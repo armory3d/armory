@@ -4,11 +4,11 @@ class AlternateNode extends LogicNode {
 
 	var b = true;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		b ? runOutput(0) : runOutput(1);
 		b = !b;
 	}

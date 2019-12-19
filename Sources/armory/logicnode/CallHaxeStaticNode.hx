@@ -2,16 +2,16 @@ package armory.logicnode;
 
 class CallHaxeStaticNode extends LogicNode {
 
-	var result:Dynamic;
+	var result: Dynamic;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
-		
-		var path:String = inputs[1].get();
-		if (path != '') {
+	override function run(from: Int) {
+
+		var path: String = inputs[1].get();
+		if (path != "") {
 			var dotIndex = path.lastIndexOf(".");
 			var classPath = path.substr(0, dotIndex);
 			var classType = Type.resolveClass(classPath);
@@ -22,7 +22,7 @@ class CallHaxeStaticNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		return result;
 	}
 }

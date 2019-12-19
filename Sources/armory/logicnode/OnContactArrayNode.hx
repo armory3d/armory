@@ -5,18 +5,18 @@ import armory.trait.physics.RigidBody;
 
 class OnContactArrayNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var lastContact = false;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		tree.notifyOnUpdate(update);
 	}
 
 	function update() {
-		var object1:Object = inputs[0].get();
-		var objects:Array<Object> = inputs[1].get();
+		var object1: Object = inputs[0].get();
+		var objects: Array<Object> = inputs[1].get();
 
 		if (object1 == null) object1 = tree.object;
 		if (objects == null)return;

@@ -5,12 +5,12 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasSetPBNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var newAt:Int;
-    var newMax:Int;
+	var canvas: CanvasScript;
+	var element: String;
+	var newAt: Int;
+    var newMax: Int;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -25,7 +25,7 @@ class CanvasSetPBNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		newAt = inputs[2].get();
         newMax = inputs[3].get();

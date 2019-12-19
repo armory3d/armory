@@ -5,7 +5,7 @@ import armory.trait.physics.PhysicsWorld;
 @:access(iron.Trait)
 class OnInitNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 		tree.notifyOnInit(init);
 	}

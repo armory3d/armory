@@ -4,13 +4,13 @@ import iron.system.Tween;
 
 class MixNode extends LogicNode {
 
-	public var property0:String; // Type
-	public var property1:String; // Ease
-	public var property2:String; // Clamp
+	public var property0: String; // Type
+	public var property1: String; // Ease
+	public var property2: String; // Clamp
 
-	var ease:Float->Float = null;
+	var ease: Float->Float = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -39,13 +39,13 @@ class MixNode extends LogicNode {
 		}
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		if (ease == null) init();
-		var k:Float = inputs[0].get(); //Factor
-		var v1:Float = inputs[1].get();
-		var v2:Float = inputs[2].get();
+		var k: Float = inputs[0].get(); //Factor
+		var v1: Float = inputs[1].get();
+		var v2: Float = inputs[2].get();
 		var f = v1 + (v2 - v1) * ease(k);
-	
+
 		if (property2 == "true") f = f < 0 ? 0 : f > 1 ? 1 : f;
 		return f;
 	}

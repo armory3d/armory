@@ -5,11 +5,11 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasSetSliderNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var value:Float;
+	var canvas: CanvasScript;
+	var element: String;
+	var value: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -22,12 +22,13 @@ class CanvasSetSliderNode extends LogicNode {
 		try {
 			canvas.getHandle(element).value = value;
 			tree.removeUpdate(update);
-		} catch (e:Dynamic) {}
+		}
+		catch (e: Dynamic) {}
 
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		value = inputs[2].get();
 		canvas = Scene.active.getTrait(CanvasScript);

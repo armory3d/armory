@@ -2,14 +2,14 @@ package armory.logicnode;
 
 class CaseStringNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var s:String = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var s: String = inputs[0].get();
 		if (s == null) return null;
 
 		switch (property0) {

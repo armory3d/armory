@@ -4,10 +4,10 @@ import iron.data.MaterialData;
 
 class MaterialNode extends LogicNode {
 
-	public var property0:String;
-	public var value:MaterialData = null;
+	public var property0: String;
+	public var value: MaterialData = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		iron.Scene.active.notifyOnInit(function() {
@@ -15,9 +15,9 @@ class MaterialNode extends LogicNode {
 		});
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		if (property0 != null) {
-			iron.data.Data.getMaterial(iron.Scene.active.raw.name, property0, function(mat:MaterialData) {
+			iron.data.Data.getMaterial(iron.Scene.active.raw.name, property0, function(mat: MaterialData) {
 				value = mat;
 			});
 		}
@@ -25,7 +25,7 @@ class MaterialNode extends LogicNode {
 		return value;
 	}
 
-	override function set(value:Dynamic) {
+	override function set(value: Dynamic) {
 		this.value = value;
 	}
 }

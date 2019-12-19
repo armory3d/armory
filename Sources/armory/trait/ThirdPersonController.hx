@@ -12,13 +12,13 @@ class ThirdPersonController extends CameraController {
 	public function new() { super(); }
 #else
 
-	static inline var rotationSpeed = 1.0; 
+	static inline var rotationSpeed = 1.0;
 
-	var animObject:String;
-	var idleAction:String;
-	var runAction:String;
-	var currentAction:String;
-	var arm:Object;
+	var animObject: String;
+	var idleAction: String;
+	var runAction: String;
+	var currentAction: String;
+	var arm: Object;
 
 	public function new(animObject = "", idle = "idle", run = "run") {
 		super();
@@ -31,7 +31,7 @@ class ThirdPersonController extends CameraController {
 		iron.Scene.active.notifyOnInit(init);
 	}
 
-	function findAnimation(o:Object):Object {
+	function findAnimation(o: Object): Object {
 		if (o.animation != null) return o;
 		for (c in o.children) {
 			var co = findAnimation(c);
@@ -39,7 +39,7 @@ class ThirdPersonController extends CameraController {
 		}
 		return null;
 	}
-	
+
 	function init() {
 		if (animObject == "") arm = findAnimation(object);
 		else arm = object.getChild(animObject);
@@ -53,7 +53,7 @@ class ThirdPersonController extends CameraController {
 	var zVec = Vec4.zAxis();
 	function preUpdate() {
 		if (Input.occupied || !body.ready) return;
-		
+
 		var mouse = Input.getMouse();
 		if (mouse.down()) {
 			camera.transform.rotate(xVec, mouse.movementY / 250 * rotationSpeed);
@@ -87,7 +87,7 @@ class ThirdPersonController extends CameraController {
 		if (moveForward || moveBackward || moveLeft || moveRight) {
 			if (currentAction != runAction) {
 				arm.animation.play(runAction, null, 0.2);
-				currentAction = runAction;	
+				currentAction = runAction;
 			}
 			dir.mult(-4 * 0.7);
 			body.activate();

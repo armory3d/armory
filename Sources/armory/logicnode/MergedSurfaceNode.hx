@@ -2,9 +2,9 @@ package armory.logicnode;
 
 class MergedSurfaceNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		tree.notifyOnUpdate(update);
@@ -26,7 +26,7 @@ class MergedSurfaceNode extends LogicNode {
 		if (b) runOutput(0);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		var surface = iron.system.Input.getSurface();
 		switch (property0) {
 		case "Touched":

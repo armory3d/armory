@@ -1,18 +1,20 @@
 package armory.logicnode;
 
 import iron.object.Object;
-import iron.math.Quat;
 import iron.math.Vec3;
 
 class GetRotationNode extends LogicNode {
-	public function new(tree:LogicTree) {
+
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var object:Object = inputs[0].get();
-		if (object == null)
+	override function get(from: Int): Dynamic {
+		var object: Object = inputs[0].get();
+		if (object == null) {
 			return null;
+		}
+
 		var rot = object.transform.rot;
 		switch (from) {
 			case 0:
@@ -21,8 +23,9 @@ class GetRotationNode extends LogicNode {
 			case 1:
 				// vector
 				var sqrtW = Math.sqrt(1 - (rot.w * rot.w));
-				if (sqrtW == 0)
+				if (sqrtW == 0) {
 					return new Vec3(0, 0, 1);
+				}
 				return new Vec3(rot.x / sqrtW, rot.y / sqrtW, rot.z / sqrtW);
 			case 2:
 				// angle radians

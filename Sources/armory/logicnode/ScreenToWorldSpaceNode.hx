@@ -5,16 +5,16 @@ import iron.math.Mat4;
 
 class ScreenToWorldSpaceNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var v = new Vec4();
 	var m = Mat4.identity();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var v1:Vec4 = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var v1: Vec4 = inputs[0].get();
 
 		if (v1 == null) return null;
 

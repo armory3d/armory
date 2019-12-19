@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class MergedMouseNode extends LogicNode {
 
-	public var property0:String;
-	public var property1:String;
+	public var property0: String;
+	public var property1: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
-		
+
 		tree.notifyOnUpdate(update);
 	}
-	
+
 	function update() {
 		var mouse = iron.system.Input.getMouse();
 		var b = false;
@@ -26,8 +26,8 @@ class MergedMouseNode extends LogicNode {
 		}
 		if (b) runOutput(0);
 	}
-	
-	override function get(from:Int):Dynamic {
+
+	override function get(from: Int): Dynamic {
 		var mouse = iron.system.Input.getMouse();
 		switch (property0) {
 		case "Down":

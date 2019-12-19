@@ -2,14 +2,14 @@ package armory.logicnode;
 
 class ExpressionNode extends LogicNode {
 
-	public var property0:String;
-	var result:Dynamic;
+	public var property0: String;
+	var result: Dynamic;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 
 		#if hscript
 		var expr = property0;
@@ -22,7 +22,7 @@ class ExpressionNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		return result;
 	}
 }

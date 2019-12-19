@@ -5,7 +5,7 @@ class OnTimerNode extends LogicNode {
 	var duration = 0.0;
 	var repeat = false;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		tree.notifyOnUpdate(update);

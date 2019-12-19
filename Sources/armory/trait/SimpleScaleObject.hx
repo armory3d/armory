@@ -14,11 +14,11 @@ import armory.trait.physics.KinematicCharacterController;
 class SimpleScaleObject extends iron.Trait {
 
 	@prop
-	var speed:Float = 0.1;
+	var speed: Float = 0.1;
 
-	var keyboard:Keyboard;
-	var rb:RigidBody;
-	var character:KinematicCharacterController;
+	var keyboard: Keyboard;
+	var rb: RigidBody;
+	var character: KinematicCharacterController;
 
 	public function new() {
 		super();
@@ -70,7 +70,7 @@ class SimpleScaleObject extends iron.Trait {
 		});
 	}
 
-	function scaleObject(vec:Vec4){
+	function scaleObject(vec: Vec4){
 		var s = object.transform.scale;
 		if (rb != null) {
 			#if arm_physics

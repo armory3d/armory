@@ -2,22 +2,22 @@ package armory.logicnode;
 
 class ScriptNode extends LogicNode {
 
-	public var property0:String;
-	var result:Dynamic;
+	public var property0: String;
+	var result: Dynamic;
 
 	#if hscript
-	var parser:hscript.Parser = null;
-	var interp:hscript.Interp = null;
-	var ast:hscript.Expr = null;
+	var parser: hscript.Parser = null;
+	var interp: hscript.Interp = null;
+	var ast: hscript.Expr = null;
 	#end
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 
-		var v:Dynamic = inputs[1].get();
+		var v: Dynamic = inputs[1].get();
 
 		#if hscript
 		if (parser == null) {
@@ -36,7 +36,7 @@ class ScriptNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		return result;
 	}
 }

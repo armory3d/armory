@@ -4,12 +4,12 @@ import armory.logicnode.*;
 
 class Logic {
 
-	static var nodes:Array<TNode>;
-	static var links:Array<TNodeLink>;
+	static var nodes: Array<TNode>;
+	static var links: Array<TNodeLink>;
 
-	static var parsed_nodes:Array<String> = null;
-	static var parsed_labels:Map<String, String> = null;
-	static var nodeMap:Map<String, armory.logicnode.LogicNode>;
+	static var parsed_nodes: Array<String> = null;
+	static var parsed_labels: Map<String, String> = null;
+	static var nodeMap: Map<String, armory.logicnode.LogicNode>;
 
 	public static var packageName = "armory.logicnode";
 
@@ -46,17 +46,17 @@ class Logic {
 		return res;
 	}
 
-	static function safesrc(s:String):String {
-		return StringTools.replace(s, ' ', '');
+	static function safesrc(s: String): String {
+		return StringTools.replace(s, " ", "");
 	}
 
-	static function node_name(node:TNode):String {
+	static function node_name(node: TNode): String {
 		var s = safesrc(node.name) + node.id;
 		return s;
 	}
 
-	static var tree:armory.logicnode.LogicTree;
-	public static function parse(canvas:TNodeCanvas, onAdd = true):armory.logicnode.LogicTree {
+	static var tree: armory.logicnode.LogicTree;
+	public static function parse(canvas: TNodeCanvas, onAdd = true): armory.logicnode.LogicTree {
 
 		nodes = canvas.nodes;
 		links = canvas.links;
@@ -78,7 +78,7 @@ class Logic {
 		return tree;
 	}
 
-	static function build_node(node:TNode):String {
+	static function build_node(node: TNode): String {
 
 		// Get node name
 		var name =  node_name(node);
@@ -97,14 +97,14 @@ class Logic {
 		// Properties
 		for (i in 0...5) {
 			for (b in node.buttons) {
-				if (b.name == 'property' + i) {
+				if (b.name == "property" + i) {
 					Reflect.setProperty(v, b.name, b.data[b.default_value]);
 				}
 			}
 		}
-		
+
 		// Create inputs
-		var inp_node:armory.logicnode.LogicNode = null;
+		var inp_node: armory.logicnode.LogicNode = null;
 		var inp_from = 0;
 		for (i in 0...node.inputs.length) {
 			var inp = node.inputs[i];
@@ -121,8 +121,7 @@ class Logic {
 					}
 				}
 			}
-			// Not linked - create node with default values
-			else {
+			else { // Not linked - create node with default values
 				inp_node = build_default_node(inp);
 				inp_from = 0;
 			}
@@ -132,7 +131,7 @@ class Logic {
 
 		// Create outputs
 		for (out in node.outputs) {
-			var outNodes:Array<armory.logicnode.LogicNode> = [];
+			var outNodes: Array<armory.logicnode.LogicNode> = [];
 			var ls = getOutputLinks(out);
 			if (ls != null && ls.length > 0) {
 				for (l in ls) {
@@ -141,8 +140,7 @@ class Logic {
 					outNodes.push(nodeMap.get(out_name));
 				}
 			}
-			// Not linked - create node with default values
-			else {
+			else { // Not linked - create node with default values
 				outNodes.push(build_default_node(out));
 			}
 			// Add outputs
@@ -151,9 +149,9 @@ class Logic {
 
 		return name;
 	}
-		
-	static function get_root_nodes(node_group:TNodeCanvas):Array<TNode> {
-		var roots:Array<TNode> = [];
+
+	static function get_root_nodes(node_group: TNodeCanvas): Array<TNode> {
+		var roots: Array<TNode> = [];
 		for (node in node_group.nodes) {
 			// if (node.bl_idname == 'NodeUndefined') {
 				// arm.log.warn('Undefined logic nodes in ' + node_group.name)
@@ -174,48 +172,48 @@ class Logic {
 		return roots;
 	}
 
-	static function build_default_node(inp:TNodeSocket):armory.logicnode.LogicNode {
-		
-		var v:armory.logicnode.LogicNode = null;
-		
-		if (inp.type == 'OBJECT') {
-			v = createClassInstance('ObjectNode', [tree, inp.default_value]);
+	static function build_default_node(inp: TNodeSocket): armory.logicnode.LogicNode {
+
+		var v: armory.logicnode.LogicNode = null;
+
+		if (inp.type == "OBJECT") {
+			v = createClassInstance("ObjectNode", [tree, inp.default_value]);
 		}
-		else if (inp.type == 'ANIMACTION') {
-			v = createClassInstance('StringNode', [tree, inp.default_value]);
+		else if (inp.type == "ANIMACTION") {
+			v = createClassInstance("StringNode", [tree, inp.default_value]);
 		}
-		else if (inp.type == 'VECTOR') {
+		else if (inp.type == "VECTOR") {
 			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
-			v = createClassInstance('VectorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+			v = createClassInstance("VectorNode", [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
-		else if (inp.type == 'RGBA') {
+		else if (inp.type == "RGBA") {
 			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
-			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
+			v = createClassInstance("ColorNode", [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
 		}
-		else if (inp.type == 'RGB') {
+		else if (inp.type == "RGB") {
 			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
-			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+			v = createClassInstance("ColorNode", [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
-		else if (inp.type == 'VALUE') { 
-			v = createClassInstance('FloatNode', [tree, inp.default_value]);
+		else if (inp.type == "VALUE") {
+			v = createClassInstance("FloatNode", [tree, inp.default_value]);
 		}
-		else if (inp.type == 'INT') {
-			v = createClassInstance('IntegerNode', [tree, inp.default_value]);
+		else if (inp.type == "INT") {
+			v = createClassInstance("IntegerNode", [tree, inp.default_value]);
 		}
-		else if (inp.type == 'BOOLEAN') {
-			v = createClassInstance('BooleanNode', [tree, inp.default_value]);
+		else if (inp.type == "BOOLEAN") {
+			v = createClassInstance("BooleanNode", [tree, inp.default_value]);
 		}
-		else if (inp.type == 'STRING') {
-			v = createClassInstance('StringNode', [tree, inp.default_value]);
+		else if (inp.type == "STRING") {
+			v = createClassInstance("StringNode", [tree, inp.default_value]);
 		}
 		else { // ACTION, ARRAY
-			v = createClassInstance('NullNode', [tree]);
+			v = createClassInstance("NullNode", [tree]);
 		}
 		return v;
 	}
 
-	static function createClassInstance(className:String, args:Array<Dynamic>):Dynamic {
-		var cname = Type.resolveClass(packageName + '.' + className);
+	static function createClassInstance(className: String, args: Array<Dynamic>): Dynamic {
+		var cname = Type.resolveClass(packageName + "." + className);
 		if (cname == null) return null;
 		return Type.createInstance(cname, args);
 	}

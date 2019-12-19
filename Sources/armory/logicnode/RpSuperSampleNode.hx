@@ -2,13 +2,13 @@ package armory.logicnode;
 
 class RpSuperSampleNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int){
+	override function run(from: Int){
 
 		switch (property0) {
 		case "1":

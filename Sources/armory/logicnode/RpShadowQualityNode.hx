@@ -2,13 +2,13 @@ package armory.logicnode;
 
 class RpShadowQualityNode extends LogicNode {
 
-    public var property0:String;
+    public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int){
+	override function run(from: Int){
 
         switch (property0) {
 		case "High":
@@ -18,7 +18,7 @@ class RpShadowQualityNode extends LogicNode {
         case "Low":
             armory.data.Config.raw.rp_shadowmap_cascade = 1024;
         }
-        
+
         armory.renderpath.RenderPathCreator.applyConfig();
         armory.data.Config.save();
 		runOutput(0);

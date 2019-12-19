@@ -2,17 +2,17 @@ package armory.logicnode;
 
 class ReadStorageNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var key:String = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var key: String = inputs[0].get();
 
-		var data:Dynamic = iron.system.Storage.data;
+		var data: Dynamic = iron.system.Storage.data;
 		if (data == null) return null;
-		
-		var value:Dynamic = Reflect.field(data, key);
+
+		var value: Dynamic = Reflect.field(data, key);
 
 		if (value == null) {
 			value = parseArg(inputs[1].get());
@@ -21,7 +21,7 @@ class ReadStorageNode extends LogicNode {
 		return value;
 	}
 
-	static function parseArg(str:String):Dynamic {
+	static function parseArg(str: String): Dynamic {
 		if (str == "true") return true;
 		else if (str == "false") return false;
 		else if (str.charAt(0) == "'") return StringTools.replace(str, "'", "");
@@ -31,7 +31,7 @@ class ReadStorageNode extends LogicNode {
 			str = StringTools.replace(str, "[", "");
 			str = StringTools.replace(str, "]", "");
 			str = StringTools.replace(str, " ", "");
-			var ar:Dynamic = [];
+			var ar: Dynamic = [];
 			var s = str.split(",");
 			for (childStr in s) {
 				ar.push(parseArg(childStr));

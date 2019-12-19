@@ -13,18 +13,18 @@ class VehicleBody extends Trait {
 	public function new() { super(); }
 #else
 
-	@prop var wheel0Name:String = "Wheel0";
-	@prop var wheel1Name:String = "Wheel1";
-	@prop var wheel2Name:String = "Wheel2";
-	@prop var wheel3Name:String = "Wheel3";
+	@prop var wheel0Name: String = "Wheel0";
+	@prop var wheel1Name: String = "Wheel1";
+	@prop var wheel2Name: String = "Wheel2";
+	@prop var wheel3Name: String = "Wheel3";
 
-	var physics:PhysicsWorld;
-	var transform:Transform;
-	var camera:CameraObject;
+	var physics: PhysicsWorld;
+	var transform: Transform;
+	var camera: CameraObject;
 
-	var wheels:Array<Object> = [];
-	var vehicle:bullet.Bt.RaycastVehicle = null;
-	var carChassis:bullet.Bt.RigidBody;
+	var wheels: Array<Object> = [];
+	var vehicle: bullet.Bt.RaycastVehicle = null;
+	var carChassis: bullet.Bt.RigidBody;
 
 	var chassis_mass = 600.0;
 	var wheelFriction = 1000;
@@ -64,7 +64,7 @@ class VehicleBody extends Trait {
 				transform.dim.z / 2));
 
 		var compound = new bullet.Bt.CompoundShape();
-		
+
 		var localTrans = new bullet.Bt.Transform();
 		localTrans.setIdentity();
 		localTrans.setOrigin(new bullet.Bt.Vector3(0, 0, 1));
@@ -82,8 +82,8 @@ class VehicleBody extends Trait {
 		carChassis.setActivationState(bullet.Bt.CollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
-		var rightIndex = 0; 
-		var upIndex = 2; 
+		var rightIndex = 0;
+		var upIndex = 2;
 		var forwardIndex = 1;
 		vehicle.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
@@ -161,7 +161,7 @@ class VehicleBody extends Trait {
 		for (i in 0...vehicle.getNumWheels()) {
 			// Synchronize the wheels with the chassis worldtransform
 			vehicle.updateWheelTransform(i, true);
-			
+
 			// Update wheels transforms
 			var trans = vehicle.getWheelTransformWS(i);
 			var p = trans.getOrigin();
@@ -186,14 +186,14 @@ class VehicleBody extends Trait {
 		camera.buildMatrix();
 	}
 
-	function createRigidBody(mass:Float, shape:bullet.Bt.CompoundShape):bullet.Bt.RigidBody {
-		
+	function createRigidBody(mass: Float, shape: bullet.Bt.CompoundShape): bullet.Bt.RigidBody {
+
 		var localInertia = new bullet.Bt.Vector3(0, 0, 0);
 		shape.calculateLocalInertia(mass, localInertia);
 
 		var centerOfMassOffset = new bullet.Bt.Transform();
 		centerOfMassOffset.setIdentity();
-		
+
 		var startTransform = new bullet.Bt.Transform();
 		startTransform.setIdentity();
 		startTransform.setOrigin(new bullet.Bt.Vector3(
@@ -208,7 +208,7 @@ class VehicleBody extends Trait {
 
 		var myMotionState = new bullet.Bt.DefaultMotionState(startTransform, centerOfMassOffset);
 		var cInfo = new bullet.Bt.RigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
-			
+
 		var body = new bullet.Bt.RigidBody(cInfo);
 		body.setLinearVelocity(new bullet.Bt.Vector3(0, 0, 0));
 		body.setAngularVelocity(new bullet.Bt.Vector3(0, 0, 0));
@@ -218,19 +218,19 @@ class VehicleBody extends Trait {
 	}
 
 	#if arm_azerty
-	static inline var keyUp = 'z';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'q';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'a';
+	static inline var keyUp = "z";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "q";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "a";
 	#else
-	static inline var keyUp = 'w';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'a';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'q';
+	static inline var keyUp = "w";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "a";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "q";
 	#end
 #end
 }
@@ -238,18 +238,18 @@ class VehicleBody extends Trait {
 class VehicleWheel {
 
 #if (!arm_bullet)
-	public function new() { }
+	public function new() {}
 #else
 
-	public var isFrontWheel:Bool;
-	public var wheelRadius:Float;
-	public var wheelWidth:Float;
+	public var isFrontWheel: Bool;
+	public var wheelRadius: Float;
+	public var wheelWidth: Float;
 
-	var locX:Float;
-	var locY:Float;
-	var locZ:Float;
+	var locX: Float;
+	var locY: Float;
+	var locZ: Float;
 
-	public function new(id:Int, transform:Transform, vehicleTransform:Transform) {
+	public function new(id: Int, transform: Transform, vehicleTransform: Transform) {
 		wheelRadius = transform.dim.z / 2;
 		wheelWidth = transform.dim.x > transform.dim.y ? transform.dim.y : transform.dim.x;
 
@@ -258,7 +258,7 @@ class VehicleWheel {
 		locZ = vehicleTransform.dim.z / 2 + transform.loc.z;
 	}
 
-	public function getConnectionPoint():bullet.Bt.Vector3 {
+	public function getConnectionPoint(): bullet.Bt.Vector3 {
 		return new bullet.Bt.Vector3(locX, locY, locZ);
 	}
 #end

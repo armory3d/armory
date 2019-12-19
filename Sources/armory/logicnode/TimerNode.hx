@@ -8,7 +8,7 @@ class TimerNode extends LogicNode {
 	var running = false;
 	var repetitions = 0;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -29,8 +29,8 @@ class TimerNode extends LogicNode {
 			}
 		}
 	}
-	
-	override function run(from:Int) {
+
+	override function run(from: Int) {
 		if (from == 0) { // Start
 			duration = inputs[3].get();
 			repeat = inputs[4].get();
@@ -56,7 +56,7 @@ class TimerNode extends LogicNode {
 		}
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		if (from == 2) return running;
 		else if (from == 3) return time;
 		else if (from == 4) return duration - time;

@@ -11,7 +11,7 @@ class DynamicResolutionScale {
 	static inline var scaleRangeMs = 10;
 	static inline var maxScale = 0.6;
 
-	public static function run(path:RenderPath) {
+	public static function run(path: RenderPath) {
 		if (firstFrame) {
 			iron.App.notifyOnRender(render);
 			firstFrame = false;
@@ -31,13 +31,13 @@ class DynamicResolutionScale {
 		else dynamicScale = 1.0;
 	}
 
-	static var frameTime:Float;
-    static var lastTime:Float = 0;
-    static var totalTime:Float = 0;
+	static var frameTime: Float;
+    static var lastTime: Float = 0;
+    static var totalTime: Float = 0;
     static var frames = 0;
     static var frameTimeAvg = 0.0;
-    
-	public static function render(g:kha.graphics4.Graphics) {
+
+	public static function render(g: kha.graphics4.Graphics) {
 		frameTime = kha.Scheduler.realTime() - lastTime;
         lastTime = kha.Scheduler.realTime();
         totalTime += frameTime;

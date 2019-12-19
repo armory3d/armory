@@ -7,14 +7,14 @@ class PickLocationNode extends LogicNode {
 
 	var loc = new Vec4();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var object:Object = inputs[0].get();
-		var coords:Vec4 = inputs[1].get();
-		
+	override function get(from: Int): Dynamic {
+		var object: Object = inputs[0].get();
+		var coords: Vec4 = inputs[1].get();
+
 		if (object == null || coords == null) null;
 
 #if arm_physics

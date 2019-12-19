@@ -4,7 +4,7 @@ import iron.RenderPath;
 
 class Inc {
 
-	static var path:RenderPath;
+	static var path: RenderPath;
 	public static var superSample = 1.0;
 
 	static var pointIndex = 0;
@@ -15,7 +15,7 @@ class Inc {
 	static var voxelsCreated = false;
 	#end
 
-	public static function init(_path:RenderPath) {
+	public static function init(_path: RenderPath) {
 		path = _path;
 
 		#if arm_config
@@ -27,7 +27,7 @@ class Inc {
 		}
 		superSample = config.rp_supersample;
 		#else
-		
+
 		#if (rp_supersampling == 1.5)
 		superSample = 1.5;
 		#elseif (rp_supersampling == 2)
@@ -35,7 +35,7 @@ class Inc {
 		#elseif (rp_supersampling == 4)
 		superSample = 4.0;
 		#end
-		
+
 		#end
 	}
 
@@ -56,13 +56,13 @@ class Inc {
 		}
 	}
 
-	static function shadowMapName(l:iron.object.LightObject):String {
+	static function shadowMapName(l: iron.object.LightObject): String {
 		if (l.data.raw.type == "sun") return "shadowMap";
 		if (l.data.raw.type == "point") return "shadowMapPoint[" + pointIndex + "]";
-		else return "shadowMapSpot[" + spotIndex + "]"; 
+		else return "shadowMapSpot[" + spotIndex + "]";
 	}
 
-	static function getShadowMap(l:iron.object.LightObject):String {
+	static function getShadowMap(l: iron.object.LightObject): String {
 		var target = shadowMapName(l);
 		var rt = path.renderTargets.get(target);
 		// Create shadowmap on the fly
@@ -124,10 +124,10 @@ class Inc {
 			if (l.data.raw.type == "point") pointIndex++;
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
-		
+
 		#end // rp_shadowmap
 	}
-	
+
 	public static function applyConfig() {
 		#if arm_config
 		var config = armory.data.Config.raw;
@@ -192,7 +192,7 @@ class Inc {
 		path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
-	public static function drawTranslucency(target:String) {
+	public static function drawTranslucency(target: String) {
 		path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
@@ -255,7 +255,7 @@ class Inc {
 	}
 	#end
 
-	public static inline function getCubeSize():Int {
+	public static inline function getCubeSize(): Int {
 		#if (rp_shadowmap_cube == 256)
 		return 256;
 		#elseif (rp_shadowmap_cube == 512)
@@ -271,7 +271,7 @@ class Inc {
 		#end
 	}
 
-	public static inline function getCascadeSize():Int {
+	public static inline function getCascadeSize(): Int {
 		#if (rp_shadowmap_cascade == 256)
 		return 256;
 		#elseif (rp_shadowmap_cascade == 512)
@@ -291,7 +291,7 @@ class Inc {
 		#end
 	}
 
-	public static inline function getVoxelRes():Int {
+	public static inline function getVoxelRes(): Int {
 		#if (rp_voxelgi_resolution == 512)
 		return 512;
 		#elseif (rp_voxelgi_resolution == 256)
@@ -307,7 +307,7 @@ class Inc {
 		#end
 	}
 
-	public static inline function getVoxelResZ():Float {
+	public static inline function getVoxelResZ(): Float {
 		#if (rp_voxelgi_resolution_z == 1.0)
 		return 1.0;
 		#elseif (rp_voxelgi_resolution_z == 0.5)
@@ -319,11 +319,11 @@ class Inc {
 		#end
 	}
 
-	public static inline function getSuperSampling():Float {
+	public static inline function getSuperSampling(): Float {
 		return superSample;
 	}
 
-	public static inline function getHdrFormat():String {
+	public static inline function getHdrFormat(): String {
 		#if rp_hdr
 		return "RGBA64";
 		#else
@@ -331,7 +331,7 @@ class Inc {
 		#end
 	}
 
-	public static inline function getDisplayp():Null<Int> {
+	public static inline function getDisplayp(): Null<Int> {
 		#if rp_resolution_filter // Custom resolution set
 		return Main.resolutionSize;
 		#else

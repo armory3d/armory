@@ -4,16 +4,16 @@ import iron.math.Mat4;
 
 class TransformMathNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var m = Mat4.identity();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var m1:Mat4 = inputs[0].get();
-		var m2:Mat4 = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var m1: Mat4 = inputs[0].get();
+		var m2: Mat4 = inputs[1].get();
 
 		if (m1 == null || m2 == null) return null;
 
@@ -23,7 +23,7 @@ class TransformMathNode extends LogicNode {
 		return m;
 	}
 
-	public static function transformMath(m1:Mat4, m2:Mat4) {
+	public static function transformMath(m1: Mat4, m2: Mat4) {
 		var a00 = m1._00; var a01 = m1._01; var a02 = m1._02;
 		var a10 = m1._10; var a11 = m1._11; var a12 = m1._12;
 		var a20 = m1._20; var a21 = m1._21; var a22 = m1._22;

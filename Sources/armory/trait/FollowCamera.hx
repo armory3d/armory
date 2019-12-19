@@ -2,26 +2,25 @@ package armory.trait;
 
 import iron.Scene;
 import iron.object.Object;
-import iron.math.Vec4;
 
-/*
-	This trait is to be used with a camera mounted on a camera boom with offset.
-	1. Place the camera as a child to another object, for example an 'Empty'.
-	2. Place this trait on the 'Empty' object.
-	3. Set the name of the target object to be followed by the camera.
-*/
+/**
+   This trait is to be used with a camera mounted on a camera boom with offset.
+   1. Place the camera as a child to another object, for example an 'Empty'.
+   2. Place this trait on the 'Empty' object.
+   3. Set the name of the target object to be followed by the camera.
+**/
 class FollowCamera extends iron.Trait {
 
 	@prop
-	var target:String;
+	var target: String;
 
 	@prop
-	var lerp:Bool = true;
+	var lerp: Bool = true;
 
 	@prop
-	var lerpSpeed:Float = 0.1;
+	var lerpSpeed: Float = 0.1;
 
-	var targetObj:Object;
+	var targetObj: Object;
 	var disabled = false;
 
 	public function new() {

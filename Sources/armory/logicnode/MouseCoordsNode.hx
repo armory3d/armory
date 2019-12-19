@@ -6,11 +6,11 @@ class MouseCoordsNode extends LogicNode {
 
 	var coords = new Vec4();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		var mouse = iron.system.Input.getMouse();
 		if (from == 0) {
 			coords.x = mouse.x;

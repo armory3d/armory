@@ -4,10 +4,10 @@ import iron.data.MeshData;
 
 class MeshNode extends LogicNode {
 
-	public var property0:String;
-	public var value:MeshData = null;
+	public var property0: String;
+	public var value: MeshData = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		iron.Scene.active.notifyOnInit(function() {
@@ -15,15 +15,15 @@ class MeshNode extends LogicNode {
 		});
 	}
 
-	override function get(from:Int):Dynamic { 
-		iron.data.Data.getMesh("mesh_" + property0, property0, function(mesh:MeshData) {
+	override function get(from: Int): Dynamic {
+		iron.data.Data.getMesh("mesh_" + property0, property0, function(mesh: MeshData) {
 			value = mesh;
 		});
 
 		return value;
 	}
 
-	override function set(value:Dynamic) {
+	override function set(value: Dynamic) {
 		this.value = value;
 	}
 }

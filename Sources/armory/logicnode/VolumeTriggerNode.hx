@@ -1,20 +1,19 @@
 package armory.logicnode;
 
 import iron.object.Object;
-import iron.math.Vec4;
 
 class VolumeTriggerNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var lastOverlap = false;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int) {
-		var object:Object = inputs[0].get();
-		var volume:Object = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var object: Object = inputs[0].get();
+		var volume: Object = inputs[1].get();
 
 		if (object == null) return false;
 		if (volume == null) volume = tree.object;

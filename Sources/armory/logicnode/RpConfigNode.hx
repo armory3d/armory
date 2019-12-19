@@ -2,14 +2,14 @@ package armory.logicnode;
 
 class RpConfigNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int){
-        var on:Bool = inputs[1].get();
+	override function run(from: Int){
+        var on: Bool = inputs[1].get();
 
 		switch (property0) {
 		case "SSGI":
@@ -21,7 +21,7 @@ class RpConfigNode extends LogicNode {
         case "GI":
 			on ? armory.data.Config.raw.rp_gi = true : armory.data.Config.raw.rp_gi = false;
 		case "Motion Blur":
-			on ? armory.data.Config.raw.rp_motionblur = true : armory.data.Config.raw.rp_motionblur = false;// armory.renderpath.RenderPathCreator.applyConfig();
+			on ? armory.data.Config.raw.rp_motionblur = true : armory.data.Config.raw.rp_motionblur = false;
 		}
 		armory.renderpath.RenderPathCreator.applyConfig();
         armory.data.Config.save();

@@ -6,11 +6,11 @@ import kha.System;
 
 class LoadUrlNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		System.loadUrl(inputs[1].get());
 	}
 }

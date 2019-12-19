@@ -1,10 +1,8 @@
 package armory.trait;
 
-import iron.object.Object;
 import iron.Trait;
 import iron.system.Input;
 import iron.math.Vec4;
-import iron.math.Quat;
 
 class ArcBall extends Trait {
 

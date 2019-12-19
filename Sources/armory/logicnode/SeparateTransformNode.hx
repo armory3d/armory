@@ -6,12 +6,12 @@ import iron.math.Quat;
 
 class SeparateTransformNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var matrix:Mat4 = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var matrix: Mat4 = inputs[0].get();
 		if (matrix == null) return null;
 
 		var loc = new Vec4();

@@ -2,17 +2,17 @@ package armory.logicnode;
 
 class MathNode extends LogicNode {
 
-	public var property0:String;
-	public var property1:String; // Clamp
+	public var property0: String;
+	public var property1: String; // Clamp
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 
-		var v1:Float = inputs[0].get();
-		var v2:Float = inputs[1].get();
+		var v1: Float = inputs[0].get();
+		var v2: Float = inputs[1].get();
 		var f = 0.0;
 		switch (property0) {
 		case "Add":

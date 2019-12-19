@@ -11,10 +11,10 @@ import armory.trait.physics.RigidBody;
 class SimpleMoveObject extends iron.Trait {
 
 	@prop
-	var speed:Float = 0.1;
+	var speed: Float = 0.1;
 
-	var keyboard:Keyboard;
-	var rb:RigidBody;
+	var keyboard: Keyboard;
+	var rb: RigidBody;
 
 	public function new() {
 		super();
@@ -57,7 +57,7 @@ class SimpleMoveObject extends iron.Trait {
 		});
 	}
 
-	function moveObject(vec:Vec4){
+	function moveObject(vec: Vec4){
 		if (rb != null) {
 			#if arm_physics
 			rb.setLinearVelocity(0, 0, 0);

@@ -2,14 +2,14 @@ package armory.logicnode;
 
 class ArrayLoopNode extends LogicNode {
 
-	var value:Dynamic;
+	var value: Dynamic;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
-		var ar:Array<Dynamic> = inputs[1].get();
+	override function run(from: Int) {
+		var ar: Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
 		for (val in ar) {
@@ -24,7 +24,7 @@ class ArrayLoopNode extends LogicNode {
 		runOutput(2);
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		return value;
 	}
 }

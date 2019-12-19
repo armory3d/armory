@@ -5,14 +5,14 @@ import iron.math.Mat4;
 
 class VectorFromTransformNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var m:Mat4 = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var m: Mat4 = inputs[0].get();
 
 		if (m == null) return null;
 

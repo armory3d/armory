@@ -5,11 +5,11 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasGetRotationNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var rad:Float;
+	var canvas: CanvasScript;
+	var element: String;
+	var rad: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -23,7 +23,7 @@ class CanvasGetRotationNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
@@ -32,7 +32,7 @@ class CanvasGetRotationNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 		update();
 	}
-    override function get(from:Int):Dynamic {
+    override function get(from: Int): Dynamic {
 		if (from == 1) return rad;
 		else return 0;
 	}

@@ -6,12 +6,12 @@ class PickObjectNode extends LogicNode {
 
 	var v = new Vec4();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var coords:Vec4 = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var coords: Vec4 = inputs[0].get();
 
 		if (coords == null) return null;
 

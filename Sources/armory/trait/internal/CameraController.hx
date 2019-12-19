@@ -12,9 +12,9 @@ class CameraController extends Trait {
 	public function new() { super(); }
 #else
 
-	var transform:Transform;
-	var body:RigidBody;
-	var camera:CameraObject;
+	var transform: Transform;
+	var body: RigidBody;
+	var camera: CameraObject;
 
 	var moveForward = false;
 	var moveBackward = false;
@@ -42,19 +42,19 @@ class CameraController extends Trait {
 	}
 
 	#if arm_azerty
-	static inline var keyUp = 'z';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'q';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'a';
+	static inline var keyUp = "z";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "q";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "a";
 	#else
-	static inline var keyUp = 'w';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'a';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'q';
+	static inline var keyUp = "w";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "a";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "q";
 	#end
 #end
 }

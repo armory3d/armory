@@ -16,20 +16,20 @@ import iron.math.Mat4;
 
 class DebugDraw {
 
-	static var inst:DebugDraw = null;
+	static var inst: DebugDraw = null;
 
-	public var color:kha.Color = 0xffff0000;
+	public var color: kha.Color = 0xffff0000;
 	public var strength = 0.02;
 
-	var vertexBuffer:VertexBuffer;
-	var indexBuffer:IndexBuffer;
-	var pipeline:PipelineState;
+	var vertexBuffer: VertexBuffer;
+	var indexBuffer: IndexBuffer;
+	var pipeline: PipelineState;
 
-	var vp:Mat4;
-	var vpID:ConstantLocation;
+	var vp: Mat4;
+	var vpID: ConstantLocation;
 
-	var vbData:kha.arrays.Float32Array;
-	var ibData:kha.arrays.Uint32Array;
+	var vbData: kha.arrays.Float32Array;
+	var ibData: kha.arrays.Uint32Array;
 
 	static inline var maxLines = 300;
 	static inline var maxVertices = maxLines * 4;
@@ -38,7 +38,7 @@ class DebugDraw {
 
 	function new() {
 		inst = this;
-		
+
 		var structure = new VertexStructure();
 		structure.add("pos", VertexData.Float3);
 		structure.add("col", VertexData.Float3);
@@ -61,11 +61,11 @@ class DebugDraw {
 		indexBuffer = new IndexBuffer(maxIndices, Usage.DynamicUsage);
 	}
 
-	static var g:kha.graphics4.Graphics;
+	static var g: kha.graphics4.Graphics;
 
-	public static function notifyOnRender(f:DebugDraw->Void) {
+	public static function notifyOnRender(f: DebugDraw->Void) {
 		if (inst == null) inst = new DebugDraw();
-		iron.RenderPath.notifyOnContext("mesh", function(g4:kha.graphics4.Graphics, i:Int, len:Int) {
+		iron.RenderPath.notifyOnContext("mesh", function(g4: kha.graphics4.Graphics, i: Int, len: Int) {
 			g = g4;
 			if (i == 0) inst.begin();
 			f(inst);
@@ -73,16 +73,16 @@ class DebugDraw {
 		});
 	}
 
-	static var v:Vec4;
+	static var v: Vec4;
 	static var vx = new Vec4();
 	static var vy = new Vec4();
 	static var vz = new Vec4();
-	public function bounds(t:iron.object.Transform) {
+	public function bounds(t: iron.object.Transform) {
 		v = t.world.getLoc();
 		var dx = t.dim.x / 2;
 		var dy = t.dim.y / 2;
 		var dz = t.dim.z / 2;
-		
+
 		var up = t.world.up();
 		var look = t.world.look();
 		var right = t.world.right();
@@ -96,7 +96,7 @@ class DebugDraw {
 		vy.mult(dy);
 		vz.setFrom(up);
 		vz.mult(dz);
-		
+
 		lineb(-1, -1, -1,  1, -1, -1);
 		lineb(-1,  1, -1,  1,  1, -1);
 		lineb(-1, -1,  1,  1, -1,  1);
@@ -116,7 +116,7 @@ class DebugDraw {
 	static var v1 = new Vec4();
 	static var v2 = new Vec4();
 	static var t = new Vec4();
-	function lineb(a:Int, b:Int, c:Int, d:Int, e:Int, f:Int) {
+	function lineb(a: Int, b: Int, c: Int, d: Int, e: Int, f: Int) {
 		v1.setFrom(v);
 		t.setFrom(vx); t.mult(a); v1.add(t);
 		t.setFrom(vy); t.mult(b); v1.add(t);
@@ -130,12 +130,12 @@ class DebugDraw {
 		linev(v1, v2);
 	}
 
-	public inline function linev(v1:Vec4, v2:Vec4) {
+	public inline function linev(v1: Vec4, v2: Vec4) {
 		line(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
 	}
 
-	public function line(x1:Float, y1:Float, z1:Float, x2:Float, y2:Float, z2:Float) {
-		
+	public function line(x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float) {
+
 		if (lines >= maxLines) { end(); begin(); }
 
 		var camera = iron.Scene.active.camera;
@@ -191,7 +191,7 @@ class DebugDraw {
 	function end() {
 		vertexBuffer.unlock();
 		indexBuffer.unlock();
-		
+
 		g.setVertexBuffer(vertexBuffer);
 		g.setIndexBuffer(indexBuffer);
 		g.setPipeline(pipeline);

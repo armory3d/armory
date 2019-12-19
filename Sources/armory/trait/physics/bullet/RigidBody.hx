@@ -9,63 +9,63 @@ import iron.object.MeshObject;
 import iron.data.MeshData;
 
 /**
- * RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
- * RigidBody can also be used with the getContacts method to detect collisions and run appropriate code.
- * The Bullet physics engine is used for these calculations.
- */
+   RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
+   RigidBody can also be used with the getContacts method to detect collisions and run appropriate code.
+   The Bullet physics engine is used for these calculations.
+**/
 @:access(armory.trait.physics.bullet.PhysicsWorld)
 class RigidBody extends iron.Trait {
 
-	var shape:Shape;
-	public var physics:PhysicsWorld;
-	public var transform:Transform = null;
-	public var mass:Float;
-	public var friction:Float;
-	public var restitution:Float;
-	public var collisionMargin:Float;
-	public var linearDamping:Float;
-	public var angularDamping:Float;
-	public var animated:Bool;
-	public var staticObj:Bool;
+	var shape: Shape;
+	public var physics: PhysicsWorld;
+	public var transform: Transform = null;
+	public var mass: Float;
+	public var friction: Float;
+	public var restitution: Float;
+	public var collisionMargin: Float;
+	public var linearDamping: Float;
+	public var angularDamping: Float;
+	public var animated: Bool;
+	public var staticObj: Bool;
 	public var destroyed = false;
-	var linearFactors:Array<Float>;
-	var angularFactors:Array<Float>;
-	var deactivationParams:Array<Float>;
+	var linearFactors: Array<Float>;
+	var angularFactors: Array<Float>;
+	var deactivationParams: Array<Float>;
 	var ccd = false; // Continuous collision detection
 	public var group = 1;
 	public var mask = 1;
 	var trigger = false;
-	var bodyScaleX:Float; // Transform scale at creation time
-	var bodyScaleY:Float;
-	var bodyScaleZ:Float;
-	var currentScaleX:Float;
-	var currentScaleY:Float;
-	var currentScaleZ:Float;
+	var bodyScaleX: Float; // Transform scale at creation time
+	var bodyScaleY: Float;
+	var bodyScaleZ: Float;
+	var currentScaleX: Float;
+	var currentScaleY: Float;
+	var currentScaleZ: Float;
 
-	public var body:bullet.Bt.RigidBody = null;
-	public var motionState:bullet.Bt.MotionState;
-	public var btshape:bullet.Bt.CollisionShape;
+	public var body: bullet.Bt.RigidBody = null;
+	public var motionState: bullet.Bt.MotionState;
+	public var btshape: bullet.Bt.CollisionShape;
 	public var ready = false;
 	static var nextId = 0;
 	public var id = 0;
-	public var onReady:Void->Void = null;
-	public var onContact:Array<RigidBody->Void> = null;
-	public var heightData:haxe.io.Bytes = null;
+	public var onReady: Void->Void = null;
+	public var onContact: Array<RigidBody->Void> = null;
+	public var heightData: haxe.io.Bytes = null;
 	#if js
-	static var ammoArray:Int = -1;
+	static var ammoArray: Int = -1;
 	#end
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3;
-	static var vec2:bullet.Bt.Vector3;
-	static var vec3:bullet.Bt.Vector3;
-	static var quat1:bullet.Bt.Quaternion;
-	static var trans1:bullet.Bt.Transform;
-	static var trans2:bullet.Bt.Transform;
+	static var vec1: bullet.Bt.Vector3;
+	static var vec2: bullet.Bt.Vector3;
+	static var vec3: bullet.Bt.Vector3;
+	static var quat1: bullet.Bt.Quaternion;
+	static var trans1: bullet.Bt.Transform;
+	static var trans2: bullet.Bt.Transform;
 	static var quat = new Quat();
 
-	static var CF_STATIC_OBJECT= 1;
-	static var CF_KINEMATIC_OBJECT= 2;
+	static var CF_STATIC_OBJECT = 1;
+	static var CF_KINEMATIC_OBJECT = 2;
 	static var CF_NO_CONTACT_RESPONSE = 4;
 	static var CF_CHARACTER_OBJECT = 16;
 
@@ -73,8 +73,8 @@ class RigidBody extends iron.Trait {
 	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
 	static var usersCache = new Map<MeshData, Int>();
 
-	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask=1,
-						params:Array<Float> = null, flags:Array<Bool> = null) {
+	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
+						params: Array<Float> = null, flags: Array<Bool> = null) {
 		super();
 
 		if (nullvec) {
@@ -85,7 +85,7 @@ class RigidBody extends iron.Trait {
 			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 0);
 			trans1 = new bullet.Bt.Transform();
 			trans2 = new bullet.Bt.Transform();
-		} 
+		}
 
 		this.shape = shape;
 		this.mass = mass;
@@ -111,11 +111,11 @@ class RigidBody extends iron.Trait {
 		notifyOnAdd(init);
 	}
 
-	inline function withMargin(f:Float) {
+	inline function withMargin(f: Float) {
 		return f - f * collisionMargin;
 	}
 
-	public function notifyOnReady(f:Void->Void) {
+	public function notifyOnReady(f: Void->Void) {
 		onReady = f;
 		if (ready) onReady();
 	}
@@ -146,7 +146,7 @@ class RigidBody extends iron.Trait {
 			var coneZ = new bullet.Bt.ConeShapeZ(
 				withMargin(transform.dim.x / 2), // Radius
 				withMargin(transform.dim.z));	  // Height
-			var cone:bullet.Bt.ConeShape = coneZ;
+			var cone: bullet.Bt.ConeShape = coneZ;
 			btshape = cone;
 		}
 		else if (shape == Shape.Cylinder) {
@@ -154,7 +154,7 @@ class RigidBody extends iron.Trait {
 			vec1.setY(withMargin(transform.dim.y / 2));
 			vec1.setZ(withMargin(transform.dim.z / 2));
 			var cylZ = new bullet.Bt.CylinderShapeZ(vec1);
-			var cyl:bullet.Bt.CylinderShape = cylZ;
+			var cyl: bullet.Bt.CylinderShape = cylZ;
 			btshape = cyl;
 		}
 		else if (shape == Shape.Capsule) {
@@ -162,7 +162,7 @@ class RigidBody extends iron.Trait {
 			var capsZ = new bullet.Bt.CapsuleShapeZ(
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
-			var caps:bullet.Bt.CapsuleShape = capsZ;
+			var caps: bullet.Bt.CapsuleShape = capsZ;
 			btshape = caps;
 		}
 		else if (shape == Shape.Mesh) {
@@ -170,7 +170,7 @@ class RigidBody extends iron.Trait {
 			if (mass > 0) {
 				var shapeGImpact = new bullet.Bt.GImpactMeshShape(meshInterface);
 				shapeGImpact.updateBound();
-				var shapeConcave:bullet.Bt.ConcaveShape = shapeGImpact;
+				var shapeConcave: bullet.Bt.ConcaveShape = shapeGImpact;
 				btshape = shapeConcave;
 				if (!physics.gimpactRegistered) {
 					#if js
@@ -183,8 +183,8 @@ class RigidBody extends iron.Trait {
 			}
 			else {
 				var shapeBvh = new bullet.Bt.BvhTriangleMeshShape(meshInterface, true, true);
-				var shapeTri:bullet.Bt.TriangleMeshShape = shapeBvh;
-				var shapeConcave:bullet.Bt.ConcaveShape = shapeTri;
+				var shapeTri: bullet.Bt.TriangleMeshShape = shapeBvh;
+				var shapeConcave: bullet.Bt.ConcaveShape = shapeTri;
 				btshape = shapeConcave;
 			}
 		}
@@ -227,12 +227,12 @@ class RigidBody extends iron.Trait {
 		vec1.setZ(0);
 		var inertia = vec1;
 
-		if(staticObj || animated) mass = 0;
+		if (staticObj || animated) mass = 0;
 		if (mass > 0) btshape.calculateLocalInertia(mass, inertia);
 		var bodyCI = new bullet.Bt.RigidBodyConstructionInfo(mass, motionState, btshape, inertia);
 		body = new bullet.Bt.RigidBody(bodyCI);
-		
-		var bodyColl:bullet.Bt.CollisionObject = body;
+
+		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(friction);
 		// body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
 		if (shape == Shape.Sphere || shape == Shape.Cylinder || shape == Shape.Cone || shape == Shape.Capsule) {
@@ -260,7 +260,7 @@ class RigidBody extends iron.Trait {
 		}
 
 		if (trigger) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
-		if (animated){ 
+		if (animated) {
 			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_KINEMATIC_OBJECT);
 			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() & ~CF_STATIC_OBJECT);
 		}
@@ -300,12 +300,12 @@ class RigidBody extends iron.Trait {
 			syncTransform();
 		}
 		else {
-			var bodyColl:bullet.Bt.CollisionObject = body;
+			var bodyColl: bullet.Bt.CollisionObject = body;
 			var trans = bodyColl.getWorldTransform();
 
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
-			var qw:bullet.Bt.QuadWord = q;
+			var qw: bullet.Bt.QuadWord = q;
 
 			transform.loc.set(p.x(), p.y(), p.z());
 			transform.rot.set(qw.x(), qw.y(), qw.z(), qw.w());
@@ -329,7 +329,7 @@ class RigidBody extends iron.Trait {
 	}
 
 	public function activate() {
-		var bodyColl:bullet.Bt.CollisionObject = body;
+		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.activate(false);
 	}
 
@@ -342,22 +342,22 @@ class RigidBody extends iron.Trait {
 		body.setGravity(physics.world.getGravity());
 	}
 
-	public function setGravity(v:Vec4) {
+	public function setGravity(v: Vec4) {
 		vec1.setValue(v.x, v.y, v.z);
 		body.setGravity(vec1);
 	}
 
-	public function setActivationState(newState:Int) {
-		var bodyColl:bullet.Bt.CollisionObject = body;
+	public function setActivationState(newState: Int) {
+		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setActivationState(newState);
 	}
 
-	public function setDeactivationParams(linearThreshold:Float, angularThreshold:Float, time:Float) {
+	public function setDeactivationParams(linearThreshold: Float, angularThreshold: Float, time: Float) {
 		body.setSleepingThresholds(linearThreshold, angularThreshold);
 		// body.setDeactivationTime(time); // not available in ammo
 	}
 
-	public function applyForce(force:Vec4, loc:Vec4 = null) {
+	public function applyForce(force: Vec4, loc: Vec4 = null) {
 		activate();
 		vec1.setValue(force.x, force.y, force.z);
 		if (loc == null) {
@@ -369,7 +369,7 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
-	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
+	public function applyImpulse(impulse: Vec4, loc: Vec4 = null) {
 		activate();
 		vec1.setValue(impulse.x, impulse.y, impulse.z);
 		if (loc == null) {
@@ -381,65 +381,65 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
-	public function applyTorque(torque:Vec4) {
+	public function applyTorque(torque: Vec4) {
 		activate();
 		vec1.setValue(torque.x, torque.y, torque.z);
 		body.applyTorque(vec1);
 	}
 
-	public function applyTorqueImpulse(torque:Vec4) {
+	public function applyTorqueImpulse(torque: Vec4) {
 		activate();
 		vec1.setValue(torque.x, torque.y, torque.z);
 		body.applyTorqueImpulse(vec1);
 	}
 
-	public function setLinearFactor(x:Float, y:Float, z:Float) {
+	public function setLinearFactor(x: Float, y: Float, z: Float) {
 		vec1.setValue(x, y, z);
 		body.setLinearFactor(vec1);
 	}
 
-	public function setAngularFactor(x:Float, y:Float, z:Float) {
+	public function setAngularFactor(x: Float, y: Float, z: Float) {
 		vec1.setValue(x, y, z);
 		body.setAngularFactor(vec1);
 	}
 
-	public function getLinearVelocity():Vec4 {
+	public function getLinearVelocity(): Vec4 {
 		var v = body.getLinearVelocity();
 		return new Vec4(v.x(), v.y(), v.z());
 	}
 
-	public function setLinearVelocity(x:Float, y:Float, z:Float) {
+	public function setLinearVelocity(x: Float, y: Float, z: Float) {
 		vec1.setValue(x, y, z);
 		body.setLinearVelocity(vec1);
 	}
 
-	public function getAngularVelocity():Vec4 {
+	public function getAngularVelocity(): Vec4 {
 		var v = body.getAngularVelocity();
 		return new Vec4(v.x(), v.y(), v.z());
 	}
 
-	public function setAngularVelocity(x:Float, y:Float, z:Float) {
+	public function setAngularVelocity(x: Float, y: Float, z: Float) {
 		vec1.setValue(x, y, z);
 		body.setAngularVelocity(vec1);
 	}
 
-	public function setFriction(f:Float) {
-		var bodyColl:bullet.Bt.CollisionObject = body;
+	public function setFriction(f: Float) {
+		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(f);
 		// bodyColl.setRollingFriction(f);
 		this.friction = f;
 	}
 
-	public function notifyOnContact(f:RigidBody->Void) {
+	public function notifyOnContact(f: RigidBody->Void) {
 		if (onContact == null) onContact = [];
 		onContact.push(f);
 	}
 
-	public function removeContact(f:RigidBody->Void) {
+	public function removeContact(f: RigidBody->Void) {
 		onContact.remove(f);
 	}
 
-	function setScale(v:Vec4) {
+	function setScale(v: Vec4) {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
@@ -447,8 +447,8 @@ class RigidBody extends iron.Trait {
 		vec1.setY(v.y / bodyScaleY);
 		vec1.setZ(v.z / bodyScaleZ);
 		btshape.setLocalScaling(vec1);
-		var worldDyn:bullet.Bt.DynamicsWorld = physics.world;
-		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
+		var worldDyn: bullet.Bt.DynamicsWorld = physics.world;
+		var worldCol: bullet.Bt.CollisionWorld = worldDyn;
 		worldCol.updateSingleAabb(body);
 	}
 
@@ -460,22 +460,20 @@ class RigidBody extends iron.Trait {
 		quat.fromMat(t.world);
 		quat1.setValue(quat.x, quat.y, quat.z, quat.w);
 		trans1.setRotation(quat1);
-		if(animated)
-		body.getMotionState().setWorldTransform(trans1);
-		else
-		body.setCenterOfMassTransform(trans1);
+		if (animated) body.getMotionState().setWorldTransform(trans1);
+		else body.setCenterOfMassTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
 	}
 
 	// Continuous collision detection
-	public function setCcd(sphereRadius:Float, motionThreshold = 1e-7) {
-		var bodyColl:bullet.Bt.CollisionObject = body;
+	public function setCcd(sphereRadius: Float, motionThreshold = 1e-7) {
+		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setCcdSweptSphereRadius(sphereRadius);
 		bodyColl.setCcdMotionThreshold(motionThreshold);
 	}
 
-	function fillConvexHull(scale:Vec4, margin:kha.FastFloat):bullet.Bt.ConvexHullShape {
+	function fillConvexHull(scale: Vec4, margin: kha.FastFloat): bullet.Bt.ConvexHullShape {
 		// Check whether shape already exists
 		var data = cast(object, MeshObject).data;
 		var shape = convexHullCache.get(data);
@@ -483,16 +481,16 @@ class RigidBody extends iron.Trait {
 			usersCache.set(data, usersCache.get(data) + 1);
 			return shape;
 		}
-		
+
 		shape = new bullet.Bt.ConvexHullShape();
 		convexHullCache.set(data, shape);
 		usersCache.set(data, 1);
 
 		var positions = data.geom.positions;
 
-		var sx:kha.FastFloat = scale.x * (1.0 - margin) * (1 / 32767);
-		var sy:kha.FastFloat = scale.y * (1.0 - margin) * (1 / 32767);
-		var sz:kha.FastFloat = scale.z * (1.0 - margin) * (1 / 32767);
+		var sx: kha.FastFloat = scale.x * (1.0 - margin) * (1 / 32767);
+		var sy: kha.FastFloat = scale.y * (1.0 - margin) * (1 / 32767);
+		var sz: kha.FastFloat = scale.z * (1.0 - margin) * (1 / 32767);
 
 		if (data.raw.scale_pos != null) {
 			sx *= data.raw.scale_pos;
@@ -509,7 +507,7 @@ class RigidBody extends iron.Trait {
 		return shape;
 	}
 
-	function fillTriangleMesh(scale:Vec4):bullet.Bt.TriangleMesh {
+	function fillTriangleMesh(scale: Vec4): bullet.Bt.TriangleMesh {
 		// Check whether shape already exists
 		var data = cast(object, MeshObject).data;
 		var triangleMesh = triangleMeshCache.get(data);
@@ -517,7 +515,7 @@ class RigidBody extends iron.Trait {
 			usersCache.set(data, usersCache.get(data) + 1);
 			return triangleMesh;
 		}
-		
+
 		triangleMesh = new bullet.Bt.TriangleMesh(true, true);
 		triangleMeshCache.set(data, triangleMesh);
 		usersCache.set(data, 1);
@@ -525,9 +523,9 @@ class RigidBody extends iron.Trait {
 		var positions = data.geom.positions;
 		var indices = data.geom.indices;
 
-		var sx:kha.FastFloat = scale.x * (1 / 32767);
-		var sy:kha.FastFloat = scale.y * (1 / 32767);
-		var sz:kha.FastFloat = scale.z * (1 / 32767);
+		var sx: kha.FastFloat = scale.x * (1 / 32767);
+		var sy: kha.FastFloat = scale.y * (1 / 32767);
+		var sz: kha.FastFloat = scale.z * (1 / 32767);
 
 		if (data.raw.scale_pos != null) {
 			sx *= data.raw.scale_pos;

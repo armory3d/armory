@@ -4,9 +4,9 @@ import armory.trait.physics.PhysicsWorld;
 
 class OnUpdateNode extends LogicNode {
 
-	public var property0:String; // Update, Late Update, Physics Pre-Update
+	public var property0: String; // Update, Late Update, Physics Pre-Update
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 		tree.notifyOnInit(init);
 	}
@@ -17,7 +17,7 @@ class OnUpdateNode extends LogicNode {
 		#if arm_physics
 		case "Physics Pre-Update": PhysicsWorld.active.notifyOnPreUpdate(update);
 		#end
-		default /* Update */: tree.notifyOnUpdate(update);
+		default: tree.notifyOnUpdate(update); /* Update */
 		}
 	}
 

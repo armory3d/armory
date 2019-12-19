@@ -15,25 +15,26 @@ import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
 
 class PhysicsHook extends Trait {
-	var target:Object;
-	var targetName:String;
-	var targetTransform:Transform;
-	var verts:Array<Float>;
 
-	var constraint:bullet.Bt.Generic6DofConstraint = null;
+	var target: Object;
+	var targetName: String;
+	var targetTransform: Transform;
+	var verts: Array<Float>;
+
+	var constraint: bullet.Bt.Generic6DofConstraint = null;
 
 	#if arm_physics_soft
-	var hookRB:bullet.Bt.RigidBody = null;
+	var hookRB: bullet.Bt.RigidBody = null;
 	#end
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3;
-	static var quat1:bullet.Bt.Quaternion;
-	static var trans1:bullet.Bt.Transform;
-	static var trans2:bullet.Bt.Transform;
+	static var vec1: bullet.Bt.Vector3;
+	static var quat1: bullet.Bt.Quaternion;
+	static var trans1: bullet.Bt.Transform;
+	static var trans2: bullet.Bt.Transform;
 	static var quat = new Quat();
 
-	public function new(targetName:String, verts:Array<Float>) {
+	public function new(targetName: String, verts: Array<Float>) {
 		super();
 
 		if (nullvec) {
@@ -62,7 +63,7 @@ class PhysicsHook extends Trait {
 
 		// Soft body hook
 	#if arm_physics_soft
-		var sb:SoftBody = object.getTrait(SoftBody);
+		var sb: SoftBody = object.getTrait(SoftBody);
 		if (sb != null && sb.ready) {
 
 			// Place static rigid body at target location
@@ -123,7 +124,7 @@ class PhysicsHook extends Trait {
 	#end
 
 		// Rigid body hook
-		var rb1:RigidBody = object.getTrait(RigidBody);
+		var rb1: RigidBody = object.getTrait(RigidBody);
 		if (rb1 != null && rb1.ready) {
 			trans1.setIdentity();
 			vec1.setX(targetTransform.worldx() - object.transform.worldx());

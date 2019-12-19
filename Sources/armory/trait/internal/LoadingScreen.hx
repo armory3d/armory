@@ -4,7 +4,7 @@ package armory.trait.internal;
 
 class LoadingScreen {
 
-	public static function render(g:kha.graphics2.Graphics, assetsLoaded:Int, assetsTotal:Int) {
+	public static function render(g: kha.graphics2.Graphics, assetsLoaded: Int, assetsTotal: Int) {
 		g.color = 0xffcf2b43;
 		g.fillRect(0, iron.App.h() - 6, iron.App.w() / assetsTotal * assetsLoaded, 6);
 	}

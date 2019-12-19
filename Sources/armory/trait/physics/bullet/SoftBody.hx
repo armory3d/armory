@@ -18,23 +18,23 @@ class SoftBody extends Trait {
 	public function new() { super(); }
 #else
 
-	static var physics:PhysicsWorld = null;
+	static var physics: PhysicsWorld = null;
 
 	public var ready = false;
-	var shape:SoftShape;
-	var bend:Float;
-	var mass:Float;
-	var margin:Float;
+	var shape: SoftShape;
+	var bend: Float;
+	var mass: Float;
+	var margin: Float;
 
 	public var vertOffsetX = 0.0;
 	public var vertOffsetY = 0.0;
 	public var vertOffsetZ = 0.0;
 
-	public var body:bullet.Bt.SoftBody;
+	public var body: bullet.Bt.SoftBody;
 
-	static var helpers:bullet.Bt.SoftBodyHelpers;
+	static var helpers: bullet.Bt.SoftBodyHelpers;
 	static var helpersCreated = false;
-	static var worldInfo:bullet.Bt.SoftBodyWorldInfo;
+	static var worldInfo: bullet.Bt.SoftBodyWorldInfo;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -48,7 +48,7 @@ class SoftBody extends Trait {
 		});
 	}
 
-	function fromI16(ar:kha.arrays.Int16Array, scalePos:Float):kha.arrays.Float32Array {
+	function fromI16(ar: kha.arrays.Int16Array, scalePos: Float): kha.arrays.Float32Array {
 		var vals = new kha.arrays.Float32Array(Std.int(ar.length / 4) * 3);
 		for (i in 0...Std.int(vals.length / 3)) {
 			vals[i * 3    ] = (ar[i * 4    ] / 32767) * scalePos;
@@ -58,7 +58,7 @@ class SoftBody extends Trait {
 		return vals;
 	}
 
-	function fromU32(ars:Array<kha.arrays.Uint32Array>):kha.arrays.Uint32Array {
+	function fromU32(ars: Array<kha.arrays.Uint32Array>): kha.arrays.Uint32Array {
 		var len = 0;
 		for (ar in ars) len += ar.length;
 		var vals = new kha.arrays.Uint32Array(len);
@@ -130,7 +130,7 @@ class SoftBody extends Trait {
 		#end
 
 		// body.generateClusters(4);
-		
+
 		#if js
 		var cfg = body.get_m_cfg();
 		cfg.set_viterations(physics.solverIterations);
@@ -142,7 +142,7 @@ class SoftBody extends Trait {
 			cfg.set_kDP(0.01);
 			cfg.set_kPR(bend);
 		}
-		
+
 		#elseif cpp
 		body.m_cfg.viterations = physics.solverIterations;
 		body.m_cfg.piterations = physics.solverIterations;
@@ -171,7 +171,7 @@ class SoftBody extends Trait {
 	function update() {
 		var mo = cast(object, MeshObject);
 		var geom = mo.data.geom;
-		
+
 		#if arm_deinterleaved
 		var v = geom.vertexBuffers[0].lockInt16();
 		var n = geom.vertexBuffers[1].lockInt16();

@@ -5,12 +5,12 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasSetLocationNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var newX:Float;
-	var newY:Float;
+	var canvas: CanvasScript;
+	var element: String;
+	var newX: Float;
+	var newY: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -24,7 +24,7 @@ class CanvasSetLocationNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		newX = inputs[2].get();
 		newY = inputs[3].get();

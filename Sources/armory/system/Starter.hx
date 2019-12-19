@@ -4,14 +4,14 @@ import kha.WindowOptions;
 
 class Starter {
 
-	static var tasks:Int;
+	static var tasks: Int;
 
 	#if arm_loadscreen
-	public static var drawLoading:kha.graphics2.Graphics->Int->Int->Void = null;
-	public static var numAssets:Int;
+	public static var drawLoading: kha.graphics2.Graphics->Int->Int->Void = null;
+	public static var numAssets: Int;
 	#end
 
-	public static function main(scene:String, mode:Int, resize:Bool, min:Bool, max:Bool, w:Int, h:Int, msaa:Int, vsync:Bool, getRenderPath:Void->iron.RenderPath) {
+	public static function main(scene: String, mode: Int, resize: Bool, min: Bool, max: Bool, w: Int, h: Int, msaa: Int, vsync: Bool, getRenderPath: Void->iron.RenderPath) {
 
 		function start() {
 			if (tasks > 0) return;
@@ -41,17 +41,17 @@ class Starter {
 			try {
 			#end
 
-			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
+			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window: kha.Window) {
 
 				iron.App.init(function() {
 					#if arm_loadscreen
-					function load(g:kha.graphics2.Graphics) {
+					function load(g: kha.graphics2.Graphics) {
 	                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(load);
 	                    else drawLoading(g, iron.data.Data.assetsLoaded, numAssets);
 	                }
 	                iron.App.notifyOnRender2D(load);
 	                #end
-					iron.Scene.setActive(scene, function(object:iron.object.Object) {
+					iron.Scene.setActive(scene, function(object: iron.object.Object) {
 						iron.RenderPath.setActive(getRenderPath());
 						#if arm_patch
 						iron.Scene.getRenderPath = getRenderPath;
@@ -65,7 +65,7 @@ class Starter {
 
 			#if (kha_webgl && (!arm_legacy) && (!kha_node))
 			}
-			catch (e:Dynamic) {
+			catch (e: Dynamic) {
 				if (!kha.SystemImpl.gl2) {
 					trace("This project was not compiled with legacy shaders flag - please use WebGL 2 capable browser.");
 				}
@@ -74,8 +74,8 @@ class Starter {
 		}
 
 		#if (js && arm_bullet)
-		function loadLibAmmo(name:String) {
-			kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
+		function loadLibAmmo(name: String) {
+			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				var print = function(s:String) { trace(s); };
 				var loaded = function() { tasks--; start(); };
 				untyped __js__("(1, eval)({0})", b.toString());
@@ -96,8 +96,8 @@ class Starter {
 		#end
 
 		#if (js && arm_navigation)
-		function loadLib(name:String) {
-			kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
+		function loadLib(name: String) {
+			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				untyped __js__("(1, eval)({0})", b.toString());
 				tasks--;
 				start();
@@ -115,7 +115,6 @@ class Starter {
 		loadLibAmmo("ammo.js");
 		#end
 		#end
-
 
 		#if (js && arm_navigation)
 		tasks++;

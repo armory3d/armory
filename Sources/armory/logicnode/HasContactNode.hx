@@ -5,13 +5,13 @@ import armory.trait.physics.RigidBody;
 
 class HasContactNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var object1:Object = inputs[0].get();
-		var object2:Object = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var object1: Object = inputs[0].get();
+		var object2: Object = inputs[1].get();
 
 		if (object1 == null || object2 == null) return false;
 

@@ -5,18 +5,18 @@ import iron.math.Quat;
 
 class LookAtNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var v1 = new Vec4();
 	var v2 = new Vec4();
 	var q = new Quat();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var vfrom:Vec4 = inputs[0].get();
-		var vto:Vec4 = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var vfrom: Vec4 = inputs[0].get();
+		var vto: Vec4 = inputs[1].get();
 
 		if (vfrom == null || vto == null) return null;
 

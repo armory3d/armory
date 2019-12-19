@@ -5,9 +5,9 @@ import armory.trait.navigation.Navigation;
 
 class NavigableLocationNode extends LogicNode {
 
-	var loc:Vec4;
+	var loc: Vec4;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		iron.Scene.active.notifyOnInit(function() {
@@ -15,10 +15,10 @@ class NavigableLocationNode extends LogicNode {
 		});
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 #if arm_navigation
 		// Assume navmesh exists..
-		Navigation.active.navMeshes[0].getRandomPoint(function(p:Vec4) {
+		Navigation.active.navMeshes[0].getRandomPoint(function(p: Vec4) {
 			loc = p;
 		});
 #end

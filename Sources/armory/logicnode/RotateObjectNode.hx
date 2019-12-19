@@ -1,7 +1,6 @@
 package armory.logicnode;
 
 import iron.object.Object;
-import iron.math.Mat4;
 import iron.math.Quat;
 import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
@@ -10,13 +9,13 @@ class RotateObjectNode extends LogicNode {
 
 	var q = new Quat();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
-		var object:Object = inputs[1].get();
-		var vec:Vec4 = inputs[2].get();
+	override function run(from: Int) {
+		var object: Object = inputs[1].get();
+		var vec: Vec4 = inputs[2].get();
 
 		if (object == null || vec == null) return;
 

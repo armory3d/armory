@@ -2,17 +2,17 @@ package armory.logicnode;
 
 class OnGamepadNode extends LogicNode {
 
-	public var property0:String;
-	public var property1:String;
+	public var property0: String;
+	public var property1: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		tree.notifyOnUpdate(update);
 	}
 
 	function update() {
-		var num:Int = inputs[0].get();
+		var num: Int = inputs[0].get();
 		var gamepad = iron.system.Input.getGamepad(num);
 		if (gamepad == null) return;
 		var b = false;

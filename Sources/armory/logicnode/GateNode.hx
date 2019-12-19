@@ -4,17 +4,16 @@ import iron.math.Vec4;
 
 class GateNode extends LogicNode {
 
-	public var property0:String;
-	public var property1:Float;
+	public var property0: String;
+	public var property1: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
-
-		var v1:Dynamic = inputs[1].get();
-		var v2:Dynamic = inputs[2].get();
+	override function run(from: Int) {
+		var v1: Dynamic = inputs[1].get();
+		var v2: Dynamic = inputs[2].get();
 		var cond = false;
 
 		switch (property0) {

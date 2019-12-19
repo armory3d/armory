@@ -5,15 +5,15 @@ import iron.math.Vec4;
 
 class VectorMixNode extends LogicNode {
 
-	public var property0:String; // Type
-	public var property1:String; // Ease
-	public var property2:String; // Clamp
+	public var property0: String; // Type
+	public var property1: String; // Ease
+	public var property2: String; // Clamp
 
 	var v = new Vec4();
 
-	var ease:Float->Float = null;
+	var ease: Float->Float = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -42,18 +42,18 @@ class VectorMixNode extends LogicNode {
 		}
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		if (ease == null) init();
-		var k:Float = inputs[0].get(); //Factor
-		var v1:Vec4 = inputs[1].get();
-		var v2:Vec4 = inputs[2].get();
+		var k: Float = inputs[0].get(); //Factor
+		var v1: Vec4 = inputs[1].get();
+		var v2: Vec4 = inputs[2].get();
 		if (v1 == null || v2 == null) return null;
 		var f = ease(k);
 		v.x = v1.x + (v2.x - v1.x) * f;
 		v.y = v1.y + (v2.y - v1.y) * f;
 		v.z = v1.z + (v2.z - v1.z) * f;
 
-		if (property2 == "true") v.clamp(0,1);
+		if (property2 == "true") v.clamp(0, 1);
 		return v;
 	}
 }

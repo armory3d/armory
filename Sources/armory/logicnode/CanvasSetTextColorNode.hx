@@ -6,14 +6,14 @@ import kha.Color;
 
 class CanvasSetTextColorNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var r:Float;
-	var g:Float;
-	var b:Float;
-	var a:Float;
+	var canvas: CanvasScript;
+	var element: String;
+	var r: Float;
+	var g: Float;
+	var b: Float;
+	var a: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -22,11 +22,11 @@ class CanvasSetTextColorNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).color_text = Color.fromFloats(r,g,b,a);
+		canvas.getElement(element).color_text = Color.fromFloats(r, g, b, a);
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		r = inputs[2].get();
 		g = inputs[3].get();

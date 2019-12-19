@@ -11,10 +11,10 @@ import armory.trait.physics.RigidBody;
 class SimpleRotateObject extends iron.Trait {
 
 	@prop
-	var speed:Float = 0.01;
+	var speed: Float = 0.01;
 
-	var keyboard:Keyboard;
-	var rb:RigidBody;
+	var keyboard: Keyboard;
+	var rb: RigidBody;
 
 	public function new() {
 		super();
@@ -57,7 +57,7 @@ class SimpleRotateObject extends iron.Trait {
 		});
 	}
 
-	function rotateObject(vec:Vec4){
+	function rotateObject(vec: Vec4){
 		if (rb != null) {
 			#if arm_physics
 			rb.setAngularVelocity(0, 0, 0);

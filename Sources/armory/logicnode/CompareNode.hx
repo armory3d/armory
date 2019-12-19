@@ -4,17 +4,17 @@ import iron.math.Vec4;
 
 class CompareNode extends LogicNode {
 
-	public var property0:String;
-	public var property1:Float;
+	public var property0: String;
+	public var property1: Float;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Bool {
+	override function get(from: Int): Bool {
 
-		var v1:Dynamic = inputs[0].get();
-		var v2:Dynamic = inputs[1].get();
+		var v1: Dynamic = inputs[0].get();
+		var v2: Dynamic = inputs[1].get();
 		var cond = false;
 
 		switch (property0) {

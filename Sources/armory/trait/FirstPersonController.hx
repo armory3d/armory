@@ -13,15 +13,15 @@ class FirstPersonController extends CameraController {
 	public function new() { super(); }
 #else
 
-	var head:Object;
-	static inline var rotationSpeed = 2.0; 
+	var head: Object;
+	static inline var rotationSpeed = 2.0;
 
 	public function new() {
 		super();
 
 		iron.Scene.active.notifyOnInit(init);
 	}
-	
+
 	function init() {
 		head = object.getChildOfType(CameraObject);
 
@@ -34,13 +34,13 @@ class FirstPersonController extends CameraController {
 	var zVec = Vec4.zAxis();
 	function preUpdate() {
 		if (Input.occupied || !body.ready) return;
-		
+
 		var mouse = Input.getMouse();
 		var kb = Input.getKeyboard();
 
 		if (mouse.started() && !mouse.locked) mouse.lock();
 		else if (kb.started("escape") && mouse.locked) mouse.unlock();
-		
+
 		if (mouse.locked || mouse.down()) {
 			head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);
 			transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
@@ -72,7 +72,7 @@ class FirstPersonController extends CameraController {
 		var btvec = body.getLinearVelocity();
 		body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
 
-		if (moveForward || moveBackward || moveLeft || moveRight) {			
+		if (moveForward || moveBackward || moveLeft || moveRight) {
 			dir.mult(6);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z - 1.0);

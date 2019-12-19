@@ -2,18 +2,18 @@ package armory.logicnode;
 
 class DynamicNode extends LogicNode {
 
-	public var value:Dynamic;
+	public var value: Dynamic;
 
-	public function new(tree:LogicTree, value:Dynamic = null) {
+	public function new(tree: LogicTree, value: Dynamic = null) {
 		super(tree);
 		this.value = value == null ? {} : value;
 	}
 
-	override function get(from:Int):Dynamic {
+	override function get(from: Int): Dynamic {
 		return value;
 	}
 
-	override function set(value:Dynamic) {
+	override function set(value: Dynamic) {
 		this.value = value;
 	}
 }

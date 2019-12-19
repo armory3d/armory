@@ -2,14 +2,14 @@ package armory.logicnode;
 
 class ArrayInArrayNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var array:Array<Dynamic> = inputs[0].get();
-		var value:Dynamic = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var array: Array<Dynamic> = inputs[0].get();
+		var value: Dynamic = inputs[1].get();
 
-		return ! (array.indexOf(value) == -1);
+		return array.indexOf(value) != -1;
 	}
 }

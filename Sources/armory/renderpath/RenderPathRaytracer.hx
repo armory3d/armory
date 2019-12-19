@@ -11,7 +11,6 @@ import kha.graphics5.VertexBuffer;
 import kha.graphics5.IndexBuffer;
 import kha.graphics5.VertexStructure;
 import kha.graphics5.VertexData;
-import kha.graphics5.Usage;
 import kha.graphics5.TextureFormat;
 
 import iron.RenderPath;
@@ -20,7 +19,7 @@ class RenderPathRaytracer {
 
 	#if (rp_renderer == "Raytracer")
 
-	static var path:RenderPath;
+	static var path: RenderPath;
 	static var ready = false;
 
 	static inline var bufferCount = 2;
@@ -34,12 +33,12 @@ class RenderPathRaytracer {
 	static var frame = 0.0;
 
 	@:access(iron.data.Geometry)
-	public static function init(_path:RenderPath) {
+	public static function init(_path: RenderPath) {
 		path = _path;
 
-		kha.Assets.loadBlobFromPath("raytrace.cso", function(rayTraceShader:kha.Blob) {		
+		kha.Assets.loadBlobFromPath("raytrace.cso", function(rayTraceShader: kha.Blob) {
 			ready = true;
-		
+
 			// Command list
 			commandList = new CommandList();
 			for (i in 0...bufferCount) {
@@ -106,7 +105,7 @@ class RenderPathRaytracer {
 		constantBuffer.setFloat(4, ct.worldy());
 		constantBuffer.setFloat(8, ct.worldz());
 		constantBuffer.setFloat(12, 1);
-		
+
 		constantBuffer.setFloat(16, helpMat._00);
 		constantBuffer.setFloat(20, helpMat._01);
 		constantBuffer.setFloat(24, helpMat._02);
@@ -123,7 +122,7 @@ class RenderPathRaytracer {
 		constantBuffer.setFloat(68, helpMat._31);
 		constantBuffer.setFloat(72, helpMat._32);
 		constantBuffer.setFloat(76, helpMat._33);
-		
+
 		constantBuffer.setFloat(80, frame);
 		frame += 1.0;
 		constantBuffer.unlock();
@@ -131,15 +130,15 @@ class RenderPathRaytracer {
 		g.begin(framebuffers[currentBuffer]);
 
 		commandList.begin();
-		
+
 		g.setAccelerationStructure(accel);
 		g.setRayTracePipeline(pipeline);
 		g.setRayTraceTarget(target);
-		
+
 		g.dispatchRays(commandList);
 		g.copyRayTraceTarget(commandList, framebuffers[currentBuffer], target);
 		commandList.end();
-		
+
 		g.end();
 		// g.swapBuffers();
 

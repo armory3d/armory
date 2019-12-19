@@ -15,11 +15,11 @@ class WalkNavigation extends Trait {
 	var yvec = new Vec4();
 	var ease = 1.0;
 
-	var camera:CameraObject;
+	var camera: CameraObject;
 
-	var keyboard:Keyboard;
-	var gamepad:Gamepad;
-	var mouse:Mouse;
+	var keyboard: Keyboard;
+	var gamepad: Gamepad;
+	var mouse: Mouse;
 
 	public function new() {
 		super();
@@ -34,7 +34,7 @@ class WalkNavigation extends Trait {
 		try {
 			camera = cast(object, CameraObject);
 		}
-		catch(msg:String) {
+		catch (msg: String) {
 			trace("Error occurred: " + msg + "\nWalkNavigation trait should be used with a camera object.");
 		}
 
@@ -89,7 +89,7 @@ class WalkNavigation extends Trait {
 				}
 			}
 		}
-		
+
 		if (moveForward || moveBackward || strafeRight || strafeLeft || strafeUp || strafeDown) {
 			ease += Time.delta * 15;
 			if (ease > 1.0) ease = 1.0;
@@ -125,18 +125,18 @@ class WalkNavigation extends Trait {
 	}
 
 	#if arm_azerty
-	static inline var keyUp = 'z';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'q';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'a';
+	static inline var keyUp = "z";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "q";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "a";
 	#else
-	static inline var keyUp = 'w';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'a';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'q';
+	static inline var keyUp = "w";
+	static inline var keyDown = "s";
+	static inline var keyLeft = "a";
+	static inline var keyRight = "d";
+	static inline var keyStrafeUp = "e";
+	static inline var keyStrafeDown = "q";
 	#end
 }

@@ -5,18 +5,18 @@ import armory.system.Event;
 
 class SendEventNode extends LogicNode {
 
-	var entries:Array<TEvent> = null;
+	var entries: Array<TEvent> = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
-		var name:String = inputs[1].get();
-		var object:Object = inputs.length > 2 ? inputs[2].get() : tree.object;
+	override function run(from: Int) {
+		var name: String = inputs[1].get();
+		var object: Object = inputs.length > 2 ? inputs[2].get() : tree.object;
 
-		if (object == null) return null;
-		
+		if (object == null) return;
+
 		var all = Event.get(name);
 		if (all != null) {
 			entries = [];

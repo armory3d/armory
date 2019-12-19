@@ -4,12 +4,12 @@ import iron.math.Vec4;
 
 class SeparateColorNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var vector:Vec4 = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var vector: Vec4 = inputs[0].get();
 		if (vector == null) return 0.0;
 
 		if (from == 0) return vector.x;

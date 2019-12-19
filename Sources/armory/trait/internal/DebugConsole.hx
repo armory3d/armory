@@ -20,7 +20,7 @@ class DebugConsole extends Trait {
 #else
 
 	public var visible = true;
-	var ui:Zui;
+	var ui: Zui;
 	var scaleFactor = 1.0;
 
 	var lastTime = 0.0;
@@ -39,27 +39,27 @@ class DebugConsole extends Trait {
 	var animTimeAvg = 0.0;
 	var physTime = 0.0;
 	var physTimeAvg = 0.0;
-	var graph:kha.Image = null;
-	var graphA:kha.Image = null;
-	var graphB:kha.Image = null;
+	var graph: kha.Image = null;
+	var graphA: kha.Image = null;
+	var graphB: kha.Image = null;
 	var benchmark = false;
 	var benchFrames = 0;
 	var benchTime = 0.0;
 
-	var selectedObject:iron.object.Object;
+	var selectedObject: iron.object.Object;
 	var selectedType = "";
-	static var lrow = [1/2, 1/2];
-	static var row4 = [1/4, 1/4, 1/4, 1/4];
+	static var lrow = [1 / 2, 1 / 2];
+	static var row4 = [1 / 4, 1 / 4, 1 / 4, 1 / 4];
 
 	public static var debugFloat = 1.0;
-	public static var watchNodes:Array<armory.logicnode.LogicNode> = [];
+	public static var watchNodes: Array<armory.logicnode.LogicNode> = [];
 
 	public function new(scaleFactor = 1.0) {
 		super();
 
 		this.scaleFactor = scaleFactor;
 
-		iron.data.Data.getFont('font_default.ttf', function(font:kha.Font) {
+		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
 			ui = new Zui({scaleFactor: scaleFactor, font: font});
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
@@ -78,12 +78,12 @@ class DebugConsole extends Trait {
 
 	var debugDrawSet = false;
 
-	function selectObject(o:iron.object.Object) {
+	function selectObject(o: iron.object.Object) {
 		selectedObject = o;
 
 		if (!debugDrawSet) {
 			debugDrawSet = true;
-			armory.trait.internal.DebugDraw.notifyOnRender(function(draw:armory.trait.internal.DebugDraw) {
+			armory.trait.internal.DebugDraw.notifyOnRender(function(draw: armory.trait.internal.DebugDraw) {
 				if (selectedObject != null) draw.bounds(selectedObject.transform);
 			});
 		}
@@ -113,15 +113,15 @@ class DebugConsole extends Trait {
 		graph.g2.end();
 	}
 
-	static var haxeTrace:Dynamic->haxe.PosInfos->Void = null;
-	static var lastTraces:Array<String> = [''];
-	static function consoleTrace(v:Dynamic, ?inf:haxe.PosInfos) {
+	static var haxeTrace: Dynamic->haxe.PosInfos->Void = null;
+	static var lastTraces: Array<String> = [""];
+	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
 		lastTraces.unshift(Std.string(v));
 		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
 
-	function render2D(g:kha.graphics2.Graphics) {
+	function render2D(g: kha.graphics2.Graphics) {
 		if (!visible) return;
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
@@ -137,16 +137,16 @@ class DebugConsole extends Trait {
 		ui.begin(g);
 		if (ui.window(hwin, wx, wy, ww, wh, true)) {
 
-			if (ui.tab(htab, '')) {}
+			if (ui.tab(htab, "")) {}
 
-			if (ui.tab(htab, 'Scene')) {
+			if (ui.tab(htab, "Scene")) {
 
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
 
 					var i = 0;
-					function drawList(h:zui.Zui.Handle, o:iron.object.Object) {
-						if (o.name.charAt(0) == '.') return; // Hidden
+					function drawList(h: zui.Zui.Handle, o: iron.object.Object) {
+						if (o.name.charAt(0) == ".") return; // Hidden
 						var b = false;
 						if (selectedObject == o) {
 							ui.g.color = 0xff205d9c;
@@ -154,7 +154,7 @@ class DebugConsole extends Trait {
 							ui.g.color = 0xffffffff;
 						}
 						if (o.children.length > 0) {
-							ui.row([1/13, 12/13]);
+							ui.row([1 / 13, 12 / 13]);
 							b = ui.panel(h.nest(i, {selected: true}), "", true);
 							ui.text(o.name);
 						}
@@ -325,34 +325,34 @@ class DebugConsole extends Trait {
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.tab(htab, '$avg ms')) {
 
-				if (ui.panel(Id.handle({selected: true}), 'Performance')) {
+				if (ui.panel(Id.handle({selected: true}), "Performance")) {
 					if (graph != null) ui.image(graph);
 					ui.indent();
 
 					ui.row(lrow);
-					ui.text('Frame');
+					ui.text("Frame");
 					ui.text('$avg ms / $fpsAvg fps', Align.Right);
 
 					ui.row(lrow);
-					ui.text('Render-path');
+					ui.text("Render-path");
 					ui.text(Math.round(renderPathTimeAvg * 10000) / 10 + " ms", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Script');
+					ui.text("Script");
 					ui.text(Math.round((updateTimeAvg - physTimeAvg - animTimeAvg) * 10000) / 10 + " ms", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Animation');
+					ui.text("Animation");
 					ui.text(Math.round(animTimeAvg * 10000) / 10 + " ms", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Physics');
+					ui.text("Physics");
 					ui.text(Math.round(physTimeAvg * 10000) / 10 + " ms", Align.Right);
 
 					ui.unindent();
 				}
 
-				if (ui.panel(Id.handle({selected: false}), 'Draw')) {
+				if (ui.panel(Id.handle({selected: false}), "Draw")) {
 					ui.indent();
 
 					ui.row(lrow);
@@ -361,42 +361,42 @@ class DebugConsole extends Trait {
 					ui.text(numMeshes + "", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Draw calls');
+					ui.text("Draw calls");
 					ui.text(iron.RenderPath.drawCalls + "", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Tris mesh');
+					ui.text("Tris mesh");
 					ui.text(iron.RenderPath.numTrisMesh + "", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Tris shadow');
+					ui.text("Tris shadow");
 					ui.text(iron.RenderPath.numTrisShadow + "", Align.Right);
 
 					#if arm_batch
 					ui.row(lrow);
-					ui.text('Batch calls');
+					ui.text("Batch calls");
 					ui.text(iron.RenderPath.batchCalls + "", Align.Right);
 
 					ui.row(lrow);
-					ui.text('Batch buckets');
+					ui.text("Batch buckets");
 					ui.text(iron.RenderPath.batchBuckets + "", Align.Right);
 					#end
 
 					ui.row(lrow);
-					ui.text('Culled'); // Assumes shadow context for all meshes
-					ui.text(iron.RenderPath.culled + ' / ' + numMeshes * 2, Align.Right);
+					ui.text("Culled"); // Assumes shadow context for all meshes
+					ui.text(iron.RenderPath.culled + " / " + numMeshes * 2, Align.Right);
 
 					#if arm_stream
 					ui.row(lrow);
 					var total = iron.Scene.active.sceneStream.sceneTotal();
-					ui.text('Streamed');
+					ui.text("Streamed");
 					ui.text('$numMeshes / $total', Align.Right);
 					#end
 
 					ui.unindent();
 				}
 
-				if (ui.panel(Id.handle({selected: false}), 'Render Targets')) {
+				if (ui.panel(Id.handle({selected: false}), "Render Targets")) {
 					ui.indent();
 					#if (kha_opengl || kha_webgl)
 					ui.imageInvertY = true;
@@ -413,7 +413,7 @@ class DebugConsole extends Trait {
 					ui.unindent();
 				}
 
-				if (ui.panel(Id.handle({selected: false}), 'Cached Materials')) {
+				if (ui.panel(Id.handle({selected: false}), "Cached Materials")) {
 					ui.indent();
 					for (c in iron.data.Data.cachedMaterials) {
 						ui.text(c.name);
@@ -421,7 +421,7 @@ class DebugConsole extends Trait {
 					ui.unindent();
 				}
 
-				if (ui.panel(Id.handle({selected: false}), 'Cached Shaders')) {
+				if (ui.panel(Id.handle({selected: false}), "Cached Shaders")) {
 					ui.indent();
 					for (c in iron.data.Data.cachedShaders) {
 						ui.text(c.name);
@@ -437,22 +437,22 @@ class DebugConsole extends Trait {
 				// 	ui.unindent();
 				// }
 			}
-			if (ui.tab(htab, lastTraces[0] == '' ? 'Console' : lastTraces[0].substr(0, 20))) {
+			if (ui.tab(htab, lastTraces[0] == "" ? "Console" : lastTraces[0].substr(0, 20))) {
 				#if js
-				if (ui.panel(Id.handle({selected: false}), 'Script')) {
+				if (ui.panel(Id.handle({selected: false}), "Script")) {
 					ui.indent();
 					var t = ui.textInput(Id.handle());
 					if (ui.button("Run")) {
 						try { trace("> " + t); js.Lib.eval(t); }
-						catch(e:Dynamic) { trace(e); }
+						catch (e: Dynamic) { trace(e); }
 					}
 					ui.unindent();
 				}
 				#end
-				if (ui.panel(Id.handle({selected: true}), 'Log')) {
+				if (ui.panel(Id.handle({selected: true}), "Log")) {
 					ui.indent();
 					if (ui.button("Clear")) {
-						lastTraces[0] = '';
+						lastTraces[0] = "";
 						lastTraces.splice(1, lastTraces.length - 1);
 					}
 					for (t in lastTraces) ui.text(t);
@@ -462,7 +462,7 @@ class DebugConsole extends Trait {
 
 			if (watchNodes.length > 0 && ui.tab(htab, "Watch")) {
 				for (n in watchNodes) {
-					ui.text(n.tree.object.name + '.' + n.tree.name + '.' + n.name + ' = ' + n.get(0));
+					ui.text(n.tree.object.name + "." + n.tree.name + "." + n.name + " = " + n.get(0));
 				}
 			}
 
@@ -523,7 +523,7 @@ class DebugConsole extends Trait {
 	#end
 	}
 
-	static function roundfp(f:Float, precision = 2):Float {
+	static function roundfp(f: Float, precision = 2): Float {
 		f *= Math.pow(10, precision);
 		return Math.round(f) / Math.pow(10, precision);
 	}

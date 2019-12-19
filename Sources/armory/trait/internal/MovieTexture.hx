@@ -7,11 +7,11 @@ import iron.object.MeshObject;
 
 class MovieTexture extends Trait {
 
-	var video:Video;
-	public static var image:Image;
+	var video: Video;
+	public static var image: Image;
 	public static var created = false;
-	
-	var videoName:String;
+
+	var videoName: String;
 
 	function pow(pow: Int): Int {
 		var ret = 1;
@@ -21,16 +21,16 @@ class MovieTexture extends Trait {
 
 	function getPower2(i: Int): Int {
 		var power = 0;
-		while(true) {
+		while (true) {
 			var res = pow(power);
 			if (res >= i) return res;
 			power++;
 		}
 	}
 
-	public function new(videoName:String) {
+	public function new(videoName: String) {
 		super();
-		
+
 		this.videoName = videoName;
 
 		if (!created) {
@@ -40,7 +40,7 @@ class MovieTexture extends Trait {
 	}
 
 	function init() {
-		iron.data.Data.getVideo(videoName, function(vid:kha.Video) {
+		iron.data.Data.getVideo(videoName, function(vid: kha.Video) {
 			video = vid;
 			video.play(true);
 
@@ -51,16 +51,16 @@ class MovieTexture extends Trait {
 			notifyOnRender2D(render);
 		});
 	}
-	
-	function render(g:kha.graphics2.Graphics) {
+
+	function render(g: kha.graphics2.Graphics) {
 		g.end();
-		
+
 		var g2 = image.g2;
 		g2.begin(true, 0xff000000);
 		g2.color = 0xffffffff;
 		g2.drawVideo(video, 0, 0, image.width, image.height);
 		g2.end();
-		
+
 		g.begin(false);
 	}
 }

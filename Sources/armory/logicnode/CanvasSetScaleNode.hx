@@ -5,12 +5,12 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasSetScaleNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var height:Int;
-    var width:Int;
+	var canvas: CanvasScript;
+	var element: String;
+	var height: Int;
+    var width: Int;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -24,7 +24,7 @@ class CanvasSetScaleNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		height = inputs[2].get();
         width = inputs[3].get();

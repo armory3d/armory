@@ -12,9 +12,9 @@ class LivePatch extends iron.Trait {
 	}
 
 	function update() {
-		kha.Assets.loadBlobFromPath("krom.patch", function(b:kha.Blob) {
+		kha.Assets.loadBlobFromPath("krom.patch", function(b: kha.Blob) {
 			if (b.length == 0) return;
-			var lines = b.toString().split('\n');
+			var lines = b.toString().split("\n");
 			var id = Std.parseInt(lines[0]);
 			if (id > patchId) {
 				patchId = id;

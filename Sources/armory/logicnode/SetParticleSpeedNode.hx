@@ -4,15 +4,15 @@ import iron.object.Object;
 
 class SetParticleSpeedNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		#if arm_particles
-		var object:Object = inputs[1].get();
-		var speed:Float = inputs[2].get();
-		
+		var object: Object = inputs[1].get();
+		var speed: Float = inputs[2].get();
+
 		if (object == null) return;
 
 		var mo = cast(object, iron.object.MeshObject);

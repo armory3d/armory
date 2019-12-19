@@ -4,12 +4,12 @@ import iron.object.CameraObject;
 
 class GetCameraFovNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var camera:CameraObject = inputs[0].get();
+	override function get(from: Int): Dynamic {
+		var camera: CameraObject = inputs[0].get();
 
 		if (camera == null) return 0.0;
 

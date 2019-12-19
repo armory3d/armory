@@ -4,20 +4,20 @@ import armory.system.Event;
 
 class OnEventNode extends LogicNode {
 
-	var _property0:String;
-	public var property0(get, set):String;
-	var listener:TEvent = null;
+	var _property0: String;
+	public var property0(get, set): String;
+	var listener: TEvent = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 		tree.notifyOnRemove(onRemove);
 	}
 
-	function get_property0():String {
+	function get_property0(): String {
 		return _property0;
 	}
 
-	function set_property0(s:String):String {
+	function set_property0(s: String): String {
 		listener = Event.add(s, onEvent, tree.object.uid);
 		return _property0 = s;
 	}

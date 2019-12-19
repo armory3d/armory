@@ -14,12 +14,12 @@ class PhysicsDrag extends Trait {
 	public function new() { super(); }
 #else
 
-	var pickConstraint:bullet.Bt.Generic6DofConstraint = null;
-	var pickDist:Float;
-	var pickedBody:RigidBody = null;
+	var pickConstraint: bullet.Bt.Generic6DofConstraint = null;
+	var pickDist: Float;
+	var pickedBody: RigidBody = null;
 
-	var rayFrom:bullet.Bt.Vector3;
-	var rayTo:bullet.Bt.Vector3;
+	var rayFrom: bullet.Bt.Vector3;
+	var rayTo: bullet.Bt.Vector3;
 
 	static var v = new Vec4();
 	static var m = Mat4.identity();
@@ -39,7 +39,7 @@ class PhysicsDrag extends Trait {
 
 		var mouse = Input.getMouse();
 		if (mouse.started()) {
-			
+
 			var b = physics.pickClosest(mouse.x, mouse.y);
 			if (b != null && b.mass > 0 && !b.body.isKinematicObject() && b.object.getTrait(PhysicsDrag) != null) {
 

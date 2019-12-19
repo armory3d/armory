@@ -6,7 +6,7 @@ class RenderPathForward {
 
 	#if (rp_renderer == "Forward")
 
-	static var path:RenderPath;
+	static var path: RenderPath;
 
 	#if rp_voxelao
 	static var voxels = "voxels";
@@ -58,10 +58,10 @@ class RenderPathForward {
 		Inc.applyConfig();
 	}
 
-	public static function init(_path:RenderPath) {
+	public static function init(_path: RenderPath) {
 
 		path = _path;
-		
+
 		#if (rp_background == "World")
 		{
 			path.loadShader("shader_datas/world_pass/world_pass");
@@ -111,7 +111,7 @@ class RenderPathForward {
 				t.name = "buf";
 				t.width = 0;
 				t.height = 0;
-				t.format = 'RGBA32';
+				t.format = "RGBA32";
 				t.displayp = Inc.getDisplayp();
 				t.scale = Inc.getSuperSampling();
 				t.depth_buffer = "main";
@@ -258,7 +258,7 @@ class RenderPathForward {
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
-			
+
 			#if rp_ssr_half
 			{
 				var t = new RenderTargetRaw();
@@ -406,7 +406,7 @@ class RenderPathForward {
 				}
 			}
 			#end
-			
+
 			#if rp_bloom
 			{
 				if (armory.data.Config.raw.rp_bloom != false) {

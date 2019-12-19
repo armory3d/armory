@@ -2,11 +2,11 @@ package armory.logicnode;
 
 class ShutdownNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		kha.System.stop();
 	}
 }

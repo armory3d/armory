@@ -5,21 +5,21 @@ import iron.math.Vec4;
 
 class OnVolumeTriggerNode extends LogicNode {
 
-	public var property0:String;
+	public var property0: String;
 	var lastOverlap = false;
 
 	var l1 = new Vec4();
 	var l2 = new Vec4();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 
 		tree.notifyOnUpdate(update);
 	}
 
 	function update() {
-		var object:Object = inputs[0].get();
-		var volume:Object = inputs[1].get();
+		var object: Object = inputs[0].get();
+		var volume: Object = inputs[1].get();
 
 		if (object == null) return;
 		if (volume == null) volume = tree.object;

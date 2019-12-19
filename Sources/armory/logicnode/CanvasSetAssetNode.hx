@@ -5,11 +5,11 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasSetAssetNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var asset:String;
+	var canvas: CanvasScript;
+	var element: String;
+	var asset: String;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -22,7 +22,7 @@ class CanvasSetAssetNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		asset = Std.string(inputs[2].get());
 		canvas = Scene.active.getTrait(CanvasScript);

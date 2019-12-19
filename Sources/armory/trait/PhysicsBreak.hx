@@ -12,14 +12,15 @@ import armory.trait.physics.PhysicsWorld;
 #end
 
 class PhysicsBreak extends Trait {
+
 #if (!arm_bullet)
 	public function new() { super(); }
 #else
 
-	static var physics:PhysicsWorld = null;
-	static var breaker:ConvexBreaker = null;
+	static var physics: PhysicsWorld = null;
+	static var breaker: ConvexBreaker = null;
 
-	var body:RigidBody;
+	var body: RigidBody;
 
 	public function new() {
 		super();
@@ -41,8 +42,8 @@ class PhysicsBreak extends Trait {
 		var ar = physics.getContactPairs(body);
 		if (ar != null) {
 			var maxImpulse = 0.0;
-			var impactPoint:Vec4 = null;
-			var impactNormal:Vec4 = null;
+			var impactPoint: Vec4 = null;
+			var impactNormal: Vec4 = null;
 			for (p in ar) {
 				if (maxImpulse < p.impulse) {
 					maxImpulse = p.impulse;
@@ -56,7 +57,7 @@ class PhysicsBreak extends Trait {
 				var radialIter = 1;
 				var randIter = 1;
 				var debris = breaker.subdivideByImpact(cast object, impactPoint, impactNormal, radialIter, randIter);
-				var numObjects = debris.length;
+				// var numObjects = debris.length;
 				for (o in debris) {
 					var ud = breaker.userDataMap.get(cast o);
 					var params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.04, 0.0, 0.0, 0.0];
@@ -77,21 +78,21 @@ class PhysicsBreak extends Trait {
 // This class can be used to subdivide a convex geometry object into pieces
 class ConvexBreaker {
 
-	var minSizeForBreak:Float;
-	var smallDelta:Float;
+	var minSizeForBreak: Float;
+	var smallDelta: Float;
 
-	var tempLine:Line3;
-	var tempPlane:Plane;
-	var tempPlane2:Plane;
-	var tempCM1:Vec4;
-	var tempCM2:Vec4;
-	var tempVec4:Vec4;
-	var tempVec42:Vec4;
-	var tempVec43:Vec4;
-	var tempCutResult:CutResult;
-	var segments:Array<Bool>;
+	var tempLine: Line3;
+	var tempPlane: Plane;
+	var tempPlane2: Plane;
+	var tempCM1: Vec4;
+	var tempCM2: Vec4;
+	var tempVec4: Vec4;
+	var tempVec42: Vec4;
+	var tempVec43: Vec4;
+	var tempCutResult: CutResult;
+	var segments: Array<Bool>;
 
-	public var userDataMap:Map<MeshObject, UserData>;
+	public var userDataMap: Map<MeshObject, UserData>;
 
 	// minSizeForBreak Min size a debris can have to break
 	// smallDelta Max distance to consider that a point belongs to a plane
@@ -113,7 +114,7 @@ class ConvexBreaker {
 		userDataMap = new Map();
 	}
 
-	public function initBreakableObject(object:MeshObject, mass:Float, friction:Float, velocity:Vec4, angularVelocity:Vec4, breakable:Bool) {
+	public function initBreakableObject(object: MeshObject, mass: Float, friction: Float, velocity: Vec4, angularVelocity: Vec4, breakable: Bool) {
 		var ar = object.data.geom.positions;
 		var scalePos = object.data.scalePos;
 		// Create vertices mark
@@ -153,7 +154,7 @@ class ConvexBreaker {
 		var verts = new Array<Vec4>();
 		var map = new Map<Int, Int>();
 		var i = 0;
-		function orderVert(fi:Int):Int {
+		function orderVert(fi: Int): Int {
 			var val = map.get(fi);
 			if (val == null) {
 				verts.push(vertices[fi]);
@@ -182,8 +183,8 @@ class ConvexBreaker {
 
 	// maxRadialIterations Iterations for radial cuts
 	// maxRandomIterations Max random iterations for not-radial cuts
-	public function subdivideByImpact(object:MeshObject, pointOfImpact:Vec4, normal:Vec4, maxRadialIterations:Int, maxRandomIterations:Int):Array<MeshObject> {
-		var debris:Array<MeshObject> = [];
+	public function subdivideByImpact(object: MeshObject, pointOfImpact: Vec4, normal: Vec4, maxRadialIterations: Int, maxRandomIterations: Int): Array<MeshObject> {
+		var debris: Array<MeshObject> = [];
 
 		tempVec4.addvecs(pointOfImpact, normal);
 		tempPlane.setFromCoplanarPoints(pointOfImpact, object.transform.loc, tempVec4);
@@ -191,13 +192,13 @@ class ConvexBreaker {
 		var maxTotalIterations = maxRandomIterations + maxRadialIterations;
 		var scope = this;
 
-		function subdivideRadial(subObject:MeshObject, startAngle:Float, endAngle:Float, numIterations:Int) {
+		function subdivideRadial(subObject: MeshObject, startAngle: Float, endAngle: Float, numIterations: Int) {
 
 			if (Math.random() < numIterations * 0.05 || numIterations > maxTotalIterations) {
 				debris.push(subObject);
 				return;
 			}
-			
+
 			var angle = Math.PI;
 			if (numIterations == 0) {
 				tempPlane2.normal.setFrom(tempPlane.normal);
@@ -237,7 +238,7 @@ class ConvexBreaker {
 		return debris;
 	}
 
-	function transformFreeVector(v:Vec4, m:Mat4):Vec4 {
+	function transformFreeVector(v: Vec4, m: Mat4): Vec4 {
 		// Vector interpreted as a free vector
 		// Mat4 orthogonal matrix (matrix without scale)
 		var x = v.x, y = v.y, z = v.z;
@@ -247,7 +248,7 @@ class ConvexBreaker {
 		return v;
 	}
 
-	function transformFreeVectorInverse(v:Vec4, m:Mat4):Vec4 {
+	function transformFreeVectorInverse(v: Vec4, m: Mat4): Vec4 {
 		// Vector interpreted as a free vector
 		// Mat4 orthogonal matrix (matrix without scale)
 		var x = v.x, y = v.y, z = v.z;
@@ -257,7 +258,7 @@ class ConvexBreaker {
 		return v;
 	}
 
-	function transformTiedVectorInverse(v:Vec4, m:Mat4):Vec4 {
+	function transformTiedVectorInverse(v: Vec4, m: Mat4): Vec4 {
 		// Vector interpreted as a tied (ordinary) vector
 		// Mat4 orthogonal matrix (matrix without scale)
 		var x = v.x, y = v.y, z = v.z;
@@ -267,7 +268,7 @@ class ConvexBreaker {
 		return v;
 	};
 
-	function transformPlaneToLocalSpace(plane:Plane, m:Mat4, resultPlane:Plane) {
+	function transformPlaneToLocalSpace(plane: Plane, m: Mat4, resultPlane: Plane) {
 		resultPlane.normal.setFrom(plane.normal);
 		resultPlane.constant = plane.constant;
 
@@ -283,10 +284,10 @@ class ConvexBreaker {
 	// object2 can be null if the plane doesn't cut the object
 	// object1 can be null only in case of error
 	// Returned value is number of pieces, 0 for error
-	function cutByPlane(object:MeshObject, plane:Plane, output:CutResult):Int {
+	function cutByPlane(object: MeshObject, plane: Plane, output: CutResult): Int {
 		var userData = userDataMap.get(object);
-		var points:Array<Vec4> = userData.vertices;
-		var faces:Array<Face3> = userData.faces;
+		var points: Array<Vec4> = userData.vertices;
+		var faces: Array<Face3> = userData.faces;
 
 		var numPoints = points.length;
 		var points1 = [];
@@ -484,7 +485,7 @@ class ConvexBreaker {
 	}
 
 	static var meshIndex = 0;
-	function makeMeshData(points:Array<Vec4>) {
+	function makeMeshData(points: Array<Vec4>): MeshData {
 		while (points.length > 50) points.pop();
 		var cm = new ConvexHull(points);
 
@@ -507,9 +508,9 @@ class ConvexBreaker {
 			if (az > maxdim) maxdim = az;
 		}
 		maxdim *= 2;
-		
+
 		var ind = new Array<Int>();
-		function addFlatNormal(normal:Vec4, fi:Int) {
+		function addFlatNormal(normal: Vec4, fi: Int) {
 			if (na[fi * 3] != 0.0 || na[fi * 3 + 1] != 0.0 || na[fi * 3 + 2] != 0.0) {
 				pa.push(pa[fi * 3    ]);
 				pa.push(pa[fi * 3 + 1]);
@@ -548,12 +549,12 @@ class ConvexBreaker {
 		}
 		var inda = new kha.arrays.Uint32Array(ind.length);
 		for (i in 0...ind.length) inda.set(i, ind[i]);
-		
-		var pos:TVertexArray = { attrib: "pos", values: paa };
-		var nor:TVertexArray = { attrib: "nor", values: naa };
-		var indices:TIndexArray = { material: 0, values: inda };
 
-		var rawmesh:TMeshData = { 
+		var pos: TVertexArray = { attrib: "pos", values: paa };
+		var nor: TVertexArray = { attrib: "nor", values: naa };
+		var indices: TIndexArray = { material: 0, values: inda };
+
+		var rawmesh: TMeshData = { 
 			name: "TempMesh" + (meshIndex++),
 			vertex_arrays: [pos, nor],
 			index_arrays: [indices],
@@ -561,57 +562,61 @@ class ConvexBreaker {
 		};
 
 		// Synchronous on Krom
-		var md = new MeshData(rawmesh, function(d:MeshData) {});
+		var md = new MeshData(rawmesh, function(d: MeshData) {});
 		md.geom.calculateAABB();
 		return md;
 	}
 }
 
 class UserData {
-	public var mass:Float;
-	public var friction:Float;
-	public var velocity:Vec4;
-	public var angularVelocity:Vec4;
-	public var breakable:Bool;
 
-	public var vertices:Array<Vec4>;
-	public var faces:Array<Face3>;
+	public var mass: Float;
+	public var friction: Float;
+	public var velocity: Vec4;
+	public var angularVelocity: Vec4;
+	public var breakable: Bool;
 
-	public function new() { }
+	public var vertices: Array<Vec4>;
+	public var faces: Array<Face3>;
+
+	public function new() {}
 }
 
 class CutResult {
-	public var object1:MeshObject = null;
-	public var object2:MeshObject = null;
-	public function new() { }
+
+	public var object1: MeshObject = null;
+	public var object2: MeshObject = null;
+	public function new() {}
 }
 
 class Line3 {
-	public var start:Vec4;
-	public var end:Vec4;
+
+	public var start: Vec4;
+	public var end: Vec4;
 
 	public function new() {
 		start = new Vec4();
 		end = new Vec4();
 	}
 
-	public function delta(result:Vec4) {
+	public function delta(result: Vec4): Vec4 {
 		result.subvecs(end, start);
 		return result;
 	}
 }
 
 class Plane {
+
 	public var normal = new Vec4(1.0, 0.0, 0.0);
 	public var constant = 0.0;
 
-	public function new() { }
+	public function new() {}
 
-	public function distanceToPoint(point:Vec4):Float {
+	public function distanceToPoint(point: Vec4): Float {
 		return normal.dot(point) + constant;
 	}
 
-	public function setFromCoplanarPoints(a:Vec4, b:Vec4, c:Vec4) {
+	public function setFromCoplanarPoints(a: Vec4, b: Vec4, c: Vec4): Plane {
 		var v1 = new Vec4();
 		var v2 = new Vec4();
 		var normal = v1.subvecs(c, b).cross(v2.subvecs(a, b)).normalize();
@@ -619,17 +624,17 @@ class Plane {
 		return this;
 	}
 
-	public function set(normal:Vec4, point:Vec4):Plane {
+	public function set(normal: Vec4, point: Vec4): Plane {
 		this.normal.setFrom(normal);
 		constant = -point.dot(this.normal);
 		return this;
 	}
 
-	public function coplanarPoint(result:Vec4) {
+	public function coplanarPoint(result: Vec4): Vec4 {
 		return result.setFrom(normal).mult(-constant);
 	}
 
-	public function intersectLine(line:Line3):Vec4 {
+	public function intersectLine(line: Line3): Vec4 {
 		var v1 = new Vec4();
 		var result = new Vec4();
 		var direction = line.delta(v1);
@@ -658,7 +663,7 @@ class ConvexHull {
 	public var face3s = new Array<Face3>();
 	public var vertices = new Array<Vec4>();
 
-	public function new(vertices:Array<Vec4>) {
+	public function new(vertices: Array<Vec4>) {
 
 		for (i in 3...vertices.length) addPoint(i, vertices);
 
@@ -702,7 +707,7 @@ class ConvexHull {
 		}
 	}
 
-	function addPoint(vertexId:Int, vertices:Array<Vec4>) {
+	function addPoint(vertexId: Int, vertices: Array<Vec4>) {
 		var vertex = vertices[vertexId].clone();
 
 		var mag = vertex.length();
@@ -710,7 +715,7 @@ class ConvexHull {
 		vertex.y += mag * randomOffset();
 		vertex.z += mag * randomOffset();
 
-		var hole:Array<Array<Int>> = [];
+		var hole: Array<Array<Int>> = [];
 		var f = 0;
 		while (f < faces.length) {
 			var face = faces[f];
@@ -749,7 +754,7 @@ class ConvexHull {
 	}
 
 	// Whether the face is visible from the vertex
-	function visible(face:Array<Int>, vertex:Vec4, vertices:Array<Vec4>) {
+	function visible(face: Array<Int>, vertex: Vec4, vertices: Array<Vec4>): Bool {
 		var va = vertices[face[0]];
 		var vb = vertices[face[1]];
 		var vc = vertices[face[2]];
@@ -758,7 +763,7 @@ class ConvexHull {
 		return n.dot(vertex) >= dist;
 	}
 
-	function normal(va:Vec4, vb:Vec4, vc:Vec4) {
+	function normal(va: Vec4, vb: Vec4, vc: Vec4): Vec4 {
 		var cb = new Vec4();
 		var ab = new Vec4();
 		cb.subvecs(vc, vb);
@@ -768,23 +773,23 @@ class ConvexHull {
 		return cb;
 	}
 
-	function equalEdge(ea:Array<Int>, eb:Array<Int>) {
+	function equalEdge(ea: Array<Int>, eb: Array<Int>): Bool {
 		return ea[0] == eb[1] && ea[1] == eb[0];
 	}
 
-	function randomOffset() {
+	function randomOffset(): Float {
 		return (Math.random() - 0.5) * 2 * 1e-6;
 	}
 }
 
 class Face3 {
 
-	public var a:Int;
-	public var b:Int;
-	public var c:Int;
-	public var normal:Vec4;
+	public var a: Int;
+	public var b: Int;
+	public var c: Int;
+	public var normal: Vec4;
 
-	public function new(a:Int, b:Int, c:Int) {
+	public function new(a: Int, b: Int, c: Int) {
 		this.a = a;
 		this.b = b;
 		this.c = c;

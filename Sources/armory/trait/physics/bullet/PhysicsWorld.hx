@@ -9,10 +9,11 @@ import iron.math.RayCaster;
 import iron.data.SceneFormat;
 
 class Hit {
-	public var rb:RigidBody;
-	public var pos:Vec4;
-	public var normal:Vec4;
-	public function new(rb:RigidBody, pos:Vec4, normal:Vec4){
+
+	public var rb: RigidBody;
+	public var pos: Vec4;
+	public var normal: Vec4;
+	public function new(rb: RigidBody, pos: Vec4, normal: Vec4){
 		this.rb = rb;
 		this.pos = pos;
 		this.normal = normal;
@@ -20,14 +21,15 @@ class Hit {
 }
 
 class ContactPair {
-	public var a:Int;
-	public var b:Int;
-	public var posA:Vec4;
-	public var posB:Vec4;
-	public var normOnB:Vec4;
-	public var impulse:Float;
-	public var distance:Float;
-	public function new(a:Int, b:Int) {
+
+	public var a: Int;
+	public var b: Int;
+	public var posA: Vec4;
+	public var posB: Vec4;
+	public var normOnB: Vec4;
+	public var impulse: Float;
+	public var distance: Float;
+	public function new(a: Int, b: Int) {
 		this.a = a;
 		this.b = b;
 	}
@@ -35,31 +37,31 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
-	public static var active:PhysicsWorld = null;
+	public static var active: PhysicsWorld = null;
 	static var sceneRemoved = false;
 
 	#if arm_physics_soft
-	public var world:bullet.Bt.SoftRigidDynamicsWorld;
+	public var world: bullet.Bt.SoftRigidDynamicsWorld;
 	#else
-	public var world:bullet.Bt.DiscreteDynamicsWorld;
+	public var world: bullet.Bt.DiscreteDynamicsWorld;
 	#end
 
-	var dispatcher:bullet.Bt.CollisionDispatcher;
+	var dispatcher: bullet.Bt.CollisionDispatcher;
 	var gimpactRegistered = false;
-	var contacts:Array<ContactPair>;
-	var preUpdates:Array<Void->Void> = null;
-	public var rbMap:Map<Int, RigidBody>;
+	var contacts: Array<ContactPair>;
+	var preUpdates: Array<Void->Void> = null;
+	public var rbMap: Map<Int, RigidBody>;
 	public var timeScale = 1.0;
 	var timeStep = 1 / 60;
 	var maxSteps = 1;
 	public var solverIterations = 10;
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
-	var pairCache:Bool = false;
+	var pairCache: Bool = false;
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3 = null;
-	static var vec2:bullet.Bt.Vector3 = null;
+	static var vec1: bullet.Bt.Vector3 = null;
+	static var vec2: bullet.Bt.Vector3 = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
@@ -87,8 +89,7 @@ class PhysicsWorld extends Trait {
 		if (active == null) {
 			createPhysics();
 		}
-		// Scene switch
-		else {
+		else { // Scene switch
 			world = active.world;
 			dispatcher = active.dispatcher;
 			gimpactRegistered = active.gimpactRegistered;
@@ -101,7 +102,7 @@ class PhysicsWorld extends Trait {
 		// Ensure physics are updated first in the lateUpdate list
 		_lateUpdate = [lateUpdate];
 		@:privateAccess iron.App.traitLateUpdates.insert(0, lateUpdate);
-		
+
 		iron.Scene.active.notifyOnRemove(function() {
 			sceneRemoved = true;
 		});
@@ -119,7 +120,7 @@ class PhysicsWorld extends Trait {
 #else
 		var collisionConfiguration = new bullet.Bt.DefaultCollisionConfiguration();
 #end
-		
+
 		dispatcher = new bullet.Bt.CollisionDispatcher(collisionConfiguration);
 		var solver = new bullet.Bt.SequentialImpulseConstraintSolver();
 
@@ -144,12 +145,12 @@ class PhysicsWorld extends Trait {
 		setGravity(gravity);
 	}
 
-	public function setGravity(v:Vec4) {
+	public function setGravity(v: Vec4) {
 		vec1.setValue(v.x, v.y, v.z);
 		world.setGravity(vec1);
 	}
 
-	public function addRigidBody(body:RigidBody) {
+	public function addRigidBody(body: RigidBody) {
 		#if js
 		world.addRigidBodyToGroup(body.body, body.group, body.mask);
 		#else
@@ -158,7 +159,7 @@ class PhysicsWorld extends Trait {
 		rbMap.set(body.id, body);
 	}
 
-	public function removeRigidBody(body:RigidBody) {
+	public function removeRigidBody(body: RigidBody) {
 		if (body.destroyed) return;
 		body.destroyed = true;
 		if (world != null) world.removeRigidBody(body.body);
@@ -189,14 +190,13 @@ class PhysicsWorld extends Trait {
 	// }
 
 	/**
-	 * Used to get intersecting rigid bodies with the passed in RigidBody as reference. Often used when checking for object collisions.
-	 *
-	 * @param	body The passed in RigidBody to be checked for intersecting rigid bodies.
-	 * @return Array<RigidBody> or null.
-	 */
-	public function getContacts(body:RigidBody):Array<RigidBody> {
+	   Used to get intersecting rigid bodies with the passed in RigidBody as reference. Often used when checking for object collisions.
+	   @param	body The passed in RigidBody to be checked for intersecting rigid bodies.
+	   @return Array<RigidBody> or null.
+	**/
+	public function getContacts(body: RigidBody): Array<RigidBody> {
 		if (contacts.length == 0) return null;
-		var res:Array<RigidBody> = [];
+		var res: Array<RigidBody> = [];
 		for (i in 0...contacts.length) {
 			var c = contacts[i];
 			var rb = null;
@@ -206,7 +206,7 @@ class PhysicsWorld extends Trait {
 			else if (c.b == untyped body.body.userIndex) rb = rbMap.get(c.a);
 
 			#else
-			var ob:bullet.Bt.CollisionObject = body.body;
+			var ob: bullet.Bt.CollisionObject = body.body;
 			if (c.a == ob.getUserIndex()) rb = rbMap.get(c.b);
 			else if (c.b == ob.getUserIndex()) rb = rbMap.get(c.a);
 			#end
@@ -216,28 +216,28 @@ class PhysicsWorld extends Trait {
 		return res;
 	}
 
-	public function getContactPairs(body:RigidBody):Array<ContactPair> {
+	public function getContactPairs(body: RigidBody): Array<ContactPair> {
 		if (contacts.length == 0) return null;
-		var res:Array<ContactPair> = [];
+		var res: Array<ContactPair> = [];
 		for (i in 0...contacts.length) {
 			var c = contacts[i];
 			#if js
-			
+
 			if (c.a == untyped body.body.userIndex) res.push(c);
 			else if (c.b == untyped body.body.userIndex) res.push(c);
-			
+
 			#else
-			
-			var ob:bullet.Bt.CollisionObject = body.body;
+
+			var ob: bullet.Bt.CollisionObject = body.body;
 			if (c.a == ob.getUserIndex()) res.push(c);
 			else if (c.b == ob.getUserIndex()) res.push(c);
-			
+
 			#end
 		}
 		return res;
 	}
-	
-	public function findBody(id:Int):RigidBody{
+
+	public function findBody(id: Int): RigidBody{
 		var rb = rbMap.get(id);
 		return rb;
 	}
@@ -265,7 +265,7 @@ class PhysicsWorld extends Trait {
 	function updateContacts() {
 		contacts = [];
 
-		var disp:bullet.Bt.Dispatcher = dispatcher;
+		var disp: bullet.Bt.Dispatcher = dispatcher;
 		var numManifolds = disp.getNumManifolds();
 
 		for (i in 0...numManifolds) {
@@ -274,16 +274,16 @@ class PhysicsWorld extends Trait {
 			var body0 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody0());
 			var body1 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody1());
 			#else
-			var body0:bullet.Bt.CollisionObject = contactManifold.getBody0();
-			var body1:bullet.Bt.CollisionObject = contactManifold.getBody1();
+			var body0: bullet.Bt.CollisionObject = contactManifold.getBody0();
+			var body1: bullet.Bt.CollisionObject = contactManifold.getBody1();
 			#end
 
 			var numContacts = contactManifold.getNumContacts();
-			var pt:bullet.Bt.ManifoldPoint = null;
-			var posA:bullet.Bt.Vector3 = null;
-			var posB:bullet.Bt.Vector3 = null;
-			var nor:bullet.Bt.Vector3 = null;
-			var cp:ContactPair = null;
+			var pt: bullet.Bt.ManifoldPoint = null;
+			var posA: bullet.Bt.Vector3 = null;
+			var posB: bullet.Bt.Vector3 = null;
+			var nor: bullet.Bt.Vector3 = null;
+			var cp: ContactPair = null;
 			for (j in 0...numContacts) {
 				pt = contactManifold.getContactPoint(j);
 				#if js
@@ -307,7 +307,7 @@ class PhysicsWorld extends Trait {
 		}
 	}
 
-	public function pickClosest(inputX:Float, inputY:Float):RigidBody {
+	public function pickClosest(inputX: Float, inputY: Float): RigidBody {
 		var camera = iron.Scene.active.camera;
 		var start = new Vec4();
 		var end = new Vec4();
@@ -317,7 +317,7 @@ class PhysicsWorld extends Trait {
 		return rb;
 	}
 
-	public function rayCast(from:Vec4, to:Vec4, group:Int=0x00000001,mask=0xFFFFFFFF):Hit {
+	public function rayCast(from: Vec4, to: Vec4, group: Int = 0x00000001, mask = 0xFFFFFFFF): Hit {
 		var rayFrom = vec1;
 		var rayTo = vec2;
 		rayFrom.setValue(from.x, from.y, from.z);
@@ -331,13 +331,13 @@ class PhysicsWorld extends Trait {
 		rayCallback.m_collisionFilterGroup = group;
 		rayCallback.m_collisionFilterMask = mask;
 		#end
-		var worldDyn:bullet.Bt.DynamicsWorld = world;
-		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
+		var worldDyn: bullet.Bt.DynamicsWorld = world;
+		var worldCol: bullet.Bt.CollisionWorld = worldDyn;
 		worldCol.rayTest(rayFrom, rayTo, rayCallback);
-		var rb:RigidBody = null;
-		var hitInfo:Hit = null;
+		var rb: RigidBody = null;
+		var hitInfo: Hit = null;
 
-		var rc:bullet.Bt.RayResultCallback = rayCallback;
+		var rc: bullet.Bt.RayResultCallback = rayCallback;
 		if (rc.hasHit()) {
 			#if js
 			var co = rayCallback.get_m_collisionObject();
@@ -347,14 +347,14 @@ class PhysicsWorld extends Trait {
 			var norm = rayCallback.get_m_hitNormalWorld();
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(untyped body.userIndex);
-			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
+			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
 			#elseif cpp
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
-			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
+			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
 			#end
 		}
 
@@ -367,12 +367,12 @@ class PhysicsWorld extends Trait {
 		return hitInfo;
 	}
 
-	public function notifyOnPreUpdate(f:Void->Void) {
+	public function notifyOnPreUpdate(f: Void->Void) {
 		if (preUpdates == null) preUpdates = [];
 		preUpdates.push(f);
 	}
 
-	public function removePreUpdate(f:Void->Void) {
+	public function removePreUpdate(f: Void->Void) {
 		preUpdates.remove(f);
 	}
 }

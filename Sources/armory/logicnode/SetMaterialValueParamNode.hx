@@ -1,6 +1,5 @@
 package armory.logicnode;
 
-import iron.math.Vec4;
 import iron.data.MaterialData;
 import iron.object.Object;
 
@@ -9,7 +8,7 @@ class SetMaterialValueParamNode extends LogicNode {
 	static var registered = false;
 	static var map = new Map<MaterialData, Map<String, Null<kha.FastFloat>>>();
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 		if (!registered) {
 			registered = true;
@@ -17,7 +16,7 @@ class SetMaterialValueParamNode extends LogicNode {
 		}
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		var mat = inputs[1].get();
 		if (mat == null) return;
 		var entry = map.get(mat);
@@ -29,7 +28,7 @@ class SetMaterialValueParamNode extends LogicNode {
 		runOutput(0);
 	}
 
-	static function floatLink(object:Object, mat:MaterialData, link:String):Null<kha.FastFloat> {
+	static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 		if (mat == null) return null;
 		var entry = map.get(mat);
 		if (entry == null) return null;

@@ -1,14 +1,12 @@
 package armory.logicnode;
 
-import iron.Scene;
-
 class SceneRootNode extends LogicNode {
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic { 
+	override function get(from: Int): Dynamic {
 		return iron.Scene.active.root;
 	}
 }

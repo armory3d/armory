@@ -11,10 +11,10 @@ class Navigation extends iron.Trait {
 	public function new() { super(); }
 #else
 
-	public static var active:Navigation = null;
-	
-	public var navMeshes:Array<NavMesh> = [];
-	public var recast:Recast;
+	public static var active: Navigation = null;
+
+	public var navMeshes: Array<NavMesh> = [];
+	public var recast: Recast;
 
 	public function new() {
 		super();

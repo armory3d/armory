@@ -5,12 +5,12 @@ import armory.trait.internal.CanvasScript;
 
 class CanvasGetScaleNode extends LogicNode {
 
-	var canvas:CanvasScript;
-	var element:String;
-	var width:Int;
-	var height:Int;
+	var canvas: CanvasScript;
+	var element: String;
+	var width: Int;
+	var height: Int;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
@@ -24,7 +24,7 @@ class CanvasGetScaleNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function run(from:Int) {
+	override function run(from: Int) {
 		element = inputs[1].get();
 		canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
@@ -33,7 +33,7 @@ class CanvasGetScaleNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 		update();
 	}
-    override function get(from:Int):Dynamic {
+    override function get(from: Int): Dynamic {
 		if (from == 1) return height;
 		else if (from == 2) return width;
 		else return 0;

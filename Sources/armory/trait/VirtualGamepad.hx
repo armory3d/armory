@@ -8,7 +8,7 @@ import iron.math.Vec2;
 @:access(iron.system.Gamepad)
 class VirtualGamepad extends Trait {
 
-	var gamepad:Gamepad;
+	var gamepad: Gamepad;
 
 	var leftPadX = 0;
 	var leftPadY = 0;
@@ -121,9 +121,9 @@ class VirtualGamepad extends Trait {
 		rightStickYLast = rightStickY;
 	}
 
-	function render2D(g:kha.graphics2.Graphics) {
+	function render2D(g: kha.graphics2.Graphics) {
 		var r = radius;
-		
+
 		g.color = 0xffaaaaaa;
 
 		kha.graphics2.GraphicsExtension.fillCircle(g, leftPadX, leftPadY, r);

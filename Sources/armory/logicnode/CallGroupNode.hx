@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class CallGroupNode extends LogicNode {
 
-	public var property0:String;
-	var callTree:LogicTree = null;
+	public var property0: String;
+	var callTree: LogicTree = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
 	@:access(iron.Trait)
-	override function run(from:Int) {
+	override function run(from: Int) {
 
 		if (callTree == null) {
 			var classType = Type.resolveClass(property0);

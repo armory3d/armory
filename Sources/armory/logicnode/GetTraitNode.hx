@@ -4,15 +4,15 @@ import iron.object.Object;
 
 class GetTraitNode extends LogicNode {
 
-	var cname:Class<iron.Trait> = null;
+	var cname: Class<iron.Trait> = null;
 
-	public function new(tree:LogicTree) {
+	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic {
-		var object:Object = inputs[0].get();
-		var name:String = inputs[1].get();
+	override function get(from: Int): Dynamic {
+		var object: Object = inputs[0].get();
+		var name: String = inputs[1].get();
 
 		if (object == null) return null;
 
