@@ -6,5 +6,5 @@ import haxe.macro.ExprTools;
 
 class Macro {
 
-	macro public static function prop() {  }
+	macro public static function prop() { return null; }
 }
