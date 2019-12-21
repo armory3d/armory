@@ -1593,8 +1593,8 @@ def make_texture(image_node, tex_name, matname=None):
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
 
-            filepath = os.path.join(unpack_path, image.name + ".png")
-            arm.utils.convert_image(image, filepath, "PNG")
+            filepath = os.path.join(unpack_path, image.name + ".jpg")
+            arm.utils.convert_image(image, filepath, "JPEG")
 
         else:
             arm.log.warn(matname + '/' + image.name + ' - invalid file path')
