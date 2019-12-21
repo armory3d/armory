@@ -67,7 +67,7 @@ def get_fp():
         return os.path.sep.join(s)
 
 def get_fp_build():
-    return get_fp() + '/' + build_dir()
+    return os.path.join(get_fp(), build_dir())
 
 def get_os():
     s = platform.system()
@@ -409,7 +409,8 @@ def asset_name(bdata):
     return s
 
 def asset_path(s):
-    return s[2:] if s[:2] == '//' else s # Remove leading '//'
+    """Remove leading '//'"""
+    return s[2:] if s[:2] == '//' else s
 
 def extract_filename(s):
     return os.path.basename(asset_path(s))
