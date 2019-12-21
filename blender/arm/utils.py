@@ -230,20 +230,27 @@ def fetch_script_props(file):
     with open(file) as f:
         name = file.rsplit('.')[0]
         if 'Sources' in name:
-            name = name[name.index('Sources')+8:]
+            name = name[name.index('Sources') + 8:]
         if '/' in name:
-            name = name.replace('/','.')
+            name = name.replace('/', '.')
         if '\\' in file:
-            name = name.replace('\\','.')
+            name = name.replace('\\', '.')
         script_props[name] = []
         script_props_defaults[name] = []
         lines = f.read().splitlines()
         read_prop = False
-        for l in lines:
+        for line in lines:
             if not read_prop:
-                read_prop = l.lstrip().startswith('@prop')
-            if read_prop and 'var ' in l:
-                p = l.split('var ')[1]
+                read_prop = line.lstrip().startswith('@prop')
+                continue
+
+            if read_prop:
+                if 'var ' in line:
+                    p = line.split('var ')[1]
+                elif 'final ' in line:
+                    p = line.split('final ')[1]
+                else:
+                    break
 
                 valid_prop = False
                 # Has type
