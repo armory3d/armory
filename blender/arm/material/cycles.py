@@ -1587,6 +1587,15 @@ def make_texture(image_node, tex_name, matname=None):
             if not has_ext:
                 # Raw bytes, write converted .jpg to /unpacked
                 filepath += '.raw'
+
+        elif image.source == "GENERATED":
+            unpack_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'unpacked')
+            if not os.path.exists(unpack_path):
+                os.makedirs(unpack_path)
+
+            filepath = os.path.join(unpack_path, image.name + ".png")
+            arm.utils.convert_image(image, filepath, "PNG")
+
         else:
             arm.log.warn(matname + '/' + image.name + ' - invalid file path')
             return None
