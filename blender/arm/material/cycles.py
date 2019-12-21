@@ -1,13 +1,13 @@
 #
 # This module builds upon Cycles nodes work licensed as
 # Copyright 2011-2013 Blender Foundation
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         parents = []
         normal_parsed = False
         curshader = frag
-        
+
         out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission = parse_shader_input(node.inputs[0])
         if parse_surface:
             frag.write('basecol = {0};'.format(out_basecol))
@@ -166,7 +166,7 @@ def parse_shader(node, socket):
     out_emission = '0.0'
 
     if node.type == 'GROUP':
-        if node.node_tree.name.startswith('Armory PBR'):     
+        if node.node_tree.name.startswith('Armory PBR'):
             if parse_surface:
                 # Base color
                 out_basecol = parse_vector_input(node.inputs[0])
@@ -268,7 +268,7 @@ def parse_shader(node, socket):
             out_metallic = '1.0'
 
     elif node.type == 'AMBIENT_OCCLUSION':
-        if parse_surface:    
+        if parse_surface:
             # Single channel
             out_occlusion = parse_vector_input(node.inputs[0]) + '.r'
 
@@ -357,7 +357,7 @@ def parse_vector_input(inp):
         if l.from_node.type == 'REROUTE':
             return parse_vector_input(l.from_node.inputs[0])
         res_var = write_result(l)
-        st = l.from_socket.type        
+        st = l.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
             return res_var
         else: # VALUE
@@ -912,7 +912,7 @@ def parse_vector(node, socket):
         # if node.rotation[0] != 0.0:
         #     a = node.rotation[0]
         #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        
+
         if location[0] != 0.0 or location[1] != 0.0 or location[2] != 0.0:
             out = '({0} + vec3({1}, {2}, {3}))'.format(out, location[0], location[1], location[2])
         # use Extension parameter from the Texture node instead
@@ -1011,7 +1011,7 @@ def parse_value_input(inp):
             return parse_value_input(l.from_node.inputs[0])
 
         res_var = write_result(l)
-        st = l.from_socket.type        
+        st = l.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
             return '{0}.x'.format(res_var)
         else: # VALUE
@@ -1572,18 +1572,18 @@ def make_texture(image_node, tex_name, matname=None):
     tex = {}
     tex['name'] = tex_name
     image = image_node.image
-    if matname == None:
+    if matname is None:
         matname = mat_state.material.name
 
-    if image == None:
+    if image is None:
         return None
 
     # Get filepath
     filepath = image.filepath
     if filepath == '':
-        if image.packed_file != None:
+        if image.packed_file is not None:
             filepath = './' + image.name
-            has_ext = filepath.endswith('.jpg') or filepath.endswith('.png') or filepath.endswith('.hdr')
+            has_ext = filepath.endswith(('.jpg', '.png', '.hdr'))
             if not has_ext:
                 # Raw bytes, write converted .jpg to /unpacked
                 filepath += '.raw'
@@ -1596,24 +1596,24 @@ def make_texture(image_node, tex_name, matname=None):
     texfile = arm.utils.extract_filename(filepath)
     tex['file'] = arm.utils.safestr(texfile)
     s = tex['file'].rsplit('.', 1)
-    
+
     if len(s) == 1:
         arm.log.warn(matname + '/' + image.name + ' - file extension required for image name')
         return None
 
     ext = s[1].lower()
-    do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
+    do_convert = ext not in ('jpg', 'png', 'hdr', 'mp4') # Convert image
     if do_convert:
-        new_ext = 'png' if (ext == 'tga' or ext == 'dds') else 'jpg'
+        new_ext = 'png' if (ext in ('tga', 'dds')) else 'jpg'
         tex['file'] = tex['file'].rsplit('.', 1)[0] + '.' + new_ext
 
-    if image.packed_file != None or not is_ascii(texfile):
+    if image.packed_file is not None or not is_ascii(texfile):
         # Extract packed data / copy non-ascii texture
-        unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+        unpack_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'unpacked')
         if not os.path.exists(unpack_path):
             os.makedirs(unpack_path)
-        unpack_filepath = unpack_path + '/' + tex['file']
-        
+        unpack_filepath = os.path.join(unpack_path, tex['file'])
+
         if do_convert:
             if not os.path.isfile(unpack_filepath):
                 fmt = 'PNG' if new_ext == 'png' else 'JPEG'
@@ -1621,7 +1621,7 @@ def make_texture(image_node, tex_name, matname=None):
         else:
 
             # Write bytes if size is different or file does not exist yet
-            if image.packed_file != None:
+            if image.packed_file is not None:
                 if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != image.packed_file.size:
                     with open(unpack_filepath, 'wb') as f:
                         f.write(image.packed_file.data)
@@ -1638,10 +1638,10 @@ def make_texture(image_node, tex_name, matname=None):
             return None
 
         if do_convert:
-            unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+            unpack_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'unpacked')
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
-            converted_path = unpack_path + '/' + tex['file']
+            converted_path = os.path.join(unpack_path, tex['file'])
             # TODO: delete cache when file changes
             if not os.path.isfile(converted_path):
                 fmt = 'PNG' if new_ext == 'png' else 'JPEG'
@@ -1659,7 +1659,7 @@ def make_texture(image_node, tex_name, matname=None):
 
     # if image_format != 'RGBA32':
         # tex['format'] = image_format
-    
+
     interpolation = image_node.interpolation
     rpdat = arm.utils.get_rp()
     texfilter = rpdat.arm_texture_filter
@@ -1688,7 +1688,7 @@ def make_texture(image_node, tex_name, matname=None):
     if image_node.extension != 'REPEAT': # Extend or clip
         tex['u_addressing'] = 'clamp'
         tex['v_addressing'] = 'clamp'
-    
+
     if image.source == 'MOVIE':
         tex['source'] = 'movie'
         tex['min_filter'] = 'linear'
