@@ -42,7 +42,7 @@ def convert_image(image, path, file_format='JPEG'):
     orig_quality = ren.image_settings.quality
     orig_file_format = ren.image_settings.file_format
     orig_color_mode = ren.image_settings.color_mode
-    ren.image_settings.quality = 90
+    ren.image_settings.quality = get_texture_quality_percentage()
     ren.image_settings.file_format = file_format
     if file_format == 'PNG':
         ren.image_settings.color_mode = 'RGBA'
@@ -67,7 +67,7 @@ def get_fp():
         return os.path.sep.join(s)
 
 def get_fp_build():
-    return get_fp() + '/' + build_dir()
+    return os.path.join(get_fp(), build_dir())
 
 def get_os():
     s = platform.system()
@@ -416,7 +416,8 @@ def asset_name(bdata):
     return s
 
 def asset_path(s):
-    return s[2:] if s[:2] == '//' else s # Remove leading '//'
+    """Remove leading '//'"""
+    return s[2:] if s[:2] == '//' else s
 
 def extract_filename(s):
     return os.path.basename(asset_path(s))
@@ -425,6 +426,9 @@ def get_render_resolution(scene):
     render = scene.render
     scale = render.resolution_percentage / 100
     return int(render.resolution_x * scale), int(render.resolution_y * scale)
+
+def get_texture_quality_percentage() -> int:
+    return int(bpy.data.worlds["Arm"].arm_texture_quality * 100)
 
 def get_project_scene_name():
     return get_active_scene().name
