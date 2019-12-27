@@ -220,30 +220,49 @@ class DebugConsole extends Trait {
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
 
-						var loc = selectedObject.transform.loc;
+						var localPos = selectedObject.transform.loc;
+						var worldPos = selectedObject.transform.getWorldPosition();
 						var scale = selectedObject.transform.scale;
 						var rot = selectedObject.transform.rot.getEuler();
 						var dim = selectedObject.transform.dim;
 						rot.mult(180 / 3.141592);
 						var f = 0.0;
 
+						ui.text("Transforms");
+						ui.indent();
+
 						ui.row(row4);
-						ui.text("Location");
-
+						ui.text("World Loc");
+						// Read-only currently
+						ui.enabled = false;
 						h = Id.handle();
-						h.text = roundfp(loc.x) + "";
+						h.text = roundfp(worldPos.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
-						if (ui.changed) loc.x = f;
-
 						h = Id.handle();
-						h.text = roundfp(loc.y) + "";
+						h.text = roundfp(worldPos.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) loc.y = f;
+						h = Id.handle();
+						h.text = roundfp(worldPos.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						ui.enabled = true;
+
+						ui.row(row4);
+						ui.text("Local Loc");
 
 						h = Id.handle();
-						h.text = roundfp(loc.z) + "";
+						h.text = roundfp(localPos.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						if (ui.changed) localPos.x = f;
+
+						h = Id.handle();
+						h.text = roundfp(localPos.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) localPos.y = f;
+
+						h = Id.handle();
+						h.text = roundfp(localPos.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) loc.z = f;
+						if (ui.changed) localPos.z = f;
 
 						ui.row(row4);
 						ui.text("Rotation");
@@ -311,6 +330,7 @@ class DebugConsole extends Trait {
 						if (ui.changed) dim.z = f;
 
 						selectedObject.transform.dirty = true;
+						ui.unindent();
 
 						if (selectedObject.traits.length > 0) {
 							ui.text("Traits:");
