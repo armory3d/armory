@@ -144,35 +144,62 @@ class DebugConsole extends Trait {
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
 
-					var i = 0;
-					function drawList(h: zui.Zui.Handle, o: iron.object.Object) {
-						if (o.name.charAt(0) == ".") return; // Hidden
+					var lineCounter = 0;
+					function drawList(listHandle: zui.Zui.Handle, currentObject: iron.object.Object) {
+						if (currentObject.name.charAt(0) == ".") return; // Hidden
 						var b = false;
-						if (selectedObject == o) {
+
+						// Highlight every other line
+						if (lineCounter % 2 == 0) {
+							ui.g.color = ui.t.SEPARATOR_COL;
+							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
+							ui.g.color = 0xffffffff;
+						}
+
+						// Highlight selected line
+						if (currentObject == selectedObject) {
 							ui.g.color = 0xff205d9c;
 							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
 							ui.g.color = 0xffffffff;
 						}
-						if (o.children.length > 0) {
+
+						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
-							b = ui.panel(h.nest(i, {selected: true}), "", true);
-							ui.text(o.name);
+							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true);
+							ui.text(currentObject.name);
 						}
 						else {
 							ui._x += 18; // Sign offset
-							ui.text(o.name);
+
+							// Draw line that shows parent relations
+							ui.g.color = ui.t.ACCENT_COL;
+							ui.g.drawLine(ui._x - 16, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
+							ui.g.color = 0xffffffff;
+
+							ui.text(currentObject.name);
 							ui._x -= 18;
 						}
+
+						lineCounter++;
+						// Undo applied offset for row drawing caused by endElement() in Zui.hx
+						ui._y -= ui.ELEMENT_OFFSET();
+
 						if (ui.isReleased) {
-							selectObject(o);
+							selectObject(currentObject);
 						}
-						i++;
+
 						if (b) {
-							for (c in o.children) {
+							var currentY = ui._y;
+							for (child in currentObject.children) {
 								ui.indent();
-								drawList(h, c);
+								drawList(listHandle, child);
 								ui.unindent();
 							}
+
+							// Draw line that shows parent relations
+							ui.g.color = ui.t.ACCENT_COL;
+							ui.g.drawLine(ui._x + 14, currentY, ui._x + 14, ui._y - ui.ELEMENT_H() / 2);
+							ui.g.color = 0xffffffff;
 						}
 					}
 					for (c in iron.Scene.active.root.children) {
