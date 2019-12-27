@@ -334,9 +334,11 @@ class DebugConsole extends Trait {
 
 						if (selectedObject.traits.length > 0) {
 							ui.text("Traits:");
+							ui.indent();
 							for (t in selectedObject.traits) {
 								ui.text(Type.getClassName(Type.getClass(t)));
 							}
+							ui.unindent();
 						}
 
 						if (selectedObject.name == "Scene") {
