@@ -349,13 +349,16 @@ class DebugConsole extends Trait {
 						else if (Std.is(selectedObject, iron.object.LightObject)) {
 							selectedType = "(Light)";
 							var light = cast(selectedObject, iron.object.LightObject);
-							light.data.raw.strength = ui.slider(Id.handle({value: light.data.raw.strength / 10}), "Strength", 0.0, 5.0, true) * 10;
+							var lightHandle = Id.handle();
+							lightHandle.value = light.data.raw.strength / 10;
+							light.data.raw.strength = ui.slider(lightHandle, "Strength", 0.0, 5.0, true) * 10;
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";
 							var cam = cast(selectedObject, iron.object.CameraObject);
-							var fovHandle = Id.handle({value: Std.int(cam.data.raw.fov * 100) / 100});
-							cam.data.raw.fov = ui.slider(fovHandle, "FoV", 0.3, 2.0, true);
+							var fovHandle = Id.handle();
+							fovHandle.value = Std.int(cam.data.raw.fov * 100) / 100;
+							cam.data.raw.fov = ui.slider(fovHandle, "Field of View", 0.3, 2.0, true);
 							if (ui.changed) {
 								cam.buildProjection();
 							}
