@@ -1391,6 +1391,41 @@ class ArmoryExporter:
 
         self.output['probe_datas'].append(o)
 
+    def export_collection(self, collection):
+        """Exports a single collection."""
+        scene_objects = self.scene.collection.all_objects
+
+        out_collection = {}
+        out_collection['name'] = collection.name
+        out_collection['instance_offset'] = list(collection.instance_offset)
+        out_collection['object_refs'] = []
+
+        for bobject in collection.objects:
+
+            # Add unparented objects only, then instantiate full object
+            # child tree
+            if bobject.parent is None and bobject.arm_export:
+
+                # This object is controlled by proxy
+                has_proxy_user = False
+                for bo in bpy.data.objects:
+                    if bo.proxy == bobject:
+                        has_proxy_user = True
+                        break
+                if has_proxy_user:
+                    continue
+
+                # Add external linked objects
+                if bobject.name not in scene_objects and collection.library is not None:
+                    self.process_bobject(bobject)
+                    self.export_object(bobject, self.scene)
+                    out_collection['object_refs'].append(arm.utils.asset_name(bobject))
+                else:
+                    out_collection['object_refs'].append(bobject.name)
+
+        self.output['groups'].append(out_collection)
+
+
     def get_camera_clear_color(self):
         if self.scene.world is None:
             return [0.051, 0.051, 0.051, 1.0]
@@ -1958,28 +1993,8 @@ class ArmoryExporter:
             for collection in bpy.data.collections:
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
-                o = {}
-                o['name'] = collection.name
-                o['object_refs'] = []
-                # Add unparented objects only, then instantiate full object child tree
-                for bobject in collection.objects:
-                    if bobject.parent == None and bobject.arm_export:
-                        # This object is controlled by proxy
-                        has_proxy_user = False
-                        for bo in bpy.data.objects:
-                            if bo.proxy == bobject:
-                                has_proxy_user = True
-                                break
-                        if has_proxy_user:
-                            continue
-                        # Add external linked objects
-                        if bobject.name not in scene_objects and collection.library is not None:
-                            self.process_bobject(bobject)
-                            self.export_object(bobject, self.scene)
-                            o['object_refs'].append(arm.utils.asset_name(bobject))
-                        else:
-                            o['object_refs'].append(bobject.name)
-                self.output['groups'].append(o)
+
+                self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
