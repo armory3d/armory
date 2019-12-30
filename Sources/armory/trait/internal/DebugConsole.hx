@@ -144,35 +144,62 @@ class DebugConsole extends Trait {
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
 
-					var i = 0;
-					function drawList(h: zui.Zui.Handle, o: iron.object.Object) {
-						if (o.name.charAt(0) == ".") return; // Hidden
+					var lineCounter = 0;
+					function drawList(listHandle: zui.Zui.Handle, currentObject: iron.object.Object) {
+						if (currentObject.name.charAt(0) == ".") return; // Hidden
 						var b = false;
-						if (selectedObject == o) {
+
+						// Highlight every other line
+						if (lineCounter % 2 == 0) {
+							ui.g.color = ui.t.SEPARATOR_COL;
+							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
+							ui.g.color = 0xffffffff;
+						}
+
+						// Highlight selected line
+						if (currentObject == selectedObject) {
 							ui.g.color = 0xff205d9c;
 							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
 							ui.g.color = 0xffffffff;
 						}
-						if (o.children.length > 0) {
+
+						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
-							b = ui.panel(h.nest(i, {selected: true}), "", true);
-							ui.text(o.name);
+							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true);
+							ui.text(currentObject.name);
 						}
 						else {
 							ui._x += 18; // Sign offset
-							ui.text(o.name);
+
+							// Draw line that shows parent relations
+							ui.g.color = ui.t.ACCENT_COL;
+							ui.g.drawLine(ui._x - 16, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
+							ui.g.color = 0xffffffff;
+
+							ui.text(currentObject.name);
 							ui._x -= 18;
 						}
+
+						lineCounter++;
+						// Undo applied offset for row drawing caused by endElement() in Zui.hx
+						ui._y -= ui.ELEMENT_OFFSET();
+
 						if (ui.isReleased) {
-							selectObject(o);
+							selectObject(currentObject);
 						}
-						i++;
+
 						if (b) {
-							for (c in o.children) {
+							var currentY = ui._y;
+							for (child in currentObject.children) {
 								ui.indent();
-								drawList(h, c);
+								drawList(listHandle, child);
 								ui.unindent();
 							}
+
+							// Draw line that shows parent relations
+							ui.g.color = ui.t.ACCENT_COL;
+							ui.g.drawLine(ui._x + 14, currentY, ui._x + 14, ui._y - ui.ELEMENT_H() / 2);
+							ui.g.color = 0xffffffff;
 						}
 					}
 					for (c in iron.Scene.active.root.children) {
@@ -193,30 +220,49 @@ class DebugConsole extends Trait {
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
 
-						var loc = selectedObject.transform.loc;
+						var localPos = selectedObject.transform.loc;
+						var worldPos = selectedObject.transform.getWorldPosition();
 						var scale = selectedObject.transform.scale;
 						var rot = selectedObject.transform.rot.getEuler();
 						var dim = selectedObject.transform.dim;
 						rot.mult(180 / 3.141592);
 						var f = 0.0;
 
+						ui.text("Transforms");
+						ui.indent();
+
 						ui.row(row4);
-						ui.text("Location");
-
+						ui.text("World Loc");
+						// Read-only currently
+						ui.enabled = false;
 						h = Id.handle();
-						h.text = roundfp(loc.x) + "";
+						h.text = roundfp(worldPos.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
-						if (ui.changed) loc.x = f;
-
 						h = Id.handle();
-						h.text = roundfp(loc.y) + "";
+						h.text = roundfp(worldPos.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) loc.y = f;
+						h = Id.handle();
+						h.text = roundfp(worldPos.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						ui.enabled = true;
+
+						ui.row(row4);
+						ui.text("Local Loc");
 
 						h = Id.handle();
-						h.text = roundfp(loc.z) + "";
+						h.text = roundfp(localPos.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						if (ui.changed) localPos.x = f;
+
+						h = Id.handle();
+						h.text = roundfp(localPos.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) localPos.y = f;
+
+						h = Id.handle();
+						h.text = roundfp(localPos.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) loc.z = f;
+						if (ui.changed) localPos.z = f;
 
 						ui.row(row4);
 						ui.text("Rotation");
@@ -284,12 +330,15 @@ class DebugConsole extends Trait {
 						if (ui.changed) dim.z = f;
 
 						selectedObject.transform.dirty = true;
+						ui.unindent();
 
 						if (selectedObject.traits.length > 0) {
 							ui.text("Traits:");
+							ui.indent();
 							for (t in selectedObject.traits) {
 								ui.text(Type.getClassName(Type.getClass(t)));
 							}
+							ui.unindent();
 						}
 
 						if (selectedObject.name == "Scene") {
@@ -300,13 +349,16 @@ class DebugConsole extends Trait {
 						else if (Std.is(selectedObject, iron.object.LightObject)) {
 							selectedType = "(Light)";
 							var light = cast(selectedObject, iron.object.LightObject);
-							light.data.raw.strength = ui.slider(Id.handle({value: light.data.raw.strength / 10}), "Strength", 0.0, 5.0, true) * 10;
+							var lightHandle = Id.handle();
+							lightHandle.value = light.data.raw.strength / 10;
+							light.data.raw.strength = ui.slider(lightHandle, "Strength", 0.0, 5.0, true) * 10;
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";
 							var cam = cast(selectedObject, iron.object.CameraObject);
-							var fovHandle = Id.handle({value: Std.int(cam.data.raw.fov * 100) / 100});
-							cam.data.raw.fov = ui.slider(fovHandle, "FoV", 0.3, 2.0, true);
+							var fovHandle = Id.handle();
+							fovHandle.value = Std.int(cam.data.raw.fov * 100) / 100;
+							cam.data.raw.fov = ui.slider(fovHandle, "Field of View", 0.3, 2.0, true);
 							if (ui.changed) {
 								cam.buildProjection();
 							}
