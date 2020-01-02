@@ -7,6 +7,7 @@ import iron.object.CameraObject;
 import iron.object.MeshObject;
 import zui.Zui;
 import zui.Id;
+using armory.object.TransformExtension;
 #end
 
 #if arm_debug

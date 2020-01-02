@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.object.Object;
+using armory.object.TransformExtension;
 
 class VolumeTriggerNode extends LogicNode {
 
