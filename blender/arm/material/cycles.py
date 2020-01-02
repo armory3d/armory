@@ -1116,13 +1116,13 @@ def parse_value(node, socket):
             return '0.0'
 
     elif node.type == 'OBJECT_INFO':
-        if socket == node.outputs[1]: # Object Index
+        if socket == node.outputs[2]: # Object Index
             curshader.add_uniform('float objectInfoIndex', link='_objectInfoIndex')
             return 'objectInfoIndex'
-        elif socket == node.outputs[2]: # Material Index
+        elif socket == node.outputs[3]: # Material Index
             curshader.add_uniform('float objectInfoMaterialIndex', link='_objectInfoMaterialIndex')
             return 'objectInfoMaterialIndex'
-        elif socket == node.outputs[3]: # Random
+        elif socket == node.outputs[4]: # Random
             curshader.add_uniform('float objectInfoRandom', link='_objectInfoRandom')
             return 'objectInfoRandom'
 
