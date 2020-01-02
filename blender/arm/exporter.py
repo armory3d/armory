@@ -66,7 +66,7 @@ class ArmoryExporter:
     @staticmethod
     def get_bobject_type(bobject):
         if bobject.type == "MESH":
-            if len(bobject.data.polygons) != 0:
+            if bobject.data.polygons:
                 return NodeTypeMesh
         elif bobject.type == "FONT":
             return NodeTypeMesh
@@ -313,13 +313,22 @@ class ArmoryExporter:
             self.process_bone(subbobject)
 
     def process_bobject(self, bobject):
+        """Adds the given blender object to the bobjectArray dict and
+        stores its type and its name.
+
+        If an object is linked, the name of its library is appended
+        after an "_".
+        """
         if ArmoryExporter.export_all_flag or bobject.select:
             btype = ArmoryExporter.get_bobject_type(bobject)
 
-            if ArmoryExporter.option_mesh_only and btype != NodeTypeMesh:
+            if btype != NodeTypeMesh and ArmoryExporter.option_mesh_only:
                 return
 
-            self.bobjectArray[bobject] = {"objectType" : btype, "structName" : arm.utils.asset_name(bobject)}
+            self.bobjectArray[bobject] = {
+                "objectType": btype,
+                "structName": arm.utils.asset_name(bobject)
+            }
 
             if bobject.type == "ARMATURE":
                 skeleton = bobject.data
@@ -680,14 +689,14 @@ class ArmoryExporter:
                 #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
 
             elif type == NodeTypeLight:
-                if not objref in self.lightArray:
+                if objref not in self.lightArray:
                     self.lightArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.lightArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.lightArray[objref]["structName"]
 
             elif type == NodeTypeProbe:
-                if not objref in self.probeArray:
+                if objref not in self.probeArray:
                     self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.probeArray[objref]["objectTable"].append(bobject)
@@ -699,18 +708,18 @@ class ArmoryExporter:
                 o['data_ref'] = self.probeArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
-                if 'spawn' in o and o['spawn'] == False:
+                if 'spawn' in o and not o['spawn']:
                     self.camera_spawned = False
                 else:
                     self.camera_spawned = True
-                if not objref in self.cameraArray:
+                if objref not in self.cameraArray:
                     self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.cameraArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.cameraArray[objref]["structName"]
 
             elif type == NodeTypeSpeaker:
-                if not objref in self.speakerArray:
+                if objref not in self.speakerArray:
                     self.speakerArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.speakerArray[objref]["objectTable"].append(bobject)
@@ -1186,8 +1195,8 @@ class ArmoryExporter:
         return self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_layers) > 0
 
     def export_mesh(self, objectRef, scene):
+        """Exports a single mesh object."""
         # profile_time = time.time()
-        # This function exports a single mesh object
         table = objectRef[1]["objectTable"]
         bobject = table[0]
         oid = arm.utils.safestr(objectRef[1]["structName"])
@@ -1281,11 +1290,11 @@ class ArmoryExporter:
 
         # Process meshes
         if ArmoryExporter.optimize_enabled:
-            vert_list = exporter_opt.export_mesh_data(self, exportMesh, bobject, o, has_armature=armature != None)
+            vert_list = exporter_opt.export_mesh_data(self, exportMesh, bobject, o, has_armature=armature is not None)
             if armature:
                 exporter_opt.export_skin(self, bobject, armature, vert_list, o)
         else:
-            self.export_mesh_data(exportMesh, bobject, o, has_armature=armature != None)
+            self.export_mesh_data(exportMesh, bobject, o, has_armature=armature is not None)
             if armature:
                 self.export_skin(bobject, armature, exportMesh, o)
 
@@ -1318,7 +1327,7 @@ class ArmoryExporter:
             bobject_eval.to_mesh_clear()
 
     def export_light(self, objectRef):
-        # This function exports a single light object
+        """Exports a single light object."""
         rpdat = arm.utils.get_rp()
         objref = objectRef[0]
         objtype = objref.type
@@ -1381,6 +1390,41 @@ class ArmoryExporter:
             o['type'] = 'cubemap'
 
         self.output['probe_datas'].append(o)
+
+    def export_collection(self, collection):
+        """Exports a single collection."""
+        scene_objects = self.scene.collection.all_objects
+
+        out_collection = {}
+        out_collection['name'] = collection.name
+        out_collection['instance_offset'] = list(collection.instance_offset)
+        out_collection['object_refs'] = []
+
+        for bobject in collection.objects:
+
+            # Add unparented objects only, then instantiate full object
+            # child tree
+            if bobject.parent is None and bobject.arm_export:
+
+                # This object is controlled by proxy
+                has_proxy_user = False
+                for bo in bpy.data.objects:
+                    if bo.proxy == bobject:
+                        has_proxy_user = True
+                        break
+                if has_proxy_user:
+                    continue
+
+                # Add external linked objects
+                if bobject.name not in scene_objects and collection.library is not None:
+                    self.process_bobject(bobject)
+                    self.export_object(bobject, self.scene)
+                    out_collection['object_refs'].append(arm.utils.asset_name(bobject))
+                else:
+                    out_collection['object_refs'].append(bobject.name)
+
+        self.output['groups'].append(out_collection)
+
 
     def get_camera_clear_color(self):
         if self.scene.world is None:
@@ -1742,26 +1786,45 @@ class ArmoryExporter:
         return ArmoryExporter.compress_enabled
 
     def export_objects(self, scene):
+        """Exports all supported blender objects.
+
+        References to objects are dictionaries storing the type and
+        name of that object.
+
+        Currently supported:
+        - Mesh
+        - Light
+        - Camera
+        - Speaker
+        - Light Probe
+        """
         if not ArmoryExporter.option_mesh_only:
             self.output['light_datas'] = []
             self.output['camera_datas'] = []
             self.output['speaker_datas'] = []
-            for o in self.lightArray.items():
-                self.export_light(o)
-            for o in self.cameraArray.items():
-                self.export_camera(o)
-            for sound in bpy.data.sounds: # Keep sounds with fake user
+
+            for light_ref in self.lightArray.items():
+                self.export_light(light_ref)
+
+            for camera_ref in self.cameraArray.items():
+                self.export_camera(camera_ref)
+
+            # Keep sounds with fake user
+            for sound in bpy.data.sounds:
                 if sound.use_fake_user:
                     assets.add(arm.utils.asset_path(sound.filepath))
-            for o in self.speakerArray.items():
-                self.export_speaker(o)
-            if len(bpy.data.lightprobes) > 0:
+
+            for speaker_ref in self.speakerArray.items():
+                self.export_speaker(speaker_ref)
+
+            if bpy.data.lightprobes:
                 self.output['probe_datas'] = []
-                for o in self.probeArray.items():
-                    self.export_probe(o)
+                for lightprobe_object in self.probeArray.items():
+                    self.export_probe(lightprobe_object)
+
         self.output['mesh_datas'] = []
-        for o in self.meshArray.items():
-            self.export_mesh(o, scene)
+        for mesh_ref in self.meshArray.items():
+            self.export_mesh(mesh_ref, scene)
 
     def execute(self, context, filepath, scene=None, depsgraph=None):
         global current_output
@@ -1813,6 +1876,7 @@ class ArmoryExporter:
             o['traits'] = []
             self.objectToArmObjectDict[bobject] = o
             # Process
+            # Skip objects that have a parent because children will be exported recursively
             if not bobject.parent:
                 self.process_bobject(bobject)
                 # Softbody needs connected triangles, use optimized geometry export
@@ -1834,7 +1898,7 @@ class ArmoryExporter:
         for bo in scene_objects:
             if arm.utils.export_bone_data(bo):
                 for slot in bo.material_slots:
-                    if slot.material == None or slot.material.library is not None:
+                    if slot.material is None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armskin'):
                         continue
@@ -1848,7 +1912,7 @@ class ArmoryExporter:
                     slot.material = mat
             elif bo.arm_tilesheet != '':
                 for slot in bo.material_slots:
-                    if slot.material == None or slot.material.library is not None:
+                    if slot.material is None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armtile'):
                         continue
@@ -1861,6 +1925,7 @@ class ArmoryExporter:
                         mat.arm_tilesheet_flag = True
                         matvars.append(mat)
                     slot.material = mat
+
         # Particle and non-particle objects can not share material
         for psys in bpy.data.particles:
             bo = psys.instance_object
@@ -1919,36 +1984,17 @@ class ArmoryExporter:
 
         self.output['objects'] = []
         for bo in scene_objects:
+            # Skip objects that have a parent because children will be exported recursively
             if not bo.parent:
                 self.export_object(bo, self.scene)
 
-        if len(bpy.data.collections) > 0:
+        if bpy.data.collections:
             self.output['groups'] = []
             for collection in bpy.data.collections:
-                if collection.name.startswith('RigidBodyWorld') or collection.name.startswith('Trait|'):
+                if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
-                o = {}
-                o['name'] = collection.name
-                o['object_refs'] = []
-                # Add unparented objects only, then instantiate full object child tree
-                for bobject in collection.objects:
-                    if bobject.parent == None and bobject.arm_export:
-                        # This object is controlled by proxy
-                        has_proxy_user = False
-                        for bo in bpy.data.objects:
-                            if bo.proxy == bobject:
-                                has_proxy_user = True
-                                break
-                        if has_proxy_user:
-                            continue
-                        # Add external linked objects
-                        if bobject.name not in scene_objects and collection.library is not None:
-                            self.process_bobject(bobject)
-                            self.export_object(bobject, self.scene)
-                            o['object_refs'].append(arm.utils.asset_name(bobject))
-                        else:
-                            o['object_refs'].append(bobject.name)
-                self.output['groups'].append(o)
+
+                self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
