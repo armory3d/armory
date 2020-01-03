@@ -49,6 +49,7 @@ class DebugConsole extends Trait {
 
 	var selectedObject: iron.object.Object;
 	var selectedType = "";
+	var selectedTraits = new Array<Trait>();
 	static var lrow = [1 / 2, 1 / 2];
 	static var row4 = [1 / 4, 1 / 4, 1 / 4, 1 / 4];
 
@@ -337,7 +338,14 @@ class DebugConsole extends Trait {
 							ui.text("Traits:");
 							ui.indent();
 							for (t in selectedObject.traits) {
+								ui.row([3/4, 1/4]);
 								ui.text(Type.getClassName(Type.getClass(t)));
+
+								if (ui.button("Details")) {
+									if (selectedTraits.indexOf(t) == -1) {
+										selectedTraits.push(t);
+									}
+								}
 							}
 							ui.unindent();
 						}
@@ -520,6 +528,67 @@ class DebugConsole extends Trait {
 			}
 
 			ui.separator();
+		}
+
+		// Draw trait debug windows
+		var handleWinTrait = Id.handle();
+		for (trait in selectedTraits) {
+			var objectID = trait.object.uid;
+			var traitIndex = trait.object.traits.indexOf(trait);
+
+			var handleWindow = handleWinTrait.nest(objectID).nest(traitIndex);
+			// This solution is not optimal, dragged windows will change their
+			// position if the selectedTraits array is changed.
+			wx -= ww + 8;
+			wy = 0;
+
+			handleWindow.redraws = 1;
+			ui.window(handleWindow, wx, wy, ww, wh, true);
+
+			if (ui.button("Close Trait View")) {
+				selectedTraits.remove(trait);
+				handleWinTrait.nest(objectID).unnest(traitIndex);
+				continue;
+			}
+
+			ui.row([1/2, 1/2]);
+			ui.text("Trait:");
+			ui.text(Type.getClassName(Type.getClass(trait)), Align.Right);
+			ui.row([1/2, 1/2]);
+			ui.text("Extends:");
+			ui.text(Type.getClassName(Type.getSuperClass(Type.getClass(trait))), Align.Right);
+			ui.row([1/2, 1/2]);
+			ui.text("Object:");
+			ui.text(trait.object.name, Align.Right);
+			ui.separator();
+
+			if (ui.panel(Id.handle().nest(objectID).nest(traitIndex), "Attributes")) {
+				ui.indent();
+
+				for (fieldName in Reflect.fields(trait)) {
+					ui.row([1/2, 1/2]);
+					ui.text(fieldName + "");
+
+					var fieldValue = Reflect.field(trait, fieldName);
+					var fieldClass = Type.getClass(fieldValue);
+
+					// Treat objects differently (VERY bad performance otherwise)
+					if (Reflect.isObject(fieldValue) && fieldClass != String) {
+
+						if (fieldClass != null) {
+							ui.text('<${Type.getClassName(fieldClass)}>', Align.Right);
+						} else {
+							// Anonymous data structures for example
+							ui.text("<???>", Align.Right);
+						}
+					} else {
+						ui.text(Std.string(fieldValue), Align.Right);
+					}
+
+				}
+
+				ui.unindent();
+			}
 		}
 
 		ui.end(bindG);
