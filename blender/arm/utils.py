@@ -348,6 +348,10 @@ def get_prop_type_from_value(value: str):
                 return "String"
             if value in ("true", "false"):
                 return "Bool"
+            if value.startswith("new "):
+                if value[4:7] == "Vec":
+                    # Vec2, Vec3, Vec4
+                    return value[4:8]
 
     return None
 
@@ -365,6 +369,12 @@ def get_type_default_value(prop_type: str):
         return ""
     if prop_type == "Bool":
         return False
+    if prop_type == "Vec2":
+        return [0.0, 0.0]
+    if prop_type == "Vec3":
+        return [0.0, 0.0, 0.0]
+    if prop_type == "Vec4":
+        return [0.0, 0.0, 0.0, 0.0]
 
     return None
 

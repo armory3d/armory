@@ -6,6 +6,9 @@ PROP_TYPE_ICONS = {
     "Int": "CHECKBOX_DEHLT",
     "Float": "RADIOBUT_OFF",
     "Bool": "CHECKMARK",
+    "Vec2": "ORIENTATION_VIEW",
+    "Vec3": "ORIENTATION_GLOBAL",
+    "Vec4": "MESH_ICOSPHERE",
 }
 
 
@@ -26,7 +29,10 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             ("String", "String", "String Type"),
             ("Int", "Integer", "Integer Type"),
             ("Float", "Float", "Float Type"),
-            ("Bool", "Boolean", "Boolean Type")),
+            ("Bool", "Boolean", "Boolean Type"),
+            ("Vec2", "Vec2", "2D Vector Type"),
+            ("Vec3", "Vec3", "3D Vector Type"),
+            ("Vec4", "Vec4", "4D Vector Type")),
         name="Type",
         description="The type of this property",
         default="String")
@@ -51,6 +57,21 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
         description="The value of this property",
         default=False)
 
+    value_vec2: FloatVectorProperty(
+        name="Value",
+        description="The value of this property",
+        size=2)
+
+    value_vec3: FloatVectorProperty(
+        name="Value",
+        description="The value of this property",
+        size=3)
+
+    value_vec4: FloatVectorProperty(
+        name="Value",
+        description="The value of this property",
+        size=4)
+
     def set_value(self, val):
         if self.type == "Int":
             self.value_int = int(val)
@@ -58,6 +79,26 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             self.value_float = float(val)
         elif self.type == "Bool":
             self.value_bool = bool(val)
+        elif self.type in ("Vec2", "Vec3", "Vec4"):
+            if isinstance(val, str):
+                dimensions = int(self.type[-1])
+
+                # Parse "new VecX(...)"
+                val = val.split("(")[1].split(")")[0].split(",")
+                val = [value.strip() for value in val]
+
+                # new VecX() without parameters
+                if len(val) == 1 and val[0] == "":
+                    # Use default value
+                    return
+
+                # new VecX() with less parameters than its dimensions
+                while len(val) < dimensions:
+                    val.append(0.0)
+
+                val = [float(value) for value in val]
+
+            setattr(self, "value_" + self.type.lower(), val)
         else:
             self.value_string = str(val)
 
@@ -68,6 +109,8 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             return self.value_float
         if self.type == "Bool":
             return self.value_bool
+        if self.type in ("Vec2", "Vec3", "Vec4"):
+            return list(getattr(self, "value_" + self.type.lower()))
         return self.value_string
 
 
