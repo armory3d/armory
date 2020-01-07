@@ -39,40 +39,14 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
         description="The type of this property",
         default="String")
 
-    value_string: StringProperty(
-        name="Value",
-        description="The value of this property",
-        default="")
-
-    value_int: IntProperty(
-        name="Value",
-        description="The value of this property",
-        default=0)
-
-    value_float: FloatProperty(
-        name="Value",
-        description="The value of this property",
-        default=0.0)
-
-    value_bool: BoolProperty(
-        name="Value",
-        description="The value of this property",
-        default=False)
-
-    value_vec2: FloatVectorProperty(
-        name="Value",
-        description="The value of this property",
-        size=2)
-
-    value_vec3: FloatVectorProperty(
-        name="Value",
-        description="The value of this property",
-        size=3)
-
-    value_vec4: FloatVectorProperty(
-        name="Value",
-        description="The value of this property",
-        size=4)
+    # === VALUES ===
+    value_string: StringProperty(name="Value", default="")
+    value_int: IntProperty(name="Value", default=0)
+    value_float: FloatProperty(name="Value", default=0.0)
+    value_bool: BoolProperty(name="Value", default=False)
+    value_vec2: FloatVectorProperty(name="Value", size=2)
+    value_vec3: FloatVectorProperty(name="Value", size=3)
+    value_vec4: FloatVectorProperty(name="Value", size=4)
 
     def set_value(self, val):
         # Would require way too much effort, so it's out of scope here.
