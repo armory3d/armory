@@ -9,6 +9,10 @@ PROP_TYPE_ICONS = {
 }
 
 
+class ArmTraitPropWarning(bpy.types.PropertyGroup):
+    warning: StringProperty(name="Warning")
+
+
 class ArmTraitPropListItem(bpy.types.PropertyGroup):
     """Group of properties representing an item in the list."""
     name: StringProperty(
@@ -87,10 +91,12 @@ class ARM_UL_PropList(bpy.types.UIList):
 
 
 def register():
+    bpy.utils.register_class(ArmTraitPropWarning)
     bpy.utils.register_class(ArmTraitPropListItem)
     bpy.utils.register_class(ARM_UL_PropList)
 
 
 def unregister():
-    bpy.utils.unregister_class(ArmTraitPropListItem)
     bpy.utils.unregister_class(ARM_UL_PropList)
+    bpy.utils.unregister_class(ArmTraitPropListItem)
+    bpy.utils.unregister_class(ArmTraitPropWarning)

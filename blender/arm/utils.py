@@ -229,6 +229,7 @@ def fetch_bundled_script_names():
 
 script_props = {}
 script_props_defaults = {}
+script_warnings = {}
 def fetch_script_props(file):
     with open(file) as f:
         name = file.rsplit('.')[0]
@@ -241,12 +242,16 @@ def fetch_script_props(file):
 
         script_props[name] = []
         script_props_defaults[name] = []
+        script_warnings[name] = []
 
         lines = f.read().splitlines()
 
         # Read next line
         read_prop = False
-        for line in lines:
+        for lineno, line in enumerate(lines):
+            # enumerate() starts with 0
+            lineno += 1
+
             if not read_prop:
                 read_prop = line.lstrip().startswith('@prop')
                 continue
@@ -256,6 +261,7 @@ def fetch_script_props(file):
                     # Line of code
                     code_ref = line.split('var ')[1].split(';')[0]
                 else:
+                    script_warnings[name].append(f"Line {lineno - 1}: Unused @prop")
                     break
 
                 valid_prop = False
@@ -276,6 +282,7 @@ def fetch_script_props(file):
                     if len(var_sides) > 1 and var_sides[1].strip() != "":
                         # Type is not supported
                         if get_type_default_value(prop_type) is None:
+                            script_warnings[name].append(f"Line {lineno}: {prop_name}: Type {prop_type} is not supported!")
                             read_prop = False
                             continue
 
@@ -286,6 +293,7 @@ def fetch_script_props(file):
 
                         # Type is not supported
                         if prop_value is None:
+                            script_warnings[name].append(f"Line {lineno}: {prop_name}: Type {prop_type} is not supported!")
                             read_prop = False
                             continue
 
@@ -296,14 +304,20 @@ def fetch_script_props(file):
                     prop_value = var_sides[1].strip()
                     prop_type = get_prop_type_from_value(prop_value)
 
-                    # Type is not supported
+                    # Type is not recognized
                     if prop_type is None:
+                        script_warnings[name].append(f"Line {lineno}: Property type not recognized!")
                         read_prop = False
                         continue
                     if prop_type == "String":
                         prop_value = prop_value.replace('\'', '').replace('"', '')
 
                     valid_prop = True
+
+                else:
+                    script_warnings[name].append(f"Line {lineno}: {prop_name}: Not a valid property!")
+                    read_prop = False
+                    continue
 
                 prop = (prop_name, prop_type)
 
@@ -412,6 +426,7 @@ def fetch_prop(o):
             continue
         props = script_props[name]
         defaults = script_props_defaults[name]
+        warnings = script_warnings[name]
 
         # Remove old props
         for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
@@ -447,6 +462,11 @@ def fetch_prop(o):
                 if (len(found_prop.name) == 1 or (len(found_prop.name) > 1 and found_prop.name[1] != p[1])):
                     prop.name = p[0]
                     prop.type = p[1]
+
+            item.arm_traitpropswarnings.clear()
+            for warning in warnings:
+                entry = item.arm_traitpropswarnings.add()
+                entry.warning = warning
 
 def fetch_bundled_trait_props():
     # Bundled script props

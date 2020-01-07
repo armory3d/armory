@@ -68,6 +68,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group)
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
+    arm_traitpropswarnings: CollectionProperty(type=ArmTraitPropWarning)
 
 class ARM_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -575,6 +576,13 @@ def draw_traits(layout, obj, is_object):
 
             # Props
             if item.arm_traitpropslist:
+                if item.arm_traitpropswarnings:
+                    box = layout.box()
+                    box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
+
+                    for warning in item.arm_traitpropswarnings:
+                        box.label(text=warning.warning)
+
                 propsrow = layout.row()
                 propsrows = max(len(item.arm_traitpropslist), 6)
                 row = layout.row()
