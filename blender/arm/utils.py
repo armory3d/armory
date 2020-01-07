@@ -349,9 +349,9 @@ def get_prop_type_from_value(value: str):
             if value in ("true", "false"):
                 return "Bool"
             if value.startswith("new "):
-                if value[4:7] == "Vec":
-                    # Vec2, Vec3, Vec4
-                    return value[4:8]
+                value = value.split()[1].split("(")[0]
+                if value.startswith("Vec"):
+                    return value
 
     return None
 
