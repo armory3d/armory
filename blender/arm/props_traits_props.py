@@ -9,8 +9,26 @@ PROP_TYPE_ICONS = {
     "Vec2": "ORIENTATION_VIEW",
     "Vec3": "ORIENTATION_GLOBAL",
     "Vec4": "MESH_ICOSPHERE",
-    "Object": "OBJECT_DATA"
+    "Object": "OBJECT_DATA",
+    "CameraObject": "CAMERA_DATA",
+    "LightObject": "LIGHT_DATA",
+    "MeshObject": "MESH_DATA",
+    "SpeakerObject": "OUTLINER_DATA_SPEAKER"
 }
+
+
+def filter_objects(item, b_object):
+    if item.type == "CameraObject":
+        return b_object.type == "CAMERA"
+    if item.type == "LightObject":
+        return b_object.type == "LIGHT"
+    if item.type == "MeshObject":
+        return b_object.type == "MESH"
+    if item.type == "SpeakerObject":
+        return b_object.type == "SPEAKER"
+
+    if item.type == "Object":
+        return True
 
 
 class ArmTraitPropWarning(bpy.types.PropertyGroup):
@@ -34,7 +52,11 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             ("Vec2", "Vec2", "2D Vector Type"),
             ("Vec3", "Vec3", "3D Vector Type"),
             ("Vec4", "Vec4", "4D Vector Type"),
-            ("Object", "Object", "Object Type")),
+            ("Object", "Object", "Object Type"),
+            ("CameraObject", "Camera Object", "Camera Object Type"),
+            ("LightObject", "Light Object", "Light Object Type"),
+            ("MeshObject", "Mesh Object", "Mesh Object Type"),
+            ("SpeakerObject", "Speaker Object", "Speaker Object Type")),
         name="Type",
         description="The type of this property",
         default="String")
@@ -47,10 +69,12 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
     value_vec2: FloatVectorProperty(name="Value", size=2)
     value_vec3: FloatVectorProperty(name="Value", size=3)
     value_vec4: FloatVectorProperty(name="Value", size=4)
+    value_object: PointerProperty(
+        name="Value", type=bpy.types.Object, poll=filter_objects)
 
     def set_value(self, val):
         # Would require way too much effort, so it's out of scope here.
-        if self.type == "Object":
+        if self.type.endswith("Object"):
             return
 
         if self.type == "Int":
@@ -91,6 +115,10 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             return self.value_bool
         if self.type in ("Vec2", "Vec3", "Vec4"):
             return list(getattr(self, "value_" + self.type.lower()))
+        if self.type.endswith("Object"):
+            if self.value_object is not None:
+                return self.value_object.name
+            return ""
 
         return self.value_string
 
@@ -98,17 +126,17 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
 class ARM_UL_PropList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         item_value_ref = "value_" + item.type.lower()
+        custom_icon = PROP_TYPE_ICONS[item.type]
 
         sp = layout.split(factor=0.2)
-        # Some properties don't support icons
-        sp.label(text=item.type, icon=PROP_TYPE_ICONS[item.type])
+        sp.label(text=item.type, icon=custom_icon)
         sp = sp.split(factor=0.6)
         sp.label(text=item.name)
 
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            if item.type == "Object":
-                sp.prop_search(item, "value_string", context.scene, "objects", text="")
+            if item.type.endswith("Object"):
+                sp.prop_search(item, "value_object", context.scene, "objects", text="", icon=custom_icon)
             else:
                 use_emboss = item.type == "Bool"
                 sp.prop(item, item_value_ref, text="", emboss=use_emboss)

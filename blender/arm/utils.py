@@ -277,8 +277,8 @@ def fetch_script_props(file):
                 # (= declaration has two parts)
                 if len(decl_sides) > 1:
                     prop_type = decl_sides[1].strip()
-                    if prop_type == "iron.object.Object":
-                        prop_type = "Object"
+                    if prop_type.startswith("iron.object."):
+                        prop_type = prop_type[12:]
 
                     # Default value exists
                     if len(var_sides) > 1 and var_sides[1].strip() != "":
@@ -367,7 +367,8 @@ def get_type_default_value(prop_type: str):
         return 0
     if prop_type == "Float":
         return 0.0
-    if prop_type in ("String", "Object"):
+    if prop_type == "String" or prop_type in (
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
         return ""
     if prop_type == "Bool":
         return False
