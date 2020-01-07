@@ -2493,19 +2493,16 @@ class ArmoryExporter:
                             print('Armory Error: Scene "' + self.scene.name + '" - Object "' + bobject.name + '" : Referenced trait file "' + hxfile + '" not found')
 
                     x['class_name'] = trait_prefix + t.class_name_prop
-                    if len(t.arm_traitpropslist) > 0:
+
+                    # Export trait properties
+                    if t.arm_traitpropslist:
                         x['props'] = []
-                        for pt in t.arm_traitpropslist: # Append props
-                            prop = pt.name.replace(')', '').split('(')
-                            x['props'].append(prop[0])
-                            if(len(prop) > 1):
-                                if prop[1] == 'String':
-                                    value = "'" + pt.value + "'"
-                                else:
-                                    value = pt.value
-                            else:
-                                value = pt.value
+                        for trait_prop in t.arm_traitpropslist:
+                            x['props'].append(trait_prop.name)
+
+                            value = trait_prop.get_value()
                             x['props'].append(value)
+
                 o['traits'].append(x)
 
     def export_canvas_themes(self):
