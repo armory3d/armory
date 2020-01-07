@@ -2499,6 +2499,7 @@ class ArmoryExporter:
                         x['props'] = []
                         for trait_prop in t.arm_traitpropslist:
                             x['props'].append(trait_prop.name)
+                            x['props'].append(trait_prop.type)
 
                             value = trait_prop.get_value()
                             x['props'].append(value)

@@ -9,6 +9,7 @@ PROP_TYPE_ICONS = {
     "Vec2": "ORIENTATION_VIEW",
     "Vec3": "ORIENTATION_GLOBAL",
     "Vec4": "MESH_ICOSPHERE",
+    "Object": "OBJECT_DATA"
 }
 
 
@@ -32,7 +33,8 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             ("Bool", "Boolean", "Boolean Type"),
             ("Vec2", "Vec2", "2D Vector Type"),
             ("Vec3", "Vec3", "3D Vector Type"),
-            ("Vec4", "Vec4", "4D Vector Type")),
+            ("Vec4", "Vec4", "4D Vector Type"),
+            ("Object", "Object", "Object Type")),
         name="Type",
         description="The type of this property",
         default="String")
@@ -73,6 +75,10 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
         size=4)
 
     def set_value(self, val):
+        # Would require way too much effort, so it's out of scope here.
+        if self.type == "Object":
+            return
+
         if self.type == "Int":
             self.value_int = int(val)
         elif self.type == "Float":
@@ -111,6 +117,7 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             return self.value_bool
         if self.type in ("Vec2", "Vec3", "Vec4"):
             return list(getattr(self, "value_" + self.type.lower()))
+
         return self.value_string
 
 
@@ -126,8 +133,11 @@ class ARM_UL_PropList(bpy.types.UIList):
 
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            use_emboss = item.type == "Bool"
-            sp.prop(item, item_value_ref, text="", emboss=use_emboss)
+            if item.type == "Object":
+                sp.prop_search(item, "value_string", context.scene, "objects", text="")
+            else:
+                use_emboss = item.type == "Bool"
+                sp.prop(item, item_value_ref, text="", emboss=use_emboss)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
