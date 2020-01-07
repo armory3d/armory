@@ -258,6 +258,10 @@ def fetch_script_props(file):
 
             if read_prop:
                 if 'var ' in line:
+                    if 'static ' in line:
+                        # Static properties can be overwritten multiple times
+                        # from multiple property lists
+                        script_warnings[name].append(f"Line {lineno}: Static properties may result in undefined behaviours!")
                     # Line of code
                     code_ref = line.split('var ')[1].split(';')[0]
                 else:
