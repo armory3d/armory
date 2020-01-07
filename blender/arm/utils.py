@@ -424,7 +424,10 @@ def fetch_prop(o):
             found_prop = False
             for i_prop in item.arm_traitpropslist:
                 if i_prop.name == p[0]:
-                    found_prop = i_prop
+                    if i_prop.type == p[1]:
+                        found_prop = i_prop
+                    else:
+                        item.arm_traitpropslist.remove(item.arm_traitpropslist.find(i_prop.name))
                     break
 
             # Not in list
