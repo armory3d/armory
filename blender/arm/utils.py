@@ -1,15 +1,18 @@
-import bpy
+import glob
 import json
 import os
-import glob
 import platform
-import re
 import subprocess
 import webbrowser
+
 import numpy as np
+
+import bpy
+
 import arm.lib.armpack
-import arm.make_state as state
 import arm.log as log
+import arm.make_state as state
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):

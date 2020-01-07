@@ -1,10 +1,5 @@
-import shutil
 import bpy
-import os
-import json
-from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from arm.utils import to_hex
 
 class ArmTraitPropListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
