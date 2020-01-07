@@ -329,7 +329,8 @@ def get_prop_type_from_value(value: str):
             float(value)
             return "Float"
         except ValueError:
-            if value.startswith("\"") and value.endswith("\""):
+            # "" is required, " alone will not work
+            if len(value) > 1 and value.startswith(("\"", "'")) and value.endswith(("\"", "'")):
                 return "String"
             if value in ("true", "false"):
                 return "Bool"
