@@ -569,16 +569,14 @@ def draw_traits(layout, obj, is_object):
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
             else:
                 # Bundled scripts not yet fetched
-                if len(bpy.data.worlds['Arm'].arm_bundled_scripts_list) == 0:
+                if not bpy.data.worlds['Arm'].arm_bundled_scripts_list:
                     arm.utils.fetch_bundled_script_names()
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
 
             # Props
-            if len(item.arm_traitpropslist) > 0:
+            if item.arm_traitpropslist:
                 propsrow = layout.row()
-                propsrows = 2
-                if len(item.arm_traitpropslist) > 2:
-                    propsrows = 4
+                propsrows = max(len(item.arm_traitpropslist), 6)
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
