@@ -266,7 +266,8 @@ def fetch_script_props(file):
                     code_ref = line.split('var ')[1].split(';')[0]
                 else:
                     script_warnings[name].append(f"Line {lineno - 1}: Unused @prop")
-                    break
+                    read_prop = line.lstrip().startswith('@prop')
+                    continue
 
                 valid_prop = False
 
