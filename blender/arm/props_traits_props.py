@@ -128,7 +128,7 @@ class ARM_UL_PropList(bpy.types.UIList):
         item_value_ref = "value_" + item.type.lower()
         custom_icon = PROP_TYPE_ICONS[item.type]
 
-        sp = layout.split(factor=0.2)
+        sp = layout.split(factor=0.3)
         sp.label(text=item.type, icon=custom_icon)
         sp = sp.split(factor=0.6)
         sp.label(text=item.name)
@@ -138,7 +138,7 @@ class ARM_UL_PropList(bpy.types.UIList):
             if item.type.endswith("Object"):
                 sp.prop_search(item, "value_object", context.scene, "objects", text="", icon=custom_icon)
             else:
-                use_emboss = item.type == "Bool"
+                use_emboss = item.type in ("Bool", "String")
                 sp.prop(item, item_value_ref, text="", emboss=use_emboss)
 
         elif self.layout_type in {'GRID'}:

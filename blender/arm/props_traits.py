@@ -576,6 +576,7 @@ def draw_traits(layout, obj, is_object):
 
             # Props
             if item.arm_traitpropslist:
+                layout.label(text="Trait Properties:")
                 if item.arm_traitpropswarnings:
                     box = layout.box()
                     box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
