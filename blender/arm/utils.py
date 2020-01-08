@@ -283,6 +283,8 @@ def fetch_script_props(file):
                     prop_type = decl_sides[1].strip()
                     if prop_type.startswith("iron.object."):
                         prop_type = prop_type[12:]
+                    elif prop_type.startswith("iron.math."):
+                        prop_type = prop_type[10:]
 
                     # Default value exists
                     if len(var_sides) > 1 and var_sides[1].strip() != "":
@@ -358,6 +360,8 @@ def get_prop_type_from_value(value: str):
                 value = value.split()[1].split("(")[0]
                 if value.startswith("Vec"):
                     return value
+                if value.startswith("iron.math.Vec"):
+                    return value[10:]
 
     return None
 
