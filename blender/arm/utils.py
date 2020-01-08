@@ -258,10 +258,6 @@ def fetch_script_props(file):
 
             if read_prop:
                 if 'var ' in line:
-                    if 'static ' in line:
-                        # Static properties can be overwritten multiple times
-                        # from multiple property lists
-                        script_warnings[name].append(f"Line {lineno}: Static properties may result in undefined behaviours!")
                     # Line of code
                     code_ref = line.split('var ')[1].split(';')[0]
                 else:
@@ -278,6 +274,11 @@ def fetch_script_props(file):
 
                 prop_name = decl_sides[0].strip()
 
+                if 'static ' in line:
+                    # Static properties can be overwritten multiple times
+                    # from multiple property lists
+                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Static properties may result in undefined behaviours!")
+
                 # If the prop type is annotated in the code
                 # (= declaration has two parts)
                 if len(decl_sides) > 1:
@@ -291,7 +292,7 @@ def fetch_script_props(file):
                     if len(var_sides) > 1 and var_sides[1].strip() != "":
                         # Type is not supported
                         if get_type_default_value(prop_type) is None:
-                            script_warnings[name].append(f"Line {lineno}: {prop_name}: Type {prop_type} is not supported!")
+                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
                             read_prop = False
                             continue
 
@@ -302,7 +303,7 @@ def fetch_script_props(file):
 
                         # Type is not supported
                         if prop_value is None:
-                            script_warnings[name].append(f"Line {lineno}: {prop_name}: Type {prop_type} is not supported!")
+                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
                             read_prop = False
                             continue
 
@@ -315,7 +316,7 @@ def fetch_script_props(file):
 
                     # Type is not recognized
                     if prop_type is None:
-                        script_warnings[name].append(f"Line {lineno}: Property type not recognized!")
+                        script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Property type not recognized!")
                         read_prop = False
                         continue
                     if prop_type == "String":
@@ -324,7 +325,7 @@ def fetch_script_props(file):
                     valid_prop = True
 
                 else:
-                    script_warnings[name].append(f"Line {lineno}: {prop_name}: Not a valid property!")
+                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Not a valid property!")
                     read_prop = False
                     continue
 
