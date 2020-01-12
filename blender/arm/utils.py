@@ -1,15 +1,18 @@
-import bpy
+import glob
 import json
 import os
-import glob
 import platform
-import re
 import subprocess
 import webbrowser
+
 import numpy as np
+
+import bpy
+
 import arm.lib.armpack
-import arm.make_state as state
 import arm.log as log
+import arm.make_state as state
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -226,6 +229,7 @@ def fetch_bundled_script_names():
 
 script_props = {}
 script_props_defaults = {}
+script_warnings = {}
 def fetch_script_props(file):
     with open(file) as f:
         name = file.rsplit('.')[0]
@@ -235,50 +239,157 @@ def fetch_script_props(file):
             name = name.replace('/', '.')
         if '\\' in file:
             name = name.replace('\\', '.')
+
         script_props[name] = []
         script_props_defaults[name] = []
+        script_warnings[name] = []
+
         lines = f.read().splitlines()
+
+        # Read next line
         read_prop = False
-        for line in lines:
+        for lineno, line in enumerate(lines):
+            # enumerate() starts with 0
+            lineno += 1
+
             if not read_prop:
                 read_prop = line.lstrip().startswith('@prop')
                 continue
 
             if read_prop:
                 if 'var ' in line:
-                    p = line.split('var ')[1]
-                elif 'final ' in line:
-                    p = line.split('final ')[1]
+                    # Line of code
+                    code_ref = line.split('var ')[1].split(';')[0]
                 else:
-                    break
+                    script_warnings[name].append(f"Line {lineno - 1}: Unused @prop")
+                    read_prop = line.lstrip().startswith('@prop')
+                    continue
 
                 valid_prop = False
-                # Has type
-                if ':' in p:
-                    # Fetch default value
-                    if '=' in p:
-                        s = p.split('=')
-                        ps = s[0].split(':')
-                        prop = (ps[0].strip(), ps[1].split(';')[0].strip())
-                        prop_value = s[1].split(';')[0].replace('\'', '').replace('"', '').strip()
-                        valid_prop = True
+
+                # Declaration = Assignment;
+                var_sides = code_ref.split('=')
+                # DeclarationName: DeclarationType
+                decl_sides = var_sides[0].split(':')
+
+                prop_name = decl_sides[0].strip()
+
+                if 'static ' in line:
+                    # Static properties can be overwritten multiple times
+                    # from multiple property lists
+                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Static properties may result in undefined behaviours!")
+
+                # If the prop type is annotated in the code
+                # (= declaration has two parts)
+                if len(decl_sides) > 1:
+                    prop_type = decl_sides[1].strip()
+                    if prop_type.startswith("iron.object."):
+                        prop_type = prop_type[12:]
+                    elif prop_type.startswith("iron.math."):
+                        prop_type = prop_type[10:]
+
+                    # Default value exists
+                    if len(var_sides) > 1 and var_sides[1].strip() != "":
+                        # Type is not supported
+                        if get_type_default_value(prop_type) is None:
+                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
+                            read_prop = False
+                            continue
+
+                        prop_value = var_sides[1].replace('\'', '').replace('"', '').strip()
+
                     else:
-                        ps = p.split(':')
-                        prop = (ps[0].strip(), ps[1].split(';')[0].strip())
-                        prop_value = ''
-                        valid_prop = True
-                # Fetch default value
-                elif '=' in p:
-                    s = p.split('=')
-                    prop = (s[0].strip(), None)
-                    prop_value = s[1].split(';')[0].replace('\'', '').replace('"', '').strip()
+                        prop_value = get_type_default_value(prop_type)
+
+                        # Type is not supported
+                        if prop_value is None:
+                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
+                            read_prop = False
+                            continue
+
                     valid_prop = True
+
+                # Default value exists
+                elif len(var_sides) > 1 and var_sides[1].strip() != "":
+                    prop_value = var_sides[1].strip()
+                    prop_type = get_prop_type_from_value(prop_value)
+
+                    # Type is not recognized
+                    if prop_type is None:
+                        script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Property type not recognized!")
+                        read_prop = False
+                        continue
+                    if prop_type == "String":
+                        prop_value = prop_value.replace('\'', '').replace('"', '')
+
+                    valid_prop = True
+
+                else:
+                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Not a valid property!")
+                    read_prop = False
+                    continue
+
+                prop = (prop_name, prop_type)
+
                 # Register prop
                 if valid_prop:
                     script_props[name].append(prop)
                     script_props_defaults[name].append(prop_value)
 
                 read_prop = False
+
+def get_prop_type_from_value(value: str):
+    """
+    Returns the property type based on its representation in the code.
+
+    If the type is not supported, `None` is returned.
+    """
+    # Maybe ast.literal_eval() is better here?
+    try:
+        int(value)
+        return "Int"
+    except ValueError:
+        try:
+            float(value)
+            return "Float"
+        except ValueError:
+            # "" is required, " alone will not work
+            if len(value) > 1 and value.startswith(("\"", "'")) and value.endswith(("\"", "'")):
+                return "String"
+            if value in ("true", "false"):
+                return "Bool"
+            if value.startswith("new "):
+                value = value.split()[1].split("(")[0]
+                if value.startswith("Vec"):
+                    return value
+                if value.startswith("iron.math.Vec"):
+                    return value[10:]
+
+    return None
+
+def get_type_default_value(prop_type: str):
+    """
+    Returns the default value of the given Haxe type.
+
+    If the type is not supported, `None` is returned:
+    """
+    if prop_type == "Int":
+        return 0
+    if prop_type == "Float":
+        return 0.0
+    if prop_type == "String" or prop_type in (
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
+        return ""
+    if prop_type == "Bool":
+        return False
+    if prop_type == "Vec2":
+        return [0.0, 0.0]
+    if prop_type == "Vec3":
+        return [0.0, 0.0, 0.0]
+    if prop_type == "Vec4":
+        return [0.0, 0.0, 0.0, 0.0]
+
+    return None
 
 def fetch_script_names():
     if bpy.data.filepath == "":
@@ -338,36 +449,47 @@ def fetch_prop(o):
             continue
         props = script_props[name]
         defaults = script_props_defaults[name]
+        warnings = script_warnings[name]
+
         # Remove old props
         for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
             ip = item.arm_traitpropslist[i]
-            # if ip.name not in props:
-            if ip.name.split('(')[0] not in [p[0] for p in props]:
+            if ip.name not in [p[0] for p in props]:
                 item.arm_traitpropslist.remove(i)
-        # Add new props
-        for i in range(0, len(props)):
-            p = props[i]
-            found = False
-            for ip in item.arm_traitpropslist:
-                if ip.name.replace(')', '').split('(')[0] == p[0]:
-                    found = ip
-                    break
-            # Not in list
-            if not found:
-                prop = item.arm_traitpropslist.add()
-                prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
-                prop.value = defaults[i]
 
-            if found:
-                prop = item.arm_traitpropslist[found.name]
-                f = found.name.replace(')', '').split('(')
+        # Add new props
+        for index, p in enumerate(props):
+            found_prop = False
+            for i_prop in item.arm_traitpropslist:
+                if i_prop.name == p[0]:
+                    if i_prop.type == p[1]:
+                        found_prop = i_prop
+                    else:
+                        item.arm_traitpropslist.remove(item.arm_traitpropslist.find(i_prop.name))
+                    break
+
+            # Not in list
+            if not found_prop:
+                prop = item.arm_traitpropslist.add()
+                prop.name = p[0]
+                prop.type = p[1]
+                prop.set_value(defaults[index])
+
+            if found_prop:
+                prop = item.arm_traitpropslist[found_prop.name]
 
                 # Default value added and current value is blank (no override)
-                if (not found.value and defaults[i]):
-                    prop.value = defaults[i]
+                if (not found_prop.get_value() and defaults[index]):
+                    prop.set_value(defaults[index])
                 # Type has changed, update displayed name
-                if (len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
-                    prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+                if (len(found_prop.name) == 1 or (len(found_prop.name) > 1 and found_prop.name[1] != p[1])):
+                    prop.name = p[0]
+                    prop.type = p[1]
+
+            item.arm_traitpropswarnings.clear()
+            for warning in warnings:
+                entry = item.arm_traitpropswarnings.add()
+                entry.warning = warning
 
 def fetch_bundled_trait_props():
     # Bundled script props

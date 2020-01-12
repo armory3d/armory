@@ -68,6 +68,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group)
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
+    arm_traitpropswarnings: CollectionProperty(type=ArmTraitPropWarning)
 
 class ARM_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -569,16 +570,22 @@ def draw_traits(layout, obj, is_object):
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
             else:
                 # Bundled scripts not yet fetched
-                if len(bpy.data.worlds['Arm'].arm_bundled_scripts_list) == 0:
+                if not bpy.data.worlds['Arm'].arm_bundled_scripts_list:
                     arm.utils.fetch_bundled_script_names()
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
 
             # Props
-            if len(item.arm_traitpropslist) > 0:
+            if item.arm_traitpropslist:
+                layout.label(text="Trait Properties:")
+                if item.arm_traitpropswarnings:
+                    box = layout.box()
+                    box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
+
+                    for warning in item.arm_traitpropswarnings:
+                        box.label(text=warning.warning)
+
                 propsrow = layout.row()
-                propsrows = 2
-                if len(item.arm_traitpropslist) > 2:
-                    propsrows = 4
+                propsrows = max(len(item.arm_traitpropslist), 6)
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
