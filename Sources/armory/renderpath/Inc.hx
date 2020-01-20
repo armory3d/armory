@@ -41,7 +41,7 @@ class Inc {
 
 	public static function bindShadowMap() {
 		for (l in iron.Scene.active.lights) {
-			if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
+			if (!l.visible || l.data.raw.type != "sun") continue;
 			var n = "shadowMap";
 			path.bindTarget(n, n);
 			break;
@@ -109,7 +109,8 @@ class Inc {
 		pointIndex = 0;
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
-			if (!l.visible || !l.data.raw.cast_shadow) continue;
+			if (!l.visible) continue;
+
 			path.light = l;
 			var shadowmap = Inc.getShadowMap(l);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
@@ -117,7 +118,9 @@ class Inc {
 				if (faces > 1) path.currentFace = i;
 				path.setTarget(shadowmap);
 				path.clearTarget(null, 1.0);
-				path.drawMeshes("shadowmap");
+				if (l.data.raw.cast_shadow) {
+					path.drawMeshes("shadowmap");
+				}
 			}
 			path.currentFace = -1;
 
