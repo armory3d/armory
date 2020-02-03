@@ -16,6 +16,11 @@ class CanvasScript extends Trait {
 	public var ready(get, null): Bool;
 	function get_ready(): Bool { return canvas != null; }
 
+	/**
+	 * Create new CanvasScript from canvas
+	 * @param canvasName Name of the canvas
+	 * @param font font file (Optional)
+	 */
 	public function new(canvasName: String, font: String = "font_default.ttf") {
 		super();
 
@@ -82,9 +87,21 @@ class CanvasScript extends Trait {
 	public function getElements(): Array<TElement> {
 		return canvas.elements;
 	}
-	// Set visibility of all elements of canvas
-	public function setCanvasVisibility(bool: Bool){
-		for (e in canvas.elements) e.visible = bool;
+
+	/**
+	 * Set visibility of canvas
+	 * @param visible Whether canvas should be visible or not
+	*/
+	public function setCanvasVisibility(visible: Bool){
+		for (e in canvas.elements) e.visible = visible;
+	}
+
+	/**
+	 * Set font size of the canvas
+	 * @param fontSize Size of font to be setted
+	 */
+	public function setCanvasFontSize(fontSize: Int) {
+		cui.t.FONT_SIZE = fontSize;
 	}
 
 	// Contains data

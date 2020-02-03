@@ -664,4 +664,4 @@ def write_canvasjson(canvas_name):
         os.makedirs(canvas_path)
     with open(canvas_path + '/' + canvas_name + '.json', 'w') as f:
         f.write(
-"""{ "name": "untitled", "x": 0.0, "y": 0.0, "width": 1280, "height": 720, "elements": [], "assets": [] }""")
+"""{ "name": "untitled", "x": 0.0, "y": 0.0, "width": 1280, "height": 720, "theme": "Default Light", "elements": [], "assets": [] }""")
