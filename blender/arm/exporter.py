@@ -2501,7 +2501,11 @@ class ArmoryExporter:
                             x['props'].append(trait_prop.name)
                             x['props'].append(trait_prop.type)
 
-                            value = trait_prop.get_value()
+                            if trait_prop.type.endswith("Object"):
+                                value = arm.utils.asset_name(trait_prop.value_object)
+                            else:
+                                value = trait_prop.get_value()
+
                             x['props'].append(value)
 
                 o['traits'].append(x)
