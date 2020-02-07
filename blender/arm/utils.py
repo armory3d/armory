@@ -479,7 +479,8 @@ def fetch_prop(o):
                 prop = item.arm_traitpropslist[found_prop.name]
 
                 # Default value added and current value is blank (no override)
-                if (not found_prop.get_value() and defaults[index]):
+                if (found_prop.get_value() is None
+                        or found_prop.get_value() == "") and defaults[index]:
                     prop.set_value(defaults[index])
                 # Type has changed, update displayed name
                 if (len(found_prop.name) == 1 or (len(found_prop.name) > 1 and found_prop.name[1] != p[1])):

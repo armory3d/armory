@@ -82,7 +82,7 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
         elif self.type == "Float":
             self.value_float = float(val)
         elif self.type == "Bool":
-            self.value_bool = bool(val)
+            self.value_bool = val == "true"
         elif self.type in ("Vec2", "Vec3", "Vec4"):
             if isinstance(val, str):
                 dimensions = int(self.type[-1])
