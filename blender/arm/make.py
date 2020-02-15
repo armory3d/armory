@@ -109,7 +109,9 @@ def export_data(fp, sdk_path):
     for scene in bpy.data.scenes:
         if scene == bpy.context.scene: continue
         for o in scene.collection.all_objects:
-            if o.type == "MESH" or o.type == "EMPTY":  export_coll.objects.link(o)
+            if o.type == "MESH" or o.type == "EMPTY":
+                if o.name not in  export_coll.all_objects.keys():
+                    export_coll.objects.link(o)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll) # destroy "zoo" collection
     
