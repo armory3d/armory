@@ -1,5 +1,7 @@
 package armory.math;
 
+import iron.math.Vec4;
+
 class Helper {
 
 	/**
@@ -31,7 +33,7 @@ class Helper {
 		return Math.PI / 180 * degrees;
   	}
 	/**
-	* rounds the precision of a float (default 2).
+	* Rounds the precision of a float (default 2).
 	* @return float with rounded precision
 	*/
   	public static function roundfp(f: Float, precision = 2): Float {
@@ -39,16 +41,23 @@ class Helper {
 		return std.Math.round(f) / std.Math.pow(10, precision);
 	}
 	/**
-	* clamps a float within some limits.
+	* Clamps a float within some limits.
 	* @return same float, min or max if exceeded limits.
 	*/
   	public static function clamp(f: Float, min: Float, max: Float): Float {
 		return f < min ? min : f > max ? max : f;
 	}
-        /*
-        * Convenience function to map a variable from one coordinate space
-        * to another. Equivalent to unlerp() followed by lerp().
-	*/
+
+	/**
+	 * Convenience function to map a variable from one coordinate space to
+	 * another. Equivalent to unlerp() followed by lerp().
+	 * @param value
+	 * @param leftMin The lower bound of the input coordinate space
+	 * @param leftMax The higher bound of the input coordinate space
+	 * @param rightMin The lower bound of the output coordinate space
+	 * @param rightMax The higher bound of the output coordinate space
+	 * @return Float
+	 */
 	public static inline function map(value: Float, leftMin: Float, leftMax: Float, rightMin: Float, rightMax: Float): Float {
 		return rightMin + (value - leftMin) / (leftMax - leftMin) * (rightMax- rightMin);
 	}
