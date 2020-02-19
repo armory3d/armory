@@ -1,5 +1,7 @@
 package armory.logicnode;
 
+import kha.arrays.Float32Array;
+
 class AddGroupNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
@@ -18,7 +20,7 @@ class AddGroupNode extends LogicNode {
 			}
 		}
 
-		raw.groups.push({ name: groupName, object_refs: [] });
+		raw.groups.push({ name: groupName, object_refs: [], instance_offset: new Float32Array(3)});
 		runOutput(0);
 	}
 }
