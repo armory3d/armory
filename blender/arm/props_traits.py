@@ -313,6 +313,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     '''Generate navmesh from selected meshes'''
     bl_idname = 'arm.generate_navmesh'
     bl_label = 'Generate Navmesh'
+
     def execute(self, context):
         obj = context.active_object
 
@@ -330,7 +331,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         apply_modifiers = not armature
 
         obj_eval = obj.evaluated_get(depsgraph) if apply_modifiers else obj
-        exportMesh = obj_eval.to_mesh()
+        export_mesh = obj_eval.to_mesh()
         # TODO: build tilecache here
         print("Started visualization generation")
         # For visualization
@@ -342,11 +343,11 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
 
         with open(mesh_path, 'w') as f:
-            for v in exportMesh.vertices:
+            for v in export_mesh.vertices:
                 f.write("v %.4f " % (v.co[0] * obj_eval.scale.x))
                 f.write("%.4f " % (v.co[2] * obj_eval.scale.z))
                 f.write("%.4f\n" % (v.co[1] * obj_eval.scale.y)) # Flipped
-            for p in exportMesh.polygons:
+            for p in export_mesh.polygons:
                 f.write("f")
                 for i in reversed(p.vertices): # Flipped normals
                     f.write(" %d" % (i + 1))
@@ -356,13 +357,12 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
 
         # append config values
         nav_config = {}
-        for t in obj.arm_traitlist:
+        for trait in obj.arm_traitlist:
             # check if trait is navmesh here
-            if len(t.arm_traitpropslist) > 0 and t.class_name_prop == 'NavMesh':
-                for pt in t.arm_traitpropslist: # Append props
-                    prop = pt.name.replace(')', '').split('(')
-                    name = prop[0]
-                    value = float(pt.value)
+            if trait.arm_traitpropslist and trait.class_name_prop == 'NavMesh':
+                for prop in trait.arm_traitpropslist: # Append props
+                    name = prop.name
+                    value = prop.get_value()
                     nav_config[name] = value
         nav_config_json = json.dumps(nav_config)
 
@@ -374,8 +374,8 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         navmesh = bpy.context.selected_objects[0]
 
         navmesh.name = nav_mesh_name
-        navmesh.rotation_euler = (0,0,0)
-        navmesh.location = (obj.location.x,obj.location.y,obj.location.z)
+        navmesh.rotation_euler = (0, 0, 0)
+        navmesh.location = (obj.location.x, obj.location.y, obj.location.z)
         navmesh.arm_export = False
 
         bpy.context.view_layer.objects.active = navmesh
