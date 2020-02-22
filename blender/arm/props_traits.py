@@ -362,7 +362,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
             if trait.arm_traitpropslist and trait.class_name_prop == 'NavMesh':
                 for prop in trait.arm_traitpropslist: # Append props
                     name = prop.name
-                    value = prop.value_float
+                    value = prop.get_value()
                     nav_config[name] = value
         nav_config_json = json.dumps(nav_config)
 
