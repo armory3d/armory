@@ -10,7 +10,7 @@ class NavAgent extends Trait {
 	@prop
 	var speed: Float = 5;
 	@prop
-	var turnSpeed: Float = 0.4;
+	var turnDuration: Float = 0.4;
 
 	var path: Array<Vec4> = null;
 	var index = 0;
@@ -66,7 +66,7 @@ class NavAgent extends Trait {
 		}});
 
 		var q = new Quat();
-		rotAnim = Tween.to({ target: object.transform, props: { rot: q.fromEuler(0, 0, targetAngle) }, duration: turnSpeed});
+		rotAnim = Tween.to({ target: object.transform, props: { rot: q.fromEuler(0, 0, targetAngle) }, duration: turnDuration});
 	}
 
 	function update() {
