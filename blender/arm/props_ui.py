@@ -362,7 +362,9 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        layout.prop(wrd, 'arm_debug_console')
+        row = layout.row()
+        row.enabled = wrd.arm_ui != 'Disabled'
+        row.prop(wrd, 'arm_debug_console')
         layout.prop(wrd, 'arm_cache_build')
         layout.prop(wrd, 'arm_live_patch')
         layout.prop(wrd, 'arm_stream_scene')
