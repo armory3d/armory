@@ -383,6 +383,10 @@ def parse_vector(node, socket):
     elif node.type == 'GROUP_INPUT':
         return parse_group_input(node, socket)
 
+    elif node.type == 'VERTEX_COLOR':
+        con.add_elem('col', 'short4norm') # Vcols only for now
+        return 'vcolor'
+
     elif node.type == 'ATTRIBUTE':
         if socket == node.outputs[0]: # Color
             con.add_elem('col', 'short4norm') # Vcols only for now

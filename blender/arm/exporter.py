@@ -969,8 +969,8 @@ class ArmoryExporter:
         has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
         has_tex1 = has_tex and num_uv_layers > 1
         num_colors = len(exportMesh.vertex_colors)
-        has_col = self.get_export_vcols(exportMesh) and num_colors > 0
-        has_tang = self.has_tangents(exportMesh)
+        has_col = self.get_export_vcols(bobject.data) and num_colors > 0
+        has_tang = self.has_tangents(bobject.data)
 
         pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
         ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
