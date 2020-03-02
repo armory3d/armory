@@ -802,12 +802,25 @@ class ArmoryExporter:
                     o['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
                 orig_action = bobject.animation_data.action
+                baked_actions = []
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     bobject.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress())
                     assets.add(fp)
                     if bdata.arm_cached == False or not os.path.exists(fp):
+                        #handle autobake
+                        if bdata.arm_autobake:
+                            sel = bpy.context.selected_objects[:]
+                            for _o in sel: _o.select_set(False)
+                            bobject.select_set(True)
+                            print('Baking action '+aname)
+                            bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
+                            action = bobject.animation_data.action
+                            bobject.select_set(False)
+                            for _o in sel: _o.select_set(True)
+                            baked_actions.append(action)
+
                         print('Exporting armature action ' + aname)
                         bones = []
                         self.bone_tracks = []
@@ -824,6 +837,10 @@ class ArmoryExporter:
                         action_obj['name'] = aname
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
+                
+                #clear baked actions
+                for a in baked_actions:
+                        bpy.data.actions.remove( a, do_unlink=True)
                 bobject.animation_data.action = orig_action
                 # TODO: cache per action
                 bdata.arm_cached = True
@@ -934,11 +951,12 @@ class ArmoryExporter:
         oskin['bone_weight_array'] = bone_weight_array
 
         # Bone constraints
-        for bone in armature.pose.bones:
-            if len(bone.constraints) > 0:
-                if 'constraints' not in oskin:
-                    oskin['constraints'] = []
-                self.add_constraints(bone, oskin, bone=True)
+        if not armature.data.arm_autobake:
+            for bone in armature.pose.bones:
+                if len(bone.constraints) > 0:
+                    if 'constraints' not in oskin:
+                        oskin['constraints'] = []
+                    self.add_constraints(bone, oskin, bone=True)
 
     def write_mesh(self, bobject, fp, o):
         wrd = bpy.data.worlds['Arm']

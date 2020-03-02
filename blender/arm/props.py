@@ -139,6 +139,7 @@ def init_properties():
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For armature
     bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.arm_autobake = BoolProperty(name="Auto Bake", description="Bake constraints automatically", default=True)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
 

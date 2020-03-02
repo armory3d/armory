@@ -142,6 +142,7 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_loop')
             layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
+            layout.prop(obj.data, 'arm_autobake')
             pass
 
 class ARM_PT_ScenePropsPanel(bpy.types.Panel):
