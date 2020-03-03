@@ -60,12 +60,14 @@ def export_data(fp, sdk_path):
     global exporter
     wrd = bpy.data.worlds['Arm']
 
-    print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
-    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi() + ', Blender: ' + bpy.app.version_string)
+    print('\n' + '_' * 10 + '  [Armory] Compiling  ' + '_' * 10)
+    if wrd.arm_verbose_output:
+        print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
+        print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi() + ', Blender: ' + bpy.app.version_string)
 
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
-    if wrd.arm_cache_build == False:
+    if not wrd.arm_cache_build:
         if os.path.isdir(build_dir + '/debug/html5-resources'):
             shutil.rmtree(build_dir + '/debug/html5-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/krom-resources'):
@@ -104,7 +106,7 @@ def export_data(fp, sdk_path):
     if not os.path.exists(build_dir + '/compiled/Assets'):
         os.makedirs(build_dir + '/compiled/Assets')
     # have a "zoo" collection in the current scene
-    export_coll = bpy.data.collections.new("export_coll") 
+    export_coll = bpy.data.collections.new("export_coll")
     bpy.context.scene.collection.children.link(export_coll)
     for scene in bpy.data.scenes:
         if scene == bpy.context.scene: continue
@@ -114,7 +116,7 @@ def export_data(fp, sdk_path):
                     export_coll.objects.link(o)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll) # destroy "zoo" collection
-    
+
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
@@ -149,12 +151,13 @@ def export_data(fp, sdk_path):
         modules.append('navigation')
     if export_ui:
         modules.append('ui')
-    print('Exported modules: ' + str(modules))
 
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
-    print('Shader flags: ' + str(defs))
-    if wrd.arm_debug_console:
+
+    if wrd.arm_verbose_output:
+        print('Exported modules: ' + str(modules))
+        print('Shader flags: ' + str(defs))
         print('Khafile flags: ' + str(assets.khafile_defs))
 
     # Render path is configurable at runtime
@@ -291,8 +294,12 @@ def compile(assets_only=False):
         cmd.append('--nohaxe')
         cmd.append('--noproject')
 
-    print("Running: ", cmd)
-    print("Using project from " + arm.utils.get_fp())
+    if not wrd.arm_verbose_output:
+        cmd.append("--silent")
+    else:
+        print("Using project from " + arm.utils.get_fp())
+        print("Running: ", cmd)
+
     state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
 
 def build(target, is_play=False, is_publish=False, is_export=False):
@@ -577,7 +584,7 @@ def build_success():
             new_files_path = files_path + '-' + ext
             os.rename(files_path, new_files_path)
             files_path = new_files_path
-        
+
         if target_name == 'html5':
             print('Exported HTML5 package to ' + files_path)
         elif target_name.startswith('ios') or target_name.startswith('osx'): # TODO: to macos

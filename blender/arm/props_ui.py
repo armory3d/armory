@@ -366,6 +366,7 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         row = layout.row()
         row.enabled = wrd.arm_ui != 'Disabled'
         row.prop(wrd, 'arm_debug_console')
+        layout.prop(wrd, 'arm_verbose_output')
         layout.prop(wrd, 'arm_cache_build')
         layout.prop(wrd, 'arm_live_patch')
         layout.prop(wrd, 'arm_stream_scene')

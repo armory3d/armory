@@ -182,7 +182,9 @@ class ArmoryExporter:
             self.export_pose_markers(oanim, action)
 
             if True: #action.arm_cached == False or not os.path.exists(fp):
-                print('Exporting object action ' + aname)
+                wrd = bpy.data.worlds['Arm']
+                if wrd.arm_verbose_output:
+                    print('Exporting object action ' + aname)
                 actionf = {}
                 actionf['objects'] = []
                 actionf['objects'].append(oaction)
@@ -285,7 +287,7 @@ class ArmoryExporter:
 
                     except KeyError:
                         if data_path not in target_names:
-                            print(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            log.warn(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
                             continue
 
                         # Missing target entry for array_index or something else
@@ -295,7 +297,9 @@ class ArmoryExporter:
                     oanim['tracks'].append(data_ttrack)
 
                 if True:  #action.arm_cached == False or not os.path.exists(fp):
-                    print('Exporting object action ' + action_name)
+                    wrd = bpy.data.worlds['Arm']
+                    if wrd.arm_verbose_output:
+                        print('Exporting object action ' + action_name)
                     actionf = {}
                     actionf['objects'] = []
                     actionf['objects'].append(oaction)
@@ -814,14 +818,16 @@ class ArmoryExporter:
                             sel = bpy.context.selected_objects[:]
                             for _o in sel: _o.select_set(False)
                             bobject.select_set(True)
-                            print('Baking action '+aname)
+                            if wrd.arm_verbose_output:
+                                print('Baking action '+aname)
                             bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
                             action = bobject.animation_data.action
                             bobject.select_set(False)
                             for _o in sel: _o.select_set(True)
                             baked_actions.append(action)
 
-                        print('Exporting armature action ' + aname)
+                        if wrd.arm_verbose_output:
+                            print('Exporting armature action ' + aname)
                         bones = []
                         self.bone_tracks = []
                         for bone in bdata.bones:
@@ -1235,7 +1241,8 @@ class ArmoryExporter:
                 log.warn('{0} users {1} and {2} differ in modifier stack - use Make Single User - Object & Data for now'.format(oid, bobject.name, table[i].name))
                 break
 
-        print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
+        if wrd.arm_verbose_output:
+            print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
 
         o = {}
         o['name'] = oid
