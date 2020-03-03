@@ -719,11 +719,11 @@ def open_editor(hx_path=None):
 
 def open_folder():
     if arm.utils.get_os() == 'win':
-        subprocess.Popen(['explorer', arm.utils.get_fp()])
+        subprocess.run(['explorer', arm.utils.get_fp()])
     elif arm.utils.get_os() == 'mac':
-        subprocess.Popen(['open', arm.utils.get_fp()])
+        subprocess.run(['open', arm.utils.get_fp()])
     elif arm.utils.get_os() == 'linux':
-        subprocess.Popen(['xdg-open', arm.utils.get_fp()])
+        subprocess.run(['xdg-open', arm.utils.get_fp()])
     else:
         webbrowser.open('file://' + arm.utils.get_fp())
 
