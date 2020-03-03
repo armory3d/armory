@@ -837,7 +837,7 @@ class ArmoryExporter:
                         action_obj['name'] = aname
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
-                
+
                 #clear baked actions
                 for a in baked_actions:
                         bpy.data.actions.remove( a, do_unlink=True)
@@ -1433,13 +1433,27 @@ class ArmoryExporter:
                 if has_proxy_user:
                     continue
 
+                asset_name = arm.utils.asset_name(bobject)
+
                 # Add external linked objects
-                if bobject.name not in scene_objects and collection.library is not None:
+                if collection.library is not None:
+                    # Iron differentiates objects based on their names,
+                    # so errors will happen if two objects with the
+                    # same name exists. This check is only required
+                    # when the object in question is in a library,
+                    # otherwise Blender will not allow duplicate names
+                    if asset_name in scene_objects:
+                        log.warn("skipping export of the object"
+                                 f" {bobject.name} (collection"
+                                 f" {collection.name}) because it has the same"
+                                 " export name as another object in the scene:"
+                                 f" {asset_name}")
+                        continue
+
                     self.process_bobject(bobject)
                     self.export_object(bobject, self.scene)
-                    out_collection['object_refs'].append(arm.utils.asset_name(bobject))
-                else:
-                    out_collection['object_refs'].append(bobject.name)
+
+                out_collection['object_refs'].append(asset_name)
 
         self.output['groups'].append(out_collection)
 
