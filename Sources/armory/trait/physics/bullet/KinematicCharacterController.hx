@@ -331,7 +331,7 @@ class KinematicCharacterController extends Trait {
 	}
 
 	function addPointsToConvexHull(shape: bullet.Bt.ConvexHullShape, scale: Vec4, margin: Float) {
-		var positions = cast(object, MeshObject).data.geom.positions;
+		var positions = cast(object, MeshObject).data.geom.positions.values;
 
 		var sx = scale.x * (1.0 - margin);
 		var sy = scale.y * (1.0 - margin);
