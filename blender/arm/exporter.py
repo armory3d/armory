@@ -1152,16 +1152,16 @@ class ArmoryExporter:
 
         # Output
         o['vertex_arrays'] = []
-        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata })
-        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata })
+        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
+        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
         if has_tex:
-            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data })
+            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
             if has_tex1:
-                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data })
+                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
         if has_col:
-            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata })
+            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
         if has_tang:
-            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata })
+            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata, 'data': 'short4norm', 'padding': 1 })
 
         # If there are multiple morph targets, export them here.
         # if (shapeKeys):
