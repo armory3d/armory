@@ -1435,8 +1435,13 @@ class ArmoryExporter:
 
                 asset_name = arm.utils.asset_name(bobject)
 
-                # Add external linked objects
-                if collection.library is not None:
+                if collection.library is None:
+                    #collection is in the same file, but (likely) on another scene
+                    if asset_name not in scene_objects:
+                        self.process_bobject(bobject)
+                        self.export_object(bobject, self.scene)
+                else:
+                    # Add external linked objects
                     # Iron differentiates objects based on their names,
                     # so errors will happen if two objects with the
                     # same name exists. This check is only required
