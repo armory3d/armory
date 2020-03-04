@@ -801,12 +801,16 @@ class ArmoryExporter:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     o['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
-                orig_action = bobject.animation_data.action
+                clear_op = set()
                 skelobj = bobject
                 baked_actions = []
+                orig_action = bobject.animation_data.action
                 if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
-                    #clone bjobject and put in the current scene so the bake operator can run
-                    skelobj = bobject.copy()
+                    clear_op.add( 'unlink' )
+                    #clone bjobject and put it in the current scene so the bake operator can run
+                    if bobject.library is not None:
+                        skelobj = bobject.copy()
+                        clear_op.add('rem')
                     bpy.context.collection.objects.link(skelobj)
 
                 for action in export_actions:
@@ -846,9 +850,8 @@ class ArmoryExporter:
                 #restore settings
                 skelobj.animation_data.action = orig_action
                 for a in baked_actions: bpy.data.actions.remove( a, do_unlink=True)
-                if skelobj != bobject:
-                    bpy.context.collection.objects.unlink(skelobj)
-                    bpy.data.objects.remove(skelobj, do_unlink=True)
+                if 'unlink' in clear_op: bpy.context.collection.objects.unlink(skelobj)
+                if 'rem' in clear_op: bpy.data.objects.remove(skelobj, do_unlink=True)
 
                 # TODO: cache per action
                 bdata.arm_cached = True
