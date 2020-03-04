@@ -353,6 +353,10 @@ class Postprocess {
 			v.z = 0;
 		}
 
+		return v;
+
+	}
+
     public static function init() {
 
 		iron.object.Uniforms.externalVec3Links.push(vec3Link);
