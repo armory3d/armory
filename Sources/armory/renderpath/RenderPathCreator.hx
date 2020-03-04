@@ -24,6 +24,13 @@ class RenderPathCreator {
 	public static function get(): RenderPath {
 		path = new RenderPath();
 		Inc.init(path);
+
+		#if rp_pp
+		iron.App.notifyOnInit(function() {
+			Postprocess.init();
+		});
+		#end
+
 		#if (rp_renderer == "Forward")
 		RenderPathForward.init(path);
 		path.commands = RenderPathForward.commands;

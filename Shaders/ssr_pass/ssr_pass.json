@@ -21,6 +21,14 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "PPComp9",
+					"link": "_PPComp9"
+				},
+				{
+					"name": "PPComp10",
+					"link": "_PPComp10"
 				}
 			],
 			"texture_params": [],
