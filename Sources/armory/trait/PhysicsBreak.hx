@@ -62,7 +62,7 @@ class PhysicsBreak extends Trait {
 					var ud = breaker.userDataMap.get(cast o);
 					var params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.04, 0.0, 0.0, 0.0];
 					o.addTrait(new RigidBody(Shape.ConvexHull, ud.mass, ud.friction, 0, 1, params));
-					if (cast(o, MeshObject).data.geom.positions.length < 600) {
+					if (cast(o, MeshObject).data.geom.positions.values.length < 600) {
 						o.addTrait(new PhysicsBreak());
 					}
 				}
@@ -115,7 +115,7 @@ class ConvexBreaker {
 	}
 
 	public function initBreakableObject(object: MeshObject, mass: Float, friction: Float, velocity: Vec4, angularVelocity: Vec4, breakable: Bool) {
-		var ar = object.data.geom.positions;
+		var ar = object.data.geom.positions.values;
 		var scalePos = object.data.scalePos;
 		// Create vertices mark
 		var sc = object.transform.scale;
@@ -550,11 +550,11 @@ class ConvexBreaker {
 		var inda = new kha.arrays.Uint32Array(ind.length);
 		for (i in 0...ind.length) inda.set(i, ind[i]);
 
-		var pos: TVertexArray = { attrib: "pos", values: paa };
-		var nor: TVertexArray = { attrib: "nor", values: naa };
+		var pos: TVertexArray = { attrib: "pos", values: paa, data: "short4norm" };
+		var nor: TVertexArray = { attrib: "nor", values: naa, data: "short2norm" };
 		var indices: TIndexArray = { material: 0, values: inda };
 
-		var rawmesh: TMeshData = { 
+		var rawmesh: TMeshData = {
 			name: "TempMesh" + (meshIndex++),
 			vertex_arrays: [pos, nor],
 			index_arrays: [indices],

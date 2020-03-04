@@ -486,7 +486,7 @@ class RigidBody extends iron.Trait {
 		convexHullCache.set(data, shape);
 		usersCache.set(data, 1);
 
-		var positions = data.geom.positions;
+		var positions = data.geom.positions.values;
 
 		var sx: kha.FastFloat = scale.x * (1.0 - margin) * (1 / 32767);
 		var sy: kha.FastFloat = scale.y * (1.0 - margin) * (1 / 32767);
@@ -520,7 +520,7 @@ class RigidBody extends iron.Trait {
 		triangleMeshCache.set(data, triangleMesh);
 		usersCache.set(data, 1);
 
-		var positions = data.geom.positions;
+		var positions = data.geom.positions.values;
 		var indices = data.geom.indices;
 
 		var sx: kha.FastFloat = scale.x * (1 / 32767);

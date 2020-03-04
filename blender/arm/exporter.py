@@ -837,7 +837,7 @@ class ArmoryExporter:
                         action_obj['name'] = aname
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
-                
+
                 #clear baked actions
                 for a in baked_actions:
                         bpy.data.actions.remove( a, do_unlink=True)
@@ -1152,16 +1152,16 @@ class ArmoryExporter:
 
         # Output
         o['vertex_arrays'] = []
-        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata })
-        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata })
+        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
+        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
         if has_tex:
-            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data })
+            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
             if has_tex1:
-                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data })
+                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
         if has_col:
-            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata })
+            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
         if has_tang:
-            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata })
+            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata, 'data': 'short4norm', 'padding': 1 })
 
         # If there are multiple morph targets, export them here.
         # if (shapeKeys):
@@ -1433,13 +1433,27 @@ class ArmoryExporter:
                 if has_proxy_user:
                     continue
 
+                asset_name = arm.utils.asset_name(bobject)
+
                 # Add external linked objects
-                if bobject.name not in scene_objects and collection.library is not None:
+                if collection.library is not None:
+                    # Iron differentiates objects based on their names,
+                    # so errors will happen if two objects with the
+                    # same name exists. This check is only required
+                    # when the object in question is in a library,
+                    # otherwise Blender will not allow duplicate names
+                    if asset_name in scene_objects:
+                        log.warn("skipping export of the object"
+                                 f" {bobject.name} (collection"
+                                 f" {collection.name}) because it has the same"
+                                 " export name as another object in the scene:"
+                                 f" {asset_name}")
+                        continue
+
                     self.process_bobject(bobject)
                     self.export_object(bobject, self.scene)
-                    out_collection['object_refs'].append(arm.utils.asset_name(bobject))
-                else:
-                    out_collection['object_refs'].append(bobject.name)
+
+                out_collection['object_refs'].append(asset_name)
 
         self.output['groups'].append(out_collection)
 
