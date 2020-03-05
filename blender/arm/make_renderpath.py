@@ -195,6 +195,9 @@ def build():
             if compo_depth:
                 wrd.compo_defs += '_CDepth'
                 assets.add_khafile_def('rp_compositordepth')
+            if rpdat.rp_pp:
+                wrd.compo_defs += '_CPostprocess'
+
             assets.add_shader_pass('compositor_pass')
 
         assets.add_khafile_def('rp_antialiasing={0}'.format(rpdat.rp_antialiasing))
@@ -328,6 +331,9 @@ def build():
 
     if rpdat.rp_dynres:
         assets.add_khafile_def('rp_dynres')
+
+    if rpdat.rp_pp:
+        assets.add_khafile_def('rp_pp')
 
     if rpdat.rp_chromatic_aberration:
         assets.add_shader_pass('copy_pass')

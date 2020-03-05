@@ -6,7 +6,12 @@
 			"color_write_alpha": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
-			"links": [],
+			"links": [
+				{
+					"name": "PPComp13",
+					"link": "_PPComp13"
+				}
+			],
 			"texture_params": [],
 			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "chromatic_aberration_pass.frag.glsl"

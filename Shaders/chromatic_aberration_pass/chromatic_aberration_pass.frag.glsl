@@ -3,6 +3,7 @@
 #include "compiled.inc"
 
 uniform sampler2D tex;
+uniform vec3 PPComp13;
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -36,8 +37,13 @@ vec4 spectrum_offset(float t) {
 
 void main() {
 
-	float max_distort = compoChromaticStrength;
-	int num_iter = compoChromaticSamples;
+	#ifdef _CPostprocess
+		float max_distort = PPComp13.x;
+		int num_iter = int(PPComp13.y);
+	#else
+		float max_distort = compoChromaticStrength;
+		int num_iter = compoChromaticSamples;
+	#endif
 
 	float reci_num_iter_f = 1.0 / float(num_iter);
 
