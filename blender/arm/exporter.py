@@ -838,7 +838,7 @@ class ArmoryExporter:
                                 boneo = {}
                                 self.export_bone(skelobj, bone, scene, boneo, action)
                                 bones.append(boneo)
-                        self.write_bone_matrices(scene, action)
+                        self.write_bone_matrices( bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
