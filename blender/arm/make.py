@@ -295,7 +295,7 @@ def compile(assets_only=False):
         cmd.append('--noproject')
 
     if not wrd.arm_verbose_output:
-        cmd.append("--silent")
+        cmd.append("--quiet")
     else:
         print("Using project from " + arm.utils.get_fp())
         print("Running: ", cmd)
