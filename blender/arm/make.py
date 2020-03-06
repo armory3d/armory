@@ -315,7 +315,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
     if arm.utils.get_save_on_build():
         bpy.ops.wm.save_mainfile()
 
-    log.clear()
+    log.clear(clear_warnings=True)
 
     # Set camera in active scene
     active_scene = arm.utils.get_active_scene()
@@ -409,7 +409,9 @@ def compilation_server_done():
 
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
-    if state.proc_build == None:
+    if log.num_warnings > 0:
+        print(f'{log.num_warnings} warnings occurred during compilation!')
+    if state.proc_build is None:
         return
     result = state.proc_build.poll()
     state.proc_build = None
@@ -475,8 +477,6 @@ def get_khajs_path(target):
 def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
-
-    log.clear()
 
     build(target=runtime_to_target(), is_play=True)
 
