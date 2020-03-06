@@ -12,6 +12,9 @@ uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
 
+uniform vec3 PPComp9;
+uniform vec3 PPComp10;
+
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
@@ -48,12 +51,20 @@ vec4 binarySearch(vec3 dir) {
 		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
-	if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	#ifdef _CPostprocess
+		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	#else
+		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
-	dir *= ssrRayStep;
+	#ifdef _CPostprocess
+		dir *= PPComp9.x;
+	#else
+		dir *= ssrRayStep;
+	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
@@ -63,7 +74,7 @@ vec4 rayCast(vec3 dir) {
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float roughness = g0.b;
+	float roughness = unpackFloat(g0.b).y;
 	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
@@ -83,7 +94,12 @@ void main() {
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
 	
-	vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	#ifdef _CPostprocess
+		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+	#else
+		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	#endif
+	
 	// * max(ssrMinRayStep, -viewPos.z)
 	vec4 coords = rayCast(dir);
 
@@ -91,12 +107,11 @@ void main() {
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
 	float reflectivity = 1.0 - roughness;
-	float intensity = pow(reflectivity, ssrFalloffExp) *
-		screenEdgeFactor *
-		clamp(-reflected.z, 0.0, 1.0) *
-		clamp((ssrSearchDist - length(viewPos - hitCoord)) *
-		(1.0 / ssrSearchDist), 0.0, 1.0) *
-		coords.w;
+	#ifdef _CPostprocess
+		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	#else
+		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;

@@ -12,6 +12,9 @@ uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform mat4 invVP;
 
+uniform vec3 PPComp11;
+uniform vec3 PPComp12;
+
 in vec2 texCoord;
 in vec3 viewRay;
 out float fragColor;
@@ -30,7 +33,11 @@ void main() {
 	vec3 currentPos = getPosNoEye(eyeLook, vray, depth, cameraProj);
 	// vec3 currentPos = getPos2NoEye(eye, invVP, depth, texCoord);
 	float currentDistance = length(currentPos);
-	float currentDistanceA = currentDistance * ssaoScale * (1.0 / ssaoRadius);
+	#ifdef _CPostprocess
+		float currentDistanceA = currentDistance * PPComp12.y * (1.0 / PPComp11.z);
+	#else
+		float currentDistanceA = currentDistance * ssaoScale * (1.0 / ssaoRadius);
+	#endif
 	float currentDistanceB = currentDistance * 0.0005;
 	ivec2 px = ivec2(texCoord * screenSize);
 	float phi = (3 * px.x ^ px.y + px.x * px.y) * 10;
@@ -47,6 +54,10 @@ void main() {
 		fragColor += max(0, dot(pos, n) - currentDistanceB) / (dot(pos, pos) + 0.015);
 	}
 	
-	fragColor *= (ssaoStrength * 0.3) / samples;
+	#ifdef _CPostprocess
+		fragColor *= (PPComp12.x * 0.3) / samples;
+	#else
+		fragColor *= (ssaoStrength * 0.3) / samples;
+	#endif
 	fragColor = 1.0 - fragColor;
 }

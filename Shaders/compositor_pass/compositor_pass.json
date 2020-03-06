@@ -75,6 +75,156 @@
 					"name": "lutTexture",
 					"link": "$luttexture.jpg",
 					"ifdef": ["_CLUT"]
+				},
+				{
+					"name": "globalWeight",
+					"link": "_globalWeight",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalTint",
+					"link": "_globalTint",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalSaturation",
+					"link": "_globalSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalContrast",
+					"link": "_globalContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalGamma",
+					"link": "_globalGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalGain",
+					"link": "_globalGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalOffset",
+					"link": "_globalOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowSaturation",
+					"link": "_shadowSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowContrast",
+					"link": "_shadowContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowGamma",
+					"link": "_shadowGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowGain",
+					"link": "_shadowGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowOffset",
+					"link": "_shadowOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneSaturation",
+					"link": "_midtoneSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneContrast",
+					"link": "_midtoneContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneGamma",
+					"link": "_midtoneGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneGain",
+					"link": "_midtoneGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneOffset",
+					"link": "_midtoneOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightSaturation",
+					"link": "_highlightSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightContrast",
+					"link": "_highlightContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightGamma",
+					"link": "_highlightGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightGain",
+					"link": "_highlightGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightOffset",
+					"link": "_highlightOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp1",
+					"link": "_PPComp1",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp2",
+					"link": "_PPComp2",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp3",
+					"link": "_PPComp3",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp4",
+					"link": "_PPComp4",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp5",
+					"link": "_PPComp5",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp6",
+					"link": "_PPComp6",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp7",
+					"link": "_PPComp7",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp8",
+					"link": "_PPComp8",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

@@ -805,11 +805,21 @@ class ArmoryExporter:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     o['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
-                orig_action = bobject.animation_data.action
+                clear_op = set()
+                skelobj = bobject
                 baked_actions = []
+                orig_action = bobject.animation_data.action
+                if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
+                    clear_op.add( 'unlink' )
+                    #clone bjobject and put it in the current scene so the bake operator can run
+                    if bobject.library is not None:
+                        skelobj = bobject.copy()
+                        clear_op.add('rem')
+                    bpy.context.collection.objects.link(skelobj)
+
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
-                    bobject.animation_data.action = action
+                    skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress())
                     assets.add(fp)
                     if bdata.arm_cached == False or not os.path.exists(fp):
@@ -817,12 +827,10 @@ class ArmoryExporter:
                         if bdata.arm_autobake:
                             sel = bpy.context.selected_objects[:]
                             for _o in sel: _o.select_set(False)
-                            bobject.select_set(True)
-                            if wrd.arm_verbose_output:
-                                print('Baking action '+aname)
+                            skelobj.select_set(True)
                             bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
-                            action = bobject.animation_data.action
-                            bobject.select_set(False)
+                            action = skelobj.animation_data.action
+                            skelobj.select_set(False)
                             for _o in sel: _o.select_set(True)
                             baked_actions.append(action)
 
@@ -833,9 +841,9 @@ class ArmoryExporter:
                         for bone in bdata.bones:
                             if not bone.parent:
                                 boneo = {}
-                                self.export_bone(bobject, bone, scene, boneo, action)
+                                self.export_bone(skelobj, bone, scene, boneo, action)
                                 bones.append(boneo)
-                        self.write_bone_matrices(scene, action)
+                        self.write_bone_matrices( bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
@@ -844,10 +852,12 @@ class ArmoryExporter:
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
 
-                #clear baked actions
-                for a in baked_actions:
-                        bpy.data.actions.remove( a, do_unlink=True)
-                bobject.animation_data.action = orig_action
+                #restore settings
+                skelobj.animation_data.action = orig_action
+                for a in baked_actions: bpy.data.actions.remove( a, do_unlink=True)
+                if 'unlink' in clear_op: bpy.context.collection.objects.unlink(skelobj)
+                if 'rem' in clear_op: bpy.data.objects.remove(skelobj, do_unlink=True)
+
                 # TODO: cache per action
                 bdata.arm_cached = True
 
@@ -1442,8 +1452,13 @@ class ArmoryExporter:
 
                 asset_name = arm.utils.asset_name(bobject)
 
-                # Add external linked objects
-                if collection.library is not None:
+                if collection.library is None:
+                    #collection is in the same file, but (likely) on another scene
+                    if asset_name not in scene_objects:
+                        self.process_bobject(bobject)
+                        self.export_object(bobject, self.scene)
+                else:
+                    # Add external linked objects
                     # Iron differentiates objects based on their names,
                     # so errors will happen if two objects with the
                     # same name exists. This check is only required
