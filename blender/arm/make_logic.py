@@ -46,6 +46,11 @@ def build_node_tree(node_group):
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
     group_name = arm.utils.safesrc(node_group.name[0].upper() + node_group.name[1:])
+
+    if group_name != node_group.name:
+        arm.log.warn('Logic node tree and generated trait names differ! Node'
+                     f' tree: "{node_group.name}", trait: "{group_name}"')
+
     file = path + group_name + '.hx'
 
     # Import referenced node group
@@ -74,7 +79,7 @@ def build_node_tree(node_group):
         for node in root_nodes:
             build_node(node, f)
         f.write('\t}\n')
-        
+
         # Create node functions
         for node_name in function_nodes:
             node = function_nodes[node_name]
@@ -154,7 +159,7 @@ def build_node(node, f):
             else:
                 prop = str(prop)
             f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
-    
+
     # Create inputs
     for inp in node.inputs:
         # Is linked - find node
@@ -179,7 +184,7 @@ def build_node(node, f):
             inp_from = 0
         # Add input
         f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
-    
+
     # Create outputs
     for out in node.outputs:
         if out.is_linked:
@@ -216,7 +221,7 @@ def collect_nodes_from_output(out, f):
         for o in reroute.outputs:
             outputs = outputs + collect_nodes_from_output(o, f)
     return outputs
-    
+
 def get_root_nodes(node_group):
     roots = []
     for node in node_group.nodes:

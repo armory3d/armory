@@ -142,6 +142,7 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_loop')
             layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
+            layout.prop(obj.data, 'arm_autobake')
             pass
 
 class ARM_PT_ScenePropsPanel(bpy.types.Panel):
@@ -264,13 +265,21 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        if state.proc_play == None and state.proc_build == None:
+        if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
         row.operator("arm.clean_menu")
         layout.prop(wrd, 'arm_runtime')
         layout.prop(wrd, 'arm_play_camera')
+
+        if log.num_warnings > 0:
+            box = layout.box()
+            # Less spacing between lines
+            col = box.column(align=True)
+            col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
+            # Blank icon to achieve the same indentation as the line before
+            col.label(text='Please open the console to get more information.', icon='BLANK1')
 
 class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
@@ -362,7 +371,10 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        layout.prop(wrd, 'arm_debug_console')
+        row = layout.row()
+        row.enabled = wrd.arm_ui != 'Disabled'
+        row.prop(wrd, 'arm_debug_console')
+        layout.prop(wrd, 'arm_verbose_output')
         layout.prop(wrd, 'arm_cache_build')
         layout.prop(wrd, 'arm_live_patch')
         layout.prop(wrd, 'arm_stream_scene')
@@ -608,7 +620,7 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 def draw_view3d_header(self, context):
-    if state.proc_build != None:
+    if state.proc_build is not None:
         self.layout.label(text='Compiling..')
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
@@ -709,6 +721,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, "rp_hdr")
         layout.prop(rpdat, "rp_stereo")
         layout.prop(rpdat, 'arm_culling')
+        layout.prop(rpdat, 'rp_pp')
 
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"

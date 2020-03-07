@@ -25,6 +25,14 @@
 				{
 					"name": "screenSize",
 					"link": "_screenSize"
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11"
+				},
+				{
+					"name": "PPComp12",
+					"link": "_PPComp12"
 				}
 			],
 			"texture_params": [],

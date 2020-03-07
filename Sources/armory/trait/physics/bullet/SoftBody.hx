@@ -92,7 +92,7 @@ class SoftBody extends Trait {
 			object.transform.buildMatrix();
 		}
 
-		var positions = fromI16(geom.positions, mo.data.scalePos);
+		var positions = fromI16(geom.positions.values, mo.data.scalePos);
 		for (i in 0...Std.int(positions.length / 3)) {
 			v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 			v.applyQuat(object.transform.rot);

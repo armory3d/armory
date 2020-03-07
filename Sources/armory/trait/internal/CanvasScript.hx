@@ -77,15 +77,30 @@ class CanvasScript extends Trait {
 		onReady = f;
 	}
 
-	// Defines layout
+	/**
+	 * Returns an element of the canvas.
+	 * @param name The name of the element
+	 * @return TElement
+	 */
 	public function getElement(name: String): TElement {
 		for (e in canvas.elements) if (e.name == name) return e;
 		return null;
 	}
 
-	// Returns canvas array of elements
+	/**
+	 * Returns an array of the elements of the canvas.
+	 * @return Array<TElement>
+	 */
 	public function getElements(): Array<TElement> {
 		return canvas.elements;
+	}
+
+	/**
+	 * Returns the canvas object of this trait.
+	 * @return TCanvas
+	 */
+	public function getCanvas(): Null<TCanvas> {
+		return canvas;
 	}
 
 	/**

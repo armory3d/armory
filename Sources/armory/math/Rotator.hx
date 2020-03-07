@@ -1,6 +1,7 @@
 package armory.math;
 
 import kha.FastFloat;
+import iron.math.Mat4;
 
 class Rotator {
 	public var pitch: FastFloat; // X - look up or down around the X axis
@@ -14,16 +15,16 @@ class Rotator {
 	}
 
 	public function toDegrees(): Rotator {
-		pitch = Math.toDegrees(pitch);
-		roll = Math.toDegrees(roll);
-		yaw = Math.toDegrees(yaw);
+		pitch = Helper.radToDeg(pitch);
+		roll = Helper.radToDeg(roll);
+		yaw = Helper.radToDeg(yaw);
 		return this;
 	}
 
 	public function toRadians(): Rotator {
-		pitch = Math.toRadians(pitch);
-		roll = Math.toRadians(roll);
-		yaw = Math.toRadians(yaw);
+		pitch = Helper.degToRad(pitch);
+		roll = Helper.degToRad(roll);
+		yaw = Helper.degToRad(yaw);
 		return this;
 	}
 
@@ -182,7 +183,7 @@ class Rotator {
 	}
 
 	public static inline function clampAxis(angle: FastFloat): FastFloat {
-		angle = Math.mod(angle, 360); // Makes the angle between -360 and +360
+		angle = angle % 360; // Makes the angle between -360 and +360
 		if (angle < 0.0) angle += 360.0;
 		return angle;
 	}

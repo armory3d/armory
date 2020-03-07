@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 import iron.math.Quat;
-import iron.math.Vec3;
+import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
 
 class SetRotationNode extends LogicNode {
@@ -18,7 +18,7 @@ class SetRotationNode extends LogicNode {
 		if (object == null) {
 			return;
 		}
-		var vec: Vec3 = inputs[2].get();
+		var vec: Vec4 = inputs[2].get();
 		var w: Float = inputs[3].get();
 		switch (property0) {
 			case "Euler Angles":
@@ -30,9 +30,8 @@ class SetRotationNode extends LogicNode {
 				}
 				var angleSin = Math.sin(angle / 2);
 				vec = vec.normalize();
-				vec = new Vec3(vec.x * angleSin, vec.y * angleSin, vec.z * angleSin);
 				var angleCos = Math.cos(angle / 2);
-				object.transform.rot = new Quat(vec.x, vec.y, vec.z, angleCos);
+				object.transform.rot = new Quat(vec.x * angleSin, vec.y * angleSin, vec.z * angleSin, angleCos);
 			case "Quaternion":
 				object.transform.rot = new Quat(vec.x, vec.y, vec.z, w);
 		}

@@ -41,6 +41,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
+        rpdat.rp_pp = False
     elif self.rp_preset == 'Mobile':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -75,6 +76,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = False
+        rpdat.rp_pp = False
     elif self.rp_preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadows = True
@@ -112,6 +114,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
+        rpdat.rp_pp = False
     elif self.rp_preset == '2D/Baked':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -146,6 +149,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_irradiance = False
         rpdat.arm_radiance = False
+        rpdat.rp_pp = False
     update_renderpath(self, context)
 
 def update_renderpath(self, context):
@@ -326,6 +330,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Water surface pass", default=False, update=update_renderpath)
+    rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
     rp_gi: EnumProperty( # TODO: remove in 0.8
         items=[('Off', 'Off', 'Off'),
                ('Voxel GI', 'Voxel GI', 'Voxel GI', 'ERROR', 1),

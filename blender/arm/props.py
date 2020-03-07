@@ -12,7 +12,7 @@ import arm.proxy
 import arm.nodes_logic
 
 # Armory version
-arm_version = '2020.2'
+arm_version = '2020.3'
 arm_commit = '$Id$'
 
 def init_properties():
@@ -71,7 +71,8 @@ def init_properties():
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport')],
         name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
                ('Browser', 'Browser', 'Browser')],
@@ -139,6 +140,7 @@ def init_properties():
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For armature
     bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.arm_autobake = BoolProperty(name="Auto Bake", description="Bake constraints automatically", default=True)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
 

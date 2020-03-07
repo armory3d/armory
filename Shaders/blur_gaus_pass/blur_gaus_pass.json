@@ -13,6 +13,10 @@
 				{
 					"name": "screenSize",
 					"link": "_windowSize"
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11"
 				}
 			],
 			"texture_params": [],
@@ -32,6 +36,10 @@
 				{
 					"name": "screenSize",
 					"link": "_windowSize"
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11"
 				}
 			],
 			"texture_params": [],
@@ -54,6 +62,10 @@
 				{
 					"name": "screenSize",
 					"link": "_windowSize"
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11"
 				}
 			],
 			"texture_params": [],

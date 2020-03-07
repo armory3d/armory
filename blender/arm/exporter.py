@@ -182,7 +182,9 @@ class ArmoryExporter:
             self.export_pose_markers(oanim, action)
 
             if True: #action.arm_cached == False or not os.path.exists(fp):
-                print('Exporting object action ' + aname)
+                wrd = bpy.data.worlds['Arm']
+                if wrd.arm_verbose_output:
+                    print('Exporting object action ' + aname)
                 actionf = {}
                 actionf['objects'] = []
                 actionf['objects'].append(oaction)
@@ -285,7 +287,7 @@ class ArmoryExporter:
 
                     except KeyError:
                         if data_path not in target_names:
-                            print(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            log.warn(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
                             continue
 
                         # Missing target entry for array_index or something else
@@ -295,7 +297,9 @@ class ArmoryExporter:
                     oanim['tracks'].append(data_ttrack)
 
                 if True:  #action.arm_cached == False or not os.path.exists(fp):
-                    print('Exporting object action ' + action_name)
+                    wrd = bpy.data.worlds['Arm']
+                    if wrd.arm_verbose_output:
+                        print('Exporting object action ' + action_name)
                     actionf = {}
                     actionf['objects'] = []
                     actionf['objects'].append(oaction)
@@ -801,22 +805,46 @@ class ArmoryExporter:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     o['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
+                clear_op = set()
+                skelobj = bobject
+                baked_actions = []
                 orig_action = bobject.animation_data.action
+                if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
+                    clear_op.add( 'unlink' )
+                    #clone bjobject and put it in the current scene so the bake operator can run
+                    if bobject.library is not None:
+                        skelobj = bobject.copy()
+                        clear_op.add('rem')
+                    bpy.context.collection.objects.link(skelobj)
+
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
-                    bobject.animation_data.action = action
+                    skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress())
                     assets.add(fp)
                     if bdata.arm_cached == False or not os.path.exists(fp):
-                        print('Exporting armature action ' + aname)
+                        #handle autobake
+                        if bdata.arm_autobake:
+                            sel = bpy.context.selected_objects[:]
+                            for _o in sel: _o.select_set(False)
+                            skelobj.select_set(True)
+                            bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
+                            action = skelobj.animation_data.action
+                            skelobj.select_set(False)
+                            for _o in sel: _o.select_set(True)
+                            baked_actions.append(action)
+
+                        wrd = bpy.data.worlds['Arm']
+                        if wrd.arm_verbose_output:
+                            print('Exporting armature action ' + aname)
                         bones = []
                         self.bone_tracks = []
                         for bone in bdata.bones:
                             if not bone.parent:
                                 boneo = {}
-                                self.export_bone(bobject, bone, scene, boneo, action)
+                                self.export_bone(skelobj, bone, scene, boneo, action)
                                 bones.append(boneo)
-                        self.write_bone_matrices(scene, action)
+                        self.write_bone_matrices( bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
@@ -824,7 +852,13 @@ class ArmoryExporter:
                         action_obj['name'] = aname
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
-                bobject.animation_data.action = orig_action
+
+                #restore settings
+                skelobj.animation_data.action = orig_action
+                for a in baked_actions: bpy.data.actions.remove( a, do_unlink=True)
+                if 'unlink' in clear_op: bpy.context.collection.objects.unlink(skelobj)
+                if 'rem' in clear_op: bpy.data.objects.remove(skelobj, do_unlink=True)
+
                 # TODO: cache per action
                 bdata.arm_cached = True
 
@@ -934,11 +968,12 @@ class ArmoryExporter:
         oskin['bone_weight_array'] = bone_weight_array
 
         # Bone constraints
-        for bone in armature.pose.bones:
-            if len(bone.constraints) > 0:
-                if 'constraints' not in oskin:
-                    oskin['constraints'] = []
-                self.add_constraints(bone, oskin, bone=True)
+        if not armature.data.arm_autobake:
+            for bone in armature.pose.bones:
+                if len(bone.constraints) > 0:
+                    if 'constraints' not in oskin:
+                        oskin['constraints'] = []
+                    self.add_constraints(bone, oskin, bone=True)
 
     def write_mesh(self, bobject, fp, o):
         wrd = bpy.data.worlds['Arm']
@@ -969,8 +1004,8 @@ class ArmoryExporter:
         has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
         has_tex1 = has_tex and num_uv_layers > 1
         num_colors = len(exportMesh.vertex_colors)
-        has_col = self.get_export_vcols(exportMesh) and num_colors > 0
-        has_tang = self.has_tangents(exportMesh)
+        has_col = self.get_export_vcols(bobject.data) and num_colors > 0
+        has_tang = self.has_tangents(bobject.data)
 
         pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
         ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
@@ -1134,16 +1169,16 @@ class ArmoryExporter:
 
         # Output
         o['vertex_arrays'] = []
-        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata })
-        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata })
+        o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
+        o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
         if has_tex:
-            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data })
+            o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
             if has_tex1:
-                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data })
+                o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
         if has_col:
-            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata })
+            o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
         if has_tang:
-            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata })
+            o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata, 'data': 'short4norm', 'padding': 1 })
 
         # If there are multiple morph targets, export them here.
         # if (shapeKeys):
@@ -1217,7 +1252,8 @@ class ArmoryExporter:
                 log.warn('{0} users {1} and {2} differ in modifier stack - use Make Single User - Object & Data for now'.format(oid, bobject.name, table[i].name))
                 break
 
-        print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
+        if wrd.arm_verbose_output:
+            print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
 
         o = {}
         o['name'] = oid
@@ -1415,13 +1451,32 @@ class ArmoryExporter:
                 if has_proxy_user:
                     continue
 
-                # Add external linked objects
-                if bobject.name not in scene_objects and collection.library is not None:
+                asset_name = arm.utils.asset_name(bobject)
+
+                if collection.library is None:
+                    #collection is in the same file, but (likely) on another scene
+                    if asset_name not in scene_objects:
+                        self.process_bobject(bobject)
+                        self.export_object(bobject, self.scene)
+                else:
+                    # Add external linked objects
+                    # Iron differentiates objects based on their names,
+                    # so errors will happen if two objects with the
+                    # same name exists. This check is only required
+                    # when the object in question is in a library,
+                    # otherwise Blender will not allow duplicate names
+                    if asset_name in scene_objects:
+                        log.warn("skipping export of the object"
+                                 f" {bobject.name} (collection"
+                                 f" {collection.name}) because it has the same"
+                                 " export name as another object in the scene:"
+                                 f" {asset_name}")
+                        continue
+
                     self.process_bobject(bobject)
                     self.export_object(bobject, self.scene)
-                    out_collection['object_refs'].append(arm.utils.asset_name(bobject))
-                else:
-                    out_collection['object_refs'].append(bobject.name)
+
+                out_collection['object_refs'].append(asset_name)
 
         self.output['groups'].append(out_collection)
 

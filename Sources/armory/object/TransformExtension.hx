@@ -35,6 +35,6 @@ class TransformExtension {
 	 * @return Vec4
 	 */
 	public static inline function getLocalVecFromWorld(t: Transform, worldVec: Vec4): Vec4 {
-		return worldVec.clone().applymat4(t.local);
+		return worldVec.clone().applymat4(Mat4.identity().getInverse(t.worldUnpack));
 	}
 }
