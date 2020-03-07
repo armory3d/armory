@@ -834,6 +834,7 @@ class ArmoryExporter:
                             for _o in sel: _o.select_set(True)
                             baked_actions.append(action)
 
+                        wrd = bpy.data.worlds['Arm']
                         if wrd.arm_verbose_output:
                             print('Exporting armature action ' + aname)
                         bones = []
