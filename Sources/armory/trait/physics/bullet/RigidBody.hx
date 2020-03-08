@@ -41,6 +41,7 @@ class RigidBody extends iron.Trait {
 	var currentScaleX: Float;
 	var currentScaleY: Float;
 	var currentScaleZ: Float;
+	var meshInterface: bullet.Bt.TriangleMesh;
 
 	public var body: bullet.Bt.RigidBody = null;
 	public var motionState: bullet.Bt.MotionState;
@@ -95,7 +96,7 @@ class RigidBody extends iron.Trait {
 		this.mask = mask;
 
 		if (params == null) params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-		if (flags == null) flags = [false, false, false];
+		if (flags == null) flags = [false, false, false, false];
 
 		this.linearDamping = params[0];
 		this.angularDamping = params[1];
@@ -166,7 +167,7 @@ class RigidBody extends iron.Trait {
 			btshape = caps;
 		}
 		else if (shape == Shape.Mesh) {
-			var meshInterface = fillTriangleMesh(transform.scale);
+			meshInterface = fillTriangleMesh(transform.scale);
 			if (mass > 0) {
 				var shapeGImpact = new bullet.Bt.GImpactMeshShape(meshInterface);
 				shapeGImpact.updateBound();
@@ -564,11 +565,18 @@ class RigidBody extends iron.Trait {
 			var data = cast(object, MeshObject).data;
 			var i = usersCache.get(data) - 1;
 			usersCache.set(data, i);
+			if(shape == Shape.Mesh) deleteShape();
 			if (i <= 0) {
-				deleteShape();
-				shape == Shape.ConvexHull ?
-					convexHullCache.remove(data) :
+				if(shape == Shape.ConvexHull)
+				{
+					deleteShape();
+					convexHullCache.remove(data);
+				}
+				else
+				{
 					triangleMeshCache.remove(data);
+					if(meshInterface != null) bullet.Bt.Ammo.destroy(meshInterface);
+				}
 			}
 		}
 		else deleteShape();
