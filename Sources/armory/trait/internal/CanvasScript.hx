@@ -61,6 +61,9 @@ class CanvasScript extends Trait {
 		notifyOnRender2D(function(g: kha.graphics2.Graphics) {
 			if (canvas == null) return;
 
+			if (canvas.fullscreen){
+				setCanvasDimensions(kha.System.windowWidth(), kha.System.windowHeight());
+			}
 			var events = Canvas.draw(cui, canvas, g);
 
 			for (e in events) {
@@ -109,6 +112,11 @@ class CanvasScript extends Trait {
 	*/
 	public function setCanvasVisibility(visible: Bool){
 		for (e in canvas.elements) e.visible = visible;
+	}
+
+	public function setCanvasDimensions(x: Int, y: Int){
+		canvas.width = x;
+		canvas.height = y;
 	}
 
 	/**
