@@ -68,7 +68,8 @@ float tex_noise_f(vec3 x) {
                mix(mix(hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),
                    mix(hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
 }
-float tex_noise(vec3 p) {
+float tex_noise(vec3 k) {
+    vec3 p = vec3(k.xy, 0);
     p *= 1.25;
     float f = 0.5 * tex_noise_f(p); p *= 2.01;
     f += 0.25 * tex_noise_f(p); p *= 2.02;
