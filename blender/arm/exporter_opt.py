@@ -171,7 +171,7 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         o['scale_pos'] = 1.0
     if has_armature: # Allow up to 2x bigger bounds for skinned mesh
         o['scale_pos'] *= 2.0
-        
+
     scale_pos = o['scale_pos']
     invscale_pos = (1 / scale_pos) * 32767
 
@@ -265,16 +265,16 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
 
     # Output
     o['vertex_arrays'] = []
-    o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata })
-    o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata })
+    o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
+    o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
     if has_tex:
-        o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data })
+        o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
         if has_tex1:
-            o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data })
+            o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
     if has_col:
-        o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata })
+        o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
     if has_tang:
-        o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata })
+        o['vertex_arrays'].append({ 'attrib': 'tang', 'values': tangdata, 'data': 'short4norm', 'padding': 1 })
 
     return vert_list
 
@@ -348,7 +348,7 @@ def export_skin(self, bobject, armature, vert_list, o):
             bone_count = 4
             bone_values.sort(reverse=True)
             bone_values = bone_values[:4]
-        
+
         bone_count_array[index] = bone_count
         for bv in bone_values:
             bone_weight_array[count] = bv[0] * 32767
