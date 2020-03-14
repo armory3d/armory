@@ -529,16 +529,15 @@ def parse_vector(node, socket):
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
         curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
-        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
+        scale = parse_value_input(node.inputs[2])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
         # Slow..
-        res = 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
+        res = 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 5.0), tex_noise({0} * {1} + 8.0))'.format(co, scale)
         if sample_bump:
             write_bump(node, res, 0.1)
         return res
