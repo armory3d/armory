@@ -168,6 +168,10 @@ def parse_shader(node, socket):
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             if parse_surface:
+                # Normal
+                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
+                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 out_basecol = parse_vector_input(node.inputs[0])
                 # Occlusion
@@ -176,10 +180,6 @@ def parse_shader(node, socket):
                 out_roughness = parse_value_input(node.inputs[3])
                 # Metallic
                 out_metallic = parse_value_input(node.inputs[4])
-                # Normal
-                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                parse_normal_map_color_input(node.inputs[5])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
                     out_emission = parse_value_input(node.inputs[6])
@@ -1495,18 +1495,23 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     mat_bind_texture(tex)
     con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
+    triplanar = node.projection == 'BOX'
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
-        uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
+        if triplanar:
+            uv_name = 'vec3({0}.x, 1.0 - {0}.y, {0}.z)'.format(uv_name)
+        else:
+            uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
         uv_name = 'texCoord'
-    triplanar = node.projection == 'BOX'
     if triplanar:
-        curshader.write(f'vec3 texCoordBlend = vec3(0.0); vec2 {uv_name}1 = vec2(0.0); vec2 {uv_name}2 = vec2(0.0);') # Temp
-        curshader.write(f'vec4 {tex_store} = vec4(0.0, 0.0, 0.0, 0.0);')
-        curshader.write(f'if (texCoordBlend.x > 0) {tex_store} += texture({tex_name}, {uv_name}.xy) * texCoordBlend.x;')
-        curshader.write(f'if (texCoordBlend.y > 0) {tex_store} += texture({tex_name}, {uv_name}1.xy) * texCoordBlend.y;')
-        curshader.write(f'if (texCoordBlend.z > 0) {tex_store} += texture({tex_name}, {uv_name}2.xy) * texCoordBlend.z;')
+        if not curshader.has_include('std/mapping.glsl'):
+            curshader.add_include('std/mapping.glsl')
+        if normal_parsed:
+            nor = 'TBN[2]'
+        else:
+            nor = 'n'
+        curshader.write('vec4 {0} = vec4(triplanarMapping({1}, {2}, {3}), 0.0);'.format(tex_store, tex_name, nor, uv_name))
     else:
         if mat_texture_grad():
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))

@@ -80,7 +80,7 @@ class ShaderContext:
     def sort_vs(self):
         vs = []
         ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
-        for ename in ar:  
+        for ename in ar:
             elem = self.get_elem(ename)
             if elem != None:
                 vs.append(elem)
@@ -125,7 +125,7 @@ class ShaderContext:
 
     def make_vert(self):
         self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
-        self.vert = Shader(self, 'vert')        
+        self.vert = Shader(self, 'vert')
         return self.vert
 
     def make_frag(self):
@@ -173,6 +173,9 @@ class Shader:
         self.geom_passthrough = False
         self.is_linked = False # Use already generated shader
         self.noprocessing = False
+
+    def has_include(self, s):
+        return s in self.includes
 
     def add_include(self, s):
         self.includes.append(s)
@@ -295,7 +298,7 @@ class Shader:
 
         if self.shader_type == 'vert':
             self.vstruct_to_vsin()
-        
+
         elif self.shader_type == 'tesc':
             in_ext = '[]'
             out_ext = '[]'
