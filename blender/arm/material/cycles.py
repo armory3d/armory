@@ -575,7 +575,18 @@ def parse_vector(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        res = 'vec3(tex_wave_f({0} * {1}))'.format(co, scale)
+        distortion = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        detail_scale = parse_value_input(node.inputs[4])
+        if node.wave_profile == 'SIN':
+            wave_profile = 0
+        else:
+            wave_profile = 1
+        if node.wave_type == 'BANDS':
+            wave_type = 0
+        else:
+            wave_type = 1
+        res = 'vec3(tex_wave_f({0} * {1},{2},{3},{4},{5},{6}))'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
         if sample_bump:
             write_bump(node, res)
         return res
@@ -1263,7 +1274,7 @@ def parse_value(node, socket):
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
+        scale = parse_value_input(node.inputs[2])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
         res = 'tex_noise({0} * {1})'.format(co, scale)
@@ -1299,7 +1310,18 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        res = 'tex_wave_f({0} * {1})'.format(co, scale)
+        distortion = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        detail_scale = parse_value_input(node.inputs[4])
+        if node.wave_profile == 'SIN':
+            wave_profile = 0
+        else:
+            wave_profile = 1
+        if node.wave_type == 'BANDS':
+            wave_type = 0
+        else:
+            wave_type = 1
+        res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
         if sample_bump:
             write_bump(node, res)
         return res
