@@ -534,10 +534,9 @@ def parse_vector(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[2])
-        # detail = parse_value_input(node.inputs[2])
-        # distortion = parse_value_input(node.inputs[3])
-        # Slow..
-        res = 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 5.0), tex_noise({0} * {1} + 8.0))'.format(co, scale)
+        detail = parse_value_input(node.inputs[3])
+        distortion = parse_value_input(node.inputs[4])
+        res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
         if sample_bump:
             write_bump(node, res, 0.1)
         return res
@@ -1275,9 +1274,9 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[2])
-        # detail = parse_value_input(node.inputs[2])
-        # distortion = parse_value_input(node.inputs[3])
-        res = 'tex_noise({0} * {1})'.format(co, scale)
+        detail = parse_value_input(node.inputs[3])
+        distortion = parse_value_input(node.inputs[4])
+        res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
         if sample_bump:
             write_bump(node, res, 0.1)
         return res
