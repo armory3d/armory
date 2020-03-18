@@ -51,6 +51,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global particle_info
     global sample_bump
     global sample_bump_res
+    global procedurals_written
     con = _con
     vert = _vert
     frag = _frag
@@ -71,6 +72,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     particle_info['angular_velocity'] = False
     sample_bump = False
     sample_bump_res = ''
+    procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
     # Surface
@@ -525,6 +527,7 @@ def parse_vector(node, socket):
         return res
 
     elif node.type == 'TEX_NOISE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
@@ -568,6 +571,7 @@ def parse_vector(node, socket):
         return res
 
     elif node.type == 'TEX_WAVE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_wave)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -1265,6 +1269,7 @@ def parse_value(node, socket):
         return res
 
     elif node.type == 'TEX_NOISE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
@@ -1303,6 +1308,7 @@ def parse_value(node, socket):
         return res
 
     elif node.type == 'TEX_WAVE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_wave)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -1490,6 +1496,13 @@ def write_result(l):
     elif l.from_node.type == 'NORMAL_MAP':
         return None
     return res_var
+
+def write_procedurals():
+    global procedurals_written
+    if(not procedurals_written):
+        curshader.add_function(c_functions.str_tex_proc)
+        procedurals_written = True
+    return
 
 def glsl_type(t):
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
