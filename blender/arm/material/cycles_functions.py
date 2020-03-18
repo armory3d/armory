@@ -1,3 +1,59 @@
+str_tex_proc = """
+//	<https://www.shadertoy.com/view/4dS3Wd>
+//	By Morgan McGuire @morgan3d, http://graphicscodex.com
+float hash_f(const vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+
+float noise(const vec2 x) {
+	vec2 i = floor(x);
+	vec2 f = fract(x);
+
+	// Four corners in 2D of a tile
+	float a = hash_f(i);
+	float b = hash_f(i + vec2(1.0, 0.0));
+	float c = hash_f(i + vec2(0.0, 1.0));
+	float d = hash_f(i + vec2(1.0, 1.0));
+
+	// Simple 2D lerp using smoothstep envelope between the values.
+	// return vec3(mix(mix(a, b, smoothstep(0.0, 1.0, f.x)),
+	//			mix(c, d, smoothstep(0.0, 1.0, f.x)),
+	//			smoothstep(0.0, 1.0, f.y)));
+
+	// Same code, with the clamps in smoothstep and common subexpressions
+	// optimized away.
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+//  Shader-code from adapted from Blender
+//  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
+float fractal_noise(const vec2 p, const float o)
+{
+  float fscale = 1.0;
+  float amp = 1.0;
+  float sum = 0.0;
+  float octaves = clamp(o, 0.0, 16.0);
+  int n = int(octaves);
+  for (int i = 0; i <= n; i++) {
+    float t = noise(fscale * p);
+    sum += t * amp;
+    amp *= 0.5;
+    fscale *= 2.0;
+  }
+  float rmd = octaves - floor(octaves);
+  if (rmd != 0.0) {
+    float t = noise(fscale * p);
+    float sum2 = sum + t * amp;
+    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1.0);
+    sum2 *= float(pow(2, n + 1)) / float(pow(2, n + 2) - 1);
+    return (1.0 - rmd) * sum + rmd * sum2;
+  }
+  else {
+    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1); 
+    return sum;
+  }
+}
+"""
+
 str_tex_checker = """
 vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
     // Prevent precision issues on unit coordinates
@@ -56,61 +112,7 @@ vec4 tex_voronoi(const vec3 x) {
 # By Morgan McGuire @morgan3d, http://graphicscodex.com Reuse permitted under the BSD license.
 # https://www.shadertoy.com/view/4dS3Wd
 str_tex_noise = """
-//	<https://www.shadertoy.com/view/4dS3Wd>
-//	By Morgan McGuire @morgan3d, http://graphicscodex.com
-float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
-
-float noise(vec2 x) {
-	vec2 i = floor(x);
-	vec2 f = fract(x);
-
-	// Four corners in 2D of a tile
-	float a = hash(i);
-	float b = hash(i + vec2(1.0, 0.0));
-	float c = hash(i + vec2(0.0, 1.0));
-	float d = hash(i + vec2(1.0, 1.0));
-
-	// Simple 2D lerp using smoothstep envelope between the values.
-	// return vec3(mix(mix(a, b, smoothstep(0.0, 1.0, f.x)),
-	//			mix(c, d, smoothstep(0.0, 1.0, f.x)),
-	//			smoothstep(0.0, 1.0, f.y)));
-
-	// Same code, with the clamps in smoothstep and common subexpressions
-	// optimized away.
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-}
-
-//  Shader-code from adapted from Blender
-//  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
-float fractal_noise(vec2 p, float octaves)
-{
-  float fscale = 1.0;
-  float amp = 1.0;
-  float sum = 0.0;
-  octaves = clamp(octaves, 0.0, 16.0);
-  int n = int(octaves);
-  for (int i = 0; i <= n; i++) {
-    float t = noise(fscale * p);
-    sum += t * amp;
-    amp *= 0.5;
-    fscale *= 2.0;
-  }
-  float rmd = octaves - floor(octaves);
-  if (rmd != 0.0) {
-    float t = noise(fscale * p);
-    float sum2 = sum + t * amp;
-    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1.0);
-    sum2 *= float(pow(2, n + 1)) / float(pow(2, n + 2) - 1);
-    return (1.0 - rmd) * sum + rmd * sum2;
-  }
-  else {
-    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1); 
-    return sum;
-  }
-}
-
-float tex_noise(vec3 co, float detail, float distortion) {
+float tex_noise(const vec3 co, const float detail, const float distortion) {
     vec2 p = co.xy * 2;
     if (distortion != 0.0) {
     p += vec2(noise(p) * distortion,noise(p) * distortion);
@@ -229,61 +231,7 @@ float tex_brick_f(vec3 p) {
 """
 
 str_tex_wave = """
-//	<https://www.shadertoy.com/view/4dS3Wd>
-//	By Morgan McGuire @morgan3d, http://graphicscodex.com
-float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
-
-float noise(vec2 x) {
-	vec2 i = floor(x);
-	vec2 f = fract(x);
-
-	// Four corners in 2D of a tile
-	float a = hash(i);
-	float b = hash(i + vec2(1.0, 0.0));
-	float c = hash(i + vec2(0.0, 1.0));
-	float d = hash(i + vec2(1.0, 1.0));
-
-	// Simple 2D lerp using smoothstep envelope between the values.
-	// return vec3(mix(mix(a, b, smoothstep(0.0, 1.0, f.x)),
-	//			mix(c, d, smoothstep(0.0, 1.0, f.x)),
-	//			smoothstep(0.0, 1.0, f.y)));
-
-	// Same code, with the clamps in smoothstep and common subexpressions
-	// optimized away.
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-}
-
-//  Shader-code from adapted from Blender
-//  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
-float fractal_noise(vec2 p, float octaves)
-{
-  float fscale = 1.0;
-  float amp = 1.0;
-  float sum = 0.0;
-  octaves = clamp(octaves, 0.0, 16.0);
-  int n = int(octaves);
-  for (int i = 0; i <= n; i++) {
-    float t = noise(fscale * p);
-    sum += t * amp;
-    amp *= 0.5;
-    fscale *= 2.0;
-  }
-  float rmd = octaves - floor(octaves);
-  if (rmd != 0.0) {
-    float t = noise(fscale * p);
-    float sum2 = sum + t * amp;
-    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1.0);
-    sum2 *= float(pow(2, n + 1)) / float(pow(2, n + 2) - 1);
-    return (1.0 - rmd) * sum + rmd * sum2;
-  }
-  else {
-    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1); 
-    return sum;
-  }
-}
-
-float tex_wave_f(const vec3 p, int type, int profile, float dist, float detail, float detail_scale) {
+float tex_wave_f(const vec3 p, const int type, const int profile, const float dist, const float detail, const float detail_scale) {
     float n;
     if(type == 0) n = (p.x + p.y) * 9.5;
     else n = length(p.xy) * 13.0;
