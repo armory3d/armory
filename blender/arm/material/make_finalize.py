@@ -69,6 +69,8 @@ def make(con_mesh):
         vert.add_uniform('float posUnpack', link='_posUnpack')
         vert.write_attrib('bposition = (spos.xyz * posUnpack + hdim) / dim;')
         vert.write_attrib('if (dim.z == 0) bposition.z = 0;')
+        vert.write_attrib('if (dim.y == 0) bposition.y = 0;')
+        vert.write_attrib('if (dim.x == 0) bposition.x = 0;')
     
     if tese != None:
         if frag_bpos:
