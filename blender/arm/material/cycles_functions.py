@@ -1,32 +1,29 @@
 str_tex_proc = """
 //	<https://www.shadertoy.com/view/4dS3Wd>
 //	By Morgan McGuire @morgan3d, http://graphicscodex.com
+float hash_f(const float n) { return fract(sin(n) * 1e4); }
 float hash_f(const vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
 
-float noise(const vec2 x) {
-	vec2 i = floor(x);
-	vec2 f = fract(x);
+float noise(const vec3 x) {
+	const vec3 step = vec3(110, 241, 171);
 
-	// Four corners in 2D of a tile
-	float a = hash_f(i);
-	float b = hash_f(i + vec2(1.0, 0.0));
-	float c = hash_f(i + vec2(0.0, 1.0));
-	float d = hash_f(i + vec2(1.0, 1.0));
+	vec3 i = floor(x);
+	vec3 f = fract(x);
+ 
+	// For performance, compute the base input to a 1D hash from the integer part of the argument and the 
+	// incremental change to the 1D based on the 3D -> 1D wrapping
+    float n = dot(i, step);
 
-	// Simple 2D lerp using smoothstep envelope between the values.
-	// return vec3(mix(mix(a, b, smoothstep(0.0, 1.0, f.x)),
-	//			mix(c, d, smoothstep(0.0, 1.0, f.x)),
-	//			smoothstep(0.0, 1.0, f.y)));
-
-	// Same code, with the clamps in smoothstep and common subexpressions
-	// optimized away.
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+	vec3 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(mix( hash_f(n + dot(step, vec3(0, 0, 0))), hash_f(n + dot(step, vec3(1, 0, 0))), u.x),
+                   mix( hash_f(n + dot(step, vec3(0, 1, 0))), hash_f(n + dot(step, vec3(1, 1, 0))), u.x), u.y),
+               mix(mix( hash_f(n + dot(step, vec3(0, 0, 1))), hash_f(n + dot(step, vec3(1, 0, 1))), u.x),
+                   mix( hash_f(n + dot(step, vec3(0, 1, 1))), hash_f(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
 }
 
 //  Shader-code from adapted from Blender
 //  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
-float fractal_noise(const vec2 p, const float o)
+float fractal_noise(const vec3 p, const float o)
 {
   float fscale = 1.0;
   float amp = 1.0;
@@ -112,12 +109,12 @@ vec4 tex_voronoi(const vec3 x) {
 # By Morgan McGuire @morgan3d, http://graphicscodex.com Reuse permitted under the BSD license.
 # https://www.shadertoy.com/view/4dS3Wd
 str_tex_noise = """
-float tex_noise(const vec3 co, const float detail, const float distortion) {
-    vec2 p = co.xy * 2;
+float tex_noise(const vec3 p, const float detail, const float distortion) {
+    vec3 pk = p;
     if (distortion != 0.0) {
-    p += vec2(noise(p) * distortion,noise(p) * distortion);
+    pk += vec3(noise(p) * distortion);
   }
-  return fractal_noise(p, detail);
+  return fractal_noise(pk, detail);
 }
 """
 
@@ -233,9 +230,9 @@ float tex_brick_f(vec3 p) {
 str_tex_wave = """
 float tex_wave_f(const vec3 p, const int type, const int profile, const float dist, const float detail, const float detail_scale) {
     float n;
-    if(type == 0) n = (p.x + p.y) * 9.5;
-    else n = length(p.xy) * 13.0;
-    if(dist != 0.0) n += dist * fractal_noise(vec2(p.xy)*detail_scale,detail) * 2.0 - 1.0;
+    if(type == 0) n = (p.x + p.y + p.z) * 9.5;
+    else n = length(p) * 13.0;
+    if(dist != 0.0) n += dist * fractal_noise(p * detail_scale, detail) * 2.0 - 1.0;
     if(profile == 0) { return 0.5 + 0.5 * sin(n - 3.14159265359); }
     else {
         n /= 2.0 * 3.14159265359;
