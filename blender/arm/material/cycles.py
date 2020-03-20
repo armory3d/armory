@@ -553,19 +553,28 @@ def parse_vector(node, socket):
         return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
+        write_procedurals()
+        outp = 0
+        if socket.type == 'RGBA':
+            outp = 1
+        elif socket.type == 'VECTOR':
+            outp = 2
+        m = 0
+        if node.distance == 'MANHATTAN':
+            m = 1
+        elif node.distance == 'CHEBYCHEV':
+            m = 2
+        elif node.distance == 'MINKOWSKI':
+            m = 3
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
-        assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        if node.coloring == 'INTENSITY':
-            res = 'vec3(tex_voronoi({0} * {1}).a)'.format(co, scale)
-        else: # CELLS
-            res = 'tex_voronoi({0} * {1}).rgb'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        exp = parse_value_input(node.inputs[4])
+        randomness = parse_value_input(node.inputs[5])
+        res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5})'.format(co, randomness, m, outp, scale, exp)
         if sample_bump:
             write_bump(node, res)
         return res
@@ -1290,19 +1299,28 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_VORONOI':
+        write_procedurals()
+        outp = 0
+        if socket.type == 'RGBA':
+            outp = 1
+        elif socket.type == 'VECTOR':
+            outp = 2
+        m = 0
+        if node.distance == 'MANHATTAN':
+            m = 1
+        elif node.distance == 'CHEBYCHEV':
+            m = 2
+        elif node.distance == 'MINKOWSKI':
+            m = 3
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
-        assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        if node.coloring == 'INTENSITY':
-            res = 'tex_voronoi({0} * {1}).a'.format(co, scale)
-        else: # CELLS
-            res = 'tex_voronoi({0} * {1}).r'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        exp = parse_value_input(node.inputs[4])
+        randomness = parse_value_input(node.inputs[5])
+        res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5}).x'.format(co, randomness, m, outp, scale, exp)
         if sample_bump:
             write_bump(node, res)
         return res
