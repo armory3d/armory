@@ -71,7 +71,7 @@ float tex_checker_f(const vec3 co, const float scale) {
 """
 
 str_tex_voronoi = """
-//Shader-code from adapted from Blender
+//Shader-code adapted from Blender
 //https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_voronoi.glsl
 float voronoi_distance(const vec3 a, const vec3 b, const int metric, const float exponent)
 {
