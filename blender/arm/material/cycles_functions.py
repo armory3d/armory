@@ -21,7 +21,7 @@ float noise(const vec3 x) {
                    mix( hash_f(n + dot(step, vec3(0, 1, 1))), hash_f(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
 }
 
-//  Shader-code from adapted from Blender
+//  Shader-code adapted from Blender
 //  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
 float fractal_noise(const vec3 p, const float o)
 {
@@ -70,28 +70,62 @@ float tex_checker_f(const vec3 co, const float scale) {
 }
 """
 
-# Created by inigo quilez - iq/2013
-# License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 str_tex_voronoi = """
-vec4 tex_voronoi(const vec3 x) {
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-    float id = 0.0;
-    float res = 100.0;
-    for (int k = -1; k <= 1; k++)
-    for (int j = -1; j <= 1; j++)
-    for (int i = -1; i <= 1; i++) {
-        vec3 b = vec3(float(i), float(j), float(k));
-        vec3 pb = p + b;
-        vec3 r = vec3(b) - f + texture(snoise256, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 256.0).xyz;
-        float d = dot(r, r);
-        if (d < res) {
-            id = dot(p + b, vec3(1.0, 57.0, 113.0));
-            res = d;
+//Shader-code from adapted from Blender
+//https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_voronoi.glsl
+float voronoi_distance(const vec3 a, const vec3 b, const int metric, const float exponent)
+{
+  if (metric == 0)  // SHD_VORONOI_EUCLIDEAN
+  {
+    return distance(a, b);
+  }
+  else if (metric == 1)  // SHD_VORONOI_MANHATTAN
+  {
+    return abs(a.x - b.x) + abs(a.y - b.y) + abs(a.z - b.z);
+  }
+  else if (metric == 2)  // SHD_VORONOI_CHEBYCHEV
+  {
+    return max(abs(a.x - b.x), max(abs(a.y - b.y), abs(a.z - b.z)));
+  }
+  else if (metric == 3)  // SHD_VORONOI_MINKOWSKI
+  {
+    return pow(pow(abs(a.x - b.x), exponent) + pow(abs(a.y - b.y), exponent) +
+                   pow(abs(a.z - b.z), exponent),
+               1.0 / exponent);
+  }
+  else {
+    return 0.5;
+  }
+}
+
+vec3 tex_voronoi(const vec3 coord, const float r, const int metric, const int outp, const float scale, const float exp)
+{
+  float randomness = clamp(r, 0.0, 1.0);
+
+  vec3 scaledCoord = coord * scale;
+  vec3 cellPosition = floor(scaledCoord);
+  vec3 localPosition = scaledCoord - cellPosition;
+
+  float minDistance = 8.0;
+  vec3 targetOffset, targetPosition;
+  for (int k = -1; k <= 1; k++) {
+    for (int j = -1; j <= 1; j++) {
+      for (int i = -1; i <= 1; i++) {
+        vec3 cellOffset = vec3(float(i), float(j), float(k));
+        vec3 pointPosition = cellOffset +
+                             (vec3(noise(cellPosition+cellOffset), noise(cellPosition+cellOffset+972.37), noise(cellPosition+cellOffset+342.48)) * randomness);
+        float distanceToPoint = voronoi_distance(pointPosition, localPosition, metric, exp);
+        if (distanceToPoint < minDistance) {
+          targetOffset = cellOffset;
+          minDistance = distanceToPoint;
+          targetPosition = pointPosition;
         }
+      }
     }
-    vec3 col = 0.5 + 0.5 * cos(id * 0.35 + vec3(0.0, 1.0, 2.0));
-    return vec4(col, sqrt(res));
+  }
+  if(outp == 0){return vec3(minDistance);}
+  else if(outp == 1) {return vec3(noise(cellPosition+targetOffset), noise(cellPosition+targetOffset+972.37), noise(cellPosition+targetOffset+342.48));}
+  return (targetPosition + cellPosition)/scale;
 }
 """
 
