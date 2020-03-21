@@ -1923,7 +1923,7 @@ class ArmoryExporter:
         # scene_objects = []
         # for lay in self.scene.view_layers:
             # scene_objects += lay.objects
-        scene_objects = self.scene.collection.all_objects
+        scene_objects = self.scene.collection.all_objects.values()
 
         for bobject in scene_objects:
             # Map objects to game objects
