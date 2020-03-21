@@ -124,7 +124,7 @@ vec3 tex_voronoi(const vec3 coord, const float r, const int metric, const int ou
     }
   }
   if(outp == 0){return vec3(minDistance);}
-  else if(outp == 1) {return vec3(noise(cellPosition+targetOffset), noise(cellPosition+targetOffset+972.37), noise(cellPosition+targetOffset+342.48));}
+  else if(outp == 1) {return targetPosition - targetOffset;}
   return (targetPosition + cellPosition)/scale;
 }
 """
