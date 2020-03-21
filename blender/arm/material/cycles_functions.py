@@ -3,6 +3,7 @@ str_tex_proc = """
 //	By Morgan McGuire @morgan3d, http://graphicscodex.com
 float hash_f(const float n) { return fract(sin(n) * 1e4); }
 float hash_f(const vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+float hash_f(vec3 co){ return fract(sin(dot(co.xyz, vec3(12.9898,78.233,52.8265)) * 24.384) * 43758.5453); }
 
 float noise(const vec3 x) {
 	const vec3 step = vec3(110, 241, 171);
@@ -112,8 +113,9 @@ vec3 tex_voronoi(const vec3 coord, const float r, const int metric, const int ou
     for (int j = -1; j <= 1; j++) {
       for (int i = -1; i <= 1; i++) {
         vec3 cellOffset = vec3(float(i), float(j), float(k));
-        vec3 pointPosition = cellOffset +
-                             (vec3(noise(cellPosition+cellOffset), noise(cellPosition+cellOffset+972.37), noise(cellPosition+cellOffset+342.48)) * randomness);
+        vec3 pointPosition = cellOffset;
+        if(randomness != 0.) {
+            pointPosition += vec3(hash_f(cellPosition+cellOffset), hash_f(cellPosition+cellOffset+972.37), hash_f(cellPosition+cellOffset+342.48)) * randomness;}
         float distanceToPoint = voronoi_distance(pointPosition, localPosition, metric, exp);
         if (distanceToPoint < minDistance) {
           targetOffset = cellOffset;
@@ -124,8 +126,11 @@ vec3 tex_voronoi(const vec3 coord, const float r, const int metric, const int ou
     }
   }
   if(outp == 0){return vec3(minDistance);}
-  else if(outp == 1) {return targetPosition - targetOffset;}
-  return (targetPosition + cellPosition)/scale;
+  else if(outp == 1) {
+      if(randomness == 0.) {return vec3(hash_f(cellPosition+targetOffset), hash_f(cellPosition+targetOffset+972.37), hash_f(cellPosition+targetOffset+342.48));}
+      return (targetPosition - targetOffset)/randomness;
+  }
+  return (targetPosition + cellPosition) / scale;
 }
 """
 
@@ -267,9 +272,9 @@ float tex_wave_f(const vec3 p, const int type, const int profile, const float di
     if(type == 0) n = (p.x + p.y + p.z) * 9.5;
     else n = length(p) * 13.0;
     if(dist != 0.0) n += dist * fractal_noise(p * detail_scale, detail) * 2.0 - 1.0;
-    if(profile == 0) { return 0.5 + 0.5 * sin(n - 3.14159265359); }
+    if(profile == 0) { return 0.5 + 0.5 * sin(n - PI); }
     else {
-        n /= 2.0 * 3.14159265359;
+        n /= 2.0 * PI;
         return n - floor(n);
     }
 }
