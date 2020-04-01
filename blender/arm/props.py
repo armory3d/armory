@@ -12,7 +12,7 @@ import arm.proxy
 import arm.nodes_logic
 
 # Armory version
-arm_version = '2020.3'
+arm_version = '2020.4'
 arm_commit = '$Id$'
 
 def init_properties():
