@@ -575,7 +575,14 @@ class RigidBody extends iron.Trait {
 				else
 				{
 					triangleMeshCache.remove(data);
-					if(meshInterface != null) bullet.Bt.Ammo.destroy(meshInterface);
+					if(meshInterface != null) 
+					{
+						#if js
+						bullet.Bt.Ammo.destroy(meshInterface);
+						#else
+						meshInterface.delete();
+						#end
+					}
 				}
 			}
 		}
