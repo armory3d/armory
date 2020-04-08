@@ -713,7 +713,7 @@ class ArmoryExporter:
 
             elif type == NodeTypeCamera:
                 if 'spawn' in o and not o['spawn']:
-                    self.camera_spawned = False
+                    self.camera_spawned |= False
                 else:
                     self.camera_spawned = True
                 if objref not in self.cameraArray:
