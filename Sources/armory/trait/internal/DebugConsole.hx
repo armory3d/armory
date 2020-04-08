@@ -167,7 +167,7 @@ class DebugConsole extends Trait {
 
 						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
-							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true);
+							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true, false, false);
 							ui.text(currentObject.name);
 						}
 						else {
