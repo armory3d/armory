@@ -316,7 +316,7 @@ class ArmoryExporter:
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
-            self.bobjectBoneArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
+            self.bobjectBoneArray[bone] = {"objectType" : NodeType.BONE, "structName" : bone.name}
 
         for subbobject in bone.children:
             self.process_bone(subbobject)
