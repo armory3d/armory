@@ -74,45 +74,41 @@ current_output = None
 class ArmoryExporter:
     """Export to Armory format"""
 
-    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene=None, depsgraph:bpy.types.Depsgraph=None):
+    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
         global current_output
-
-        self.output = {}
-        current_output = self.output
 
         self.filepath = filepath
         self.scene = context.scene if scene is None else scene
         self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
 
+        self.output = {}
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
+        current_output = self.output
 
         # Stores the object type ("objectType") and the asset name
         # ("structName") in a dict for each object
-        self.bobjectArray = {}  # type: Dict[bpy.types.Object, Dict[str, Union[NodeType, str]]
-        self.bobjectBoneArray = {}
-        self.meshArray = {}
-        self.lightArray = {}
-        self.probeArray = {}
-        self.cameraArray = {}
-        self.speakerArray = {}
-        self.materialArray = []
-        self.particleSystemArray = {}
-        # Export all worlds
-        self.worldArray = {}
-        self.boneParentArray = {}
+        self.bobject_array = {}  # type: Dict[bpy.types.Object, Dict[str, Union[NodeType, str]]]
+        self.bobject_bone_array = {}
+        self.mesh_array = {}
+        self.light_array = {}
+        self.probe_array = {}
+        self.camera_array = {}
+        self.speaker_array = {}
+        self.material_array = []
+        self.particle_system_array = {}
 
         # `True` if there is at least one spawned camera in the scene
         self.camera_spawned = False
 
-        self.materialToObjectDict = dict()
+        self.material_to_object_dict = {}
         # If no material is assigned, provide default to mimic cycles
-        self.defaultMaterialObjects = []
-        self.defaultSkinMaterialObjects = []
-        self.defaultPartMaterialObjects = []
-        self.materialToArmObjectDict = dict()
+        self.default_material_objects = []
+        self.default_skin_material_objects = []
+        self.default_part_material_objects = []
+        self.material_to_arm_object_dict = {}
         # Stores the link between a blender object and its
         # corresponding export data (arm object)
-        self.objectToArmObjectDict = dict() # type: Dict[bpy.types.Object, Dict]
+        self.object_to_arm_object_dict = {}  # type: Dict[bpy.types.Object, Dict]
 
         self.bone_tracks = []
 
@@ -154,7 +150,7 @@ class ArmoryExporter:
         return None
 
     def find_bone(self, name: str):
-        for bobject_ref in self.bobjectBoneArray.items():
+        for bobject_ref in self.bobject_bone_array.items():
             if bobject_ref[0].name == name:
                 return bobject_ref
         return None
@@ -173,7 +169,7 @@ class ArmoryExporter:
         return curve_array
 
     def export_bone(self, armature, bone, scene, o, action):
-        bobjectRef = self.bobjectBoneArray.get(bone)
+        bobjectRef = self.bobject_bone_array.get(bone)
 
         if bobjectRef:
             o['type'] = STRUCT_IDENTIFIER[bobjectRef["objectType"].value]
@@ -373,13 +369,13 @@ class ArmoryExporter:
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
-            self.bobjectBoneArray[bone] = {"objectType" : NodeType.BONE, "structName" : bone.name}
+            self.bobject_bone_array[bone] = {"objectType" : NodeType.BONE, "structName" : bone.name}
 
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
     def process_bobject(self, bobject):
-        """Adds the given blender object to the bobjectArray dict and
+        """Adds the given blender object to the bobject_array dict and
         stores its type and its name.
 
         If an object is linked, the name of its library is appended
@@ -391,7 +387,7 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            self.bobjectArray[bobject] = {
+            self.bobject_array[bobject] = {
                 "objectType": btype,
                 "structName": arm.utils.asset_name(bobject)
             }
@@ -408,7 +404,7 @@ class ArmoryExporter:
                 self.process_bobject(subbobject)
 
     def process_skinned_meshes(self):
-        for bobjectRef in self.bobjectArray.items():
+        for bobjectRef in self.bobject_array.items():
             if bobjectRef[1]["objectType"] is NodeType.MESH:
                 armature = bobjectRef[0].find_armature()
                 if armature:
@@ -453,10 +449,10 @@ class ArmoryExporter:
     def use_default_material(self, bobject, o):
         if arm.utils.export_bone_data(bobject):
             o['material_refs'].append('armdefaultskin')
-            self.defaultSkinMaterialObjects.append(bobject)
+            self.default_skin_material_objects.append(bobject)
         else:
             o['material_refs'].append('armdefault')
-            self.defaultMaterialObjects.append(bobject)
+            self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
         # Particle object with no material assigned
@@ -464,29 +460,29 @@ class ArmoryExporter:
             if ps.render_type != 'OBJECT' or ps.instance_object is None:
                 continue
             po = ps.instance_object
-            if po not in self.objectToArmObjectDict:
+            if po not in self.object_to_arm_object_dict:
                 continue
-            o = self.objectToArmObjectDict[po]
-            if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.defaultPartMaterialObjects:
-                self.defaultPartMaterialObjects.append(po)
+            o = self.object_to_arm_object_dict[po]
+            if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.default_part_material_objects:
+                self.default_part_material_objects.append(po)
                 o['material_refs'] = ['armdefaultpart'] # Replace armdefault
 
     def export_material_ref(self, bobject, material, index, o):
         if material is None: # Use default for empty mat slots
             self.use_default_material(bobject, o)
             return
-        if not material in self.materialArray:
-            self.materialArray.append(material)
+        if not material in self.material_array:
+            self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys, index, o):
-        if psys.settings in self.particleSystemArray: # or not modifier.show_render:
+        if psys.settings in self.particle_system_array: # or not modifier.show_render:
             return
 
         if psys.settings.instance_object == None or psys.settings.render_type != 'OBJECT':
              return
 
-        self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
+        self.particle_system_array[psys.settings] = {"structName" : psys.settings.name}
         pref = {}
         pref['name'] = psys.name
         pref['seed'] = psys.seed
@@ -643,18 +639,18 @@ class ArmoryExporter:
         if not self.preprocess_object(bobject):
             return
 
-        bobject_ref = self.bobjectArray.get(bobject)
+        bobject_ref = self.bobject_array.get(bobject)
         if bobject_ref is not None:
             object_type = bobject_ref["objectType"]
 
             # Linked object, not present in scene
-            if bobject not in self.objectToArmObjectDict:
+            if bobject not in self.object_to_arm_object_dict:
                 object_export_data = {}  # type: Dict[str, Any]
                 object_export_data['traits'] = []
                 object_export_data['spawn'] = False
-                self.objectToArmObjectDict[bobject] = object_export_data
+                self.object_to_arm_object_dict[bobject] = object_export_data
 
-            object_export_data = self.objectToArmObjectDict[bobject]
+            object_export_data = self.object_to_arm_object_dict[bobject]
             object_export_data['type'] = STRUCT_IDENTIFIER[object_type.value]
             object_export_data['name'] = bobject_ref["structName"]
 
@@ -714,12 +710,12 @@ class ArmoryExporter:
                     object_export_data['lod_material'] = True
 
             if object_type is NodeType.MESH:
-                if objref not in self.meshArray:
-                    self.meshArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                if objref not in self.mesh_array:
+                    self.mesh_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.meshArray[objref]["objectTable"].append(bobject)
+                    self.mesh_array[objref]["objectTable"].append(bobject)
 
-                oid = arm.utils.safestr(self.meshArray[objref]["structName"])
+                oid = arm.utils.safestr(self.mesh_array[objref]["structName"])
 
                 wrd = bpy.data.worlds['Arm']
                 if wrd.arm_single_data_file:
@@ -758,17 +754,17 @@ class ArmoryExporter:
                 #     self.ExportMorphWeights(bobject, shapeKeys, scene, object_export_data)
 
             elif object_type is NodeType.LIGHT:
-                if objref not in self.lightArray:
-                    self.lightArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                if objref not in self.light_array:
+                    self.light_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.lightArray[objref]["objectTable"].append(bobject)
-                object_export_data['data_ref'] = self.lightArray[objref]["structName"]
+                    self.light_array[objref]["objectTable"].append(bobject)
+                object_export_data['data_ref'] = self.light_array[objref]["structName"]
 
             elif object_type is NodeType.PROBE:
-                if objref not in self.probeArray:
-                    self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                if objref not in self.probe_array:
+                    self.probe_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.probeArray[objref]["objectTable"].append(bobject)
+                    self.probe_array[objref]["objectTable"].append(bobject)
 
                 dist = bobject.data.influence_distance
 
@@ -778,7 +774,7 @@ class ArmoryExporter:
                 # GRID, CUBEMAP
                 else:
                     object_export_data['dimensions'] = [dist, dist, dist]
-                object_export_data['data_ref'] = self.probeArray[objref]["structName"]
+                object_export_data['data_ref'] = self.probe_array[objref]["structName"]
 
             elif object_type is NodeType.CAMERA:
                 if 'spawn' in object_export_data and not object_export_data['spawn']:
@@ -786,18 +782,18 @@ class ArmoryExporter:
                 else:
                     self.camera_spawned = True
 
-                if objref not in self.cameraArray:
-                    self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                if objref not in self.camera_array:
+                    self.camera_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.cameraArray[objref]["objectTable"].append(bobject)
-                object_export_data['data_ref'] = self.cameraArray[objref]["structName"]
+                    self.camera_array[objref]["objectTable"].append(bobject)
+                object_export_data['data_ref'] = self.camera_array[objref]["structName"]
 
             elif object_type is NodeType.SPEAKER:
-                if objref not in self.speakerArray:
-                    self.speakerArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                if objref not in self.speaker_array:
+                    self.speaker_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.speakerArray[objref]["objectTable"].append(bobject)
-                object_export_data['data_ref'] = self.speakerArray[objref]["structName"]
+                    self.speaker_array[objref]["objectTable"].append(bobject)
+                object_export_data['data_ref'] = self.speaker_array[objref]["structName"]
 
             # Export the transform. If object is animated, then animation tracks are exported here
             if bobject.type != 'ARMATURE' and bobject.animation_data is not None:
@@ -1710,22 +1706,22 @@ class ArmoryExporter:
 
         # Keep materials with fake user
         for m in bpy.data.materials:
-            if m.use_fake_user and m not in self.materialArray:
-                self.materialArray.append(m)
+            if m.use_fake_user and m not in self.material_array:
+                self.material_array.append(m)
         # Ensure the same order for merging materials
-        self.materialArray.sort(key=lambda x: x.name)
+        self.material_array.sort(key=lambda x: x.name)
 
         if wrd.arm_batch_materials:
-            mat_users = self.materialToObjectDict
-            mat_armusers = self.materialToArmObjectDict
-            mat_batch.build(self.materialArray, mat_users, mat_armusers)
+            mat_users = self.material_to_object_dict
+            mat_armusers = self.material_to_arm_object_dict
+            mat_batch.build(self.material_array, mat_users, mat_armusers)
 
         transluc_used = False
         overlays_used = False
         blending_used = False
         decals_used = False
         # sss_used = False
-        for material in self.materialArray:
+        for material in self.material_array:
             # If the material is unlinked, material becomes None
             if material is None:
                 continue
@@ -1756,8 +1752,8 @@ class ArmoryExporter:
 
             o['contexts'] = []
 
-            mat_users = self.materialToObjectDict
-            mat_armusers = self.materialToArmObjectDict
+            mat_users = self.material_to_object_dict
+            mat_armusers = self.material_to_arm_object_dict
             sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
 
             # Attach MovieTexture
@@ -1808,8 +1804,8 @@ class ArmoryExporter:
                 material.export_vcols = vcol_export
                 material.export_tangents = tang_export
 
-                if material in self.materialToObjectDict:
-                    mat_users = self.materialToObjectDict[material]
+                if material in self.material_to_object_dict:
+                    mat_users = self.material_to_object_dict[material]
                     for ob in mat_users:
                         ob.data.arm_cached = False
 
@@ -1838,9 +1834,9 @@ class ArmoryExporter:
             make_renderpath.build()
 
     def export_particle_systems(self):
-        if len(self.particleSystemArray) > 0:
+        if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
-        for particleRef in self.particleSystemArray.items():
+        for particleRef in self.particle_system_array.items():
             o = {}
             psettings = particleRef[0]
 
@@ -1875,7 +1871,7 @@ class ArmoryExporter:
             o['mass'] = psettings.mass
             # Render
             o['instance_object'] = psettings.instance_object.name
-            self.objectToArmObjectDict[psettings.instance_object]['is_particle'] = True
+            self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
             # Field weights
             o['weight_gravity'] = psettings.effector_weights.gravity
             self.output['particle_datas'].append(o)
@@ -1930,10 +1926,10 @@ class ArmoryExporter:
             self.output['camera_datas'] = []
             self.output['speaker_datas'] = []
 
-            for light_ref in self.lightArray.items():
+            for light_ref in self.light_array.items():
                 self.export_light(light_ref)
 
-            for camera_ref in self.cameraArray.items():
+            for camera_ref in self.camera_array.items():
                 self.export_camera(camera_ref)
 
             # Keep sounds with fake user
@@ -1941,16 +1937,16 @@ class ArmoryExporter:
                 if sound.use_fake_user:
                     assets.add(arm.utils.asset_path(sound.filepath))
 
-            for speaker_ref in self.speakerArray.items():
+            for speaker_ref in self.speaker_array.items():
                 self.export_speaker(speaker_ref)
 
             if bpy.data.lightprobes:
                 self.output['probe_datas'] = []
-                for lightprobe_object in self.probeArray.items():
+                for lightprobe_object in self.probe_array.items():
                     self.export_probe(lightprobe_object)
 
         self.output['mesh_datas'] = []
-        for mesh_ref in self.meshArray.items():
+        for mesh_ref in self.mesh_array.items():
             self.export_mesh(mesh_ref, scene)
 
     def execute(self):
@@ -1965,7 +1961,7 @@ class ArmoryExporter:
             # Map objects to game objects
             o = {}
             o['traits'] = []
-            self.objectToArmObjectDict[bobject] = o
+            self.object_to_arm_object_dict[bobject] = o
             # Process
             # Skip objects that have a parent because children will be exported recursively
             if not bobject.parent:
@@ -2061,7 +2057,7 @@ class ArmoryExporter:
             assets.add_khafile_def('arm_terrain')
             # Export material
             mat = self.scene.arm_terrain_object.children[0].data.materials[0]
-            self.materialArray.append(mat)
+            self.material_array.append(mat)
             # Terrain data
             terrain = {}
             terrain['name'] = 'Terrain'
@@ -2097,14 +2093,14 @@ class ArmoryExporter:
             self.output['material_datas'] = []
 
             # Object with no material assigned in the scene
-            if len(self.defaultMaterialObjects) > 0:
-                self.make_default_mat('armdefault', self.defaultMaterialObjects)
-            if len(self.defaultSkinMaterialObjects) > 0:
-                self.make_default_mat('armdefaultskin', self.defaultSkinMaterialObjects)
+            if len(self.default_material_objects) > 0:
+                self.make_default_mat('armdefault', self.default_material_objects)
+            if len(self.default_skin_material_objects) > 0:
+                self.make_default_mat('armdefaultskin', self.default_skin_material_objects)
             if len(bpy.data.particles) > 0:
                 self.use_default_material_part()
-            if len(self.defaultPartMaterialObjects) > 0:
-                self.make_default_mat('armdefaultpart', self.defaultPartMaterialObjects, is_particle=True)
+            if len(self.default_part_material_objects) > 0:
+                self.make_default_mat('armdefaultpart', self.default_part_material_objects, is_particle=True)
 
             self.export_materials()
             self.export_particle_systems()
@@ -2460,12 +2456,12 @@ class ArmoryExporter:
         # Map objects to materials, can be used in later stages
         for i in range(len(bobject.material_slots)):
             mat = self.slot_to_material(bobject, bobject.material_slots[i])
-            if mat in self.materialToObjectDict:
-                self.materialToObjectDict[mat].append(bobject)
-                self.materialToArmObjectDict[mat].append(o)
+            if mat in self.material_to_object_dict:
+                self.material_to_object_dict[mat].append(bobject)
+                self.material_to_arm_object_dict[mat].append(o)
             else:
-                self.materialToObjectDict[mat] = [bobject]
-                self.materialToArmObjectDict[mat] = [o]
+                self.material_to_object_dict[mat] = [bobject]
+                self.material_to_arm_object_dict[mat] = [o]
 
         # Export constraints
         if len(bobject.constraints) > 0:
