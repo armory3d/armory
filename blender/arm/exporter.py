@@ -120,7 +120,9 @@ class ArmoryExporter:
 
     @classmethod
     def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene=None, depsgraph: bpy.types.Depsgraph=None) -> None:
-        """Exports the given scene to the given filepath."""
+        """Exports the given scene to the given filepath. This is the
+        function that is called in make.py and the entry point of the
+        exporter."""
         cls(context, filepath, scene, depsgraph).execute()
 
     @staticmethod
