@@ -579,80 +579,81 @@ class ArmoryExporter:
         meshes), and transform.
         Subobjects are then exported recursively.
         """
+        if not self.preprocess_object(bobject):
             return
 
-        bobjectRef = self.bobjectArray.get(bobject)
-        if bobjectRef:
-            type = bobjectRef["objectType"]
+        bobject_ref = self.bobjectArray.get(bobject)
+        if bobject_ref is not None:
+            object_type = bobject_ref["objectType"]
 
             # Linked object, not present in scene
             if bobject not in self.objectToArmObjectDict:
-                o = {}
-                o['traits'] = []
-                o['spawn'] = False
-                self.objectToArmObjectDict[bobject] = o
+                object_export_data = {}  # type: Dict[str, Any]
+                object_export_data['traits'] = []
+                object_export_data['spawn'] = False
+                self.objectToArmObjectDict[bobject] = object_export_data
 
-            o = self.objectToArmObjectDict[bobject]
-            o['type'] = structIdentifier[type]
-            o['name'] = bobjectRef["structName"]
+            object_export_data = self.objectToArmObjectDict[bobject]
+            object_export_data['type'] = structIdentifier[object_type]
+            object_export_data['name'] = bobject_ref["structName"]
 
             if bobject.parent_type == "BONE":
-                o['parent_bone'] = bobject.parent_bone
+                object_export_data['parent_bone'] = bobject.parent_bone
 
-            if bobject.hide_render or bobject.arm_visible == False:
-                o['visible'] = False
+            if bobject.hide_render or not bobject.arm_visible:
+                object_export_data['visible'] = False
 
             if not bobject.cycles_visibility.camera:
-                o['visible_mesh'] = False
+                object_export_data['visible_mesh'] = False
 
             if not bobject.cycles_visibility.shadow:
-                o['visible_shadow'] = False
+                object_export_data['visible_shadow'] = False
 
-            if bobject.arm_spawn == False:
-                o['spawn'] = False
+            if not bobject.arm_spawn:
+                object_export_data['spawn'] = False
 
-            o['mobile'] = bobject.arm_mobile
+            object_export_data['mobile'] = bobject.arm_mobile
 
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
-                o['group_ref'] = bobject.instance_collection.name
+                object_export_data['group_ref'] = bobject.instance_collection.name
 
             if bobject.arm_tilesheet != '':
-                o['tilesheet_ref'] = bobject.arm_tilesheet
-                o['tilesheet_action_ref'] = bobject.arm_tilesheet_action
+                object_export_data['tilesheet_ref'] = bobject.arm_tilesheet
+                object_export_data['tilesheet_action_ref'] = bobject.arm_tilesheet_action
 
             if len(bobject.arm_propertylist) > 0:
-                o['properties'] = []
+                object_export_data['properties'] = []
                 for p in bobject.arm_propertylist:
                     po = {}
                     po['name'] = p.name_prop
                     po['value'] = getattr(p, p.type_prop + '_prop')
-                    o['properties'].append(po)
+                    object_export_data['properties'].append(po)
 
             # TODO:
             layer_found = True
-            if layer_found == False:
-                o['spawn'] = False
+            if not layer_found:
+                object_export_data['spawn'] = False
 
             # Export the object reference and material references
             objref = bobject.data
             if objref is not None:
                 objname = arm.utils.asset_name(objref)
 
-            # Lods
+            # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
-                o['lods'] = []
+                object_export_data['lods'] = []
                 for l in objref.arm_lodlist:
-                    if l.enabled_prop == False:
+                    if not l.enabled_prop:
                         continue
                     lod = {}
                     lod['object_ref'] = l.name
                     lod['screen_size'] = l.screen_size_prop
-                    o['lods'].append(lod)
+                    object_export_data['lods'].append(lod)
                 if objref.arm_lod_material:
-                    o['lod_material'] = True
+                    object_export_data['lod_material'] = True
 
-            if type == NodeTypeMesh:
-                if not objref in self.meshArray:
+            if object_type == NodeTypeMesh:
+                if objref not in self.meshArray:
                     self.meshArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.meshArray[objref]["objectTable"].append(bobject)
@@ -661,76 +662,81 @@ class ArmoryExporter:
 
                 wrd = bpy.data.worlds['Arm']
                 if wrd.arm_single_data_file:
-                    o['data_ref'] = oid
+                    object_export_data['data_ref'] = oid
                 else:
                     ext = '' if not self.is_compress() else '.lz4'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
-                    o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
+                    object_export_data['data_ref'] = 'mesh_' + oid + ext + '/' + oid
 
-                o['material_refs'] = []
+                object_export_data['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
                     mat = self.slot_to_material(bobject, bobject.material_slots[i])
                     # Export ref
-                    self.export_material_ref(bobject, mat, i, o)
+                    self.export_material_ref(bobject, mat, i, object_export_data)
                     # Decal flag
                     if mat != None and mat.arm_decal:
-                        o['type'] = 'decal_object'
+                        object_export_data['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
-                if len(o['material_refs']) == 0:
-                    self.use_default_material(bobject, o)
+                if len(object_export_data['material_refs']) == 0:
+                    self.use_default_material(bobject, object_export_data)
 
                 num_psys = len(bobject.particle_systems)
                 if num_psys > 0:
-                    o['particle_refs'] = []
+                    object_export_data['particle_refs'] = []
                     for i in range(0, num_psys):
-                        self.export_particle_system_ref(bobject.particle_systems[i], i, o)
+                        self.export_particle_system_ref(bobject.particle_systems[i], i, object_export_data)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
                     self.calc_aabb(bobject)
-                o['dimensions'] = [aabb[0], aabb[1], aabb[2]]
+                object_export_data['dimensions'] = [aabb[0], aabb[1], aabb[2]]
 
-                #shapeKeys = ArmoryExporter.get_shape_keys(objref)
-                #if shapeKeys:
-                #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
+                # shapeKeys = ArmoryExporter.get_shape_keys(objref)
+                # if shapeKeys:
+                #     self.ExportMorphWeights(bobject, shapeKeys, scene, object_export_data)
 
-            elif type == NodeTypeLight:
+            elif object_type == NodeTypeLight:
                 if objref not in self.lightArray:
                     self.lightArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.lightArray[objref]["objectTable"].append(bobject)
-                o['data_ref'] = self.lightArray[objref]["structName"]
+                object_export_data['data_ref'] = self.lightArray[objref]["structName"]
 
-            elif type == NodeTypeProbe:
+            elif object_type == NodeTypeProbe:
                 if objref not in self.probeArray:
                     self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.probeArray[objref]["objectTable"].append(bobject)
-                dist = bobject.data.influence_distance
-                if objref.type == "PLANAR":
-                    o['dimensions'] = [1.0, 1.0, dist]
-                else: # GRID, CUBEMAP
-                    o['dimensions'] = [dist, dist, dist]
-                o['data_ref'] = self.probeArray[objref]["structName"]
 
-            elif type == NodeTypeCamera:
-                if 'spawn' in o and not o['spawn']:
+                dist = bobject.data.influence_distance
+
+                if objref.type == "PLANAR":
+                    object_export_data['dimensions'] = [1.0, 1.0, dist]
+
+                # GRID, CUBEMAP
+                else:
+                    object_export_data['dimensions'] = [dist, dist, dist]
+                object_export_data['data_ref'] = self.probeArray[objref]["structName"]
+
+            elif object_type == NodeTypeCamera:
+                if 'spawn' in object_export_data and not object_export_data['spawn']:
                     self.camera_spawned |= False
                 else:
                     self.camera_spawned = True
+
                 if objref not in self.cameraArray:
                     self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.cameraArray[objref]["objectTable"].append(bobject)
-                o['data_ref'] = self.cameraArray[objref]["structName"]
+                object_export_data['data_ref'] = self.cameraArray[objref]["structName"]
 
-            elif type == NodeTypeSpeaker:
+            elif object_type == NodeTypeSpeaker:
                 if objref not in self.speakerArray:
                     self.speakerArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.speakerArray[objref]["objectTable"].append(bobject)
-                o['data_ref'] = self.speakerArray[objref]["structName"]
+                object_export_data['data_ref'] = self.speakerArray[objref]["structName"]
 
             # Export the transform. If object is animated, then animation tracks are exported here
             if bobject.type != 'ARMATURE' and bobject.animation_data is not None:
@@ -746,28 +752,28 @@ class ArmoryExporter:
                 orig_action = action
                 for a in export_actions:
                     bobject.animation_data.action = a
-                    self.export_object_transform(bobject, o)
+                    self.export_object_transform(bobject, object_export_data)
                 if len(export_actions) >= 2 and export_actions[0] is None: # No action assigned
-                    o['object_actions'].insert(0, 'null')
+                    object_export_data['object_actions'].insert(0, 'null')
                 bobject.animation_data.action = orig_action
             else:
-                self.export_object_transform(bobject, o)
+                self.export_object_transform(bobject, object_export_data)
 
             # If the object is parented to a bone and is not relative, then undo the bone's transform
             if bobject.parent_type == "BONE":
                 armature = bobject.parent.data
                 bone = armature.bones[bobject.parent_bone]
                 # if not bone.use_relative_parent:
-                o['parent_bone_connected'] = bone.use_connect
+                object_export_data['parent_bone_connected'] = bone.use_connect
                 if bone.use_connect:
                     bone_translation = Vector((0, bone.length, 0)) + bone.head
-                    o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
+                    object_export_data['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
                 else:
                     bone_translation = bone.tail - bone.head
-                    o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
+                    object_export_data['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
                     pose_bone = bobject.parent.pose.bones[bobject.parent_bone]
                     bone_translation_pose = pose_bone.tail - pose_bone.head
-                    o['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
+                    object_export_data['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
 
             if bobject.type == 'ARMATURE' and bobject.data is not None:
                 bdata = bobject.data # Armature data
@@ -803,18 +809,18 @@ class ArmoryExporter:
                 ext = '.lz4' if self.is_compress() else ''
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
-                o['bone_actions'] = []
+                object_export_data['bone_actions'] = []
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
-                    o['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
+                    object_export_data['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
                 clear_op = set()
                 skelobj = bobject
                 baked_actions = []
                 orig_action = bobject.animation_data.action
                 if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
-                    clear_op.add( 'unlink' )
-                    #clone bjobject and put it in the current scene so the bake operator can run
+                    clear_op.add('unlink')
+                    # Clone bjobject and put it in the current scene so the bake operator can run
                     if bobject.library is not None:
                         skelobj = bobject.copy()
                         clear_op.add('rem')
@@ -825,16 +831,18 @@ class ArmoryExporter:
                     skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress())
                     assets.add(fp)
-                    if bdata.arm_cached == False or not os.path.exists(fp):
+                    if not bdata.arm_cached or not os.path.exists(fp):
                         #handle autobake
                         if bdata.arm_autobake:
                             sel = bpy.context.selected_objects[:]
-                            for _o in sel: _o.select_set(False)
+                            for _o in sel:
+                                _o.select_set(False)
                             skelobj.select_set(True)
                             bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
                             action = skelobj.animation_data.action
                             skelobj.select_set(False)
-                            for _o in sel: _o.select_set(True)
+                            for _o in sel:
+                                _o.select_set(True)
                             baked_actions.append(action)
 
                         wrd = bpy.data.worlds['Arm']
@@ -865,19 +873,19 @@ class ArmoryExporter:
                 # TODO: cache per action
                 bdata.arm_cached = True
 
-            if parento is None:
-                self.output['objects'].append(o)
+            if parent_export_data is None:
+                self.output['objects'].append(object_export_data)
             else:
-                parento['children'].append(o)
+                parent_export_data['children'].append(object_export_data)
 
-            self.post_export_object(bobject, o, type)
+            self.post_export_object(bobject, object_export_data, object_type)
 
-            if not hasattr(o, 'children') and len(bobject.children) > 0:
-                o['children'] = []
+            if not hasattr(object_export_data, 'children') and len(bobject.children) > 0:
+                object_export_data['children'] = []
 
         if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
-                self.export_object(subbobject, scene, o)
+                self.export_object(subbobject, scene, object_export_data)
 
     def export_skin(self, bobject, armature, exportMesh, o):
         # This function exports all skinning data, which includes the skeleton
