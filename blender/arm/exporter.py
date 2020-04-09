@@ -112,14 +112,34 @@ class ArmoryExporter:
 
         self.bone_tracks = []
 
-        self.preprocess()
+        ArmoryExporter.preprocess()
 
     @classmethod
-    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene=None, depsgraph: bpy.types.Depsgraph=None) -> None:
+    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None) -> None:
         """Exports the given scene to the given filepath. This is the
         function that is called in make.py and the entry point of the
         exporter."""
         cls(context, filepath, scene, depsgraph).execute()
+
+    @classmethod
+    def preprocess(cls):
+        wrd = bpy.data.worlds['Arm']
+
+        cls.export_all_flag = True
+        cls.export_physics = False # Indicates whether rigid body is exported
+        if wrd.arm_physics == 'Enabled':
+            cls.export_physics = True
+        cls.export_navigation = False
+        if wrd.arm_navigation == 'Enabled':
+            cls.export_navigation = True
+        cls.export_ui = False
+        if not hasattr(cls, 'compress_enabled'):
+            cls.compress_enabled = False
+        if not hasattr(cls, 'optimize_enabled'):
+            cls.optimize_enabled = False
+        if not hasattr(cls, 'import_traits'):
+            cls.import_traits = [] # Referenced traits
+        cls.option_mesh_only = False
 
     @staticmethod
     def write_matrix(matrix):
@@ -169,11 +189,11 @@ class ArmoryExporter:
         return curve_array
 
     def export_bone(self, armature, bone, scene, o, action):
-        bobjectRef = self.bobject_bone_array.get(bone)
+        bobject_ref = self.bobject_bone_array.get(bone)
 
-        if bobjectRef:
-            o['type'] = STRUCT_IDENTIFIER[bobjectRef["objectType"].value]
-            o['name'] = bobjectRef["structName"]
+        if bobject_ref:
+            o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
+            o['name'] = bobject_ref["structName"]
             self.export_bone_transform(armature, bone, scene, o, action)
 
         o['children'] = []
@@ -182,14 +202,17 @@ class ArmoryExporter:
             self.export_bone(armature, subbobject, scene, so, action)
             o['children'].append(so)
 
-    def export_pose_markers(self, oanim, action):
-        if action.pose_markers == None or len(action.pose_markers) == 0:
+    @staticmethod
+    def export_pose_markers(oanim, action):
+        if action.pose_markers is None or len(action.pose_markers) == 0:
             return
+
         oanim['marker_frames'] = []
         oanim['marker_names'] = []
-        for m in action.pose_markers:
-            oanim['marker_frames'].append(int(m.frame))
-            oanim['marker_names'].append(m.name)
+
+        for pos_marker in action.pose_markers:
+            oanim['marker_frames'].append(int(pos_marker.frame))
+            oanim['marker_names'].append(pos_marker.name)
 
     def export_object_sampled_animation(self, bobject: bpy.types.Object,scene: bpy.types.Scene, o: Dict) -> None:
         """Exports animation as full 4x4 matrices for each frame"""
@@ -204,9 +227,9 @@ class ArmoryExporter:
 
             action = bobject.animation_data.action
             aname = arm.utils.safestr(arm.utils.asset_name(action))
-            fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress())
+            fp = self.get_meshes_file_path('action_' + aname, compressed=ArmoryExporter.compress_enabled)
             assets.add(fp)
-            ext = '.lz4' if self.is_compress() else ''
+            ext = '.lz4' if ArmoryExporter.compress_enabled else ''
             if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                 ext = '.json'
             o['object_actions'].append('action_' + aname + ext)
@@ -252,7 +275,8 @@ class ArmoryExporter:
                 oaction['transform'] = None
                 arm.utils.write_arm(fp, actionf)
 
-    def calculate_animation_length(self, action):
+    @staticmethod
+    def calculate_animation_length(action):
         """Calculates the length of the given action."""
         start = action.frame_range[0]
         end = action.frame_range[1]
@@ -272,7 +296,8 @@ class ArmoryExporter:
 
         return (int(start), int(end))
 
-    def export_animation_track(self, fcurve, frame_range, target):
+    @staticmethod
+    def export_animation_track(fcurve, frame_range, target):
         """This function exports a single animation track."""
         data_ttrack = {}
 
@@ -316,9 +341,9 @@ class ArmoryExporter:
                 if 'object_actions' not in o:
                     o['object_actions'] = []
 
-                fp = self.get_meshes_file_path('action_' + action_name, compressed=self.is_compress())
+                fp = self.get_meshes_file_path('action_' + action_name, compressed=ArmoryExporter.compress_enabled)
                 assets.add(fp)
-                ext = '.lz4' if self.is_compress() else ''
+                ext = '.lz4' if ArmoryExporter.compress_enabled else ''
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
                 o['object_actions'].append('action_' + action_name + ext)
@@ -489,7 +514,8 @@ class ArmoryExporter:
         pref['particle'] = psys.settings.name
         o['particle_refs'].append(pref)
 
-    def get_view3d_area(self):
+    @staticmethod
+    def get_view3d_area():
         screen = bpy.context.window.screen
         for area in screen.areas:
             if area.type == 'VIEW_3D':
@@ -530,7 +556,8 @@ class ArmoryExporter:
                         values += ArmoryExporter.write_matrix(pose_bone.matrix)
         # print('Bone matrices exported in ' + str(time.time() - profile_time))
 
-    def has_baked_material(self, bobject, materials):
+    @staticmethod
+    def has_baked_material(bobject, materials):
         for mat in materials:
             if mat is None:
                 continue
@@ -539,7 +566,8 @@ class ArmoryExporter:
                 return True
         return False
 
-    def slot_to_material(self, bobject, slot):
+    @staticmethod
+    def slot_to_material(bobject, slot):
         mat = slot.material
         # Pick up backed material if present
         if mat is not None:
@@ -636,7 +664,7 @@ class ArmoryExporter:
         meshes), and transform.
         Subobjects are then exported recursively.
         """
-        if not self.preprocess_object(bobject):
+        if not bobject.arm_export:
             return
 
         bobject_ref = self.bobject_array.get(bobject)
@@ -711,7 +739,7 @@ class ArmoryExporter:
 
             if object_type is NodeType.MESH:
                 if objref not in self.mesh_array:
-                    self.mesh_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                    self.mesh_array[objref] = {"structName": objname, "objectTable": [bobject]}
                 else:
                     self.mesh_array[objref]["objectTable"].append(bobject)
 
@@ -721,7 +749,7 @@ class ArmoryExporter:
                 if wrd.arm_single_data_file:
                     object_export_data['data_ref'] = oid
                 else:
-                    ext = '' if not self.is_compress() else '.lz4'
+                    ext = '' if not ArmoryExporter.compress_enabled else '.lz4'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
                     object_export_data['data_ref'] = 'mesh_' + oid + ext + '/' + oid
@@ -732,7 +760,7 @@ class ArmoryExporter:
                     # Export ref
                     self.export_material_ref(bobject, mat, i, object_export_data)
                     # Decal flag
-                    if mat != None and mat.arm_decal:
+                    if mat is not None and mat.arm_decal:
                         object_export_data['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(object_export_data['material_refs']) == 0:
@@ -863,7 +891,7 @@ class ArmoryExporter:
                             export_actions.append(strip.action)
 
                 armatureid = arm.utils.safestr(arm.utils.asset_name(bdata))
-                ext = '.lz4' if self.is_compress() else ''
+                ext = '.lz4' if ArmoryExporter.compress_enabled else ''
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
                 object_export_data['bone_actions'] = []
@@ -886,7 +914,7 @@ class ArmoryExporter:
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     skelobj.animation_data.action = action
-                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress())
+                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
                     if not bdata.arm_cached or not os.path.exists(fp):
                         #handle autobake
@@ -1053,7 +1081,8 @@ class ArmoryExporter:
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
 
-    def calc_aabb(self, bobject):
+    @staticmethod
+    def calc_aabb(bobject):
         aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
         bobject.data.arm_aabb = [ \
             abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
@@ -1308,7 +1337,7 @@ class ArmoryExporter:
         if wrd.arm_single_data_file:
             fp = None
         else:
-            fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress())
+            fp = self.get_meshes_file_path('mesh_' + oid, compressed=ArmoryExporter.compress_enabled)
             assets.add(fp)
             # No export necessary
             if bobject.data.arm_cached and os.path.exists(fp):
@@ -1570,7 +1599,8 @@ class ArmoryExporter:
         else:
             return [0.051, 0.051, 0.051, 1.0]
 
-    def extract_projection(self, o, proj, with_planes=True):
+    @staticmethod
+    def extract_projection(o, proj, with_planes=True):
         a = proj[0][0]
         b = proj[1][1]
         c = proj[2][2]
@@ -1581,7 +1611,8 @@ class ArmoryExporter:
             o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
             o['far_plane'] = k * o['near_plane']
 
-    def extract_ortho(self, o, proj):
+    @staticmethod
+    def extract_ortho(o, proj):
         # left, right, bottom, top
         o['ortho'] = [-(1 + proj[3][0]) / proj[0][0], \
                        (1 - proj[3][0]) / proj[0][0], \
@@ -1904,9 +1935,6 @@ class ArmoryExporter:
             o['name'] = w.name
             self.post_export_world(w, o)
             self.output['world_datas'].append(o)
-
-    def is_compress(self):
-        return ArmoryExporter.compress_enabled
 
     def export_objects(self, scene):
         """Exports all supported blender objects.
@@ -2248,25 +2276,29 @@ class ArmoryExporter:
         self.output['objects'].append(o)
         self.output['camera_ref'] = 'DefaultCamera'
 
-    def get_export_tangents(self, mesh):
-        for m in mesh.materials:
-            if m != None and m.export_tangents == True:
+    @staticmethod
+    def get_export_tangents(mesh):
+        for material in mesh.materials:
+            if material is not None and material.export_tangents:
                 return True
         return False
 
-    def get_export_vcols(self, mesh):
-        for m in mesh.materials:
-            if m != None and m.export_vcols == True:
+    @staticmethod
+    def get_export_vcols(mesh):
+        for material in mesh.materials:
+            if material is not None and material.export_vcols == True:
                 return True
         return False
 
-    def get_export_uvs(self, mesh):
-        for m in mesh.materials:
-            if m != None and m.export_uvs == True:
+    @staticmethod
+    def get_export_uvs(mesh):
+        for material in mesh.materials:
+            if material is not None and material.export_uvs == True:
                 return True
         return False
 
-    def object_process_instancing(self, refs, scale_pos):
+    @staticmethod
+    def object_process_instancing(refs, scale_pos):
         instanced_type = 0
         instanced_data = None
         for bobject in refs:
@@ -2317,33 +2349,6 @@ class ArmoryExporter:
             #     break
 
         return instanced_type, instanced_data
-
-    def preprocess(self):
-        wrd = bpy.data.worlds['Arm']
-        ArmoryExporter.export_all_flag = True
-        ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
-        if wrd.arm_physics == 'Enabled':
-            ArmoryExporter.export_physics = True
-        ArmoryExporter.export_navigation = False
-        if wrd.arm_navigation == 'Enabled':
-            ArmoryExporter.export_navigation = True
-        ArmoryExporter.export_ui = False
-        if not hasattr(ArmoryExporter, 'compress_enabled'):
-            ArmoryExporter.compress_enabled = False
-        if not hasattr(ArmoryExporter, 'optimize_enabled'):
-            ArmoryExporter.optimize_enabled = False
-        if not hasattr(ArmoryExporter, 'import_traits'):
-            ArmoryExporter.import_traits = [] # Referenced traits
-        ArmoryExporter.option_mesh_only = False
-
-    def preprocess_object(self, bobject): # Returns false if object should not be exported
-        export_object = True
-
-        # Disabled object
-        if bobject.arm_export == False:
-            return False
-
-        return export_object
 
     def post_export_object(self, bobject, o, type):
         # Export traits
@@ -2471,7 +2476,8 @@ class ArmoryExporter:
         for x in o['traits']:
             ArmoryExporter.import_traits.append(x['class_name'])
 
-    def add_constraints(self, bobject, o, bone=False):
+    @staticmethod
+    def add_constraints(bobject, o, bone=False):
         for con in bobject.constraints:
             if con.mute:
                 continue
@@ -2597,7 +2603,8 @@ class ArmoryExporter:
 
                 o['traits'].append(x)
 
-    def export_canvas_themes(self):
+    @staticmethod
+    def export_canvas_themes():
         path_themes = os.path.join(arm.utils.get_fp(), 'Bundled', 'canvas')
         file_theme = os.path.join(path_themes, "_themes.json")
 
@@ -2624,7 +2631,8 @@ class ArmoryExporter:
         if soft_type == 0:
             self.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
-    def add_hook_mod(self, o, bobject, target_name, group_name):
+    @staticmethod
+    def add_hook_mod(o, bobject, target_name, group_name):
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         trait = {}
@@ -2642,10 +2650,11 @@ class ArmoryExporter:
         trait['parameters'] = ["'" + target_name + "'", str(verts)]
         o['traits'].append(trait)
 
-    def add_rigidbody_constraint(self, o, rbc):
+    @staticmethod
+    def add_rigidbody_constraint(o, rbc):
         rb1 = rbc.object1
         rb2 = rbc.object2
-        if rb1 == None or rb2 is None:
+        if rb1 is None or rb2 is None:
             return
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
@@ -2742,7 +2751,8 @@ class ArmoryExporter:
             trait['parameters'].append(str(limits))
         o['traits'].append(trait)
 
-    def post_export_world(self, world, o):
+    @staticmethod
+    def post_export_world(world, o):
         wrd = bpy.data.worlds['Arm']
         bgcol = world.arm_envtex_color
         if '_LDR' in wrd.world_defs: # No compositor used
@@ -2796,15 +2806,19 @@ class ArmoryExporter:
         po['strength'] = strength
         o['probe'] = po
 
-    # https://blender.stackexchange.com/questions/70629
-    def mod_equal(self, mod1, mod2):
+    @staticmethod
+    def mod_equal(mod1: bpy.types.Modifier, mod2: bpy.types.Modifier):
+        """Compares whether the given modifiers are equal."""
+        # https://blender.stackexchange.com/questions/70629
         return all([getattr(mod1, prop, True) == getattr(mod2, prop, False) for prop in mod1.bl_rna.properties.keys()])
 
-    def mod_equal_stack(self, obj1, obj2):
+    @staticmethod
+    def mod_equal_stack(obj1, obj2):
+        """Returns `True` if the given objects have the same modifiers."""
         if len(obj1.modifiers) == 0 and len(obj2.modifiers) == 0:
             return True
         if len(obj1.modifiers) == 0 or len(obj2.modifiers) == 0:
             return False
         if len(obj1.modifiers) != len(obj2.modifiers):
             return False
-        return all([self.mod_equal(m, obj2.modifiers[i]) for i,m in enumerate(obj1.modifiers)])
+        return all([ArmoryExporter.mod_equal(m, obj2.modifiers[i]) for i, m in enumerate(obj1.modifiers)])
