@@ -87,7 +87,7 @@ class ArmoryExporter:
 
         # Stores the object type ("objectType") and the asset name
         # ("structName") in a dict for each object
-        self.bobject_array: Dict[bpy.types.Object, Dict, str, Union[NodeType, str]] = {}
+        self.bobject_array: Dict[bpy.types.Object, Dict[str, Union[NodeType, str]]] = {}
         self.bobject_bone_array = {}
         self.mesh_array = {}
         self.light_array = {}
