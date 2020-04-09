@@ -81,11 +81,13 @@ class ArmoryExporter:
                 matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
                 matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]]
 
-    def get_meshes_file_path(self, object_id, compressed=False):
+    def get_meshes_file_path(self, object_id: str, compressed=False) -> str:
         index = self.filepath.rfind('/')
         mesh_fp = self.filepath[:(index + 1)] + 'meshes/'
+
         if not os.path.exists(mesh_fp):
             os.makedirs(mesh_fp)
+
         ext = '.lz4' if compressed else '.arm'
         return mesh_fp + object_id + ext
 
@@ -142,8 +144,8 @@ class ArmoryExporter:
             oanim['marker_frames'].append(int(m.frame))
             oanim['marker_names'].append(m.name)
 
-    def export_object_sampled_animation(self, bobject, scene, o):
-        # This function exports animation as full 4x4 matrices for each frame
+    def export_object_sampled_animation(self, bobject: bpy.types.Object,scene: bpy.types.Scene, o: Dict) -> None:
+        """Exports animation as full 4x4 matrices for each frame"""
         animation_flag = False
 
         animation_flag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
@@ -1913,7 +1915,9 @@ class ArmoryExporter:
         current_output = self.output
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
         self.filepath = filepath
-        self.bobjectArray = {}
+        # Stores the object type ("objectType") and the asset name
+        # ("structName") in a dict for each object
+        self.bobjectArray = {}  # type: Dict[bpy.types.Object, Dict[str], Union[NodeType, str]]
         self.bobjectBoneArray = {}
         self.meshArray = {}
         self.lightArray = {}
@@ -1932,7 +1936,9 @@ class ArmoryExporter:
         self.defaultSkinMaterialObjects = []
         self.defaultPartMaterialObjects = []
         self.materialToArmObjectDict = dict()
-        self.objectToArmObjectDict = dict()
+        # Stores the link between a blender object and its
+        # corresponding export data (arm object)
+        self.objectToArmObjectDict = dict() # type: Dict[bpy.types.Object, Dict]
         self.bone_tracks = []
         # self.active_layers = []
         # for i in range(0, len(self.scene.view_layers)):
