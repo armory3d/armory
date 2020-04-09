@@ -74,6 +74,55 @@ current_output = None
 class ArmoryExporter:
     """Export to Armory format"""
 
+    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene=None, depsgraph:bpy.types.Depsgraph=None):
+        global current_output
+
+        self.output = {}
+        current_output = self.output
+
+        self.filepath = filepath
+        self.scene = context.scene if scene is None else scene
+        self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
+
+        self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
+
+        # Stores the object type ("objectType") and the asset name
+        # ("structName") in a dict for each object
+        self.bobjectArray = {}  # type: Dict[bpy.types.Object, Dict[str], Union[NodeType, str]]
+        self.bobjectBoneArray = {}
+        self.meshArray = {}
+        self.lightArray = {}
+        self.probeArray = {}
+        self.cameraArray = {}
+        self.speakerArray = {}
+        self.materialArray = []
+        self.particleSystemArray = {}
+        # Export all worlds
+        self.worldArray = {}
+        self.boneParentArray = {}
+
+        # `True` if there is at least one spawned camera in the scene
+        self.camera_spawned = False
+
+        self.materialToObjectDict = dict()
+        # If no material is assigned, provide default to mimic cycles
+        self.defaultMaterialObjects = []
+        self.defaultSkinMaterialObjects = []
+        self.defaultPartMaterialObjects = []
+        self.materialToArmObjectDict = dict()
+        # Stores the link between a blender object and its
+        # corresponding export data (arm object)
+        self.objectToArmObjectDict = dict() # type: Dict[bpy.types.Object, Dict]
+
+        self.bone_tracks = []
+
+        self.preprocess()
+
+    @classmethod
+    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene=None, depsgraph: bpy.types.Depsgraph=None) -> None:
+        """Exports the given scene to the given filepath."""
+        cls(context, filepath, scene, depsgraph).execute()
+
     @staticmethod
     def write_matrix(matrix):
         return [matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
@@ -1902,56 +1951,14 @@ class ArmoryExporter:
         for mesh_ref in self.meshArray.items():
             self.export_mesh(mesh_ref, scene)
 
-    def execute(self, context, filepath, scene=None, depsgraph=None):
-        global current_output
+    def execute(self):
+        """Exports the scene."""
         profile_time = time.time()
-
-        self.scene = context.scene if scene is None else scene
-        current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
-
         print('Exporting ' + arm.utils.asset_name(self.scene))
 
-        self.output = {}
-        current_output = self.output
-        self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
-        self.filepath = filepath
-        # Stores the object type ("objectType") and the asset name
-        # ("structName") in a dict for each object
-        self.bobjectArray = {}  # type: Dict[bpy.types.Object, Dict[str], Union[NodeType, str]]
-        self.bobjectBoneArray = {}
-        self.meshArray = {}
-        self.lightArray = {}
-        self.probeArray = {}
-        self.cameraArray = {}
-        self.camera_spawned = False
-        self.speakerArray = {}
-        self.materialArray = []
-        self.particleSystemArray = {}
-        # Export all worlds
-        self.worldArray = {}
-        self.boneParentArray = {}
-        self.materialToObjectDict = dict()
-        # If no material is assigned, provide default to mimic cycles
-        self.defaultMaterialObjects = []
-        self.defaultSkinMaterialObjects = []
-        self.defaultPartMaterialObjects = []
-        self.materialToArmObjectDict = dict()
-        # Stores the link between a blender object and its
-        # corresponding export data (arm object)
-        self.objectToArmObjectDict = dict() # type: Dict[bpy.types.Object, Dict]
-        self.bone_tracks = []
-        # self.active_layers = []
-        # for i in range(0, len(self.scene.view_layers)):
-            # if self.scene.view_layers[i] == True:
-                # self.active_layers.append(i)
-        self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
-        self.preprocess()
+        current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
 
-        # scene_objects = []
-        # for lay in self.scene.view_layers:
-            # scene_objects += lay.objects
         scene_objects = self.scene.collection.all_objects.values()
-
         for bobject in scene_objects:
             # Map objects to game objects
             o = {}
@@ -2198,8 +2205,8 @@ class ArmoryExporter:
             bpy.data.materials.remove(mat, do_unlink=True)
 
         # Restore frame
-        if scene.frame_current != current_frame:
-            scene.frame_set(current_frame, subframe=current_subframe)
+        if self.scene.frame_current != current_frame:
+            self.scene.frame_set(current_frame, subframe=current_subframe)
 
         print('Scene exported in ' + str(time.time() - profile_time))
         return {'FINISHED'}

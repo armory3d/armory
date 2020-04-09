@@ -21,7 +21,6 @@ import arm.lib.make_datas
 import arm.lib.server
 from arm.exporter import ArmoryExporter
 
-exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
@@ -57,7 +56,6 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 def export_data(fp, sdk_path):
-    global exporter
     wrd = bpy.data.worlds['Arm']
 
     print('\n' + '_' * 10 + '  [Armory] Compiling  ' + '_' * 10)
@@ -121,7 +119,7 @@ def export_data(fp, sdk_path):
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
+            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -429,7 +427,7 @@ def patch():
     fp = arm.utils.get_fp()
     os.chdir(fp)
     asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
-    exporter.execute(bpy.context, asset_path, scene=bpy.context.scene)
+    ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
     if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
         raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
         shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
