@@ -44,9 +44,29 @@ class NodeType(Enum):
     DECAL = 6
     PROBE = 7
 
+    @classmethod
+    def get_bobject_type(cls, bobject: bpy.types.Object) -> "NodeType":
+        """Returns the NodeType enum member belonging to the type of
+        the given blender object."""
+        if bobject.type == "MESH":
+            if bobject.data.polygons:
+                return cls.MESH
+        elif bobject.type == "FONT" or bobject.type == "META":
+            return cls.MESH
+        elif bobject.type == "LIGHT":
+            return cls.LIGHT
+        elif bobject.type == "CAMERA":
+            return cls.CAMERA
+        elif bobject.type == "SPEAKER":
+            return cls.SPEAKER
+        elif bobject.type == "LIGHT_PROBE":
+            return cls.PROBE
+        return cls.EMPTY
+
 
 struct_identifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
 current_output = None
+
 
 class ArmoryExporter:
     '''Export to Armory format'''
@@ -64,23 +84,6 @@ class ArmoryExporter:
             os.makedirs(mesh_fp)
         ext = '.lz4' if compressed else '.arm'
         return mesh_fp + object_id + ext
-
-    @staticmethod
-    def get_bobject_type(bobject: bpy.types.Object) -> NodeType:
-        if bobject.type == "MESH":
-            if bobject.data.polygons:
-                return NodeType.MESH
-        elif bobject.type == "FONT" or bobject.type == "META":
-            return NodeType.MESH
-        elif bobject.type == "LIGHT":
-            return NodeType.LIGHT
-        elif bobject.type == "CAMERA":
-            return NodeType.CAMERA
-        elif bobject.type == "SPEAKER":
-            return NodeType.SPEAKER
-        elif bobject.type == "LIGHT_PROBE":
-            return NodeType.PROBE
-        return NodeType.EMPTY
 
     @staticmethod
     def get_shape_keys(mesh):
@@ -324,7 +327,7 @@ class ArmoryExporter:
         after an "_".
         """
         if ArmoryExporter.export_all_flag or bobject.select:
-            btype = ArmoryExporter.get_bobject_type(bobject)
+            btype = NodeType.get_bobject_type(bobject)
 
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
