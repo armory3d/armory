@@ -87,7 +87,7 @@ class ArmoryExporter:
 
         # Stores the object type ("objectType") and the asset name
         # ("structName") in a dict for each object
-        self.bobject_array = {}  # type: Dict[bpy.types.Object, Dict[str, Union[NodeType, str]]]
+        self.bobject_array: Dict[bpy.types.Object, Dict, str, Union[NodeType, str]] = {}
         self.bobject_bone_array = {}
         self.mesh_array = {}
         self.light_array = {}
@@ -108,7 +108,7 @@ class ArmoryExporter:
         self.material_to_arm_object_dict = {}
         # Stores the link between a blender object and its
         # corresponding export data (arm object)
-        self.object_to_arm_object_dict = {}  # type: Dict[bpy.types.Object, Dict]
+        self.object_to_arm_object_dict: Dict[bpy.types.Object, Dict] = {}
 
         self.bone_tracks = []
 
@@ -645,7 +645,7 @@ class ArmoryExporter:
 
             # Linked object, not present in scene
             if bobject not in self.object_to_arm_object_dict:
-                object_export_data = {}  # type: Dict[str, Any]
+                object_export_data: Dict[str, Any] = {}
                 object_export_data['traits'] = []
                 object_export_data['spawn'] = False
                 self.object_to_arm_object_dict[bobject] = object_export_data
