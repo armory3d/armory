@@ -90,14 +90,16 @@ class ArmoryExporter:
 
     @staticmethod
     def get_shape_keys(mesh):
-        if not hasattr(mesh, 'shape_keys'): # Metaball
+        # Metaball
+        if not hasattr(mesh, 'shape_keys'):
             return None
+
         shape_keys = mesh.shape_keys
         if shape_keys and len(shape_keys.key_blocks) > 1:
             return shape_keys
         return None
 
-    def find_bone(self, name):
+    def find_bone(self, name: str):
         for bobject_ref in self.bobjectBoneArray.items():
             if bobject_ref[0].name == name:
                 return bobject_ref
@@ -751,7 +753,7 @@ class ArmoryExporter:
                     if track.strips is None:
                         continue
                     for strip in track.strips:
-                        if strip.action == None or strip.action in export_actions:
+                        if strip.action is None or strip.action in export_actions:
                             continue
                         export_actions.append(strip.action)
                 orig_action = action
@@ -1901,7 +1903,7 @@ class ArmoryExporter:
         global current_output
         profile_time = time.time()
 
-        self.scene = context.scene if scene == None else scene
+        self.scene = context.scene if scene is None else scene
         current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
 
         print('Exporting ' + arm.utils.asset_name(self.scene))
@@ -1920,10 +1922,12 @@ class ArmoryExporter:
         self.speakerArray = {}
         self.materialArray = []
         self.particleSystemArray = {}
-        self.worldArray = {} # Export all worlds
+        # Export all worlds
+        self.worldArray = {}
         self.boneParentArray = {}
         self.materialToObjectDict = dict()
-        self.defaultMaterialObjects = [] # If no material is assigned, provide default to mimic cycles
+        # If no material is assigned, provide default to mimic cycles
+        self.defaultMaterialObjects = []
         self.defaultSkinMaterialObjects = []
         self.defaultPartMaterialObjects = []
         self.materialToArmObjectDict = dict()
@@ -1933,7 +1937,7 @@ class ArmoryExporter:
         # for i in range(0, len(self.scene.view_layers)):
             # if self.scene.view_layers[i] == True:
                 # self.active_layers.append(i)
-        self.depsgraph = context.evaluated_depsgraph_get() if depsgraph == None else depsgraph
+        self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
         self.preprocess()
 
         # scene_objects = []
