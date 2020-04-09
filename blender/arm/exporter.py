@@ -72,8 +72,9 @@ current_output = None
 
 
 class ArmoryExporter:
-    '''Export to Armory format'''
+    """Export to Armory format"""
 
+    @staticmethod
     def write_matrix(self, matrix):
         return [matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
                 matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3],
@@ -184,7 +185,7 @@ class ArmoryExporter:
 
             for i in range(begin_frame, end_frame):
                 scene.frame_set(i)
-                tracko['values'] += self.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
+                tracko['values'] += ArmoryExporter.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
 
             oanim['tracks'] = [tracko]
             self.export_pose_markers(oanim, action)
@@ -254,7 +255,7 @@ class ArmoryExporter:
 
         # Static transform
         o['transform'] = {}
-        o['transform']['values'] = self.write_matrix(bobject.matrix_local)
+        o['transform']['values'] = ArmoryExporter.write_matrix(bobject.matrix_local)
 
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":
@@ -377,7 +378,7 @@ class ArmoryExporter:
             transform = (bone.parent.matrix_local.inverted_safe() @ transform)
 
         o['transform'] = {}
-        o['transform']['values'] = self.write_matrix(transform)
+        o['transform']['values'] = ArmoryExporter.write_matrix(transform)
 
         curve_array = self.collect_bone_animation(armature, bone.name)
         animation = len(curve_array) != 0
@@ -475,9 +476,9 @@ class ArmoryExporter:
                     values, pose_bone = track[0], track[1]
                     parent = pose_bone.parent
                     if parent:
-                        values += self.write_matrix((parent.matrix.inverted_safe() @ pose_bone.matrix))
+                        values += ArmoryExporter.write_matrix((parent.matrix.inverted_safe() @ pose_bone.matrix))
                     else:
-                        values += self.write_matrix(pose_bone.matrix)
+                        values += ArmoryExporter.write_matrix(pose_bone.matrix)
         # print('Bone matrices exported in ' + str(time.time() - profile_time))
 
     def has_baked_material(self, bobject, materials):
@@ -903,7 +904,7 @@ class ArmoryExporter:
         # Write the skin bind pose transform
         otrans = {}
         oskin['transform'] = otrans
-        otrans['values'] = self.write_matrix(bobject.matrix_world)
+        otrans['values'] = ArmoryExporter.write_matrix(bobject.matrix_world)
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
@@ -930,7 +931,7 @@ class ArmoryExporter:
         for i in range(bone_count):
             skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
             skeletonI = (skeletonI @ bobject.matrix_world)
-            oskin['transformsI'].append(self.write_matrix(skeletonI))
+            oskin['transformsI'].append(ArmoryExporter.write_matrix(skeletonI))
 
         # Export the per-vertex bone influence data
         group_remap = []
@@ -2223,7 +2224,7 @@ class ArmoryExporter:
         o['transform'] = {}
         viewport_matrix = self.get_viewport_view_matrix()
         if viewport_matrix is not None:
-            o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
+            o['transform']['values'] = ArmoryExporter.write_matrix(viewport_matrix.inverted_safe())
             o['local_only'] = True
         else:
             o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
