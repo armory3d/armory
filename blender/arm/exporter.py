@@ -44,11 +44,6 @@ class NodeType(Enum):
     DECAL = 6
     PROBE = 7
 
-AnimationTypeSampled = 0
-AnimationTypeLinear = 1
-AnimationTypeBezier = 2
-AnimationTypeConstant = 3
-ExportEpsilon = 1.0e-6
 
 struct_identifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
 current_output = None
