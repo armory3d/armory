@@ -64,7 +64,10 @@ class NodeType(Enum):
         return cls.EMPTY
 
 
-struct_identifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
+STRUCT_IDENTIFIER = ("object", "bone_object", "mesh_object",
+                     "light_object", "camera_object", "speaker_object",
+                     "decal_object", "probe_object")
+
 current_output = None
 
 
@@ -117,7 +120,7 @@ class ArmoryExporter:
         bobjectRef = self.bobjectBoneArray.get(bone)
 
         if bobjectRef:
-            o['type'] = struct_identifier[bobjectRef["objectType"].value]
+            o['type'] = STRUCT_IDENTIFIER[bobjectRef["objectType"].value]
             o['name'] = bobjectRef["structName"]
             self.export_bone_transform(armature, bone, scene, o, action)
 
@@ -596,7 +599,7 @@ class ArmoryExporter:
                 self.objectToArmObjectDict[bobject] = object_export_data
 
             object_export_data = self.objectToArmObjectDict[bobject]
-            object_export_data['type'] = struct_identifier[object_type.value]
+            object_export_data['type'] = STRUCT_IDENTIFIER[object_type.value]
             object_export_data['name'] = bobject_ref["structName"]
 
             if bobject.parent_type == "BONE":
