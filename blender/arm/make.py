@@ -433,15 +433,11 @@ def patch():
         shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
+
     cmd = [node_path, khamake_path, 'krom']
-    cmd.append('--shaderversion')
-    cmd.append('330')
-    cmd.append('--parallelAssetConversion')
-    cmd.append('4')
-    cmd.append('--to')
-    cmd.append(arm.utils.build_dir() + '/debug')
-    cmd.append('--nohaxe')
-    cmd.append('--noproject')
+    cmd.extend(('--shaderversion', '330', '--parallelAssetConversion', '4',
+                '--to', arm.utils.build_dir() + '/debug', '--nohaxe', '--noproject'))
+
     assets.invalidate_enabled = True
     state.proc_build = run_proc(cmd, patch_done)
 
