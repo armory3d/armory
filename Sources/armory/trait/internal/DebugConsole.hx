@@ -167,7 +167,7 @@ class DebugConsole extends Trait {
 
 						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
-							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true);
+							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true, false, false);
 							ui.text(currentObject.name);
 						}
 						else {
@@ -352,8 +352,13 @@ class DebugConsole extends Trait {
 
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
-							var p = iron.Scene.active.world.probe;
-							p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
+							if (iron.Scene.active.world != null) {
+								var p = iron.Scene.active.world.probe;
+								p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
+							}
+							else {
+								ui.text("This scene has no world data to edit.");
+							}
 						}
 						else if (Std.is(selectedObject, iron.object.LightObject)) {
 							selectedType = "(Light)";
