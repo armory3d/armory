@@ -14,11 +14,12 @@ http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 import math
 import os
 import time
+from typing import Any, Dict
 
 import numpy as np
 
-from mathutils import *
 import bpy
+from mathutils import *
 
 import arm.assets as assets
 import arm.exporter_opt as exporter_opt
@@ -571,11 +572,13 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject, scene, parento=None):
-        # This function exports a single object in the scene and includes its name,
-        # object reference, material references (for meshes), and transform.
-        # Subobjects are then exported recursively.
-        if self.preprocess_object(bobject) == False:
+    def export_object(self, bobject: bpy.types.Object, scene: bpy.types.Scene,
+                      parent_export_data: Dict = None) -> None:
+        """This function exports a single object in the scene and
+        includes its name, object reference, material references (for
+        meshes), and transform.
+        Subobjects are then exported recursively.
+        """
             return
 
         bobjectRef = self.bobjectArray.get(bobject)
