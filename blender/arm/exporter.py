@@ -11,10 +11,11 @@ This software is licensed under the Creative Commons
 Attribution-ShareAlike 3.0 Unported License:
 http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
+from enum import Enum, unique
 import math
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import numpy as np
 
@@ -30,21 +31,26 @@ import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.utils
 
-NodeTypeEmpty = 0
-NodeTypeBone = 1
-NodeTypeMesh = 2
-NodeTypeLight = 3
-NodeTypeCamera = 4
-NodeTypeSpeaker = 5
-NodeTypeDecal = 6
-NodeTypeProbe = 7
+
+@unique
+class NodeType(Enum):
+    """Represents the type of an object."""
+    EMPTY = 0
+    BONE = 1
+    MESH = 2
+    LIGHT = 3
+    CAMERA = 4
+    SPEAKER = 5
+    DECAL = 6
+    PROBE = 7
+
 AnimationTypeSampled = 0
 AnimationTypeLinear = 1
 AnimationTypeBezier = 2
 AnimationTypeConstant = 3
 ExportEpsilon = 1.0e-6
 
-structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
+struct_identifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
 current_output = None
 
 class ArmoryExporter:
@@ -65,23 +71,21 @@ class ArmoryExporter:
         return mesh_fp + object_id + ext
 
     @staticmethod
-    def get_bobject_type(bobject):
+    def get_bobject_type(bobject: bpy.types.Object) -> NodeType:
         if bobject.type == "MESH":
             if bobject.data.polygons:
-                return NodeTypeMesh
-        elif bobject.type == "FONT":
-            return NodeTypeMesh
-        elif bobject.type == "META":
-            return NodeTypeMesh
+                return NodeType.MESH
+        elif bobject.type == "FONT" or bobject.type == "META":
+            return NodeType.MESH
         elif bobject.type == "LIGHT":
-            return NodeTypeLight
+            return NodeType.LIGHT
         elif bobject.type == "CAMERA":
-            return NodeTypeCamera
+            return NodeType.CAMERA
         elif bobject.type == "SPEAKER":
-            return NodeTypeSpeaker
+            return NodeType.SPEAKER
         elif bobject.type == "LIGHT_PROBE":
-            return NodeTypeProbe
-        return NodeTypeEmpty
+            return NodeType.PROBE
+        return NodeType.EMPTY
 
     @staticmethod
     def get_shape_keys(mesh):
@@ -115,7 +119,7 @@ class ArmoryExporter:
         bobjectRef = self.bobjectBoneArray.get(bone)
 
         if bobjectRef:
-            o['type'] = structIdentifier[bobjectRef["objectType"]]
+            o['type'] = struct_identifier[bobjectRef["objectType"].value]
             o['name'] = bobjectRef["structName"]
             self.export_bone_transform(armature, bone, scene, o, action)
 
@@ -327,7 +331,7 @@ class ArmoryExporter:
         if ArmoryExporter.export_all_flag or bobject.select:
             btype = ArmoryExporter.get_bobject_type(bobject)
 
-            if btype != NodeTypeMesh and ArmoryExporter.option_mesh_only:
+            if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
             self.bobjectArray[bobject] = {
@@ -348,14 +352,14 @@ class ArmoryExporter:
 
     def process_skinned_meshes(self):
         for bobjectRef in self.bobjectArray.items():
-            if bobjectRef[1]["objectType"] == NodeTypeMesh:
+            if bobjectRef[1]["objectType"] is NodeType.MESH:
                 armature = bobjectRef[0].find_armature()
                 if armature:
                     for bone in armature.data.bones:
                         boneRef = self.find_bone(bone.name)
                         if boneRef:
                             # If an object is used as a bone, then we force its type to be a bone
-                            boneRef[1]["objectType"] = NodeTypeBone
+                            boneRef[1]["objectType"] = NodeType.BONE
 
     def export_bone_transform(self, armature, bone, scene, o, action):
 
@@ -594,7 +598,7 @@ class ArmoryExporter:
                 self.objectToArmObjectDict[bobject] = object_export_data
 
             object_export_data = self.objectToArmObjectDict[bobject]
-            object_export_data['type'] = structIdentifier[object_type]
+            object_export_data['type'] = struct_identifier[object_type.value]
             object_export_data['name'] = bobject_ref["structName"]
 
             if bobject.parent_type == "BONE":
@@ -652,7 +656,7 @@ class ArmoryExporter:
                 if objref.arm_lod_material:
                     object_export_data['lod_material'] = True
 
-            if object_type == NodeTypeMesh:
+            if object_type is NodeType.MESH:
                 if objref not in self.meshArray:
                     self.meshArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
@@ -696,14 +700,14 @@ class ArmoryExporter:
                 # if shapeKeys:
                 #     self.ExportMorphWeights(bobject, shapeKeys, scene, object_export_data)
 
-            elif object_type == NodeTypeLight:
+            elif object_type is NodeType.LIGHT:
                 if objref not in self.lightArray:
                     self.lightArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.lightArray[objref]["objectTable"].append(bobject)
                 object_export_data['data_ref'] = self.lightArray[objref]["structName"]
 
-            elif object_type == NodeTypeProbe:
+            elif object_type is NodeType.PROBE:
                 if objref not in self.probeArray:
                     self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
@@ -719,7 +723,7 @@ class ArmoryExporter:
                     object_export_data['dimensions'] = [dist, dist, dist]
                 object_export_data['data_ref'] = self.probeArray[objref]["structName"]
 
-            elif object_type == NodeTypeCamera:
+            elif object_type is NodeType.CAMERA:
                 if 'spawn' in object_export_data and not object_export_data['spawn']:
                     self.camera_spawned |= False
                 else:
@@ -731,7 +735,7 @@ class ArmoryExporter:
                     self.cameraArray[objref]["objectTable"].append(bobject)
                 object_export_data['data_ref'] = self.cameraArray[objref]["structName"]
 
-            elif object_type == NodeTypeSpeaker:
+            elif object_type is NodeType.SPEAKER:
                 if objref not in self.speakerArray:
                     self.speakerArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
@@ -2424,9 +2428,9 @@ class ArmoryExporter:
                 self.add_rigidbody_constraint(o, rbc)
 
         # Camera traits
-        if type == NodeTypeCamera:
+        if type is NodeType.CAMERA:
             # Viewport camera enabled, attach navigation to active camera
-            if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
+            if self.scene.camera is not None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
