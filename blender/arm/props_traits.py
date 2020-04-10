@@ -54,6 +54,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
     enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     is_object: BoolProperty(name="", default=True)
+    fake_user: BoolProperty(name="Fake User", description="Export this trait even if it is deactivated", default=False)
     type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
@@ -88,11 +89,15 @@ class ARM_UL_TraitList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            layout.label(text=item.name, icon=custom_icon, icon_value=custom_icon_value)
+            # Display " " for props without a name to right-align the
+            # fake_user button
+            layout.label(text=item.name if item.name != "" else " ", icon=custom_icon, icon_value=custom_icon_value)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon=custom_icon, icon_value=custom_icon_value)
+
+        layout.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
 
 class ArmTraitListNewItem(bpy.types.Operator):
     # Add a new item to the list
