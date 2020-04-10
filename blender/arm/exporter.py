@@ -262,7 +262,7 @@ class ArmoryExporter:
             oanim['tracks'] = [tracko]
             self.export_pose_markers(oanim, action)
 
-            if True: #action.arm_cached == False or not os.path.exists(fp):
+            if True: #not action.arm_cached or not os.path.exists(fp):
                 wrd = bpy.data.worlds['Arm']
                 if wrd.arm_verbose_output:
                     print('Exporting object action ' + aname)
@@ -379,7 +379,7 @@ class ArmoryExporter:
 
                     oanim['tracks'].append(data_ttrack)
 
-                if True:  #action.arm_cached == False or not os.path.exists(fp):
+                if True:  # not action.arm_cached or not os.path.exists(fp):
                     wrd = bpy.data.worlds['Arm']
                     if wrd.arm_verbose_output:
                         print('Exporting object action ' + action_name)
@@ -1324,7 +1324,7 @@ class ArmoryExporter:
         #         bpy.data.meshes.remove(morphMesh)
 
     def has_tangents(self, exportMesh):
-        return self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_layers) > 0
+        return self.get_export_uvs(exportMesh) and self.get_export_tangents(exportMesh) and len(exportMesh.uv_layers) > 0
 
     def export_mesh(self, objectRef, scene):
         """Exports a single mesh object."""
@@ -1658,7 +1658,7 @@ class ArmoryExporter:
                 if not os.path.exists(unpack_path):
                     os.makedirs(unpack_path)
                 unpack_filepath = unpack_path + '/' + objref.sound.name
-                if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != objref.sound.packed_file.size:
+                if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != objref.sound.packed_file.size:
                     with open(unpack_filepath, 'wb') as f:
                         f.write(objref.sound.packed_file.data)
                 assets.add(unpack_filepath)
@@ -1701,7 +1701,7 @@ class ArmoryExporter:
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
         rpdat = arm.utils.get_rp()
-        if rpdat.arm_culling == False:
+        if not rpdat.arm_culling:
             o['override_context'] = {}
             o['override_context']['cull_mode'] = 'none'
 
@@ -1736,9 +1736,10 @@ class ArmoryExporter:
         wrd = bpy.data.worlds['Arm']
 
         # Keep materials with fake user
-        for m in bpy.data.materials:
-            if m.use_fake_user and m not in self.material_array:
-                self.material_array.append(m)
+        for material in bpy.data.materials:
+            if m.use_fake_user and material not in self.material_array:
+                self.material_array.append(material)
+
         # Ensure the same order for merging materials
         self.material_array.sort(key=lambda x: x.name)
 
@@ -1752,6 +1753,7 @@ class ArmoryExporter:
         blending_used = False
         decals_used = False
         # sss_used = False
+
         for material in self.material_array:
             # If the material is unlinked, material becomes None
             if material is None:
@@ -1774,7 +1776,7 @@ class ArmoryExporter:
                 o['skip_context'] = material.arm_skip_context
 
             rpdat = arm.utils.get_rp()
-            if material.arm_two_sided or rpdat.arm_culling == False:
+            if material.arm_two_sided or not rpdat.arm_culling:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'
             elif material.arm_cull_mode != 'clockwise':
@@ -2286,14 +2288,14 @@ class ArmoryExporter:
     @staticmethod
     def get_export_vcols(mesh):
         for material in mesh.materials:
-            if material is not None and material.export_vcols == True:
+            if material is not None and material.export_vcols:
                 return True
         return False
 
     @staticmethod
     def get_export_uvs(mesh):
         for material in mesh.materials:
-            if material is not None and material.export_uvs == True:
+            if material is not None and material.export_uvs:
                 return True
         return False
 
@@ -2318,7 +2320,7 @@ class ArmoryExporter:
                     instanced_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
 
                 for child in bobject.children:
-                    if child.arm_export == False or child.hide_render:
+                    if not child.arm_export or child.hide_render:
                         continue
                     if 'Loc' in inst:
                         loc = child.matrix_local.to_translation() # Without parent matrix
@@ -2505,7 +2507,7 @@ class ArmoryExporter:
     def export_traits(self, bobject, o):
         if hasattr(bobject, 'arm_traitlist'):
             for t in bobject.arm_traitlist:
-                if t.enabled_prop == False:
+                if not t.enabled_prop:
                     continue
                 x = {}
                 if t.type_prop == 'Logic Nodes' and t.node_tree_prop != None and t.node_tree_prop.name != '':
@@ -2554,7 +2556,7 @@ class ArmoryExporter:
                             nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
                             assets.add(nav_filepath)
                             # TODO: Implement cache
-                            #if os.path.isfile(nav_filepath) == False:
+                            #if not os.path.isfile(nav_filepath):
                             # override = {'selected_objects': [bobject]}
                             # bobject.scale.y *= -1
                             # mesh = obj.data
