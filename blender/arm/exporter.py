@@ -1737,7 +1737,7 @@ class ArmoryExporter:
 
         # Keep materials with fake user
         for material in bpy.data.materials:
-            if m.use_fake_user and material not in self.material_array:
+            if material.use_fake_user and material not in self.material_array:
                 self.material_array.append(material)
 
         # Ensure the same order for merging materials
