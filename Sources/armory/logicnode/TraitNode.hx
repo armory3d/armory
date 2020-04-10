@@ -14,6 +14,7 @@ class TraitNode extends LogicNode {
 
 		var cname = Type.resolveClass(Main.projectPackage + "." + property0);
 		if (cname == null) cname = Type.resolveClass(Main.projectPackage + ".node." + property0);
+		if (cname == null) throw 'No trait with the name "$property0" found, make sure that the trait is exported!';
 		value = Type.createInstance(cname, []);
 		return value;
 	}
