@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 import bpy
 
 def proxy_sync_loc(self, context):
@@ -107,10 +109,35 @@ def sync_collection(cSrc, cDst):
         for prop in properties:
             setattr(mDst, prop, getattr(mSrc, prop))
 
-def sync_traits(obj):
+def sync_traits(obj: bpy.types.Object):
+    """Synchronizes the traits of the given object with the traits of
+    its proxy.
+    If `arm.proxy_sync_trait_props` is `False`, the values of the trait
+    properties are kept where possible.
+    """
+    # (Optionally) keep the old property values
+    for i in range(len(obj.arm_traitlist)):
+        values: Dict[str, Dict[str, Any]] = {}
+
+        if not obj.arm_proxy_sync_trait_props:
+            for prop in obj.arm_traitlist[i].arm_traitpropslist:
+                values[obj.name][prop.name] = prop.get_value()
+
     sync_collection(obj.proxy.arm_traitlist, obj.arm_traitlist)
-    for i in range(0, len(obj.arm_traitlist)):
+
+    for i in range(len(obj.arm_traitlist)):
         sync_collection(obj.proxy.arm_traitlist[i].arm_traitpropslist, obj.arm_traitlist[i].arm_traitpropslist)
+
+        # Set stored property values
+        if not obj.arm_proxy_sync_trait_props:
+            for prop in obj.arm_traitlist[i].arm_traitpropslist:
+                if value.get(obj.name) is None:
+                    continue
+
+                value = values[obj.name].get(prop.name)
+                if value is not None:
+                    prop.set_value(value)
+
 
 def sync_materials(obj):
     # Blender likes to crash here:(
