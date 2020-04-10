@@ -74,6 +74,11 @@ current_output = None
 class ArmoryExporter:
     """Export to Armory format"""
 
+    compress_enabled = False
+    optimize_enabled = False
+    # Referenced traits
+    import_traits = []
+
     def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
         global current_output
 
@@ -133,12 +138,6 @@ class ArmoryExporter:
         if wrd.arm_navigation == 'Enabled':
             cls.export_navigation = True
         cls.export_ui = False
-        if not hasattr(cls, 'compress_enabled'):
-            cls.compress_enabled = False
-        if not hasattr(cls, 'optimize_enabled'):
-            cls.optimize_enabled = False
-        if not hasattr(cls, 'import_traits'):
-            cls.import_traits = [] # Referenced traits
         cls.option_mesh_only = False
 
     @staticmethod
