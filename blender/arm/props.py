@@ -124,7 +124,7 @@ def init_properties():
     bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_materials)
     bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_modifiers)
     bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_traits)
-    bpy.types.Object.arm_proxy_sync_trait_props = BoolProperty(name="Trait Property Values", description="Keep trait property values synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_traits)
+    bpy.types.Object.arm_proxy_sync_trait_props = BoolProperty(name="Trait Property Values", description="Keep trait property values synchronized with proxy object", default=False, update=arm.proxy.proxy_sync_traits)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)
