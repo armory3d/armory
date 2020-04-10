@@ -218,7 +218,7 @@ class ArmoryExporter:
         """Exports animation as full 4x4 matrices for each frame"""
         animation_flag = False
 
-        animation_flag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
+        animation_flag = bobject.animation_data is not None and bobject.animation_data.action is not None and bobject.type != 'ARMATURE'
 
         # Font out
         if animation_flag:
@@ -504,10 +504,10 @@ class ArmoryExporter:
         if psys.settings in self.particle_system_array: # or not modifier.show_render:
             return
 
-        if psys.settings.instance_object == None or psys.settings.render_type != 'OBJECT':
-             return
+        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT':
+            return
 
-        self.particle_system_array[psys.settings] = {"structName" : psys.settings.name}
+        self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
         pref = {}
         pref['name'] = psys.name
         pref['seed'] = psys.seed
@@ -1876,7 +1876,7 @@ class ArmoryExporter:
             if psettings is None:
                 continue
 
-            if psettings.instance_object == None or psettings.render_type != 'OBJECT':
+            if psettings.instance_object is None or psettings.render_type != 'OBJECT':
                 continue
 
             o['name'] = particleRef[1]["structName"]
@@ -2046,10 +2046,10 @@ class ArmoryExporter:
         # Particle and non-particle objects can not share material
         for psys in bpy.data.particles:
             bo = psys.instance_object
-            if bo == None or psys.render_type != 'OBJECT':
+            if bo is None or psys.render_type != 'OBJECT':
                 continue
             for slot in bo.material_slots:
-                if slot.material == None or slot.material.library is not None:
+                if slot.material is None or slot.material.library is not None:
                     continue
                 if slot.material.name.endswith('_armpart'):
                     continue
@@ -2176,7 +2176,7 @@ class ArmoryExporter:
             phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
             x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
             rbw = self.scene.rigidbody_world
-            if rbw != None and rbw.enabled:
+            if rbw is not None and rbw.enabled:
                 x['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
             self.output['traits'].append(x)
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
@@ -2361,7 +2361,7 @@ class ArmoryExporter:
         phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
 
         # Rigid body trait
-        if bobject.rigid_body != None and phys_enabled:
+        if bobject.rigid_body is not None and phys_enabled:
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
@@ -2448,7 +2448,7 @@ class ArmoryExporter:
                     self.add_hook_mod(o, bobject, m.object.name, m.vertex_group)
             # Rigid body constraint
             rbc = bobject.rigid_body_constraint
-            if rbc != None and rbc.enabled:
+            if rbc is not None and rbc.enabled:
                 self.add_rigidbody_constraint(o, rbc)
 
         # Camera traits
@@ -2510,7 +2510,7 @@ class ArmoryExporter:
                 if not t.enabled_prop:
                     continue
                 x = {}
-                if t.type_prop == 'Logic Nodes' and t.node_tree_prop != None and t.node_tree_prop.name != '':
+                if t.type_prop == 'Logic Nodes' and t.node_tree_prop is not None and t.node_tree_prop.name != '':
                     x['type'] = 'Script'
                     group_name = arm.utils.safesrc(t.node_tree_prop.name[0].upper() + t.node_tree_prop.name[1:])
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
