@@ -1320,6 +1320,9 @@ class ARM_PT_ProxyPanel(bpy.types.Panel):
             layout.prop(obj, "arm_proxy_sync_materials")
             layout.prop(obj, "arm_proxy_sync_modifiers")
             layout.prop(obj, "arm_proxy_sync_traits")
+            row = layout.row()
+            row.enabled = obj.arm_proxy_sync_traits
+            row.prop(obj, "arm_proxy_sync_trait_props")
             layout.operator("arm.proxy_toggle_all")
             layout.operator("arm.proxy_apply_all")
 
@@ -1349,6 +1352,7 @@ class ArmProxyToggleAllButton(bpy.types.Operator):
         obj.arm_proxy_sync_materials = b
         obj.arm_proxy_sync_modifiers = b
         obj.arm_proxy_sync_traits = b
+        obj.arm_proxy_sync_trait_props = b
         return{'FINISHED'}
 
 class ArmProxyApplyAllButton(bpy.types.Operator):
@@ -1365,6 +1369,7 @@ class ArmProxyApplyAllButton(bpy.types.Operator):
                 obj.arm_proxy_sync_materials = context.object.arm_proxy_sync_materials
                 obj.arm_proxy_sync_modifiers = context.object.arm_proxy_sync_modifiers
                 obj.arm_proxy_sync_traits = context.object.arm_proxy_sync_traits
+                obj.arm_proxy_sync_trait_props = context.object.arm_proxy_sync_trait_props
         return{'FINISHED'}
 
 class ArmSyncProxyButton(bpy.types.Operator):
