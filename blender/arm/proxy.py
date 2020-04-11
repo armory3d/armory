@@ -116,12 +116,11 @@ def sync_traits(obj: bpy.types.Object):
     properties are kept where possible.
     """
     # (Optionally) keep the old property values
+    values: Dict[bpy.types.Object, Dict[str, Dict[str, Any]]] = {}
     for i in range(len(obj.arm_traitlist)):
-        values: Dict[str, Dict[str, Any]] = {}
-
         if not obj.arm_proxy_sync_trait_props:
             for prop in obj.arm_traitlist[i].arm_traitpropslist:
-                values[obj.name][prop.name] = prop.get_value()
+                values[obj][obj.arm_traitlist[i].name][prop.name] = prop.get_value()
 
     sync_collection(obj.proxy.arm_traitlist, obj.arm_traitlist)
 
@@ -130,11 +129,16 @@ def sync_traits(obj: bpy.types.Object):
 
         # Set stored property values
         if not obj.arm_proxy_sync_trait_props:
-            for prop in obj.arm_traitlist[i].arm_traitpropslist:
-                if value.get(obj.name) is None:
-                    continue
+            if values.get(obj) is None:
+                continue
 
-                value = values[obj.name].get(prop.name)
+            value = values[obj].get(obj.arm_traitlist[i].name)
+            if value is None:
+                continue
+
+            for prop in obj.arm_traitlist[i].arm_traitpropslist:
+
+                value = values[obj].get(prop.name)
                 if value is not None:
                     prop.set_value(value)
 
