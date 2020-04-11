@@ -2467,8 +2467,12 @@ class ArmoryExporter:
     def export_traits(self, bobject, o):
         if hasattr(bobject, 'arm_traitlist'):
             for t in bobject.arm_traitlist:
-                if t.enabled_prop == False:
+                # Don't export disabled traits but still export those
+                # with fake user enabled so that nodes like `TraitNode`
+                # still work
+                if not t.enabled_prop and not t.fake_user:
                     continue
+
                 x = {}
                 if t.type_prop == 'Logic Nodes' and t.node_tree_prop != None and t.node_tree_prop.name != '':
                     x['type'] = 'Script'
