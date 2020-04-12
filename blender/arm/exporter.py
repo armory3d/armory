@@ -15,7 +15,7 @@ from enum import Enum, unique
 import math
 import os
 import time
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 
@@ -169,10 +169,12 @@ class ArmoryExporter:
             return shape_keys
         return None
 
-    def find_bone(self, name: str):
-        for bobject_ref in self.bobject_bone_array.items():
-            if bobject_ref[0].name == name:
-                return bobject_ref
+    def find_bone(self, name: str) -> Tuple[bpy.types.Bone, Dict] | None:
+        """Finds the bone reference (a tuple containing the bone object
+        and its data) by the given name and returns it."""
+        for bone_ref in self.bobject_bone_array.items():
+            if bone_ref[0].name == name:
+                return bone_ref
         return None
 
     @staticmethod
@@ -392,7 +394,7 @@ class ArmoryExporter:
                     oaction['transform'] = None
                     arm.utils.write_arm(fp, actionf)
 
-    def process_bone(self, bone):
+    def process_bone(self, bone: bpy.types.Bone) -> None:
         if ArmoryExporter.export_all_flag or bone.select:
             self.bobject_bone_array[bone] = {
                 "objectType": NodeType.BONE,
@@ -402,7 +404,7 @@ class ArmoryExporter:
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
-    def process_bobject(self, bobject: bpy.types.Object):
+    def process_bobject(self, bobject: bpy.types.Object) -> None:
         """Stores some basic information about the given object (its
         name and type).
         If the given object is an armature, its bones are also
@@ -431,15 +433,18 @@ class ArmoryExporter:
                 self.process_bobject(subbobject)
 
     def process_skinned_meshes(self):
-        for bobjectRef in self.bobject_array.items():
-            if bobjectRef[1]["objectType"] is NodeType.MESH:
-                armature = bobjectRef[0].find_armature()
-                if armature:
+        """Iterates through all objects that are exported and ensures
+        that bones are actually stored as bones."""
+        for bobject_ref in self.bobject_array.items():
+            if bobject_ref[1]["objectType"] is NodeType.MESH:
+                armature = bobject_ref[0].find_armature()
+                if armature is not None:
                     for bone in armature.data.bones:
-                        boneRef = self.find_bone(bone.name)
-                        if boneRef:
-                            # If an object is used as a bone, then we force its type to be a bone
-                            boneRef[1]["objectType"] = NodeType.BONE
+                        bone_ref = self.find_bone(bone.name)
+                        if bone_ref is not None:
+                            # If an object is used as a bone, then we
+                            # force its type to be a bone
+                            bone_ref[1]["objectType"] = NodeType.BONE
 
     def export_bone_transform(self, armature, bone, scene, o, action):
 
@@ -1990,7 +1995,7 @@ class ArmoryExporter:
 
         current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
 
-        scene_objects = self.scene.collection.all_objects.values()
+        scene_objects: List[bpy.types.Object] = self.scene.collection.all_objects.values()
         # bobject = blender object
         for bobject in scene_objects:
             # Initialize object export data (map objects to game objects)
@@ -1998,10 +2003,12 @@ class ArmoryExporter:
             self.object_to_arm_object_dict[bobject] = object_export_data
 
             # Process
-            # Skip objects that have a parent because children are processed recursively
+            # Skip objects that have a parent because children are
+            # processed recursively
             if not bobject.parent:
                 self.process_bobject(bobject)
-                # Softbody needs connected triangles, use optimized geometry export
+                # Softbody needs connected triangles, use optimized
+                # geometry export
                 for mod in bobject.modifiers:
                     if mod.type == 'CLOTH' or mod.type == 'SOFT_BODY':
                         ArmoryExporter.optimize_enabled = True

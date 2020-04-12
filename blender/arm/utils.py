@@ -659,8 +659,11 @@ def is_bone_animation_enabled(bobject):
             return True
     return False
 
-def export_bone_data(bobject):
+
+def export_bone_data(bobject: bpy.types.Object) -> bool:
+    """Returns whether the bone data of the given object should be exported."""
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
+
 
 def open_editor(hx_path=None):
     ide_bin = get_ide_bin()
