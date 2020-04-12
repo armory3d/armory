@@ -2100,28 +2100,34 @@ class ArmoryExporter:
 
         # Terrain
         if self.scene.arm_terrain_object is not None:
-            # Append trait
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            trait = {}
-            trait['type'] = 'Script'
-            trait['class_name'] = 'armory.trait.internal.TerrainPhysics'
-            self.output['traits'].append(trait)
-            ArmoryExporter.import_traits.append(trait['class_name'])
-            ArmoryExporter.export_physics = True
             assets.add_khafile_def('arm_terrain')
+
+            # Append trait
+            trait_export_data = {
+                'type': 'Script',
+                'class_name': 'armory.trait.internal.TerrainPhysics'
+            }
+            if 'traits' not in self.output:
+                self.output['traits']: List[Dict[str, str]] = []
+
+            self.output['traits'].append(trait_export_data)
+
+            ArmoryExporter.import_traits.append(trait_export_data['class_name'])
+            ArmoryExporter.export_physics = True
+
             # Export material
             mat = self.scene.arm_terrain_object.children[0].data.materials[0]
             self.material_array.append(mat)
             # Terrain data
-            terrain = {}
-            terrain['name'] = 'Terrain'
-            terrain['sectors_x'] = self.scene.arm_terrain_sectors[0]
-            terrain['sectors_y'] = self.scene.arm_terrain_sectors[1]
-            terrain['sector_size'] = self.scene.arm_terrain_sector_size
-            terrain['height_scale'] = self.scene.arm_terrain_height_scale
-            terrain['material_ref'] = mat.name
-            self.output['terrain_datas'] = [terrain]
+            terrain_export_data = {
+                'name': 'Terrain',
+                'sectors_x': self.scene.arm_terrain_sectors[0],
+                'sectors_y': self.scene.arm_terrain_sectors[1],
+                'sector_size': self.scene.arm_terrain_sector_size,
+                'height_scale': self.scene.arm_terrain_height_scale,
+                'material_ref': mat.name
+            }
+            self.output['terrain_datas'] = [terrain_export_data]
             self.output['terrain_ref'] = 'Terrain'
 
         self.output['objects'] = []
