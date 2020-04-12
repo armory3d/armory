@@ -175,7 +175,7 @@ class DebugConsole extends Trait {
 
 							// Draw line that shows parent relations
 							ui.g.color = ui.t.ACCENT_COL;
-							ui.g.drawLine(ui._x - 16, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
+							ui.g.drawLine(ui._x - 10, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
 							ui.g.color = 0xffffffff;
 
 							ui.text(currentObject.name);
