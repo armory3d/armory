@@ -15,7 +15,7 @@ from enum import Enum, unique
 import math
 import os
 import time
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 
@@ -169,7 +169,7 @@ class ArmoryExporter:
             return shape_keys
         return None
 
-    def find_bone(self, name: str) -> Tuple[bpy.types.Bone, Dict] | None:
+    def find_bone(self, name: str) -> Optional[Tuple[bpy.types.Bone, Dict]]:
         """Finds the bone reference (a tuple containing the bone object
         and its data) by the given name and returns it."""
         for bone_ref in self.bobject_bone_array.items():
