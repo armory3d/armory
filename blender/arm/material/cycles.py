@@ -14,16 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import math
-import bpy
 import os
+import shutil
+
+import bpy
+from mathutils import Euler, Vector
+
 import arm.assets
 import arm.utils
 import arm.make_state
 import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
-import shutil
 
 emission_found = False
 particle_info = None # Particle info export
@@ -373,7 +375,7 @@ def parse_vector_input(inp):
             else:
                 return to_vec3(inp.default_value)
 
-def parse_vector(node, socket):
+def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     global particle_info
     global sample_bump
     global sample_bump_res
@@ -920,32 +922,59 @@ def parse_vector(node, socket):
         return res
 
     elif node.type == 'MAPPING':
-        out = parse_vector_input(node.inputs[0])
-        scale = node.inputs['Scale'].default_value
-        rotation = node.inputs['Rotation'].default_value
-        location = node.inputs['Location'].default_value if node.inputs['Location'].enabled else [0.0, 0.0, 0.0]
-        if scale[0] != 1.0 or scale[1] != 1.0 or scale[2] != 1.0:
-            out = '({0} * vec3({1}, {2}, {3}))'.format(out, scale[0], scale[1], scale[2])
-        if rotation[2] != 0.0:
-            # ZYX rotation, Z axis for now..
-            a = rotation[2]
-            # x * cos(theta) - y * sin(theta)
-            # x * sin(theta) + y * cos(theta)
-            out = 'vec3({0}.x * {1} - ({0}.y) * {2}, {0}.x * {2} + ({0}.y) * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        # if node.rotation[1] != 0.0:
-        #     a = node.rotation[1]
-        #     out = 'vec3({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        # if node.rotation[0] != 0.0:
-        #     a = node.rotation[0]
-        #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
+        # Only "Point", "Texture" and "Vector" types supported for now..
+        # More information about the order of operations for this node:
+        # https://docs.blender.org/manual/en/latest/render/shader_nodes/vector/mapping.html#properties
 
-        if location[0] != 0.0 or location[1] != 0.0 or location[2] != 0.0:
-            out = '({0} + vec3({1}, {2}, {3}))'.format(out, location[0], location[1], location[2])
-        # use Extension parameter from the Texture node instead
-        # if node.use_min:
-        #     out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
-        # if node.use_max:
-        #      out = 'min({0}, vec3({1}, {2}, {3}))'.format(out, node.max[0], node.max[1])
+        input_vector: bpy.types.NodeSocket = node.inputs[0]
+        input_location: bpy.types.NodeSocket = node.inputs['Location']
+        input_rotation: bpy.types.NodeSocket = node.inputs['Rotation']
+        input_scale: bpy.types.NodeSocket = node.inputs['Scale']
+        out: str = parse_vector_input(input_vector) if input_vector.is_linked else to_vec3(input_vector.default_value)
+        location: str = parse_vector_input(input_location) if input_location.is_linked else to_vec3(input_location.default_value)
+        rotation: str = parse_vector_input(input_rotation) if input_rotation.is_linked else to_vec3(input_rotation.default_value)
+        scale: str = parse_vector_input(input_scale) if input_scale.is_linked else to_vec3(input_scale.default_value)
+
+        # Use inner functions because the order of operations varies between mapping node vector types. This adds a
+        # slight overhead but makes the code much more readable.
+        # "Point" and "Vector" use Scale -> Rotate -> Translate, "Texture" uses Translate -> Rotate -> Scale
+        def calc_location(output: str) -> str:
+            # Vectors and Eulers support the "!=" operator
+            if input_scale.is_linked or input_scale.default_value != Vector((1, 1, 1)):
+                if node.vector_type == 'TEXTURE':
+                    output = f'({output} / {scale})'
+                else:
+                    output = f'({output} * {scale})'
+
+            return output
+
+        def calc_scale(output: str) -> str:
+            if input_location.is_linked or input_location.default_value != Vector((0, 0, 0)):
+                # z location is a little off sometimes?...
+                if node.vector_type == 'TEXTURE':
+                    output = f'({output} - {location})'
+                else:
+                    output = f'({output} + {location})'
+            return output
+
+        out = calc_location(out) if node.vector_type == 'TEXTURE' else calc_scale(out)
+
+        if input_rotation.is_linked or input_rotation.default_value != Euler((0, 0, 0)):
+            if node.vector_type == 'TEXTURE':
+                curshader.write(f'mat3 rotationX = mat3(1.0, 0.0, 0.0, 0.0, cos({rotation}.x), sin({rotation}.x), 0.0, -sin({rotation}.x), cos({rotation}.x));')
+                curshader.write(f'mat3 rotationY = mat3(cos({rotation}.y), 0.0, -sin({rotation}.y), 0.0, 1.0, 0.0, sin({rotation}.y), 0.0, cos({rotation}.y));')
+                curshader.write(f'mat3 rotationZ = mat3(cos({rotation}.z), sin({rotation}.z), 0.0, -sin({rotation}.z), cos({rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+            else:
+                # A little bit redundant, but faster than 12 more multiplications to make it work dynamically
+                curshader.write(f'mat3 rotationX = mat3(1.0, 0.0, 0.0, 0.0, cos(-{rotation}.x), sin(-{rotation}.x), 0.0, -sin(-{rotation}.x), cos(-{rotation}.x));')
+                curshader.write(f'mat3 rotationY = mat3(cos(-{rotation}.y), 0.0, -sin(-{rotation}.y), 0.0, 1.0, 0.0, sin(-{rotation}.y), 0.0, cos(-{rotation}.y));')
+                curshader.write(f'mat3 rotationZ = mat3(cos(-{rotation}.z), sin(-{rotation}.z), 0.0, -sin(-{rotation}.z), cos(-{rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+
+            # XYZ-order euler rotation
+            out = f'{out} * rotationX * rotationY * rotationZ'
+
+        out = calc_scale(out) if node.vector_type == 'TEXTURE' else calc_location(out)
+
         return out
 
     elif node.type == 'NORMAL':
