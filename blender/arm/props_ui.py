@@ -356,7 +356,7 @@ class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         row = layout.row(align=True)
-        row.operator("arm.open_editor")
+        row.operator("arm.open_editor", icon="DESKTOP")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
 class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
@@ -1358,6 +1358,7 @@ class ArmProxyToggleAllButton(bpy.types.Operator):
 class ArmProxyApplyAllButton(bpy.types.Operator):
     bl_idname = 'arm.proxy_apply_all'
     bl_label = 'Apply to All'
+
     def execute(self, context):
         for obj in bpy.data.objects:
             if obj.proxy == None:
