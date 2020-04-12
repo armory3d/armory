@@ -2032,8 +2032,8 @@ class ArmoryExporter:
                         mat.name = mat_name
                         matvars.append(mat)
                     slot.material = mat
-            elif bo.arm_tilesheet != '':
-                for slot in bo.material_slots:
+            elif bobject.arm_tilesheet != '':
+                for slot in bobject.material_slots:
                     if slot.material is None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armtile'):
