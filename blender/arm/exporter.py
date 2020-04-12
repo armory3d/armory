@@ -398,7 +398,7 @@ class ArmoryExporter:
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
-    def process_bobject(self, bobject: bpy.types.Object : bpy.types.Objectb: bpy.types.Objectp: bpy.types.Objecty: bpy.types.Object.: bpy.types.Objecttypes.Object):
+    def process_bobject(self, bobject: bpy.types.Object):
         """Adds the given blender object to the bobject_array dict and
         stores its type and its name.
 
