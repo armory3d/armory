@@ -75,7 +75,12 @@ class ArmoryExporter:
     """Export to Armory format"""
 
     compress_enabled = False
+    export_all_flag = True
+    # Indicates whether rigid body is exported
+    export_physics = False
     optimize_enabled = False
+    option_mesh_only = False
+
     # Class names of referenced traits
     import_traits: List[str] = []
 
@@ -86,7 +91,7 @@ class ArmoryExporter:
         self.scene = context.scene if scene is None else scene
         self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
 
-        self.output = {'frame_time': 1.0 / (self.scene.render.fps / self.scene.render.fps_base)}
+        self.output: Dict[str, Any] = {'frame_time': 1.0 / (self.scene.render.fps / self.scene.render.fps_base)}
         current_output = self.output
 
         # Stores the object type ("objectType") and the asset name
@@ -129,16 +134,12 @@ class ArmoryExporter:
     def preprocess(cls):
         wrd = bpy.data.worlds['Arm']
 
-        cls.export_all_flag = True
-        # Indicates whether rigid body is exported
-        cls.export_physics = False
         if wrd.arm_physics == 'Enabled':
             cls.export_physics = True
         cls.export_navigation = False
         if wrd.arm_navigation == 'Enabled':
             cls.export_navigation = True
         cls.export_ui = False
-        cls.option_mesh_only = False
 
     @staticmethod
     def write_matrix(matrix):
@@ -393,20 +394,22 @@ class ArmoryExporter:
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
-            self.bobject_bone_array[bone] = {"objectType" : NodeType.BONE, "structName" : bone.name}
+            self.bobject_bone_array[bone] = {
+                "objectType": NodeType.BONE,
+                "structName": bone.name
+            }
 
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
     def process_bobject(self, bobject: bpy.types.Object):
-        """Adds the given blender object to the bobject_array dict and
-        stores its type and its name.
-
-        If an object is linked, the name of its library is appended
-        after an "_".
+        """Stores some basic information about the given object (its
+        name and type).
+        If the given object is an armature, its bones are also
+        processed.
         """
-        if ArmoryExporter.export_all_flag or bobject.select:
-            btype = NodeType.get_bobject_type(bobject)
+        if ArmoryExporter.export_all_flag or bobject.select_get():
+            btype: NodeType = NodeType.get_bobject_type(bobject)
 
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
@@ -417,9 +420,9 @@ class ArmoryExporter:
             }
 
             if bobject.type == "ARMATURE":
-                skeleton = bobject.data
-                if skeleton:
-                    for bone in skeleton.bones:
+                armature: bpy.types.Armature = bobject.data
+                if armature:
+                    for bone in armature.bones:
                         if not bone.parent:
                             self.process_bone(bone)
 
@@ -673,9 +676,10 @@ class ArmoryExporter:
 
             # Linked object, not present in scene
             if bobject not in self.object_to_arm_object_dict:
-                object_export_data: Dict[str, Any] = {}
-                object_export_data['traits'] = []
-                object_export_data['spawn'] = False
+                object_export_data = {
+                    'traits': [],
+                    'spawn': False
+                }
                 self.object_to_arm_object_dict[bobject] = object_export_data
 
             object_export_data = self.object_to_arm_object_dict[bobject]
@@ -949,9 +953,9 @@ class ArmoryExporter:
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
 
-                #restore settings
+                # restore settings
                 skelobj.animation_data.action = orig_action
-                for a in baked_actions: bpy.data.actions.remove( a, do_unlink=True)
+                for a in baked_actions: bpy.data.actions.remove(a, do_unlink=True)
                 if 'unlink' in clear_op: bpy.context.collection.objects.unlink(skelobj)
                 if 'rem' in clear_op: bpy.data.objects.remove(skelobj, do_unlink=True)
 
@@ -1551,7 +1555,7 @@ class ArmoryExporter:
                 asset_name = arm.utils.asset_name(bobject)
 
                 if collection.library is None:
-                    #collection is in the same file, but (likely) on another scene
+                    # collection is in the same file, but (likely) on another scene
                     if asset_name not in scene_objects:
                         self.process_bobject(bobject)
                         self.export_object(bobject, self.scene)
@@ -1987,13 +1991,14 @@ class ArmoryExporter:
         current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
 
         scene_objects = self.scene.collection.all_objects.values()
+        # bobject = blender object
         for bobject in scene_objects:
-            # Map objects to game objects
-            o = {}
-            o['traits'] = []
-            self.object_to_arm_object_dict[bobject] = o
+            # Initialize object export data (map objects to game objects)
+            object_export_data: Dict[str, Any] = {'traits': []}
+            self.object_to_arm_object_dict[bobject] = object_export_data
+
             # Process
-            # Skip objects that have a parent because children will be exported recursively
+            # Skip objects that have a parent because children are processed recursively
             if not bobject.parent:
                 self.process_bobject(bobject)
                 # Softbody needs connected triangles, use optimized geometry export
@@ -2012,9 +2017,9 @@ class ArmoryExporter:
         # Create unique material variants for skinning, tilesheets, particles
         matvars = []
         matslots = []
-        for bo in scene_objects:
-            if arm.utils.export_bone_data(bo):
-                for slot in bo.material_slots:
+        for bobject in scene_objects:
+            if arm.utils.export_bone_data(bobject):
+                for slot in bobject.material_slots:
                     if slot.material is None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armskin'):
@@ -2045,10 +2050,10 @@ class ArmoryExporter:
 
         # Particle and non-particle objects can not share material
         for psys in bpy.data.particles:
-            bo = psys.instance_object
-            if bo is None or psys.render_type != 'OBJECT':
+            bobject = psys.instance_object
+            if bobject is None or psys.render_type != 'OBJECT':
                 continue
-            for slot in bo.material_slots:
+            for slot in bobject.material_slots:
                 if slot.material is None or slot.material.library is not None:
                     continue
                 if slot.material.name.endswith('_armpart'):
@@ -2100,10 +2105,10 @@ class ArmoryExporter:
             self.output['terrain_ref'] = 'Terrain'
 
         self.output['objects'] = []
-        for bo in scene_objects:
+        for bobject in scene_objects:
             # Skip objects that have a parent because children will be exported recursively
-            if not bo.parent:
-                self.export_object(bo, self.scene)
+            if not bobject.parent:
+                self.export_object(bobject, self.scene)
 
         if bpy.data.collections:
             self.output['groups'] = []
