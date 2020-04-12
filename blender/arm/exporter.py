@@ -15,7 +15,7 @@ from enum import Enum, unique
 import math
 import os
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 
@@ -76,8 +76,8 @@ class ArmoryExporter:
 
     compress_enabled = False
     optimize_enabled = False
-    # Referenced traits
-    import_traits = []
+    # Class names of referenced traits
+    import_traits: List[str] = []
 
     def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
         global current_output
@@ -86,8 +86,7 @@ class ArmoryExporter:
         self.scene = context.scene if scene is None else scene
         self.depsgraph = context.evaluated_depsgraph_get() if depsgraph is None else depsgraph
 
-        self.output = {}
-        self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
+        self.output = {'frame_time': 1.0 / (self.scene.render.fps / self.scene.render.fps_base)}
         current_output = self.output
 
         # Stores the object type ("objectType") and the asset name
@@ -121,7 +120,7 @@ class ArmoryExporter:
 
     @classmethod
     def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None) -> None:
-        """Exports the given scene to the given filepath. This is the
+        """Exports the given scene to the given file path. This is the
         function that is called in make.py and the entry point of the
         exporter."""
         cls(context, filepath, scene, depsgraph).execute()
@@ -131,7 +130,8 @@ class ArmoryExporter:
         wrd = bpy.data.worlds['Arm']
 
         cls.export_all_flag = True
-        cls.export_physics = False # Indicates whether rigid body is exported
+        # Indicates whether rigid body is exported
+        cls.export_physics = False
         if wrd.arm_physics == 'Enabled':
             cls.export_physics = True
         cls.export_navigation = False
@@ -196,9 +196,9 @@ class ArmoryExporter:
             self.export_bone_transform(armature, bone, scene, o, action)
 
         o['children'] = []
-        for subbobject in bone.children:
+        for sub_bobject in bone.children:
             so = {}
-            self.export_bone(armature, subbobject, scene, so, action)
+            self.export_bone(armature, sub_bobject, scene, so, action)
             o['children'].append(so)
 
     @staticmethod
@@ -221,7 +221,7 @@ class ArmoryExporter:
 
         # Font out
         if animation_flag:
-            if not 'object_actions' in o:
+            if 'object_actions' not in o:
                 o['object_actions'] = []
 
             action = bobject.animation_data.action
@@ -261,7 +261,7 @@ class ArmoryExporter:
             oanim['tracks'] = [tracko]
             self.export_pose_markers(oanim, action)
 
-            if True: #not action.arm_cached or not os.path.exists(fp):
+            if True:  # not action.arm_cached or not os.path.exists(fp):
                 wrd = bpy.data.worlds['Arm']
                 if wrd.arm_verbose_output:
                     print('Exporting object action ' + aname)
@@ -313,7 +313,7 @@ class ArmoryExporter:
 
         return data_ttrack
 
-    def export_object_transform(self, bobject, o):
+    def export_object_transform(self, bobject: bpy.types.Object, o):
         # Internal target names for single FCurve data paths
         target_names = {
             "location": ("xloc", "yloc", "zloc"),
@@ -398,7 +398,7 @@ class ArmoryExporter:
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
-    def process_bobject(self, bobject):
+    def process_bobject(self, bobject: bpy.types.Object : bpy.types.Objectb: bpy.types.Objectp: bpy.types.Objecty: bpy.types.Object.: bpy.types.Objecttypes.Object):
         """Adds the given blender object to the bobject_array dict and
         stores its type and its name.
 
@@ -470,7 +470,7 @@ class ArmoryExporter:
             tracko['values'] = []
             self.bone_tracks.append((tracko['values'], pose_bone))
 
-    def use_default_material(self, bobject, o):
+    def use_default_material(self, bobject: bpy.types.Object, o):
         if arm.utils.export_bone_data(bobject):
             o['material_refs'].append('armdefaultskin')
             self.default_skin_material_objects.append(bobject)
@@ -489,28 +489,29 @@ class ArmoryExporter:
             o = self.object_to_arm_object_dict[po]
             if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.default_part_material_objects:
                 self.default_part_material_objects.append(po)
-                o['material_refs'] = ['armdefaultpart'] # Replace armdefault
+                o['material_refs'] = ['armdefaultpart']  # Replace armdefault
 
-    def export_material_ref(self, bobject, material, index, o):
-        if material is None: # Use default for empty mat slots
+    def export_material_ref(self, bobject: bpy.types.Object, material, index, o):
+        if material is None:  # Use default for empty mat slots
             self.use_default_material(bobject, o)
             return
-        if not material in self.material_array:
+        if material not in self.material_array:
             self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys, index, o):
-        if psys.settings in self.particle_system_array: # or not modifier.show_render:
+        if psys.settings in self.particle_system_array:  # or not modifier.show_render:
             return
 
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT':
             return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
-        pref = {}
-        pref['name'] = psys.name
-        pref['seed'] = psys.seed
-        pref['particle'] = psys.settings.name
+        pref = {
+            'name': psys.name,
+            'seed': psys.seed,
+            'particle': psys.settings.name
+        }
         o['particle_refs'].append(pref)
 
     @staticmethod
@@ -971,7 +972,7 @@ class ArmoryExporter:
             for subbobject in bobject.children:
                 self.export_object(subbobject, scene, object_export_data)
 
-    def export_skin(self, bobject, armature, exportMesh, o):
+    def export_skin(self, bobject: bpy.types.Object, armature, exportMesh, o):
         # This function exports all skinning data, which includes the skeleton
         # and per-vertex bone influence data
         oskin = {}
@@ -1070,7 +1071,7 @@ class ArmoryExporter:
                         oskin['constraints'] = []
                     self.add_constraints(bone, oskin, bone=True)
 
-    def write_mesh(self, bobject, fp, o):
+    def write_mesh(self, bobject: bpy.types.Object, fp, o):
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_single_data_file:
             self.output['mesh_datas'].append(o)
@@ -1089,7 +1090,7 @@ class ArmoryExporter:
             abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
         ]
 
-    def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
+    def export_mesh_data(self, exportMesh, bobject: bpy.types.Object, o, has_armature=False):
         exportMesh.calc_normals_split()
         exportMesh.calc_loop_triangles()
 
@@ -2222,7 +2223,7 @@ class ArmoryExporter:
 
         # Remove created material variants
         for slot in matslots: # Set back to original material
-            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin, _armpart, _armtile
+            orig_mat = bpy.data.materials[slot.material.name[:-8]]  # _armskin, _armpart, _armtile
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents
@@ -2351,7 +2352,7 @@ class ArmoryExporter:
 
         return instanced_type, instanced_data
 
-    def post_export_object(self, bobject, o, type):
+    def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
 
@@ -2503,7 +2504,7 @@ class ArmoryExporter:
                     co['influence'] = con.influence
             o['constraints'].append(co)
 
-    def export_traits(self, bobject, o):
+    def export_traits(self, bobject: bpy.types.Object, o):
         if hasattr(bobject, 'arm_traitlist'):
             for t in bobject.arm_traitlist:
                 # Don't export disabled traits but still export those
@@ -2620,7 +2621,7 @@ class ArmoryExporter:
                 pass
             assets.add(file_theme)
 
-    def add_softbody_mod(self, o, bobject, soft_mod, soft_type):
+    def add_softbody_mod(self, o, bobject: bpy.types.Object, soft_mod, soft_type):
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         assets.add_khafile_def('arm_physics_soft')
@@ -2637,7 +2638,7 @@ class ArmoryExporter:
             self.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
     @staticmethod
-    def add_hook_mod(o, bobject, target_name, group_name):
+    def add_hook_mod(o, bobject: bpy.types.Object, target_name, group_name):
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         trait = {}
