@@ -575,7 +575,71 @@ class ArmoryExporter:
         return False
 
     @staticmethod
-    def slot_to_material(bobject, slot):
+    def create_material_variants(scene: bpy.types.Scene) -> Tuple[List[bpy.types.Material], List[bpy.types.MaterialSlot]]:
+        """Creates unique material variants for skinning, tilesheets and
+        particles."""
+        matvars: List[bpy.types.Material] = []
+        matslots: List[bpy.types.MaterialSlot] = []
+
+        bobject: bpy.types.Object
+        for bobject in scene.collection.all_objects.values():
+            variant_suffix = ''
+
+            # Skinning
+            if arm.utils.export_bone_data(bobject):
+                variant_suffix = '_armskin'
+            # Tilesheets
+            elif bobject.arm_tilesheet != '':
+                variant_suffix = '_armtile'
+
+            if variant_suffix == '':
+                continue
+
+            for slot in bobject.material_slots:
+                if slot.material is None or slot.material.library is not None:
+                    continue
+                if slot.material.name.endswith(variant_suffix):
+                    continue
+
+                matslots.append(slot)
+                mat_name = slot.material.name + variant_suffix
+                mat = bpy.data.materials.get(mat_name)
+                # Create material variant
+                if mat is None:
+                    mat = slot.material.copy()
+                    mat.name = mat_name
+                    if variant_suffix == '_armtile':
+                        mat.arm_tilesheet_flag = True
+                    matvars.append(mat)
+                slot.material = mat
+
+        # Particle and non-particle objects can not share material
+        particle_sys: bpy.types.ParticleSettings
+        for particle_sys in bpy.data.particles:
+            bobject = particle_sys.instance_object
+            if bobject is None or particle_sys.render_type != 'OBJECT':
+                continue
+
+            for slot in bobject.material_slots:
+                if slot.material is None or slot.material.library is not None:
+                    continue
+                if slot.material.name.endswith('_armpart'):
+                    continue
+
+                matslots.append(slot)
+                mat_name = slot.material.name + '_armpart'
+                mat = bpy.data.materials.get(mat_name)
+                if mat is None:
+                    mat = slot.material.copy()
+                    mat.name = mat_name
+                    mat.arm_particle_flag = True
+                    matvars.append(mat)
+                slot.material = mat
+
+        return matvars, matslots
+
+    @staticmethod
+    def slot_to_material(bobject: bpy.types.Object, slot: bpy.types.MaterialSlot):
         mat = slot.material
         # Pick up backed material if present
         if mat is not None:
@@ -2021,59 +2085,8 @@ class ArmoryExporter:
         elif not bpy.data.worlds['Arm'].arm_minimize:
             self.output['name'] += '.json'
 
-        # Create unique material variants for skinning, tilesheets, particles
-        matvars = []
-        matslots = []
-        for bobject in scene_objects:
-            if arm.utils.export_bone_data(bobject):
-                for slot in bobject.material_slots:
-                    if slot.material is None or slot.material.library is not None:
-                        continue
-                    if slot.material.name.endswith('_armskin'):
-                        continue
-                    matslots.append(slot)
-                    mat_name = slot.material.name + '_armskin'
-                    mat = bpy.data.materials.get(mat_name)
-                    if mat is None:
-                        mat = slot.material.copy()
-                        mat.name = mat_name
-                        matvars.append(mat)
-                    slot.material = mat
-            elif bobject.arm_tilesheet != '':
-                for slot in bobject.material_slots:
-                    if slot.material is None or slot.material.library is not None:
-                        continue
-                    if slot.material.name.endswith('_armtile'):
-                        continue
-                    matslots.append(slot)
-                    mat_name = slot.material.name + '_armtile'
-                    mat = bpy.data.materials.get(mat_name)
-                    if mat is None:
-                        mat = slot.material.copy()
-                        mat.name = mat_name
-                        mat.arm_tilesheet_flag = True
-                        matvars.append(mat)
-                    slot.material = mat
-
-        # Particle and non-particle objects can not share material
-        for psys in bpy.data.particles:
-            bobject = psys.instance_object
-            if bobject is None or psys.render_type != 'OBJECT':
-                continue
-            for slot in bobject.material_slots:
-                if slot.material is None or slot.material.library is not None:
-                    continue
-                if slot.material.name.endswith('_armpart'):
-                    continue
-                matslots.append(slot)
-                mat_name = slot.material.name + '_armpart'
-                mat = bpy.data.materials.get(mat_name)
-                if mat is None:
-                    mat = slot.material.copy()
-                    mat.name = mat_name
-                    mat.arm_particle_flag = True
-                    matvars.append(mat)
-                slot.material = mat
+        # Create unique material variants for skinning, tilesheets and particles
+        matvars, matslots = self.create_material_variants(self.scene)
 
         # Auto-bones
         wrd = bpy.data.worlds['Arm']
