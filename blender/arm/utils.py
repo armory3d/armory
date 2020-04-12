@@ -690,7 +690,7 @@ def open_editor(hx_path=None):
 
         # Sublime Text
         if get_code_editor() == 'sublime':
-            project_name = bpy.data.worlds['Arm'].arm_project_name
+            project_name = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_name)
             subl_project_path = arm.utils.get_fp() + f'/{project_name}.sublime-project'
 
             if not os.path.exists(subl_project_path):
