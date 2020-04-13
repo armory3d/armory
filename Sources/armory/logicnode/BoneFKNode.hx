@@ -32,10 +32,10 @@ class BoneFKNode extends LogicNode {
 		w = anim.getAbsMat(bone);
 
 		function moveBone() {
-			m.setFrom(w);
+			// m.setFrom(w);
 			m.multmat(transform);
-			iw.getInverse(w);
-			m.multmat(iw);
+			// iw.getInverse(w);
+			// m.multmat(iw);
 
 			// anim.removeUpdate(moveBone);
 			// notified = false;
