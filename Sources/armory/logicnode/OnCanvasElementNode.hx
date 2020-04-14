@@ -45,11 +45,54 @@ class OnCanvasElementNode extends LogicNode {
 			
 			var x1 = canvas.getElement(element).x;
 			var y1 = canvas.getElement(element).y;
-			var x2 = x1 + canvas.getElement(element).width;
-			var y2 = y1 + canvas.getElement(element).height;
-
+			var anchor = canvas.getElement(element).anchor;
+			var cx = canvas.getCanvas().width;
+			var cy = canvas.getCanvas().height;
 			var mouseX = mouse.x;
 			var mouseY = mouse.y;
+			var x2 = x1 + canvas.getElement(element).width;
+			var y2 = y1 + canvas.getElement(element).height;
+			switch(anchor)
+			{
+				case 1:
+				{
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+				}
+				case 2:
+				{
+					mouseX -= cx - canvas.getElement(element).width;
+				}
+				case 3:
+				{
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				}
+				case 4:
+				{
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				}
+				case 5:
+				{
+					mouseX -= cx - canvas.getElement(element).width;
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				}
+				case 6:
+				{
+					mouseY -= cy - canvas.getElement(element).height;
+				}
+				case 7:
+				{
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseY -= cy - canvas.getElement(element).height;
+				}
+				case 8:
+				{
+					mouseX -= cx - canvas.getElement(element).width;
+					mouseY -= cy - canvas.getElement(element).height;
+				}
+			}
+			
+			
 
 			if((mouseX >= x1) && (mouseX <= x2))
 			{
