@@ -526,7 +526,9 @@ def safesrc(s):
         s = '_' + s
     return s
 
-def safestr(s):
+def safestr(s: str) -> str:
+    """Outputs a string where special characters have been replaced with
+    '_', which can be safely used in file and path names."""
     for c in r'[]/\;,><&*:%=+@!#^()|?^':
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
@@ -534,7 +536,7 @@ def safestr(s):
 def asset_name(bdata):
     s = bdata.name
     # Append library name if linked
-    if bdata.library != None:
+    if bdata.library is not None:
         s += '_' + bdata.library.name
     return s
 
