@@ -1532,67 +1532,70 @@ class ArmoryExporter:
         if hasattr(bobject, 'evaluated_get'):
             bobject_eval.to_mesh_clear()
 
-    def export_light(self, objectRef):
+    def export_light(self, object_ref):
         """Exports a single light object."""
         rpdat = arm.utils.get_rp()
-        objref = objectRef[0]
-        objtype = objref.type
-        o = {}
-        o['name'] = objectRef[1]["structName"]
-        o['type'] = objtype.lower()
-        o['cast_shadow'] = objref.use_shadow
-        o['near_plane'] = objref.arm_clip_start
-        o['far_plane'] = objref.arm_clip_end
-        o['fov'] = objref.arm_fov
-        o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
-        o['strength'] = objref.energy
-        o['shadows_bias'] = objref.arm_shadows_bias * 0.0001
+        light_ref = object_ref[0]
+        objtype = light_ref.type
+        out_light = {
+            'name': object_ref[1]["structName"],
+            'type': objtype.lower(),
+            'cast_shadow': light_ref.use_shadow,
+            'near_plane': light_ref.arm_clip_start,
+            'far_plane': light_ref.arm_clip_end,
+            'fov': light_ref.arm_fov,
+            'color': [light_ref.color[0], light_ref.color[1], light_ref.color[2]],
+            'strength': light_ref.energy,
+            'shadows_bias': light_ref.arm_shadows_bias * 0.0001
+        }
         if rpdat.rp_shadows:
             if objtype == 'POINT':
-                o['shadowmap_size'] = int(rpdat.rp_shadowmap_cube)
+                out_light['shadowmap_size'] = int(rpdat.rp_shadowmap_cube)
             else:
-                o['shadowmap_size'] = arm.utils.get_cascade_size(rpdat)
+                out_light['shadowmap_size'] = arm.utils.get_cascade_size(rpdat)
         else:
-            o['shadowmap_size'] = 0
+            out_light['shadowmap_size'] = 0
 
         if objtype == 'SUN':
-            o['strength'] *= 0.325
-            o['shadows_bias'] *= 20.0 # Scale bias for ortho light matrix
-            if o['shadowmap_size'] > 1024:
-                o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
+            out_light['strength'] *= 0.325
+            # Scale bias for ortho light matrix
+            out_light['shadows_bias'] *= 20.0
+            if out_light['shadowmap_size'] > 1024:
+                # Less bias for bigger maps
+                out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            o['strength'] *= 2.6
+            out_light['strength'] *= 2.6
             if bpy.app.version >= (2, 80, 72):
-                o['strength'] *= 0.01
-            o['fov'] = 1.5708 # pi/2
-            o['shadowmap_cube'] = True
-            if objref.shadow_soft_size > 0.1:
-                o['light_size'] = objref.shadow_soft_size * 10
+                out_light['strength'] *= 0.01
+            out_light['fov'] = 1.5708 # pi/2
+            out_light['shadowmap_cube'] = True
+            if light_ref.shadow_soft_size > 0.1:
+                out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            o['strength'] *= 2.6
+            out_light['strength'] *= 2.6
             if bpy.app.version >= (2, 80, 72):
-                o['strength'] *= 0.01
-            o['spot_size'] = math.cos(objref.spot_size / 2)
-            o['spot_blend'] = objref.spot_blend / 10 # Cycles defaults to 0.15
+                out_light['strength'] *= 0.01
+            out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
+            # Cycles defaults to 0.15
+            out_light['spot_blend'] = light_ref.spot_blend / 10
         elif objtype == 'AREA':
-            o['strength'] *= 80.0 / (objref.size * objref.size_y)
+            out_light['strength'] *= 80.0 / (light_ref.size * light_ref.size_y)
             if bpy.app.version >= (2, 80, 72):
-                o['strength'] *= 0.01
-            o['size'] = objref.size
-            o['size_y'] = objref.size_y
+                out_light['strength'] *= 0.01
+            out_light['size'] = light_ref.size
+            out_light['size_y'] = light_ref.size_y
 
-        self.output['light_datas'].append(o)
+        self.output['light_datas'].append(out_light)
 
     def export_probe(self, objectRef):
-        o = {}
-        o['name'] = objectRef[1]["structName"]
+        o = {'name': objectRef[1]["structName"]}
         bo = objectRef[0]
 
         if bo.type == 'GRID':
             o['type'] = 'grid'
         elif bo.type == 'PLANAR':
             o['type'] = 'planar'
-        else: # CUBEMAP
+        else:
             o['type'] = 'cubemap'
 
         self.output['probe_datas'].append(o)
