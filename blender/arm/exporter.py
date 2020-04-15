@@ -2557,109 +2557,126 @@ class ArmoryExporter:
             o['constraints'].append(out_constraint)
 
     def export_traits(self, bobject: bpy.types.Object, o):
-        if hasattr(bobject, 'arm_traitlist'):
-            for t in bobject.arm_traitlist:
-                # Don't export disabled traits but still export those
-                # with fake user enabled so that nodes like `TraitNode`
-                # still work
-                if not t.enabled_prop and not t.fake_user:
+        if not hasattr(bobject, 'arm_traitlist'):
+            return
+
+        for traitlistItem in bobject.arm_traitlist:
+            # Do not export disabled traits but still export those
+            # with fake user enabled so that nodes like `TraitNode`
+            # still work
+            if not traitlistItem.enabled_prop and not traitlistItem.fake_user:
+                continue
+
+            out_trait = {}
+            if traitlistItem.type_prop == 'Logic Nodes' and traitlistItem.node_tree_prop is not None and traitlistItem.node_tree_prop.name != '':
+                group_name = arm.utils.safesrc(traitlistItem.node_tree_prop.name[0].upper() + traitlistItem.node_tree_prop.name[1:])
+
+                out_trait['type'] = 'Script'
+                out_trait['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
+
+            elif traitlistItem.type_prop == 'WebAssembly':
+                wpath = os.path.join(arm.utils.get_fp(), 'Bundled', traitlistItem.webassembly_prop + '.wasm')
+                if not os.path.exists(wpath):
+                    log.warn(f'Wasm "{traitlistItem.webassembly_prop}" not found, skipping')
                     continue
 
-                x = {}
-                if t.type_prop == 'Logic Nodes' and t.node_tree_prop is not None and t.node_tree_prop.name != '':
-                    x['type'] = 'Script'
-                    group_name = arm.utils.safesrc(t.node_tree_prop.name[0].upper() + t.node_tree_prop.name[1:])
-                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
-                elif t.type_prop == 'WebAssembly':
-                    wpath = arm.utils.get_fp() + '/Bundled/' + t.webassembly_prop + '.wasm'
-                    if not os.path.exists(wpath):
-                        log.warn('Wasm "' + t.webassembly_prop + '" not found, skipping')
-                        continue
-                    x['type'] = 'Script'
-                    x['class_name'] = 'armory.trait.internal.WasmScript'
-                    x['parameters'] = ["'" + t.webassembly_prop + "'"]
-                elif t.type_prop == 'UI Canvas':
-                    cpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.json'
-                    if not os.path.exists(cpath):
-                        log.warn('Scene "' + self.scene.name + '" - Object "' + bobject.name + '" - Referenced canvas "' + t.canvas_name_prop + '" not found, skipping')
-                        continue
-                    ArmoryExporter.export_ui = True
-                    x['type'] = 'Script'
-                    x['class_name'] = 'armory.trait.internal.CanvasScript'
-                    x['parameters'] = ["'" + t.canvas_name_prop + "'"]
-                    # assets.add(assetpath) # Bundled is auto-added
-                    # Read file list and add canvas assets
-                    assetpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.files'
-                    if os.path.exists(assetpath):
-                        with open(assetpath) as f:
-                            fileList = f.read().splitlines()
-                            for asset in fileList:
-                                # Relative to the root/Bundled/canvas path
-                                asset = asset[6:] # Strip ../../ to start in project root
-                                assets.add(asset)
-                else: # Haxe/Bundled Script
-                    if t.class_name_prop == '': # Empty class name, skip
-                        continue
-                    x['type'] = 'Script'
-                    if t.type_prop == 'Bundled Script':
-                        trait_prefix = 'armory.trait.'
-                        # TODO: temporary, export single mesh navmesh as obj
-                        if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
-                            ArmoryExporter.export_navigation = True
-                            nav_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
-                            if not os.path.exists(nav_path):
-                                os.makedirs(nav_path)
-                            nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
-                            assets.add(nav_filepath)
-                            # TODO: Implement cache
-                            #if not os.path.isfile(nav_filepath):
-                            # override = {'selected_objects': [bobject]}
-                            # bobject.scale.y *= -1
-                            # mesh = obj.data
-                            # for face in mesh.faces:
-                                # face.v.reverse()
-                            # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
-                            # bobject.scale.y *= -1
-                            armature = bobject.find_armature()
-                            apply_modifiers = not armature
+                out_trait['type'] = 'Script'
+                out_trait['class_name'] = 'armory.trait.internal.WasmScript'
+                out_trait['parameters'] = ["'" + traitlistItem.webassembly_prop + "'"]
 
-                            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
-                            exportMesh = bobject_eval.to_mesh()
+            elif traitlistItem.type_prop == 'UI Canvas':
+                cpath = os.path.join(arm.utils.get_fp(), 'Bundled', 'canvas', traitlistItem.canvas_name_prop + '.json')
+                if not os.path.exists(cpath):
+                    log.warn(f'Scene "{self.scene.name}" - Object "{bobject.name}" - Referenced canvas "{traitlistItem.canvas_name_prop}" not found, skipping')
+                    continue
 
-                            with open(nav_filepath, 'w') as f:
-                                for v in exportMesh.vertices:
-                                    f.write("v %.4f " % (v.co[0] * bobject_eval.scale.x))
-                                    f.write("%.4f " % (v.co[2] * bobject_eval.scale.z))
-                                    f.write("%.4f\n" % (v.co[1] * bobject_eval.scale.y)) # Flipped
-                                for p in exportMesh.polygons:
-                                    f.write("f")
-                                    for i in reversed(p.vertices): # Flipped normals
-                                        f.write(" %d" % (i + 1))
-                                    f.write("\n")
-                    else: # Haxe
-                        trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
-                        hxfile = '/Sources/' + (trait_prefix + t.class_name_prop).replace('.', '/') + '.hx'
-                        if not os.path.exists(arm.utils.get_fp() + hxfile):
-                            # TODO: Halt build here once this check is tested
-                            print('Armory Error: Scene "' + self.scene.name + '" - Object "' + bobject.name + '" : Referenced trait file "' + hxfile + '" not found')
+                ArmoryExporter.export_ui = True
+                out_trait['type'] = 'Script'
+                out_trait['class_name'] = 'armory.trait.internal.CanvasScript'
+                out_trait['parameters'] = ["'" + traitlistItem.canvas_name_prop + "'"]
 
-                    x['class_name'] = trait_prefix + t.class_name_prop
+                # Read file list and add canvas assets
+                assetpath = os.path.join(arm.utils.get_fp(), 'Bundled', 'canvas', traitlistItem.canvas_name_prop + '.files')
+                if os.path.exists(assetpath):
+                    with open(assetpath) as f:
+                        file_list = f.read().splitlines()
+                        for asset in file_list:
+                            # Relative to the root/Bundled/canvas path
+                            asset = asset[6:]  # Strip ../../ to start in project root
+                            assets.add(asset)
 
-                    # Export trait properties
-                    if t.arm_traitpropslist:
-                        x['props'] = []
-                        for trait_prop in t.arm_traitpropslist:
-                            x['props'].append(trait_prop.name)
-                            x['props'].append(trait_prop.type)
+            # Haxe/Bundled Script
+            else:
+                # Empty class name, skip
+                if traitlistItem.class_name_prop == '':
+                    continue
 
-                            if trait_prop.type.endswith("Object"):
-                                value = arm.utils.asset_name(trait_prop.value_object)
-                            else:
-                                value = trait_prop.get_value()
+                out_trait['type'] = 'Script'
+                if traitlistItem.type_prop == 'Bundled Script':
+                    trait_prefix = 'armory.trait.'
 
-                            x['props'].append(value)
+                    # TODO: temporary, export single mesh navmesh as obj
+                    if traitlistItem.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                        ArmoryExporter.export_navigation = True
 
-                o['traits'].append(x)
+                        nav_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'navigation')
+                        if not os.path.exists(nav_path):
+                            os.makedirs(nav_path)
+                        nav_filepath = os.path.join(nav_path, 'nav_' + bobject.data.name + '.arm')
+                        assets.add(nav_filepath)
+
+                        # TODO: Implement cache
+                        # if not os.path.isfile(nav_filepath):
+                        # override = {'selected_objects': [bobject]}
+                        # bobject.scale.y *= -1
+                        # mesh = obj.data
+                        # for face in mesh.faces:
+                            # face.v.reverse()
+                        # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
+                        # bobject.scale.y *= -1
+                        armature = bobject.find_armature()
+                        apply_modifiers = not armature
+
+                        bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
+                        export_mesh = bobject_eval.to_mesh()
+
+                        with open(nav_filepath, 'w') as f:
+                            for v in export_mesh.vertices:
+                                f.write("v %.4f " % (v.co[0] * bobject_eval.scale.x))
+                                f.write("%.4f " % (v.co[2] * bobject_eval.scale.z))
+                                f.write("%.4f\n" % (v.co[1] * bobject_eval.scale.y)) # Flipped
+                            for p in export_mesh.polygons:
+                                f.write("f")
+                                # Flipped normals
+                                for i in reversed(p.vertices):
+                                    f.write(" %d" % (i + 1))
+                                f.write("\n")
+
+                # Haxe
+                else:
+                    trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
+                    hxfile = os.path.join('Sources', (trait_prefix + traitlistItem.class_name_prop).replace('.', '/') + '.hx')
+                    if not os.path.exists(os.path.join(arm.utils.get_fp(), hxfile)):
+                        # TODO: Halt build here once this check is tested
+                        print(f'Armory Error: Scene "{self.scene.name}" - Object "{bobject.name}": Referenced trait file "{hxfile}" not found')
+
+                out_trait['class_name'] = trait_prefix + traitlistItem.class_name_prop
+
+                # Export trait properties
+                if traitlistItem.arm_traitpropslist:
+                    out_trait['props'] = []
+                    for trait_prop in traitlistItem.arm_traitpropslist:
+                        out_trait['props'].append(trait_prop.name)
+                        out_trait['props'].append(trait_prop.type)
+
+                        if trait_prop.type.endswith("Object"):
+                            value = arm.utils.asset_name(trait_prop.value_object)
+                        else:
+                            value = trait_prop.get_value()
+
+                        out_trait['props'].append(value)
+
+            o['traits'].append(out_trait)
 
     @staticmethod
     def export_canvas_themes():
