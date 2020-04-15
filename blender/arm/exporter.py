@@ -2283,7 +2283,6 @@ class ArmoryExporter:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
         print('Scene exported in ' + str(time.time() - profile_time))
-        return {'FINISHED'}
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
@@ -2385,7 +2384,7 @@ class ArmoryExporter:
                         instanced_data.append(rot.x)
                         instanced_data.append(rot.y)
                         instanced_data.append(rot.z)
-                    if 'Scale'in inst:
+                    if 'Scale' in inst:
                         scale = child.matrix_local.to_scale()
                         instanced_data.append(scale.x)
                         instanced_data.append(scale.y)
@@ -2417,7 +2416,7 @@ class ArmoryExporter:
         if bobject.rigid_body is not None and phys_enabled:
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
-            shape = 0 # BOX
+            shape = 0  # BOX
             if rb.collision_shape == 'SPHERE':
                 shape = 1
             elif rb.collision_shape == 'CONVEX_HULL':
