@@ -520,18 +520,19 @@ class ArmoryExporter:
             'seed': psys.seed,
             'particle': psys.settings.name
         }
-        o['particle_refs'].append(pref)
+        object_export_data['particle_refs'].append(pref)
 
     @staticmethod
-    def get_view3d_area():
+    def get_view3d_area() -> Optional[bpy.types.Area]:
         screen = bpy.context.window.screen
         for area in screen.areas:
             if area.type == 'VIEW_3D':
                 return area
         return None
 
-    def get_viewport_view_matrix(self):
-        play_area = self.get_view3d_area()
+    @staticmethod
+    def get_viewport_view_matrix() -> Optional[Matrix]:
+        play_area = ArmoryExporter.get_view3d_area()
         if play_area is None:
             return None
         for space in play_area.spaces:
@@ -539,8 +540,9 @@ class ArmoryExporter:
                 return space.region_3d.view_matrix
         return None
 
-    def get_viewport_projection_matrix(self):
-        play_area = self.get_view3d_area()
+    @staticmethod
+    def get_viewport_projection_matrix() -> Tuple[Optional[Matrix], bool]:
+        play_area = ArmoryExporter.get_view3d_area()
         if play_area is None:
             return None, False
         for space in play_area.spaces:
