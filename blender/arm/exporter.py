@@ -2286,42 +2286,49 @@ class ArmoryExporter:
         return {'FINISHED'}
 
     def create_default_camera(self, is_viewport_camera=False):
-        o = {}
-        o['name'] = 'DefaultCamera'
-        o['near_plane'] = 0.1
-        o['far_plane'] = 100.0
-        o['fov'] = 0.85
-        o['frustum_culling'] = True
-        o['clear_color'] = self.get_camera_clear_color()
+        """Creates the default camera and adds a WalkNavigation trait to it."""
+        out_camera = {
+            'name': 'DefaultCamera',
+            'near_plane': 0.1,
+            'far_plane': 100.0,
+            'fov': 0.85,
+            'frustum_culling': True,
+            'clear_color': self.get_camera_clear_color()
+        }
+
         # Set viewport camera projection
         if is_viewport_camera:
             proj, is_persp = self.get_viewport_projection_matrix()
             if proj is not None:
                 if is_persp:
-                    self.extract_projection(o, proj, with_planes=False)
+                    self.extract_projection(out_camera, proj, with_planes=False)
                 else:
-                    self.extract_ortho(o, proj)
-        self.output['camera_datas'].append(o)
+                    self.extract_ortho(out_camera, proj)
+        self.output['camera_datas'].append(out_camera)
 
-        o = {}
-        o['name'] = 'DefaultCamera'
-        o['type'] = 'camera_object'
-        o['data_ref'] = 'DefaultCamera'
-        o['material_refs'] = []
-        o['transform'] = {}
+        out_object = {
+            'name': 'DefaultCamera',
+            'type': 'camera_object',
+            'data_ref': 'DefaultCamera',
+            'material_refs': [],
+            'transform': {}
+        }
         viewport_matrix = self.get_viewport_view_matrix()
         if viewport_matrix is not None:
-            o['transform']['values'] = ArmoryExporter.write_matrix(viewport_matrix.inverted_safe())
-            o['local_only'] = True
+            out_object['transform']['values'] = ArmoryExporter.write_matrix(viewport_matrix.inverted_safe())
+            out_object['local_only'] = True
         else:
-            o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-        o['traits'] = []
-        trait = {}
-        trait['type'] = 'Script'
-        trait['class_name'] = 'armory.trait.WalkNavigation'
-        o['traits'].append(trait)
+            out_object['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+        # Add WalkNavigation trait
+        trait = {
+            'type': 'Script',
+            'class_name': 'armory.trait.WalkNavigation'
+        }
+        out_object['traits'] = [trait]
         ArmoryExporter.import_traits.append(trait['class_name'])
-        self.output['objects'].append(o)
+
+        self.output['objects'].append(out_object)
         self.output['camera_ref'] = 'DefaultCamera'
 
     @staticmethod
