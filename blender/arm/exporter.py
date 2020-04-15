@@ -507,7 +507,7 @@ class ArmoryExporter:
             self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
-    def export_particle_system_ref(self, psys, index, o):
+    def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, object_export_data):
         if psys.settings in self.particle_system_array:  # or not modifier.show_render:
             return
 
@@ -731,8 +731,7 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject: bpy.types.Object, scene: bpy.types.Scene,
-                      parent_export_data: Dict = None) -> None:
+    def export_object(self, bobject: bpy.types.Object, scene: bpy.types.Scene, parent_export_data: Dict = None) -> None:
         """This function exports a single object in the scene and
         includes its name, object reference, material references (for
         meshes), and transform.
@@ -783,16 +782,11 @@ class ArmoryExporter:
 
             if len(bobject.arm_propertylist) > 0:
                 object_export_data['properties'] = []
-                for p in bobject.arm_propertylist:
-                    po = {}
-                    po['name'] = p.name_prop
-                    po['value'] = getattr(p, p.type_prop + '_prop')
-                    object_export_data['properties'].append(po)
-
-            # TODO:
-            layer_found = True
-            if not layer_found:
-                object_export_data['spawn'] = False
+                for proplist_item in bobject.arm_propertylist:
+                    property_export_data = {
+                        'name': proplist_item.name_prop,
+                        'value': getattr(proplist_item, proplist_item.type_prop + '_prop')}
+                    object_export_data['properties'].append(property_export_data)
 
             # Export the object reference and material references
             objref = bobject.data
@@ -802,13 +796,14 @@ class ArmoryExporter:
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
                 object_export_data['lods'] = []
-                for l in objref.arm_lodlist:
-                    if not l.enabled_prop:
+                for lodlist_item in objref.arm_lodlist:
+                    if not lodlist_item.enabled_prop:
                         continue
-                    lod = {}
-                    lod['object_ref'] = l.name
-                    lod['screen_size'] = l.screen_size_prop
-                    object_export_data['lods'].append(lod)
+                    lod_export_data = {
+                        'object_ref': lodlist_item.name,
+                        'screen_size': lodlist_item.screen_size_prop
+                    }
+                    object_export_data['lods'].append(lod_export_data)
                 if objref.arm_lod_material:
                     object_export_data['lod_material'] = True
 
@@ -845,7 +840,7 @@ class ArmoryExporter:
                 if num_psys > 0:
                     object_export_data['particle_refs'] = []
                     for i in range(0, num_psys):
-                        self.export_particle_system_ref(bobject.particle_systems[i], i, object_export_data)
+                        self.export_particle_system_ref(bobject.particle_systems[i], object_export_data)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
@@ -936,8 +931,10 @@ class ArmoryExporter:
                     object_export_data['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
 
             if bobject.type == 'ARMATURE' and bobject.data is not None:
-                bdata = bobject.data # Armature data
-                action = None # Reference start action
+                # Armature data
+                bdata = bobject.data
+                # Reference start action
+                action = None
                 adata = bobject.animation_data
 
                 # Active action
@@ -953,7 +950,8 @@ class ArmoryExporter:
 
                 # Export actions
                 export_actions = [action]
-                # hasattr - armature modifier may reference non-parent armature object to deform with
+                # hasattr - armature modifier may reference non-parent
+                # armature object to deform with
                 if hasattr(adata, 'nla_tracks') and adata.nla_tracks is not None:
                     for track in adata.nla_tracks:
                         if track.strips is None:
@@ -980,7 +978,8 @@ class ArmoryExporter:
                 orig_action = bobject.animation_data.action
                 if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
                     clear_op.add('unlink')
-                    # Clone bjobject and put it in the current scene so the bake operator can run
+                    # Clone bobject and put it in the current scene so
+                    # the bake operator can run
                     if bobject.library is not None:
                         skelobj = bobject.copy()
                         clear_op.add('rem')
@@ -992,13 +991,13 @@ class ArmoryExporter:
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
                     if not bdata.arm_cached or not os.path.exists(fp):
-                        #handle autobake
+                        # Handle autobake
                         if bdata.arm_autobake:
                             sel = bpy.context.selected_objects[:]
                             for _o in sel:
                                 _o.select_set(False)
                             skelobj.select_set(True)
-                            bpy.ops.nla.bake(frame_start = action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
+                            bpy.ops.nla.bake(frame_start=action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
                             action = skelobj.animation_data.action
                             skelobj.select_set(False)
                             for _o in sel:
@@ -1015,20 +1014,21 @@ class ArmoryExporter:
                                 boneo = {}
                                 self.export_bone(skelobj, bone, scene, boneo, action)
                                 bones.append(boneo)
-                        self.write_bone_matrices( bpy.context.scene, action)
+                        self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
-                        action_obj = {}
-                        action_obj['name'] = aname
-                        action_obj['objects'] = bones
+                        action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
 
-                # restore settings
+                # Restore settings
                 skelobj.animation_data.action = orig_action
-                for a in baked_actions: bpy.data.actions.remove(a, do_unlink=True)
-                if 'unlink' in clear_op: bpy.context.collection.objects.unlink(skelobj)
-                if 'rem' in clear_op: bpy.data.objects.remove(skelobj, do_unlink=True)
+                for a in baked_actions:
+                    bpy.data.actions.remove(a, do_unlink=True)
+                if 'unlink' in clear_op:
+                    bpy.context.collection.objects.unlink(skelobj)
+                if 'rem' in clear_op:
+                    bpy.data.objects.remove(skelobj, do_unlink=True)
 
                 # TODO: cache per action
                 bdata.arm_cached = True
