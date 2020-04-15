@@ -1146,13 +1146,13 @@ class ArmoryExporter:
                         oskin['constraints'] = []
                     self.add_constraints(bone, oskin, bone=True)
 
-    def write_mesh(self, bobject: bpy.types.Object, fp, o):
-        wrd = bpy.data.worlds['Arm']
-        if wrd.arm_single_data_file:
-            self.output['mesh_datas'].append(o)
-        else: # One mesh data per file
-            mesh_obj = {}
-            mesh_obj['mesh_datas'] = [o]
+    def write_mesh(self, bobject: bpy.types.Object, fp, mesh_export_data):
+        if bpy.data.worlds['Arm'].arm_single_data_file:
+            self.output['mesh_datas'].append(mesh_export_data)
+
+        # One mesh data per file
+        else:
+            mesh_obj = {'mesh_datas': [mesh_export_data]}
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
 
@@ -1401,12 +1401,12 @@ class ArmoryExporter:
     def has_tangents(self, exportMesh):
         return self.get_export_uvs(exportMesh) and self.get_export_tangents(exportMesh) and len(exportMesh.uv_layers) > 0
 
-    def export_mesh(self, objectRef, scene):
+    def export_mesh(self, object_ref):
         """Exports a single mesh object."""
         # profile_time = time.time()
-        table = objectRef[1]["objectTable"]
+        table = object_ref[1]["objectTable"]
         bobject = table[0]
-        oid = arm.utils.safestr(objectRef[1]["structName"])
+        oid = arm.utils.safestr(object_ref[1]["structName"])
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_single_data_file:
@@ -1427,44 +1427,43 @@ class ArmoryExporter:
         if wrd.arm_verbose_output:
             print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
 
-        o = {}
-        o['name'] = oid
-        mesh = objectRef[0]
-        structFlag = False
+        mesh_export_data = {'name': oid}
+        mesh = object_ref[0]
+        struct_flag = False
 
         # Save the morph state if necessary
-        activeShapeKeyIndex = bobject.active_shape_key_index
-        showOnlyShapeKey = bobject.show_only_shape_key
-        currentMorphValue = []
+        active_shape_key_index = bobject.active_shape_key_index
+        show_only_shape_key = bobject.show_only_shape_key
+        current_morph_value = []
 
-        shapeKeys = ArmoryExporter.get_shape_keys(mesh)
-        if shapeKeys:
+        shape_keys = ArmoryExporter.get_shape_keys(mesh)
+        if shape_keys:
             bobject.active_shape_key_index = 0
             bobject.show_only_shape_key = True
 
-            baseIndex = 0
-            relative = shapeKeys.use_relative
+            base_index = 0
+            relative = shape_keys.use_relative
             if relative:
-                morphCount = 0
-                baseName = shapeKeys.reference_key.name
-                for block in shapeKeys.key_blocks:
+                morph_count = 0
+                baseName = shape_keys.reference_key.name
+                for block in shape_keys.key_blocks:
                     if block.name == baseName:
-                        baseIndex = morphCount
+                        base_index = morph_count
                         break
-                    morphCount += 1
+                    morph_count += 1
 
-            morphCount = 0
-            for block in shapeKeys.key_blocks:
-                currentMorphValue.append(block.value)
+            morph_count = 0
+            for block in shape_keys.key_blocks:
+                current_morph_value.append(block.value)
                 block.value = 0.0
 
                 if block.name != "":
-                    # self.IndentWrite(B"Morph (index = ", 0, structFlag)
-                    # self.WriteInt(morphCount)
+                    # self.IndentWrite(B"Morph (index = ", 0, struct_flag)
+                    # self.WriteInt(morph_count)
 
-                    # if (relative) and (morphCount != baseIndex):
+                    # if (relative) and (morph_count != base_index):
                     #   self.Write(B", base = ")
-                    #   self.WriteInt(baseIndex)
+                    #   self.WriteInt(base_index)
 
                     # self.Write(B")\n")
                     # self.IndentWrite(B"{\n")
@@ -1473,24 +1472,24 @@ class ArmoryExporter:
                     # self.Write(B"\"}}\n")
                     # self.IndentWrite(B"}\n")
                     # TODO
-                    structFlag = True
+                    struct_flag = True
 
-                morphCount += 1
+                morph_count += 1
 
-            shapeKeys.key_blocks[0].value = 1.0
+            shape_keys.key_blocks[0].value = 1.0
             mesh.update()
 
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
         bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
-        exportMesh = bobject_eval.to_mesh()
+        export_mesh = bobject_eval.to_mesh()
 
-        if exportMesh is None:
+        if export_mesh is None:
             log.warn(oid + ' was not exported')
             return
 
-        if len(exportMesh.uv_layers) > 2:
+        if len(export_mesh.uv_layers) > 2:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Update aabb
@@ -1498,37 +1497,37 @@ class ArmoryExporter:
 
         # Process meshes
         if ArmoryExporter.optimize_enabled:
-            vert_list = exporter_opt.export_mesh_data(self, exportMesh, bobject, o, has_armature=armature is not None)
+            vert_list = exporter_opt.export_mesh_data(self, export_mesh, bobject, mesh_export_data, has_armature=armature is not None)
             if armature:
-                exporter_opt.export_skin(self, bobject, armature, vert_list, o)
+                exporter_opt.export_skin(self, bobject, armature, vert_list, mesh_export_data)
         else:
-            self.export_mesh_data(exportMesh, bobject, o, has_armature=armature is not None)
+            self.export_mesh_data(export_mesh, bobject, mesh_export_data, has_armature=armature is not None)
             if armature:
-                self.export_skin(bobject, armature, exportMesh, o)
+                self.export_skin(bobject, armature, export_mesh, mesh_export_data)
 
         # Restore the morph state
-        if shapeKeys:
-            bobject.active_shape_key_index = activeShapeKeyIndex
-            bobject.show_only_shape_key = showOnlyShapeKey
+        if shape_keys:
+            bobject.active_shape_key_index = active_shape_key_index
+            bobject.show_only_shape_key = show_only_shape_key
 
-            for m in range(len(currentMorphValue)):
-                shapeKeys.key_blocks[m].value = currentMorphValue[m]
+            for m in range(len(current_morph_value)):
+                shape_keys.key_blocks[m].value = current_morph_value[m]
 
             mesh.update()
 
         # Check if mesh is using instanced rendering
-        instanced_type, instanced_data = self.object_process_instancing(table, o['scale_pos'])
+        instanced_type, instanced_data = self.object_process_instancing(table, mesh_export_data['scale_pos'])
 
         # Save offset data for instanced rendering
         if instanced_type > 0:
-            o['instanced_data'] = instanced_data
-            o['instanced_type'] = instanced_type
+            mesh_export_data['instanced_data'] = instanced_data
+            mesh_export_data['instanced_type'] = instanced_type
 
         # Export usage
         if bobject.data.arm_dynamic_usage:
-            o['dynamic_usage'] = bobject.data.arm_dynamic_usage
+            mesh_export_data['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
-        self.write_mesh(bobject, fp, o)
+        self.write_mesh(bobject, fp, mesh_export_data)
         # print('Mesh exported in ' + str(time.time() - profile_time))
 
         if hasattr(bobject, 'evaluated_get'):
@@ -2052,7 +2051,7 @@ class ArmoryExporter:
 
         self.output['mesh_datas'] = []
         for mesh_ref in self.mesh_array.items():
-            self.export_mesh(mesh_ref, scene)
+            self.export_mesh(mesh_ref)
 
     def execute(self):
         """Exports the scene."""
