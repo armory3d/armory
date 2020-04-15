@@ -2731,98 +2731,108 @@ class ArmoryExporter:
         rb2 = rbc.object2
         if rb1 is None or rb2 is None:
             return
+
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         breaking_threshold = rbc.breaking_threshold if rbc.use_breaking else 0
-        trait = {}
-        trait['type'] = 'Script'
-        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsConstraint'
-        trait['parameters'] = [\
-            "'" + rb1.name + "'", \
-            "'" + rb2.name + "'", \
-            "'" + rbc.type + "'", \
-            str(rbc.disable_collisions).lower(), \
-            str(breaking_threshold)]
+
+        trait = {
+            'type': 'Script',
+            'class_name': 'armory.trait.physics.' + phys_pkg + '.PhysicsConstraint',
+            'parameters': [
+                "'" + rb1.name + "'",
+                "'" + rb2.name + "'",
+                "'" + rbc.type + "'",
+                str(rbc.disable_collisions).lower(),
+                str(breaking_threshold)
+            ]
+        }
+
         if rbc.type == "GENERIC":
-            limits = []
-            limits.append(1 if rbc.use_limit_lin_x else 0)
-            limits.append(rbc.limit_lin_x_lower)
-            limits.append(rbc.limit_lin_x_upper)
-            limits.append(1 if rbc.use_limit_lin_y else 0)
-            limits.append(rbc.limit_lin_y_lower)
-            limits.append(rbc.limit_lin_y_upper)
-            limits.append(1 if rbc.use_limit_lin_z else 0)
-            limits.append(rbc.limit_lin_z_lower)
-            limits.append(rbc.limit_lin_z_upper)
-            limits.append(1 if rbc.use_limit_ang_x else 0)
-            limits.append(rbc.limit_ang_x_lower)
-            limits.append(rbc.limit_ang_x_upper)
-            limits.append(1 if rbc.use_limit_ang_y else 0)
-            limits.append(rbc.limit_ang_y_lower)
-            limits.append(rbc.limit_ang_y_upper)
-            limits.append(1 if rbc.use_limit_ang_z else 0)
-            limits.append(rbc.limit_ang_z_lower)
-            limits.append(rbc.limit_ang_z_upper)
+            limits = [
+                1 if rbc.use_limit_lin_x else 0,
+                rbc.limit_lin_x_lower,
+                rbc.limit_lin_x_upper,
+                1 if rbc.use_limit_lin_y else 0,
+                rbc.limit_lin_y_lower,
+                rbc.limit_lin_y_upper,
+                1 if rbc.use_limit_lin_z else 0,
+                rbc.limit_lin_z_lower,
+                rbc.limit_lin_z_upper,
+                1 if rbc.use_limit_ang_x else 0,
+                rbc.limit_ang_x_lower,
+                rbc.limit_ang_x_upper,
+                1 if rbc.use_limit_ang_y else 0,
+                rbc.limit_ang_y_lower,
+                rbc.limit_ang_y_upper,
+                1 if rbc.use_limit_ang_z else 0,
+                rbc.limit_ang_z_lower,
+                rbc.limit_ang_z_upper
+            ]
             trait['parameters'].append(str(limits))
         if rbc.type == "GENERIC_SPRING":
-            limits = []
-            limits.append(1 if rbc.use_limit_lin_x else 0)
-            limits.append(rbc.limit_lin_x_lower)
-            limits.append(rbc.limit_lin_x_upper)
-            limits.append(1 if rbc.use_limit_lin_y else 0)
-            limits.append(rbc.limit_lin_y_lower)
-            limits.append(rbc.limit_lin_y_upper)
-            limits.append(1 if rbc.use_limit_lin_z else 0)
-            limits.append(rbc.limit_lin_z_lower)
-            limits.append(rbc.limit_lin_z_upper)
-            limits.append(1 if rbc.use_limit_ang_x else 0)
-            limits.append(rbc.limit_ang_x_lower)
-            limits.append(rbc.limit_ang_x_upper)
-            limits.append(1 if rbc.use_limit_ang_y else 0)
-            limits.append(rbc.limit_ang_y_lower)
-            limits.append(rbc.limit_ang_y_upper)
-            limits.append(1 if rbc.use_limit_ang_z else 0)
-            limits.append(rbc.limit_ang_z_lower)
-            limits.append(rbc.limit_ang_z_upper)
-            limits.append(1 if rbc.use_spring_x else 0)
-            limits.append(rbc.spring_stiffness_x)
-            limits.append(rbc.spring_damping_x)
-            limits.append(1 if rbc.use_spring_y else 0)
-            limits.append(rbc.spring_stiffness_y)
-            limits.append(rbc.spring_damping_y)
-            limits.append(1 if rbc.use_spring_z else 0)
-            limits.append(rbc.spring_stiffness_z)
-            limits.append(rbc.spring_damping_z)
-            limits.append(1 if rbc.use_spring_ang_x else 0)
-            limits.append(rbc.spring_stiffness_ang_x)
-            limits.append(rbc.spring_damping_ang_x)
-            limits.append(1 if rbc.use_spring_ang_y else 0)
-            limits.append(rbc.spring_stiffness_ang_y)
-            limits.append(rbc.spring_damping_ang_y)
-            limits.append(1 if rbc.use_spring_ang_z else 0)
-            limits.append(rbc.spring_stiffness_ang_z)
-            limits.append(rbc.spring_damping_ang_z)
+            limits = [
+                1 if rbc.use_limit_lin_x else 0,
+                rbc.limit_lin_x_lower,
+                rbc.limit_lin_x_upper,
+                1 if rbc.use_limit_lin_y else 0,
+                rbc.limit_lin_y_lower,
+                rbc.limit_lin_y_upper,
+                1 if rbc.use_limit_lin_z else 0,
+                rbc.limit_lin_z_lower,
+                rbc.limit_lin_z_upper,
+                1 if rbc.use_limit_ang_x else 0,
+                rbc.limit_ang_x_lower,
+                rbc.limit_ang_x_upper,
+                1 if rbc.use_limit_ang_y else 0,
+                rbc.limit_ang_y_lower,
+                rbc.limit_ang_y_upper,
+                1 if rbc.use_limit_ang_z else 0,
+                rbc.limit_ang_z_lower,
+                rbc.limit_ang_z_upper,
+                1 if rbc.use_spring_x else 0,
+                rbc.spring_stiffness_x,
+                rbc.spring_damping_x,
+                1 if rbc.use_spring_y else 0,
+                rbc.spring_stiffness_y,
+                rbc.spring_damping_y,
+                1 if rbc.use_spring_z else 0,
+                rbc.spring_stiffness_z,
+                rbc.spring_damping_z,
+                1 if rbc.use_spring_ang_x else 0,
+                rbc.spring_stiffness_ang_x,
+                rbc.spring_damping_ang_x,
+                1 if rbc.use_spring_ang_y else 0,
+                rbc.spring_stiffness_ang_y,
+                rbc.spring_damping_ang_y,
+                1 if rbc.use_spring_ang_z else 0,
+                rbc.spring_stiffness_ang_z,
+                rbc.spring_damping_ang_z
+            ]
             trait['parameters'].append(str(limits))
         if rbc.type == "HINGE":
-            limits = []
-            limits.append(1 if rbc.use_limit_ang_z else 0)
-            limits.append(rbc.limit_ang_z_lower)
-            limits.append(rbc.limit_ang_z_upper)
+            limits = [
+                1 if rbc.use_limit_ang_z else 0,
+                rbc.limit_ang_z_lower,
+                rbc.limit_ang_z_upper
+            ]
             trait['parameters'].append(str(limits))
         if rbc.type == "SLIDER":
-            limits = []
-            limits.append(1 if rbc.use_limit_lin_x else 0)
-            limits.append(rbc.limit_lin_x_lower)
-            limits.append(rbc.limit_lin_x_upper)
+            limits = [
+                1 if rbc.use_limit_lin_x else 0,
+                rbc.limit_lin_x_lower,
+                rbc.limit_lin_x_upper
+            ]
             trait['parameters'].append(str(limits))
         if rbc.type == "PISTON":
-            limits = []
-            limits.append(1 if rbc.use_limit_lin_x else 0)
-            limits.append(rbc.limit_lin_x_lower)
-            limits.append(rbc.limit_lin_x_upper)
-            limits.append(1 if rbc.use_limit_ang_x else 0)
-            limits.append(rbc.limit_ang_x_lower)
-            limits.append(rbc.limit_ang_x_upper)
+            limits = [
+                1 if rbc.use_limit_lin_x else 0,
+                rbc.limit_lin_x_lower,
+                rbc.limit_lin_x_upper,
+                1 if rbc.use_limit_ang_x else 0,
+                rbc.limit_ang_x_lower,
+                rbc.limit_ang_x_upper
+            ]
             trait['parameters'].append(str(limits))
         o['traits'].append(trait)
 
