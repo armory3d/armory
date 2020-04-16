@@ -68,6 +68,18 @@ STRUCT_IDENTIFIER = ("object", "bone_object", "mesh_object",
                      "light_object", "camera_object", "speaker_object",
                      "decal_object", "probe_object")
 
+# Internal target names for single FCurve data paths
+FCURVE_TARGET_NAMES = {
+    "location": ("xloc", "yloc", "zloc"),
+    "rotation_euler": ("xrot", "yrot", "zrot"),
+    "rotation_quaternion": ("qwrot", "qxrot", "qyrot", "qzrot"),
+    "scale": ("xscl", "yscl", "zscl"),
+    "delta_location": ("dxloc", "dyloc", "dzloc"),
+    "delta_rotation_euler": ("dxrot", "dyrot", "dzrot"),
+    "delta_rotation_quaternion": ("dqwrot", "dqxrot", "dqyrot", "dqzrot"),
+    "delta_scale": ("dxscl", "dyscl", "dzscl"),
+}
+
 current_output = None
 
 
@@ -186,30 +198,28 @@ class ArmoryExporter:
         return None
 
     @staticmethod
-    def collect_bone_animation(armature, name):
-        path = "pose.bones[\"" + name + "\"]."
-        curve_array = []
+    def collect_bone_animation(armature: bpy.types.Object, name: str) -> List[bpy.types.FCurve]:
+        path = f"pose.bones[\"{name}\"]."
 
         if armature.animation_data:
             action = armature.animation_data.action
             if action:
-                for fcurve in action.fcurves:
-                    if fcurve.data_path.startswith(path):
-                        curve_array.append(fcurve)
-        return curve_array
+                return [fcurve for fcurve in action.fcurves if fcurve.data_path.startswith(path)]
 
-    def export_bone(self, armature, bone, scene, o, action):
+        return []
+
+    def export_bone(self, armature, bone: bpy.types.Bone, o, action: bpy.types.Action):
         bobject_ref = self.bobject_bone_array.get(bone)
 
         if bobject_ref:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
             o['name'] = bobject_ref["structName"]
-            self.export_bone_transform(armature, bone, scene, o, action)
+            self.export_bone_transform(armature, bone, o, action)
 
         o['children'] = []
         for sub_bobject in bone.children:
             so = {}
-            self.export_bone(armature, sub_bobject, scene, so, action)
+            self.export_bone(armature, sub_bobject, so, action)
             o['children'].append(so)
 
     @staticmethod
@@ -225,8 +235,13 @@ class ArmoryExporter:
             oanim['marker_names'].append(pos_marker.name)
 
     @staticmethod
-    def calculate_animation_length(action):
-        """Calculates the length of the given action."""
+    def calculate_anim_frame_range(action: bpy.types.Action) -> Tuple[int, int]:
+        """Calculates the required frame range of the given action by
+        also taking fcurve modifiers into account.
+
+        Modifiers that are not range-restricted are ignored in this
+        calculation.
+        """
         start = action.frame_range[0]
         end = action.frame_range[1]
 
@@ -243,42 +258,25 @@ class ArmoryExporter:
                 if modifier.frame_end > end:
                     end = modifier.frame_end
 
-        return (int(start), int(end))
+        return int(start), int(end)
 
     @staticmethod
-    def export_animation_track(fcurve, frame_range, target):
+    def export_animation_track(fcurve: bpy.types.FCurve, frame_range: Tuple[int, int], target: str) -> Dict:
         """This function exports a single animation track."""
-        data_ttrack = {}
-
-        data_ttrack['target'] = target
-        data_ttrack['frames'] = []
-        data_ttrack['values'] = []
+        out_track = {'target': target, 'frames': [], 'values': []}
 
         start = frame_range[0]
         end = frame_range[1]
 
         for frame in range(start, end + 1):
-            data_ttrack['frames'].append(frame)
-            data_ttrack['values'].append(fcurve.evaluate(frame))
+            out_track['frames'].append(frame)
+            out_track['values'].append(fcurve.evaluate(frame))
 
-        return data_ttrack
+        return out_track
 
     def export_object_transform(self, bobject: bpy.types.Object, o):
-        # Internal target names for single FCurve data paths
-        target_names = {
-            "location": ("xloc", "yloc", "zloc"),
-            "rotation_euler": ("xrot", "yrot", "zrot"),
-            "rotation_quaternion": ("qwrot", "qxrot", "qyrot", "qzrot"),
-            "scale": ("xscl", "yscl", "zscl"),
-            "delta_location": ("dxloc", "dyloc", "dzloc"),
-            "delta_rotation_euler": ("dxrot", "dyrot", "dzrot"),
-            "delta_rotation_quaternion": ("dqwrot", "dqxrot", "dqyrot", "dqzrot"),
-            "delta_scale": ("dxscl", "dyscl", "dzscl"),
-        }
-
         # Static transform
-        o['transform'] = {}
-        o['transform']['values'] = ArmoryExporter.write_matrix(bobject.matrix_local)
+        o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
 
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":
@@ -287,59 +285,52 @@ class ArmoryExporter:
             if action is not None:
                 action_name = arm.utils.safestr(arm.utils.asset_name(action))
 
-                if 'object_actions' not in o:
-                    o['object_actions'] = []
-
                 fp = self.get_meshes_file_path('action_' + action_name, compressed=ArmoryExporter.compress_enabled)
                 assets.add(fp)
                 ext = '.lz4' if ArmoryExporter.compress_enabled else ''
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
-                o['object_actions'].append('action_' + action_name + ext)
 
-                oaction = {}
-                oaction['name'] = action.name
+                o.get('object_actions', []).append('action_' + action_name + ext)
 
-                # Export the animation tracks
-                oanim = {}
-                oaction['anim'] = oanim
+                frame_range = self.calculate_anim_frame_range(action)
+                out_anim = {
+                    'begin': frame_range[0],
+                    'end': frame_range[1],
+                    'tracks': []
+                }
 
-                frame_range = self.calculate_animation_length(action)
-                oanim['begin'] = frame_range[0]
-                oanim['end'] = frame_range[1]
-
-                oanim['tracks'] = []
-                self.export_pose_markers(oanim, action)
+                self.export_pose_markers(out_anim, action)
 
                 for fcurve in action.fcurves:
                     data_path = fcurve.data_path
 
                     try:
-                        data_ttrack = self.export_animation_track(fcurve, frame_range, target_names[data_path][fcurve.array_index])
-
+                        out_track = self.export_animation_track(fcurve, frame_range, FCURVE_TARGET_NAMES[data_path][fcurve.array_index])
                     except KeyError:
-                        if data_path not in target_names:
+                        if data_path not in FCURVE_TARGET_NAMES:
                             log.warn(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
                             continue
-
                         # Missing target entry for array_index or something else
                         else:
                             raise
 
-                    oanim['tracks'].append(data_ttrack)
+                    out_anim['tracks'].append(out_track)
 
                 if True:  # not action.arm_cached or not os.path.exists(fp):
                     wrd = bpy.data.worlds['Arm']
                     if wrd.arm_verbose_output:
                         print('Exporting object action ' + action_name)
-                    actionf = {}
-                    actionf['objects'] = []
-                    actionf['objects'].append(oaction)
-                    oaction['type'] = 'object'
-                    oaction['name'] = action_name
-                    oaction['data_ref'] = ''
-                    oaction['transform'] = None
-                    arm.utils.write_arm(fp, actionf)
+
+                    out_object_action = {
+                        'name': action_name,
+                        'anim': out_anim,
+                        'type': 'object',
+                        'data_ref': '',
+                        'transform': None
+                    }
+                    action_file = {'objects': [out_object_action]}
+                    arm.utils.write_arm(fp, action_file)
 
     def process_bone(self, bone: bpy.types.Bone) -> None:
         if ArmoryExporter.export_all_flag or bone.select:
@@ -393,8 +384,7 @@ class ArmoryExporter:
                             # force its type to be a bone
                             bone_ref[1]["objectType"] = NodeType.BONE
 
-    def export_bone_transform(self, armature, bone, scene, o, action):
-
+    def export_bone_transform(self, armature: bpy.types.Object, bone: bpy.types.Bone, o, action: bpy.types.Action):
         pose_bone = armature.pose.bones.get(bone.name)
         # if pose_bone is not None:
         #     transform = pose_bone.matrix.copy()
@@ -405,25 +395,20 @@ class ArmoryExporter:
         if bone.parent is not None:
             transform = (bone.parent.matrix_local.inverted_safe() @ transform)
 
-        o['transform'] = {}
-        o['transform']['values'] = ArmoryExporter.write_matrix(transform)
+        o['transform'] = {'values': ArmoryExporter.write_matrix(transform)}
 
-        curve_array = self.collect_bone_animation(armature, bone.name)
-        animation = len(curve_array) != 0
+        fcurve_list = self.collect_bone_animation(armature, bone.name)
 
-        if animation and pose_bone:
+        if fcurve_list and pose_bone:
             begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
 
-            o['anim'] = {}
-            tracko = {}
-            o['anim']['tracks'] = [tracko]
-            tracko['target'] = "transform"
-            tracko['frames'] = []
-            for i in range(begin_frame, end_frame + 1):
-                tracko['frames'].append(i - begin_frame)
+            out_track = {'target': "transform", 'frames': [], 'values': []}
+            o['anim'] = {'tracks': [out_track]}
 
-            tracko['values'] = []
-            self.bone_tracks.append((tracko['values'], pose_bone))
+            for i in range(begin_frame, end_frame + 1):
+                out_track['frames'].append(i - begin_frame)
+
+            self.bone_tracks.append((out_track['values'], pose_bone))
 
     def use_default_material(self, bobject: bpy.types.Object, o):
         if arm.utils.export_bone_data(bobject):
@@ -959,7 +944,7 @@ class ArmoryExporter:
                         for bone in bdata.bones:
                             if not bone.parent:
                                 boneo = {}
-                                self.export_bone(skelobj, bone, scene, boneo, action)
+                                self.export_bone(skelobj, bone, boneo, action)
                                 bones.append(boneo)
                         self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
