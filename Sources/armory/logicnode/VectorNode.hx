@@ -17,6 +17,7 @@ class VectorNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
+		value = new Vec4();
 		value.x = inputs[0].get();
 		value.y = inputs[1].get();
 		value.z = inputs[2].get();

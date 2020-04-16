@@ -18,7 +18,7 @@ class ArmLodListItem(bpy.types.PropertyGroup):
            name="Name",
            description="A name for this item",
            default="")
-           
+
     enabled_prop: BoolProperty(
            name="",
            description="A name for this item",
@@ -82,9 +82,9 @@ class ArmLodListDeleteItem(bpy.types.Operator):
         index = mdata.arm_lodlist_index
 
         n = lodlist[index].name
-        if n in context.scene.objects:
+        if n in context.scene.collection.objects:
             obj = bpy.data.objects[n]
-            context.scene.objects.unlink(obj)
+            context.scene.collection.objects.unlink(obj)
 
         lodlist.remove(index)
 
