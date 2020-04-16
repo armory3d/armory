@@ -2,6 +2,8 @@ import shutil
 import os
 import stat
 import bpy
+
+import arm.log as log
 import arm.utils
 
 assets = []
