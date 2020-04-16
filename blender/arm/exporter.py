@@ -291,7 +291,9 @@ class ArmoryExporter:
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
 
-                o.get('object_actions', []).append('action_' + action_name + ext)
+                if 'object_actions' not in o:
+                    o['object_actions'] = []
+                o['object_actions'].append('action_' + action_name + ext)
 
                 frame_range = self.calculate_anim_frame_range(action)
                 out_anim = {
