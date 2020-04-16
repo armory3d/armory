@@ -2374,13 +2374,12 @@ class ArmoryExporter:
 
         # Phys traits
         if phys_enabled:
-            for m in bobject.modifiers:
-                if m.type == 'CLOTH':
-                    self.add_softbody_mod(o, bobject, m, 0) # SoftShape.Cloth
-                elif m.type == 'SOFT_BODY':
-                    self.add_softbody_mod(o, bobject, m, 1) # SoftShape.Volume
-                elif m.type == 'HOOK':
-                    self.add_hook_mod(o, bobject, m.object.name, m.vertex_group)
+            for modifier in bobject.modifiers:
+                if modifier.type == 'CLOTH' or modifier.type == 'SOFT_BODY':
+                    self.add_softbody_mod(o, bobject, modifier)
+                elif modifier.type == 'HOOK':
+                    self.add_hook_mod(o, bobject, modifier.object.name, modifier.vertex_group)
+
             # Rigid body constraint
             rbc = bobject.rigid_body_constraint
             if rbc is not None and rbc.enabled:
@@ -2619,29 +2618,41 @@ class ArmoryExporter:
                 pass
             assets.add(file_theme)
 
-    def add_softbody_mod(self, o, bobject: bpy.types.Object, soft_mod, soft_type):
+    @staticmethod
+    def add_softbody_mod(o, bobject: bpy.types.Object, modifier: Union[bpy.types.ClothModifier, bpy.types.SoftBodyModifier]):
+        """Adds a softbody trait to the given object based on the given
+        softbody/cloth modifier.
+        """
         ArmoryExporter.export_physics = True
-        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         assets.add_khafile_def('arm_physics_soft')
-        trait = {}
-        trait['type'] = 'Script'
-        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.SoftBody'
+
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
+        out_trait = {'type': 'Script', 'class_name': 'armory.trait.physics.' + phys_pkg + '.SoftBody'}
+        # ClothModifier
+        if modifier.type == 'CLOTH':
+            bend = modifier.settings.bending_stiffness
+            soft_type = 0
+        # SoftBodyModifier
+        elif modifier.type == 'SOFT_BODY':
+            bend = (modifier.settings.bend + 1.0) * 10
+            soft_type = 1
+        else:
+            # Wrong modifier type
+            return
+
+        out_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
+        o['traits'].append(out_trait)
+
         if soft_type == 0:
-            bend = soft_mod.settings.bending_stiffness
-        elif soft_type == 1:
-            bend = (soft_mod.settings.bend + 1.0) * 10
-        trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
-        o['traits'].append(trait)
-        if soft_type == 0:
-            self.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
+            ArmoryExporter.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
     @staticmethod
     def add_hook_mod(o, bobject: bpy.types.Object, target_name, group_name):
         ArmoryExporter.export_physics = True
+
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
-        trait = {}
-        trait['type'] = 'Script'
-        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsHook'
+        out_trait = {'type': 'Script', 'class_name': 'armory.trait.physics.' + phys_pkg + '.PhysicsHook'}
+
         verts = []
         if group_name != '':
             group = bobject.vertex_groups[group_name].index
@@ -2651,8 +2662,9 @@ class ArmoryExporter:
                         verts.append(v.co.x)
                         verts.append(v.co.y)
                         verts.append(v.co.z)
-        trait['parameters'] = ["'" + target_name + "'", str(verts)]
-        o['traits'].append(trait)
+
+        out_trait['parameters'] = [f"'{target_name}'", str(verts)]
+        o['traits'].append(out_trait)
 
     @staticmethod
     def add_rigidbody_constraint(o, rbc):
