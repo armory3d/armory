@@ -2833,13 +2833,13 @@ class ArmoryExporter:
         o['probe'] = po
 
     @staticmethod
-    def mod_equal(mod1: bpy.types.Modifier, mod2: bpy.types.Modifier):
+    def mod_equal(mod1: bpy.types.Modifier, mod2: bpy.types.Modifier) -> bool:
         """Compares whether the given modifiers are equal."""
         # https://blender.stackexchange.com/questions/70629
         return all([getattr(mod1, prop, True) == getattr(mod2, prop, False) for prop in mod1.bl_rna.properties.keys()])
 
     @staticmethod
-    def mod_equal_stack(obj1, obj2):
+    def mod_equal_stack(obj1: bpy.types.Object, obj2: bpy.types.Object) -> bool:
         """Returns `True` if the given objects have the same modifiers."""
         if len(obj1.modifiers) == 0 and len(obj2.modifiers) == 0:
             return True
