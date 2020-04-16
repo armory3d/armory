@@ -2567,6 +2567,8 @@ class ArmoryExporter:
         wrd = bpy.data.worlds['Arm']
 
         if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
+            if 'traits' not in self.output:
+                self.output['traits'] = []
             phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
 
             out_trait = {
@@ -2578,24 +2580,30 @@ class ArmoryExporter:
             if rbw is not None and rbw.enabled:
                 out_trait['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
 
-            self.output.get('traits', None).append(out_trait)
+            self.output['traits'].append(out_trait)
 
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
+            if 'traits' not in self.output:
+                self.output['traits'] = []
             out_trait = {'type': 'Script', 'class_name': 'armory.trait.navigation.Navigation'}
-            self.output.get('traits', None).append(out_trait)
+            self.output['traits'].append(out_trait)
 
         if wrd.arm_debug_console:
+            if 'traits' not in self.output:
+                self.output['traits'] = []
             ArmoryExporter.export_ui = True
             out_trait = {
                 'type': 'Script',
                 'class_name': 'armory.trait.internal.DebugConsole',
                 'parameters': [str(arm.utils.get_ui_scale())]
             }
-            self.output.get('traits', None).append(out_trait)
+            self.output['traits'].append(out_trait)
 
         if wrd.arm_live_patch:
+            if 'traits' not in self.output:
+                self.output['traits'] = []
             out_trait = {'type': 'Script', 'class_name': 'armory.trait.internal.LivePatch'}
-            self.output.get('traits', None).append(out_trait)
+            self.output['traits'].append(out_trait)
 
         if len(self.scene.arm_traitlist) > 0:
             if 'traits' not in self.output:
