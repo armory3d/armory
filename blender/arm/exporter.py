@@ -224,67 +224,6 @@ class ArmoryExporter:
             oanim['marker_frames'].append(int(pos_marker.frame))
             oanim['marker_names'].append(pos_marker.name)
 
-    def export_object_sampled_animation(self, bobject: bpy.types.Object,scene: bpy.types.Scene, o: Dict) -> None:
-        """Exports animation as full 4x4 matrices for each frame"""
-        animation_flag = False
-
-        animation_flag = bobject.animation_data is not None and bobject.animation_data.action is not None and bobject.type != 'ARMATURE'
-
-        # Font out
-        if animation_flag:
-            if 'object_actions' not in o:
-                o['object_actions'] = []
-
-            action = bobject.animation_data.action
-            aname = arm.utils.safestr(arm.utils.asset_name(action))
-            fp = self.get_meshes_file_path('action_' + aname, compressed=ArmoryExporter.compress_enabled)
-            assets.add(fp)
-            ext = '.lz4' if ArmoryExporter.compress_enabled else ''
-            if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
-                ext = '.json'
-            o['object_actions'].append('action_' + aname + ext)
-
-            oaction = {}
-            oaction['sampled'] = True
-            oaction['name'] = action.name
-            oanim = {}
-            oaction['anim'] = oanim
-
-            tracko = {}
-            tracko['target'] = "transform"
-
-            tracko['frames'] = []
-
-            begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
-            end_frame += 1
-
-            for i in range(begin_frame, end_frame):
-                tracko['frames'].append(int(i - begin_frame))
-
-            tracko['frames'].append(int(end_frame))
-
-            tracko['values'] = []
-
-            for i in range(begin_frame, end_frame):
-                scene.frame_set(i)
-                tracko['values'] += ArmoryExporter.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
-
-            oanim['tracks'] = [tracko]
-            self.export_pose_markers(oanim, action)
-
-            if True:  # not action.arm_cached or not os.path.exists(fp):
-                wrd = bpy.data.worlds['Arm']
-                if wrd.arm_verbose_output:
-                    print('Exporting object action ' + aname)
-                actionf = {}
-                actionf['objects'] = []
-                actionf['objects'].append(oaction)
-                oaction['type'] = 'object'
-                oaction['name'] = aname
-                oaction['data_ref'] = ''
-                oaction['transform'] = None
-                arm.utils.write_arm(fp, actionf)
-
     @staticmethod
     def calculate_animation_length(action):
         """Calculates the length of the given action."""
