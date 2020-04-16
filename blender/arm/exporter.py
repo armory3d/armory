@@ -2137,48 +2137,7 @@ class ArmoryExporter:
         if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
             self.create_default_camera()
 
-        # Scene traits
-        if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            x = {}
-            x['type'] = 'Script'
-            phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
-            x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
-            rbw = self.scene.rigidbody_world
-            if rbw is not None and rbw.enabled:
-                x['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
-            self.output['traits'].append(x)
-        if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.navigation.Navigation'
-            self.output['traits'].append(x)
-        if wrd.arm_debug_console:
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            ArmoryExporter.export_ui = True
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.DebugConsole'
-            x['parameters'] = [str(arm.utils.get_ui_scale())]
-            self.output['traits'].append(x)
-        if wrd.arm_live_patch:
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.LivePatch'
-            self.output['traits'].append(x)
-        if len(self.scene.arm_traitlist) > 0:
-            if not 'traits' in self.output:
-                self.output['traits'] = []
-            self.export_traits(self.scene, self.output)
-        if 'traits' in self.output:
-            for x in self.output['traits']:
-                ArmoryExporter.import_traits.append(x['class_name'])
+        self.export_scene_traits()
 
         self.export_canvas_themes()
 
@@ -2601,6 +2560,52 @@ class ArmoryExporter:
                         out_trait['props'].append(value)
 
             o['traits'].append(out_trait)
+
+    def export_scene_traits(self) -> None:
+        """Exports the traits of the scene and adds some internal traits
+        to the scene depending on the exporter settings.
+        """
+        wrd = bpy.data.worlds['Arm']
+
+        if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
+            phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
+
+            out_trait = {
+                'type': 'Script',
+                'class_name': 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
+            }
+
+            rbw = self.scene.rigidbody_world
+            if rbw is not None and rbw.enabled:
+                out_trait['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
+
+            self.output.get('traits', None).append(out_trait)
+
+        if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
+            out_trait = {'type': 'Script', 'class_name': 'armory.trait.navigation.Navigation'}
+            self.output.get('traits', None).append(out_trait)
+
+        if wrd.arm_debug_console:
+            ArmoryExporter.export_ui = True
+            out_trait = {
+                'type': 'Script',
+                'class_name': 'armory.trait.internal.DebugConsole',
+                'parameters': [str(arm.utils.get_ui_scale())]
+            }
+            self.output.get('traits', None).append(out_trait)
+
+        if wrd.arm_live_patch:
+            out_trait = {'type': 'Script', 'class_name': 'armory.trait.internal.LivePatch'}
+            self.output.get('traits', None).append(out_trait)
+
+        if len(self.scene.arm_traitlist) > 0:
+            if 'traits' not in self.output:
+                self.output['traits'] = []
+            self.export_traits(self.scene, self.output)
+
+        if 'traits' in self.output:
+            for out_trait in self.output['traits']:
+                ArmoryExporter.import_traits.append(out_trait['class_name'])
 
     @staticmethod
     def export_canvas_themes():
