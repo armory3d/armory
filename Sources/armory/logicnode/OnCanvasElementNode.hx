@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import zui.Canvas.Anchor;
 import iron.Scene;
 import armory.trait.internal.CanvasScript;
 
@@ -45,12 +46,38 @@ class OnCanvasElementNode extends LogicNode {
 			
 			var x1 = canvas.getElement(element).x;
 			var y1 = canvas.getElement(element).y;
+			var anchor = canvas.getElement(element).anchor;
+			var cx = canvas.getCanvas().width;
+			var cy = canvas.getCanvas().height;
+			var mouseX = mouse.x;
+			var mouseY = mouse.y;
 			var x2 = x1 + canvas.getElement(element).width;
 			var y2 = y1 + canvas.getElement(element).height;
 
-			var mouseX = mouse.x;
-			var mouseY = mouse.y;
-
+			switch(anchor)
+			{
+				case Top:
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+				case TopRight:
+					mouseX -= cx - canvas.getElement(element).width;
+				case CenterLeft:
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				case Anchor.Center:
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				case CenterRight:
+					mouseX -= cx - canvas.getElement(element).width;
+					mouseY -= cy/2 - canvas.getElement(element).height/2;
+				case BottomLeft:
+					mouseY -= cy - canvas.getElement(element).height;
+				case Bottom:
+					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseY -= cy - canvas.getElement(element).height;
+				case BottomRight:
+					mouseX -= cx - canvas.getElement(element).width;
+					mouseY -= cy - canvas.getElement(element).height;
+			}
+			
 			if((mouseX >= x1) && (mouseX <= x2))
 			{
 				if((mouseY >= y1) && (mouseY <= y2))
