@@ -219,7 +219,7 @@ class Shader:
 
         Parameters
         ----------
-        type_str: : str
+        type_str: str
             The name of the type, like 'float' or 'vec3'. If the
             constant is an array, there is no need to add `[]` to the
             type
