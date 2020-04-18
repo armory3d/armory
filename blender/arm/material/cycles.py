@@ -1519,28 +1519,28 @@ def is_parsed(s):
     global parsed
     return s in parsed
 
-def res_var_name(node, socket):
+def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
-def write_result(l):
+def write_result(link: bpy.types.NodeLink) -> Optional[str]:
     global parsed
-    res_var = res_var_name(l.from_node, l.from_socket)
+    res_var = res_var_name(link.from_node, link.from_socket)
     # Unparsed node
     if not is_parsed(res_var):
         parsed[res_var] = True
-        st = l.from_socket.type
+        st = link.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            res = parse_vector(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_vector(link.from_node, link.from_socket)
+            if res is None:
                 return None
             curshader.write('vec3 {0} = {1};'.format(res_var, res))
         elif st == 'VALUE':
-            res = parse_value(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_value(link.from_node, link.from_socket)
+            if res is None:
                 return None
             curshader.write('float {0} = {1};'.format(res_var, res))
     # Normal map already parsed, return
-    elif l.from_node.type == 'NORMAL_MAP':
+    elif link.from_node.type == 'NORMAL_MAP':
         return None
     return res_var
 
