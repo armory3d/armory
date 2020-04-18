@@ -27,6 +27,8 @@ import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
 
+from typing import Optional
+
 emission_found = False
 particle_info = None # Particle info export
 
