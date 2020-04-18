@@ -1538,7 +1538,10 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
                 return None
-            curshader.write('float {0} = {1};'.format(res_var, res))
+            if link.from_node.type == "VALUE":
+                curshader.add_const('float', res_var, res)
+            else:
+                curshader.write('float {0} = {1};'.format(res_var, res))
     # Normal map already parsed, return
     elif link.from_node.type == 'NORMAL_MAP':
         return None
