@@ -755,34 +755,49 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         # Pass constant
         return to_vec3([rgb[0], rgb[1], rgb[2]])
 
-    elif node.type == 'VALTORGB': # ColorRamp
-        fac = parse_value_input(node.inputs[0])
+    # ColorRamp
+    elif node.type == 'VALTORGB':
+        input_fac: bpy.types.NodeSocket = node.inputs[0]
+
+        fac: str = parse_value_input(input_fac) if input_fac.is_linked else to_vec1(input_fac.default_value)
         interp = node.color_ramp.interpolation
         elems = node.color_ramp.elements
+
         if len(elems) == 1:
             return to_vec3(elems[0].color)
-        # Write cols array
-        cols_var = node_name(node.name) + '_cols'
-        curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems))) # TODO: Make const
-        for i in range(0, len(elems)):
-            curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
-        # Get index
+
+        # Write color array
+        # The last entry is included twice so that the interpolation
+        # between indices works (no out of bounds error)
+        cols_var = node_name(node.name).upper() + '_COLS'
+        cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+        cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
+        curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+
         fac_var = node_name(node.name) + '_fac'
-        curshader.write('float {0} = {1};'.format(fac_var, fac))
-        index = '0'
-        for i in range(1, len(elems)):
-            index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
+        curshader.write(f'float {fac_var} = {fac};')
+
+        # Get index of the nearest left element relative to the factor
+        index = '0 + '
+        index += ' + '.join([f'(({fac_var} > {elems[i].position}) ? 1 : 0)' for i in range(1, len(elems))])
+
         # Write index
         index_var = node_name(node.name) + '_i'
-        curshader.write('int {0} = {1};'.format(index_var, index))
+        curshader.write(f'int {index_var} = {index};')
+
         if interp == 'CONSTANT':
-            return '{0}[{1}]'.format(cols_var, index_var)
-        else: # Linear
-            # Write facs array
-            facs_var = node_name(node.name) + '_facs'
-            curshader.write('float {0}[{1}];'.format(facs_var, len(elems))) # TODO: Make const
-            for i in range(0, len(elems)):
-                curshader.write('{0}[{1}] = {2};'.format(facs_var, i, elems[i].position))
+            return f'{cols_var}[{index_var}]'
+
+        # Linear interpolation
+        else:
+            # Write factor array
+            facs_var = node_name(node.name).upper() + '_FACS'
+            facs_entries = ', '.join(str(elem.position) for elem in elems)
+            # Add one more entry at the rightmost position so that the
+            # interpolation between indices works (no out of bounds error)
+            facs_entries += ', 1.0'
+            curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
+
             # Mix color
             # float f = (pos - start) * (1.0 / (finish - start))
             return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
