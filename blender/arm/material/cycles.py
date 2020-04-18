@@ -1060,18 +1060,20 @@ def parse_normal_map_color_input(inp, strength_input=None):
         con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
-def parse_value_input(inp):
+def parse_value_input(inp) -> str:
     if inp.is_linked:
-        l = inp.links[0]
+        link = inp.links[0]
 
-        if l.from_node.type == 'REROUTE':
-            return parse_value_input(l.from_node.inputs[0])
+        if link.from_node.type == 'REROUTE':
+            return parse_value_input(link.from_node.inputs[0])
 
-        res_var = write_result(l)
-        st = l.from_socket.type
-        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            return '{0}.x'.format(res_var)
-        else: # VALUE
+        res_var = write_result(link)
+        socket_type = link.from_socket.type
+        if socket_type == 'RGB' or socket_type == 'RGBA' or socket_type == 'VECTOR':
+            # RGB to BW
+            return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+        # VALUE
+        else:
             return res_var
     else:
         if mat_batch() and inp.is_uniform:
