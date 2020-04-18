@@ -16,6 +16,7 @@
 #
 import os
 import shutil
+from typing import Optional
 
 import bpy
 from mathutils import Euler, Vector
@@ -26,11 +27,11 @@ import arm.make_state
 import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
-
-from typing import Optional
+from arm.material.shader import Shader
 
 emission_found = False
 particle_info = None # Particle info export
+curshader: Shader
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -66,14 +67,15 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     emission_found = False
-    particle_info = {}
-    particle_info['index'] = False
-    particle_info['age'] = False
-    particle_info['lifetime'] = False
-    particle_info['location'] = False
-    particle_info['size'] = False
-    particle_info['velocity'] = False
-    particle_info['angular_velocity'] = False
+    particle_info = {
+        'index': False,
+        'age': False,
+        'lifetime': False,
+        'location': False,
+        'size': False,
+        'velocity': False,
+        'angular_velocity': False
+    }
     sample_bump = False
     sample_bump_res = ''
     procedurals_written = False
@@ -357,7 +359,7 @@ def parse_displacement_input(inp):
     else:
         return None
 
-def parse_vector_input(inp):
+def parse_vector_input(inp) -> str:
     if inp.is_linked:
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
@@ -1053,7 +1055,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
     global frag
     if basecol_only:
         return
-    if inp.is_linked == False:
+    if not inp.is_linked:
         return
     if normal_parsed:
         return
@@ -1067,7 +1069,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        if strength_input != None:
+        if strength_input is not None:
             strength = parse_value_input(strength_input)
             if strength != '1.0':
                 frag.write('n.xy *= {0};'.format(strength))
