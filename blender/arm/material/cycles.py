@@ -16,6 +16,7 @@
 #
 import os
 import shutil
+from typing import Optional
 
 import bpy
 from mathutils import Euler, Vector
@@ -26,9 +27,11 @@ import arm.make_state
 import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
+from arm.material.shader import Shader
 
 emission_found = False
 particle_info = None # Particle info export
+curshader: Shader
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -64,14 +67,15 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     emission_found = False
-    particle_info = {}
-    particle_info['index'] = False
-    particle_info['age'] = False
-    particle_info['lifetime'] = False
-    particle_info['location'] = False
-    particle_info['size'] = False
-    particle_info['velocity'] = False
-    particle_info['angular_velocity'] = False
+    particle_info = {
+        'index': False,
+        'age': False,
+        'lifetime': False,
+        'location': False,
+        'size': False,
+        'velocity': False,
+        'angular_velocity': False
+    }
     sample_bump = False
     sample_bump_res = ''
     procedurals_written = False
@@ -355,7 +359,7 @@ def parse_displacement_input(inp):
     else:
         return None
 
-def parse_vector_input(inp):
+def parse_vector_input(inp) -> str:
     if inp.is_linked:
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
@@ -753,34 +757,49 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         # Pass constant
         return to_vec3([rgb[0], rgb[1], rgb[2]])
 
-    elif node.type == 'VALTORGB': # ColorRamp
-        fac = parse_value_input(node.inputs[0])
+    # ColorRamp
+    elif node.type == 'VALTORGB':
+        input_fac: bpy.types.NodeSocket = node.inputs[0]
+
+        fac: str = parse_value_input(input_fac) if input_fac.is_linked else to_vec1(input_fac.default_value)
         interp = node.color_ramp.interpolation
         elems = node.color_ramp.elements
+
         if len(elems) == 1:
             return to_vec3(elems[0].color)
-        # Write cols array
-        cols_var = node_name(node.name) + '_cols'
-        curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems))) # TODO: Make const
-        for i in range(0, len(elems)):
-            curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
-        # Get index
+
+        # Write color array
+        # The last entry is included twice so that the interpolation
+        # between indices works (no out of bounds error)
+        cols_var = node_name(node.name).upper() + '_COLS'
+        cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+        cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
+        curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+
         fac_var = node_name(node.name) + '_fac'
-        curshader.write('float {0} = {1};'.format(fac_var, fac))
-        index = '0'
-        for i in range(1, len(elems)):
-            index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
+        curshader.write(f'float {fac_var} = {fac};')
+
+        # Get index of the nearest left element relative to the factor
+        index = '0 + '
+        index += ' + '.join([f'(({fac_var} > {elems[i].position}) ? 1 : 0)' for i in range(1, len(elems))])
+
         # Write index
         index_var = node_name(node.name) + '_i'
-        curshader.write('int {0} = {1};'.format(index_var, index))
+        curshader.write(f'int {index_var} = {index};')
+
         if interp == 'CONSTANT':
-            return '{0}[{1}]'.format(cols_var, index_var)
-        else: # Linear
-            # Write facs array
-            facs_var = node_name(node.name) + '_facs'
-            curshader.write('float {0}[{1}];'.format(facs_var, len(elems))) # TODO: Make const
-            for i in range(0, len(elems)):
-                curshader.write('{0}[{1}] = {2};'.format(facs_var, i, elems[i].position))
+            return f'{cols_var}[{index_var}]'
+
+        # Linear interpolation
+        else:
+            # Write factor array
+            facs_var = node_name(node.name).upper() + '_FACS'
+            facs_entries = ', '.join(str(elem.position) for elem in elems)
+            # Add one more entry at the rightmost position so that the
+            # interpolation between indices works (no out of bounds error)
+            facs_entries += ', 1.0'
+            curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
+
             # Mix color
             # float f = (pos - start) * (1.0 / (finish - start))
             return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
@@ -1036,7 +1055,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
     global frag
     if basecol_only:
         return
-    if inp.is_linked == False:
+    if not inp.is_linked:
         return
     if normal_parsed:
         return
@@ -1050,7 +1069,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        if strength_input != None:
+        if strength_input is not None:
             strength = parse_value_input(strength_input)
             if strength != '1.0':
                 frag.write('n.xy *= {0};'.format(strength))
@@ -1058,18 +1077,20 @@ def parse_normal_map_color_input(inp, strength_input=None):
         con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
-def parse_value_input(inp):
+def parse_value_input(inp) -> str:
     if inp.is_linked:
-        l = inp.links[0]
+        link = inp.links[0]
 
-        if l.from_node.type == 'REROUTE':
-            return parse_value_input(l.from_node.inputs[0])
+        if link.from_node.type == 'REROUTE':
+            return parse_value_input(link.from_node.inputs[0])
 
-        res_var = write_result(l)
-        st = l.from_socket.type
-        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            return '{0}.x'.format(res_var)
-        else: # VALUE
+        res_var = write_result(link)
+        socket_type = link.from_socket.type
+        if socket_type == 'RGB' or socket_type == 'RGBA' or socket_type == 'VECTOR':
+            # RGB to BW
+            return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+        # VALUE
+        else:
             return res_var
     else:
         if mat_batch() and inp.is_uniform:
@@ -1519,28 +1540,31 @@ def is_parsed(s):
     global parsed
     return s in parsed
 
-def res_var_name(node, socket):
+def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
-def write_result(l):
+def write_result(link: bpy.types.NodeLink) -> Optional[str]:
     global parsed
-    res_var = res_var_name(l.from_node, l.from_socket)
+    res_var = res_var_name(link.from_node, link.from_socket)
     # Unparsed node
     if not is_parsed(res_var):
         parsed[res_var] = True
-        st = l.from_socket.type
+        st = link.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            res = parse_vector(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_vector(link.from_node, link.from_socket)
+            if res is None:
                 return None
             curshader.write('vec3 {0} = {1};'.format(res_var, res))
         elif st == 'VALUE':
-            res = parse_value(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_value(link.from_node, link.from_socket)
+            if res is None:
                 return None
-            curshader.write('float {0} = {1};'.format(res_var, res))
+            if link.from_node.type == "VALUE":
+                curshader.add_const('float', res_var, res)
+            else:
+                curshader.write('float {0} = {1};'.format(res_var, res))
     # Normal map already parsed, return
-    elif l.from_node.type == 'NORMAL_MAP':
+    elif link.from_node.type == 'NORMAL_MAP':
         return None
     return res_var
 
