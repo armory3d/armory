@@ -15,11 +15,11 @@ class SetRotationNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
-		if (object == null) {
-			return;
-		}
+		if (object == null) return;
 		var vec: Vec4 = inputs[2].get();
+		if (vec == null) return;
 		var w: Float = inputs[3].get();
+
 		switch (property0) {
 			case "Euler Angles":
 				object.transform.rot.fromEuler(vec.x, vec.y, vec.z);
