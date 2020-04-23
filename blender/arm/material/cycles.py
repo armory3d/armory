@@ -1559,7 +1559,7 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
                 return None
-            if link.from_node.type == "VALUE":
+            if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
                 curshader.add_const('float', res_var, res)
             else:
                 curshader.write('float {0} = {1};'.format(res_var, res))
