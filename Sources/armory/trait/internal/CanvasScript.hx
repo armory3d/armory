@@ -105,6 +105,14 @@ class CanvasScript extends Trait {
 	}
 
 	/**
+	 * Set UI scale factor.
+	 * @param factor Scale factor.
+	 */
+	 public function setUiScale(factor:Float) {
+		cui.setScale(factor);
+	}
+
+	/**
 	 * Set visibility of canvas
 	 * @param visible Whether canvas should be visible or not
 	*/
