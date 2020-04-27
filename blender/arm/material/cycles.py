@@ -979,18 +979,19 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         out = calc_location(out) if node.vector_type == 'TEXTURE' else calc_scale(out)
 
         if input_rotation.is_linked or input_rotation.default_value != Euler((0, 0, 0)):
+            var_name = node_name(node.name) + "_rotation"
             if node.vector_type == 'TEXTURE':
-                curshader.write(f'mat3 rotationX = mat3(1.0, 0.0, 0.0, 0.0, cos({rotation}.x), sin({rotation}.x), 0.0, -sin({rotation}.x), cos({rotation}.x));')
-                curshader.write(f'mat3 rotationY = mat3(cos({rotation}.y), 0.0, -sin({rotation}.y), 0.0, 1.0, 0.0, sin({rotation}.y), 0.0, cos({rotation}.y));')
-                curshader.write(f'mat3 rotationZ = mat3(cos({rotation}.z), sin({rotation}.z), 0.0, -sin({rotation}.z), cos({rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+                curshader.write(f'mat3 {var_name}X = mat3(1.0, 0.0, 0.0, 0.0, cos({rotation}.x), sin({rotation}.x), 0.0, -sin({rotation}.x), cos({rotation}.x));')
+                curshader.write(f'mat3 {var_name}Y = mat3(cos({rotation}.y), 0.0, -sin({rotation}.y), 0.0, 1.0, 0.0, sin({rotation}.y), 0.0, cos({rotation}.y));')
+                curshader.write(f'mat3 {var_name}Z = mat3(cos({rotation}.z), sin({rotation}.z), 0.0, -sin({rotation}.z), cos({rotation}.z), 0.0, 0.0, 0.0, 1.0);')
             else:
                 # A little bit redundant, but faster than 12 more multiplications to make it work dynamically
-                curshader.write(f'mat3 rotationX = mat3(1.0, 0.0, 0.0, 0.0, cos(-{rotation}.x), sin(-{rotation}.x), 0.0, -sin(-{rotation}.x), cos(-{rotation}.x));')
-                curshader.write(f'mat3 rotationY = mat3(cos(-{rotation}.y), 0.0, -sin(-{rotation}.y), 0.0, 1.0, 0.0, sin(-{rotation}.y), 0.0, cos(-{rotation}.y));')
-                curshader.write(f'mat3 rotationZ = mat3(cos(-{rotation}.z), sin(-{rotation}.z), 0.0, -sin(-{rotation}.z), cos(-{rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+                curshader.write(f'mat3 {var_name}X = mat3(1.0, 0.0, 0.0, 0.0, cos(-{rotation}.x), sin(-{rotation}.x), 0.0, -sin(-{rotation}.x), cos(-{rotation}.x));')
+                curshader.write(f'mat3 {var_name}Y = mat3(cos(-{rotation}.y), 0.0, -sin(-{rotation}.y), 0.0, 1.0, 0.0, sin(-{rotation}.y), 0.0, cos(-{rotation}.y));')
+                curshader.write(f'mat3 {var_name}Z = mat3(cos(-{rotation}.z), sin(-{rotation}.z), 0.0, -sin(-{rotation}.z), cos(-{rotation}.z), 0.0, 0.0, 0.0, 1.0);')
 
             # XYZ-order euler rotation
-            out = f'{out} * rotationX * rotationY * rotationZ'
+            out = f'{out} * {var_name}X * {var_name}Y * {var_name}Z'
 
         out = calc_scale(out) if node.vector_type == 'TEXTURE' else calc_location(out)
 
