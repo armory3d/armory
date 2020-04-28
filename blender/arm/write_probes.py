@@ -228,8 +228,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
 
     return mip_count
 
-# Parse sh coefs produced by cmft into json array
 def sh_to_json(sh_file):
+    """Parse sh coefs produced by cmft into json array"""
     with open(sh_file + '.c') as f:
         sh_lines = f.read().splitlines()
     band0_line = sh_lines[5]
@@ -240,10 +240,9 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
-    
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
-    ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else '.json'
+
+    sh_json = {'irradiance': irradiance_floats}
+    ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else ''
     arm.utils.write_arm(sh_file + ext, sh_json)
     
     # Clean up .c
