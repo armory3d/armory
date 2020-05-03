@@ -452,6 +452,12 @@ def write_compiledglsl(defs, make_variants):
             if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
+
+        f.write("""#if defined(HLSL) || defined(METAL)
+#define _InvY
+#endif
+""")
+
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
