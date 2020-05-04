@@ -62,6 +62,13 @@ class RenderPathForward {
 
 		path = _path;
 
+		#if kha_metal
+		{
+			path.loadShader("shader_datas/clear_pass/clear_pass");
+			path.clearShader = "shader_datas/clear_pass/clear_pass";
+		}
+		#end
+
 		#if (rp_background == "World")
 		{
 			path.loadShader("shader_datas/world_pass/world_pass");

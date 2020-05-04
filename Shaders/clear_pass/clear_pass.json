@@ -1,0 +1,14 @@
+{
+	"contexts": [
+		{
+			"name": "clear_pass",
+			"depth_write": true,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "clear_pass.frag.glsl"
+		}
+	]
+}
