@@ -127,8 +127,7 @@ def build():
         assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(arm.utils.get_cascade_size(rpdat)))
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
-    gapi = state.export_gapi
-    if gapi == 'metal':
+    if arm.utils.get_gapi() == 'metal':
         assets.add_shader_pass('clear_pass')
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
