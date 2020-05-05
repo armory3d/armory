@@ -150,13 +150,9 @@ void main() {
 
 #ifdef _EnvSky
 	vec3 n = normalize(normal);
-	float phi = acos(n.z);
-	float theta = atan(-n.y, n.x) + PI;
-	
 	float cos_theta = clamp(n.z, 0.0, 1.0);
 	float cos_gamma = dot(n, hosekSunDirection);
 	float gamma_val = acos(cos_gamma);
-
 	fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
 #endif
 
