@@ -46,6 +46,9 @@ def make(context_id, rpasses):
     if '_LDR' not in wrd.world_defs:
         con['color_attachment'] = 'RGBA64'
 
+    if rid == 'Deferred':
+        con['color_attachment_count'] = 3 if '_gbuffer2' in wrd.world_defs else 2
+
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 

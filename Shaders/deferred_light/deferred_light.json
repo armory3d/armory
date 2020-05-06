@@ -240,7 +240,8 @@
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",
-			"fragment_shader": "deferred_light.frag.glsl"
+			"fragment_shader": "deferred_light.frag.glsl",
+			"color_attachment": "RGBA64"
 		}
 	]
 }
