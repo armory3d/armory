@@ -16,11 +16,12 @@ write_material_attribs_post = None
 write_vertex_attribs = None
 
 def make(context_id, rpasses):
+    wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
 
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
-    
+
     # Blend context
     mat = mat_state.material
     blend = mat.arm_blending
@@ -41,6 +42,9 @@ def make(context_id, rpasses):
     elif dprepass: # Depth prepass was performed
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
+
+    if '_LDR' not in wrd.world_defs:
+        con['color_attachment'] = 'RGBA64'
 
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
@@ -243,7 +247,7 @@ def make_deferred(con_mesh, rpasses):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    
+
     if '_Emission' in wrd.world_defs or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.write('uint matid = 0;')
         if '_Emission' in wrd.world_defs:
@@ -393,7 +397,7 @@ def make_forward_mobile(con_mesh):
             if '_Spot' in wrd.world_defs:
                 vert.add_out('vec4 spotPosition')
                 vert.add_uniform('mat4 LWVPSpot0', link='_biasLightWorldViewProjectionMatrixSpot0')
-                vert.write('spotPosition = LWVPSpot0 * spos;')  
+                vert.write('spotPosition = LWVPSpot0 * spos;')
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]')
                 frag.write('if (spotPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = spotPosition.xyz / spotPosition.w;')
@@ -469,7 +473,7 @@ def make_forward_solid(con_mesh):
     parse_opacity = (blend and is_transluc) or arm_discard
     if parse_opacity:
         frag.write('float opacity;')
-    
+
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     if arm_discard:

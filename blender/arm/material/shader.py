@@ -65,6 +65,10 @@ class ShaderContext:
             self.data['color_writes_blue'] = props['color_writes_blue']
         if 'color_writes_alpha' in props:
             self.data['color_writes_alpha'] = props['color_writes_alpha']
+        if 'color_attachment_count' in props:
+            self.data['color_attachment_count'] = props['color_attachment_count']
+        if 'color_attachment' in props:
+            self.data['color_attachment'] = props['color_attachment']
 
         self.data['texture_units'] = []
         self.tunits = self.data['texture_units']

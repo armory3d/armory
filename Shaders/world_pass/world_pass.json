@@ -108,7 +108,8 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "world_pass.vert.glsl",
-			"fragment_shader": "world_pass.frag.glsl"
+			"fragment_shader": "world_pass.frag.glsl",
+			"color_attachment": "_HDR"
 		}
 	]
 }
