@@ -9,7 +9,7 @@
 			"texture_params": [],
 			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "clear_pass.frag.glsl",
-			"color_attachment": "_HDR"
+			"color_attachments": ["_HDR"]
 		}
 	]
 }

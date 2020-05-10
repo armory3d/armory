@@ -34,17 +34,17 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
         if con['tesseval_shader'] not in asset:
             asset.append(con['tesseval_shader'])
 
-    if 'color_attachment' in c:
-        con['color_attachment'] = c['color_attachment']
-        if con['color_attachment'] == '_HDR':
-            con['color_attachment'] = 'RGBA32' if '_LDR' in defs else 'RGBA64'
+    if 'color_attachments' in c:
+        con['color_attachments'] = c['color_attachments']
+        for i in range(len(con['color_attachments'])):
+            if con['color_attachments'][i] == '_HDR':
+                con['color_attachments'][i] = 'RGBA32' if '_LDR' in defs else 'RGBA64'
 
     # Params
     params = ['depth_write', 'compare_mode', 'cull_mode', \
         'blend_source', 'blend_destination', 'blend_operation', \
         'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation' \
         'color_writes_red', 'color_writes_green', 'color_writes_blue', 'color_writes_alpha', \
-        'color_attachment_count', \
         'conservative_raster']
 
     for p in params:

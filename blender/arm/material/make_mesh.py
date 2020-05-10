@@ -43,11 +43,10 @@ def make(context_id, rpasses):
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
 
-    if '_LDR' not in wrd.world_defs:
-        con['color_attachment'] = 'RGBA64'
-
-    if rid == 'Deferred':
-        con['color_attachment_count'] = 3 if '_gbuffer2' in wrd.world_defs else 2
+    attachment_format = 'RGBA32' if '_LDR' in wrd.world_defs else 'RGBA64'
+    con['color_attachments'] = [attachment_format, attachment_format]
+    if '_gbuffer2' in wrd.world_defs:
+        con['color_attachments'].append(attachment_format)
 
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh

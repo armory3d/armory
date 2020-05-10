@@ -8,7 +8,7 @@
 			"links": [],
 			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl",
-			"color_attachment": "RGBA64"
+			"color_attachments": ["RGBA64"]
 		}
 	]
 }
