@@ -431,8 +431,8 @@ def make_forward_mobile(con_mesh):
 
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
-        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
-        env_str = 'shIrradiance(n)'
+        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance')
+        env_str = 'shIrradiance(n, shirr)'
     else:
         env_str = '0.5'
 
@@ -610,8 +610,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
-        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
-        frag.write('vec3 indirect = shIrradiance(n);')
+        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance')
+        frag.write('vec3 indirect = shIrradiance(n, shirr);')
         if '_EnvTex' in wrd.world_defs:
             frag.write('indirect /= PI;')
         frag.write('indirect *= albedo;')

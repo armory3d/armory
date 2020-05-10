@@ -17,7 +17,7 @@ uniform sampler2D gbuffer1;
 
 uniform float envmapStrength;
 #ifdef _Irr
-//!uniform vec4 shirr[7];
+uniform vec4 shirr[7];
 #endif
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
@@ -96,7 +96,7 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
-	
+
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
@@ -123,7 +123,7 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
-	vec3 envl = shIrradiance(n);
+	vec3 envl = shIrradiance(n, shirr);
 	#ifdef _EnvTex
 	envl /= PI;
 	#endif
@@ -145,7 +145,7 @@ void main() {
 #endif
 
 	envl.rgb *= albedo;
-	
+
 #ifdef _Rad // Indirect specular
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
 #else
