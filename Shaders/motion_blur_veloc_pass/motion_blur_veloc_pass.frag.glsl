@@ -14,11 +14,11 @@ out vec4 fragColor;
 
 void main() {
 	vec2 velocity = textureLod(sveloc, texCoord, 0.0).rg * motionBlurIntensity * frameScale;
-	
-	#ifdef HLSL
+
+	#ifdef _InvY
 	velocity.y = -velocity.y;
 	#endif
-	
+
 	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
 
 	// float speed = length(velocity / texStep);

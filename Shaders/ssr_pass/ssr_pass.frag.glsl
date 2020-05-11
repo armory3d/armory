@@ -29,13 +29,13 @@ vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	#ifdef HLSL
+	#ifdef _InvY
 	projectedCoord.y = 1.0 - projectedCoord.y;
 	#endif
 	return projectedCoord.xy;
 }
 
-float getDeltaDepth(const vec3 hit) {	
+float getDeltaDepth(const vec3 hit) {
 	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
@@ -79,7 +79,7 @@ void main() {
 
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
-	
+
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
@@ -88,18 +88,18 @@ void main() {
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
-	
+
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
-	
+
 	#ifdef _CPostprocess
 		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
 	#else
 		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
 	#endif
-	
+
 	// * max(ssrMinRayStep, -viewPos.z)
 	vec4 coords = rayCast(dir);
 

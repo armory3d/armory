@@ -64,8 +64,10 @@ class RenderPathForward {
 
 		#if kha_metal
 		{
-			path.loadShader("shader_datas/clear_pass/clear_pass");
-			path.clearShader = "shader_datas/clear_pass/clear_pass";
+			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
+			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
+			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
+			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
 		}
 		#end
 

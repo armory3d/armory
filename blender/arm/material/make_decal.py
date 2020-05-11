@@ -30,7 +30,7 @@ def make(context_id):
     vert.write('wnormal = N * vec3(0.0, 0.0, 1.0);')
     vert.write('wvpposition = WVP * vec4(pos.xyz, 1.0);')
     vert.write('gl_Position = wvpposition;')
-    
+
     frag.add_include('compiled.inc')
     frag.add_include('std/gbuffer.glsl')
     frag.ins = vert.outs
@@ -43,11 +43,11 @@ def make(context_id):
 
     frag.write_attrib('    vec2 screenPosition = wvpposition.xy / wvpposition.w;')
     frag.write_attrib('    vec2 depthCoord = screenPosition * 0.5 + 0.5;')
-    frag.write_attrib('#ifdef HLSL')
+    frag.write_attrib('#ifdef _InvY')
     frag.write_attrib('    depthCoord.y = 1.0 - depthCoord.y;')
     frag.write_attrib('#endif')
     frag.write_attrib('    float depth = texture(gbufferD, depthCoord).r * 2.0 - 1.0;')
-    
+
     frag.write_attrib('    vec3 wpos = getPos2(invVP, depth, depthCoord);')
     frag.write_attrib('    vec4 mpos = invW * vec4(wpos, 1.0);')
     frag.write_attrib('    if (abs(mpos.x) > 1.0) discard;')

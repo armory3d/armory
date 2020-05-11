@@ -17,7 +17,7 @@ out vec4 fragColor;
 void main() {
 	vec2 texCoord = wvpposition.xy / wvpposition.w;
 	texCoord = texCoord * 0.5 + 0.5;
-	#ifdef HLSL
+	#ifdef _InvY
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
@@ -46,7 +46,7 @@ void main() {
 
 	vec3 v = wp - eye;
 	vec3 r = reflect(v, n);
-	#ifdef HLSL
+	#ifdef _InvY
 	r.y = -r.y;
 	#endif
 	float intensity = clamp((1.0 - roughness) * dot(wp - probep, n), 0.0, 1.0);

@@ -37,6 +37,15 @@ class RenderPathDeferred {
 
 		path = _path;
 
+		#if kha_metal
+		{
+			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
+			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
+			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
+			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
+		}
+		#end
+
 		#if (rp_background == "World")
 		{
 			path.loadShader("shader_datas/world_pass/world_pass");

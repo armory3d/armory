@@ -1,14 +1,14 @@
 {
 	"contexts": [
 		{
-			"name": "clear_pass",
-			"depth_write": true,
+			"name": "clear_color_pass",
+			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [],
 			"texture_params": [],
 			"vertex_shader": "../include/pass.vert.glsl",
-			"fragment_shader": "clear_pass.frag.glsl",
+			"fragment_shader": "clear_color_pass.frag.glsl",
 			"color_attachments": ["_HDR"]
 		}
 	]

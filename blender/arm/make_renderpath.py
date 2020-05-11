@@ -128,7 +128,9 @@ def build():
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
     if arm.utils.get_gapi() == 'metal':
-        assets.add_shader_pass('clear_pass')
+        assets.add_shader_pass('clear_color_depth_pass')
+        assets.add_shader_pass('clear_color_pass')
+        assets.add_shader_pass('clear_depth_pass')
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':

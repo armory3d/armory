@@ -413,7 +413,7 @@ def make_forward_mobile(con_mesh):
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
                 frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
                 frag.write('float compare = lpToDepth(ld, lightProj) - pointBias * 1.5;')
-                frag.write('#ifdef HLSL')
+                frag.write('#ifdef _InvY')
                 frag.write('l.y = -l.y;')
                 frag.write('#endif')
                 if '_Legacy' in wrd.world_defs:

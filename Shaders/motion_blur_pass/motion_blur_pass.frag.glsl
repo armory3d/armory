@@ -18,7 +18,7 @@ in vec3 viewRay;
 out vec4 fragColor;
 
 vec2 getVelocity(vec2 coord, float depth) {
-	#ifdef HLSL
+	#ifdef _InvY
 	coord.y = 1.0 - coord.y;
 	#endif
 	vec4 currentPos = vec4(coord.xy * 2.0 - 1.0, depth, 1.0);
@@ -26,7 +26,7 @@ vec2 getVelocity(vec2 coord, float depth) {
 	vec4 previousPos = prevVP * worldPos;
 	previousPos /= previousPos.w;
 	vec2 velocity = (currentPos - previousPos).xy / 40.0;
-	#ifdef HLSL
+	#ifdef _InvY
 	velocity.y = -velocity.y;
 	#endif
 	return velocity;
@@ -34,7 +34,7 @@ vec2 getVelocity(vec2 coord, float depth) {
 
 void main() {
 	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
-	
+
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (depth == 1.0) {
 		return;
@@ -42,7 +42,7 @@ void main() {
 
 	float blurScale = motionBlurIntensity * frameScale;
 	vec2 velocity = getVelocity(texCoord, depth) * blurScale;
-	
+
 	vec2 offset = texCoord;
 	int processed = 1;
 	for(int i = 0; i < 8; ++i) {

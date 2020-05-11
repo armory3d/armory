@@ -18,7 +18,7 @@ out vec4 fragColor;
 // Neighborhood Blending Pixel Shader (Third Pass)
 
 vec4 textureLodA(sampler2D tex, vec2 coords, float lod) {
-	#ifdef HLSL
+	#ifdef _InvY
 	coords.y = 1.0 - coords.y;
 	#endif
 	return textureLod(tex, coords, lod);
@@ -49,7 +49,7 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset) {
 		// Calculate the blending offsets:
 		vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
 		vec2 blendingWeight = a.yw;
-		
+
 		if (h) {
 			blendingOffset.x = a.x;
 			blendingOffset.y = 0.0;
@@ -58,11 +58,11 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset) {
 			blendingWeight.x = a.x;
 			blendingWeight.y = a.z;
 		}
-		
+
 		blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
 
 		// Calculate the texture coordinates:
-		#ifdef HLSL
+		#ifdef _InvY
 		vec2 tc = vec2(texcoord.x, 1.0 - texcoord.y);
 		#else
 		vec2 tc = texcoord;
