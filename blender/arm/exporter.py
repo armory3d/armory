@@ -773,7 +773,8 @@ class ArmoryExporter:
                 num_psys = len(bobject.particle_systems)
                 if num_psys > 0:
                     out_object['particle_refs'] = []
-                    for i in range(0, num_psys):
+                    out_object['render_emitter'] = bobject.show_instancer_for_render
+                    for i in range(num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
@@ -1893,7 +1894,6 @@ class ArmoryExporter:
             o['name'] = particleRef[1]["structName"]
             o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
             o['loop'] = psettings.arm_loop
-            o['render_emitter'] = False # TODO
             # Emission
             o['count'] = int(psettings.count * psettings.arm_count_mult)
             o['frame_start'] = int(psettings.frame_start)
