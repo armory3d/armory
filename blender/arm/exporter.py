@@ -1914,7 +1914,7 @@ class ArmoryExporter:
             o['size_random'] = psettings.size_random
             o['mass'] = psettings.mass
             # Render
-            o['instance_object'] = psettings.instance_object.name
+            o['instance_object'] = arm.utils.asset_name(psettings.instance_object)
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
             # Field weights
             o['weight_gravity'] = psettings.effector_weights.gravity
