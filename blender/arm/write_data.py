@@ -351,6 +351,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
 package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
+    public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
         if rpdat.rp_voxelao:
