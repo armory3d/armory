@@ -773,7 +773,8 @@ class ArmoryExporter:
                 num_psys = len(bobject.particle_systems)
                 if num_psys > 0:
                     out_object['particle_refs'] = []
-                    for i in range(0, num_psys):
+                    out_object['render_emitter'] = bobject.show_instancer_for_render
+                    for i in range(num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
@@ -1881,7 +1882,6 @@ class ArmoryExporter:
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
         for particleRef in self.particle_system_array.items():
-            o = {}
             psettings = particleRef[0]
 
             if psettings is None:
@@ -1890,35 +1890,41 @@ class ArmoryExporter:
             if psettings.instance_object is None or psettings.render_type != 'OBJECT':
                 continue
 
-            o['name'] = particleRef[1]["structName"]
-            o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
-            o['loop'] = psettings.arm_loop
-            o['render_emitter'] = False # TODO
-            # Emission
-            o['count'] = int(psettings.count * psettings.arm_count_mult)
-            o['frame_start'] = int(psettings.frame_start)
-            o['frame_end'] = int(psettings.frame_end)
-            o['lifetime'] = psettings.lifetime
-            o['lifetime_random'] = psettings.lifetime_random
-            o['emit_from'] = 1 if psettings.emit_from == 'VOLUME' else 0 # VERT, FACE
-            # Velocity
-            # o['normal_factor'] = psettings.normal_factor
-            # o['tangent_factor'] = psettings.tangent_factor
-            # o['tangent_phase'] = psettings.tangent_phase
-            o['object_align_factor'] = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
-            # o['object_factor'] = psettings.object_factor
-            o['factor_random'] = psettings.factor_random
-            # Physics
-            o['physics_type'] = 1 if psettings.physics_type == 'NEWTON' else 0
-            o['particle_size'] = psettings.particle_size
-            o['size_random'] = psettings.size_random
-            o['mass'] = psettings.mass
-            # Render
-            o['instance_object'] = psettings.instance_object.name
+            out_particlesys = {
+                'name': particleRef[1]["structName"],
+                'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
+                'loop': psettings.arm_loop,
+                # Emission
+                'count': int(psettings.count * psettings.arm_count_mult),
+                'frame_start': int(psettings.frame_start),
+                'frame_end': int(psettings.frame_end),
+                'lifetime': psettings.lifetime,
+                'lifetime_random': psettings.lifetime_random,
+                'emit_from': 1 if psettings.emit_from == 'VOLUME' else 0, # VERT, FACE
+                # Velocity
+                # 'normal_factor': psettings.normal_factor,
+                # 'tangent_factor': psettings.tangent_factor,
+                # 'tangent_phase': psettings.tangent_phase,
+                'object_align_factor': (
+                    psettings.object_align_factor[0],
+                    psettings.object_align_factor[1],
+                    psettings.object_align_factor[2]
+                ),
+                # 'object_factor': psettings.object_factor,
+                'factor_random': psettings.factor_random,
+                # Physics
+                'physics_type': 1 if psettings.physics_type == 'NEWTON' else 0,
+                'particle_size': psettings.particle_size,
+                'size_random': psettings.size_random,
+                'mass': psettings.mass,
+                # Render
+                'instance_object': arm.utils.asset_name(psettings.instance_object),
+                # Field weights
+                'weight_gravity': psettings.effector_weights.gravity
+            }
+
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
-            # Field weights
-            o['weight_gravity'] = psettings.effector_weights.gravity
-            self.output['particle_datas'].append(o)
+            self.output['particle_datas'].append(out_particlesys)
 
     def export_tilesheets(self):
         wrd = bpy.data.worlds['Arm']
