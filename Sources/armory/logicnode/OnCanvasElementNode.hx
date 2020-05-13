@@ -30,7 +30,7 @@ class OnCanvasElementNode extends LogicNode {
 		if(canvas == null) return;
 		if (!canvas.ready) return;
 		if(canvas.getElement(element) == null) return;
-
+		if(canvas.getElement(element).visible == false) return;
 		var mouse = iron.system.Input.getMouse();
 		var b = false;
 		switch (property0) {
