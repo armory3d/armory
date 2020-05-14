@@ -46,44 +46,45 @@ class OnCanvasElementNode extends LogicNode {
 		}
 		if (b) 
 		{
-			
-			var x1 = canvas.getElement(element).x;
-			var y1 = canvas.getElement(element).y;
-			var anchor = canvas.getElement(element).anchor;
+			var canvasElem = canvas.getElement(element);
+			var left = canvasElem.x;
+			var top = canvasElem.y;
+			var right = left + canvasElem.width;
+			var bottom = top + canvasElem.height;
+
+			var anchor = canvasElem.anchor;
 			var cx = canvas.getCanvas().width;
 			var cy = canvas.getCanvas().height;
 			var mouseX = mouse.x;
 			var mouseY = mouse.y;
-			var x2 = x1 + canvas.getElement(element).width;
-			var y2 = y1 + canvas.getElement(element).height;
 
 			switch(anchor)
 			{
 				case Top:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseX -= cx/2 - canvasElem.width/2;
 				case TopRight:
-					mouseX -= cx - canvas.getElement(element).width;
+					mouseX -= cx - canvasElem.width;
 				case CenterLeft:
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case Anchor.Center:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseX -= cx/2 - canvasElem.width/2;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case CenterRight:
-					mouseX -= cx - canvas.getElement(element).width;
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseX -= cx - canvasElem.width;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case BottomLeft:
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseY -= cy - canvasElem.height;
 				case Bottom:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseX -= cx/2 - canvasElem.width/2;
+					mouseY -= cy - canvasElem.height;
 				case BottomRight:
-					mouseX -= cx - canvas.getElement(element).width;
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseX -= cx - canvasElem.width;
+					mouseY -= cy - canvasElem.height;
 			}
-			
-			if((mouseX >= x1) && (mouseX <= x2))
+
+			if((mouseX >= left) && (mouseX <= right))
 			{
-				if((mouseY >= y1) && (mouseY <= y2))
+				if((mouseY >= top) && (mouseY <= bottom))
 				{
 					runOutput(0);
 				}
