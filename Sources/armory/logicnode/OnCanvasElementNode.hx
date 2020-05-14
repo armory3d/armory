@@ -11,22 +11,33 @@ class OnCanvasElementNode extends LogicNode {
 
 	var canvas: CanvasScript;
 	var element: String;
-	
+
+	/**
+	 * The event type this node should react to, can be "click" or "hover".
+	 */
 	public var property0: String;
+	/**
+	 * If the event type is click, this property states whether to check for
+	 * "down", "started" or "released" events.
+	 */
 	public var property1: String;
+	/**
+	 * The mouse button that this node should react to. Only used when listening
+	 * for mouse clicks.
+	 */
+	public var property2: String;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		// Ensure canvas is ready
 		tree.notifyOnUpdate(update);
 	}
 
 	#if arm_ui
 	function update() {
+		element = inputs[0].get();
 
-		element = inputs[0].get();		
-
+		// Ensure canvas is ready
 		if(!Scene.active.ready) return;
 		canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
@@ -35,16 +46,24 @@ class OnCanvasElementNode extends LogicNode {
 		if(canvas.getElement(element) == null) return;
 		if(canvas.getElement(element).visible == false) return;
 		var mouse = iron.system.Input.getMouse();
-		var b = false;
-		switch (property0) {
-		case "Down":
-			b = mouse.down(property1);
-		case "Started":
-			b = mouse.started(property1);
-		case "Released":
-			b = mouse.released(property1);
+		var isEvent = false;
+
+		if (property0 == "click") {
+			switch (property1) {
+			case "down":
+				isEvent = mouse.down(property2);
+			case "started":
+				isEvent = mouse.started(property2);
+			case "released":
+				isEvent = mouse.released(property2);
+			}
 		}
-		if (b) 
+		// Hovered
+		else {
+			isEvent = true;
+		}
+
+		if (isEvent)
 		{
 			var canvasElem = canvas.getElement(element);
 			var left = canvasElem.x;
