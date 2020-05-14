@@ -1,8 +1,11 @@
 package armory.logicnode;
 
-import zui.Canvas.Anchor;
-import iron.Scene;
 import armory.trait.internal.CanvasScript;
+import iron.Scene;
+
+#if arm_ui
+import zui.Canvas.Anchor;
+#end
 
 class OnCanvasElementNode extends LogicNode {
 
@@ -19,7 +22,7 @@ class OnCanvasElementNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 	}
 
-#if arm_ui
+	#if arm_ui
 	function update() {
 
 		element = inputs[0].get();		
@@ -87,5 +90,7 @@ class OnCanvasElementNode extends LogicNode {
 			}
 		}
 	}
-#end
+	#else
+	function update() {}
+	#end
 }
