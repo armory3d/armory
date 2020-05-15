@@ -15,10 +15,14 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
         description='Play the sound in a loop',
         default=False)
     property2: BoolProperty(
+        name='Retrigger',
+        description='Play the sound from the beginning everytime',
+        default=False)
+    property3: BoolProperty(
         name='Use Custom Sample Rate',
         description='If enabled, override the default sample rate',
         default=False)
-    property3: IntProperty(
+    property4: IntProperty(
         name='Sample Rate',
         description='Set the sample rate used to play this sound',
         default=44100,
@@ -35,15 +39,17 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
 
-        layout.prop(self, 'property1')
+        col = layout.column(align=True)
+        col.prop(self, 'property1')
+        col.prop(self, 'property2')
 
         layout.label(text="Overrides:")
         # Sample rate
         split = layout.split(factor=0.15, align=False)
-        split.prop(self, 'property2', text="")
+        split.prop(self, 'property3', text="")
         row = split.row()
-        if not self.property2:
+        if not self.property3:
             row.enabled = False
-        row.prop(self, 'property3')
+        row.prop(self, 'property4')
 
 add_node(PlaySoundNode, category='Sound')

@@ -6,10 +6,12 @@ class PlaySoundRawNode extends LogicNode {
 	public var property0: String;
 	/** Whether to loop the playback */
 	public var property1: Bool;
-	/** Override sample rate */
+	/** Retrigger */
 	public var property2: Bool;
+	/** Override sample rate */
+	public var property3: Bool;
 	/** Playback sample rate */
-	public var property3: Int;
+	public var property4: Int;
 
 	var sound: kha.Sound = null;
 	var channel: kha.audio1.AudioChannel = null;
@@ -29,11 +31,12 @@ class PlaySoundRawNode extends LogicNode {
 
 				// Resume
 				if (channel != null) {
+					if (property2) channel.stop();
 					channel.play();
 				}
 				// Start
 				else if (sound != null) {
-					if (property2) sound.sampleRate = property3;
+					if (property3) sound.sampleRate = property4;
 					channel = iron.system.Audio.play(sound, property1);
 				}
 
@@ -41,17 +44,11 @@ class PlaySoundRawNode extends LogicNode {
 				runOutput(0);
 
 			case Pause:
-				if (channel != null) {
-					channel.pause();
-				}
-
+				if (channel != null) channel.pause();
 				tree.removeUpdate(this.onUpdate);
 
 			case Stop:
-				if (channel != null) {
-					channel.stop();
-				}
-
+				if (channel != null) channel.stop();
 				tree.removeUpdate(this.onUpdate);
 		}
 	}
@@ -64,9 +61,7 @@ class PlaySoundRawNode extends LogicNode {
 				runOutput(2);
 			}
 			// Running
-			else {
-				runOutput(1);
-			}
+			else runOutput(1);
 		}
 	}
 }
