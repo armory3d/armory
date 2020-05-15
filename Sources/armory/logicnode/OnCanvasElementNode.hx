@@ -1,29 +1,43 @@
 package armory.logicnode;
 
-import zui.Canvas.Anchor;
-import iron.Scene;
 import armory.trait.internal.CanvasScript;
+import iron.Scene;
+
+#if arm_ui
+import zui.Canvas.Anchor;
+#end
 
 class OnCanvasElementNode extends LogicNode {
 
 	var canvas: CanvasScript;
 	var element: String;
-	
+
+	/**
+	 * The event type this node should react to, can be "click" or "hover".
+	 */
 	public var property0: String;
+	/**
+	 * If the event type is click, this property states whether to check for
+	 * "down", "started" or "released" events.
+	 */
 	public var property1: String;
+	/**
+	 * The mouse button that this node should react to. Only used when listening
+	 * for mouse clicks.
+	 */
+	public var property2: String;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		// Ensure canvas is ready
 		tree.notifyOnUpdate(update);
 	}
 
-#if arm_ui
+	#if arm_ui
 	function update() {
+		element = inputs[0].get();
 
-		element = inputs[0].get();		
-
+		// Ensure canvas is ready
 		if(!Scene.active.ready) return;
 		canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
@@ -32,60 +46,71 @@ class OnCanvasElementNode extends LogicNode {
 		if(canvas.getElement(element) == null) return;
 		if(canvas.getElement(element).visible == false) return;
 		var mouse = iron.system.Input.getMouse();
-		var b = false;
-		switch (property0) {
-		case "Down":
-			b = mouse.down(property1);
-		case "Started":
-			b = mouse.started(property1);
-		case "Released":
-			b = mouse.released(property1);
+		var isEvent = false;
+
+		if (property0 == "click") {
+			switch (property1) {
+			case "down":
+				isEvent = mouse.down(property2);
+			case "started":
+				isEvent = mouse.started(property2);
+			case "released":
+				isEvent = mouse.released(property2);
+			}
 		}
-		if (b) 
+		// Hovered
+		else {
+			isEvent = true;
+		}
+
+		if (isEvent)
 		{
-			
-			var x1 = canvas.getElement(element).x;
-			var y1 = canvas.getElement(element).y;
-			var anchor = canvas.getElement(element).anchor;
+			var canvasElem = canvas.getElement(element);
+			var left = canvasElem.x;
+			var top = canvasElem.y;
+			var right = left + canvasElem.width;
+			var bottom = top + canvasElem.height;
+
+			var anchor = canvasElem.anchor;
 			var cx = canvas.getCanvas().width;
 			var cy = canvas.getCanvas().height;
 			var mouseX = mouse.x;
 			var mouseY = mouse.y;
-			var x2 = x1 + canvas.getElement(element).width;
-			var y2 = y1 + canvas.getElement(element).height;
 
 			switch(anchor)
 			{
 				case Top:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
+					mouseX -= cx/2 - canvasElem.width/2;
 				case TopRight:
-					mouseX -= cx - canvas.getElement(element).width;
+					mouseX -= cx - canvasElem.width;
 				case CenterLeft:
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case Anchor.Center:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseX -= cx/2 - canvasElem.width/2;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case CenterRight:
-					mouseX -= cx - canvas.getElement(element).width;
-					mouseY -= cy/2 - canvas.getElement(element).height/2;
+					mouseX -= cx - canvasElem.width;
+					mouseY -= cy/2 - canvasElem.height/2;
 				case BottomLeft:
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseY -= cy - canvasElem.height;
 				case Bottom:
-					mouseX -= cx/2 - canvas.getElement(element).width/2;
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseX -= cx/2 - canvasElem.width/2;
+					mouseY -= cy - canvasElem.height;
 				case BottomRight:
-					mouseX -= cx - canvas.getElement(element).width;
-					mouseY -= cy - canvas.getElement(element).height;
+					mouseX -= cx - canvasElem.width;
+					mouseY -= cy - canvasElem.height;
 			}
-			
-			if((mouseX >= x1) && (mouseX <= x2))
+
+			if((mouseX >= left) && (mouseX <= right))
 			{
-				if((mouseY >= y1) && (mouseY <= y2))
+				if((mouseY >= top) && (mouseY <= bottom))
 				{
 					runOutput(0);
 				}
 			}
 		}
 	}
-#end
+	#else
+	function update() {}
+	#end
 }
