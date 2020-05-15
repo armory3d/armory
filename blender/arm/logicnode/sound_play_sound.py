@@ -25,8 +25,12 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
         min=0)
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'Play')
+        self.inputs.new('ArmNodeSocketAction', 'Pause')
+        self.inputs.new('ArmNodeSocketAction', 'Stop')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Running')
+        self.outputs.new('ArmNodeSocketAction', 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')

@@ -11,15 +11,68 @@ class PlaySoundRawNode extends LogicNode {
 	/** Playback sample rate */
 	public var property3: Int;
 
+	var sound: kha.Sound = null;
+	var channel: kha.audio1.AudioChannel = null;
+
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
 	override function run(from: Int) {
-		iron.data.Data.getSound(property0, function(sound: kha.Sound) {
-			if (property2) sound.sampleRate = property3;
-			iron.system.Audio.play(sound, property1);
-		});
-		runOutput(0);
+		switch (from) {
+			case Play:
+				if (sound == null) {
+					iron.data.Data.getSound(property0, function(s: kha.Sound) {
+						this.sound = s;
+					});
+				}
+
+				// Resume
+				if (channel != null) {
+					channel.play();
+				}
+				// Start
+				else if (sound != null) {
+					if (property2) sound.sampleRate = property3;
+					channel = iron.system.Audio.play(sound, property1);
+				}
+
+				tree.notifyOnUpdate(this.onUpdate);
+				runOutput(0);
+
+			case Pause:
+				if (channel != null) {
+					channel.pause();
+				}
+
+				tree.removeUpdate(this.onUpdate);
+
+			case Stop:
+				if (channel != null) {
+					channel.stop();
+				}
+
+				tree.removeUpdate(this.onUpdate);
+		}
 	}
+
+	function onUpdate() {
+		if (channel != null) {
+			// Done
+			if (channel.finished) {
+				channel = null;
+				runOutput(2);
+			}
+			// Running
+			else {
+				runOutput(1);
+			}
+		}
+	}
+}
+
+private enum abstract PlayState(Int) from Int to Int {
+	var Play = 0;
+	var Pause = 1;
+	var Stop = 2;
 }
