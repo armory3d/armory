@@ -7,7 +7,7 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
     """Play sound node"""
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
-    bl_icon = 'QUESTION'
+    bl_icon = 'PLAY_SOUND'
 
     property0: PointerProperty(name='', type=bpy.types.Sound)
     property1: BoolProperty(
