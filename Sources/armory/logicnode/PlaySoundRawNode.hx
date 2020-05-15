@@ -2,15 +2,14 @@ package armory.logicnode;
 
 class PlaySoundRawNode extends LogicNode {
 
+	/** The name of the sound */
 	public var property0: String;
-	/**
-	 * Override sample rate
-	 */
+	/** Whether to loop the playback */
 	public var property1: Bool;
-	/**
-	 * Playback sample rate
-	 */
-	public var property2: Int;
+	/** Override sample rate */
+	public var property2: Bool;
+	/** Playback sample rate */
+	public var property3: Int;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -18,8 +17,8 @@ class PlaySoundRawNode extends LogicNode {
 
 	override function run(from: Int) {
 		iron.data.Data.getSound(property0, function(sound: kha.Sound) {
-			if (property1) sound.sampleRate = property2;
-			iron.system.Audio.play(sound, false);
+			if (property2) sound.sampleRate = property3;
+			iron.system.Audio.play(sound, property1);
 		});
 		runOutput(0);
 	}
