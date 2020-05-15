@@ -154,6 +154,8 @@ def build_node(node, f):
             prop = getattr(node, prop_name)
             if isinstance(prop, str):
                 prop = '"' + str(prop) + '"'
+            elif isinstance(prop, bool):
+                prop = str(prop).lower()
             elif hasattr(prop, 'name'): # PointerProperty
                 prop = '"' + str(prop.name) + '"'
             else:
