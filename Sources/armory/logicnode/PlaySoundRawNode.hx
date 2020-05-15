@@ -50,6 +50,7 @@ class PlaySoundRawNode extends LogicNode {
 			case Stop:
 				if (channel != null) channel.stop();
 				tree.removeUpdate(this.onUpdate);
+				runOutput(2);
 		}
 	}
 
