@@ -272,6 +272,7 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         row.operator("arm.clean_menu")
         layout.prop(wrd, 'arm_runtime')
         layout.prop(wrd, 'arm_play_camera')
+        layout.prop(wrd, 'arm_play_scene')
 
         if log.num_warnings > 0:
             box = layout.box()

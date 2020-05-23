@@ -559,10 +559,12 @@ def get_project_scene_name():
     return get_active_scene().name
 
 def get_active_scene():
+    wrd = bpy.data.worlds['Arm']
     if not state.is_export:
-        return bpy.context.scene
+        if wrd.arm_play_scene == None:
+            return bpy.context.scene
+        return wrd.arm_play_scene
     else:
-        wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return item.arm_project_scene
 
