@@ -71,6 +71,7 @@ def init_properties():
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport')],
         name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_play_scene = PointerProperty(name="Scene", description="Scene to launch", update=assets.invalidate_compiler_cache, type=bpy.types.Scene)
     bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
