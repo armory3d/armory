@@ -118,7 +118,7 @@ class DebugConsole extends Trait {
 	static var haxeTrace: Dynamic->haxe.PosInfos->Void = null;
 	static var lastTraces: Array<String> = [""];
 	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
-		lastTraces.unshift(Std.string(v));
+		lastTraces.unshift(haxe.Log.formatOutput(v,inf));
 		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
