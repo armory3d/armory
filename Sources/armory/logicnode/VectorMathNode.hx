@@ -42,6 +42,8 @@ class VectorMathNode extends LogicNode {
 			f = v.length();
 		case "Distance":
 			f = v.distanceTo(v2);
+		case "Reflect":
+			v.reflect(v2);
 		}
 
 		if (from == 0) return v;
