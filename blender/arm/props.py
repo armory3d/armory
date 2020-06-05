@@ -87,7 +87,8 @@ def init_properties():
     bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
-                 ('Fullscreen', 'Fullscreen', 'Fullscreen')],
+                 ('Fullscreen', 'Fullscreen', 'Borderless Fullscreen Window'),
+                 ('Exclusive Fullscreen', 'Exclusive Fullscreen', 'Exclusive Fullscreen')],
         name="Mode", default='Window', description='Window mode to start in', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_winorient = EnumProperty(
         items = [('Multi', 'Multi', 'Multi'),
