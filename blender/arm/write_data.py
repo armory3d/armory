@@ -298,8 +298,10 @@ project.addSources('Sources');
 def get_winmode(arm_winmode):
     if arm_winmode == 'Window':
         return 0
-    else: # Fullscreen
+    elif arm_winmode == 'Fullscreen': # Fullscreen
         return 1
+    else:   # Exclusive Fullscreen
+        return 2
 
 def write_config(resx, resy):
     wrd = bpy.data.worlds['Arm']
