@@ -78,7 +78,7 @@ class Starter {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				var print = function(s:String) { trace(s); };
 				var loaded = function() { tasks--; start(); };
-				untyped __js__("(1, eval)({0})", b.toString());
+				js.Syntax.code("(1, eval)({0})", b.toString());
 				#if kha_krom
 				var instantiateWasm = function(imports, successCallback) {
 					var wasmbin = Krom.loadBlob("ammo.wasm.wasm");
@@ -87,9 +87,9 @@ class Starter {
 					successCallback(inst);
 					return inst.exports;
 				};
-				untyped __js__("Ammo({print:print, instantiateWasm:instantiateWasm}).then(loaded)");
+				js.Syntax.code("Ammo({print:print, instantiateWasm:instantiateWasm}).then(loaded)");
 				#else
-				untyped __js__("Ammo({print:print}).then(loaded)");
+				js.Syntax.code("Ammo({print:print}).then(loaded)");
 				#end
 			});
 		}
@@ -98,7 +98,7 @@ class Starter {
 		#if (js && arm_navigation)
 		function loadLib(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
-				untyped __js__("(1, eval)({0})", b.toString());
+				js.Syntax.code("(1, eval)({0})", b.toString());
 				tasks--;
 				start();
 			});
