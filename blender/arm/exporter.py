@@ -442,9 +442,6 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
-        if psys.settings in self.particle_system_array:  # or not modifier.show_render:
-            return
-
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT':
             return
 
