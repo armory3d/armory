@@ -414,7 +414,7 @@ def write_indexhtml(w, h, is_publish):
 <html>
 <head>
     <meta charset="utf-8"/>""")
-        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
+        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen' or wrd.arm_winmode == 'Exclusive Fullscreen':
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
@@ -428,7 +428,7 @@ def write_indexhtml(w, h, is_publish):
 </head>
 <body style="margin: 0; padding: 0;">
 """)
-        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
+        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen' or wrd.arm_winmode == 'Exclusive Fullscreen':
             f.write("""
     <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'></canvas>
 """)
