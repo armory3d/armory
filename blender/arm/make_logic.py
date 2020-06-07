@@ -249,7 +249,7 @@ def build_default_node(inp):
         inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.get_default_value()) + '")'
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketAnimAction':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()) + '")'
+        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()).replace("\"", "\\\"") + '")'
         return inp_name
     if inp.type == 'VECTOR':
         inp_name = 'new armory.logicnode.VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
@@ -264,5 +264,5 @@ def build_default_node(inp):
     elif inp.type == 'BOOLEAN':
         inp_name = 'new armory.logicnode.BooleanNode(this, ' + str(inp.default_value).lower() + ')'
     elif inp.type == 'STRING':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value) + '")'
+        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value).replace("\"", "\\\"") + '")'
     return inp_name
