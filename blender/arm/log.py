@@ -1,9 +1,15 @@
+import platform
+
 DEBUG = 36
 INFO = 37
 WARN = 35
 ERROR = 31
 
-no_colors = False
+if platform.system() == "Windows":
+    HAS_COLOR_SUPPORT = platform.release() == "10"
+else:
+    HAS_COLOR_SUPPORT = True
+
 info_text = ''
 num_warnings = 0
 
@@ -17,7 +23,7 @@ def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
 
 def log(text,color=None):
-    if not no_colors and color is not None:
+    if HAS_COLOR_SUPPORT and color is not None:
         csi = '\033['
         text = csi + str(color) + 'm' + text + csi + '0m';
     print(text)
