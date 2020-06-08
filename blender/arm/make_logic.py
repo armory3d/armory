@@ -100,7 +100,7 @@ def build_node_tree(node_group):
         f.write('}')
     node_group.arm_cached = True
 
-def build_node(node, f):
+def build_node(node: bpy.types.Node, f):
     global parsed_nodes
     global parsed_ids
 
@@ -243,13 +243,15 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp):
     inp_name = 'new armory.logicnode.NullNode(this)'
+    if isinstance(inp, arm.logicnode.arm_nodes.ArmCustomSocket):
+        return inp_name
     if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketObject':
         inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.get_default_value()) + '")'
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketAnimAction':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()) + '")'
+        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()).replace("\"", "\\\"") + '")'
         return inp_name
     if inp.type == 'VECTOR':
         inp_name = 'new armory.logicnode.VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
@@ -264,5 +266,5 @@ def build_default_node(inp):
     elif inp.type == 'BOOLEAN':
         inp_name = 'new armory.logicnode.BooleanNode(this, ' + str(inp.default_value).lower() + ')'
     elif inp.type == 'STRING':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value) + '")'
+        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value).replace("\"", "\\\"") + '")'
     return inp_name
