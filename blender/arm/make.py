@@ -388,7 +388,7 @@ def assets_done():
     else:
         state.proc_build = None
         state.redraw_ui = True
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def compilation_server_done():
     if state.proc_build == None:
@@ -403,12 +403,12 @@ def compilation_server_done():
     else:
         state.proc_build = None
         state.redraw_ui = True
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
     if log.num_warnings > 0:
-        print(f'{log.num_warnings} warnings occurred during compilation!')
+        log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
     if state.proc_build is None:
         return
     result = state.proc_build.poll()
@@ -418,7 +418,7 @@ def build_done():
         bpy.data.worlds['Arm'].arm_recompile = False
         build_success()
     else:
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def patch():
     if state.proc_build != None:

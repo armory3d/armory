@@ -1,3 +1,15 @@
+import platform
+
+DEBUG = 36
+INFO = 37
+WARN = 35
+ERROR = 31
+
+if platform.system() == "Windows":
+    HAS_COLOR_SUPPORT = platform.release() == "10"
+else:
+    HAS_COLOR_SUPPORT = True
+
 info_text = ''
 num_warnings = 0
 
@@ -10,12 +22,27 @@ def clear(clear_warnings=False):
 def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
 
-def print_info(text):
-    global info_text
+def log(text,color=None):
+    if HAS_COLOR_SUPPORT and color is not None:
+        csi = '\033['
+        text = csi + str(color) + 'm' + text + csi + '0m';
     print(text)
+
+def debug(text):
+    log(text,DEBUG)
+
+def info(text):
+    global info_text
+    log(text,INFO)
     info_text = format_text(text)
+
+def print_warn(text):
+    log('Warning: ' + text,WARN)
 
 def warn(text):
     global num_warnings
     num_warnings += 1
-    print('Armory Warning: ' + text)
+    print_warn(text)
+
+def error(text):
+    log('ERROR: ' + text,ERROR)
