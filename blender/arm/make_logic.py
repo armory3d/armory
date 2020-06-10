@@ -241,10 +241,21 @@ def get_root_nodes(node_group):
             roots.append(node)
     return roots
 
-def build_default_node(inp):
+def build_default_node(inp: bpy.types.NodeSocket):
+    """Creates a new node to give a not connected input socket a value"""
     inp_name = 'new armory.logicnode.NullNode(this)'
+
     if isinstance(inp, arm.logicnode.arm_nodes.ArmCustomSocket):
-        return inp_name
+        # ArmCustomSockets need to implement get_default_value()
+        default_value = inp.get_default_value()
+
+        if default_value is None:
+            return inp_name
+        if isinstance(default_value, str):
+            default_value = f'"{default_value}"'
+
+        return f'new armory.logicnode.DynamicNode(this, {default_value})'
+
     if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketObject':
