@@ -33,6 +33,10 @@ class ArmCustomSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmCustomSocket'
     bl_label = 'Custom Socket'
 
+    def get_default_value(self):
+        """Override this for values of unconnected input sockets."""
+        return None
+
 class ArmArraySocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketArray'
     bl_label = 'Array Socket'
