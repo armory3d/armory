@@ -274,7 +274,7 @@ def build_default_node(inp: bpy.types.NodeSocket):
     elif inp.type == 'INT':
         return f'new armory.logicnode.IntegerNode(this, {inp.default_value})'
     elif inp.type == 'BOOLEAN':
-        return f'new armory.logicnode.BooleanNode(this, {inp.default_value.lower()})'
+        return f'new armory.logicnode.BooleanNode(this, {str(inp.default_value).lower()})'
     elif inp.type == 'STRING':
         default_value = inp.default_value.replace("\"", "\\\"")
         return f'new armory.logicnode.StringNode(this, "{default_value}")'
