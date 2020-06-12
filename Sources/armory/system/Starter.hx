@@ -31,7 +31,10 @@ class Starter {
 
 			armory.object.Uniforms.register();
 
-			var windowMode = c.window_mode == 0 ? kha.WindowMode.Windowed : kha.WindowMode.Fullscreen;
+			var windowMode;
+			if (c.window_mode == 0) windowMode = kha.WindowMode.Windowed;
+			else if (c.window_mode == 1) windowMode = kha.WindowMode.Fullscreen;
+			else windowMode = kha.WindowMode.ExclusiveFullscreen;
 			var windowFeatures = None;
 			if (c.window_resizable) windowFeatures |= FeatureResizable;
 			if (c.window_maximizable) windowFeatures |= FeatureMaximizable;
