@@ -401,12 +401,12 @@ def fetch_script_names():
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
-        for file in glob.glob('**/*.hx', recursive=True):
-            name = file.rsplit('.')[0]
-            # Replace the path syntax for package syntax so that it can be searchable in blender traits "Class" dropdown
-            wrd.arm_scripts_list.add().name = name.replace(os.sep, '.')
-            fetch_script_props(file)
-
+        for file in glob.glob('**/[A-Z][A-Za-z0-9_]*.hx', recursive=True):
+            parts = file.rsplit('.')
+            if parts[1] == "hx":
+                # Replace the path syntax for package syntax so that it can be searchable in blender traits "Class" dropdown
+                wrd.arm_scripts_list.add().name = parts[0].replace(os.sep, '.')
+                fetch_script_props(file)
     # Canvas
     wrd.arm_canvas_list.clear()
     canvas_path = get_fp() + '/Bundled/canvas'
