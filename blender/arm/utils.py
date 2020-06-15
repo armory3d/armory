@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import platform
+import re
 import subprocess
 import webbrowser
 
@@ -402,11 +403,12 @@ def fetch_script_names():
         os.chdir(sources_path)
         # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
         for file in glob.glob('**/*.hx', recursive=True):
-            name = file.rsplit('.')[0]
-            # Replace the path syntax for package syntax so that it can be searchable in blender traits "Class" dropdown
-            wrd.arm_scripts_list.add().name = name.replace(os.sep, '.')
-            fetch_script_props(file)
-
+            mod = file.rsplit('.')[0]
+            mod_parts = mod.rsplit('/')
+            if re.match('^[A-Z][A-Za-z0-9_]*$',mod_parts[-1]):
+                wrd.arm_scripts_list.add().name = mod.replace(os.sep, '.')
+                fetch_script_props(file)
+     
     # Canvas
     wrd.arm_canvas_list.clear()
     canvas_path = get_fp() + '/Bundled/canvas'
