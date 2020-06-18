@@ -23,25 +23,26 @@ def build_node_tree(world):
     wrd = bpy.data.worlds['Arm']
     wrd.world_defs = ''
     rpdat = arm.utils.get_rp()
-    
-    if callback != None:
+
+    if callback is not None:
         callback()
-    
+
     # Traverse world node tree
-    parsed = False
-    if world.node_tree != None:
+    is_parsed = False
+    if world.node_tree is not None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
-        if output_node != None:
+        if output_node is not None:
             parse_world_output(world, output_node)
-            parsed = True
-    if parsed == False:
+            is_parsed = True
+
+    if not is_parsed:
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
         c = world.color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = 1.0
-    
+
     # Clear to color if no texture or sky is provided
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
         if '_EnvImg' not in wrd.world_defs:
@@ -52,7 +53,7 @@ def build_node_tree(world):
         write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
     # film_transparent
-    if bpy.context.scene != None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
+    if bpy.context.scene is not None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
         wrd.world_defs += '_EnvTransp'
         wrd.world_defs += '_EnvCol'
 
@@ -67,15 +68,15 @@ def parse_world_output(world, node):
     if node.inputs[0].is_linked:
         surface_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
         parse_surface(world, surface_node)
-    
+
 def parse_surface(world, node):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
-    
+
     # Extract environment strength
     if node.type == 'BACKGROUND':
-        
+
         # Append irradiance define
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
@@ -88,18 +89,18 @@ def parse_surface(world, node):
             color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
             parse_color(world, color_node)
 
-def parse_color(world, node):       
+def parse_color(world, node):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
 
     # Env map included
-    if node.type == 'TEX_ENVIRONMENT' and node.image != None:
+    if node.type == 'TEX_ENVIRONMENT' and node.image is not None:
 
         image = node.image
         filepath = image.filepath
-        
-        if image.packed_file == None and not os.path.isfile(arm.utils.asset_path(filepath)):
+
+        if image.packed_file is None and not os.path.isfile(arm.utils.asset_path(filepath)):
             log.warn(world.name + ' - unable to open ' + image.filepath)
             return
 
@@ -121,7 +122,7 @@ def parse_color(world, node):
                 tex_file = base[0] + '.jpg'
                 target_format = 'JPEG'
 
-        if image.packed_file != None:
+        if image.packed_file is not None:
             # Extract packed data
             unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
@@ -133,10 +134,10 @@ def parse_color(world, node):
                 if not os.path.isfile(unpack_filepath):
                     arm.utils.unpack_image(image, unpack_filepath, file_format=target_format)
 
-            elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+            elif not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != image.packed_file.size:
                 with open(unpack_filepath, 'wb') as f:
                     f.write(image.packed_file.data)
-            
+
             assets.add(unpack_filepath)
         else:
             if do_convert:
@@ -157,12 +158,12 @@ def parse_color(world, node):
         world.arm_envtex_name = tex_file
         world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
         disable_hdr = target_format == 'JPEG'
-        
+
         mip_count = world.arm_envtex_num_mips
         mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
-        
+
         world.arm_envtex_num_mips = mip_count
-        
+
         # Append envtex define
         wrd.world_defs += '_EnvTex'
         # Append LDR define
@@ -173,7 +174,7 @@ def parse_color(world, node):
             wrd.world_defs += '_Rad'
 
     # Static image background
-    elif node.type == 'TEX_IMAGE':        
+    elif node.type == 'TEX_IMAGE':
         image = node.image
         filepath = image.filepath
 
@@ -200,14 +201,14 @@ def parse_color(world, node):
     elif node.type == 'TEX_SKY':
         # Match to cycles
         world.arm_envtex_strength *= 0.1
-        
         wrd.world_defs += '_EnvSky'
+
         assets.add_khafile_def('arm_hosek')
-        
+
         world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
         world.arm_envtex_turbidity = node.turbidity
         world.arm_envtex_ground_albedo = node.ground_albedo
-        
+
         # Irradiance json file name
         wname = arm.utils.safestr(world.name)
         world.arm_envtex_irr_name = wname
@@ -222,6 +223,6 @@ def parse_color(world, node):
             assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance.hdr')
             for i in range(0, 8):
                 assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
-            
+
             world.arm_envtex_name = 'hosek'
             world.arm_envtex_num_mips = 8
