@@ -4,14 +4,14 @@ import kha.WindowOptions;
 
 class Starter {
 
-	static var tasks: Int;
-
 	#if arm_loadscreen
 	public static var drawLoading: kha.graphics2.Graphics->Int->Int->Void = null;
 	public static var numAssets: Int;
 	#end
 
 	public static function main(scene: String, mode: Int, resize: Bool, min: Bool, max: Bool, w: Int, h: Int, msaa: Int, vsync: Bool, getRenderPath: Void->iron.RenderPath) {
+
+		var tasks : Int;
 
 		function start() {
 			if (tasks > 0) return;
@@ -76,20 +76,17 @@ class Starter {
 		#if (js && arm_bullet)
 		function loadLibAmmo(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
-				var print = function(s:String) { trace(s); };
-				var loaded = function() { tasks--; start(); };
-				js.Syntax.code("(1, eval)({0})", b.toString());
+				js.Syntax.code("(1,eval)({0})", b.toString());
 				#if kha_krom
-				var instantiateWasm = function(imports, successCallback) {
-					var wasmbin = Krom.loadBlob("ammo.wasm.wasm");
-					var module = new js.lib.webassembly.Module(wasmbin);
-					var inst = new js.lib.webassembly.Instance(module, imports);
+				js.Syntax.code("Ammo({print:function(s){haxe.Log.trace(s);},instantiateWasm:function(imports,successCallback) {
+					var wasmbin = Krom.loadBlob('ammo.wasm.wasm');
+					var module = new WebAssembly.Module(wasmbin);
+					var inst = new WebAssembly.Instance(module,imports);
 					successCallback(inst);
 					return inst.exports;
-				};
-				js.Syntax.code("Ammo({print:print, instantiateWasm:instantiateWasm}).then(loaded)");
+				}}).then(function(){ tasks--; start();})");
 				#else
-				js.Syntax.code("Ammo({print:print}).then(loaded)");
+				js.Syntax.code("Ammo({print:function(s){haxe.Log.trace(s);}}).then(function(){ tasks--; start();})");
 				#end
 			});
 		}
