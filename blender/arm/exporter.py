@@ -1943,14 +1943,14 @@ class ArmoryExporter:
                 o['actions'].append(ao)
             self.output['tilesheet_datas'].append(o)
 
-    def export_worlds(self):
-        worldRef = self.scene.world
-        if worldRef is not None:
-            o = {}
-            w = worldRef
-            o['name'] = w.name
-            self.post_export_world(w, o)
-            self.output['world_datas'].append(o)
+    def export_world(self):
+        """Exports the world of the scene."""
+        world = self.scene.world
+        if world is not None:
+            out_world = {'name': world.name}
+
+            self.post_export_world(world, out_world)
+            self.output['world_datas'].append(out_world)
 
     def export_objects(self, scene):
         """Exports all supported blender objects.
@@ -2110,7 +2110,7 @@ class ArmoryExporter:
             self.export_materials()
             self.export_particle_systems()
             self.output['world_datas'] = []
-            self.export_worlds()
+            self.export_world()
             self.export_tilesheets()
 
             if self.scene.world is not None:
@@ -2791,27 +2791,29 @@ class ArmoryExporter:
         o['traits'].append(trait)
 
     @staticmethod
-    def post_export_world(world, o):
+    def post_export_world(world: bpy.types.World, out_world: Dict):
         wrd = bpy.data.worlds['Arm']
+
         bgcol = world.arm_envtex_color
-        if '_LDR' in wrd.world_defs: # No compositor used
+        # No compositor used
+        if '_LDR' in wrd.world_defs:
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
-        o['background_color'] = arm.utils.color_to_int(bgcol)
+        out_world['background_color'] = arm.utils.color_to_int(bgcol)
 
         if '_EnvSky' in wrd.world_defs:
             # Sky data for probe
-            o['sun_direction'] =  list(world.arm_envtex_sun_direction)
-            o['turbidity'] = world.arm_envtex_turbidity
-            o['ground_albedo'] = world.arm_envtex_ground_albedo
+            out_world['sun_direction'] =  list(world.arm_envtex_sun_direction)
+            out_world['turbidity'] = world.arm_envtex_turbidity
+            out_world['ground_albedo'] = world.arm_envtex_ground_albedo
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
         if '_EnvTex' in wrd.world_defs or '_EnvImg' in wrd.world_defs:
             o['envmap'] = world.arm_envtex_name.rsplit('.', 1)[0]
             if disable_hdr:
-                o['envmap'] += '.jpg'
+                out_world['envmap'] += '.jpg'
             else:
-                o['envmap'] += '.hdr'
+                out_world['envmap'] += '.hdr'
 
         # Main probe
         rpdat = arm.utils.get_rp()
@@ -2833,17 +2835,16 @@ class ArmoryExporter:
         if mobile_mat:
             arm_radiance = False
 
-        po = {}
-        po['name'] = world.name
+        out_probe = {'name': world.name}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
-            po['irradiance'] = irrsharmonics + '_irradiance' + ext
+            out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext
             if arm_radiance:
-                po['radiance'] = radtex + '_radiance'
-                po['radiance'] += '.jpg' if disable_hdr else '.hdr'
-                po['radiance_mipmaps'] = num_mips
-        po['strength'] = strength
-        o['probe'] = po
+                out_probe['radiance'] = radtex + '_radiance'
+                out_probe['radiance'] += '.jpg' if disable_hdr else '.hdr'
+                out_probe['radiance_mipmaps'] = num_mips
+        out_probe['strength'] = strength
+        out_world['probe'] = out_probe
 
     @staticmethod
     def mod_equal(mod1: bpy.types.Modifier, mod2: bpy.types.Modifier) -> bool:
