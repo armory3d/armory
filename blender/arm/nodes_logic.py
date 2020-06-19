@@ -9,7 +9,7 @@ import webbrowser
 registered_nodes = []
 
 class ArmLogicTree(NodeTree):
-    '''Logic nodes'''
+    """Logic nodes"""
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
@@ -33,10 +33,28 @@ def register_nodes():
     node_categories = []
 
     for category in sorted(arm_nodes.category_items):
-        sorted_items=sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
+        if category == 'Layout':
+            # Handled separately
+            continue
+
+        sorted_items = sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
         node_categories.append(
             LogicNodeCategory('Logic' + category + 'Nodes', category, items=sorted_items)
         )
+
+    # Add special layout nodes known from Blender's node editors
+    if 'Layout' in arm_nodes.category_items:
+        # Clone with [:] to prevent double entries
+        layout_items = arm_nodes.category_items['Layout'][:]
+    else:
+        layout_items = []
+
+    layout_items += [NodeItem('NodeReroute'), NodeItem('NodeFrame')]
+    layout_items = sorted(layout_items, key=lambda item: item.nodetype)
+
+    node_categories.append(
+        LogicNodeCategory('LogicLayoutNodes', 'Layout', description='Layout Nodes', items=layout_items)
+    )
 
     nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
 
