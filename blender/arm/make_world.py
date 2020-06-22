@@ -8,15 +8,63 @@ import arm.utils
 import arm.node_utils as node_utils
 import arm.log as log
 import arm.make_state as state
+from arm.material import make_shader
+from arm.material.shader import ShaderContext, Shader
 
 callback = None
 
 def build():
     worlds = []
     for scene in bpy.data.scenes:
-        if scene.arm_export and scene.world != None and scene.world not in worlds:
+        if scene.arm_export and scene.world is not None and scene.world not in worlds:
             worlds.append(scene.world)
-            build_node_tree(scene.world)
+            create_world_shaders(scene.world)
+
+
+def create_world_shaders(world: bpy.types.World):
+    """Creates fragment and vertex shaders for the given world."""
+    world_name = arm.utils.safestr(world.name)
+
+    shader_data = {'name': world_name + '_data', 'contexts': []}
+    shader_props = {
+        'name': 'world_' + world_name,
+        'depth_write': False,
+        'compare_mode': 'less',
+        'cull_mode': 'clockwise',
+        'color_attachments': ['_HDR'],
+        'vertex_elements': [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}]
+    }
+
+    # ShaderContext expects a material, but using a world also works
+    shader_context = ShaderContext(world, shader_data, shader_props)
+    vert = shader_context.make_vert()
+    frag = shader_context.make_frag()
+
+    vert.add_out('vec3 normal')
+    vert.add_uniform('mat4 SMVP')
+
+    frag.add_include('compiled.inc')
+    frag.add_in('vec3 normal')
+    frag.add_out('vec4 fragColor')
+
+    vert.write('''normal = nor;
+    vec4 position = SMVP * vec4(pos, 1.0);
+    gl_Position = vec4(position);''')
+
+    build_node_tree(world, frag, vert)
+
+    frag.write('fragColor = vec4(0.0);')
+
+    # TODO: Rework shader export so that it doesn't depend on materials
+    # to prevent workaround code like this
+    rel_path = os.path.join(arm.utils.build_dir(), 'compiled', 'Shaders')
+    full_path = os.path.join(arm.utils.get_fp(), rel_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+
+    # Output: world_[world_name].[frag/vert].glsl
+    make_shader.write_shader(rel_path, shader_context.vert, 'vert', world_name, 'world')
+    make_shader.write_shader(rel_path, shader_context.frag, 'frag', world_name, 'world')
 
 
 def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):

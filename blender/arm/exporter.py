@@ -1947,7 +1947,7 @@ class ArmoryExporter:
         """Exports the world of the scene."""
         world = self.scene.world
         if world is not None:
-            out_world = {'name': world.name}
+            out_world = {'name': arm.utils.safestr(world.name)}
 
             self.post_export_world(world, out_world)
             self.output['world_datas'].append(out_world)
