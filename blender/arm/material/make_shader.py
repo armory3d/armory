@@ -130,7 +130,7 @@ def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
         return
 
     # TODO: blend context
-    if mat_state.material.arm_blending and rpass == 'mesh':
+    if rpass == 'mesh' and mat_state.material.arm_blending:
         rpass = 'blend'
 
     file_ext = '.glsl'
