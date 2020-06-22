@@ -2796,20 +2796,21 @@ class ArmoryExporter:
 
         bgcol = world.arm_envtex_color
         # No compositor used
-        if '_LDR' in wrd.world_defs:
+        if '_LDR' in world.world_defs:
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
         out_world['background_color'] = arm.utils.color_to_int(bgcol)
 
-        if '_EnvSky' in wrd.world_defs:
+        if '_EnvSky' in world.world_defs:
             # Sky data for probe
             out_world['sun_direction'] =  list(world.arm_envtex_sun_direction)
             out_world['turbidity'] = world.arm_envtex_turbidity
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
-        if '_EnvTex' in wrd.world_defs or '_EnvImg' in wrd.world_defs:
-            o['envmap'] = world.arm_envtex_name.rsplit('.', 1)[0]
+        print('_EnvTex' in world.world_defs)
+        if '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs:
+            out_world['envmap'] = world.arm_envtex_name.rsplit('.', 1)[0]
             if disable_hdr:
                 out_world['envmap'] += '.jpg'
             else:
@@ -2822,10 +2823,11 @@ class ArmoryExporter:
         arm_radiance = False
         radtex = world.arm_envtex_name.rsplit('.', 1)[0]
         irrsharmonics = world.arm_envtex_irr_name
+
         # Radiance
-        if '_EnvTex' in wrd.world_defs:
+        if '_EnvTex' in world.world_defs:
             arm_radiance = rpdat.arm_radiance
-        elif '_EnvSky' in wrd.world_defs:
+        elif '_EnvSky' in world.world_defs:
             arm_radiance = rpdat.arm_radiance
             radtex = 'hosek'
         num_mips = world.arm_envtex_num_mips

@@ -18,10 +18,11 @@ def build():
             worlds.append(scene.world)
             build_node_tree(scene.world)
 
-def build_node_tree(world):
-    wname = arm.utils.safestr(world.name)
-    wrd = bpy.data.worlds['Arm']
-    wrd.world_defs = ''
+
+def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
+    """Generates the shader code for the given world."""
+    world_name = arm.utils.safestr(world.name)
+    world.world_defs = ''
     rpdat = arm.utils.get_rp()
 
     if callback is not None:
@@ -38,31 +39,31 @@ def build_node_tree(world):
     if not is_parsed:
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
-            wrd.world_defs += '_Irr'
+            world.world_defs += '_Irr'
         c = world.color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = 1.0
 
     # Clear to color if no texture or sky is provided
-    if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
-        if '_EnvImg' not in wrd.world_defs:
-            wrd.world_defs += '_EnvCol'
+    if '_EnvSky' not in world.world_defs and '_EnvTex' not in world.world_defs:
+        if '_EnvImg' not in world.world_defs:
+            world.world_defs += '_EnvCol'
         # Irradiance json file name
-        world.arm_envtex_name = wname
-        world.arm_envtex_irr_name = wname
-        write_probes.write_color_irradiance(wname, world.arm_envtex_color)
+        world.arm_envtex_name = world_name
+        world.arm_envtex_irr_name = world_name
+        write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
 
     # film_transparent
     if bpy.context.scene is not None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
-        wrd.world_defs += '_EnvTransp'
-        wrd.world_defs += '_EnvCol'
+        world.world_defs += '_EnvTransp'
+        world.world_defs += '_EnvCol'
 
     # Clouds enabled
     if rpdat.arm_clouds:
-        wrd.world_defs += '_EnvClouds'
+        world.world_defs += '_EnvClouds'
 
-    if '_EnvSky' in wrd.world_defs or '_EnvTex' in wrd.world_defs or '_EnvImg' in wrd.world_defs or '_EnvClouds' in wrd.world_defs:
-        wrd.world_defs += '_EnvStr'
+    if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
+        world.world_defs += '_EnvStr'
 
 def parse_world_output(world, node):
     if node.inputs[0].is_linked:
@@ -165,10 +166,10 @@ def parse_color(world, node):
         world.arm_envtex_num_mips = mip_count
 
         # Append envtex define
-        wrd.world_defs += '_EnvTex'
+        world.world_defs += '_EnvTex'
         # Append LDR define
         if disable_hdr:
-            wrd.world_defs += '_EnvLDR'
+            world.world_defs += '_EnvLDR'
         # Append radiance define
         if rpdat.arm_irradiance and rpdat.arm_radiance and not mobile_mat:
             wrd.world_defs += '_Rad'
@@ -201,8 +202,8 @@ def parse_color(world, node):
     elif node.type == 'TEX_SKY':
         # Match to cycles
         world.arm_envtex_strength *= 0.1
-        wrd.world_defs += '_EnvSky'
 
+        world.world_defs += '_EnvSky'
         assets.add_khafile_def('arm_hosek')
 
         world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]

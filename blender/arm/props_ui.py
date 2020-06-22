@@ -1,16 +1,16 @@
-import bpy
-import webbrowser
 import os
-from bpy.types import Menu, Panel, UIList
-from bpy.props import *
-import arm.utils
-import arm.make as make
-import arm.make_state as state
+
+import bpy
+
+import arm.api
 import arm.assets as assets
 import arm.log as log
-import arm.proxy
-import arm.api
+import arm.make as make
+import arm.make_state as state
+import arm.props as props
 import arm.props_properties
+import arm.proxy
+import arm.utils
 
 # Menu in object region
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
@@ -144,6 +144,49 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'arm_autobake')
             pass
+
+class ARM_PT_WorldPropsPanel(bpy.types.Panel):
+    bl_label = "Armory World Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "world"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        world = context.world
+        if world is None:
+            return
+
+        layout.prop(world, 'arm_use_fog')
+        col = layout.column(align=True)
+        col.enabled = world.arm_use_fog
+        col.prop(world, 'arm_fog_color')
+        col.prop(world, 'arm_fog_amounta')
+        col.prop(world, 'arm_fog_amountb')
+
+        layout.prop(world, 'arm_use_clouds')
+        col = layout.column(align=True)
+        col.enabled = world.arm_use_clouds
+        col.prop(world, 'arm_clouds_lower')
+        col.prop(world, 'arm_clouds_upper')
+        col.prop(world, 'arm_clouds_precipitation')
+        col.prop(world, 'arm_clouds_secondary')
+        col.prop(world, 'arm_clouds_wind')
+        col.prop(world, 'arm_clouds_steps')
+
+        layout.prop(world, "arm_use_water")
+        col = layout.column(align=True)
+        col.enabled = world.arm_use_water
+        col.prop(world, 'arm_water_level')
+        col.prop(world, 'arm_water_density')
+        col.prop(world, 'arm_water_displace')
+        col.prop(world, 'arm_water_speed')
+        col.prop(world, 'arm_water_freq')
+        col.prop(world, 'arm_water_refract')
+        col.prop(world, 'arm_water_reflect')
+        col.prop(world, 'arm_water_color')
 
 class ARM_PT_ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -826,25 +869,7 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         colb.enabled = rpdat.arm_radiance
         colb.prop(rpdat, 'arm_radiance_size')
         layout.prop(rpdat, 'arm_clouds')
-        col = layout.column()
-        col.enabled = rpdat.arm_clouds
-        col.prop(rpdat, 'arm_clouds_lower')
-        col.prop(rpdat, 'arm_clouds_upper')
-        col.prop(rpdat, 'arm_clouds_precipitation')
-        col.prop(rpdat, 'arm_clouds_secondary')
-        col.prop(rpdat, 'arm_clouds_wind')
-        col.prop(rpdat, 'arm_clouds_steps')
         layout.prop(rpdat, "rp_water")
-        col = layout.column()
-        col.enabled = rpdat.rp_water
-        col.prop(rpdat, 'arm_water_level')
-        col.prop(rpdat, 'arm_water_density')
-        col.prop(rpdat, 'arm_water_displace')
-        col.prop(rpdat, 'arm_water_speed')
-        col.prop(rpdat, 'arm_water_freq')
-        col.prop(rpdat, 'arm_water_refract')
-        col.prop(rpdat, 'arm_water_reflect')
-        col.prop(rpdat, 'arm_water_color')
 
 class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
     bl_label = "Post Process"
@@ -978,11 +1003,6 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col.enabled = rpdat.arm_grain
         col.prop(rpdat, 'arm_grain_strength')
         layout.prop(rpdat, 'arm_fog')
-        col = layout.column()
-        col.enabled = rpdat.arm_fog
-        col.prop(rpdat, 'arm_fog_color')
-        col.prop(rpdat, 'arm_fog_amounta')
-        col.prop(rpdat, 'arm_fog_amountb')
         layout.separator()
         layout.prop(rpdat, "rp_autoexposure")
         col = layout.column()
@@ -1433,6 +1453,7 @@ def register():
     bpy.utils.register_class(ARM_PT_PhysicsPropsPanel)
     bpy.utils.register_class(ARM_PT_DataPropsPanel)
     bpy.utils.register_class(ARM_PT_ScenePropsPanel)
+    bpy.utils.register_class(ARM_PT_WorldPropsPanel)
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
     bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
@@ -1482,6 +1503,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)
     bpy.utils.unregister_class(ARM_PT_PhysicsPropsPanel)
     bpy.utils.unregister_class(ARM_PT_DataPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_WorldPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
