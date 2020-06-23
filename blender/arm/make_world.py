@@ -2,13 +2,15 @@ import bpy
 import os
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
+from typing import List
+
 import arm.write_probes as write_probes
 import arm.assets as assets
 import arm.utils
 import arm.node_utils as node_utils
 import arm.log as log
 import arm.make_state as state
-from arm.material import make_shader
+from arm.material import make_shader, mat_state
 from arm.material.shader import ShaderContext, Shader
 
 callback = None
@@ -18,14 +20,13 @@ def build():
     for scene in bpy.data.scenes:
         if scene.arm_export and scene.world is not None and scene.world not in worlds:
             worlds.append(scene.world)
-            create_world_shaders(scene.world)
+            # create_world_shaders(scene.world)
 
 
-def create_world_shaders(world: bpy.types.World):
+def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
     """Creates fragment and vertex shaders for the given world."""
     world_name = arm.utils.safestr(world.name)
 
-    shader_data = {'name': world_name + '_data', 'contexts': []}
     shader_props = {
         'name': 'world_' + world_name,
         'depth_write': False,
@@ -34,6 +35,7 @@ def create_world_shaders(world: bpy.types.World):
         'color_attachments': ['_HDR'],
         'vertex_elements': [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}]
     }
+    shader_data = {'name': world_name + '_data', 'contexts': [shader_props]}
 
     # ShaderContext expects a material, but using a world also works
     shader_context = ShaderContext(world, shader_data, shader_props)
@@ -65,6 +67,12 @@ def create_world_shaders(world: bpy.types.World):
     # Output: world_[world_name].[frag/vert].glsl
     make_shader.write_shader(rel_path, shader_context.vert, 'vert', world_name, 'world')
     make_shader.write_shader(rel_path, shader_context.frag, 'frag', world_name, 'world')
+
+    # Write shader data file
+    shader_data_file = 'world_' + world_name + '_data.arm'
+    arm.utils.write_arm(os.path.join(full_path, shader_data_file), {'shader_datas': shader_context.data})
+    shader_data_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Shaders', shader_data_file)
+    assets.add_shader_data(shader_data_path)
 
 
 def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):

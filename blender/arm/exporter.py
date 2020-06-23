@@ -30,6 +30,7 @@ import arm.material.cycles as cycles
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.utils
+from arm import make_world
 
 
 @unique
@@ -124,7 +125,9 @@ class ArmoryExporter:
         self.camera_array = {}
         self.speaker_array = {}
         self.material_array = []
+        self.world_array = []
         self.particle_system_array = {}
+
 
         # `True` if there is at least one spawned camera in the scene
         self.camera_spawned = False
@@ -1947,10 +1950,15 @@ class ArmoryExporter:
         """Exports the world of the scene."""
         world = self.scene.world
         if world is not None:
-            out_world = {'name': arm.utils.safestr(world.name)}
+            world_name = arm.utils.safestr(world.name)
 
-            self.post_export_world(world, out_world)
-            self.output['world_datas'].append(out_world)
+            if world_name not in self.world_array:
+                self.world_array.append(world_name)
+                out_world = {'name': world_name}
+
+                make_world.create_world_shaders(world, self.output['material_datas'])
+                self.post_export_world(world, out_world)
+                self.output['world_datas'].append(out_world)
 
     def export_objects(self, scene):
         """Exports all supported blender objects.

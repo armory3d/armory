@@ -55,7 +55,7 @@ def build(material, mat_users, mat_armusers):
                     global_elems.append({'name': 'irot', 'data': 'float3'})
                 if bo.arm_instanced == 'Loc + Scale' or bo.arm_instanced == 'Loc + Rot + Scale':
                     global_elems.append({'name': 'iscl', 'data': 'float3'})
-                
+
     mat_state.data.global_elems = global_elems
 
     bind_constants = dict()
@@ -77,7 +77,7 @@ def build(material, mat_users, mat_armusers):
 
         if con != None:
             pass
-            
+
         elif rp == 'mesh':
             con = make_mesh.make(rp, rpasses)
 
