@@ -2,7 +2,7 @@ import bpy
 from bpy.types import NodeTree
 from bpy.props import *
 import nodeitems_utils
-from nodeitems_utils import NodeCategory
+from nodeitems_utils import NodeCategory, NodeItem
 from arm.logicnode import *
 import webbrowser
 
