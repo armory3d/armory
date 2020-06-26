@@ -14,6 +14,7 @@ from arm.material import make_shader, mat_state
 from arm.material.shader import ShaderContext, Shader
 
 callback = None
+shader_datas = []
 
 def build():
     worlds = []
@@ -25,10 +26,12 @@ def build():
 
 def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
     """Creates fragment and vertex shaders for the given world."""
+    global shader_datas
     world_name = arm.utils.safestr(world.name)
+    pass_name = 'World_' + world_name
 
     shader_props = {
-        'name': 'world_' + world_name,
+        'name': world_name,
         'depth_write': False,
         'compare_mode': 'less',
         'cull_mode': 'clockwise',
@@ -64,15 +67,19 @@ def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
     if not os.path.exists(full_path):
         os.makedirs(full_path)
 
-    # Output: world_[world_name].[frag/vert].glsl
-    make_shader.write_shader(rel_path, shader_context.vert, 'vert', world_name, 'world')
-    make_shader.write_shader(rel_path, shader_context.frag, 'frag', world_name, 'world')
+    # Output: World_[world_name].[frag/vert].glsl
+    make_shader.write_shader(rel_path, shader_context.vert, 'vert', world_name, 'World')
+    make_shader.write_shader(rel_path, shader_context.frag, 'frag', world_name, 'World')
 
     # Write shader data file
-    shader_data_file = 'world_' + world_name + '_data.arm'
+    shader_data_file = pass_name + '_data.arm'
     arm.utils.write_arm(os.path.join(full_path, shader_data_file), {'shader_datas': shader_context.data})
     shader_data_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Shaders', shader_data_file)
     assets.add_shader_data(shader_data_path)
+
+    assets.add_shader_pass(pass_name)
+    assets.shader_passes_assets[pass_name] = shader_context.data
+    shader_datas.append({'contexts': [shader_context.data], 'name': pass_name})
 
 
 def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):

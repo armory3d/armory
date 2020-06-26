@@ -169,8 +169,8 @@ def export_data(fp, sdk_path):
 
     # Write referenced shader passes
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        res = {}
-        res['shader_datas'] = []
+        res = {'shader_datas': []}
+
         for ref in assets.shader_passes:
             # Ensure shader pass source exists
             if not os.path.exists(raw_shaders_path + '/' + ref):
@@ -180,7 +180,12 @@ def export_data(fp, sdk_path):
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
+
+        # Workaround to also export non-material world shaders
+        res['shader_datas'] += make_world.shader_datas
+
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
             assets.add_shader(shaders_path + '/' + s + '.glsl')
