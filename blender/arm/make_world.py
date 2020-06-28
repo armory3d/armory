@@ -62,8 +62,6 @@ def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
 
     build_node_tree(world, frag, vert)
 
-    frag.write('fragColor = vec4(0.0);')
-
     # TODO: Rework shader export so that it doesn't depend on materials
     # to prevent workaround code like this
     rel_path = os.path.join(arm.utils.build_dir(), 'compiled', 'Shaders')
@@ -115,6 +113,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     if '_EnvSky' not in world.world_defs and '_EnvTex' not in world.world_defs:
         if '_EnvImg' not in world.world_defs:
             world.world_defs += '_EnvCol'
+            frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
         # Irradiance json file name
         world.arm_envtex_name = world_name
         world.arm_envtex_irr_name = world_name
@@ -124,6 +123,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     if bpy.context.scene is not None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
         world.world_defs += '_EnvTransp'
         world.world_defs += '_EnvCol'
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
 
     # Clouds enabled
     if rpdat.arm_clouds:
@@ -131,6 +131,12 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
 
     if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
         world.world_defs += '_EnvStr'
+
+    if '_EnvCol' in world.world_defs:
+        frag.write('fragColor = vec4(backgroundCol, 1.0);')
+    else:
+        # Placeholder, replace later
+        frag.write('fragColor = vec4(1.0, 1.0, 1.0, 1.0);')
 
 def parse_world_output(world, node):
     if node.inputs[0].is_linked:
@@ -157,7 +163,7 @@ def parse_surface(world, node):
             color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
             parse_color(world, color_node)
 
-def parse_color(world, node):
+def parse_color(world: bpy.types.World, node: bpy.types.Node):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
