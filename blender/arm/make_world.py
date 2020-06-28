@@ -16,6 +16,7 @@ from arm.material.shader import ShaderContext, Shader
 callback = None
 shader_datas = []
 
+
 def build():
     worlds = []
     for scene in bpy.data.scenes:
@@ -98,15 +99,15 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     if world.node_tree is not None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node is not None:
-            parse_world_output(world, output_node, frag)
-            is_parsed = True
+            is_parsed = parse_world_output(world, output_node, frag)
 
+    # No world nodes/no output node, use background color
     if not is_parsed:
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
             world.world_defs += '_Irr'
-        c = world.color
-        world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
+        col = world.color
+        world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
 
     # Clear to color if no texture or sky is provided
@@ -138,30 +139,39 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     # Mark as non-opaque
     frag.write('fragColor.a = 0.0;')
 
-def parse_world_output(world, node, frag: Shader):
-    if node.inputs[0].is_linked:
-        surface_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
-        parse_surface(world, surface_node, frag)
 
-def parse_surface(world, node, frag: Shader):
+def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader) -> bool:
+    """Parse the world's output node. Return `False` when the node has
+    no connected surface input."""
+    if not node_output.inputs[0].is_linked:
+        return False
+
+    surface_node = node_utils.find_node_by_link(world.node_tree, node_output, node_output.inputs[0])
+    parse_surface(world, surface_node, frag)
+    return True
+
+
+def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
 
-    # Extract environment strength
-    if node.type == 'BACKGROUND':
-
+    if node_surface.type in ('BACKGROUND', 'EMISSION'):
         # Append irradiance define
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
 
-        world.arm_envtex_color = node.inputs[0].default_value
-        world.arm_envtex_strength = node.inputs[1].default_value
+        # Extract environment strength
+        # Todo: follow/parse strength input
+        world.arm_envtex_strength = node_surface.inputs[1].default_value
 
-        # Strength
-        if node.inputs[0].is_linked:
-            color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
+        # Color
+        if node_surface.inputs[0].is_linked:
+            color_node = node_utils.find_node_by_link(world.node_tree, node_surface, node_surface.inputs[0])
             parse_color(world, color_node, frag)
+        else:
+            world.arm_envtex_color = node_surface.inputs[0].default_value
+
 
 def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
     wrd = bpy.data.worlds['Arm']
