@@ -134,7 +134,6 @@ def build():
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':
-        assets.add_shader_pass('world_pass')
         if '_EnvClouds' in wrd.world_defs:
             assets.add(assets_path + 'clouds_base.raw')
             assets.add_embedded_data('clouds_base.raw')

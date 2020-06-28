@@ -1956,7 +1956,6 @@ class ArmoryExporter:
                 self.world_array.append(world_name)
                 out_world = {'name': world_name}
 
-                make_world.create_world_shaders(world, self.output['material_datas'])
                 self.post_export_world(world, out_world)
                 self.output['world_datas'].append(out_world)
 
@@ -2811,7 +2810,7 @@ class ArmoryExporter:
 
         if '_EnvSky' in world.world_defs:
             # Sky data for probe
-            out_world['sun_direction'] =  list(world.arm_envtex_sun_direction)
+            out_world['sun_direction'] = list(world.arm_envtex_sun_direction)
             out_world['turbidity'] = world.arm_envtex_turbidity
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
 

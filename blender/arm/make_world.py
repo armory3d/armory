@@ -20,12 +20,13 @@ shader_datas = []
 def build():
     worlds = []
     for scene in bpy.data.scenes:
+        # Only export worlds from enabled scenes
         if scene.arm_export and scene.world is not None and scene.world not in worlds:
             worlds.append(scene.world)
-            # create_world_shaders(scene.world)
+            create_world_shaders(scene.world)
 
 
-def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
+def create_world_shaders(world: bpy.types.World):
     """Creates fragment and vertex shaders for the given world."""
     global shader_datas
     world_name = arm.utils.safestr(world.name)
@@ -90,6 +91,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     world_name = arm.utils.safestr(world.name)
     world.world_defs = ''
     rpdat = arm.utils.get_rp()
+    wrd = bpy.data.worlds['Arm']
 
     if callback is not None:
         callback()
@@ -127,17 +129,17 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
 
     # Clouds enabled
-    if rpdat.arm_clouds:
+    if rpdat.arm_clouds and world.arm_use_clouds:
         world.world_defs += '_EnvClouds'
+        # Also set this flag globally so that the required textures are
+        # included
+        wrd.world_defs += '_EnvClouds'
+        frag_write_clouds(world, frag)
 
     if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
         frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
-    if '_EnvCol' in world.world_defs:
-        frag.write('fragColor.rgb = backgroundCol;')
-
-    # Mark as non-opaque
-    frag.write('fragColor.a = 0.0;')
+    frag_write_main(world, frag)
 
 
 def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader) -> bool:
@@ -330,3 +332,101 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 
             world.arm_envtex_name = 'hosek'
             world.arm_envtex_num_mips = 8
+
+
+def frag_write_clouds(world: bpy.types.World, frag: Shader):
+    """References:
+    GPU PRO 7 - Real-time Volumetric Cloudscapes
+    https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn
+    https://github.com/sebh/TileableVolumeNoise
+    """
+    frag.add_uniform('sampler3D scloudsBase', link='$clouds_base.raw')
+    frag.add_uniform('sampler3D scloudsDetail', link='$clouds_detail.raw')
+    frag.add_uniform('sampler2D scloudsMap', link='$clouds_map.png')
+    frag.add_uniform('float time', link='_time')
+
+    frag.add_const('float', 'cloudsLower', str(round(world.arm_clouds_lower * 100) / 100))
+    frag.add_const('float', 'cloudsUpper', str(round(world.arm_clouds_upper * 100) / 100))
+    frag.add_const('vec2', 'cloudsWind', 'vec2(' + str(round(world.arm_clouds_wind[0] * 100) / 100) + ',' + str(round(world.arm_clouds_wind[1] * 100) / 100) + ')')
+    frag.add_const('float', 'cloudsPrecipitation', str(round(world.arm_clouds_precipitation * 100) / 100))
+    frag.add_const('float', 'cloudsSecondary', str(round(world.arm_clouds_secondary * 100) / 100))
+    frag.add_const('float', 'cloudsSteps', str(round(world.arm_clouds_steps * 100) / 100))
+
+    frag.add_function('''float remap(float old_val, float old_min, float old_max, float new_min, float new_max) {
+\treturn new_min + (((old_val - old_min) / (old_max - old_min)) * (new_max - new_min));
+}''')
+
+    frag.add_function('''float getDensityHeightGradientForPoint(float height, float cloud_type) {
+\tconst vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
+\tconst vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
+\tconst vec4 cumulusGrad = vec4(0.01f, 0.0625f, 0.78f, 1.0f);
+\tfloat stratus = 1.0f - clamp(cloud_type * 2.0f, 0, 1);
+\tfloat stratocumulus = 1.0f - abs(cloud_type - 0.5f) * 2.0f;
+\tfloat cumulus = clamp(cloud_type - 0.5f, 0, 1) * 2.0f;
+\tvec4 cloudGradient = stratusGrad * stratus + stratocumulusGrad * stratocumulus + cumulusGrad * cumulus;
+\treturn smoothstep(cloudGradient.x, cloudGradient.y, height) - smoothstep(cloudGradient.z, cloudGradient.w, height);
+}''')
+
+    frag.add_function('''float sampleCloudDensity(vec3 p) {
+\tfloat cloud_base = textureLod(scloudsBase, p, 0).r * 40; // Base noise
+\tvec3 weather_data = textureLod(scloudsMap, p.xy, 0).rgb; // Weather map
+\tcloud_base *= getDensityHeightGradientForPoint(p.z, weather_data.b); // Cloud type
+\tcloud_base = remap(cloud_base, weather_data.r, 1.0, 0.0, 1.0); // Coverage
+\tcloud_base *= weather_data.r;
+\tfloat cloud_detail = textureLod(scloudsDetail, p, 0).r * 2; // Detail noise
+\tfloat cloud_detail_mod = mix(cloud_detail, 1.0 - cloud_detail, clamp(p.z * 10.0, 0, 1));
+\tcloud_base = remap(cloud_base, cloud_detail_mod * 0.2, 1.0, 0.0, 1.0);
+\treturn cloud_base;
+}''')
+
+    func_cloud_radiance = 'float cloudRadiance(vec3 p, vec3 dir) {\n'
+    if '_EnvSky' in world.world_defs:
+        func_cloud_radiance += '\tvec3 sun_dir = hosekSunDirection;\n'
+    else:
+        func_cloud_radiance += '\tvec3 sun_dir = vec3(0, 0, -1);\n'
+    func_cloud_radiance += '''\tconst int steps = 8;
+\tfloat step_size = 0.5 / float(steps);
+\tfloat d = 0.0;
+\tp += sun_dir * step_size;
+\tfor(int i = 0; i < steps; ++i) {
+\t\td += sampleCloudDensity(p + sun_dir * float(i) * step_size);
+\t}
+\treturn 1.0 - d;
+}'''
+    frag.add_function(func_cloud_radiance)
+
+    frag.add_function('''vec3 traceClouds(vec3 sky, vec3 dir) {
+\tconst float step_size = 0.5 / float(cloudsSteps);
+\tfloat T = 1.0;
+\tfloat C = 0.0;
+\tvec2 uv = dir.xy / dir.z * 0.4 * cloudsLower + cloudsWind * time * 0.02;
+
+\tfor (int i = 0; i < cloudsSteps; ++i) {
+\t\tfloat h = float(i) / float(cloudsSteps);
+\t\tvec3 p = vec3(uv * 0.04, h);
+\t\tfloat d = sampleCloudDensity(p);
+
+\t\tif (d > 0) {
+\t\t\t// float radiance = cloudRadiance(p, dir);
+\t\t\tC += T * exp(h) * d * step_size * 0.6 * cloudsPrecipitation;
+\t\t\tT *= exp(-d * step_size);
+\t\t\tif (T < 0.01) break;
+\t\t}
+\t\tuv += (dir.xy / dir.z) * step_size * cloudsUpper;
+\t}
+
+\treturn vec3(C) + sky * T;
+}''')
+
+
+def frag_write_main(world: bpy.types.World, frag: Shader):
+    if '_EnvCol' in world.world_defs:
+        frag.write('fragColor.rgb = backgroundCol;')
+
+    if '_EnvClouds' in world.world_defs:
+        if '_EnvCol' in world.world_defs:
+            frag.write('vec3 n = normalize(normal);')
+        frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
+
+    # Mark as non-opaque
+    frag.write('fragColor.a = 0.0;')
