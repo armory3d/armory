@@ -1,4 +1,5 @@
 import bpy
+import multiprocessing
 import os
 import sys
 import subprocess
@@ -114,6 +115,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
 
     wrd = bpy.data.worlds['Arm']
     use_opencl = 'true'
+    cpu_count = multiprocessing.cpu_count()
 
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
@@ -128,7 +130,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--glossBias', '3',
             '--lightingModel', 'blinnbrdf',
             '--edgeFixup', 'none',
-            '--numCpuProcessingThreads', '4',
+            '--numCpuProcessingThreads', str(cpu_count),
             '--useOpenCL', use_opencl,
             '--clVendor', 'anyGpuVendor',
             '--deviceType', 'gpu',
@@ -154,7 +156,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --glossBias 3' + \
             ' --lightingModel blinnbrdf' + \
             ' --edgeFixup none' + \
-            ' --numCpuProcessingThreads 4' + \
+            ' --numCpuProcessingThreads ' + str(cpu_count) + \
             ' --useOpenCL ' + use_opencl + \
             ' --clVendor anyGpuVendor' + \
             ' --deviceType gpu' + \
