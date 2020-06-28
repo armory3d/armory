@@ -42,8 +42,8 @@ def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
 
     # ShaderContext expects a material, but using a world also works
     shader_context = ShaderContext(world, shader_data, shader_props)
-    vert = shader_context.make_vert()
-    frag = shader_context.make_frag()
+    vert = shader_context.make_vert(custom_name="World_" + world_name)
+    frag = shader_context.make_frag(custom_name="World_" + world_name)
 
     # Update name, make_vert() and make_frag() above need another name
     # to work
