@@ -378,7 +378,7 @@ class Shader:
         for c in self.constants:
             s += 'const ' + c + ';\n'
         for f in self.functions:
-            s += self.functions[f]
+            s += self.functions[f] + '\n'
         s += 'void main() {\n'
         s += self.main_attribs
         s += self.main_textures
