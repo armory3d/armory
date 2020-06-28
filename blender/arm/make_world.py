@@ -45,8 +45,12 @@ def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
     vert = shader_context.make_vert()
     frag = shader_context.make_frag()
 
+    # Update name, make_vert() and make_frag() above need another name
+    # to work
+    shader_context.data['name'] = pass_name
+
     vert.add_out('vec3 normal')
-    vert.add_uniform('mat4 SMVP')
+    vert.add_uniform('mat4 SMVP', link="_skydomeMatrix")
 
     frag.add_include('compiled.inc')
     frag.add_in('vec3 normal')
@@ -73,7 +77,7 @@ def create_world_shaders(world: bpy.types.World, out_shader_datas: List):
 
     # Write shader data file
     shader_data_file = pass_name + '_data.arm'
-    arm.utils.write_arm(os.path.join(full_path, shader_data_file), {'shader_datas': shader_context.data})
+    arm.utils.write_arm(os.path.join(full_path, shader_data_file), {'contexts': [shader_context.data]})
     shader_data_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Shaders', shader_data_file)
     assets.add_shader_data(shader_data_path)
 
