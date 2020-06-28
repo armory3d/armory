@@ -98,7 +98,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     if world.node_tree is not None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node is not None:
-            parse_world_output(world, output_node)
+            parse_world_output(world, output_node, frag)
             is_parsed = True
 
     if not is_parsed:
@@ -130,20 +130,20 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
         world.world_defs += '_EnvClouds'
 
     if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
-        world.world_defs += '_EnvStr'
+        frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     if '_EnvCol' in world.world_defs:
-        frag.write('fragColor = vec4(backgroundCol, 1.0);')
-    else:
-        # Placeholder, replace later
-        frag.write('fragColor = vec4(1.0, 1.0, 1.0, 1.0);')
+        frag.write('fragColor.rgb = backgroundCol;')
 
-def parse_world_output(world, node):
+    # Mark as non-opaque
+    frag.write('fragColor.a = 0.0;')
+
+def parse_world_output(world, node, frag: Shader):
     if node.inputs[0].is_linked:
         surface_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
-        parse_surface(world, surface_node)
+        parse_surface(world, surface_node, frag)
 
-def parse_surface(world, node):
+def parse_surface(world, node, frag: Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
@@ -161,9 +161,9 @@ def parse_surface(world, node):
         # Strength
         if node.inputs[0].is_linked:
             color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
-            parse_color(world, color_node)
+            parse_color(world, color_node, frag)
 
-def parse_color(world: bpy.types.World, node: bpy.types.Node):
+def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
@@ -278,6 +278,26 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node):
 
         world.world_defs += '_EnvSky'
         assets.add_khafile_def('arm_hosek')
+        frag.add_uniform('vec3 A', link="_hosekA")
+        frag.add_uniform('vec3 B', link="_hosekB")
+        frag.add_uniform('vec3 C', link="_hosekC")
+        frag.add_uniform('vec3 D', link="_hosekD")
+        frag.add_uniform('vec3 E', link="_hosekE")
+        frag.add_uniform('vec3 F', link="_hosekF")
+        frag.add_uniform('vec3 G', link="_hosekG")
+        frag.add_uniform('vec3 H', link="_hosekH")
+        frag.add_uniform('vec3 I', link="_hosekI")
+        frag.add_uniform('vec3 Z', link="_hosekZ")
+        frag.add_uniform('vec3 hosekSunDirection', link="_hosekSunDirection")
+        frag.add_function('''vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
+\tvec3 chi = (1 + cos_gamma * cos_gamma) / pow(1 + H * H - 2 * cos_gamma * H, vec3(1.5));
+\treturn (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
+}''')
+        frag.write('vec3 n = normalize(normal);')
+        frag.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
+        frag.write('float cos_gamma = dot(n, hosekSunDirection);')
+        frag.write('float gamma_val = acos(cos_gamma);')
+        frag.write('fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;')
 
         world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
         world.arm_envtex_turbidity = node.turbidity
