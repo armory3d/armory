@@ -327,7 +327,7 @@ class PhysicsWorld extends Trait {
 		#if js
 		rayCallback.set_m_collisionFilterGroup(group);
 		rayCallback.set_m_collisionFilterMask(mask);
-		#elseif cpp
+		#elseif (cpp || hl)
 		rayCallback.m_collisionFilterGroup = group;
 		rayCallback.m_collisionFilterMask = mask;
 		#end
@@ -348,7 +348,7 @@ class PhysicsWorld extends Trait {
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(untyped body.userIndex);
 			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
-			#elseif cpp
+			#elseif (cpp || hl)
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
