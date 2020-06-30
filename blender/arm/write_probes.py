@@ -143,15 +143,18 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--outputNum', '1',
             '--output0', output_file_rad,
             '--output0params', 'hdr,rgbe,latlong'])
+        if wrd.arm_verbose_output:
+            print(cmd)
+        else:
+            cmd.append(' --silent')
+        subprocess.call([cmd])
     else:
-        subprocess.call([ \
-            cmft_path + \
+        cmd = cmft_path + \
             ' --input "' + scaled_file + '"' + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
             ' --excludeBase false' + \
-            #' --mipCount ' + str(mip_count) + \
             ' --glossScale 8' + \
             ' --glossBias 3' + \
             ' --lightingModel blinnbrdf' + \
@@ -168,7 +171,12 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --outputGammaDenominator 1.0' + \
             ' --outputNum 1' + \
             ' --output0 "' + output_file_rad + '"' + \
-            ' --output0params hdr,rgbe,latlong'], shell=True)
+            ' --output0params hdr,rgbe,latlong'
+        if wrd.arm_verbose_output:
+            print(cmd)
+        else:
+            cmd += ' --silent'
+        subprocess.call([cmd], shell=True)
 
     # Remove size extensions in file name
     mip_w = int(face_size * 4)
