@@ -2815,7 +2815,7 @@ class ArmoryExporter:
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
-        print('_EnvTex' in world.world_defs)
+
         if '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs:
             out_world['envmap'] = world.arm_envtex_name.rsplit('.', 1)[0]
             if disable_hdr:

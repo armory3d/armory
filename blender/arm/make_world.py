@@ -118,7 +118,8 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
             world.world_defs += '_EnvCol'
             frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
         # Irradiance json file name
-        world.arm_envtex_name = world_name
+        # Todo: this breaks static image backgrounds
+        # world.arm_envtex_name = world_name
         world.arm_envtex_irr_name = world_name
         write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
 
@@ -261,10 +262,16 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 
     # Static image background
     elif node.type == 'TEX_IMAGE':
+        world.world_defs += '_EnvImg'
+
+        # Background texture
+        frag.add_uniform('sampler2D envmap', link='_envmap')
+        frag.add_uniform('vec2 screenSize', link='_screenSize')
+
         image = node.image
         filepath = image.filepath
 
-        if image.packed_file != None:
+        if image.packed_file is not None:
             # Extract packed data
             filepath = arm.utils.build_dir() + '/compiled/Assets/unpacked'
             unpack_path = arm.utils.get_fp() + filepath
@@ -422,6 +429,12 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
 def frag_write_main(world: bpy.types.World, frag: Shader):
     if '_EnvCol' in world.world_defs:
         frag.write('fragColor.rgb = backgroundCol;')
+
+    elif '_EnvImg' in world.world_defs:
+        # Will have to get rid of gl_FragCoord, pass texture coords from
+        # vertex shader
+        frag.write('vec2 texco = gl_FragCoord.xy / screenSize;')
+        frag.write('fragColor.rgb = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;')
 
     if '_EnvClouds' in world.world_defs:
         if '_EnvCol' in world.world_defs:
