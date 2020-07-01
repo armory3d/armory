@@ -426,6 +426,8 @@ def frag_write_main(world: bpy.types.World, frag: Shader):
 
     if '_EnvCol' in world.world_defs:
         frag.write('fragColor.rgb = backgroundCol;')
+        if '_EnvTransp' in world.world_defs:
+            frag.write('return;')
 
     # Static background image
     elif '_EnvImg' in world.world_defs:
