@@ -183,6 +183,10 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image is not None:
+        world.world_defs += '_EnvTex'
+
+        frag.add_include('std/math.glsl')
+        frag.add_uniform('sampler2D envmap', link='_envmap')
 
         image = node.image
         filepath = image.filepath
@@ -251,8 +255,6 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 
         world.arm_envtex_num_mips = mip_count
 
-        # Append envtex define
-        world.world_defs += '_EnvTex'
         # Append LDR define
         if disable_hdr:
             world.world_defs += '_EnvLDR'
@@ -430,16 +432,29 @@ def frag_write_main(world: bpy.types.World, frag: Shader):
     if '_EnvCol' in world.world_defs:
         frag.write('fragColor.rgb = backgroundCol;')
 
+    # Static background image
     elif '_EnvImg' in world.world_defs:
         # Will have to get rid of gl_FragCoord, pass texture coords from
         # vertex shader
         frag.write('vec2 texco = gl_FragCoord.xy / screenSize;')
         frag.write('fragColor.rgb = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;')
 
+    # Environment texture
+    # Check for _EnvSky too to prevent case when sky radiance is enabled
+    elif '_EnvTex' in world.world_defs and '_EnvSky' not in world.world_defs:
+        frag.write('vec3 n = normalize(normal);')
+        frag.write('fragColor.rgb = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;')
+
+        if '_EnvLDR' in world.world_defs:
+            frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
+
     if '_EnvClouds' in world.world_defs:
         if '_EnvCol' in world.world_defs:
             frag.write('vec3 n = normalize(normal);')
         frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
+
+    if '_EnvLDR' in world.world_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
     # Mark as non-opaque
     frag.write('fragColor.a = 0.0;')
