@@ -103,7 +103,7 @@ class PhysicsDrag extends Trait {
 				dir.setZ(dir.z() * pickDist);
 				var newPivotB = new bullet.Bt.Vector3(rayFrom.x() + dir.x(), rayFrom.y() + dir.y(), rayFrom.z() + dir.z());
 
-				#if js
+				#if (js || hl)
 				pickConstraint.getFrameOffsetA().setOrigin(newPivotB);
 				#elseif cpp
 				pickConstraint.setFrameOffsetAOrigin(newPivotB);
