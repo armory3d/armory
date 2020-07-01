@@ -233,12 +233,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
              ('Clear', 'Clear', 'Clear'),
              ('Off', 'No Clear', 'Off'),
       ],
-      name="Background", description="Background type", default='World', update=update_renderpath)    
+      name="Background", description="Background type", default='World', update=update_renderpath)
     arm_irradiance: BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
     arm_radiance: BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
     arm_radiance_size: EnumProperty(
         items=[('512', '512', '512'),
-               ('1024', '1024', '1024'), 
+               ('1024', '1024', '1024'),
                ('2048', '2048', '2048')],
         name="Map Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     rp_autoexposure: BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
@@ -296,19 +296,19 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_translucency: BoolProperty(name="Translucency", description="Current render-path state", default=False)
     rp_translucency_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
     rp_decals: BoolProperty(name="Decals", description="Current render-path state", default=False)
     rp_decals_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Decals", description="Decals pass", default='Auto', update=update_decals_state)
     rp_overlays: BoolProperty(name="Overlays", description="Current render-path state", default=False)
     rp_overlays_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
     rp_sss: BoolProperty(name="SSS", description="Current render-path state", default=False)
@@ -329,7 +329,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Shader', 'Shader', 'Shader')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
-    rp_water: BoolProperty(name="Water", description="Water surface pass", default=False, update=update_renderpath)
+    rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
     rp_gi: EnumProperty( # TODO: remove in 0.8
         items=[('Off', 'Off', 'Off'),
@@ -350,13 +350,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('0.5', '0.5', '0.5'),
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
-    arm_clouds: BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Micro shadowing based on ambient occlusion", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
-               ('Linear', 'Linear', 'Linear'), 
-               ('Point', 'Closest', 'Point'), 
+               ('Linear', 'Linear', 'Linear'),
+               ('Point', 'Closest', 'Point'),
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model: EnumProperty(
@@ -380,7 +380,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution", description="Resolution to perform rendering at", default='Display', update=update_renderpath)
     arm_rp_resolution_size: IntProperty(name="Size", description="Resolution height in pixels(for example 720p), width is auto-fit to preserve aspect ratio", default=720, min=0, update=update_renderpath)
     arm_rp_resolution_filter: EnumProperty(
-        items=[('Linear', 'Linear', 'Linear'), 
+        items=[('Linear', 'Linear', 'Linear'),
                ('Point', 'Closest', 'Point')],
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
@@ -397,7 +397,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('4', '4', '4'),
                ('8', '8', '8'),
                ('16', '16', '16')],
-        name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
+        name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')
 
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
@@ -412,13 +412,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=1.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_clouds_lower: FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_upper: FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_wind: FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
-    arm_clouds_secondary: FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_precipitation: FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_steps: IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
-    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1,1,1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
     arm_water_displace: FloatProperty(name="Displace", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_speed: FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)

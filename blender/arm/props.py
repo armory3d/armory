@@ -270,11 +270,6 @@ def init_properties():
     bpy.types.World.world_defs = StringProperty(name="World Shader Defs", default='')
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
 
-    bpy.types.World.arm_use_fog = BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_color = FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_amounta = FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_amountb = FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
-
     bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
@@ -282,16 +277,6 @@ def init_properties():
     bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_steps = IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
-
-    bpy.types.World.arm_use_water = BoolProperty(name="Water", description="Water surface pass", default=False, update=props_renderpath.update_renderpath)
-    bpy.types.World.arm_water_color = FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_level = FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_displace = FloatProperty(name="Displace", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_speed = FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_freq = FloatProperty(name="Freq", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_density = FloatProperty(name="Density", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_refract = FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_water_reflect = FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
 
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)

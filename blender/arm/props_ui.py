@@ -159,13 +159,6 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         if world is None:
             return
 
-        layout.prop(world, 'arm_use_fog')
-        col = layout.column(align=True)
-        col.enabled = world.arm_use_fog
-        col.prop(world, 'arm_fog_color')
-        col.prop(world, 'arm_fog_amounta')
-        col.prop(world, 'arm_fog_amountb')
-
         layout.prop(world, 'arm_use_clouds')
         col = layout.column(align=True)
         col.enabled = world.arm_use_clouds
@@ -175,18 +168,6 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         col.prop(world, 'arm_clouds_secondary')
         col.prop(world, 'arm_clouds_wind')
         col.prop(world, 'arm_clouds_steps')
-
-        layout.prop(world, "arm_use_water")
-        col = layout.column(align=True)
-        col.enabled = world.arm_use_water
-        col.prop(world, 'arm_water_level')
-        col.prop(world, 'arm_water_density')
-        col.prop(world, 'arm_water_displace')
-        col.prop(world, 'arm_water_speed')
-        col.prop(world, 'arm_water_freq')
-        col.prop(world, 'arm_water_refract')
-        col.prop(world, 'arm_water_reflect')
-        col.prop(world, 'arm_water_color')
 
 class ARM_PT_ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -870,6 +851,16 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         colb.prop(rpdat, 'arm_radiance_size')
         layout.prop(rpdat, 'arm_clouds')
         layout.prop(rpdat, "rp_water")
+        col = layout.column(align=True)
+        col.enabled = rpdat.rp_water
+        col.prop(rpdat, 'arm_water_level')
+        col.prop(rpdat, 'arm_water_density')
+        col.prop(rpdat, 'arm_water_displace')
+        col.prop(rpdat, 'arm_water_speed')
+        col.prop(rpdat, 'arm_water_freq')
+        col.prop(rpdat, 'arm_water_refract')
+        col.prop(rpdat, 'arm_water_reflect')
+        col.prop(rpdat, 'arm_water_color')
 
 class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
     bl_label = "Post Process"
@@ -1003,6 +994,11 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col.enabled = rpdat.arm_grain
         col.prop(rpdat, 'arm_grain_strength')
         layout.prop(rpdat, 'arm_fog')
+        col = layout.column(align=True)
+        col.enabled = rpdat.arm_fog
+        col.prop(rpdat, 'arm_fog_color')
+        col.prop(rpdat, 'arm_fog_amounta')
+        col.prop(rpdat, 'arm_fog_amountb')
         layout.separator()
         layout.prop(rpdat, "rp_autoexposure")
         col = layout.column()
