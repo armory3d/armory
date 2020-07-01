@@ -1,15 +1,11 @@
 import bpy
 from bpy.props import *
-import os
-import shutil
-import arm.props_ui as props_ui
+
 import arm.assets as assets
-import arm.log as log
-import arm.utils
 import arm.make
-import arm.props_renderpath as props_renderpath
-import arm.proxy
 import arm.nodes_logic
+import arm.proxy
+import arm.utils
 
 # Armory version
 arm_version = '2020.6'

@@ -1,17 +1,14 @@
-import bpy
 import os
-from bpy.types import NodeTree, Node, NodeSocket
-from bpy.props import *
-from typing import List
 
-import arm.write_probes as write_probes
+import bpy
+
 import arm.assets as assets
-import arm.utils
-import arm.node_utils as node_utils
 import arm.log as log
-import arm.make_state as state
-from arm.material import make_shader, mat_state
+from arm.material import make_shader
 from arm.material.shader import ShaderContext, Shader
+import arm.node_utils as node_utils
+import arm.utils
+import arm.write_probes as write_probes
 
 callback = None
 shader_datas = []

@@ -1,10 +1,8 @@
-import os
-import shutil
+import bpy
+from bpy.props import *
+
 import arm.assets as assets
 import arm.utils
-import bpy
-from bpy.types import Menu, Panel, UIList
-from bpy.props import *
 
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
