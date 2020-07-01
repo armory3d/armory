@@ -311,11 +311,6 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 \tvec3 chi = (1 + cos_gamma * cos_gamma) / pow(1 + H * H - 2 * cos_gamma * H, vec3(1.5));
 \treturn (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
 }''')
-        frag.write('vec3 n = normalize(normal);')
-        frag.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
-        frag.write('float cos_gamma = dot(n, hosekSunDirection);')
-        frag.write('float gamma_val = acos(cos_gamma);')
-        frag.write('fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;')
 
         world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
         world.arm_envtex_turbidity = node.turbidity
@@ -426,6 +421,9 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
 
 
 def frag_write_main(world: bpy.types.World, frag: Shader):
+    if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvClouds' in world.world_defs:
+        frag.write('vec3 n = normalize(normal);')
+
     if '_EnvCol' in world.world_defs:
         frag.write('fragColor.rgb = backgroundCol;')
 
@@ -437,17 +435,20 @@ def frag_write_main(world: bpy.types.World, frag: Shader):
         frag.write('fragColor.rgb = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;')
 
     # Environment texture
-    # Check for _EnvSky too to prevent case when sky radiance is enabled
+    # Also check for _EnvSky to prevent case when sky radiance is enabled
     elif '_EnvTex' in world.world_defs and '_EnvSky' not in world.world_defs:
-        frag.write('vec3 n = normalize(normal);')
         frag.write('fragColor.rgb = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;')
 
         if '_EnvLDR' in world.world_defs:
             frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
 
+    if '_EnvSky' in world.world_defs:
+        frag.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
+        frag.write('float cos_gamma = dot(n, hosekSunDirection);')
+        frag.write('float gamma_val = acos(cos_gamma);')
+        frag.write('fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;')
+
     if '_EnvClouds' in world.world_defs:
-        if '_EnvCol' in world.world_defs:
-            frag.write('vec3 n = normalize(normal);')
         frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
 
     if '_EnvLDR' in world.world_defs:
