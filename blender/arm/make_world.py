@@ -10,14 +10,14 @@ import arm.node_utils as node_utils
 import arm.utils
 import arm.write_probes as write_probes
 
-# See make.py
+callback = None
 shader_datas = []
 
 
 def build():
     worlds = []
     for scene in bpy.data.scenes:
-        # Only export worlds from enabled scenes that are not yet exported
+        # Only export worlds from enabled scenes
         if scene.arm_export and scene.world is not None and scene.world not in worlds:
             worlds.append(scene.world)
             create_world_shaders(scene.world)
@@ -89,6 +89,9 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
     world.world_defs = ''
     rpdat = arm.utils.get_rp()
     wrd = bpy.data.worlds['Arm']
+
+    if callback is not None:
+        callback()
 
     # Traverse world node tree
     is_parsed = False
