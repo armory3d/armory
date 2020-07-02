@@ -2653,11 +2653,11 @@ class ArmoryExporter:
             # Wrong modifier type
             return
 
-        out_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
+        out_trait['parameters'] = [str(soft_type), str(bend), str(modifier.settings.mass), str(bobject.arm_soft_body_margin)]
         o['traits'].append(out_trait)
 
         if soft_type == 0:
-            ArmoryExporter.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
+            ArmoryExporter.add_hook_mod(o, bobject, '', modifier.settings.vertex_group_mass)
 
     @staticmethod
     def add_hook_mod(o, bobject: bpy.types.Object, target_name, group_name):
