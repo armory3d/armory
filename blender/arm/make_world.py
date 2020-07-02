@@ -59,7 +59,7 @@ def create_world_shaders(world: bpy.types.World):
     vec4 position = SMVP * vec4(pos, 1.0);
     gl_Position = vec4(position);''')
 
-    build_node_tree(world, frag, vert)
+    build_node_tree(world, frag)
 
     # TODO: Rework shader export so that it doesn't depend on materials
     # to prevent workaround code like this
@@ -83,7 +83,7 @@ def create_world_shaders(world: bpy.types.World):
     shader_datas.append({'contexts': [shader_context.data], 'name': pass_name})
 
 
-def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader):
+def build_node_tree(world: bpy.types.World, frag: Shader):
     """Generates the shader code for the given world."""
     world_name = arm.utils.safestr(world.name)
     world.world_defs = ''
