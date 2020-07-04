@@ -536,6 +536,8 @@ def safestr(s: str) -> str:
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
 def asset_name(bdata):
+    if bdata == None:
+        return None
     s = bdata.name
     # Append library name if linked
     if bdata.library is not None:
