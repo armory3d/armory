@@ -11,7 +11,7 @@ class Starter {
 
 	public static function main(scene: String, mode: Int, resize: Bool, min: Bool, max: Bool, w: Int, h: Int, msaa: Int, vsync: Bool, getRenderPath: Void->iron.RenderPath) {
 
-		var tasks : Int;
+		var tasks : Int = null;
 
 		function start() {
 			if (tasks > 0) return;
