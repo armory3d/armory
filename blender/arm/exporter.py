@@ -30,7 +30,6 @@ import arm.material.cycles as cycles
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.utils
-from arm import make_world
 
 
 @unique
