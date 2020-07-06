@@ -260,32 +260,31 @@ def write_sky_irradiance(base_name):
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 
-    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+    envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
     if not os.path.exists(envpath):
         os.makedirs(envpath)
 
-    output_file = envpath + '/' + base_name + '_irradiance'
+    output_file = os.path.join(envpath, base_name + '_irradiance')
 
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
+    sh_json = {'irradiance': irradiance_floats}
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
 
 def write_color_irradiance(base_name, col):
-    # Constant color
-    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13] # Adjust to Cycles
+    """Constant color irradiance"""
+    # Adjust to Cycles
+    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13]
     for i in range(0, 24):
         irradiance_floats.append(0.0)
 
-    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+    envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
     if not os.path.exists(envpath):
         os.makedirs(envpath)
 
-    output_file = envpath + '/' + base_name + '_irradiance'
+    output_file = os.path.join(envpath, base_name + '_irradiance')
 
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
+    sh_json = {'irradiance': irradiance_floats}
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
