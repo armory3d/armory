@@ -119,10 +119,10 @@ def build_node_tree(world: bpy.types.World, frag: Shader):
         if '_EnvImg' not in world.world_defs:
             world.world_defs += '_EnvCol'
             frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        # Irradiance json file name
-        # Todo: this breaks static image backgrounds
-        # world.arm_envtex_name = world_name
-        world.arm_envtex_irr_name = world_name
+
+            # Irradiance json file name
+            world.arm_envtex_name = world_name
+            world.arm_envtex_irr_name = world_name
         write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
 
     # film_transparent
@@ -292,7 +292,24 @@ def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
 
         # Reference image name
         tex_file = arm.utils.extract_filename(image.filepath)
+        base = tex_file.rsplit('.', 1)
+        ext = base[1].lower()
+
+        if ext == 'hdr':
+            target_format = 'HDR'
+        else:
+            target_format = 'JPEG'
+
+        # Generate prefiltered envmaps
         world.arm_envtex_name = tex_file
+        world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
+
+        disable_hdr = target_format == 'JPEG'
+
+        mip_count = world.arm_envtex_num_mips
+        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
+
+        world.arm_envtex_num_mips = mip_count
 
     # Append sky define
     elif node.type == 'TEX_SKY':
