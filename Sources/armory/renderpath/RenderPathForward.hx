@@ -36,7 +36,7 @@ class RenderPathForward {
 		#if (rp_background == "World")
 		{
 			RenderPathCreator.setTargetMeshes();
-			path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref);
+			path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
 		}
 		#end
 
