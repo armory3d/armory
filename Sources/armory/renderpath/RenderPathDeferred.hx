@@ -643,8 +643,10 @@ class RenderPathDeferred {
 
 		#if (rp_background == "World")
 		{
-			path.setTarget("tex"); // Re-binds depth
-			path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
+			if (Scene.active.raw.world_ref != null) {
+				path.setTarget("tex"); // Re-binds depth
+				path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
+			}
 		}
 		#end
 
