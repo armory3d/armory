@@ -15,8 +15,12 @@ shader_datas = []
 
 
 def build():
+    global shader_datas
+
     bpy.data.worlds['Arm'].world_defs = ''
     worlds = []
+    shader_datas = []
+
     for scene in bpy.data.scenes:
         # Only export worlds from enabled scenes
         if scene.arm_export and scene.world is not None and scene.world not in worlds:
