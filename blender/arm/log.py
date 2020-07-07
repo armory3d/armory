@@ -7,6 +7,15 @@ ERROR = 31
 
 if platform.system() == "Windows":
     HAS_COLOR_SUPPORT = platform.release() == "10"
+
+    if HAS_COLOR_SUPPORT:
+        # Enable ANSI codes. Otherwise, the ANSI sequences might not be
+        # evaluated correctly for the first colored print statement.
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        # -11: stdout, 7 (0b111): ENABLE_PROCESSED_OUTPUT, ENABLE_WRAP_AT_EOL_OUTPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        # see https://docs.microsoft.com/en-us/windows/console/setconsolemode
+        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 else:
     HAS_COLOR_SUPPORT = True
 
