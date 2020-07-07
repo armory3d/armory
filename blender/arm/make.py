@@ -155,9 +155,10 @@ def export_data(fp, sdk_path):
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
 
     if wrd.arm_verbose_output:
-        print('Exported modules: ' + str(modules))
-        print('Shader flags: ' + str(defs))
-        print('Khafile flags: ' + str(assets.khafile_defs))
+        print('Exported modules:', modules)
+        print('Shader flags:', defs)
+        print('Compositor flags:', cdefs)
+        print('Khafile flags:', assets.khafile_defs)
 
     # Render path is configurable at runtime
     has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
