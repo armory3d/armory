@@ -1,25 +1,26 @@
-import os
 import glob
-import time
-import shutil
-import bpy
 import json
+import os
+import shutil
+import time
 import stat
-from bpy.props import *
 import subprocess
 import threading
 import webbrowser
-import arm.utils
-import arm.write_data as write_data
-import arm.make_logic as make_logic
-import arm.make_renderpath as make_renderpath
-import arm.make_world as make_world
-import arm.make_state as state
+
+import bpy
+
 import arm.assets as assets
-import arm.log as log
+from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
-from arm.exporter import ArmoryExporter
+import arm.log as log
+import arm.make_logic as make_logic
+import arm.make_renderpath as make_renderpath
+import arm.make_state as state
+import arm.make_world as make_world
+import arm.utils
+import arm.write_data as write_data
 
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
@@ -169,8 +170,8 @@ def export_data(fp, sdk_path):
 
     # Write referenced shader passes
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        res = {}
-        res['shader_datas'] = []
+        res = {'shader_datas': []}
+
         for ref in assets.shader_passes:
             # Ensure shader pass source exists
             if not os.path.exists(raw_shaders_path + '/' + ref):
@@ -180,7 +181,12 @@ def export_data(fp, sdk_path):
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
+
+        # Workaround to also export non-material world shaders
+        res['shader_datas'] += make_world.shader_datas
+
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
             assets.add_shader(shaders_path + '/' + s + '.glsl')

@@ -125,28 +125,43 @@ class ShaderContext:
             c['is_image'] = is_image
         self.tunits.append(c)
 
-    def make_vert(self):
-        self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
+    def make_vert(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
+        else:
+            self.data['vertex_shader'] = custom_name + '.vert'
         self.vert = Shader(self, 'vert')
         return self.vert
 
-    def make_frag(self):
-        self.data['fragment_shader'] = self.matname + '_' + self.data['name'] + '.frag'
+    def make_frag(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['fragment_shader'] = self.matname + '_' + self.data['name'] + '.frag'
+        else:
+            self.data['fragment_shader'] = custom_name + '.frag'
         self.frag = Shader(self, 'frag')
         return self.frag
 
-    def make_geom(self):
-        self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
+    def make_geom(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
+        else:
+            self.data['geometry_shader'] = custom_name + '.geom'
         self.geom = Shader(self, 'geom')
         return self.geom
 
-    def make_tesc(self):
-        self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
+    def make_tesc(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
+        else:
+            self.data['tesscontrol_shader'] = custom_name + '.tesc'
         self.tesc = Shader(self, 'tesc')
         return self.tesc
 
-    def make_tese(self):
-        self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
+    def make_tese(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
+        else:
+            self.data['tesseval_shader'] = custom_name + '.tese'
         self.tese = Shader(self, 'tese')
         return self.tese
 
@@ -363,7 +378,7 @@ class Shader:
         for c in self.constants:
             s += 'const ' + c + ';\n'
         for f in self.functions:
-            s += self.functions[f]
+            s += self.functions[f] + '\n'
         s += 'void main() {\n'
         s += self.main_attribs
         s += self.main_textures

@@ -467,15 +467,7 @@ const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shado
 const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
-        if rpdat.arm_clouds:
-            f.write(
-"""const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 100) / 100) + """;
-const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 100) / 100) + """;
-const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 100) / 100) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 100) / 100) + """);
-const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation * 100) / 100) + """;
-const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
-const int cloudsSteps = """ + str(rpdat.arm_clouds_steps) + """;
-""")
+
         if rpdat.rp_water:
             f.write(
 """const float waterLevel = """ + str(round(rpdat.arm_water_level * 100) / 100) + """;

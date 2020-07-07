@@ -1,15 +1,11 @@
 import bpy
 from bpy.props import *
-import os
-import shutil
-import arm.props_ui as props_ui
+
 import arm.assets as assets
-import arm.log as log
-import arm.utils
 import arm.make
-import arm.props_renderpath as props_renderpath
-import arm.proxy
 import arm.nodes_logic
+import arm.proxy
+import arm.utils
 
 # Armory version
 arm_version = '2020.7'
@@ -269,6 +265,15 @@ def init_properties():
     bpy.types.World.arm_wasm_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.world_defs = StringProperty(name="World Shader Defs", default='')
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
+
+    bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_steps = IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
+
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)
     bpy.types.Material.export_tangents = BoolProperty(name="Export Tangents", default=False)
