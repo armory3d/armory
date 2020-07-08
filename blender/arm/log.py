@@ -13,9 +13,17 @@ if platform.system() == "Windows":
         # evaluated correctly for the first colored print statement.
         import ctypes
         kernel32 = ctypes.windll.kernel32
-        # -11: stdout, 7 (0b111): ENABLE_PROCESSED_OUTPUT, ENABLE_WRAP_AT_EOL_OUTPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING
+
+        # -11: stdout
+        handle_out = kernel32.GetStdHandle(-11)
+
+        console_mode = ctypes.c_long()
+        kernel32.GetConsoleMode(handle_out, ctypes.byref(console_mode))
+
+        # 0b100: ENABLE_VIRTUAL_TERMINAL_PROCESSING, enables ANSI codes
         # see https://docs.microsoft.com/en-us/windows/console/setconsolemode
-        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+        console_mode.value |= 0b100
+        kernel32.SetConsoleMode(handle_out, console_mode)
 else:
     HAS_COLOR_SUPPORT = True
 
