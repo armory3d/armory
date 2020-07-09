@@ -118,7 +118,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     cpu_count = multiprocessing.cpu_count()
 
     if arm.utils.get_os() == 'win':
-        subprocess.call([ \
+        cmd = [
             cmft_path,
             '--input', scaled_file,
             '--filter', 'radiance',
@@ -142,12 +142,13 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--outputGammaDenominator', '1.0',
             '--outputNum', '1',
             '--output0', output_file_rad,
-            '--output0params', 'hdr,rgbe,latlong'])
+            '--output0params', 'hdr,rgbe,latlong'
+        ]
         if wrd.arm_verbose_output:
             print(cmd)
         else:
-            cmd.append(' --silent')
-        subprocess.call([cmd])
+            cmd.append('--silent')
+        subprocess.call(cmd)
     else:
         cmd = cmft_path + \
             ' --input "' + scaled_file + '"' + \
