@@ -598,7 +598,7 @@ def get_cascade_size(rpdat):
 def check_saved(self):
     if bpy.data.filepath == "":
         msg = "Save blend file first"
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     return True
 
@@ -613,18 +613,18 @@ def check_path(s):
 
 def check_sdkpath(self):
     s = get_sdk_path()
-    if check_path(s) == False:
-        msg = "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s)
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+    if not check_path(s):
+        msg = f"SDK path '{s}' contains special characters. Please move SDK to different path for now."
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     else:
         return True
 
 def check_projectpath(self):
     s = get_fp()
-    if check_path(s) == False:
-        msg = "Project path '{0}' contains special characters, build process may fail.".format(s)
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+    if not check_path(s):
+        msg = f"Project path '{s}' contains special characters, build process may fail."
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     else:
         return True
