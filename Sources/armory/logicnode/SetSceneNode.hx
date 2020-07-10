@@ -13,6 +13,10 @@ class SetSceneNode extends LogicNode {
 	override function run(from: Int) {
 		var sceneName: String = inputs[1].get();
 
+		#if arm_json
+		sceneName += ".json";
+		#end
+
 		iron.Scene.setActive(sceneName, function(o: iron.object.Object) {
 			root = o;
 			runOutput(0);
