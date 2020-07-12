@@ -407,7 +407,7 @@ def fetch_script_names():
             mod = mod.replace('\\', '/')
             mod_parts = mod.rsplit('/')
             if re.match('^[A-Z][A-Za-z0-9_]*$', mod_parts[-1]):
-                wrd.arm_scripts_list.add().name = mod.replace(os.sep, '.')
+                wrd.arm_scripts_list.add().name = mod.replace('/', '.')
                 fetch_script_props(file)
 
     # Canvas
