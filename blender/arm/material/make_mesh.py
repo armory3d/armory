@@ -366,8 +366,11 @@ def make_forward_mobile(con_mesh):
             vert.add_out('vec4 lightPosition')
             vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
             vert.write('lightPosition = LWVP * spos;')
+            frag.add_uniform('bool receiveShadow')
             frag.add_uniform('sampler2DShadow shadowMap')
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
+
+            frag.write('if (receiveShadow) {')
             if '_CSM' in wrd.world_defs:
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
@@ -381,6 +384,7 @@ def make_forward_mobile(con_mesh):
                 else:
                     frag.write('    svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
                 frag.write('}')
+            frag.write('}') # receiveShadow
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
 
     if '_SinglePoint' in wrd.world_defs:
@@ -394,8 +398,11 @@ def make_forward_mobile(con_mesh):
         frag.write('vec3 l = normalize(ld);')
         frag.write('float dotNL = max(dot(n, l), 0.0);')
         if is_shadows:
+            frag.add_uniform('bool receiveShadow')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             frag.add_include('std/shadows.glsl')
+
+            frag.write('if (receiveShadow) {')
             if '_Spot' in wrd.world_defs:
                 vert.add_out('vec4 spotPosition')
                 vert.add_uniform('mat4 LWVPSpot0', link='_biasLightWorldViewProjectionMatrixSpot0')
@@ -420,6 +427,7 @@ def make_forward_mobile(con_mesh):
                     frag.write('visibility = float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 20)).r > compare);')
                 else:
                     frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
+            frag.write('}') # receiveShadow
 
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 
@@ -593,7 +601,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     float dotNV = max(dot(n, vVec), 0.0);
 """)
 
-    sh = tese if tese != None else vert
+    sh = tese if tese is not None else vert
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
     sh.write('eyeDir = eye - wposition;')
@@ -645,7 +653,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
 
     frag.write('vec3 direct = vec3(0.0);')
-    frag.add_uniform('bool receiveShadow')
 
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
@@ -656,6 +663,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('float sdotNH = dot(n, sh);')
         frag.write('float sdotVH = dot(vVec, sh);')
         if is_shadows:
+            frag.add_uniform('bool receiveShadow')
             frag.add_uniform('sampler2DShadow shadowMap')
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
             frag.write('if (receiveShadow) {')
@@ -665,7 +673,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec3 eye', '_cameraPosition')
                 frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias);')
             else:
-                if tese != None:
+                if tese is not None:
                     tese.add_out('vec4 lightPosition')
                     tese.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
                     tese.write('lightPosition = LVP * vec4(wposition, 1.0);')
@@ -694,6 +702,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform('vec3 spotDir', link='_spotDirection')
             frag.add_uniform('vec2 spotData', link='_spotData')
         if is_shadows:
+            frag.add_uniform('bool receiveShadow')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             if '_Spot' in wrd.world_defs:
                 # Skip world matrix, already in world-space
@@ -705,7 +714,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
-            frag.write('  , 0, pointBias')
+            frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir')
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:

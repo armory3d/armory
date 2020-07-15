@@ -182,7 +182,7 @@ void main() {
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
-			, 0, pointBias
+			, 0, pointBias, true
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir
@@ -218,7 +218,7 @@ void main() {
 			occspec.y,
 			f0
 			#ifdef _ShadowMap
-				, li, lightsArray[li * 2].w // bias
+				, li, lightsArray[li * 2].w, true // bias
 			#endif
 			#ifdef _Spot
 			, li > numPoints - 1
