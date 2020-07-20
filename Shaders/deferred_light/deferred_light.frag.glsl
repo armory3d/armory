@@ -259,7 +259,7 @@ void main() {
 #endif
 
 #ifdef _Emission
-	if (g0.a == 1.0) {
+	if (matid == 1) {
 		fragColor.rgb += g1.rgb; // materialid
 		albedo = vec3(0.0);
 	}
@@ -320,7 +320,7 @@ void main() {
 	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
-// 	if (g0.a == 2.0) {
+// 	if (matid == 2) {
 // 		const float shinyParallel = roughness;
 // 		const float shinyPerpendicular = 0.1;
 // 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
@@ -330,7 +330,7 @@ void main() {
 //	#endif
 
 	#ifdef _SSS
-	if (g0.a == 2.0) {
+	if (matid == 2) {
 		#ifdef _CSM
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
@@ -366,7 +366,7 @@ void main() {
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (g0.a == 2.0) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
 
