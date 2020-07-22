@@ -74,7 +74,11 @@ class PhysicsConstraint extends iron.Trait {
 			trans2.setRotation(new bullet.Bt.Quaternion(t.rot.x, t.rot.y, t.rot.z, t.rot.w));
 
 			if (type == "GENERIC" || type == "FIXED") {
+				#if hl
+				var c = new bullet.Bt.Generic6DofConstraint(rb1.body, rb2.body, trans1, trans2, false);
+				#else
 				var c = bullet.Bt.Generic6DofConstraint.new2(rb1.body, rb2.body, trans1, trans2, false);
+				#end
 				if (type == "FIXED") {
 					vec1.setX(0);
 					vec1.setY(0);
