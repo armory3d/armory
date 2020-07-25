@@ -307,7 +307,6 @@ def register():
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
     bpy.utils.register_class(ARMAddSetVarNode)
-    bpy.types.Scene.arm_varlist_index = IntProperty(name="Index for node variables", default=0)
     register_nodes()
 
 def unregister():
