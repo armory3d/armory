@@ -155,7 +155,7 @@ class ARMAddVarNode(bpy.types.Operator):
         return({'FINISHED'})
     
 class ARMAddSetVarNode(bpy.types.Operator):
-    '''Add a node to set that this ones value'''
+    '''Add a node to set this Variable'''
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Set'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
