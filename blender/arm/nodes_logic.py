@@ -91,6 +91,117 @@ class ArmOpenNodeSource(bpy.types.Operator):
             name = context.active_node.bl_idname[2:]
             webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
         return{'FINISHED'}
+    
+#Node Variables Panel
+class ARM_PT_Variables(bpy.types.Panel):
+    bl_label = 'Armory Node Variables'
+    bl_idname = 'ARM_PT_Variables'
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'Node'
+            
+    def draw(self, context):
+        layout = self.layout
+
+        nodes = list(filter(lambda node: node.arm_logic_id != "", list(context.space_data.node_tree.nodes)))
+        
+        IDs = []
+        for n in nodes:
+             if not n.arm_logic_id in IDs:
+                IDs.append(n.arm_logic_id)
+
+        for ID in IDs:
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            row.label(text = ID)
+            getN = row.operator(operator = 'arm.add_var_node')
+            getN.ntype = ID
+            setN = row.operator('arm.add_setvar_node')
+            setN.ntype = ID
+            
+class ARMAddVarNode(bpy.types.Operator):
+    '''Add a linked node of that Variable'''
+    bl_idname = 'arm.add_var_node'
+    bl_label = 'Add Get'
+    bl_options = {'GRAB_CURSOR', 'BLOCKING'}
+    
+    ntype = bpy.props.StringProperty()
+    nodeRef = None
+    
+    def invoke(self, context, event):
+        context.window_manager.modal_handler_add(self)
+        self.execute(context)
+        return {'RUNNING_MODAL'}
+    
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':           
+            self.nodeRef.location = context.space_data.cursor_location
+        elif event.type == 'LEFTMOUSE':  # Confirm
+            return {'FINISHED'}
+        return {'RUNNING_MODAL'}
+    
+    def execute(self, context):
+        nodes = context.space_data.node_tree.nodes
+        node = nodes.new("LNDynamicNode")
+        print(context.space_data.backdrop_offset[0])
+        node.location = context.space_data.cursor_location
+        node.arm_logic_id = self.ntype
+        node.label = "GET " + self.ntype
+        node.use_custom_color = True
+        node.color = (0.22, 0.89, 0.5)
+        #node.width = 5
+        global nodeRef
+        self.nodeRef = node
+        return({'FINISHED'})
+    
+class ARMAddSetVarNode(bpy.types.Operator):
+    '''Add a node to set that this ones value'''
+    bl_idname = 'arm.add_setvar_node'
+    bl_label = 'Add Set'
+    bl_options = {'GRAB_CURSOR', 'BLOCKING'}
+    
+    ntype = bpy.props.StringProperty()
+    nodeRef = None
+    setNodeRef = None
+    
+    def invoke(self, context, event):
+        context.window_manager.modal_handler_add(self)
+        self.execute(context)
+        return {'RUNNING_MODAL'}
+    
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':           
+            self.setNodeRef.location = context.space_data.cursor_location
+            self.nodeRef.location[0] = context.space_data.cursor_location[0]+10
+            self.nodeRef.location[1] = context.space_data.cursor_location[1]-10
+        elif event.type == 'LEFTMOUSE':  # Confirm
+            return {'FINISHED'}
+        return {'RUNNING_MODAL'}
+    
+    def execute(self, context):
+        nodes = context.space_data.node_tree.nodes
+        node = nodes.new("LNDynamicNode")
+        print(context.space_data.backdrop_offset[0])
+        node.location = context.space_data.cursor_location
+        node.arm_logic_id = self.ntype
+        node.label = "GET " + self.ntype
+        node.use_custom_color = True
+        node.color = (0.32, 0.65, 0.89)
+        node.bl_width_min = 3
+        node.width = 5
+        node.bl_width_min = 100
+        setNode = nodes.new("LNSetVariableNode")
+        setNode.label = "SET " + self.ntype
+        setNode.location = context.space_data.cursor_location
+        setNode.use_custom_color = True
+        setNode.color = (0.49, 0.2, 1.0)
+        links = context.space_data.node_tree.links
+        links.new(node.outputs[0], setNode.inputs[1])
+        global nodeRef
+        self.nodeRef = node
+        global setNodeRef
+        self.setNodeRef = setNode
+        return({'FINISHED'})
 
 # node replacement code
 replacements = {}
@@ -193,6 +304,10 @@ def register():
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
     bpy.utils.register_class(ReplaceNodesOperator)
+    bpy.utils.register_class(ARM_PT_Variables)
+    bpy.utils.register_class(ARMAddVarNode)
+    bpy.utils.register_class(ARMAddSetVarNode)
+    bpy.types.Scene.arm_varlist_index = IntProperty(name="Index for node variables", default=0)
     register_nodes()
 
 def unregister():
@@ -201,3 +316,6 @@ def unregister():
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
+    bpy.utils.unregister_class(ARM_PT_Variables)
+    bpy.utils.unregister_class(ARMAddVarNode)
+    bpy.utils.unregister_class(ARMAddSetVarNode)
