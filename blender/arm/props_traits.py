@@ -480,6 +480,8 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = self.canvas_name.replace(' ', '')
         write_data.write_canvasjson(self.canvas_name)
         arm.utils.fetch_script_names()
+        # Todo: create new trait item when called from operator search
+        # menu, then remove 'INTERNAL' from bl_options
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         item.canvas_name_prop = self.canvas_name
         return {'FINISHED'}
