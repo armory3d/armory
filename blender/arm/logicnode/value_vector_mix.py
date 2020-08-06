@@ -7,7 +7,7 @@ class VectorMixNode(Node, ArmLogicTreeNode):
     '''Vector mix node'''
     bl_idname = 'LNVectorMixNode'
     bl_label = 'Vector Mix'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),

@@ -7,7 +7,7 @@ class RpShadowQualityNode(Node, ArmLogicTreeNode):
     '''Configure shadow quality node'''
     bl_idname = 'LNRpShadowQualityNode'
     bl_label = 'Rp Shadow Quality'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('High', 'High', 'High'),
                  ('Medium', 'Medium', 'Medium'),

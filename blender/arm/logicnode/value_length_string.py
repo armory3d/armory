@@ -7,7 +7,7 @@ class LengthStringNode(Node, ArmLogicTreeNode):
     '''String Length node'''
     bl_idname = 'LNLengthStringNode'
     bl_label = 'String Length'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketInt', 'length')

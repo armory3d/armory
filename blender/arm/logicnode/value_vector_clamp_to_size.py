@@ -7,7 +7,7 @@ class VectorClampToSizeNode(Node, ArmLogicTreeNode):
     '''Vector clamp to size node'''
     bl_idname = 'LNVectorClampToSizeNode'
     bl_label = 'Vector Clamp To Size'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Vector')

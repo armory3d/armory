@@ -7,7 +7,7 @@ class RandomFloatNode(Node, ArmLogicTreeNode):
     '''Random float node'''
     bl_idname = 'LNRandomFloatNode'
     bl_label = 'Random (Float)'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'Min')

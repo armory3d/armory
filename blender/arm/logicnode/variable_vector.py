@@ -7,7 +7,7 @@ class VectorNode(Node, ArmLogicTreeNode):
     '''Vector node'''
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'X')

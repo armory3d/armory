@@ -7,7 +7,7 @@ class GroupNode(Node, ArmLogicTreeNode):
     '''Group node'''
     bl_idname = 'LNGroupNode'
     bl_label = 'Collection'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: PointerProperty(name='', type=bpy.types.Collection)
     
