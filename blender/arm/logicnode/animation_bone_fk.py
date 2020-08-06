@@ -7,7 +7,7 @@ class BoneFKNode(Node, ArmLogicTreeNode):
     '''Bone Forward Kinematics node'''
     bl_idname = 'LNBoneFKNode'
     bl_label = 'Bone FK'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

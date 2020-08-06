@@ -7,7 +7,7 @@ class ClearParentNode(Node, ArmLogicTreeNode):
     '''Clear parent node'''
     bl_idname = 'LNClearParentNode'
     bl_label = 'Clear Parent'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

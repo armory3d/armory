@@ -7,7 +7,7 @@ class SetVariableNode(Node, ArmLogicTreeNode):
     '''Set variable node'''
     bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

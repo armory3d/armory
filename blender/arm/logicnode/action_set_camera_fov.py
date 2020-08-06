@@ -7,7 +7,7 @@ class SetCameraFovNode(Node, ArmLogicTreeNode):
     '''Set camera FOV node'''
     bl_idname = 'LNSetCameraFovNode'
     bl_label = 'Set Camera FOV'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

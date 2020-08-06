@@ -7,7 +7,7 @@ class CanvasSetTextColorNode(Node, ArmLogicTreeNode):
     '''Set canvas text color'''
     bl_idname = 'LNCanvasSetTextColorNode'
     bl_label = 'Canvas Set Text Color'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

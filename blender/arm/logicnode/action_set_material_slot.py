@@ -7,7 +7,7 @@ class SetMaterialSlotNode(Node, ArmLogicTreeNode):
     '''Set material slot node'''
     bl_idname = 'LNSetMaterialSlotNode'
     bl_label = 'Set Material Slot'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,7 +7,7 @@ class CallFunctionNode(Node, ArmLogicTreeNode):
     '''Call Haxe function node'''
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     min_inputs = 3
 
     def __init__(self):

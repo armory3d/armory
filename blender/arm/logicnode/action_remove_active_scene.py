@@ -7,7 +7,7 @@ class RemoveActiveSceneNode(Node, ArmLogicTreeNode):
     '''Remove active scene node'''
     bl_idname = 'LNRemoveActiveSceneNode'
     bl_label = 'Remove Active Scene'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

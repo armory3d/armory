@@ -7,7 +7,7 @@ class CanvasGetPositionNode(Node, ArmLogicTreeNode):
     '''Get canvas radio and combo value'''
     bl_idname = 'LNCanvasGetPositionNode'
     bl_label = 'Canvas Get Position'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Element')

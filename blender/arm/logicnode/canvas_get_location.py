@@ -7,7 +7,7 @@ class CanvasGetLocationNode(Node, ArmLogicTreeNode):
     '''Get canvas element location'''
     bl_idname = 'LNCanvasGetLocationNode'
     bl_label = 'Canvas Get Location'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

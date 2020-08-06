@@ -7,7 +7,7 @@ class CanvasSetPBNode(Node, ArmLogicTreeNode):
     '''Set canvas progress bar'''
     bl_idname = 'LNCanvasSetPBNode'
     bl_label = 'Canvas Set Progress Bar'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

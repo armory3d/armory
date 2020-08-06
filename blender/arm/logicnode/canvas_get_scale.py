@@ -7,7 +7,7 @@ class CanvasGetScaleNode(Node, ArmLogicTreeNode):
     '''Get canvas element scale'''
     bl_idname = 'LNCanvasGetScaleNode'
     bl_label = 'Canvas Get Scale'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
