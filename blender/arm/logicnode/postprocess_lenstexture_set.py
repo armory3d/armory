@@ -7,7 +7,7 @@ class LenstextureSetNode(Node, ArmLogicTreeNode):
     '''Set Lenstexture Effect'''
     bl_idname = 'LNLenstextureSetNode'
     bl_label = 'Set Lenstexture'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

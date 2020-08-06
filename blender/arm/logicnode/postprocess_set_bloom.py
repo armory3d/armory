@@ -7,7 +7,7 @@ class BloomSetNode(Node, ArmLogicTreeNode):
     '''Set Bloom Effect'''
     bl_idname = 'LNBloomSetNode'
     bl_label = 'Set Bloom'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

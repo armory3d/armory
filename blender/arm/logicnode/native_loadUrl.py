@@ -7,7 +7,7 @@ class LoadUrlNode(Node, ArmLogicTreeNode):
     '''Load Url'''
     bl_idname = 'LNLoadUrlNode'
     bl_label = 'Load Url (Browser only)'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

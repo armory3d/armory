@@ -7,7 +7,7 @@ class ExpressionNode(Node, ArmLogicTreeNode):
     '''Expression node'''
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: StringProperty(name='', default='')
 

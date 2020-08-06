@@ -7,7 +7,7 @@ class ChromaticAberrationSetNode(Node, ArmLogicTreeNode):
     '''Set Chromatic Aberration Effect'''
     bl_idname = 'LNChromaticAberrationSetNode'
     bl_label = 'Set ChromaticAberration'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

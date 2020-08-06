@@ -7,7 +7,7 @@ class SwitchNode(Node, ArmLogicTreeNode):
     '''Switch node'''
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     min_inputs = 1
     min_outputs = 1
     

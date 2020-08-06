@@ -7,7 +7,7 @@ class OnEventNode(Node, ArmLogicTreeNode):
     '''On event node'''
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: StringProperty(name='', default='')
     
     def init(self, context):

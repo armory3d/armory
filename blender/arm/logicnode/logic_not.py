@@ -7,7 +7,7 @@ class NotNode(Node, ArmLogicTreeNode):
     '''Not node'''
     bl_idname = 'LNNotNode'
     bl_label = 'Not'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketBool', 'Value')

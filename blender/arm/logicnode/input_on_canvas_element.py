@@ -7,7 +7,7 @@ class OnCanvasElementNode(Node, ArmLogicTreeNode):
     """On canvas element node"""
     bl_idname = 'LNOnCanvasElementNode'
     bl_label = 'On Canvas Element'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items=[('click', 'Click', 'Listen to mouse clicks'),

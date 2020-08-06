@@ -7,7 +7,7 @@ class OnInitNode(Node, ArmLogicTreeNode):
     '''On init node'''
     bl_idname = 'LNOnInitNode'
     bl_label = 'On Init'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketAction', 'Out')

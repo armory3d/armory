@@ -28,7 +28,7 @@ class ColorgradingSetMidtoneNode(Node, ArmLogicTreeNode):
     '''Colorgrading Set Midtone node'''
     bl_idname = 'LNColorgradingSetMidtoneNode'
     bl_label = 'Colorgrading Set Midtone'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(

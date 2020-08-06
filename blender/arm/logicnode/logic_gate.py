@@ -12,7 +12,7 @@ class GateNode(Node, ArmLogicTreeNode):
     '''Gate node'''
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),

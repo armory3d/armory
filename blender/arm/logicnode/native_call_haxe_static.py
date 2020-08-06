@@ -7,7 +7,7 @@ class CallHaxeStaticNode(Node, ArmLogicTreeNode):
     '''Call static Haxe function node'''
     bl_idname = 'LNCallHaxeStaticNode'
     bl_label = 'Call Haxe Static'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -28,7 +28,7 @@ class ColorgradingSetShadowNode(Node, ArmLogicTreeNode):
     '''Colorgrading Set Shadow node'''
     bl_idname = 'LNColorgradingSetShadowNode'
     bl_label = 'Colorgrading Set Shadow'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(

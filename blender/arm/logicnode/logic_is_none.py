@@ -7,7 +7,7 @@ class IsNoneNode(Node, ArmLogicTreeNode):
     '''Is none node'''
     bl_idname = 'LNIsNoneNode'
     bl_label = 'Is None'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

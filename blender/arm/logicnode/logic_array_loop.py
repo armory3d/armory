@@ -7,7 +7,7 @@ class ArrayLoopNode(Node, ArmLogicTreeNode):
     '''ArrayLoop node'''
     bl_idname = 'LNArrayLoopNode'
     bl_label = 'Array Loop'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

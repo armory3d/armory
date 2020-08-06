@@ -7,7 +7,7 @@ class CameraGetNode(Node, ArmLogicTreeNode):
     '''Get Camera Effect'''
     bl_idname = 'LNCameraGetNode'
     bl_label = 'Get Camera'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'F-Stop')

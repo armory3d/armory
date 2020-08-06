@@ -7,7 +7,7 @@ class ReadJsonNode(Node, ArmLogicTreeNode):
     '''Read JSON node'''
     bl_idname = 'LNReadJsonNode'
     bl_label = 'Read JSON'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

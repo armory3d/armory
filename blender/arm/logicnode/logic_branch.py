@@ -7,7 +7,7 @@ class BranchNode(Node, ArmLogicTreeNode):
     '''Branch node'''
     bl_idname = 'LNBranchNode'
     bl_label = 'Branch'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
