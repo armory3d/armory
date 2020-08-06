@@ -100,11 +100,11 @@ class ARM_UL_TraitList(bpy.types.UIList):
         layout.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
 
 class ArmTraitListNewItem(bpy.types.Operator):
-    # Add a new item to the list
     bl_idname = "arm_traitlist.new_item"
-    bl_label = "New"
+    bl_label = "New Trait Item"
+    bl_description = "Add a new trait item to the list"
 
-    is_object: BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="Object Trait", description="Whether this is an object or scene trait", default=False)
     type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
@@ -118,8 +118,10 @@ class ArmTraitListNewItem(bpy.types.Operator):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
-    def draw(self,context):
+    def draw(self, context):
         layout = self.layout
+        # Todo: show is_object property when called from operator search menu
+        # layout.prop(self, "is_object")
         layout.prop(self, "type_prop", expand=True)
 
     def execute(self, context):
@@ -135,9 +137,10 @@ class ArmTraitListNewItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTraitListDeleteItem(bpy.types.Operator):
-    # Delete the selected item from the list
+    """Delete the selected item from the list"""
     bl_idname = "arm_traitlist.delete_item"
     bl_label = "Deletes an item"
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
 
@@ -167,9 +170,10 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTraitListDeleteItemScene(bpy.types.Operator):
-    # Delete the selected item from the list
+    """Delete the selected item from the list"""
     bl_idname = "arm_traitlist.delete_item_scene"
     bl_label = "Deletes an item"
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
 
@@ -198,9 +202,11 @@ class ArmTraitListDeleteItemScene(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTraitListMoveItem(bpy.types.Operator):
-    # Move an item in the list
+    """Move an item in the list"""
     bl_idname = "arm_traitlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL'}
+
     direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
@@ -247,9 +253,10 @@ class ArmTraitListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmEditScriptButton(bpy.types.Operator):
-    '''Edit script in Kode Studio'''
     bl_idname = 'arm.edit_script'
     bl_label = 'Edit Script'
+    bl_description = 'Edit script in the text editor'
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
 
@@ -274,9 +281,10 @@ class ArmEditScriptButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmEditBundledScriptButton(bpy.types.Operator):
-    '''Copy script to project and edit in Kode Studio'''
     bl_idname = 'arm.edit_bundled_script'
     bl_label = 'Edit Script'
+    bl_description = 'Copy script to project and edit in the text editor'
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
 
@@ -315,7 +323,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
-    '''Generate navmesh from selected meshes'''
+    """Generate navmesh from selected meshes"""
     bl_idname = 'arm.generate_navmesh'
     bl_label = 'Generate Navmesh'
 
@@ -396,9 +404,10 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmEditCanvasButton(bpy.types.Operator):
-    '''Edit ui canvas'''
     bl_idname = 'arm.edit_canvas'
     bl_label = 'Edit Canvas'
+    bl_description = 'Edit UI Canvas'
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
 
@@ -425,9 +434,10 @@ class ArmEditCanvasButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNewScriptDialog(bpy.types.Operator):
-    '''Create blank script'''
     bl_idname = "arm.new_script"
     bl_label = "New Script"
+    bl_description = 'Create a blank script'
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="Object trait", description="Is this an object trait?", default=False)
     class_name: StringProperty(name="Name", description="The class name")
@@ -454,9 +464,10 @@ class ArmNewScriptDialog(bpy.types.Operator):
         self.layout.prop(self, "class_name")
 
 class ArmNewCanvasDialog(bpy.types.Operator):
-    '''Create blank canvas'''
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
+    bl_description = 'Create a blank canvas'
+    bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="Object trait", description="Is this an object trait?", default=False)
     canvas_name: StringProperty(name="Name", description="The canvas name")
@@ -469,6 +480,8 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = self.canvas_name.replace(' ', '')
         write_data.write_canvasjson(self.canvas_name)
         arm.utils.fetch_script_names()
+        # Todo: create new trait item when called from operator search
+        # menu, then remove 'INTERNAL' from bl_options
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         item.canvas_name_prop = self.canvas_name
         return {'FINISHED'}
@@ -483,7 +496,7 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.layout.prop(self, "canvas_name")
 
 class ArmNewWasmButton(bpy.types.Operator):
-    '''Create new WebAssembly module'''
+    """Create new WebAssembly module"""
     bl_idname = 'arm.new_wasm'
     bl_label = 'New Module'
 
@@ -492,9 +505,9 @@ class ArmNewWasmButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmRefreshScriptsButton(bpy.types.Operator):
-    '''Fetch all script names'''
+    """Fetch all script names"""
     bl_idname = 'arm.refresh_scripts'
-    bl_label = 'Refresh'
+    bl_label = 'Refresh Traits'
 
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
@@ -505,9 +518,9 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmRefreshCanvasListButton(bpy.types.Operator):
-    '''Fetch all canvas names'''
+    """Fetch all canvas names"""
     bl_idname = 'arm.refresh_canvas_list'
-    bl_label = 'Refresh'
+    bl_label = 'Refresh Canvas Traits'
 
     def execute(self, context):
         arm.utils.fetch_script_names()
@@ -580,7 +593,7 @@ def draw_traits(layout, obj, is_object):
                 op.is_object = is_object
                 op = row.operator("arm.new_script")
                 op.is_object = is_object
-                op = row.operator("arm.refresh_scripts")
+                op = row.operator("arm.refresh_scripts", text="Refresh")
             else: # Bundled
                 if item.class_name_prop == 'NavMesh':
                     row = layout.row(align=True)
@@ -593,7 +606,7 @@ def draw_traits(layout, obj, is_object):
                 if not item.class_name_prop == 'NavMesh':
                     op = column.operator("arm.edit_bundled_script", icon="FILE_SCRIPT")
                     op.is_object = is_object
-                op = row.operator("arm.refresh_scripts")
+                op = row.operator("arm.refresh_scripts", text="Refresh")
 
             # Default props
             item.name = item.class_name_prop
@@ -620,7 +633,7 @@ def draw_traits(layout, obj, is_object):
             # op.is_object = is_object
             op = row.operator("arm.new_wasm")
             # op.is_object = is_object
-            op = row.operator("arm.refresh_scripts")
+            op = row.operator("arm.refresh_scripts", text="Refresh")
 
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
@@ -635,7 +648,7 @@ def draw_traits(layout, obj, is_object):
             op.is_object = is_object
             op = row.operator("arm.new_canvas")
             op.is_object = is_object
-            op = row.operator("arm.refresh_canvas_list")
+            op = row.operator("arm.refresh_canvas_list", text="Refresh")
 
             row = layout.row()
             row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
