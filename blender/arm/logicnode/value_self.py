@@ -7,7 +7,7 @@ class SelfNode(Node, ArmLogicTreeNode):
     '''Self node'''
     bl_idname = 'LNSelfNode'
     bl_label = 'Self'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketObject', 'Object')

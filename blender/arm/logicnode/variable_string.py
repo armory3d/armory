@@ -7,7 +7,7 @@ class StringNode(Node, ArmLogicTreeNode):
     '''String node'''
     bl_idname = 'LNStringNode'
     bl_label = 'String'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Value')

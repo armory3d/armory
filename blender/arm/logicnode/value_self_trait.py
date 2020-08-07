@@ -7,7 +7,7 @@ class SelfTraitNode(Node, ArmLogicTreeNode):
     '''Self trait node'''
     bl_idname = 'LNSelfTraitNode'
     bl_label = 'Self Trait'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Trait')

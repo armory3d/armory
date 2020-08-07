@@ -7,7 +7,7 @@ class MatrixMathNode(Node, ArmLogicTreeNode):
     '''Matrix math node'''
     bl_idname = 'LNMatrixMathNode'
     bl_label = 'Matrix Math'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Multiply', 'Multiply', 'Multiply')],
         name='', default='Multiply')

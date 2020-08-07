@@ -7,7 +7,7 @@ class SubStringNode(Node, ArmLogicTreeNode):
     '''Sub string node'''
     bl_idname = 'LNSubStringNode'
     bl_label = 'Sub String'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketString', 'String')

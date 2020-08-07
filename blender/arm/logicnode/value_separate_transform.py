@@ -7,7 +7,7 @@ class SeparateTransformNode(Node, ArmLogicTreeNode):
     '''Separate transform node'''
     bl_idname = 'LNSeparateTransformNode'
     bl_label = 'Separate Transform'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketShader', 'Transform')

@@ -6,8 +6,8 @@ from arm.logicnode.arm_nodes import *
 class ObjectArrayNode(Node, ArmLogicTreeNode):
     '''Object array node'''
     bl_idname = 'LNArrayObjectNode'
-    bl_label = 'Array (Object)'
-    bl_icon = 'QUESTION'
+    bl_label = 'Array Object'
+    bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

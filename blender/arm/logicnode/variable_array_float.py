@@ -6,8 +6,8 @@ from arm.logicnode.arm_nodes import *
 class FloatArrayNode(Node, ArmLogicTreeNode):
     '''Float array node'''
     bl_idname = 'LNArrayFloatNode'
-    bl_label = 'Array (Float)'
-    bl_icon = 'QUESTION'
+    bl_label = 'Array Float'
+    bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

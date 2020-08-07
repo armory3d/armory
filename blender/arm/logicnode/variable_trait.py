@@ -7,7 +7,7 @@ class TraitNode(Node, ArmLogicTreeNode):
     '''Trait node'''
     bl_idname = 'LNTraitNode'
     bl_label = 'Trait'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: StringProperty(name='', default='')
     

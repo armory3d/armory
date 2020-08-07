@@ -7,7 +7,7 @@ class VectorFromTransformNode(Node, ArmLogicTreeNode):
     '''Vector from transform node'''
     bl_idname = 'LNVectorFromTransformNode'
     bl_label = 'Vector From Transform'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Up', 'Up', 'Up'),
                  ('Right', 'Right', 'Right'),

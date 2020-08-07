@@ -7,7 +7,7 @@ class IntegerNode(Node, ArmLogicTreeNode):
     '''Int node'''
     bl_idname = 'LNIntegerNode'
     bl_label = 'Integer'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketInt', 'Value')
