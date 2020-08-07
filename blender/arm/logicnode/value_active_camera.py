@@ -7,7 +7,7 @@ class ActiveCameraNode(Node, ArmLogicTreeNode):
     '''Active camera node'''
     bl_idname = 'LNActiveCameraNode'
     bl_label = 'Active Camera'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketObject', 'Object')

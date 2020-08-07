@@ -7,7 +7,7 @@ class SSRGetNode(Node, ArmLogicTreeNode):
     '''Get SSR Effect'''
     bl_idname = 'LNSSRGetNode'
     bl_label = 'Get SSR'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'SSR Step')

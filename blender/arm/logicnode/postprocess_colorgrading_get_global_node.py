@@ -7,7 +7,7 @@ class ColorgradingGetGlobalNode(Node, ArmLogicTreeNode):
     '''Colorgrading Get Global node'''
     bl_idname = 'LNColorgradingGetGlobalNode'
     bl_label = 'Colorgrading Get Global'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'Whitebalance')

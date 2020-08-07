@@ -7,7 +7,7 @@ class LookAtNode(Node, ArmLogicTreeNode):
     '''Look at node'''
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('X', ' X', 'X'),

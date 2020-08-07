@@ -7,7 +7,7 @@ class DisplayInfoNode(Node, ArmLogicTreeNode):
     '''Display info node'''
     bl_idname = 'LNDisplayInfoNode'
     bl_label = 'Display Info'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketInt', 'Width')

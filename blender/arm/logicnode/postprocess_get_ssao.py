@@ -7,7 +7,7 @@ class SSAOGetNode(Node, ArmLogicTreeNode):
     '''Get SSAO Effect'''
     bl_idname = 'LNSSAOGetNode'
     bl_label = 'Get SSAO'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'Radius')

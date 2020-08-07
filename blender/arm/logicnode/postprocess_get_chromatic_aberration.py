@@ -7,7 +7,7 @@ class ChromaticAberrationGetNode(Node, ArmLogicTreeNode):
     '''Get Chromatic Aberration Effect'''
     bl_idname = 'LNChromaticAberrationGetNode'
     bl_label = 'Get ChromaticAberration'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'Strength')

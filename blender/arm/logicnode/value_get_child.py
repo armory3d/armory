@@ -7,7 +7,7 @@ class GetChildNode(Node, ArmLogicTreeNode):
     '''Get child node'''
     bl_idname = 'LNGetChildNode'
     bl_label = 'Get Child'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
