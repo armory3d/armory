@@ -7,7 +7,7 @@ class MouseCoordsNode(Node, ArmLogicTreeNode):
     '''Mouse coords node'''
     bl_idname = 'LNMouseCoordsNode'
     bl_label = 'Mouse Coords'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketVector', 'Coords')

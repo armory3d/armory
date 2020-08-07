@@ -7,7 +7,7 @@ class OnSurfaceNode(Node, ArmLogicTreeNode):
     '''On surface node'''
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),

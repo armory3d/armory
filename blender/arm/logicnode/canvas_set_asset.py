@@ -7,7 +7,7 @@ class CanvasSetAssetNode(Node, ArmLogicTreeNode):
     '''Set canvas asset'''
     bl_idname = 'LNCanvasSetAssetNode'
     bl_label = 'Canvas Set Asset'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,7 +7,7 @@ class PlayActionNode(Node, ArmLogicTreeNode):
     '''Play action node'''
     bl_idname = 'LNPlayActionNode'
     bl_label = 'Play Action'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

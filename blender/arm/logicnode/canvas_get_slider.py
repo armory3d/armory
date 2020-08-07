@@ -7,7 +7,7 @@ class CanvasGetSliderNode(Node, ArmLogicTreeNode):
     '''Set canvas text'''
     bl_idname = 'LNCanvasGetSliderNode'
     bl_label = 'Canvas Get Slider'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Element')

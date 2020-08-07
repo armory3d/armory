@@ -7,7 +7,7 @@ class KeyboardNode(Node, ArmLogicTreeNode):
     '''Keyboard node'''
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),

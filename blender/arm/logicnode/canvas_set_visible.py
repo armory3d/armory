@@ -7,7 +7,7 @@ class CanvasSetVisibleNode(Node, ArmLogicTreeNode):
     '''Canvas Set Visible node'''
     bl_idname = 'LNCanvasSetVisibleNode'
     bl_label = 'Canvas Set Visible'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

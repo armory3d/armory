@@ -7,7 +7,7 @@ class ArraySpliceNode(Node, ArmLogicTreeNode):
     '''Array splice node'''
     bl_idname = 'LNArraySpliceNode'
     bl_label = 'Array Splice'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
