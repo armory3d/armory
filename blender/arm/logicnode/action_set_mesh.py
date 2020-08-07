@@ -7,7 +7,7 @@ class SetMeshNode(Node, ArmLogicTreeNode):
     '''Set mesh node'''
     bl_idname = 'LNSetMeshNode'
     bl_label = 'Set Mesh'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

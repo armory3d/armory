@@ -7,7 +7,7 @@ class SetPropertyNode(Node, ArmLogicTreeNode):
     '''Set property node'''
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Property'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

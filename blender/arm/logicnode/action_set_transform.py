@@ -7,7 +7,7 @@ class SetTransformNode(Node, ArmLogicTreeNode):
     '''Set transform node'''
     bl_idname = 'LNSetTransformNode'
     bl_label = 'Set Transform'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

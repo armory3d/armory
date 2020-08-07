@@ -7,7 +7,7 @@ class SendEventNode(Node, ArmLogicTreeNode):
     '''Send event node'''
     bl_idname = 'LNSendEventNode'
     bl_label = 'Send Event'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

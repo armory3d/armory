@@ -7,7 +7,7 @@ class RemoveTraitNode(Node, ArmLogicTreeNode):
     '''Remove trait node'''
     bl_idname = 'LNRemoveTraitNode'
     bl_label = 'Remove Trait'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

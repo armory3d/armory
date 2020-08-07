@@ -7,7 +7,7 @@ class RotateObjectAroundAxisNode(Node, ArmLogicTreeNode):
     '''Rotate object around axis node'''
     bl_idname = 'LNRotateObjectAroundAxisNode'
     bl_label = 'Rotate Object Around Axis'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

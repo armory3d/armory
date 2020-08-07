@@ -7,7 +7,7 @@ class SetLightStrengthNode(Node, ArmLogicTreeNode):
     '''Set light strength node'''
     bl_idname = 'LNSetLightStrengthNode'
     bl_label = 'Set Light Strength'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
