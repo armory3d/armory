@@ -7,7 +7,7 @@ class SurfaceNode(Node, ArmLogicTreeNode):
     '''Surface node'''
     bl_idname = 'LNMergedSurfaceNode'
     bl_label = 'Surface'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),

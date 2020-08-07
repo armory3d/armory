@@ -7,7 +7,7 @@ class ApplyImpulseNode(Node, ArmLogicTreeNode):
     '''Apply impulse node'''
     bl_idname = 'LNApplyImpulseNode'
     bl_label = 'Apply Impulse'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

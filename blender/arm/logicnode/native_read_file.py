@@ -7,7 +7,7 @@ class ReadFileNode(Node, ArmLogicTreeNode):
     '''Read File node'''
     bl_idname = 'LNReadFileNode'
     bl_label = 'Read File'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

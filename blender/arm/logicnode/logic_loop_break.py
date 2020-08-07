@@ -7,7 +7,7 @@ class LoopBreakNode(Node, ArmLogicTreeNode):
     '''Loop break node'''
     bl_idname = 'LNLoopBreakNode'
     bl_label = 'Loop Break'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

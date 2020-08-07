@@ -7,7 +7,7 @@ class AlternateNode(Node, ArmLogicTreeNode):
     '''Alternate node'''
     bl_idname = 'LNAlternateNode'
     bl_label = 'Alternate'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

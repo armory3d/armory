@@ -7,7 +7,7 @@ class LoopNode(Node, ArmLogicTreeNode):
     '''Loop node'''
     bl_idname = 'LNLoopNode'
     bl_label = 'Loop'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

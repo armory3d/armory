@@ -7,7 +7,7 @@ class GetGravityNode(Node, ArmLogicTreeNode):
     '''Get Gravity node'''
     bl_idname = 'LNGetGravityNode'
     bl_label = 'Get Gravity'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Gravity')

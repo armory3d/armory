@@ -7,7 +7,7 @@ class WriteFileNode(Node, ArmLogicTreeNode):
     '''Write File node'''
     bl_idname = 'LNWriteFileNode'
     bl_label = 'Write File'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

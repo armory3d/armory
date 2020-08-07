@@ -7,7 +7,7 @@ class ApplyForceNode(Node, ArmLogicTreeNode):
     '''Apply force node'''
     bl_idname = 'LNApplyForceNode'
     bl_label = 'Apply Force'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

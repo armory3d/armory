@@ -7,7 +7,7 @@ class FunctionNode(Node, ArmLogicTreeNode):
     '''Function node'''
     bl_idname = 'LNFunctionNode'
     bl_label = 'Function'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     min_outputs = 1
     
     def __init__(self):

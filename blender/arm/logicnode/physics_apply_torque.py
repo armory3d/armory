@@ -7,7 +7,7 @@ class ApplyTorqueNode(Node, ArmLogicTreeNode):
     '''Apply torque node'''
     bl_idname = 'LNApplyTorqueNode'
     bl_label = 'Apply Torque'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
