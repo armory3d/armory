@@ -79,7 +79,7 @@ class VehicleBody extends Trait {
 		vehicle = new bullet.Bt.RaycastVehicle(tuning, carChassis, vehicleRayCaster);
 
 		// Never deactivate the vehicle
-		carChassis.setActivationState(bullet.Bt.CollisionObject.DISABLE_DEACTIVATION);
+		carChassis.setActivationState(bullet.Bt.CollisionObjectActivationState.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
 		var rightIndex = 0;
