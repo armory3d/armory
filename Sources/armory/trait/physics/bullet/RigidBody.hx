@@ -245,7 +245,7 @@ class RigidBody extends iron.Trait {
 			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
 		}
 		else {
-			setActivationState(ActivationState.NoDeactivation);
+			setActivationState(bullet.Bt.CollisionObjectActivationState.DISABLE_DEACTIVATION);
 		}
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
@@ -607,12 +607,6 @@ class RigidBody extends iron.Trait {
 	var Cylinder = 5;
 	var Capsule = 6;
 	var Terrain = 7;
-}
-
-@:enum abstract ActivationState(Int) from Int to Int {
-	var Active = 1;
-	var NoDeactivation = 4;
-	var NoSimulation = 5;
 }
 
 #end
