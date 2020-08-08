@@ -7,7 +7,7 @@ class RadToDegNode(Node, ArmLogicTreeNode):
     '''Radians to degrees node'''
     bl_idname = 'LNRadToDegNode'
     bl_label = 'Rad to Deg'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'Radians')

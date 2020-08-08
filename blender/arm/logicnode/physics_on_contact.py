@@ -7,7 +7,7 @@ class OnContactNode(Node, ArmLogicTreeNode):
     '''On contact node'''
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),

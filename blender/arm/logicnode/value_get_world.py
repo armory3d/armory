@@ -7,7 +7,7 @@ class GetWorldNode(Node, ArmLogicTreeNode):
     '''Get world node'''
     bl_idname = 'LNGetWorldNode'
     bl_label = 'Get World'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('right', 'right', 'right'),

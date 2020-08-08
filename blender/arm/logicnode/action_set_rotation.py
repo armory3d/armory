@@ -7,7 +7,7 @@ class SetRotationNode(Node, ArmLogicTreeNode):
     '''Set rotation node'''
     bl_idname = 'LNSetRotationNode'
     bl_label = 'Set Rotation'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('Euler Angles', 'Euler Angles', 'Euler Angles'),

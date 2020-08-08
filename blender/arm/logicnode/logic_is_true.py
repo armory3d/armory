@@ -7,7 +7,7 @@ class IsTrueNode(Node, ArmLogicTreeNode):
     '''Is true node'''
     bl_idname = 'LNIsTrueNode'
     bl_label = 'Is True'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

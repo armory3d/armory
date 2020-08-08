@@ -7,7 +7,7 @@ class NavigableLocationNode(Node, ArmLogicTreeNode):
     '''Navigable location node'''
     bl_idname = 'LNNavigableLocationNode'
     bl_label = 'Navigable Location'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Location')

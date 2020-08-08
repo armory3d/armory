@@ -7,7 +7,7 @@ class ParseFloatNode(Node, ArmLogicTreeNode):
     '''Parse float node'''
     bl_idname = 'LNParseFloatNode'
     bl_label = 'Parse float'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'Float')

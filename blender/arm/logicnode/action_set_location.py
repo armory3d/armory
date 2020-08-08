@@ -7,7 +7,7 @@ class SetLocationNode(Node, ArmLogicTreeNode):
     '''Set location node'''
     bl_idname = 'LNSetLocationNode'
     bl_label = 'Set Location'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

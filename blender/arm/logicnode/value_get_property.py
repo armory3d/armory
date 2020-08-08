@@ -7,7 +7,7 @@ class GetPropertyNode(Node, ArmLogicTreeNode):
     '''Get property node'''
     bl_idname = 'LNGetPropertyNode'
     bl_label = 'Get Property'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

@@ -7,7 +7,7 @@ class GetLocationNode(Node, ArmLogicTreeNode):
     '''Get location node'''
     bl_idname = 'LNGetLocationNode'
     bl_label = 'Get Location'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

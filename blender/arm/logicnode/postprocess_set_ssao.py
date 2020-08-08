@@ -7,7 +7,7 @@ class SSAOSetNode(Node, ArmLogicTreeNode):
     '''Set SSAO Effect'''
     bl_idname = 'LNSSAOSetNode'
     bl_label = 'Set SSAO'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

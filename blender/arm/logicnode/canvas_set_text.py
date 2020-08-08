@@ -7,7 +7,7 @@ class CanvasSetTextNode(Node, ArmLogicTreeNode):
     '''Set canvas text'''
     bl_idname = 'LNCanvasSetTextNode'
     bl_label = 'Canvas Set Text'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

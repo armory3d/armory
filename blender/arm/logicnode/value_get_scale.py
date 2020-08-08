@@ -7,7 +7,7 @@ class GetScaleNode(Node, ArmLogicTreeNode):
     '''Get scale node'''
     bl_idname = 'LNGetScaleNode'
     bl_label = 'Get Scale'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

@@ -6,8 +6,8 @@ from arm.logicnode.arm_nodes import *
 class BooleanArrayNode(Node, ArmLogicTreeNode):
     '''Boolean array node'''
     bl_idname = 'LNArrayBooleanNode'
-    bl_label = 'Array (Boolean)'
-    bl_icon = 'QUESTION'
+    bl_label = 'Array Boolean'
+    bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

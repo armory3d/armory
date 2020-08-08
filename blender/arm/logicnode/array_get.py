@@ -7,7 +7,7 @@ class ArrayGetNode(Node, ArmLogicTreeNode):
     '''Array get node'''
     bl_idname = 'LNArrayGetNode'
     bl_label = 'Array Get'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketArray', 'Array')

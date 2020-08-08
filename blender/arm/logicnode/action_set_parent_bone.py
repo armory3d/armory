@@ -7,7 +7,7 @@ class SetParentBoneNode(Node, ArmLogicTreeNode):
     '''Set parent bone node'''
     bl_idname = 'LNSetParentBoneNode'
     bl_label = 'Set Parent Bone'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,7 +7,7 @@ class ArraySliceNode(Node, ArmLogicTreeNode):
     '''Array slice node'''
     bl_idname = 'LNArraySliceNode'
     bl_label = 'Array Slice'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketArray', 'Array')

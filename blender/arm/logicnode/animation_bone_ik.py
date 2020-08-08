@@ -7,7 +7,7 @@ class BoneIKNode(Node, ArmLogicTreeNode):
     '''Bone Inverse Kinematics node'''
     bl_idname = 'LNBoneIKNode'
     bl_label = 'Bone IK'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

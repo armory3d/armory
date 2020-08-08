@@ -7,7 +7,7 @@ class CanvasGetCheckboxNode(Node, ArmLogicTreeNode):
     '''Get canvas checkbox value'''
     bl_idname = 'LNCanvasGetCheckboxNode'
     bl_label = 'Canvas Get Checkbox'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Element')

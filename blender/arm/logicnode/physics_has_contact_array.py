@@ -6,8 +6,8 @@ from arm.logicnode.arm_nodes import *
 class HasContactArrayNode(Node, ArmLogicTreeNode):
     '''Has contact array node'''
     bl_idname = 'LNHasContactArrayNode'
-    bl_label = 'Has Contact (Array)'
-    bl_icon = 'QUESTION'
+    bl_label = 'Has Contact Array'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object 1')

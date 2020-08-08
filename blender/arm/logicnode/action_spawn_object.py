@@ -7,7 +7,7 @@ class SpawnObjectNode(Node, ArmLogicTreeNode):
     '''Spawn object node'''
     bl_idname = 'LNSpawnObjectNode'
     bl_label = 'Spawn Object'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

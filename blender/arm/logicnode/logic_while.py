@@ -7,7 +7,7 @@ class WhileNode(Node, ArmLogicTreeNode):
     '''While node'''
     bl_idname = 'LNWhileNode'
     bl_label = 'While'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

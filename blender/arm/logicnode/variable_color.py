@@ -7,7 +7,7 @@ class ColorNode(Node, ArmLogicTreeNode):
     '''Color node'''
     bl_idname = 'LNColorNode'
     bl_label = 'Color'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketColor', 'Color')

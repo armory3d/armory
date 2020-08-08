@@ -7,7 +7,7 @@ class FunctionOutputNode(Node, ArmLogicTreeNode):
     '''Function output node'''
     bl_idname = 'LNFunctionOutputNode'
     bl_label = 'Function Output'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

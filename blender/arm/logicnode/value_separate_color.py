@@ -7,7 +7,7 @@ class SeparateColorNode(Node, ArmLogicTreeNode):
     '''Separate color node'''
     bl_idname = 'LNSeparateColorNode'
     bl_label = 'Separate RGB'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketColor', 'Color')

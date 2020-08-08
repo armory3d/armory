@@ -7,7 +7,7 @@ class SurfaceCoordsNode(Node, ArmLogicTreeNode):
     '''Surface coords node'''
     bl_idname = 'LNSurfaceCoordsNode'
     bl_label = 'Surface Coords'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketVector', 'Coords')

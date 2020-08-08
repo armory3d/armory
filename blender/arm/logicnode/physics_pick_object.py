@@ -7,7 +7,7 @@ class PickObjectNode(Node, ArmLogicTreeNode):
     '''Pick closest object node'''
     bl_idname = 'LNPickObjectNode'
     bl_label = 'Pick Object'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Screen Coords')

@@ -7,7 +7,7 @@ class ConcatenateStringNode(Node, ArmLogicTreeNode):
     '''Concatenate string node'''
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def __init__(self):
         array_nodes[str(id(self))] = self

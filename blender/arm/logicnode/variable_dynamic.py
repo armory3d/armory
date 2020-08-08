@@ -7,7 +7,7 @@ class DynamicNode(Node, ArmLogicTreeNode):
     '''Dynamic node'''
     bl_idname = 'LNDynamicNode'
     bl_label = 'Dynamic'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Dynamic')

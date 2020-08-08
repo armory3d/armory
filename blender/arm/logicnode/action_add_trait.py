@@ -7,7 +7,7 @@ class AddTraitNode(Node, ArmLogicTreeNode):
     '''Add trait node'''
     bl_idname = 'LNAddTraitNode'
     bl_label = 'Add Trait'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

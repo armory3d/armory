@@ -7,7 +7,7 @@ class ArrayPopNode(Node, ArmLogicTreeNode):
     '''Array pop node'''
     bl_idname = 'LNArrayPopNode'
     bl_label = 'Array Pop'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketArray', 'Array')

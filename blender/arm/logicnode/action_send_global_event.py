@@ -7,7 +7,7 @@ class SendGlobalEventNode(Node, ArmLogicTreeNode):
     '''Send global event node'''
     bl_idname = 'LNSendGlobalEventNode'
     bl_label = 'Send Global Event'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

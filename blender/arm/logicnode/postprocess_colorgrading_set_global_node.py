@@ -28,7 +28,7 @@ class ColorgradingSetGlobalNode(Node, ArmLogicTreeNode):
     '''Colorgrading Set Global node'''
     bl_idname = 'LNColorgradingSetGlobalNode'
     bl_label = 'Colorgrading Set Global'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(

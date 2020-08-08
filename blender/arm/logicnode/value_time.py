@@ -7,7 +7,7 @@ class TimeNode(Node, ArmLogicTreeNode):
     '''Time node'''
     bl_idname = 'LNTimeNode'
     bl_label = 'Time'
-    bl_icon = 'TIME'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'Time')

@@ -8,7 +8,7 @@ class MaterialNode(Node, ArmLogicTreeNode):
     '''Material node'''
     bl_idname = 'LNMaterialNode'
     bl_label = 'Material'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     @property
     def property0_get(self):

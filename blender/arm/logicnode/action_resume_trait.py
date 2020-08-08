@@ -7,7 +7,7 @@ class ResumeTraitNode(Node, ArmLogicTreeNode):
     '''Resume trait node'''
     bl_idname = 'LNResumeTraitNode'
     bl_label = 'Resume Trait'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

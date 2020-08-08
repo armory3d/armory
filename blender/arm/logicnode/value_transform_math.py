@@ -7,7 +7,7 @@ class TransformMathNode(Node, ArmLogicTreeNode):
     '''Transform math node'''
     bl_idname = 'LNTransformMathNode'
     bl_label = 'Transform Math'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketShader', 'Transform')

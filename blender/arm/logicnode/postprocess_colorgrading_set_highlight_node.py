@@ -28,7 +28,7 @@ class ColorgradingSetHighlightNode(Node, ArmLogicTreeNode):
     '''Colorgrading Set Highlight node'''
     bl_idname = 'LNColorgradingSetHighlightNode'
     bl_label = 'Colorgrading Set Highlight'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(

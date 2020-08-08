@@ -7,7 +7,7 @@ class SeparateVectorNode(Node, ArmLogicTreeNode):
     '''Separate vector node'''
     bl_idname = 'LNSeparateVectorNode'
     bl_label = 'Separate XYZ'
-    bl_icon = 'CURVE_PATH'
+    bl_icon = 'NONE'
     
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Vector')

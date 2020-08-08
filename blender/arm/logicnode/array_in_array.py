@@ -7,7 +7,7 @@ class ArrayInArrayNode(Node, ArmLogicTreeNode):
     '''In Array node'''
     bl_idname = 'LNArrayInArrayNode'
     bl_label = 'In Array'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketArray', 'Array')

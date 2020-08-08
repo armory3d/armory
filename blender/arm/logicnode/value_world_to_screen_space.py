@@ -7,7 +7,7 @@ class WorldToScreenSpaceNode(Node, ArmLogicTreeNode):
     '''World to screen space node'''
     bl_idname = 'LNWorldToScreenSpaceNode'
     bl_label = 'World To Screen Space'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Vector')

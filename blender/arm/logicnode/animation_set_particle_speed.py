@@ -7,7 +7,7 @@ class SetParticleSpeedNode(Node, ArmLogicTreeNode):
     '''Set particle speed node'''
     bl_idname = 'LNSetParticleSpeedNode'
     bl_label = 'Set Particle Speed'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,7 +7,7 @@ class TransformNode(Node, ArmLogicTreeNode):
     '''Transform node'''
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'
-    bl_icon = 'SOUND'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Location')

@@ -7,7 +7,7 @@ class ColorgradingGetHighlightNode(Node, ArmLogicTreeNode):
     '''Colorgrading Get Highlight node'''
     bl_idname = 'LNColorgradingGetHighlightNode'
     bl_label = 'Colorgrading Get Highlight'
-    bl_icon = 'QUESTION'
+    bl_icon = 'NONE'
 
     def init(self, context):
         self.outputs.new('NodeSocketFloat', 'HightlightMin')
