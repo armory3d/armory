@@ -43,6 +43,30 @@ def on_depsgraph_update_post(self):
         if len(ops) > 0 and ops[-1] != None:
             send_operator(ops[-1])
 
+    # Hacky solution to update armory props after operator executions
+    last_operator = bpy.context.active_operator
+    if last_operator is not None:
+        on_operator_post(last_operator.bl_idname)
+
+
+def on_operator_post(operator_id: str) -> None:
+    """Called after operator execution. Does not work for operators
+    executed in another context. Warning: this function is also called
+    when the operator execution raised an exception!"""
+    # 3D View > Object > Rigid Body > Copy from Active
+    if operator_id == "RIGIDBODY_OT_object_settings_copy":
+        # Copy armory rigid body settings
+        source_obj = bpy.context.active_object
+        for target_obj in bpy.context.selected_objects:
+            target_obj.arm_rb_linear_factor = source_obj.arm_rb_linear_factor
+            target_obj.arm_rb_angular_factor = source_obj.arm_rb_angular_factor
+            target_obj.arm_rb_trigger = source_obj.arm_rb_trigger
+            target_obj.arm_rb_force_deactivation = source_obj.arm_rb_force_deactivation
+            target_obj.arm_rb_deactivation_time = source_obj.arm_rb_deactivation_time
+            target_obj.arm_rb_ccd = source_obj.arm_rb_ccd
+            target_obj.arm_rb_collision_filter_mask = source_obj.arm_rb_collision_filter_mask
+
+
 def send_operator(op):
     if hasattr(bpy.context, 'object') and bpy.context.object != None:
         obj = bpy.context.object.name
