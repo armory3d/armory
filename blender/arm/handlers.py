@@ -51,7 +51,8 @@ def on_depsgraph_update_post(self):
 
 def on_operator_post(operator_id: str) -> None:
     """Called after operator execution. Does not work for operators
-    executed in another context."""
+    executed in another context. Warning: this function is also called
+    when the operator execution raised an exception!"""
     # 3D View > Object > Rigid Body > Copy from Active
     if operator_id == "RIGIDBODY_OT_object_settings_copy":
         # Copy armory rigid body settings
