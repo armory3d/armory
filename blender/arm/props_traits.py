@@ -48,7 +48,13 @@ def update_trait_group(self, context):
                     col = bpy.data.collections.new('Trait|' + t.name)
                 else:
                     col = bpy.data.collections['Trait|' + t.name]
-                col.objects.link(o)
+                try:
+                    col.objects.link(o)
+                except RuntimeError:
+                    # Object is already in that collection. This can
+                    # happen when multiple same traits are copied with
+                    # bpy.ops.arm.copy_traits_to_active
+                    pass
 
 class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
