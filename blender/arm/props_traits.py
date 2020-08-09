@@ -1,16 +1,17 @@
-import shutil
-import bpy
-import subprocess
+import json
 import os
+import shutil
+import subprocess
 import webbrowser
+
+from bpy.types import NodeTree
 import bpy.utils.previews
-from bpy.types import Menu, Panel, UIList, NodeTree
-from bpy.props import *
+
+import arm.make as make
 from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
-import arm.make as make
-import json
+
 
 def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
