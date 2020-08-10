@@ -650,6 +650,13 @@ def draw_view3d_header(self, context):
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
 
+
+def draw_view3d_object_menu(self, context):
+    self.layout.separator()
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator('arm.copy_traits_to_active')
+
+
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
     bl_space_type = "PROPERTIES"
