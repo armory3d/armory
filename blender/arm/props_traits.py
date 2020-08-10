@@ -577,7 +577,7 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
         layout = layout.column(align=True)
         layout.alignment = 'EXPAND'
 
-        layout.label(text=f'Warning: At least one target object already has', icon='ERROR')
+        layout.label(text='Warning: At least one target object already has', icon='ERROR')
         layout.label(text='traits assigned to it!', icon='BLANK1')
         layout.separator()
         layout.label(text='Do you want to overwrite the already existing traits', icon='BLANK1')
