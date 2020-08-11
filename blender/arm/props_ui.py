@@ -650,6 +650,13 @@ def draw_view3d_header(self, context):
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
 
+
+def draw_view3d_object_menu(self, context):
+    self.layout.separator()
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator('arm.copy_traits_to_active')
+
+
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
     bl_space_type = "PROPERTIES"
@@ -1442,6 +1449,18 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')
 
+
+class ARM_OT_DiscardPopup(bpy.types.Operator):
+    """Empty operator for discarding dialogs."""
+    bl_idname = 'arm.discard_popup'
+    bl_label = 'OK'
+    bl_description = 'Discard'
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.register_class(ARM_PT_ModifiersPropsPanel)
@@ -1490,10 +1509,17 @@ def register():
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
+    bpy.utils.register_class(ARM_OT_DiscardPopup)
+
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
+    bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
+
 
 def unregister():
+    bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
+
+    bpy.utils.unregister_class(ARM_OT_DiscardPopup)
     bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ModifiersPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)

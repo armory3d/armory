@@ -94,20 +94,22 @@ def sync_modifiers(obj):
         for prop in properties:
             setattr(mDst, prop, getattr(mSrc, prop))
 
-def sync_collection(cSrc, cDst):
-    cDst.clear()
-    for mSrc in cSrc:
-        mDst = cDst.get(mSrc.name, None)
-        if not mDst:
-            mDst = cDst.add()
+def sync_collection(col_src, col_dst, clear_dst=True):
+    """Synchronizes collection properties. If `clear_dst` is False, the
+    destination collection is not cleared before syncing."""
+    if clear_dst:
+        col_dst.clear()
+
+    for m_src in col_src:
+        m_dst = col_dst.add()
 
         # collect names of writable properties
-        properties = [p.identifier for p in mSrc.bl_rna.properties
+        properties = [p.identifier for p in m_src.bl_rna.properties
                       if not p.is_readonly]
 
         # copy those properties
         for prop in properties:
-            setattr(mDst, prop, getattr(mSrc, prop))
+            setattr(m_dst, prop, getattr(m_src, prop))
 
 def sync_traits(obj: bpy.types.Object):
     """Synchronizes the traits of the given object with the traits of

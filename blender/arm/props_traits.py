@@ -1,16 +1,18 @@
-import shutil
-import bpy
-import subprocess
+import json
 import os
+import shutil
+import subprocess
 import webbrowser
+
+from bpy.types import NodeTree
 import bpy.utils.previews
-from bpy.types import Menu, Panel, UIList, NodeTree
-from bpy.props import *
+
+import arm.make as make
 from arm.props_traits_props import *
+import arm.proxy as proxy
 import arm.utils
 import arm.write_data as write_data
-import arm.make as make
-import json
+
 
 def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
@@ -48,7 +50,13 @@ def update_trait_group(self, context):
                     col = bpy.data.collections.new('Trait|' + t.name)
                 else:
                     col = bpy.data.collections['Trait|' + t.name]
-                col.objects.link(o)
+                try:
+                    col.objects.link(o)
+                except RuntimeError:
+                    # Object is already in that collection. This can
+                    # happen when multiple same traits are copied with
+                    # bpy.ops.arm.copy_traits_to_active
+                    pass
 
 class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
@@ -552,6 +560,82 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         obj = bpy.context.scene
         draw_traits(layout, obj, is_object=False)
 
+
+class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
+    bl_label = 'Copy Traits from Active Object'
+    bl_idname = 'arm.copy_traits_to_active'
+    bl_description = 'Copies the traits of the active object to all other selected objects'
+
+    overwrite: BoolProperty(name="Overwrite", default=True)
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and len(context.selected_objects) > 1
+
+    def draw_message_box(self, context):
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        layout.label(text='Warning: At least one target object already has', icon='ERROR')
+        layout.label(text='traits assigned to it!', icon='BLANK1')
+        layout.separator()
+        layout.label(text='Do you want to overwrite the already existing traits', icon='BLANK1')
+        layout.label(text='or append to them?', icon='BLANK1')
+        layout.separator()
+
+        row = layout.row(align=True)
+        row.active_default = True
+        row.operator('arm.copy_traits_to_active', text='Overwrite').overwrite = True
+        row.active_default = False
+        row.operator('arm.copy_traits_to_active', text='Append').overwrite = False
+        row.operator('arm.discard_popup', text='Cancel')
+
+    def execute(self, context):
+        source_obj = bpy.context.active_object
+
+        for target_obj in bpy.context.selected_objects:
+            if source_obj == target_obj:
+                continue
+
+            # Offset for trait iteration when appending traits
+            offset = 0
+            if not self.overwrite:
+                offset = len(target_obj.arm_traitlist)
+
+            # Make use of proxy functions here
+            proxy.sync_collection(
+                source_obj.arm_traitlist, target_obj.arm_traitlist, clear_dst=self.overwrite)
+
+            for i in range(len(source_obj.arm_traitlist)):
+                proxy.sync_collection(
+                    source_obj.arm_traitlist[i].arm_traitpropslist,
+                    target_obj.arm_traitlist[i + offset].arm_traitpropslist
+                )
+
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        show_dialog = False
+
+        # Test if there is a target object which has traits that would
+        # get overwritten
+        source_obj = bpy.context.active_object
+        for target_object in bpy.context.selected_objects:
+            if source_obj == target_object:
+                continue
+            else:
+                if target_object.arm_traitlist:
+                    show_dialog = True
+
+        if show_dialog:
+            context.window_manager.popover(self.__class__.draw_message_box, ui_units_x=16)
+        else:
+            bpy.ops.arm.copy_traits_to_active()
+
+        return {'INTERFACE'}
+
+
 def draw_traits(layout, obj, is_object):
     rows = 2
     if len(obj.arm_traitlist) > 1:
@@ -692,10 +776,13 @@ def register():
     bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ARM_PT_TraitPanel)
     bpy.utils.register_class(ARM_PT_SceneTraitPanel)
+    bpy.utils.register_class(ARM_OT_CopyTraitsFromActive)
+
     bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
     bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
     bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
+
     icons_dict = bpy.utils.previews.new()
     icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
     icons_dict.load("haxe", os.path.join(icons_dir, "haxe.png"), 'IMAGE')
@@ -703,6 +790,7 @@ def register():
 
 def unregister():
     global icons_dict
+    bpy.utils.unregister_class(ARM_OT_CopyTraitsFromActive)
     bpy.utils.unregister_class(ArmTraitListItem)
     bpy.utils.unregister_class(ARM_UL_TraitList)
     bpy.utils.unregister_class(ArmTraitListNewItem)
