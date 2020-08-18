@@ -396,11 +396,19 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         return 'vcolor'
 
     elif node.type == 'ATTRIBUTE':
+        # Shader uniforms
+        if node.attribute_name.startswith(('vec2 ', 'vec3 ', 'vec4 ')):
+            utype, uname = node.attribute_name.split(' ')[:2]
+            frag.add_uniform(f'{utype} {uname}', link=uname)
+            return uname
+
         if socket == node.outputs[0]: # Color
-            con.add_elem('col', 'short4norm') # Vcols only for now
+            # Vertex colors
+            con.add_elem('col', 'short4norm')
             return 'vcolor'
         else: # Vector
-            con.add_elem('tex', 'short2norm') # UVMaps only for now
+            # UV maps
+            con.add_elem('tex', 'short2norm')
             mat = mat_get_material()
             mat_users = mat_get_material_users()
             if mat_users != None and mat in mat_users:
@@ -1117,10 +1125,17 @@ def parse_value(node, socket):
         return parse_group_input(node, socket)
 
     elif node.type == 'ATTRIBUTE':
-        # Pass time till drivers are implemented
         if node.attribute_name == 'time':
             curshader.add_uniform('float time', link='_time')
             return 'time'
+
+        # Shader uniforms
+        elif node.attribute_name.startswith(('float ', 'int ')):
+            utype, uname = node.attribute_name.split(' ')[:2]
+            frag.add_uniform(f'{utype} {uname}', link=uname)
+            return uname
+
+        # Return 0.0 till drivers are implemented
         else:
             return '0.0'
 
