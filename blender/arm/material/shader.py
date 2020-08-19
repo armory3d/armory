@@ -196,13 +196,16 @@ class Shader:
         return s in self.includes
 
     def add_include(self, s):
-        self.includes.append(s)
+        if not self.has_include(s):
+            self.includes.append(s)
 
     def add_in(self, s):
-        self.ins.append(s)
+        if s not in self.ins:
+            self.ins.append(s)
 
     def add_out(self, s):
-        self.outs.append(s)
+        if s not in self.outs:
+            self.outs.append(s)
 
     def add_uniform(self, s, link=None, included=False):
         ar = s.split(' ')

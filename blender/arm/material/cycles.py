@@ -396,12 +396,6 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         return 'vcolor'
 
     elif node.type == 'ATTRIBUTE':
-        # Shader uniforms
-        if node.attribute_name.startswith(('vec2 ', 'vec3 ', 'vec4 ')):
-            utype, uname = node.attribute_name.split(' ')[:2]
-            frag.add_uniform(f'{utype} {uname}', link=uname)
-            return uname
-
         if socket == node.outputs[0]: # Color
             # Vertex colors
             con.add_elem('col', 'short4norm')
@@ -1059,6 +1053,10 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         nor = parse_vector_input(node.inputs[3])
         return '(vec3({0}) * {1})'.format(height, scale)
 
+    elif node.type == 'CUSTOM':
+        if node.bl_idname == 'ArmShaderDataNode':
+            return node.parse(frag, vert)
+
 def parse_normal_map_color_input(inp, strength_input=None):
     global normal_parsed
     global frag
@@ -1128,12 +1126,6 @@ def parse_value(node, socket):
         if node.attribute_name == 'time':
             curshader.add_uniform('float time', link='_time')
             return 'time'
-
-        # Shader uniforms
-        elif node.attribute_name.startswith(('float ', 'int ')):
-            utype, uname = node.attribute_name.split(' ')[:2]
-            frag.add_uniform(f'{utype} {uname}', link=uname)
-            return uname
 
         # Return 0.0 till drivers are implemented
         else:
@@ -1519,6 +1511,10 @@ def parse_value(node, socket):
             return 'dot({0}, {1})'.format(vec1, vec2)
         else:
             return '0.0'
+
+    elif node.type == 'CUSTOM':
+        if node.bl_idname == 'ArmShaderDataNode':
+            return node.parse(frag, vert)
 
 ##
 
