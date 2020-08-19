@@ -56,7 +56,7 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.color_mode = orig_color_mode
 
 def blend_name():
-    return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
+    return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.', 1)[0]
 
 def build_dir():
     return 'build_' + safestr(blend_name())
@@ -226,14 +226,14 @@ def fetch_bundled_script_names():
     wrd.arm_bundled_scripts_list.clear()
     os.chdir(get_sdk_path() + '/armory/Sources/armory/trait')
     for file in glob.glob('*.hx'):
-        wrd.arm_bundled_scripts_list.add().name = file.rsplit('.')[0]
+        wrd.arm_bundled_scripts_list.add().name = file.rsplit('.', 1)[0]
 
 script_props = {}
 script_props_defaults = {}
 script_warnings = {}
 def fetch_script_props(file):
     with open(file) as f:
-        name = file.rsplit('.')[0]
+        name = file.rsplit('.', 1)[0]
         if 'Sources' in name:
             name = name[name.index('Sources') + 8:]
         if '/' in name:
@@ -403,7 +403,7 @@ def fetch_script_names():
         os.chdir(sources_path)
         # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
         for file in glob.glob('**/*.hx', recursive=True):
-            mod = file.rsplit('.')[0]
+            mod = file.rsplit('.', 1)[0]
             mod = mod.replace('\\', '/')
             mod_parts = mod.rsplit('/')
             if re.match('^[A-Z][A-Za-z0-9_]*$', mod_parts[-1]):
@@ -418,7 +418,7 @@ def fetch_script_names():
         for file in glob.glob('*.json'):
             if file == "_themes.json":
                 continue
-            wrd.arm_canvas_list.add().name = file.rsplit('.')[0]
+            wrd.arm_canvas_list.add().name = file.rsplit('.', 1)[0]
     os.chdir(get_fp())
 
 def fetch_wasm_names():
@@ -431,7 +431,7 @@ def fetch_wasm_names():
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.wasm'):
-            name = file.rsplit('.')[0]
+            name = file.rsplit('.', 1)[0]
             wrd.arm_wasm_list.add().name = name
     os.chdir(get_fp())
 
