@@ -1053,6 +1053,10 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         nor = parse_vector_input(node.inputs[3])
         return '(vec3({0}) * {1})'.format(height, scale)
 
+    elif node.type == 'CUSTOM':
+        if node.bl_idname == 'ArmShaderDataNode':
+            return node.parse(frag, vert)
+
 def parse_normal_map_color_input(inp, strength_input=None):
     global normal_parsed
     global frag
@@ -1507,6 +1511,10 @@ def parse_value(node, socket):
             return 'dot({0}, {1})'.format(vec1, vec2)
         else:
             return '0.0'
+
+    elif node.type == 'CUSTOM':
+        if node.bl_idname == 'ArmShaderDataNode':
+            return node.parse(frag, vert)
 
 ##
 

@@ -1,4 +1,5 @@
 import arm.nodes_logic
+import arm.nodes_material
 import arm.props_traits_props
 import arm.props_traits
 import arm.props_lod
@@ -31,6 +32,7 @@ def register(local_sdk=False):
     arm.props.register()
     arm.props_ui.register()
     arm.nodes_logic.register()
+    arm.nodes_material.register()
     arm.keymap.register()
     arm.handlers.register()
     arm.props_collision_filter_mask.register()
@@ -40,6 +42,7 @@ def unregister():
     registered = False
     arm.keymap.unregister()
     arm.utils.unregister()
+    arm.nodes_material.unregister()
     arm.nodes_logic.unregister()
     arm.handlers.unregister()
     arm.props_ui.unregister()
