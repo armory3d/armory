@@ -23,10 +23,12 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import Optional
-
 import numpy as np
 from numpy import uint8, int32
+
+
+class LZ4RangeException(Exception):
+    pass
 
 
 class LZ4:
@@ -37,13 +39,12 @@ class LZ4:
         return 0 if size > 0x7e000000 else size + (size // 255 | 0) + 16
 
     @staticmethod
-    def encode(b: bytes) -> Optional[bytes]:
+    def encode(b: bytes) -> bytes:
         i_buf: np.ndarray = np.frombuffer(b, dtype=uint8)
         i_len = i_buf.size
 
         if i_len >= 0x7e000000:
-            print("LZ4 range error")
-            return None
+            raise LZ4RangeException("Input buffer is too large")
 
         # "The last match must start at least 12 bytes before end of block"
         last_match_pos = i_len - 12
