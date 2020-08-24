@@ -14,7 +14,8 @@ def bake():
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                 iterNum = iterNum + 1
 
-    iterNum = iterNum - 1
+    if iterNum > 1:
+        iterNum = iterNum - 1
 
     for obj in bpy.data.objects:
         if obj.type == 'MESH':

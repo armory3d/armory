@@ -14,6 +14,7 @@ import arm.utils
 
 from arm.lightmapper.utility import icon
 from arm.lightmapper.properties.denoiser import oidn, optix
+import importlib
 
 # Menu in object region
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
@@ -52,6 +53,49 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
+
+        # Lightmapping props
+        if obj.type == "MESH":
+            row = layout.row(align=True)
+            row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_use")
+
+            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_resolution")
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_unwrap_mode")
+                row = layout.row()
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroup":
+                    pass
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_unwrap_margin")
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filter_override")
+                row = layout.row()
+                if obj.TLM_ObjectProperties.tlm_mesh_filter_override:
+                    row = layout.row(align=True)
+                    row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_mode")
+                    row = layout.row(align=True)
+                    if obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Gaussian":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_gaussian_strength")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    elif obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Box":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_box_strength")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    elif obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Bilateral":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_diameter")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_color_deviation")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_coordinate_deviation")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    else:
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_median_kernel", expand=True)
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
 
 class ARM_PT_ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -1300,6 +1344,46 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 row = layout.row(align=True)
                 row.operator("tlm.remove_uv_selection")
                 row = layout.row(align=True)
+
+            ##################
+            #SELECTION OPERATORS!
+
+            row = layout.row(align=True)
+            row.label(text="Selection Operators")
+            row = layout.row(align=True)
+
+            row = layout.row(align=True)
+            row.operator("tlm.enable_selection")
+            row = layout.row(align=True)
+            row.operator("tlm.disable_selection")
+            row = layout.row(align=True)
+            row.prop(sceneProperties, "tlm_override_object_settings")
+
+            if sceneProperties.tlm_override_object_settings:
+
+                row = layout.row(align=True)
+                row = layout.row()
+                row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
+                row = layout.row()
+
+                if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroup":
+
+                    if scene.TLM_AtlasList_index >= 0 and len(scene.TLM_AtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_AtlasList[scene.TLM_AtlasList_index]
+                        row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+
+                else:
+
+                    row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
+                    row = layout.row()
+                    row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
+
+            row = layout.row(align=True)
+            row.operator("tlm.remove_uv_selection")
+            row = layout.row(align=True)
             
 
 class ArmGenLodButton(bpy.types.Operator):
