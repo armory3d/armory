@@ -30,7 +30,8 @@ class ShaderDataNode(Node):
                  ('float', 'float', 'float'),
                  ('vec2', 'vec2', 'vec2'),
                  ('vec3', 'vec3', 'vec3'),
-                 ('vec4', 'vec4', 'vec4')],
+                 ('vec4', 'vec4', 'vec4'),
+                 ('sampler2D', 'sampler2D', 'sampler2D')],
         name='Variable Type',
         default='vec3',
         description="The type of the variable")
@@ -65,6 +66,11 @@ class ShaderDataNode(Node):
     def parse(self, frag: Shader, vert: Shader) -> str:
         if self.input_type == "uniform":
             frag.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
+
+            if self.variable_type == "sampler2D":
+                frag.add_uniform('vec2 screenSize', link='_screenSize')
+                return f'texture({self.variable_name}, gl_FragCoord.xy / screenSize).rgb'
+
             return self.variable_name
 
         else:
