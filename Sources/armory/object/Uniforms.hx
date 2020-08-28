@@ -25,7 +25,8 @@ class Uniforms {
 			return armory.data.ConstData.ltcMagTex;
 		}
 		#end
-		return null;
+		var target = iron.RenderPath.active.renderTargets.get(link);
+		return target != null ? target.image : null;
 	}
 
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
