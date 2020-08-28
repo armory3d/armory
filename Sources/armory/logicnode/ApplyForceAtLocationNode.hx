@@ -13,15 +13,19 @@ class ApplyForceAtLocationNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var force: Vec4 = inputs[2].get();
-        var location: Vec4 = inputs[3].get();
-		var local: Bool = inputs.length > 3 ? inputs[3].get() : false;
+		var localForce: Bool = inputs[3].get();
+        var location: Vec4 = inputs[4].get();
+		var localLoc: Bool =  inputs[5].get();
 
 		if (object == null || force == null || location == null) return;
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
-		if (!local) {
-			rb.applyForce(force, location);
+		if (localLoc) {
+			location.applyQuat(object.transform.rot);
+		}
+		if(!localForce){
+			rb.applyForce(force,location);
 		}
 		else {
 			var look = object.transform.world.look().mult(force.y);

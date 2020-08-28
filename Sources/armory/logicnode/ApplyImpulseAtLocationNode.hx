@@ -13,15 +13,20 @@ class ApplyImpulseAtLocationNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var impulse: Vec4 = inputs[2].get();
-		var location: Vec4 = inputs[3].get();
-		var local: Bool = inputs.length > 3 ? inputs[3].get() : false;
+		var localForce: Bool = inputs[3].get();
+        var location: Vec4 = inputs[4].get();
+		var localLoc: Bool =  inputs[5].get();
 
 		if (object == null || impulse == null || location == null) return;
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
-		if (!local) {
-			rb.applyImpulse(impulse, location); }
+		if (localLoc) {
+			location.applyQuat(object.transform.rot);
+		}
+		if (!localForce) {
+			rb.applyImpulse(impulse, location); 
+		}
 		else {
 			var look = object.transform.world.look().mult(impulse.y);
 			var right = object.transform.world.right().mult(impulse.x);
