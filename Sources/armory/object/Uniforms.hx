@@ -4,6 +4,7 @@ import iron.Scene;
 import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
+using StringTools;
 
 // Structure for setting shader uniforms
 class Uniforms {
@@ -25,7 +26,7 @@ class Uniforms {
 			return armory.data.ConstData.ltcMagTex;
 		}
 		#end
-		var target = iron.RenderPath.active.renderTargets.get(link);
+		var target = iron.RenderPath.active.renderTargets.get(link.endsWith("_depth") ? link.substr(0, link.length - 6) : link);
 		return target != null ? target.image : null;
 	}
 
