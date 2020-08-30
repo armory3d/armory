@@ -17,5 +17,7 @@ class QuaternionNode(Node, ArmLogicTreeNode):
         self.inputs[-1].default_value = 1.0
         
         self.outputs.new('NodeSocketVector', 'Quaternion')
+        self.outputs.new('NodeSocketVector', 'XYZ')
+        self.outputs.new('NodeSocketFloat', 'W')
 
 add_node(QuaternionNode, category='Variable')
