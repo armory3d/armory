@@ -24,7 +24,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import numpy as np
-from numpy import uint8, int32
+from numpy import uint8, int32, uint32
 
 
 class LZ4RangeException(Exception):
@@ -67,20 +67,22 @@ class LZ4:
         while True:
             ref_pos = int32(0)
             m_offset = 0
-            sequence: uint8 = i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24
+            sequence = np.uint32(i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24)
 
             # Match-finding loop
             while i_pos <= last_match_pos:
-                sequence = sequence >> 8 | i_buf[i_pos + 3] << 24
-                hash_val = (sequence * 0x9e37 & 0xffff) + (sequence * 0x79b1 >> 16) & 0xffff
+                # Conversion to uint32 is mandatory to ensure correct
+                # unsigned right shift (compare with .hx implementation)
+                sequence = uint32(uint32(sequence) >> uint32(8) | i_buf[i_pos + 3] << 24)
+                hash_val = (sequence * 0x9e37 & 0xffff) + (uint32(sequence * 0x79b1) >> uint32(16)) & 0xffff
                 ref_pos = LZ4.hash_table[hash_val]
                 LZ4.hash_table[hash_val] = i_pos
                 m_offset = i_pos - ref_pos
                 if (m_offset < 65536
-                        and i_buf[ref_pos + 0] == ((sequence       ) & 0xff)
-                        and i_buf[ref_pos + 1] == ((sequence >>  8) & 0xff)
-                        and i_buf[ref_pos + 2] == ((sequence >> 16) & 0xff)
-                        and i_buf[ref_pos + 3] == ((sequence >> 24) & 0xff)):
+                        and i_buf[ref_pos + 0] == ((sequence) & 0xff)
+                        and i_buf[ref_pos + 1] == ((sequence >> uint32(8)) & 0xff)
+                        and i_buf[ref_pos + 2] == ((sequence >> uint32(16)) & 0xff)
+                        and i_buf[ref_pos + 3] == ((sequence >> uint32(24)) & 0xff)):
                     break
 
                 i_pos += 1
