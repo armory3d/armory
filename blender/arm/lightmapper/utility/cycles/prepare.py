@@ -76,6 +76,13 @@ def configure_meshes(self):
         if obj.type == "MESH":
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
 
+                objWasHidden = False
+
+                #For some reason, a Blender bug might prevent invisible objects from being smart projected
+                #We will turn the object temporarily visible
+                obj.hide_viewport = False
+                obj.hide_set(False)
+
                 currentIterNum = currentIterNum + 1
 
                 #Configure selection
@@ -244,6 +251,14 @@ def preprocess_material(obj, scene):
     
     obj["TLM_PrevMatArray"] = matArray
 
+    #We check and safeguard against NoneType
+    for slot in obj.material_slots:
+        if slot.material is None:
+            matName = obj.name + ".00" + str(0)
+            bpy.data.materials.new(name=matName)
+            slot.material = bpy.data.materials[matName]
+            slot.material.use_nodes = True
+
     for slot in obj.material_slots:
 
         cache.backup_material_copy(slot)
@@ -252,54 +267,6 @@ def preprocess_material(obj, scene):
         if mat.users > 1:
                 copymat = mat.copy()
                 slot.material = copymat
-
-    # for slot in obj.material_slots:
-    #     matname = slot.material.name
-    #     originalName = "." + matname + "_Original"
-    #     hasOriginal = False
-    #     if originalName in bpy.data.materials:
-    #         hasOriginal = True
-    #     else:
-    #         hasOriginal = False
-
-    #     if hasOriginal:
-    #         cache.backup_material_restore(slot)
-
-    #     cache.backup_material_copy(slot)
-
-    ############################
-
-    #Make a material backup and restore original if exists
-    # if scene.TLM_SceneProperties.tlm_caching_mode == "Copy":
-    #     for slot in obj.material_slots:
-    #         matname = slot.material.name
-    #         originalName = "." + matname + "_Original"
-    #         hasOriginal = False
-    #         if originalName in bpy.data.materials:
-    #             hasOriginal = True
-    #         else:
-    #             hasOriginal = False
-
-    #         if hasOriginal:
-    #             matcache.backup_material_restore(slot)
-
-    #         matcache.backup_material_copy(slot)
-
-    # else: #Cache blend
-    #     #TEST CACHE
-    #     filepath = bpy.data.filepath
-    #     dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_SceneProperties.tlm_lightmap_savedir)
-    #     path = dirpath + "/cache.blend"
-    #     bpy.ops.wm.save_as_mainfile(filepath=path, copy=True)
-        #print("Warning: Cache blend not supported")
-
-    # for mat in bpy.data.materials:
-    #     if mat.name.endswith('_baked'):
-    #         bpy.data.materials.remove(mat, do_unlink=True)
-    # for img in bpy.data.images:
-    #     if img.name == obj.name + "_baked":
-    #         bpy.data.images.remove(img, do_unlink=True)
-
 
     #SOME ATLAS EXCLUSION HERE?
     ob = obj
@@ -448,5 +415,6 @@ def store_existing(prev_container):
         cycles.device,
         scene.render.engine,
         bpy.context.view_layer.objects.active,
-        selected
+        selected,
+        [scene.render.resolution_x, scene.render.resolution_y]
     ]

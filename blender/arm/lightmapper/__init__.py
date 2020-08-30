@@ -1,1 +1,1 @@
-__all__ = ('Operators', 'Panels', 'Properties', 'Preferences', 'Utility', 'Keymap')
+__all__ = ('Operators', 'Properties', 'Preferences', 'Utility', 'Keymap')

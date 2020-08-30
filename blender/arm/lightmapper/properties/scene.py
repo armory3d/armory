@@ -108,10 +108,10 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     tlm_filtering_engine : EnumProperty(
         items = [('OpenCV', 'OpenCV', 'Make use of OpenCV based image filtering (Requires it to be installed first in the preferences panel)'),
-                ('Numpy', 'Numpy', 'Make use of Numpy based image filtering (Integrated)')],
+                ('Shader', 'Shader', 'Make use of GPU offscreen shader to filter')],
                 name = "Filtering library", 
                 description="Select which filtering library to use.", 
-                default='Numpy')
+                default='OpenCV')
 
     #Numpy Filtering options
     tlm_numpy_filtering_mode : EnumProperty(
@@ -262,3 +262,12 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         name="Don't apply materials", 
         description="Headless; Do not apply baked materials on finish.", 
         default=False)
+
+    tlm_alert_sound : EnumProperty(
+        items = [('dash', 'Dash', 'Dash alert'),
+                ('noot', 'Noot', 'Noot alert'),
+                ('gentle', 'Gentle', 'Gentle alert'),
+                ('pingping', 'Ping', 'Ping alert')],
+                name = "Alert sound", 
+                description="Alert sound when lightmap building finished.", 
+                default="gentle")

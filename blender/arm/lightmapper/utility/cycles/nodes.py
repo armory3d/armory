@@ -56,8 +56,10 @@ def apply_materials():
                         load_library("Exposure")
 
                 #Apply materials
+                print(obj.name)
                 for slot in obj.material_slots:
                     mat = slot.material
+                    print(slot.material)
 
                     node_tree = mat.node_tree
                     nodes = mat.node_tree.nodes

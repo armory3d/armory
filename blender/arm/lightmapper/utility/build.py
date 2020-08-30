@@ -1,7 +1,7 @@
 import bpy, os, importlib, subprocess, sys, threading, platform, aud
 from . import encoding
 from . cycles import lightmap, prepare, nodes, cache
-from . denoiser import integrated, oidn
+from . denoiser import integrated, oidn, optix
 from . filtering import opencv
 from os import listdir
 from os.path import isfile, join
@@ -55,6 +55,8 @@ def prepare_build(self=0, background_mode=False):
                 print("Error:Filtering - OpenCV not installed")
                 self.report({'INFO'}, "Error:Filtering - OpenCV not installed")
                 return{'FINISHED'}
+
+        setMode()
 
         dirpath = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
         if not os.path.isdir(dirpath):
@@ -234,7 +236,24 @@ def begin_build():
             del denoiser
 
         else:
-            pass
+
+            baked_image_array = []
+
+            dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+
+            for file in dirfiles:
+                if file.endswith("_baked.hdr"):
+                    baked_image_array.append(file)
+
+            optixProperties = scene.TLM_OptixEngineProperties
+
+            denoiser = optix.TLM_Optix_Denoise(optixProperties, baked_image_array, dirpath)
+
+            denoiser.denoise()
+
+            denoiser.clean()
+
+            del denoiser
 
     #Filtering
     if sceneProperties.tlm_filtering_use:
@@ -444,13 +463,23 @@ def manage_build(background_pass=False):
 
     if scene.TLM_SceneProperties.tlm_alert_on_finish:
 
+        alertSelect = scene.TLM_SceneProperties.tlm_alert_sound
+
+        if alertSelect == "dash":
+            soundfile = "dash.ogg"
+        elif alertSelect == "pingping":
+            soundfile = "pingping.ogg"  
+        elif alertSelect == "gentle":
+            soundfile = "gentle.ogg"
+        else:
+            soundfile = "noot.ogg"
+
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        sound_path = os.path.abspath(os.path.join(scriptDir, '..', 'assets/sound.ogg'))
+        sound_path = os.path.abspath(os.path.join(scriptDir, '..', 'assets/'+soundfile))
 
         device = aud.Device()
         sound = aud.Sound.file(sound_path)
         device.play(sound)
-        print("ALERT!")
 
 def reset_settings(prev_settings):
     scene = bpy.context.scene
@@ -468,6 +497,8 @@ def reset_settings(prev_settings):
     cycles.device = prev_settings[9]
     scene.render.engine = prev_settings[10]
     bpy.context.view_layer.objects.active = prev_settings[11]
+    scene.render.resolution_x = prev_settings[13][0]
+    scene.render.resolution_y = prev_settings[13][1]
     
     #for obj in prev_settings[12]:
     #    obj.select_set(True)
@@ -550,15 +581,6 @@ def check_denoiser():
             else:
                 return 0
 
-    # if scene.TLM_SceneProperties.tlm_denoise_use:
-    #     if scene.TLM_SceneProperties.tlm_oidn_path == "":
-    #         print("NO DENOISE PATH")
-    #         return False
-    #     else:
-    #         return True
-    # else:
-    #     return True
-
 def check_materials():
     for obj in bpy.data.objects:
         if obj.type == "MESH":
@@ -583,3 +605,8 @@ def sec_to_hours(seconds):
     c=str((seconds%3600)%60)
     d=["{} hours {} mins {} seconds".format(a, b, c)]
     return d
+
+def setMode():
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    #TODO Make some checks that returns to previous selection
