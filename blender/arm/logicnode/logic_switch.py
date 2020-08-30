@@ -8,7 +8,7 @@ class SwitchNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
     bl_icon = 'NONE'
-    min_inputs = 1
+    min_inputs = 2
     min_outputs = 1
     
     def __init__(self):

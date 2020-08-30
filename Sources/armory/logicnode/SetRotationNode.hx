@@ -34,6 +34,7 @@ class SetRotationNode extends LogicNode {
 				object.transform.rot = new Quat(vec.x * angleSin, vec.y * angleSin, vec.z * angleSin, angleCos);
 			case "Quaternion":
 				object.transform.rot = new Quat(vec.x, vec.y, vec.z, w);
+				object.transform.rot.normalize();
 		}
 		object.transform.buildMatrix();
 		#if arm_physics

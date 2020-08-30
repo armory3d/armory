@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.math.Quat;
+import iron.math.Vec4;
 
 class QuaternionNode extends LogicNode {
 
@@ -22,7 +23,22 @@ class QuaternionNode extends LogicNode {
 		value.y = inputs[1].get();
 		value.z = inputs[2].get();
 		value.w = inputs[3].get();
-		return value;
+		value.normalize();
+		switch (from){
+		case 0:
+			return value;
+	        case 1:
+	                var value1 = new Vec4();
+			value1.x = value.x;
+			value1.y = value.y;
+			value1.z = value.z;
+			value1.w = 0; // use 0 to avoid this vector being translated.
+			return value1;
+		case 2:
+		        return value.w;
+		default:
+			return null;
+		}
 	}
 
 	override function set(value: Dynamic) {
