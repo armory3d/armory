@@ -67,7 +67,7 @@ class LZ4:
         while True:
             ref_pos = int32(0)
             m_offset = 0
-            sequence = np.uint32(i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24)
+            sequence = uint32(i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24)
 
             # Match-finding loop
             while i_pos <= last_match_pos:
@@ -79,7 +79,7 @@ class LZ4:
                 LZ4.hash_table[hash_val] = i_pos
                 m_offset = i_pos - ref_pos
                 if (m_offset < 65536
-                        and i_buf[ref_pos + 0] == ((sequence) & 0xff)
+                        and i_buf[ref_pos + 0] == (sequence & 0xff)
                         and i_buf[ref_pos + 1] == ((sequence >> uint32(8)) & 0xff)
                         and i_buf[ref_pos + 2] == ((sequence >> uint32(16)) & 0xff)
                         and i_buf[ref_pos + 3] == ((sequence >> uint32(24)) & 0xff)):
