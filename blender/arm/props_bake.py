@@ -3,6 +3,7 @@ import arm.assets
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+from arm.lightmapper import operators, properties, preferences, utility, keymap
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -351,6 +352,18 @@ def register():
                  ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],
         name = "UV Unwrap", default='Smart UV Project')
 
+
+    #Register lightmapper
+    bpy.types.Scene.arm_bakemode = EnumProperty(
+        items = [('Static Map', 'Static Map', 'Static Map'),
+                 ('Lightmap', 'Lightmap', 'Lightmap')],
+        name = "Bake mode", default='Static Map')
+
+    operators.register()
+    properties.register()
+    preferences.register()
+    keymap.register()
+
 def unregister():
     bpy.utils.unregister_class(ArmBakeListItem)
     bpy.utils.unregister_class(ARM_UL_BakeList)
@@ -364,3 +377,10 @@ def unregister():
     bpy.utils.unregister_class(ArmBakeAddSelectedButton)
     bpy.utils.unregister_class(ArmBakeClearAllButton)
     bpy.utils.unregister_class(ArmBakeRemoveBakedMaterialsButton)
+
+    #Unregister lightmapper
+
+    operators.unregister()
+    properties.unregister()
+    preferences.unregister()
+    keymap.unregister()
