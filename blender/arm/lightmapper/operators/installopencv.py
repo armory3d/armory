@@ -19,8 +19,6 @@ class TLM_Install_OpenCV(bpy.types.Operator):
         scene = context.scene
         cycles = bpy.data.scenes[scene.name].cycles
 
-        print("Module OpenCV")
-
         pythonbinpath = bpy.app.binary_path_python
 
         if platform.system() == "Windows":
@@ -34,7 +32,7 @@ class TLM_Install_OpenCV(bpy.types.Operator):
         pip = subprocess.run(cmda, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if pip.returncode == 0:
-            print("Sucessfully installed pip!\n")
+            print("Successfully installed pip!\n")
         else:
 
             try:

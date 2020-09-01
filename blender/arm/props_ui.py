@@ -1255,16 +1255,17 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             if sceneProperties.tlm_filtering_use:
 
-                row.prop(sceneProperties, "tlm_filtering_engine", expand=True)
-                row = layout.row(align=True)
-
                 if sceneProperties.tlm_filtering_engine == "OpenCV":
 
                     cv2 = importlib.util.find_spec("cv2")
 
                     if cv2 is None:
                         row = layout.row(align=True)
-                        row.label(text="OpenCV is not installed. Install it through preferences.")
+                        row.label(text="OpenCV is not installed. Install it below.")
+                        row = layout.row(align=True)
+                        row.label(text="It is recommended to install as administrator.")
+                        row = layout.row(align=True)
+                        row.operator("tlm.install_opencv_lightmaps")
                     else:
                         row = layout.row(align=True)
                         row.prop(scene.TLM_SceneProperties, "tlm_filtering_mode")

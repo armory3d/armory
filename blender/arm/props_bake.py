@@ -3,7 +3,7 @@ import arm.assets
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from arm.lightmapper import operators, properties, preferences, utility, keymap
+from arm.lightmapper import operators, properties, utility, keymap
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -361,7 +361,6 @@ def register():
 
     operators.register()
     properties.register()
-    preferences.register()
     keymap.register()
 
 def unregister():
@@ -382,5 +381,4 @@ def unregister():
 
     operators.unregister()
     properties.unregister()
-    preferences.unregister()
     keymap.unregister()
