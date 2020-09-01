@@ -8,7 +8,7 @@ import arm.proxy
 import arm.utils
 
 # Armory version
-arm_version = '2020.8'
+arm_version = '2020.9'
 arm_commit = '$Id$'
 
 def init_properties():
