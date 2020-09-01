@@ -36,7 +36,7 @@ uniform vec3 eyeSnap;
 
 uniform float envmapStrength;
 #ifdef _Irr
-//!uniform vec4 shirr[7];
+uniform vec4 shirr[7];
 #endif
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
@@ -165,7 +165,7 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, matid
-	
+
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
@@ -196,7 +196,7 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
-	vec3 envl = shIrradiance(n);
+	vec3 envl = shIrradiance(n, shirr);
 	#ifdef _EnvTex
 	envl /= PI;
 	#endif
@@ -218,7 +218,7 @@ void main() {
 #endif
 
 	envl.rgb *= albedo;
-	
+
 #ifdef _Rad // Indirect specular
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
 #else
@@ -236,7 +236,7 @@ void main() {
 	#else
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-	
+
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
@@ -245,7 +245,7 @@ void main() {
 	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
-	
+
 #endif
 
 	fragColor.rgb = envl;
@@ -259,7 +259,7 @@ void main() {
 #endif
 
 #ifdef _Emission
-	if (g0.a == 1.0) {
+	if (matid == 1) {
 		fragColor.rgb += g1.rgb; // materialid
 		albedo = vec3(0.0);
 	}
@@ -272,7 +272,7 @@ void main() {
 	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
 	// 	vec3 point = origin + 0.005 * step * direction;
 	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	// } 
+	// }
 	// fragColor.rgb += color.rgb;
 
 	// Show SSAO
@@ -320,7 +320,7 @@ void main() {
 	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
-// 	if (g0.a == 2.0) {
+// 	if (matid == 2) {
 // 		const float shinyParallel = roughness;
 // 		const float shinyPerpendicular = 0.1;
 // 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
@@ -330,7 +330,7 @@ void main() {
 //	#endif
 
 	#ifdef _SSS
-	if (g0.a == 2.0) {
+	if (matid == 2) {
 		#ifdef _CSM
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
@@ -346,7 +346,7 @@ void main() {
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
-			, 0, pointBias
+			, 0, pointBias, true
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir
@@ -363,12 +363,12 @@ void main() {
 		, gbufferD, invVP, eye
 		#endif
 	);
-	
+
 	#ifdef _Spot
 	#ifdef _SSS
-	if (g0.a == 2.0) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
-	#endif	
+	#endif
 
 #endif
 
@@ -400,7 +400,7 @@ void main() {
 			occspec.y,
 			f0
 			#ifdef _ShadowMap
-				, li, lightsArray[li * 2].w // bias
+				, li, lightsArray[li * 2].w, true // bias
 			#endif
 			#ifdef _Spot
 			, li > numPoints - 1

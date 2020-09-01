@@ -118,7 +118,7 @@ class DebugConsole extends Trait {
 	static var haxeTrace: Dynamic->haxe.PosInfos->Void = null;
 	static var lastTraces: Array<String> = [""];
 	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
-		lastTraces.unshift(Std.string(v));
+		lastTraces.unshift(haxe.Log.formatOutput(v,inf));
 		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
@@ -167,7 +167,7 @@ class DebugConsole extends Trait {
 
 						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
-							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true);
+							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true, false, false);
 							ui.text(currentObject.name);
 						}
 						else {
@@ -175,7 +175,7 @@ class DebugConsole extends Trait {
 
 							// Draw line that shows parent relations
 							ui.g.color = ui.t.ACCENT_COL;
-							ui.g.drawLine(ui._x - 16, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
+							ui.g.drawLine(ui._x - 10, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
 							ui.g.color = 0xffffffff;
 
 							ui.text(currentObject.name);
@@ -352,8 +352,13 @@ class DebugConsole extends Trait {
 
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
-							var p = iron.Scene.active.world.probe;
-							p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
+							if (iron.Scene.active.world != null) {
+								var p = iron.Scene.active.world.probe;
+								p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
+							}
+							else {
+								ui.text("This scene has no world data to edit.");
+							}
 						}
 						else if (Std.is(selectedObject, iron.object.LightObject)) {
 							selectedType = "(Light)";

@@ -54,6 +54,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
     enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     is_object: BoolProperty(name="", default=True)
+    fake_user: BoolProperty(name="Fake User", description="Export this trait even if it is deactivated", default=False)
     type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
@@ -88,11 +89,15 @@ class ARM_UL_TraitList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            layout.label(text=item.name, icon=custom_icon, icon_value=custom_icon_value)
+            # Display " " for props without a name to right-align the
+            # fake_user button
+            layout.label(text=item.name if item.name != "" else " ", icon=custom_icon, icon_value=custom_icon_value)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon=custom_icon, icon_value=custom_icon_value)
+
+        layout.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
 
 class ArmTraitListNewItem(bpy.types.Operator):
     # Add a new item to the list
@@ -562,33 +567,8 @@ def draw_traits(layout, obj, is_object):
 
     if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
         item = obj.arm_traitlist[obj.arm_traitlist_index]
-        # Default props
+
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
-            item.name = item.class_name_prop
-            row = layout.row()
-            if item.type_prop == 'Haxe Script':
-                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
-            else:
-                # Bundled scripts not yet fetched
-                if not bpy.data.worlds['Arm'].arm_bundled_scripts_list:
-                    arm.utils.fetch_bundled_script_names()
-                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
-
-            # Props
-            if item.arm_traitpropslist:
-                layout.label(text="Trait Properties:")
-                if item.arm_traitpropswarnings:
-                    box = layout.box()
-                    box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
-
-                    for warning in item.arm_traitpropswarnings:
-                        box.label(text=warning.warning)
-
-                propsrow = layout.row()
-                propsrows = max(len(item.arm_traitpropslist), 6)
-                row = layout.row()
-                row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
-
             if item.type_prop == 'Haxe Script':
                 row = layout.row(align=True)
                 row.alignment = 'EXPAND'
@@ -615,6 +595,17 @@ def draw_traits(layout, obj, is_object):
                     op.is_object = is_object
                 op = row.operator("arm.refresh_scripts")
 
+            # Default props
+            item.name = item.class_name_prop
+            row = layout.row()
+            if item.type_prop == 'Haxe Script':
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
+            else:
+                # Bundled scripts not yet fetched
+                if not bpy.data.worlds['Arm'].arm_bundled_scripts_list:
+                    arm.utils.fetch_bundled_script_names()
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
+
         elif item.type_prop == 'WebAssembly':
             item.name = item.webassembly_prop
             row = layout.row()
@@ -633,8 +624,6 @@ def draw_traits(layout, obj, is_object):
 
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
-            row = layout.row()
-            row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
 
             row = layout.row(align=True)
             row.alignment = 'EXPAND'
@@ -648,9 +637,28 @@ def draw_traits(layout, obj, is_object):
             op.is_object = is_object
             op = row.operator("arm.refresh_canvas_list")
 
+            row = layout.row()
+            row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
+
         elif item.type_prop == 'Logic Nodes':
             row = layout.row()
             row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
+
+        if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
+            # Props
+            if item.arm_traitpropslist:
+                layout.label(text="Trait Properties:")
+                if item.arm_traitpropswarnings:
+                    box = layout.box()
+                    box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
+
+                    for warning in item.arm_traitpropswarnings:
+                        box.label(text=warning.warning)
+
+                propsrow = layout.row()
+                propsrows = max(len(item.arm_traitpropslist), 6)
+                row = layout.row()
+                row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
 def register():
     global icons_dict

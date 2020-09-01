@@ -1,6 +1,7 @@
 package armory.renderpath;
 
 import iron.RenderPath;
+import iron.Scene;
 
 class RenderPathForward {
 
@@ -34,8 +35,10 @@ class RenderPathForward {
 
 		#if (rp_background == "World")
 		{
-			RenderPathCreator.setTargetMeshes();
-			path.drawSkydome("shader_datas/world_pass/world_pass");
+			if (Scene.active.raw.world_ref != null) {
+				RenderPathCreator.setTargetMeshes();
+				path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
+			}
 		}
 		#end
 
@@ -62,9 +65,12 @@ class RenderPathForward {
 
 		path = _path;
 
-		#if (rp_background == "World")
+		#if kha_metal
 		{
-			path.loadShader("shader_datas/world_pass/world_pass");
+			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
+			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
+			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
+			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
 		}
 		#end
 

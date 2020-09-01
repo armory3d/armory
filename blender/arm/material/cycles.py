@@ -14,19 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import math
-import bpy
 import os
+import shutil
+from typing import Optional
+
+import bpy
+from mathutils import Euler, Vector
+
 import arm.assets
 import arm.utils
 import arm.make_state
 import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
-import shutil
+from arm.material.shader import Shader
 
 emission_found = False
 particle_info = None # Particle info export
+curshader: Shader
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -51,6 +56,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global particle_info
     global sample_bump
     global sample_bump_res
+    global procedurals_written
     con = _con
     vert = _vert
     frag = _frag
@@ -61,16 +67,18 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     emission_found = False
-    particle_info = {}
-    particle_info['index'] = False
-    particle_info['age'] = False
-    particle_info['lifetime'] = False
-    particle_info['location'] = False
-    particle_info['size'] = False
-    particle_info['velocity'] = False
-    particle_info['angular_velocity'] = False
+    particle_info = {
+        'index': False,
+        'age': False,
+        'lifetime': False,
+        'location': False,
+        'size': False,
+        'velocity': False,
+        'angular_velocity': False
+    }
     sample_bump = False
     sample_bump_res = ''
+    procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
     # Surface
@@ -168,6 +176,10 @@ def parse_shader(node, socket):
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             if parse_surface:
+                # Normal
+                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
+                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 out_basecol = parse_vector_input(node.inputs[0])
                 # Occlusion
@@ -176,10 +188,6 @@ def parse_shader(node, socket):
                 out_roughness = parse_value_input(node.inputs[3])
                 # Metallic
                 out_metallic = parse_value_input(node.inputs[4])
-                # Normal
-                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                parse_normal_map_color_input(node.inputs[5])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
                     out_emission = parse_value_input(node.inputs[6])
@@ -351,7 +359,7 @@ def parse_displacement_input(inp):
     else:
         return None
 
-def parse_vector_input(inp):
+def parse_vector_input(inp) -> str:
     if inp.is_linked:
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
@@ -371,7 +379,7 @@ def parse_vector_input(inp):
             else:
                 return to_vec3(inp.default_value)
 
-def parse_vector(node, socket):
+def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     global particle_info
     global sample_bump
     global sample_bump_res
@@ -525,20 +533,19 @@ def parse_vector(node, socket):
         return res
 
     elif node.type == 'TEX_NOISE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
         curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
-        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        # detail = parse_value_input(node.inputs[2])
-        # distortion = parse_value_input(node.inputs[3])
-        # Slow..
-        res = 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        distortion = parse_value_input(node.inputs[4])
+        res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
         if sample_bump:
             write_bump(node, res, 0.1)
         return res
@@ -552,31 +559,52 @@ def parse_vector(node, socket):
         return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
+        write_procedurals()
+        outp = 0
+        if socket.type == 'RGBA':
+            outp = 1
+        elif socket.type == 'VECTOR':
+            outp = 2
+        m = 0
+        if node.distance == 'MANHATTAN':
+            m = 1
+        elif node.distance == 'CHEBYCHEV':
+            m = 2
+        elif node.distance == 'MINKOWSKI':
+            m = 3
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
-        assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        if node.coloring == 'INTENSITY':
-            res = 'vec3(tex_voronoi({0} * {1}).a)'.format(co, scale)
-        else: # CELLS
-            res = 'tex_voronoi({0} * {1}).rgb'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        exp = parse_value_input(node.inputs[4])
+        randomness = parse_value_input(node.inputs[5])
+        res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5})'.format(co, randomness, m, outp, scale, exp)
         if sample_bump:
             write_bump(node, res)
         return res
 
     elif node.type == 'TEX_WAVE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_wave)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        res = 'vec3(tex_wave_f({0} * {1}))'.format(co, scale)
+        distortion = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        detail_scale = parse_value_input(node.inputs[4])
+        if node.wave_profile == 'SIN':
+            wave_profile = 0
+        else:
+            wave_profile = 1
+        if node.wave_type == 'BANDS':
+            wave_type = 0
+        else:
+            wave_type = 1
+        res = 'vec3(tex_wave_f({0} * {1},{2},{3},{4},{5},{6}))'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
         if sample_bump:
             write_bump(node, res)
         return res
@@ -729,34 +757,49 @@ def parse_vector(node, socket):
         # Pass constant
         return to_vec3([rgb[0], rgb[1], rgb[2]])
 
-    elif node.type == 'VALTORGB': # ColorRamp
-        fac = parse_value_input(node.inputs[0])
+    # ColorRamp
+    elif node.type == 'VALTORGB':
+        input_fac: bpy.types.NodeSocket = node.inputs[0]
+
+        fac: str = parse_value_input(input_fac) if input_fac.is_linked else to_vec1(input_fac.default_value)
         interp = node.color_ramp.interpolation
         elems = node.color_ramp.elements
+
         if len(elems) == 1:
             return to_vec3(elems[0].color)
-        # Write cols array
-        cols_var = node_name(node.name) + '_cols'
-        curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems))) # TODO: Make const
-        for i in range(0, len(elems)):
-            curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
-        # Get index
+
+        # Write color array
+        # The last entry is included twice so that the interpolation
+        # between indices works (no out of bounds error)
+        cols_var = node_name(node.name).upper() + '_COLS'
+        cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+        cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
+        curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+
         fac_var = node_name(node.name) + '_fac'
-        curshader.write('float {0} = {1};'.format(fac_var, fac))
-        index = '0'
-        for i in range(1, len(elems)):
-            index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
+        curshader.write(f'float {fac_var} = {fac};')
+
+        # Get index of the nearest left element relative to the factor
+        index = '0 + '
+        index += ' + '.join([f'(({fac_var} > {elems[i].position}) ? 1 : 0)' for i in range(1, len(elems))])
+
         # Write index
         index_var = node_name(node.name) + '_i'
-        curshader.write('int {0} = {1};'.format(index_var, index))
+        curshader.write(f'int {index_var} = {index};')
+
         if interp == 'CONSTANT':
-            return '{0}[{1}]'.format(cols_var, index_var)
-        else: # Linear
-            # Write facs array
-            facs_var = node_name(node.name) + '_facs'
-            curshader.write('float {0}[{1}];'.format(facs_var, len(elems))) # TODO: Make const
-            for i in range(0, len(elems)):
-                curshader.write('{0}[{1}] = {2};'.format(facs_var, i, elems[i].position))
+            return f'{cols_var}[{index_var}]'
+
+        # Linear interpolation
+        else:
+            # Write factor array
+            facs_var = node_name(node.name).upper() + '_FACS'
+            facs_entries = ', '.join(str(elem.position) for elem in elems)
+            # Add one more entry at the rightmost position so that the
+            # interpolation between indices works (no out of bounds error)
+            facs_entries += ', 1.0'
+            curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
+
             # Mix color
             # float f = (pos - start) * (1.0 / (finish - start))
             return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
@@ -898,32 +941,60 @@ def parse_vector(node, socket):
         return res
 
     elif node.type == 'MAPPING':
-        out = parse_vector_input(node.inputs[0])
-        scale = node.inputs['Scale'].default_value
-        rotation = node.inputs['Rotation'].default_value
-        location = node.inputs['Location'].default_value if node.inputs['Location'].enabled else [0.0, 0.0, 0.0]
-        if scale[0] != 1.0 or scale[1] != 1.0 or scale[2] != 1.0:
-            out = '({0} * vec3({1}, {2}, {3}))'.format(out, scale[0], scale[1], scale[2])
-        if rotation[2] != 0.0:
-            # ZYX rotation, Z axis for now..
-            a = rotation[2]
-            # x * cos(theta) - y * sin(theta)
-            # x * sin(theta) + y * cos(theta)
-            out = 'vec3({0}.x * {1} - ({0}.y) * {2}, {0}.x * {2} + ({0}.y) * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        # if node.rotation[1] != 0.0:
-        #     a = node.rotation[1]
-        #     out = 'vec3({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        # if node.rotation[0] != 0.0:
-        #     a = node.rotation[0]
-        #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
+        # Only "Point", "Texture" and "Vector" types supported for now..
+        # More information about the order of operations for this node:
+        # https://docs.blender.org/manual/en/latest/render/shader_nodes/vector/mapping.html#properties
 
-        if location[0] != 0.0 or location[1] != 0.0 or location[2] != 0.0:
-            out = '({0} + vec3({1}, {2}, {3}))'.format(out, location[0], location[1], location[2])
-        # use Extension parameter from the Texture node instead
-        # if node.use_min:
-        #     out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
-        # if node.use_max:
-        #      out = 'min({0}, vec3({1}, {2}, {3}))'.format(out, node.max[0], node.max[1])
+        input_vector: bpy.types.NodeSocket = node.inputs[0]
+        input_location: bpy.types.NodeSocket = node.inputs['Location']
+        input_rotation: bpy.types.NodeSocket = node.inputs['Rotation']
+        input_scale: bpy.types.NodeSocket = node.inputs['Scale']
+        out: str = parse_vector_input(input_vector) if input_vector.is_linked else to_vec3(input_vector.default_value)
+        location: str = parse_vector_input(input_location) if input_location.is_linked else to_vec3(input_location.default_value)
+        rotation: str = parse_vector_input(input_rotation) if input_rotation.is_linked else to_vec3(input_rotation.default_value)
+        scale: str = parse_vector_input(input_scale) if input_scale.is_linked else to_vec3(input_scale.default_value)
+
+        # Use inner functions because the order of operations varies between mapping node vector types. This adds a
+        # slight overhead but makes the code much more readable.
+        # "Point" and "Vector" use Scale -> Rotate -> Translate, "Texture" uses Translate -> Rotate -> Scale
+        def calc_location(output: str) -> str:
+            # Vectors and Eulers support the "!=" operator
+            if input_scale.is_linked or input_scale.default_value != Vector((1, 1, 1)):
+                if node.vector_type == 'TEXTURE':
+                    output = f'({output} / {scale})'
+                else:
+                    output = f'({output} * {scale})'
+
+            return output
+
+        def calc_scale(output: str) -> str:
+            if input_location.is_linked or input_location.default_value != Vector((0, 0, 0)):
+                # z location is a little off sometimes?...
+                if node.vector_type == 'TEXTURE':
+                    output = f'({output} - {location})'
+                else:
+                    output = f'({output} + {location})'
+            return output
+
+        out = calc_location(out) if node.vector_type == 'TEXTURE' else calc_scale(out)
+
+        if input_rotation.is_linked or input_rotation.default_value != Euler((0, 0, 0)):
+            var_name = node_name(node.name) + "_rotation"
+            if node.vector_type == 'TEXTURE':
+                curshader.write(f'mat3 {var_name}X = mat3(1.0, 0.0, 0.0, 0.0, cos({rotation}.x), sin({rotation}.x), 0.0, -sin({rotation}.x), cos({rotation}.x));')
+                curshader.write(f'mat3 {var_name}Y = mat3(cos({rotation}.y), 0.0, -sin({rotation}.y), 0.0, 1.0, 0.0, sin({rotation}.y), 0.0, cos({rotation}.y));')
+                curshader.write(f'mat3 {var_name}Z = mat3(cos({rotation}.z), sin({rotation}.z), 0.0, -sin({rotation}.z), cos({rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+            else:
+                # A little bit redundant, but faster than 12 more multiplications to make it work dynamically
+                curshader.write(f'mat3 {var_name}X = mat3(1.0, 0.0, 0.0, 0.0, cos(-{rotation}.x), sin(-{rotation}.x), 0.0, -sin(-{rotation}.x), cos(-{rotation}.x));')
+                curshader.write(f'mat3 {var_name}Y = mat3(cos(-{rotation}.y), 0.0, -sin(-{rotation}.y), 0.0, 1.0, 0.0, sin(-{rotation}.y), 0.0, cos(-{rotation}.y));')
+                curshader.write(f'mat3 {var_name}Z = mat3(cos(-{rotation}.z), sin(-{rotation}.z), 0.0, -sin(-{rotation}.z), cos(-{rotation}.z), 0.0, 0.0, 0.0, 1.0);')
+
+            # XYZ-order euler rotation
+            out = f'{out} * {var_name}X * {var_name}Y * {var_name}Z'
+
+        out = calc_scale(out) if node.vector_type == 'TEXTURE' else calc_location(out)
+
         return out
 
     elif node.type == 'NORMAL':
@@ -985,7 +1056,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
     global frag
     if basecol_only:
         return
-    if inp.is_linked == False:
+    if not inp.is_linked:
         return
     if normal_parsed:
         return
@@ -999,7 +1070,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        if strength_input != None:
+        if strength_input is not None:
             strength = parse_value_input(strength_input)
             if strength != '1.0':
                 frag.write('n.xy *= {0};'.format(strength))
@@ -1007,18 +1078,20 @@ def parse_normal_map_color_input(inp, strength_input=None):
         con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
-def parse_value_input(inp):
+def parse_value_input(inp) -> str:
     if inp.is_linked:
-        l = inp.links[0]
+        link = inp.links[0]
 
-        if l.from_node.type == 'REROUTE':
-            return parse_value_input(l.from_node.inputs[0])
+        if link.from_node.type == 'REROUTE':
+            return parse_value_input(link.from_node.inputs[0])
 
-        res_var = write_result(l)
-        st = l.from_socket.type
-        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            return '{0}.x'.format(res_var)
-        else: # VALUE
+        res_var = write_result(link)
+        socket_type = link.from_socket.type
+        if socket_type == 'RGB' or socket_type == 'RGBA' or socket_type == 'VECTOR':
+            # RGB to BW
+            return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+        # VALUE
+        else:
             return res_var
     else:
         if mat_batch() and inp.is_uniform:
@@ -1256,6 +1329,7 @@ def parse_value(node, socket):
         return res
 
     elif node.type == 'TEX_NOISE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
@@ -1264,10 +1338,10 @@ def parse_value(node, socket):
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        # detail = parse_value_input(node.inputs[2])
-        # distortion = parse_value_input(node.inputs[3])
-        res = 'tex_noise({0} * {1})'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        distortion = parse_value_input(node.inputs[4])
+        res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
         if sample_bump:
             write_bump(node, res, 0.1)
         return res
@@ -1276,31 +1350,52 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_VORONOI':
+        write_procedurals()
+        outp = 0
+        if socket.type == 'RGBA':
+            outp = 1
+        elif socket.type == 'VECTOR':
+            outp = 2
+        m = 0
+        if node.distance == 'MANHATTAN':
+            m = 1
+        elif node.distance == 'CHEBYCHEV':
+            m = 2
+        elif node.distance == 'MINKOWSKI':
+            m = 3
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
-        assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        if node.coloring == 'INTENSITY':
-            res = 'tex_voronoi({0} * {1}).a'.format(co, scale)
-        else: # CELLS
-            res = 'tex_voronoi({0} * {1}).r'.format(co, scale)
+        scale = parse_value_input(node.inputs[2])
+        exp = parse_value_input(node.inputs[4])
+        randomness = parse_value_input(node.inputs[5])
+        res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5}).x'.format(co, randomness, m, outp, scale, exp)
         if sample_bump:
             write_bump(node, res)
         return res
 
     elif node.type == 'TEX_WAVE':
+        write_procedurals()
         curshader.add_function(c_functions.str_tex_wave)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        res = 'tex_wave_f({0} * {1})'.format(co, scale)
+        distortion = parse_value_input(node.inputs[2])
+        detail = parse_value_input(node.inputs[3])
+        detail_scale = parse_value_input(node.inputs[4])
+        if node.wave_profile == 'SIN':
+            wave_profile = 0
+        else:
+            wave_profile = 1
+        if node.wave_type == 'BANDS':
+            wave_type = 0
+        else:
+            wave_type = 1
+        res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
         if sample_bump:
             write_bump(node, res)
         return res
@@ -1446,30 +1541,40 @@ def is_parsed(s):
     global parsed
     return s in parsed
 
-def res_var_name(node, socket):
+def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
-def write_result(l):
+def write_result(link: bpy.types.NodeLink) -> Optional[str]:
     global parsed
-    res_var = res_var_name(l.from_node, l.from_socket)
+    res_var = res_var_name(link.from_node, link.from_socket)
     # Unparsed node
     if not is_parsed(res_var):
         parsed[res_var] = True
-        st = l.from_socket.type
+        st = link.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            res = parse_vector(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_vector(link.from_node, link.from_socket)
+            if res is None:
                 return None
             curshader.write('vec3 {0} = {1};'.format(res_var, res))
         elif st == 'VALUE':
-            res = parse_value(l.from_node, l.from_socket)
-            if res == None:
+            res = parse_value(link.from_node, link.from_socket)
+            if res is None:
                 return None
-            curshader.write('float {0} = {1};'.format(res_var, res))
+            if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
+                curshader.add_const('float', res_var, res)
+            else:
+                curshader.write('float {0} = {1};'.format(res_var, res))
     # Normal map already parsed, return
-    elif l.from_node.type == 'NORMAL_MAP':
+    elif link.from_node.type == 'NORMAL_MAP':
         return None
     return res_var
+
+def write_procedurals():
+    global procedurals_written
+    if(not procedurals_written):
+        curshader.add_function(c_functions.str_tex_proc)
+        procedurals_written = True
+    return
 
 def glsl_type(t):
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
@@ -1496,18 +1601,23 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     mat_bind_texture(tex)
     con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
+    triplanar = node.projection == 'BOX'
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
-        uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
+        if triplanar:
+            uv_name = 'vec3({0}.x, 1.0 - {0}.y, {0}.z)'.format(uv_name)
+        else:
+            uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
         uv_name = 'texCoord'
-    triplanar = node.projection == 'BOX'
     if triplanar:
-        curshader.write(f'vec3 texCoordBlend = vec3(0.0); vec2 {uv_name}1 = vec2(0.0); vec2 {uv_name}2 = vec2(0.0);') # Temp
-        curshader.write(f'vec4 {tex_store} = vec4(0.0, 0.0, 0.0, 0.0);')
-        curshader.write(f'if (texCoordBlend.x > 0) {tex_store} += texture({tex_name}, {uv_name}.xy) * texCoordBlend.x;')
-        curshader.write(f'if (texCoordBlend.y > 0) {tex_store} += texture({tex_name}, {uv_name}1.xy) * texCoordBlend.y;')
-        curshader.write(f'if (texCoordBlend.z > 0) {tex_store} += texture({tex_name}, {uv_name}2.xy) * texCoordBlend.z;')
+        if not curshader.has_include('std/mapping.glsl'):
+            curshader.add_include('std/mapping.glsl')
+        if normal_parsed:
+            nor = 'TBN[2]'
+        else:
+            nor = 'n'
+        curshader.write('vec4 {0} = vec4(triplanarMapping({1}, {2}, {3}), 0.0);'.format(tex_store, tex_name, nor, uv_name))
     else:
         if mat_texture_grad():
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))

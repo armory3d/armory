@@ -1,9 +1,8 @@
 package armory.renderpath;
 
-import iron.Scene;
-import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
+import iron.object.Object;
 
 class Postprocess {
 
@@ -100,253 +99,208 @@ class Postprocess {
 	public static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
         var v:Vec4 = null;
 
-		if (link == "_globalWeight") {
+		switch link {
+		case "_globalWeight":
 			var ppm_index = 0;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalTint") {
+		case "_globalTint":
 			var ppm_index = 1;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalSaturation") {
+		case "_globalSaturation":
 			var ppm_index = 2;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalContrast") {
+		case "_globalContrast":
 			var ppm_index = 3;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalGamma") {
+		case "_globalGamma":
 			var ppm_index = 4;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalGain") {
+		case "_globalGain":
 			var ppm_index = 5;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
-		if (link == "_globalOffset") {
+		case "_globalOffset":
 			var ppm_index = 6;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[ppm_index][0];
 			v.y = colorgrading_global_uniforms[ppm_index][1];
 			v.z = colorgrading_global_uniforms[ppm_index][2];
-		}
 
 		//Shadow ppm
-		if (link == "_shadowSaturation") {
+		case "_shadowSaturation":
 			var ppm_index = 0;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_shadow_uniforms[ppm_index][0];
 			v.y = colorgrading_shadow_uniforms[ppm_index][1];
 			v.z = colorgrading_shadow_uniforms[ppm_index][2];
-		}
-		if (link == "_shadowContrast") {
+		case "_shadowContrast":
 			var ppm_index = 1;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_shadow_uniforms[ppm_index][0];
 			v.y = colorgrading_shadow_uniforms[ppm_index][1];
 			v.z = colorgrading_shadow_uniforms[ppm_index][2];
-		}
-		if (link == "_shadowGamma") {
+		case "_shadowGamma":
 			var ppm_index = 2;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_shadow_uniforms[ppm_index][0];
 			v.y = colorgrading_shadow_uniforms[ppm_index][1];
 			v.z = colorgrading_shadow_uniforms[ppm_index][2];
-		}
-		if (link == "_shadowGain") {
+		case "_shadowGain":
 			var ppm_index = 3;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_shadow_uniforms[ppm_index][0];
 			v.y = colorgrading_shadow_uniforms[ppm_index][1];
 			v.z = colorgrading_shadow_uniforms[ppm_index][2];
-		}
-		if (link == "_shadowOffset") {
+		case "_shadowOffset":
 			var ppm_index = 4;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_shadow_uniforms[ppm_index][0];
 			v.y = colorgrading_shadow_uniforms[ppm_index][1];
 			v.z = colorgrading_shadow_uniforms[ppm_index][2];
-		}
 
 		//Midtone ppm
-		if (link == "_midtoneSaturation") {
+		case "_midtoneSaturation":
 			var ppm_index = 0;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_midtone_uniforms[ppm_index][0];
 			v.y = colorgrading_midtone_uniforms[ppm_index][1];
 			v.z = colorgrading_midtone_uniforms[ppm_index][2];
-		}
-		if (link == "_midtoneContrast") {
+		case "_midtoneContrast":
 			var ppm_index = 1;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_midtone_uniforms[ppm_index][0];
 			v.y = colorgrading_midtone_uniforms[ppm_index][1];
 			v.z = colorgrading_midtone_uniforms[ppm_index][2];
-		}
-		if (link == "_midtoneGamma") {
+		case "_midtoneGamma":
 			var ppm_index = 2;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_midtone_uniforms[ppm_index][0];
 			v.y = colorgrading_midtone_uniforms[ppm_index][1];
 			v.z = colorgrading_midtone_uniforms[ppm_index][2];
-		}
-		if (link == "_midtoneGain") {
+		case "_midtoneGain":
 			var ppm_index = 3;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_midtone_uniforms[ppm_index][0];
 			v.y = colorgrading_midtone_uniforms[ppm_index][1];
 			v.z = colorgrading_midtone_uniforms[ppm_index][2];
-		}
-		if (link == "_midtoneOffset") {
+		case "_midtoneOffset":
 			var ppm_index = 4;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_midtone_uniforms[ppm_index][0];
 			v.y = colorgrading_midtone_uniforms[ppm_index][1];
 			v.z = colorgrading_midtone_uniforms[ppm_index][2];
-		}
 
 		//Highlight ppm
-		if (link == "_highlightSaturation") {
+		case "_highlightSaturation":
 			var ppm_index = 0;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_highlight_uniforms[ppm_index][0];
 			v.y = colorgrading_highlight_uniforms[ppm_index][1];
 			v.z = colorgrading_highlight_uniforms[ppm_index][2];
-		}
-		if (link == "_highlightContrast") {
+		case "_highlightContrast":
 			var ppm_index = 1;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_highlight_uniforms[ppm_index][0];
 			v.y = colorgrading_highlight_uniforms[ppm_index][1];
 			v.z = colorgrading_highlight_uniforms[ppm_index][2];
-		}
-		if (link == "_highlightGamma") {
+		case "_highlightGamma":
 			var ppm_index = 2;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_highlight_uniforms[ppm_index][0];
 			v.y = colorgrading_highlight_uniforms[ppm_index][1];
 			v.z = colorgrading_highlight_uniforms[ppm_index][2];
-		}
-		if (link == "_highlightGain") {
+		case "_highlightGain":
 			var ppm_index = 3;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_highlight_uniforms[ppm_index][0];
 			v.y = colorgrading_highlight_uniforms[ppm_index][1];
 			v.z = colorgrading_highlight_uniforms[ppm_index][2];
-		}
-		if (link == "_highlightOffset") {
+		case "_highlightOffset":
 			var ppm_index = 4;
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_highlight_uniforms[ppm_index][0];
 			v.y = colorgrading_highlight_uniforms[ppm_index][1];
 			v.z = colorgrading_highlight_uniforms[ppm_index][2];
-		}
 
 		//Postprocess Components
-		if (link == "_PPComp1") {
+		case "_PPComp1":
 			v = iron.object.Uniforms.helpVec;
 			v.x = camera_uniforms[0]; //F-Number
 			v.y = camera_uniforms[1]; //Shutter
 			v.z = camera_uniforms[2]; //ISO
-		}
-
-		if (link == "_PPComp2") {
+		case "_PPComp2":
 			v = iron.object.Uniforms.helpVec;
 			v.x = camera_uniforms[3]; //EC
 			v.y = camera_uniforms[4]; //Lens Distortion
 			v.z = camera_uniforms[5]; //DOF Autofocus
-		}
-
-		if (link == "_PPComp3") {
+		case "_PPComp3":
 			v = iron.object.Uniforms.helpVec;
 			v.x = camera_uniforms[6]; //Distance
 			v.y = camera_uniforms[7]; //Focal Length
 			v.z = camera_uniforms[8]; //F-Stop
-		}
-
-		if (link == "_PPComp4") {
+		case "_PPComp4":
 			v = iron.object.Uniforms.helpVec;
 			v.x = Std.int(camera_uniforms[9]); //Tonemapping
 			v.y = camera_uniforms[10]; //Film Grain
 			v.z = tonemapper_uniforms[0]; //Slope
-		}
-
-		if (link == "_PPComp5") {
+		case "_PPComp5":
 			v = iron.object.Uniforms.helpVec;
 			v.x = tonemapper_uniforms[1]; //Toe
 			v.y = tonemapper_uniforms[2]; //Shoulder
 			v.z = tonemapper_uniforms[3]; //Black Clip
-		}
-
-		if (link == "_PPComp6") {
+		case "_PPComp6":
 			v = iron.object.Uniforms.helpVec;
 			v.x = tonemapper_uniforms[4]; //White Clip
 			v.y = lenstexture_uniforms[0]; //Center Min
 			v.z = lenstexture_uniforms[1]; //Center Max
-		}
-
-		if (link == "_PPComp7") {
+		case "_PPComp7":
 			v = iron.object.Uniforms.helpVec;
 			v.x = lenstexture_uniforms[2]; //Lum min
 			v.y = lenstexture_uniforms[3]; //Lum max
 			v.z = lenstexture_uniforms[4]; //Expo
-		}
-
-		if (link == "_PPComp8") {
+		case "_PPComp8":
 			v = iron.object.Uniforms.helpVec;
 			v.x = colorgrading_global_uniforms[7][0]; //LUT R
 			v.y = colorgrading_global_uniforms[7][1]; //LUT G
 			v.z = colorgrading_global_uniforms[7][2]; //LUT B
-		}
-
-		if (link == "_PPComp9") {
+		case "_PPComp9":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[0]; //Step
 			v.y = ssr_uniforms[1]; //StepMin
 			v.z = ssr_uniforms[2]; //Search
-		}
-		
-		if (link == "_PPComp10") {
+		case "_PPComp10":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[3]; //Falloff
 			v.y = ssr_uniforms[4]; //Jitter
 			v.z = bloom_uniforms[0]; //Bloom Threshold
-		}
-
-		if (link == "_PPComp11") {
+		case "_PPComp11":
 			v = iron.object.Uniforms.helpVec;
 			v.x = bloom_uniforms[1]; //Bloom Strength
 			v.y = bloom_uniforms[2]; //Bloom Radius
 			v.z = ssao_uniforms[0]; //SSAO Strength
-		}
-
-		if (link == "_PPComp12") {
+		case "_PPComp12":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssao_uniforms[1]; //SSAO Radius
 			v.y = ssao_uniforms[2]; //SSAO Max Steps
 			v.z = 0;
-		}
-
-		if(link == "_PPComp13") {
+		case "_PPComp13":
 			v = iron.object.Uniforms.helpVec;
 			v.x = chromatic_aberration_uniforms[0]; //CA Strength
 			v.y = chromatic_aberration_uniforms[1]; //CA Samples
@@ -354,13 +308,10 @@ class Postprocess {
 		}
 
 		return v;
-
 	}
 
     public static function init() {
-
 		iron.object.Uniforms.externalVec3Links.push(vec3Link);
-
     }
 
 }

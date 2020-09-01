@@ -24,6 +24,19 @@ class ArmActionSocket(bpy.types.NodeSocket):
     def draw_color(self, context, node):
         return (0.8, 0.3, 0.3, 1)
 
+class ArmCustomSocket(bpy.types.NodeSocket):
+    """
+    A custom socket that can be used to define more socket types for
+    logic node packs. Do not use this type directly (it is not
+    registered)!
+    """
+    bl_idname = 'ArmCustomSocket'
+    bl_label = 'Custom Socket'
+
+    def get_default_value(self):
+        """Override this for values of unconnected input sockets."""
+        return None
+
 class ArmArraySocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketArray'
     bl_label = 'Array Socket'

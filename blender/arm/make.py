@@ -1,27 +1,27 @@
-import os
 import glob
-import time
-import shutil
-import bpy
 import json
+import os
+import shutil
+import time
 import stat
-from bpy.props import *
 import subprocess
 import threading
 import webbrowser
-import arm.utils
-import arm.write_data as write_data
-import arm.make_logic as make_logic
-import arm.make_renderpath as make_renderpath
-import arm.make_world as make_world
-import arm.make_state as state
+
+import bpy
+
 import arm.assets as assets
-import arm.log as log
+from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
-from arm.exporter import ArmoryExporter
+import arm.log as log
+import arm.make_logic as make_logic
+import arm.make_renderpath as make_renderpath
+import arm.make_state as state
+import arm.make_world as make_world
+import arm.utils
+import arm.write_data as write_data
 
-exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
@@ -57,7 +57,6 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 def export_data(fp, sdk_path):
-    global exporter
     wrd = bpy.data.worlds['Arm']
 
     print('\n' + '_' * 10 + '  [Armory] Compiling  ' + '_' * 10)
@@ -121,7 +120,7 @@ def export_data(fp, sdk_path):
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
+            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -156,9 +155,10 @@ def export_data(fp, sdk_path):
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
 
     if wrd.arm_verbose_output:
-        print('Exported modules: ' + str(modules))
-        print('Shader flags: ' + str(defs))
-        print('Khafile flags: ' + str(assets.khafile_defs))
+        print('Exported modules:', modules)
+        print('Shader flags:', defs)
+        print('Compositor flags:', cdefs)
+        print('Khafile flags:', assets.khafile_defs)
 
     # Render path is configurable at runtime
     has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
@@ -171,8 +171,8 @@ def export_data(fp, sdk_path):
 
     # Write referenced shader passes
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        res = {}
-        res['shader_datas'] = []
+        res = {'shader_datas': []}
+
         for ref in assets.shader_passes:
             # Ensure shader pass source exists
             if not os.path.exists(raw_shaders_path + '/' + ref):
@@ -182,7 +182,12 @@ def export_data(fp, sdk_path):
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
+
+        # Workaround to also export non-material world shaders
+        res['shader_datas'] += make_world.shader_datas
+
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
             assets.add_shader(shaders_path + '/' + s + '.glsl')
@@ -390,7 +395,7 @@ def assets_done():
     else:
         state.proc_build = None
         state.redraw_ui = True
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def compilation_server_done():
     if state.proc_build == None:
@@ -405,12 +410,12 @@ def compilation_server_done():
     else:
         state.proc_build = None
         state.redraw_ui = True
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
     if log.num_warnings > 0:
-        print(f'{log.num_warnings} warnings occurred during compilation!')
+        log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
     if state.proc_build is None:
         return
     result = state.proc_build.poll()
@@ -420,7 +425,7 @@ def build_done():
         bpy.data.worlds['Arm'].arm_recompile = False
         build_success()
     else:
-        log.print_info('Build failed, check console')
+        log.error('Build failed, check console')
 
 def patch():
     if state.proc_build != None:
@@ -429,21 +434,17 @@ def patch():
     fp = arm.utils.get_fp()
     os.chdir(fp)
     asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
-    exporter.execute(bpy.context, asset_path, scene=bpy.context.scene)
+    ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
     if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
         raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
         shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
+
     cmd = [node_path, khamake_path, 'krom']
-    cmd.append('--shaderversion')
-    cmd.append('330')
-    cmd.append('--parallelAssetConversion')
-    cmd.append('4')
-    cmd.append('--to')
-    cmd.append(arm.utils.build_dir() + '/debug')
-    cmd.append('--nohaxe')
-    cmd.append('--noproject')
+    cmd.extend(('--shaderversion', '330', '--parallelAssetConversion', '4',
+                '--to', arm.utils.build_dir() + '/debug', '--nohaxe', '--noproject'))
+
     assets.invalidate_enabled = True
     state.proc_build = run_proc(cmd, patch_done)
 

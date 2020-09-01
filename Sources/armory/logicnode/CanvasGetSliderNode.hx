@@ -12,7 +12,7 @@ class CanvasGetSliderNode extends LogicNode {
 	}
 
 #if arm_ui
-	override function get(from: Int) {
+	override function get(from: Int): Dynamic { // Null<Float>
 		if (canvas == null) canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
 		if (canvas == null || !canvas.ready) return null;

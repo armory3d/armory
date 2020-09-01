@@ -100,7 +100,7 @@ def build_node_tree(node_group):
         f.write('}')
     node_group.arm_cached = True
 
-def build_node(node, f):
+def build_node(node: bpy.types.Node, f):
     global parsed_nodes
     global parsed_ids
 
@@ -154,6 +154,8 @@ def build_node(node, f):
             prop = getattr(node, prop_name)
             if isinstance(prop, str):
                 prop = '"' + str(prop) + '"'
+            elif isinstance(prop, bool):
+                prop = str(prop).lower()
             elif hasattr(prop, 'name'): # PointerProperty
                 prop = '"' + str(prop.name) + '"'
             else:
@@ -239,28 +241,42 @@ def get_root_nodes(node_group):
             roots.append(node)
     return roots
 
-def build_default_node(inp):
-    inp_name = 'new armory.logicnode.NullNode(this)'
+def build_default_node(inp: bpy.types.NodeSocket):
+    """Creates a new node to give a not connected input socket a value"""
+    null_node = 'new armory.logicnode.NullNode(this)'
+
+    if isinstance(inp, arm.logicnode.arm_nodes.ArmCustomSocket):
+        # ArmCustomSockets need to implement get_default_value()
+        default_value = inp.get_default_value()
+        if default_value is None:
+            return null_node
+        if isinstance(default_value, str):
+            default_value = f'"{default_value}"'
+
+        return f'new armory.logicnode.DynamicNode(this, {default_value})'
+
     if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
-        return inp_name
+        return null_node
     if inp.bl_idname == 'ArmNodeSocketObject':
-        inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.get_default_value()) + '")'
-        return inp_name
+        return f'new armory.logicnode.ObjectNode(this, "{inp.get_default_value()}")'
     if inp.bl_idname == 'ArmNodeSocketAnimAction':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()) + '")'
-        return inp_name
+        # Backslashes are not allowed in f-strings so we need this variable
+        default_value = inp.get_default_value().replace("\"", "\\\"")
+        return f'new armory.logicnode.StringNode(this, "{default_value}")'
     if inp.type == 'VECTOR':
-        inp_name = 'new armory.logicnode.VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
+        return f'new armory.logicnode.VectorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]})'
     elif inp.type == 'RGBA':
-        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'
+        return f'new armory.logicnode.ColorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]}, {inp.default_value[3]})'
     elif inp.type == 'RGB':
-        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
+        return f'new armory.logicnode.ColorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]})'
     elif inp.type == 'VALUE':
-        inp_name = 'new armory.logicnode.FloatNode(this, ' + str(inp.default_value) + ')'
+        return f'new armory.logicnode.FloatNode(this, {inp.default_value})'
     elif inp.type == 'INT':
-        inp_name = 'new armory.logicnode.IntegerNode(this, ' + str(inp.default_value) + ')'
+        return f'new armory.logicnode.IntegerNode(this, {inp.default_value})'
     elif inp.type == 'BOOLEAN':
-        inp_name = 'new armory.logicnode.BooleanNode(this, ' + str(inp.default_value).lower() + ')'
+        return f'new armory.logicnode.BooleanNode(this, {str(inp.default_value).lower()})'
     elif inp.type == 'STRING':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value) + '")'
-    return inp_name
+        default_value = inp.default_value.replace("\"", "\\\"")
+        return f'new armory.logicnode.StringNode(this, "{default_value}")'
+
+    return null_node

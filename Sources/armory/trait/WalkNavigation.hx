@@ -9,7 +9,7 @@ import iron.math.Vec4;
 class WalkNavigation extends Trait {
 
 	public static var enabled = true;
-	static inline var speed = 5.0;
+	var speed = 5.0;
 	var dir = new Vec4();
 	var xvec = new Vec4();
 	var yvec = new Vec4();
@@ -109,6 +109,13 @@ class WalkNavigation extends Trait {
 		else {
 			ease -= Time.delta * 20.0 * ease;
 			if (ease < 0.0) ease = 0.0;
+		}
+
+		if (mouse.wheelDelta < 0) {
+			speed *= 1.1;
+		} else if (mouse.wheelDelta > 0) {
+			speed *= 0.9;
+			if (speed < 0.5) speed = 0.5;
 		}
 
 		var d = Time.delta * speed * fast * ease;

@@ -22,12 +22,9 @@ class TranslateObjectNode extends LogicNode {
 			object.transform.buildMatrix();
 		}
 		else {
-			var look = object.transform.world.look().mult(vec.y);
-			var right = object.transform.world.right().mult(vec.x);
-			var up = object.transform.world.up().mult(vec.z);
-			object.transform.loc.add(look);
-			object.transform.loc.add(right);
-			object.transform.loc.add(up);
+			object.transform.move(object.transform.local.look(),vec.y);
+			object.transform.move(object.transform.local.up(),vec.z);
+			object.transform.move(object.transform.local.right(),vec.x);
 			object.transform.buildMatrix();
 		}
 

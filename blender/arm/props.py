@@ -1,18 +1,14 @@
 import bpy
 from bpy.props import *
-import os
-import shutil
-import arm.props_ui as props_ui
+
 import arm.assets as assets
-import arm.log as log
-import arm.utils
 import arm.make
-import arm.props_renderpath as props_renderpath
-import arm.proxy
 import arm.nodes_logic
+import arm.proxy
+import arm.utils
 
 # Armory version
-arm_version = '2020.3'
+arm_version = '2020.8'
 arm_commit = '$Id$'
 
 def init_properties():
@@ -71,6 +67,7 @@ def init_properties():
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport')],
         name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_play_scene = PointerProperty(name="Scene", description="Scene to launch", update=assets.invalidate_compiler_cache, type=bpy.types.Scene)
     bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
@@ -124,6 +121,7 @@ def init_properties():
     bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_materials)
     bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_modifiers)
     bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_traits)
+    bpy.types.Object.arm_proxy_sync_trait_props = BoolProperty(name="Trait Property Values", description="Keep trait property values synchronized with proxy object", default=False, update=arm.proxy.proxy_sync_traits)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)
@@ -267,6 +265,15 @@ def init_properties():
     bpy.types.World.arm_wasm_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.world_defs = StringProperty(name="World Shader Defs", default='')
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
+
+    bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_steps = IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
+
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)
     bpy.types.Material.export_tangents = BoolProperty(name="Export Tangents", default=False)

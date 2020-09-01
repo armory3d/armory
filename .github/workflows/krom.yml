@@ -19,4 +19,4 @@ jobs:
     - name: Compile
       run: |
         cd armory_ci
-        nodejs_bin/node-linux64 Kha/make.js krom
+        nodejs_bin/node-linux64 Kha/make.js krom --shaderversion 330

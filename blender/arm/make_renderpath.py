@@ -127,9 +127,13 @@ def build():
         assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(arm.utils.get_cascade_size(rpdat)))
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
+    if arm.utils.get_gapi() == 'metal':
+        assets.add_shader_pass('clear_color_depth_pass')
+        assets.add_shader_pass('clear_color_pass')
+        assets.add_shader_pass('clear_depth_pass')
+
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':
-        assets.add_shader_pass('world_pass')
         if '_EnvClouds' in wrd.world_defs:
             assets.add(assets_path + 'clouds_base.raw')
             assets.add_embedded_data('clouds_base.raw')
@@ -221,7 +225,7 @@ def build():
             if rpdat.rp_antialiasing == 'TAA':
                 assets.add_khafile_def('arm_taa')
 
-        assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))        
+        assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))
         if rpdat.rp_supersampling == '4':
             assets.add_shader_pass('supersample_resolve')
 
@@ -276,7 +280,7 @@ def build():
         else: # mobile, solid
             assets.add_shader_pass('deferred_light_' + rpdat.arm_material_model.lower())
             assets.add_khafile_def('rp_material_' + rpdat.arm_material_model.lower())
-    
+
     if len(bpy.data.lightprobes) > 0:
         wrd.world_defs += '_Probes'
         assets.add_khafile_def('rp_probes')

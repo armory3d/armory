@@ -35,7 +35,7 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 	const float s = shadowmapCubePcfSize; // TODO: incorrect...
 	float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
-	#ifdef HLSL
+	#ifdef _InvY
 	ml.y = -ml.y;
 	#endif
 	float result = texture(shadowMapCube, vec4(ml, compare));
@@ -105,7 +105,7 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	int casi;
 	int casIndex;
 	mat4 LWVP = getCascadeMat(d, casi, casIndex);
-	
+
 	vec4 lPos = LWVP * vec4(p, 1.0);
 	lPos.xyz /= lPos.w;
 

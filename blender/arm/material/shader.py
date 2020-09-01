@@ -65,6 +65,8 @@ class ShaderContext:
             self.data['color_writes_blue'] = props['color_writes_blue']
         if 'color_writes_alpha' in props:
             self.data['color_writes_alpha'] = props['color_writes_alpha']
+        if 'color_attachments' in props:
+            self.data['color_attachments'] = props['color_attachments']
 
         self.data['texture_units'] = []
         self.tunits = self.data['texture_units']
@@ -80,7 +82,7 @@ class ShaderContext:
     def sort_vs(self):
         vs = []
         ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
-        for ename in ar:  
+        for ename in ar:
             elem = self.get_elem(ename)
             if elem != None:
                 vs.append(elem)
@@ -123,28 +125,43 @@ class ShaderContext:
             c['is_image'] = is_image
         self.tunits.append(c)
 
-    def make_vert(self):
-        self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
-        self.vert = Shader(self, 'vert')        
+    def make_vert(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
+        else:
+            self.data['vertex_shader'] = custom_name + '.vert'
+        self.vert = Shader(self, 'vert')
         return self.vert
 
-    def make_frag(self):
-        self.data['fragment_shader'] = self.matname + '_' + self.data['name'] + '.frag'
+    def make_frag(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['fragment_shader'] = self.matname + '_' + self.data['name'] + '.frag'
+        else:
+            self.data['fragment_shader'] = custom_name + '.frag'
         self.frag = Shader(self, 'frag')
         return self.frag
 
-    def make_geom(self):
-        self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
+    def make_geom(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
+        else:
+            self.data['geometry_shader'] = custom_name + '.geom'
         self.geom = Shader(self, 'geom')
         return self.geom
 
-    def make_tesc(self):
-        self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
+    def make_tesc(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
+        else:
+            self.data['tesscontrol_shader'] = custom_name + '.tesc'
         self.tesc = Shader(self, 'tesc')
         return self.tesc
 
-    def make_tese(self):
-        self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
+    def make_tese(self, custom_name: str = None):
+        if custom_name is None:
+            self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
+        else:
+            self.data['tesseval_shader'] = custom_name + '.tese'
         self.tese = Shader(self, 'tese')
         return self.tese
 
@@ -157,6 +174,7 @@ class Shader:
         self.ins = []
         self.outs = []
         self.uniforms = []
+        self.constants = []
         self.functions = {}
         self.main = ''
         self.main_init = ''
@@ -173,6 +191,9 @@ class Shader:
         self.geom_passthrough = False
         self.is_linked = False # Use already generated shader
         self.noprocessing = False
+
+    def has_include(self, s):
+        return s in self.includes
 
     def add_include(self, s):
         self.includes.append(s)
@@ -206,8 +227,30 @@ class Shader:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link)
-        if included == False and s not in self.uniforms:
+        if not included and s not in self.uniforms:
             self.uniforms.append(s)
+
+    def add_const(self, type_str: str, name: str, value_str: str, array_size: int = 0):
+        """
+        Add a global constant to the shader.
+
+        Parameters
+        ----------
+        type_str: str
+            The name of the type, like 'float' or 'vec3'. If the
+            constant is an array, there is no need to add `[]` to the
+            type
+        name: str
+            The name of the variable
+        value_str: str
+            The value of the constant as a string
+        array_size: int
+            If not 0 (default value), create an array with the given size
+        """
+        if array_size == 0:
+            self.constants.append(f'{type_str} {name} = {value_str}')
+        elif array_size > 0:
+            self.constants.append(f'{type_str} {name}[{array_size}] = {type_str}[]({value_str})')
 
     def add_function(self, s):
         fname = s.split('(', 1)[0]
@@ -295,7 +338,7 @@ class Shader:
 
         if self.shader_type == 'vert':
             self.vstruct_to_vsin()
-        
+
         elif self.shader_type == 'tesc':
             in_ext = '[]'
             out_ext = '[]'
@@ -332,8 +375,10 @@ class Shader:
                 s += 'out {0}{1};\n'.format(a, out_ext)
         for a in self.uniforms:
             s += 'uniform ' + a + ';\n'
+        for c in self.constants:
+            s += 'const ' + c + ';\n'
         for f in self.functions:
-            s += self.functions[f]
+            s += self.functions[f] + '\n'
         s += 'void main() {\n'
         s += self.main_attribs
         s += self.main_textures

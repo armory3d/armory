@@ -37,7 +37,7 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	#ifdef HLSL
+	#ifdef _InvY
 	projectedCoord.y = 1.0 - projectedCoord.y;
 	#endif
 	return projectedCoord.xy;

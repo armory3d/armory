@@ -34,6 +34,12 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
         if con['tesseval_shader'] not in asset:
             asset.append(con['tesseval_shader'])
 
+    if 'color_attachments' in c:
+        con['color_attachments'] = c['color_attachments']
+        for i in range(len(con['color_attachments'])):
+            if con['color_attachments'][i] == '_HDR':
+                con['color_attachments'][i] = 'RGBA32' if '_LDR' in defs else 'RGBA64'
+
     # Params
     params = ['depth_write', 'compare_mode', 'cull_mode', \
         'blend_source', 'blend_destination', 'blend_operation', \
@@ -65,7 +71,7 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
         with open(c['tesscontrol_shader']) as f:
             tesc = f.read().splitlines()
         parse_shader(sres, c, con, defs, tesc, False)
-    
+
     if 'tesseval_shader' in c:
         with open(c['tesseval_shader']) as f:
             tese = f.read().splitlines()
@@ -76,12 +82,12 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
     skip_else = False
     vertex_elements_parsed = False
     vertex_elements_parsing = False
-    
+
     stack = []
 
     if parse_attributes == False:
         vertex_elements_parsed = True
-        
+
     for line in lines:
         line = line.lstrip()
 

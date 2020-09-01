@@ -1,3 +1,57 @@
+str_tex_proc = """
+//	<https://www.shadertoy.com/view/4dS3Wd>
+//	By Morgan McGuire @morgan3d, http://graphicscodex.com
+float hash_f(const float n) { return fract(sin(n) * 1e4); }
+float hash_f(const vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+float hash_f(const vec3 co){ return fract(sin(dot(co.xyz, vec3(12.9898,78.233,52.8265)) * 24.384) * 43758.5453); }
+
+float noise(const vec3 x) {
+	const vec3 step = vec3(110, 241, 171);
+
+	vec3 i = floor(x);
+	vec3 f = fract(x);
+ 
+	// For performance, compute the base input to a 1D hash from the integer part of the argument and the 
+	// incremental change to the 1D based on the 3D -> 1D wrapping
+    float n = dot(i, step);
+
+	vec3 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(mix( hash_f(n + dot(step, vec3(0, 0, 0))), hash_f(n + dot(step, vec3(1, 0, 0))), u.x),
+                   mix( hash_f(n + dot(step, vec3(0, 1, 0))), hash_f(n + dot(step, vec3(1, 1, 0))), u.x), u.y),
+               mix(mix( hash_f(n + dot(step, vec3(0, 0, 1))), hash_f(n + dot(step, vec3(1, 0, 1))), u.x),
+                   mix( hash_f(n + dot(step, vec3(0, 1, 1))), hash_f(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
+}
+
+//  Shader-code adapted from Blender
+//  https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_wave.glsl & /gpu_shader_material_fractal_noise.glsl
+float fractal_noise(const vec3 p, const float o)
+{
+  float fscale = 1.0;
+  float amp = 1.0;
+  float sum = 0.0;
+  float octaves = clamp(o, 0.0, 16.0);
+  int n = int(octaves);
+  for (int i = 0; i <= n; i++) {
+    float t = noise(fscale * p);
+    sum += t * amp;
+    amp *= 0.5;
+    fscale *= 2.0;
+  }
+  float rmd = octaves - floor(octaves);
+  if (rmd != 0.0) {
+    float t = noise(fscale * p);
+    float sum2 = sum + t * amp;
+    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1.0);
+    sum2 *= float(pow(2, n + 1)) / float(pow(2, n + 2) - 1);
+    return (1.0 - rmd) * sum + rmd * sum2;
+  }
+  else {
+    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1); 
+    return sum;
+  }
+}
+"""
+
 str_tex_checker = """
 vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
     // Prevent precision issues on unit coordinates
@@ -17,28 +71,66 @@ float tex_checker_f(const vec3 co, const float scale) {
 }
 """
 
-# Created by inigo quilez - iq/2013
-# License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 str_tex_voronoi = """
-vec4 tex_voronoi(const vec3 x) {
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-    float id = 0.0;
-    float res = 100.0;
-    for (int k = -1; k <= 1; k++)
-    for (int j = -1; j <= 1; j++)
-    for (int i = -1; i <= 1; i++) {
-        vec3 b = vec3(float(i), float(j), float(k));
-        vec3 pb = p + b;
-        vec3 r = vec3(b) - f + texture(snoise256, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 256.0).xyz;
-        float d = dot(r, r);
-        if (d < res) {
-            id = dot(p + b, vec3(1.0, 57.0, 113.0));
-            res = d;
+//Shader-code adapted from Blender
+//https://github.com/sobotka/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_tex_voronoi.glsl
+float voronoi_distance(const vec3 a, const vec3 b, const int metric, const float exponent)
+{
+  if (metric == 0)  // SHD_VORONOI_EUCLIDEAN
+  {
+    return distance(a, b);
+  }
+  else if (metric == 1)  // SHD_VORONOI_MANHATTAN
+  {
+    return abs(a.x - b.x) + abs(a.y - b.y) + abs(a.z - b.z);
+  }
+  else if (metric == 2)  // SHD_VORONOI_CHEBYCHEV
+  {
+    return max(abs(a.x - b.x), max(abs(a.y - b.y), abs(a.z - b.z)));
+  }
+  else if (metric == 3)  // SHD_VORONOI_MINKOWSKI
+  {
+    return pow(pow(abs(a.x - b.x), exponent) + pow(abs(a.y - b.y), exponent) +
+                   pow(abs(a.z - b.z), exponent),
+               1.0 / exponent);
+  }
+  else {
+    return 0.5;
+  }
+}
+
+vec3 tex_voronoi(const vec3 coord, const float r, const int metric, const int outp, const float scale, const float exp)
+{
+  float randomness = clamp(r, 0.0, 1.0);
+
+  vec3 scaledCoord = coord * scale;
+  vec3 cellPosition = floor(scaledCoord);
+  vec3 localPosition = scaledCoord - cellPosition;
+
+  float minDistance = 8.0;
+  vec3 targetOffset, targetPosition;
+  for (int k = -1; k <= 1; k++) {
+    for (int j = -1; j <= 1; j++) {
+      for (int i = -1; i <= 1; i++) {
+        vec3 cellOffset = vec3(float(i), float(j), float(k));
+        vec3 pointPosition = cellOffset;
+        if(randomness != 0.) {
+            pointPosition += vec3(hash_f(cellPosition+cellOffset), hash_f(cellPosition+cellOffset+972.37), hash_f(cellPosition+cellOffset+342.48)) * randomness;}
+        float distanceToPoint = voronoi_distance(pointPosition, localPosition, metric, exp);
+        if (distanceToPoint < minDistance) {
+          targetOffset = cellOffset;
+          minDistance = distanceToPoint;
+          targetPosition = pointPosition;
         }
+      }
     }
-    vec3 col = 0.5 + 0.5 * cos(id * 0.35 + vec3(0.0, 1.0, 2.0));
-    return vec4(col, sqrt(res));
+  }
+  if(outp == 0){return vec3(minDistance);}
+  else if(outp == 1) {
+      if(randomness == 0.) {return vec3(hash_f(cellPosition+targetOffset), hash_f(cellPosition+targetOffset+972.37), hash_f(cellPosition+targetOffset+342.48));}
+      return (targetPosition - targetOffset)/randomness;
+  }
+  return (targetPosition + cellPosition) / scale;
 }
 """
 
@@ -56,25 +148,12 @@ vec4 tex_voronoi(const vec3 x) {
 # By Morgan McGuire @morgan3d, http://graphicscodex.com Reuse permitted under the BSD license.
 # https://www.shadertoy.com/view/4dS3Wd
 str_tex_noise = """
-float hash(float n) { return fract(sin(n) * 1e4); }
-float tex_noise_f(vec3 x) {
-    const vec3 step = vec3(110, 241, 171);
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    float n = dot(i, step);
-    vec3 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(mix(hash(n + dot(step, vec3(0, 0, 0))), hash(n + dot(step, vec3(1, 0, 0))), u.x),
-                   mix(hash(n + dot(step, vec3(0, 1, 0))), hash(n + dot(step, vec3(1, 1, 0))), u.x), u.y),
-               mix(mix(hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),
-                   mix(hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
-}
-float tex_noise(vec3 p) {
-    p *= 1.25;
-    float f = 0.5 * tex_noise_f(p); p *= 2.01;
-    f += 0.25 * tex_noise_f(p); p *= 2.02;
-    f += 0.125 * tex_noise_f(p); p *= 2.03;
-    f += 0.0625 * tex_noise_f(p);
-    return 1.0 - f;
+float tex_noise(const vec3 p, const float detail, const float distortion) {
+    vec3 pk = p;
+    if (distortion != 0.0) {
+    pk += vec3(noise(p) * distortion);
+  }
+  return fractal_noise(pk, detail);
 }
 """
 
@@ -188,8 +267,16 @@ float tex_brick_f(vec3 p) {
 """
 
 str_tex_wave = """
-float tex_wave_f(const vec3 p) {
-    return 1.0 - sin((p.x + p.y) * 10.0);
+float tex_wave_f(const vec3 p, const int type, const int profile, const float dist, const float detail, const float detail_scale) {
+    float n;
+    if(type == 0) n = (p.x + p.y + p.z) * 9.5;
+    else n = length(p) * 13.0;
+    if(dist != 0.0) n += dist * fractal_noise(p * detail_scale, detail) * 2.0 - 1.0;
+    if(profile == 0) { return 0.5 + 0.5 * sin(n - PI); }
+    else {
+        n /= 2.0 * PI;
+        return n - floor(n);
+    }
 }
 """
 

@@ -19,7 +19,7 @@ vec3 getPosView(const vec3 viewRay, const float depth, const vec2 cameraProj) {
 	return viewRay * linearDepth;
 }
 
-vec3 getPos(const vec3 eye, const vec3 eyeLook, const vec3 viewRay, const float depth, const vec2 cameraProj) {	
+vec3 getPos(const vec3 eye, const vec3 eyeLook, const vec3 viewRay, const float depth, const vec2 cameraProj) {
 	// eyeLook, viewRay should be normalized
 	float linearDepth = cameraProj.y / ((depth * 0.5 + 0.5) - cameraProj.x);
 	float viewZDist = dot(eyeLook, viewRay);
@@ -27,7 +27,7 @@ vec3 getPos(const vec3 eye, const vec3 eyeLook, const vec3 viewRay, const float 
 	return wposition;
 }
 
-vec3 getPosNoEye(const vec3 eyeLook, const vec3 viewRay, const float depth, const vec2 cameraProj) {	
+vec3 getPosNoEye(const vec3 eyeLook, const vec3 viewRay, const float depth, const vec2 cameraProj) {
 	// eyeLook, viewRay should be normalized
 	float linearDepth = cameraProj.y / ((depth * 0.5 + 0.5) - cameraProj.x);
 	float viewZDist = dot(eyeLook, viewRay);
@@ -35,7 +35,7 @@ vec3 getPosNoEye(const vec3 eyeLook, const vec3 viewRay, const float depth, cons
 	return wposition;
 }
 
-#ifdef HLSL
+#if defined(HLSL) || defined(METAL)
 vec3 getPos2(const mat4 invVP, const float depth, vec2 coord) {
 	coord.y = 1.0 - coord.y;
 #else
@@ -47,7 +47,7 @@ vec3 getPos2(const mat4 invVP, const float depth, const vec2 coord) {
 	return pos.xyz;
 }
 
-#ifdef HLSL
+#if defined(HLSL) || defined(METAL)
 vec3 getPosView2(const mat4 invP, const float depth, vec2 coord) {
 	coord.y = 1.0 - coord.y;
 #else
@@ -59,7 +59,7 @@ vec3 getPosView2(const mat4 invP, const float depth, const vec2 coord) {
 	return pos.xyz;
 }
 
-#ifdef HLSL
+#if defined(HLSL) || defined(METAL)
 vec3 getPos2NoEye(const vec3 eye, const mat4 invVP, const float depth, vec2 coord) {
 	coord.y = 1.0 - coord.y;
 #else

@@ -18,9 +18,10 @@ class VectorMathNode(Node, ArmLogicTreeNode):
                  ('Cross Product', 'Cross Product', 'Cross Product'),
                  ('Length', 'Length', 'Length'),
                  ('Distance', 'Distance', 'Distance'),
+                 ('Reflect', 'Reflect', 'Reflect'),
                  ],
         name='', default='Add')
-    
+
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Vector')
         self.inputs[-1].default_value = [0.5, 0.5, 0.5]

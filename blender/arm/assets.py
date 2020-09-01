@@ -2,6 +2,8 @@ import shutil
 import os
 import stat
 import bpy
+
+import arm.log as log
 import arm.utils
 
 assets = []
@@ -48,20 +50,26 @@ def reset():
     shader_cons['voxel_frag'] = []
     shader_cons['voxel_geom'] = []
 
-def add(file):
+def add(asset_file):
     global assets
-    if file in assets:
+
+    # Asset already exists, do nothing
+    if asset_file in assets:
         return
-    base = os.path.basename(file)
+
+    asset_file_base = os.path.basename(asset_file)
     for f in assets:
-        if f.endswith(base):
-            print('Armory Warning: Asset name "{0}" already exists, skipping'.format(base))
+        f_file_base = os.path.basename(f)
+        if f_file_base == asset_file_base:
+            log.warn(f'Armory Warning: Asset name "{asset_file_base}" already exists, skipping')
             return
-    assets.append(file)
+
+    assets.append(asset_file)
+
     # Reserved file name
     for f in reserved_names:
-        if f in file:
-            print('Armory Warning: File "{0}" contains reserved keyword, this will break C++ builds!'.format(file))
+        if f in asset_file:
+            log.warn(f'Armory Warning: File "{asset_file}" contains reserved keyword, this will break C++ builds!')
 
 def add_khafile_def(d):
     global khafile_defs

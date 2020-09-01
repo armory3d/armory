@@ -3,13 +3,14 @@ import bpy
 def write(vert, frag):
     wrd = bpy.data.worlds['Arm']
     is_shadows = '_ShadowMap' in wrd.world_defs
-    
+
     frag.add_include('std/clusters.glsl')
     frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
     frag.add_uniform('vec2 cameraPlane', link='_cameraPlane')
     frag.add_uniform('vec4 lightsArray[maxLights * 2]', link='_lightsArray')
     frag.add_uniform('sampler2D clustersData', link='_clustersData')
     if is_shadows:
+        frag.add_uniform('bool receiveShadow')
         frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
         frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
     vert.add_out('vec4 wvpposition')
@@ -36,7 +37,7 @@ def write(vert, frag):
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-    
+
     frag.write('direct += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
@@ -49,7 +50,7 @@ def write(vert, frag):
     frag.write('    specular,')
     frag.write('    f0')
     if is_shadows:
-        frag.write('    , li, lightsArray[li * 2].w') # bias
+        frag.write('    , li, lightsArray[li * 2].w, receiveShadow') # bias
     if '_Spot' in wrd.world_defs:
         frag.write('    , li > numPoints - 1')
         frag.write('    , lightsArray[li * 2 + 1].w') # cutoff

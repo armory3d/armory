@@ -225,6 +225,8 @@ project.addSources('Sources');
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
             f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
+
+        if wrd.arm_verbose_output:
             f.write("project.addParameter('--times');\n")
 
         if export_ui:
@@ -351,6 +353,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
 package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
+    public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
         if rpdat.rp_voxelao:
@@ -452,21 +455,19 @@ def write_compiledglsl(defs, make_variants):
             if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
+
+        f.write("""#if defined(HLSL) || defined(METAL)
+#define _InvY
+#endif
+""")
+
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
-        if rpdat.arm_clouds:
-            f.write(
-"""const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 100) / 100) + """;
-const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 100) / 100) + """;
-const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 100) / 100) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 100) / 100) + """);
-const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation * 100) / 100) + """;
-const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
-const int cloudsSteps = """ + str(rpdat.arm_clouds_steps) + """;
-""")
+
         if rpdat.rp_water:
             f.write(
 """const float waterLevel = """ + str(round(rpdat.arm_water_level * 100) / 100) + """;

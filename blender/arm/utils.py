@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import platform
+import re
 import subprocess
 import webbrowser
 
@@ -397,15 +398,17 @@ def fetch_script_names():
     wrd = bpy.data.worlds['Arm']
     # Sources
     wrd.arm_scripts_list.clear()
-    sources_path = get_fp() + '/Sources/' + safestr(wrd.arm_project_package)
+    sources_path = os.path.join(get_fp(), 'Sources', safestr(wrd.arm_project_package))
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
         for file in glob.glob('**/*.hx', recursive=True):
-            name = file.rsplit('.')[0]
-            # Replace the path syntax for package syntax so that it can be searchable in blender traits "Class" dropdown
-            wrd.arm_scripts_list.add().name = name.replace(os.sep, '.')
-            fetch_script_props(file)
+            mod = file.rsplit('.')[0]
+            mod = mod.replace('\\', '/')
+            mod_parts = mod.rsplit('/')
+            if re.match('^[A-Z][A-Za-z0-9_]*$', mod_parts[-1]):
+                wrd.arm_scripts_list.add().name = mod.replace('/', '.')
+                fetch_script_props(file)
 
     # Canvas
     wrd.arm_canvas_list.clear()
@@ -526,15 +529,19 @@ def safesrc(s):
         s = '_' + s
     return s
 
-def safestr(s):
+def safestr(s: str) -> str:
+    """Outputs a string where special characters have been replaced with
+    '_', which can be safely used in file and path names."""
     for c in r'[]/\;,><&*:%=+@!#^()|?^':
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
 def asset_name(bdata):
+    if bdata == None:
+        return None
     s = bdata.name
     # Append library name if linked
-    if bdata.library != None:
+    if bdata.library is not None:
         s += '_' + bdata.library.name
     return s
 
@@ -557,10 +564,12 @@ def get_project_scene_name():
     return get_active_scene().name
 
 def get_active_scene():
+    wrd = bpy.data.worlds['Arm']
     if not state.is_export:
-        return bpy.context.scene
+        if wrd.arm_play_scene == None:
+            return bpy.context.scene
+        return wrd.arm_play_scene
     else:
-        wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return item.arm_project_scene
 
@@ -590,7 +599,7 @@ def get_cascade_size(rpdat):
 def check_saved(self):
     if bpy.data.filepath == "":
         msg = "Save blend file first"
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     return True
 
@@ -605,18 +614,18 @@ def check_path(s):
 
 def check_sdkpath(self):
     s = get_sdk_path()
-    if check_path(s) == False:
-        msg = "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s)
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+    if not check_path(s):
+        msg = f"SDK path '{s}' contains special characters. Please move SDK to different path for now."
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     else:
         return True
 
 def check_projectpath(self):
     s = get_fp()
-    if check_path(s) == False:
-        msg = "Project path '{0}' contains special characters, build process may fail.".format(s)
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
+    if not check_path(s):
+        msg = f"Project path '{s}' contains special characters, build process may fail."
+        self.report({"ERROR"}, msg) if self is not None else log.warn(msg)
         return False
     else:
         return True
@@ -659,8 +668,11 @@ def is_bone_animation_enabled(bobject):
             return True
     return False
 
-def export_bone_data(bobject):
+
+def export_bone_data(bobject: bpy.types.Object) -> bool:
+    """Returns whether the bone data of the given object should be exported."""
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
+
 
 def open_editor(hx_path=None):
     ide_bin = get_ide_bin()
@@ -690,7 +702,7 @@ def open_editor(hx_path=None):
 
         # Sublime Text
         if get_code_editor() == 'sublime':
-            project_name = bpy.data.worlds['Arm'].arm_project_name
+            project_name = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_name)
             subl_project_path = arm.utils.get_fp() + f'/{project_name}.sublime-project'
 
             if not os.path.exists(subl_project_path):

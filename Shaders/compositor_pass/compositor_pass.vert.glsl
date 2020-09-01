@@ -18,7 +18,7 @@ void main() {
 	// Scale vertex attribute to [0-1] range
 	const vec2 madd = vec2(0.5, 0.5);
 	texCoord = pos.xy * madd + madd;
-	#ifdef HLSL
+	#ifdef _InvY
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
@@ -26,7 +26,7 @@ void main() {
 
 // #ifdef _CPos
 	// NDC (at the back of cube)
-	// vec4 v = vec4(pos.xy, 1.0, 1.0);	
+	// vec4 v = vec4(pos.xy, 1.0, 1.0);
 	// v = vec4(invVP * v);
 	// v.xyz /= v.w;
 	// viewRay = v.xyz - eye;

@@ -1,4 +1,5 @@
 import bpy
+import multiprocessing
 import os
 import sys
 import subprocess
@@ -18,12 +19,12 @@ def add_rad_assets(output_file_rad, rad_format, num_mips):
 # Generate probes from environment map
 def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True):
     envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
-    
+
     if not os.path.exists(envpath):
         os.makedirs(envpath)
 
     base_name = arm.utils.extract_filename(image_filepath).rsplit('.', 1)[0]
-    
+
     # Assets to be generated
     output_file_irr = envpath + '/' + base_name + '_irradiance'
     output_file_rad = envpath + '/' + base_name + '_radiance'
@@ -37,7 +38,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             if arm_radiance:
                 add_rad_assets(output_file_rad, rad_format, cached_num_mips)
             return cached_num_mips
-    
+
     # Get paths
     sdk_path = arm.utils.get_sdk_path()
     kha_path = arm.utils.get_kha_path()
@@ -51,10 +52,10 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     else:
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
         kraffiti_path = '"' + kha_path + '/Kinc/Tools/kraffiti/kraffiti-linux64"'
-    
+
     output_gama_numerator = '2.2' if disable_hdr else '1.0'
     input_file = arm.utils.asset_path(image_filepath)
-    
+
     # Scale map
     rpdat = arm.utils.get_rp()
     target_w = int(rpdat.arm_radiance_size)
@@ -77,7 +78,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' format=' + rad_format + \
             ' width=' + str(target_w) + \
             ' height=' + str(target_h)], shell=True)
-    
+
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
@@ -96,7 +97,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
 
     sh_to_json(output_file_irr)
     add_irr_assets(output_file_irr)
-    
+
     # Mip-mapped radiance
     if arm_radiance == False:
         return cached_num_mips
@@ -111,12 +112,13 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         mip_count = 8
     else:
         mip_count = 7
-    
+
     wrd = bpy.data.worlds['Arm']
     use_opencl = 'true'
+    cpu_count = multiprocessing.cpu_count()
 
     if arm.utils.get_os() == 'win':
-        subprocess.call([ \
+        cmd = [
             cmft_path,
             '--input', scaled_file,
             '--filter', 'radiance',
@@ -128,7 +130,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--glossBias', '3',
             '--lightingModel', 'blinnbrdf',
             '--edgeFixup', 'none',
-            '--numCpuProcessingThreads', '4',
+            '--numCpuProcessingThreads', str(cpu_count),
             '--useOpenCL', use_opencl,
             '--clVendor', 'anyGpuVendor',
             '--deviceType', 'gpu',
@@ -140,21 +142,25 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--outputGammaDenominator', '1.0',
             '--outputNum', '1',
             '--output0', output_file_rad,
-            '--output0params', 'hdr,rgbe,latlong'])
+            '--output0params', 'hdr,rgbe,latlong'
+        ]
+        if wrd.arm_verbose_output:
+            print(cmd)
+        else:
+            cmd.append('--silent')
+        subprocess.call(cmd)
     else:
-        subprocess.call([ \
-            cmft_path + \
+        cmd = cmft_path + \
             ' --input "' + scaled_file + '"' + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
             ' --excludeBase false' + \
-            #' --mipCount ' + str(mip_count) + \
             ' --glossScale 8' + \
             ' --glossBias 3' + \
             ' --lightingModel blinnbrdf' + \
             ' --edgeFixup none' + \
-            ' --numCpuProcessingThreads 4' + \
+            ' --numCpuProcessingThreads ' + str(cpu_count) + \
             ' --useOpenCL ' + use_opencl + \
             ' --clVendor anyGpuVendor' + \
             ' --deviceType gpu' + \
@@ -166,7 +172,12 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --outputGammaDenominator 1.0' + \
             ' --outputNum 1' + \
             ' --output0 "' + output_file_rad + '"' + \
-            ' --output0params hdr,rgbe,latlong'], shell=True)
+            ' --output0params hdr,rgbe,latlong'
+        if wrd.arm_verbose_output:
+            print(cmd)
+        else:
+            cmd += ' --silent'
+        subprocess.call([cmd], shell=True)
 
     # Remove size extensions in file name
     mip_w = int(face_size * 4)
@@ -184,7 +195,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     generated_files = []
     for i in range(0, mip_count):
         generated_files.append(output_file_rad + '_' + str(i))
-    
+
     # Convert to jpgs
     if disable_hdr is True:
         for f in generated_files:
@@ -201,7 +212,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
                     ' to="' + f + '.jpg"' + \
                     ' format=jpg'], shell=True)
             os.remove(f + '.hdr')
-    
+
     # Scale from (4x2 to 1x1>
     for i in range (0, 2):
         last = generated_files[-1]
@@ -221,15 +232,15 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
                 ' scale=0.5' + \
                 ' format=' + rad_format], shell=True)
         generated_files.append(out)
-    
+
     mip_count += 2
 
     add_rad_assets(output_file_rad, rad_format, mip_count)
 
     return mip_count
 
-# Parse sh coefs produced by cmft into json array
 def sh_to_json(sh_file):
+    """Parse sh coefs produced by cmft into json array"""
     with open(sh_file + '.c') as f:
         sh_lines = f.read().splitlines()
     band0_line = sh_lines[5]
@@ -240,12 +251,11 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
-    
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
-    ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else '.json'
+
+    sh_json = {'irradiance': irradiance_floats}
+    ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else ''
     arm.utils.write_arm(sh_file + ext, sh_json)
-    
+
     # Clean up .c
     os.remove(sh_file + '.c')
 
@@ -261,32 +271,31 @@ def write_sky_irradiance(base_name):
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 
-    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+    envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
     if not os.path.exists(envpath):
         os.makedirs(envpath)
-    
-    output_file = envpath + '/' + base_name + '_irradiance'
-    
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
+
+    output_file = os.path.join(envpath, base_name + '_irradiance')
+
+    sh_json = {'irradiance': irradiance_floats}
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
 
 def write_color_irradiance(base_name, col):
-    # Constant color
-    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13] # Adjust to Cycles
+    """Constant color irradiance"""
+    # Adjust to Cycles
+    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13]
     for i in range(0, 24):
         irradiance_floats.append(0.0)
-    
-    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+
+    envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
     if not os.path.exists(envpath):
         os.makedirs(envpath)
-    
-    output_file = envpath + '/' + base_name + '_irradiance'
-    
-    sh_json = {}
-    sh_json['irradiance'] = irradiance_floats
+
+    output_file = os.path.join(envpath, base_name + '_irradiance')
+
+    sh_json = {'irradiance': irradiance_floats}
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
