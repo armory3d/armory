@@ -4,9 +4,9 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CameraGetNode(Node, ArmLogicTreeNode):
-    '''Get Camera Effect'''
+    """Get postprocessing effects of the camera."""
     bl_idname = 'LNCameraGetNode'
-    bl_label = 'Get Camera'
+    bl_label = 'Get Camera Postprocessing'
     bl_icon = 'NONE'
 
     def init(self, context):
