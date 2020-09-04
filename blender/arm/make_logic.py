@@ -159,7 +159,10 @@ def build_node(node: bpy.types.Node, f):
             elif hasattr(prop, 'name'): # PointerProperty
                 prop = '"' + str(prop.name) + '"'
             else:
-                prop = str(prop)
+                if prop is None:
+                    prop = 'null'
+                else:
+                    prop = str(prop)
             f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
 
     # Create inputs
