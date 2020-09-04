@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.object.Object;
+import armory.trait.physics.RigidBody;
 
 class SetParentNode extends LogicNode {
 
@@ -23,6 +24,12 @@ class SetParentNode extends LogicNode {
 		if (object == null || parent == null || object.parent == parent) return;
 
 		object.parent.removeChild(object, isUnparent); // keepTransform
+		
+		#if arm_physics
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null) rigidBody.setActivationState(0);
+		#end
+
 		parent.addChild(object, !isUnparent); // applyInverse
 
 		runOutput(0);
