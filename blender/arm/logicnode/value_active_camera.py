@@ -4,11 +4,11 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ActiveCameraNode(Node, ArmLogicTreeNode):
-    '''Active camera node'''
+    """Get the active camera of the active scene."""
     bl_idname = 'LNActiveCameraNode'
-    bl_label = 'Active Camera'
+    bl_label = 'Get Active Camera'
     bl_icon = 'NONE'
-    
+
     def init(self, context):
         self.outputs.new('ArmNodeSocketObject', 'Object')
 
