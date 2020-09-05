@@ -19,6 +19,9 @@ class ApplyImpulseNode extends LogicNode {
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
+
+		if (rb == null) return; 
+
 		if (!local) {
 			rb.applyImpulse(impulse);
 		}

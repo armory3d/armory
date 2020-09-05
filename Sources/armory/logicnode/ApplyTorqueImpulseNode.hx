@@ -18,6 +18,9 @@ class ApplyTorqueImpulseNode extends LogicNode {
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
+
+		if (rb == null) return;
+
 		rb.applyTorqueImpulse(torque);
 #end
 

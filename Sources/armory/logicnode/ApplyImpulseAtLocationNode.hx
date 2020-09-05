@@ -21,6 +21,9 @@ class ApplyImpulseAtLocationNode extends LogicNode {
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
+
+		if (rb == null) return;
+
 		if (localLoc) {
 			location.applyQuat(object.transform.rot);
 		}
