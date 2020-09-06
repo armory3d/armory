@@ -1,10 +1,16 @@
+from collections import OrderedDict
+import itertools
+from typing import Generator, List, Optional
+from typing import OrderedDict as ODict  # Prevent naming conflicts
+
 import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
+
 import arm.utils
 
 nodes = []
-category_items = {}
+category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
 object_sockets = dict()
 array_nodes = dict()
@@ -243,12 +249,109 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
             outs.remove(outs.values()[-1])
         return{'FINISHED'}
 
-def add_node(node_class, category):
+
+
+class ArmNodeCategory:
+    """Represents a category (=directory) of logic nodes."""
+    def __init__(self, name: str, icon: str, description: str):
+        self.name = name
+        self.icon = icon
+        self.description = description
+        self.node_sections: ODict[str, List[NodeItem]] = OrderedDict({'default': []})
+
+    def register_node(self, node_class, node_section: str) -> None:
+        """Registers a node to this category so that it will be
+        displayed int the `Add node` menu."""
+        self.add_node_section(node_section)
+
+        self.node_sections[node_section].append(NodeItem(node_class.bl_idname))
+
+    def get_all_nodes(self) -> Generator[NodeItem, None, None]:
+        """Returns all nodes that are registered into this category."""
+        yield from itertools.chain(*self.node_sections.values())
+
+    def add_node_section(self, name: str):
+        """Adds a node section to this category."""
+        if name not in self.node_sections:
+            self.node_sections[name] = []
+
+
+def category_exists(name: str) -> bool:
+    for category_section in category_items:
+        for c in category_items[category_section]:
+            if c.name == name:
+                return True
+
+    return False
+
+
+def get_category(name: str) -> Optional[ArmNodeCategory]:
+    for category_section in category_items:
+        for c in category_items[category_section]:
+            if c.name == name:
+                return c
+
+    return None
+
+
+def get_all_categories() -> Generator[ArmNodeCategory, None, None]:
+    for section_categories in category_items.values():
+        yield from itertools.chain(section_categories)
+
+
+def get_all_nodes() -> Generator[NodeItem, None, None]:
+    for category in get_all_categories():
+        # print(category.get_all_nodes().__next__())
+        yield from itertools.chain(category.get_all_nodes())
+
+
+def add_category_section(name: str) -> None:
+    """Adds a section of categories to the node menu to group multiple
+    categories visually together. The given name only acts as an ID and
+    is not displayed in the user inferface."""
+    global category_items
+    if name not in category_items:
+        category_items[name] = []
+
+
+def add_node_section(name: str, category: str) -> None:
+    """Adds a section of nodes to the sub menu of the given category to
+    group multiple nodes visually together. The given name only acts as
+    an ID and is not displayed in the user inferface."""
+    node_category = get_category(category)
+
+    if node_category is not None:
+        node_category.add_node_section(name)
+
+
+def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', description: str = '') -> Optional[ArmNodeCategory]:
+    """Adds a category of nodes to the node menu."""
+    global category_items
+
+    add_category_section(section)
+    if not category_exists(category):
+        node_category = ArmNodeCategory(category, icon, description)
+        category_items[section].append(node_category)
+        return node_category
+
+    return None
+
+
+def add_node(node_class, category: str, section: str = 'default') -> None:
+    """
+    Registers a node to the given category. If no section is given, the
+    node is put into the default section that does always exist.
+    """
     global nodes
+
     nodes.append(node_class)
-    if category_items.get(category) == None:
-        category_items[category] = []
-    category_items[category].append(NodeItem(node_class.bl_idname))
+    node_category = get_category(category)
+
+    if node_category is None:
+        node_category = add_category(category)
+
+    node_category.register_node(node_class, section)
+    node_class.bl_icon = node_category.icon
 
 bpy.utils.register_class(ArmActionSocket)
 bpy.utils.register_class(ArmArraySocket)
