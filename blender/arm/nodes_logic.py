@@ -82,16 +82,16 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
             layout.operator('arm.open_node_source')
 
 class ArmOpenNodeSource(bpy.types.Operator):
-    '''Expose Haxe source'''
+    """Expose Haxe source"""
     bl_idname = 'arm.open_node_source'
     bl_label = 'Open Node Source'
- 
+
     def execute(self, context):
-        if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
+        if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
             name = context.active_node.bl_idname[2:]
             webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
         return{'FINISHED'}
-    
+
 #Node Variables Panel
 class ARM_PT_Variables(bpy.types.Panel):
     bl_label = 'Armory Node Variables'
@@ -99,12 +99,12 @@ class ARM_PT_Variables(bpy.types.Panel):
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
-            
+
     def draw(self, context):
         layout = self.layout
 
         nodes = list(filter(lambda node: node.arm_logic_id != "", list(context.space_data.node_tree.nodes)))
-        
+
         IDs = []
         for n in nodes:
              if not n.arm_logic_id in IDs:
@@ -118,28 +118,28 @@ class ARM_PT_Variables(bpy.types.Panel):
             getN.ntype = ID
             setN = row.operator('arm.add_setvar_node')
             setN.ntype = ID
-            
+
 class ARMAddVarNode(bpy.types.Operator):
     '''Add a linked node of that Variable'''
     bl_idname = 'arm.add_var_node'
     bl_label = 'Add Get'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-    
-    ntype = bpy.props.StringProperty()
+
+    ntype: bpy.props.StringProperty()
     nodeRef = None
-    
+
     def invoke(self, context, event):
         context.window_manager.modal_handler_add(self)
         self.execute(context)
         return {'RUNNING_MODAL'}
-    
+
     def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':           
+        if event.type == 'MOUSEMOVE':
             self.nodeRef.location = context.space_data.cursor_location
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
-    
+
     def execute(self, context):
         nodes = context.space_data.node_tree.nodes
         node = nodes.new("LNDynamicNode")
@@ -153,31 +153,31 @@ class ARMAddVarNode(bpy.types.Operator):
         global nodeRef
         self.nodeRef = node
         return({'FINISHED'})
-    
+
 class ARMAddSetVarNode(bpy.types.Operator):
     '''Add a node to set this Variable'''
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Set'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-    
-    ntype = bpy.props.StringProperty()
+
+    ntype: bpy.props.StringProperty()
     nodeRef = None
     setNodeRef = None
-    
+
     def invoke(self, context, event):
         context.window_manager.modal_handler_add(self)
         self.execute(context)
         return {'RUNNING_MODAL'}
-    
+
     def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':           
+        if event.type == 'MOUSEMOVE':
             self.setNodeRef.location = context.space_data.cursor_location
             self.nodeRef.location[0] = context.space_data.cursor_location[0]+10
             self.nodeRef.location[1] = context.space_data.cursor_location[1]-10
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
-    
+
     def execute(self, context):
         nodes = context.space_data.node_tree.nodes
         node = nodes.new("LNDynamicNode")
@@ -208,7 +208,7 @@ replacements = {}
 
 def add_replacement(item):
     replacements[item.from_node] = item
-    
+
 def get_replaced_nodes():
     return replacements.keys()
 
@@ -246,12 +246,12 @@ def replace(tree, node):
     # map properties
     for prop in replacement.property_mapping.keys():
         setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
-    
+
     # map unconnected inputs
     for in_socket in replacement.in_socket_mapping.keys():
         if not node.inputs[in_socket].is_linked:
             newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
-    
+
     # map connected inputs
     for link in tree.links:
         if link.from_node == node:
