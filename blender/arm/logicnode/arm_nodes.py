@@ -20,7 +20,7 @@ class ArmLogicTreeNode:
 
 
 class ArmNodeAddInputButton(bpy.types.Operator):
-    '''Add new input'''
+    """Add new input"""
     bl_idname = 'arm.node_add_input'
     bl_label = 'Add Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -35,7 +35,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddInputValueButton(bpy.types.Operator):
-    '''Add new input'''
+    """Add new input"""
     bl_idname = 'arm.node_add_input_value'
     bl_label = 'Add Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -48,7 +48,7 @@ class ArmNodeAddInputValueButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputButton(bpy.types.Operator):
-    '''Remove last input'''
+    """Remove last input"""
     bl_idname = 'arm.node_remove_input'
     bl_label = 'Remove Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -63,7 +63,7 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputValueButton(bpy.types.Operator):
-    '''Remove last input'''
+    """Remove last input"""
     bl_idname = 'arm.node_remove_input_value'
     bl_label = 'Remove Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -78,7 +78,7 @@ class ArmNodeRemoveInputValueButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddOutputButton(bpy.types.Operator):
-    '''Add new output'''
+    """Add new output"""
     bl_idname = 'arm.node_add_output'
     bl_label = 'Add Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -93,7 +93,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveOutputButton(bpy.types.Operator):
-    '''Remove last output'''
+    """Remove last output"""
     bl_idname = 'arm.node_remove_output'
     bl_label = 'Remove Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -108,7 +108,7 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddInputOutputButton(bpy.types.Operator):
-    '''Add new input and output'''
+    """Add new input and output"""
     bl_idname = 'arm.node_add_input_output'
     bl_label = 'Add Input Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -128,7 +128,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
-    '''Remove last input and output'''
+    """Remove last input and output"""
     bl_idname = 'arm.node_remove_input_output'
     bl_label = 'Remove Input Output'
     node_index: StringProperty(name='Node Index', default='')
