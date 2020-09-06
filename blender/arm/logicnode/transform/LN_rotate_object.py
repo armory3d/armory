@@ -4,8 +4,10 @@ class RotateObjectNode(ArmLogicTreeNode):
     """Rotate object node"""
     bl_idname = 'LNRotateObjectNode'
     bl_label = 'Rotate Object'
+    arm_version = 1
 
     def init(self, context):
+        super().init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Euler Angles')

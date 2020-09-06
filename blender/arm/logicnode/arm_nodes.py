@@ -1,6 +1,6 @@
 import itertools
 from collections import OrderedDict
-from typing import Any, Generator, List, Optional, Type
+from typing import Any, Generator, List, Optional, Type, Dict
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -19,9 +19,40 @@ array_nodes = dict()
 
 
 class ArmLogicTreeNode(bpy.types.Node):
+    def init(self, context):
+        # make sure a given node knows the version of the NodeClass from when it was created
+        if isinstance(type(self).arm_version, int):
+            self.arm_version = type(self).arm_version
+        else:
+            self.arm_version = 1
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        # needs to be overridden by individual node classes with arm_version>1
+        """(only called if the node's version is inferior to the node class's version)
+        Help with the node replacement process, by explaining how a node (`self`) should be replaced.
+        This method can either return a NodeReplacement object (see `nodes_logic.py`), or a brand new node.
+
+        If a new node is returned, then the following needs to be already set:
+        - the node's links to the other nodes
+        - the node's properties
+        - the node inputs's default values
+
+        If more than one node need to be created (for example, if an input needs a type conversion after update),
+        please return all the nodes in a list.
+
+        please raise a LookupError specifically when the node's version isn't handled by the function.
+
+        note that the lowest 'defined' version should be 1. if the node's version is 0, it means that it has been saved before versioning was a thing.
+        NODES OF VERSION 1 AND VERSION 0 SHOULD HAVE THE SAME CONTENTS
+        """
+        if self.arm_version==0 and type(self).arm_version == 1:
+            return NodeReplacement.Identity(self)  # in case someone doesn't implement this function, but the node has version 0.
+        else:
+            raise LookupError(f"the current node class, {repr(type(self)):s}, does not implement the getReplacementNode method, even though it has updated")
 
     def add_input(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
         """Adds a new input socket to the node.
@@ -57,6 +88,82 @@ class ArmLogicTreeNode(bpy.types.Node):
 
         return socket
 
+
+class NodeReplacement:
+    """
+    Represents a simple replacement rule, this can replace nodes of one type to nodes of a second type.
+    However, it is fairly limited. For instance, it assumes there are no changes in the type of the inputs or outputs
+    Second, it also assumes that node properties (especially EnumProperties) keep the same possible values.
+
+    - from_node, from_node_version: the type of node to be removed, and its version number
+    - to_node, to_node_version: the type of node which takes from_node's place, and its version number
+    - *_socket_mapping: a map which defines how the sockets of the old node shall be connected to the new node
+      {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
+    - property_mapping: the mapping used to transfer the values of the old node's properties to the new node's properties.
+      {"property0": "property1"} mean that the value of the new node's property1 should be the old node's property0's value.
+    - input_defaults: a mapping used to give default values to the inputs which aren't overridden otherwise.
+    - property_defaults: a mapping used to define the value of the new node's properties, when they aren't overridden otherwise.
+    """
+
+    def __init__(self, from_node: str, from_node_version: int, to_node: str, to_node_version: int,
+                 in_socket_mapping: Dict[int, int], out_socket_mapping: Dict[int, int], property_mapping: Dict[str, str] = {},
+                 input_defaults: Dict[int, any] = {}, property_defaults: Dict[str, any]={}):
+        self.from_node = from_node
+        self.to_node = to_node
+        self.from_node_version = from_node_version
+        self.to_node_version = to_node_version
+
+        self.in_socket_mapping = in_socket_mapping
+        self.out_socket_mapping = out_socket_mapping
+        self.property_mapping = property_mapping
+
+        self.input_defaults = input_defaults
+        self.property_defaults = property_defaults
+
+    @classmethod
+    def Identity(cls, node: ArmLogicTreeNode):
+        """returns a NodeReplacement that does nothing, while operating on a given node.
+        WARNING: it assumes that all node properties are called "property0", "property1", etc...
+        """
+        in_socks = {i:i for i in range(len(node.inputs))}
+        out_socks = {i:i for i in range(len(node.outputs))}
+        props = {}
+        i=0
+        while hasattr(node, f'property{i:d}'):
+            props[f'property{i:d}'] = f'property{i:d}'
+            i +=1
+        return NodeReplacement(
+            node.bl_idname, node.arm_version, node.bl_idname, type(node).arm_version,
+            in_socket_mapping=in_socks, out_socket_mapping=out_socks,
+            property_mapping=props
+        )
+
+    def chain_with(self, other):
+        """modify the current NodeReplacement by "adding" a second replacement after it"""
+        if self.to_node != other.from_node or self.to_node_version != other.from_node_version:
+            raise TypeError('the given NodeReplacement-s could not be chained')
+        self.to_node = other.to_node
+        self.to_node_version = other.to_node_version
+
+        for i1, i2 in self.in_socket_mapping.items():
+            i3 = other.in_socket_mapping[i2]
+            self.in_socket_mapping[i1] = i3
+        for i1, i2 in self.out_socket_mapping.items():
+            i3 = other.out_socket_mapping[i2]
+            self.out_socket_mapping[i1] = i3
+        for p1, p2 in self.property_mapping.items():
+            p3 = other.property_mapping[p2]
+            self.property_mapping[p1] = p3
+
+        old_input_defaults = self.input_defaults
+        self.input_defaults = other.input_defaults.copy()
+        for i, x in old_input_defaults.items():
+            self.input_defaults[ other.in_socket_mapping[i] ] = x
+
+        old_property_defaults = self.property_defaults
+        self.property_defaults = other.property_defaults.copy()
+        for p, x in old_property_defaults.items():
+            self.property_defaults[ other.property_mapping[p] ] = x
 
 class ArmNodeAddInputButton(bpy.types.Operator):
     """Add new input"""
@@ -317,7 +424,7 @@ def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', 
     return None
 
 
-def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default') -> None:
+def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default', is_obselete: bool = False) -> None:
     """
     Registers a node to the given category. If no section is given, the
     node is put into the default section that does always exist.
@@ -329,6 +436,11 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
 
     nodes.append(node_type)
     node_category = get_category(category)
+
+    if is_obselete:
+        # We need the obselete nodes to be registered in order to have them replaced,
+        # but do not add them to the menu.
+        return
 
     if node_category is None:
         node_category = add_category(category)
