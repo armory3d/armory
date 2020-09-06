@@ -100,14 +100,16 @@ def register_nodes():
 
 
 def unregister_nodes():
-    global registered_nodes
+    global registered_nodes, registered_categories
+
     for n in registered_nodes:
         bpy.utils.unregister_class(n)
     for c in registered_categories:
         bpy.utils.unregister_class(c)
+
     registered_nodes = []
     registered_categories = []
-    nodeitems_utils.unregister_node_categories('ArmLogicNodes')
+
 
 class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_label = 'Armory Logic Node'
