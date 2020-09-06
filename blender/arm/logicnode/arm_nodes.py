@@ -259,12 +259,18 @@ class ArmNodeCategory:
         self.description = description
         self.node_sections: ODict[str, List[NodeItem]] = OrderedDict({'default': []})
 
-    def register_node(self, node_class, node_section: str) -> None:
+    def register_node(self, node_type: Type[bpy.types.Node], node_section: str) -> None:
         """Registers a node to this category so that it will be
         displayed int the `Add node` menu."""
         self.add_node_section(node_section)
 
-        self.node_sections[node_section].append(NodeItem(node_class.bl_idname))
+        # Internal node types seem to have no bl_idname attribute
+        if issubclass(node_type, bpy.types.NodeInternal):
+            item = NodeItem(node_type.__name__)
+        else:
+            item = NodeItem(node_type.bl_idname)
+
+        self.node_sections[node_section].append(item)
 
     def get_all_nodes(self) -> Generator[NodeItem, None, None]:
         """Returns all nodes that are registered into this category."""
