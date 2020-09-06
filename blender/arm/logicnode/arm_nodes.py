@@ -337,21 +337,21 @@ def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', 
     return None
 
 
-def add_node(node_class, category: str, section: str = 'default') -> None:
+def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default') -> None:
     """
     Registers a node to the given category. If no section is given, the
     node is put into the default section that does always exist.
     """
     global nodes
 
-    nodes.append(node_class)
+    nodes.append(node_type)
     node_category = get_category(category)
 
     if node_category is None:
         node_category = add_category(category)
 
-    node_category.register_node(node_class, section)
-    node_class.bl_icon = node_category.icon
+    node_category.register_node(node_type, section)
+    node_type.bl_icon = node_category.icon
 
 bpy.utils.register_class(ArmActionSocket)
 bpy.utils.register_class(ArmArraySocket)
