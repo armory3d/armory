@@ -350,6 +350,9 @@ def register():
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
     bpy.utils.register_class(ARMAddSetVarNode)
+    ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
+    bpy.utils.register_class(ARM_MT_NodeAddOverride)
+
     register_nodes()
 
 def unregister():
@@ -361,3 +364,5 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_Variables)
     bpy.utils.unregister_class(ARMAddVarNode)
     bpy.utils.unregister_class(ARMAddSetVarNode)
+    bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+
