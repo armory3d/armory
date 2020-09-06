@@ -38,6 +38,10 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
         if context.space_data.tree_type == 'ArmLogicTreeType':
             layout = self.layout
 
+            # Invoke the search
+            layout.operator_context = "INVOKE_DEFAULT"
+            layout.operator('arm.node_search', icon="VIEWZOOM")
+
             for category_section in arm_nodes.category_items.values():
                 layout.separator()
 

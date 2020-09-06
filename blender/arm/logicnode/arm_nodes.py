@@ -250,6 +250,41 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
+class ArmNodeSearch(bpy.types.Operator):
+    bl_idname = "arm.node_search"
+    bl_label = "Search..."
+    bl_options = {"REGISTER"}
+    bl_property = "item"
+
+    def get_search_items(self, context):
+        items = []
+        for node in get_all_nodes():
+            items.append((node.nodetype, node.label, ""))
+        return items
+
+    item: EnumProperty(items=get_search_items)
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
+    @classmethod
+    def description(cls, context, properties):
+        if cls.poll(context):
+            return "Search for a logic node"
+        else:
+            return "Search for a logic node. This operator is not available" \
+                   " without an active node tree"
+
+    def invoke(self, context, event):
+        context.window_manager.invoke_search_popup(self)
+        return {"CANCELLED"}
+
+    def execute(self, context):
+        """Called when a node is added."""
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.item, use_transform=True)
+        return {"FINISHED"}
+
 
 class ArmNodeCategory:
     """Represents a category (=directory) of logic nodes."""
@@ -359,7 +394,9 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     node_category.register_node(node_type, section)
     node_type.bl_icon = node_category.icon
 
+
 bpy.utils.register_class(ArmActionSocket)
+bpy.utils.register_class(ArmNodeSearch)
 bpy.utils.register_class(ArmArraySocket)
 bpy.utils.register_class(ArmObjectSocket)
 bpy.utils.register_class(ArmNodeEyedropButton)
