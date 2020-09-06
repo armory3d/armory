@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import itertools
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
