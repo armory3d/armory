@@ -8,6 +8,7 @@ import nodeitems_utils
 from arm.logicnode import *
 from arm.logicnode import arm_nodes
 from arm.logicnode.arm_nodes import ArmNodeCategory
+from arm.logicnode import arm_sockets
 
 registered_nodes = []
 registered_categories = []
@@ -343,6 +344,8 @@ class ReplaceNodesOperator(bpy.types.Operator):
 # add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
+    arm_sockets.register()
+
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
@@ -355,9 +358,11 @@ def register():
 
     register_nodes()
 
+
 def unregister():
-    bpy.utils.unregister_class(ReplaceNodesOperator)
     unregister_nodes()
+
+    bpy.utils.unregister_class(ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
@@ -366,3 +371,4 @@ def unregister():
     bpy.utils.unregister_class(ARMAddSetVarNode)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
 
+    arm_sockets.unregister()

@@ -7,120 +7,17 @@ import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
 
-import arm.utils
-
 nodes = []
 category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
-object_sockets = dict()
 array_nodes = dict()
+
 
 class ArmLogicTreeNode:
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
 
-class ArmActionSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketAction'
-    bl_label = 'Action Socket'
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=self.name)
-
-    def draw_color(self, context, node):
-        return (0.8, 0.3, 0.3, 1)
-
-class ArmCustomSocket(bpy.types.NodeSocket):
-    """
-    A custom socket that can be used to define more socket types for
-    logic node packs. Do not use this type directly (it is not
-    registered)!
-    """
-    bl_idname = 'ArmCustomSocket'
-    bl_label = 'Custom Socket'
-
-    def get_default_value(self):
-        """Override this for values of unconnected input sockets."""
-        return None
-
-class ArmArraySocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketArray'
-    bl_label = 'Array Socket'
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=self.name)
-
-    def draw_color(self, context, node):
-        return (0.8, 0.4, 0.0, 1)
-
-class ArmObjectSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketObject'
-    bl_label = 'Object Socket'
-    default_value_get: PointerProperty(name='Object', type=bpy.types.Object)
-
-    def get_default_value(self):
-        if self.default_value_get == None:
-            return ''
-        if self.default_value_get.name not in bpy.data.objects:
-            return self.default_value_get.name
-        return arm.utils.asset_name(bpy.data.objects[self.default_value_get.name])
-
-    def __init__(self):
-        global object_sockets
-        # Buckle up..
-        # Match id strings to socket dict to retrieve socket in eyedropper operator
-        object_sockets[str(id(self))] = self
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            row = layout.row(align=True)
-            row.prop_search(self, 'default_value_get', bpy.context.scene, 'objects', icon='NONE', text=self.name)
-            op = row.operator('arm.node_eyedrop', text='', icon='EYEDROPPER', emboss=True)
-            op.socket_index = str(id(self))
-
-    def draw_color(self, context, node):
-        return (0.15, 0.55, 0.75, 1)
-
-class ArmNodeEyedropButton(bpy.types.Operator):
-    '''Pick selected object'''
-    bl_idname = 'arm.node_eyedrop'
-    bl_label = 'Eyedrop'
-    socket_index: StringProperty(name='Socket Index', default='')
-
-    def execute(self, context):
-        global object_sockets
-        obj = bpy.context.active_object
-        if obj != None:
-            object_sockets[self.socket_index].default_value_get = obj
-        return{'FINISHED'}
-
-class ArmAnimActionSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketAnimAction'
-    bl_label = 'Action Socket'
-    default_value_get: PointerProperty(name='Action', type=bpy.types.Action)
-
-    def get_default_value(self):
-        if self.default_value_get == None:
-            return ''
-        if self.default_value_get.name not in bpy.data.actions:
-            return self.default_value_get.name
-        name = arm.utils.asset_name(bpy.data.actions[self.default_value_get.name])
-        return arm.utils.safestr(name)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            layout.prop_search(self, 'default_value_get', bpy.data, 'actions', icon='NONE', text='')
-
-    def draw_color(self, context, node):
-        return (0.8, 0.8, 0.8, 1)
 
 class ArmNodeAddInputButton(bpy.types.Operator):
     '''Add new input'''
@@ -395,12 +292,7 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     node_type.bl_icon = node_category.icon
 
 
-bpy.utils.register_class(ArmActionSocket)
 bpy.utils.register_class(ArmNodeSearch)
-bpy.utils.register_class(ArmArraySocket)
-bpy.utils.register_class(ArmObjectSocket)
-bpy.utils.register_class(ArmNodeEyedropButton)
-bpy.utils.register_class(ArmAnimActionSocket)
 bpy.utils.register_class(ArmNodeAddInputButton)
 bpy.utils.register_class(ArmNodeAddInputValueButton)
 bpy.utils.register_class(ArmNodeRemoveInputButton)
