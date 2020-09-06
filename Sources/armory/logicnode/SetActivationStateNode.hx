@@ -22,11 +22,10 @@ class SetActivationStateNode extends LogicNode {
 		if (object == null) return;
 
 		var state: Int = inputs[2].get();
-		if (state < 0 || state > 5) return;
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		if (rigidBody != null) rigidBody.setActivationState(state);
+		if (rigidBody != null && state > 0 && state < 5) rigidBody.setActivationState(state);
 		#end
 
 		runOutput(0);
