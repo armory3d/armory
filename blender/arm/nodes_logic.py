@@ -1,12 +1,17 @@
-import bpy
-from bpy.types import NodeTree
-from bpy.props import *
-import nodeitems_utils
-from nodeitems_utils import NodeCategory, NodeItem
-from arm.logicnode import *
+from typing import Callable
 import webbrowser
 
+import bpy
+from bpy.types import NodeTree
+import nodeitems_utils
+
+from arm.logicnode import *
+from arm.logicnode import arm_nodes
+from arm.logicnode.arm_nodes import ArmNodeCategory
+
 registered_nodes = []
+registered_categories = []
+
 
 class ArmLogicTree(NodeTree):
     """Logic nodes"""
@@ -14,10 +19,50 @@ class ArmLogicTree(NodeTree):
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
 
-class LogicNodeCategory(NodeCategory):
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'ArmLogicTreeType'
+
+class ARM_MT_NodeAddOverride(bpy.types.Menu):
+    """
+    Overrides the `Add node` menu. If called from the logic node
+    editor, the custom menu is drawn, otherwise the default one is drawn.
+
+    Todo: Find a better solution to custom menus, this will conflict
+    with other add-ons overriding this menu.
+    """
+    bl_idname = "NODE_MT_add"
+    bl_label = "Add"
+    bl_translation_context = bpy.app.translations.contexts.operator_default
+
+    overridden_draw: Callable = None
+
+    def draw(self, context):
+        if context.space_data.tree_type == 'ArmLogicTreeType':
+            layout = self.layout
+
+            for category_section in arm_nodes.category_items.values():
+                layout.separator()
+
+                for category in category_section:
+                    layout.menu(f'ARM_MT_{category.name.lower()}_menu', text=category.name, icon=category.icon)
+
+        else:
+            ARM_MT_NodeAddOverride.overridden_draw(self, context)
+
+
+def get_category_draw_func(category: ArmNodeCategory):
+    def draw_category_menu(self, context):
+        layout = self.layout
+
+        for index, node_section in enumerate(category.node_sections.values()):
+            if index != 0:
+                layout.separator()
+
+            for node_item in node_section:
+                op = layout.operator("node.add_node", text=node_item.label)
+                op.type = node_item.nodetype
+                op.use_transform = True
+
+    return draw_category_menu
+
 
 def register_nodes():
     global registered_nodes
@@ -30,39 +75,33 @@ def register_nodes():
         registered_nodes.append(n)
         bpy.utils.register_class(n)
 
-    node_categories = []
+    # Also add Blender's layout nodes
+    arm_nodes.add_node(bpy.types.NodeReroute, 'Layout')
+    arm_nodes.add_node(bpy.types.NodeFrame, 'Layout')
 
-    for category in sorted(arm_nodes.category_items):
-        if category == 'Layout':
-            # Handled separately
-            continue
+    # Generate and register category menus
+    for category_section in arm_nodes.category_items.values():
+        for category in category_section:
+            menu_class = type(f'ARM_MT_{category.name}Menu', (bpy.types.Menu, ), {
+                'bl_space_type': 'NODE_EDITOR',
+                'bl_idname': f'ARM_MT_{category.name.lower()}_menu',
+                'bl_label': category.name,
+                'bl_description': category.description,
+                'draw': get_category_draw_func(category)
+            })
+            registered_categories.append(menu_class)
 
-        sorted_items = sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
-        node_categories.append(
-            LogicNodeCategory('Logic' + category + 'Nodes', category, items=sorted_items)
-        )
+            bpy.utils.register_class(menu_class)
 
-    # Add special layout nodes known from Blender's node editors
-    if 'Layout' in arm_nodes.category_items:
-        # Clone with [:] to prevent double entries
-        layout_items = arm_nodes.category_items['Layout'][:]
-    else:
-        layout_items = []
-
-    layout_items += [NodeItem('NodeReroute'), NodeItem('NodeFrame')]
-    layout_items = sorted(layout_items, key=lambda item: item.nodetype)
-
-    node_categories.append(
-        LogicNodeCategory('LogicLayoutNodes', 'Layout', description='Layout Nodes', items=layout_items)
-    )
-
-    nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
 
 def unregister_nodes():
     global registered_nodes
     for n in registered_nodes:
         bpy.utils.unregister_class(n)
+    for c in registered_categories:
+        bpy.utils.unregister_class(c)
     registered_nodes = []
+    registered_categories = []
     nodeitems_utils.unregister_node_categories('ArmLogicNodes')
 
 class ARM_PT_LogicNodePanel(bpy.types.Panel):
