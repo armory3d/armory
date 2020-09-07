@@ -21,9 +21,6 @@ class SetVelocityNode extends LogicNode {
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
-
-		if (rb == null) return;
-
 		rb.activate();
 		rb.setLinearVelocity(linear.x, linear.y, linear.z);
 		rb.setLinearFactor(linearFactor.x, linearFactor.y, linearFactor.z);
