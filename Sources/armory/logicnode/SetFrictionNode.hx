@@ -17,7 +17,7 @@ class SetFrictionNode extends LogicNode {
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		if (rigidBody != null) rigidBody.setFriction(friction);
+		rigidBody.setFriction(friction);
 		#end
 
 		runOutput(0);
