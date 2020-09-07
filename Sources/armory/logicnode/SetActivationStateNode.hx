@@ -23,8 +23,6 @@ class SetActivationStateNode extends LogicNode {
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		
-		if (rigidBody == null) return;
 
 		switch (property0) {
 		case "Inactive":
