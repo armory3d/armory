@@ -87,6 +87,7 @@ def register_nodes():
     # Generate and register category menus
     for category_section in arm_nodes.category_items.values():
         for category in category_section:
+            category.sort_nodes()
             menu_class = type(f'ARM_MT_{category.name}Menu', (bpy.types.Menu, ), {
                 'bl_space_type': 'NODE_EDITOR',
                 'bl_idname': f'ARM_MT_{category.name.lower()}_menu',

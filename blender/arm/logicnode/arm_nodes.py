@@ -218,6 +218,10 @@ class ArmNodeCategory:
         if name not in self.node_sections:
             self.node_sections[name] = []
 
+    def sort_nodes(self):
+        for node_section in self.node_sections:
+            self.node_sections[node_section] = sorted(self.node_sections[node_section], key=lambda item: item.label)
+
 
 def category_exists(name: str) -> bool:
     for category_section in category_items:
