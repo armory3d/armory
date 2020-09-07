@@ -239,7 +239,6 @@ def get_all_categories() -> Generator[ArmNodeCategory, None, None]:
 
 def get_all_nodes() -> Generator[NodeItem, None, None]:
     for category in get_all_categories():
-        # print(category.get_all_nodes().__next__())
         yield from itertools.chain(category.get_all_nodes())
 
 
