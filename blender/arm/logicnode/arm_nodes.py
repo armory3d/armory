@@ -194,7 +194,7 @@ class ArmNodeCategory:
         self.name = name
         self.icon = icon
         self.description = description
-        self.node_sections: ODict[str, List[NodeItem]] = OrderedDict({'default': []})
+        self.node_sections: ODict[str, List[NodeItem]] = OrderedDict()
 
     def register_node(self, node_type: Type[bpy.types.Node], node_section: str) -> None:
         """Registers a node to this category so that it will be
