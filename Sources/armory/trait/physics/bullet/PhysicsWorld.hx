@@ -150,6 +150,11 @@ class PhysicsWorld extends Trait {
 		world.setGravity(vec1);
 	}
 
+	public function getGravity(): Vec4{
+		var g = world.getGravity();
+		return (new Vec4(g.x(), g.y(), g.z()));
+	}
+
 	public function addRigidBody(body: RigidBody) {
 		#if js
 		world.addRigidBodyToGroup(body.body, body.group, body.mask);
