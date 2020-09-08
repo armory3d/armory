@@ -1,5 +1,5 @@
-from collections import OrderedDict
 import itertools
+from collections import OrderedDict
 from typing import Any, Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 

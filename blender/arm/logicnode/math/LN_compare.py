@@ -1,6 +1,3 @@
-import bpy
-from bpy.props import *
-from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 def remove_extra_inputs(self, context):

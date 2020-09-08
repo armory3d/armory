@@ -1,8 +1,8 @@
 import bpy
-from bpy.props import *
-from bpy.types import Node, NodeSocket
-from arm.logicnode.arm_nodes import *
+
 import arm.utils
+from arm.logicnode.arm_nodes import *
+
 
 class MaterialNode(ArmLogicTreeNode):
     """Material node"""

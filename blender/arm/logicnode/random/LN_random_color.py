@@ -1,4 +1,3 @@
-from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
