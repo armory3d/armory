@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class NoneNode(Node, ArmLogicTreeNode):
+class NoneNode(ArmLogicTreeNode):
     '''None node'''
     bl_idname = 'LNNoneNode'
     bl_label = 'None'

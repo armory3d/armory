@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class VectorClampToSizeNode(Node, ArmLogicTreeNode):
+class VectorClampToSizeNode(ArmLogicTreeNode):
     '''Vector clamp to size node'''
     bl_idname = 'LNVectorClampToSizeNode'
     bl_label = 'Vector Clamp To Size'

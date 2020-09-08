@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class StringArrayNode(Node, ArmLogicTreeNode):
+class StringArrayNode(ArmLogicTreeNode):
     '''String array node'''
     bl_idname = 'LNArrayStringNode'
     bl_label = 'Array String'

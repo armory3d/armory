@@ -8,7 +8,7 @@ def remove_extra_inputs(self, context):
         while len(self.inputs) > self.min_inputs:
             self.inputs.remove(self.inputs[-1])
 
-class CompareNode(Node, ArmLogicTreeNode):
+class CompareNode(ArmLogicTreeNode):
     '''Compare node'''
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'

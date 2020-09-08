@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class RemoveTraitNode(Node, ArmLogicTreeNode):
+class RemoveTraitNode(ArmLogicTreeNode):
     '''Remove trait node'''
     bl_idname = 'LNRemoveTraitNode'
     bl_label = 'Remove Trait'

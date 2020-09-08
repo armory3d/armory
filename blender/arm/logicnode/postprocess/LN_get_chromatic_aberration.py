@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ChromaticAberrationGetNode(Node, ArmLogicTreeNode):
+class ChromaticAberrationGetNode(ArmLogicTreeNode):
     '''Get Chromatic Aberration Effect'''
     bl_idname = 'LNChromaticAberrationGetNode'
     bl_label = 'Get ChromaticAberration'

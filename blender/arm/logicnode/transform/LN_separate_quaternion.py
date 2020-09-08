@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 
-class SeparateQuaternionNode(Node, ArmLogicTreeNode):
+class SeparateQuaternionNode(ArmLogicTreeNode):
 
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"

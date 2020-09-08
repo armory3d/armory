@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasSetVisibleNode(Node, ArmLogicTreeNode):
+class CanvasSetVisibleNode(ArmLogicTreeNode):
     '''Canvas Set Visible node'''
     bl_idname = 'LNCanvasSetVisibleNode'
     bl_label = 'Canvas Set Visible'

@@ -3,7 +3,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class IsFalseNode(Node, ArmLogicTreeNode):
+class IsFalseNode(ArmLogicTreeNode):
     """Is False node"""
     bl_idname = 'LNIsFalseNode'
     bl_label = 'Is False'

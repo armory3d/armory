@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CameraGetNode(Node, ArmLogicTreeNode):
+class CameraGetNode(ArmLogicTreeNode):
     """Get postprocessing effects of the camera."""
     bl_idname = 'LNCameraGetNode'
     bl_label = 'Get Camera Postprocessing'

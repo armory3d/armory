@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetMaterialRgbParamNode(Node, ArmLogicTreeNode):
+class SetMaterialRgbParamNode(ArmLogicTreeNode):
     '''Set material rgb param node'''
     bl_idname = 'LNSetMaterialRgbParamNode'
     bl_label = 'Set Material RGB Param'

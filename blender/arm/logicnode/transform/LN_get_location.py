@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetLocationNode(Node, ArmLogicTreeNode):
+class GetLocationNode(ArmLogicTreeNode):
     '''Get location node'''
     bl_idname = 'LNGetLocationNode'
     bl_label = 'Get Location'

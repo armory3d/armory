@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ActiveCameraNode(Node, ArmLogicTreeNode):
+class ActiveCameraNode(ArmLogicTreeNode):
     """Get the active camera of the active scene."""
     bl_idname = 'LNActiveCameraNode'
     bl_label = 'Get Active Camera'

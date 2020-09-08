@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class OnUpdateNode(Node, ArmLogicTreeNode):
+class OnUpdateNode(ArmLogicTreeNode):
     '''On update node'''
     bl_idname = 'LNOnUpdateNode'
     bl_label = 'On Update'

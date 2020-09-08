@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ToBoolNode(Node, ArmLogicTreeNode):
+class ToBoolNode(ArmLogicTreeNode):
     '''To Bool Node'''
     bl_idname = 'LNToBoolNode'
     bl_label = 'To Bool'

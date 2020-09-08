@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class RpShadowQualityNode(Node, ArmLogicTreeNode):
+class RpShadowQualityNode(ArmLogicTreeNode):
     '''Configure shadow quality node'''
     bl_idname = 'LNRpShadowQualityNode'
     bl_label = 'Rp Shadow Quality'

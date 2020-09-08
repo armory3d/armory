@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetFirstContactNode(Node, ArmLogicTreeNode):
+class GetFirstContactNode(ArmLogicTreeNode):
     '''Get first contact node'''
     bl_idname = 'LNGetFirstContactNode'
     bl_label = 'Get First Contact'

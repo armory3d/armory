@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class IsTrueNode(Node, ArmLogicTreeNode):
+class IsTrueNode(ArmLogicTreeNode):
     '''Is true node'''
     bl_idname = 'LNIsTrueNode'
     bl_label = 'Is True'

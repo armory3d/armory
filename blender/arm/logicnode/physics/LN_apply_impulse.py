@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ApplyImpulseNode(Node, ArmLogicTreeNode):
+class ApplyImpulseNode(ArmLogicTreeNode):
     '''Apply impulse node'''
     bl_idname = 'LNApplyImpulseNode'
     bl_label = 'Apply Impulse'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasGetInputTextNode(Node, ArmLogicTreeNode):
+class CanvasGetInputTextNode(ArmLogicTreeNode):
     '''Get canvas input text'''
     bl_idname = 'LNCanvasGetInputTextNode'
     bl_label = 'Canvas Get Input Text'

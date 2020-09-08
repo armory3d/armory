@@ -4,7 +4,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class FunctionNode(Node, ArmLogicTreeNode):
+class FunctionNode(ArmLogicTreeNode):
     """Function node"""
     bl_idname = 'LNFunctionNode'
     bl_label = 'Function'

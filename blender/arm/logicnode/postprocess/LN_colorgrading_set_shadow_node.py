@@ -24,7 +24,7 @@ def set_data(self, context):
         data = myfile.read().replace('\n', '').replace('"','')
         self.property1 = data
 
-class ColorgradingSetShadowNode(Node, ArmLogicTreeNode):
+class ColorgradingSetShadowNode(ArmLogicTreeNode):
     '''Colorgrading Set Shadow node'''
     bl_idname = 'LNColorgradingSetShadowNode'
     bl_label = 'Colorgrading Set Shadow'

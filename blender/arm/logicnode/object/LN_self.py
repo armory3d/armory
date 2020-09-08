@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SelfNode(Node, ArmLogicTreeNode):
+class SelfNode(ArmLogicTreeNode):
     '''Self node'''
     bl_idname = 'LNSelfNode'
     bl_label = 'Self'

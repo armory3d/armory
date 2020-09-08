@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
-class OnCanvasElementNode(Node, ArmLogicTreeNode):
+class OnCanvasElementNode(ArmLogicTreeNode):
     """On canvas element node"""
     bl_idname = 'LNOnCanvasElementNode'
     bl_label = 'On Canvas Element'

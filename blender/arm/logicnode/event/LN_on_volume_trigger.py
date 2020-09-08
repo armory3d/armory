@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class OnVolumeTriggerNode(Node, ArmLogicTreeNode):
+class OnVolumeTriggerNode(ArmLogicTreeNode):
     '''On volume trigger node'''
     bl_idname = 'LNOnVolumeTriggerNode'
     bl_label = 'On Volume Trigger'

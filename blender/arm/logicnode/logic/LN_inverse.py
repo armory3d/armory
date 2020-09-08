@@ -3,7 +3,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class InverseNode(Node, ArmLogicTreeNode):
+class InverseNode(ArmLogicTreeNode):
     """Inverse node"""
     bl_idname = 'LNInverseNode'
     bl_label = 'Inverse'

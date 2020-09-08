@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SSRSetNode(Node, ArmLogicTreeNode):
+class SSRSetNode(ArmLogicTreeNode):
     '''Set SSR Effect'''
     bl_idname = 'LNSSRSetNode'
     bl_label = 'Set SSR'

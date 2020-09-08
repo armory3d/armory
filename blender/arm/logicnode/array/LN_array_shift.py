@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArrayShiftNode(Node, ArmLogicTreeNode):
+class ArrayShiftNode(ArmLogicTreeNode):
     '''Array shift node'''
     bl_idname = 'LNArrayShiftNode'
     bl_label = 'Array Shift'

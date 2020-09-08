@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class WhileNode(Node, ArmLogicTreeNode):
+class WhileNode(ArmLogicTreeNode):
     '''While node'''
     bl_idname = 'LNWhileNode'
     bl_label = 'While'

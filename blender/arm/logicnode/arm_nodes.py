@@ -18,7 +18,7 @@ category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 array_nodes = dict()
 
 
-class ArmLogicTreeNode:
+class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'

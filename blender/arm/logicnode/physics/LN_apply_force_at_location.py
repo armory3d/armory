@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ApplyForceAtLocationNode(Node, ArmLogicTreeNode):
+class ApplyForceAtLocationNode(ArmLogicTreeNode):
     '''Apply force at location node'''
     bl_idname = 'LNApplyForceAtLocationNode'
     bl_label = 'Apply Force At Location'

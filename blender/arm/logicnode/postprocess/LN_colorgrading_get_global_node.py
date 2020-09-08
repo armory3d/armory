@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ColorgradingGetGlobalNode(Node, ArmLogicTreeNode):
+class ColorgradingGetGlobalNode(ArmLogicTreeNode):
     '''Colorgrading Get Global node'''
     bl_idname = 'LNColorgradingGetGlobalNode'
     bl_label = 'Colorgrading Get Global'

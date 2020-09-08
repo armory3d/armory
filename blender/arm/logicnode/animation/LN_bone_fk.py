@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class BoneFKNode(Node, ArmLogicTreeNode):
+class BoneFKNode(ArmLogicTreeNode):
     '''Bone Forward Kinematics node'''
     bl_idname = 'LNBoneFKNode'
     bl_label = 'Bone FK'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetActionSpeedNode(Node, ArmLogicTreeNode):
+class SetActionSpeedNode(ArmLogicTreeNode):
     '''Set action speed node'''
     bl_idname = 'LNSetActionSpeedNode'
     bl_label = 'Set Action Speed'

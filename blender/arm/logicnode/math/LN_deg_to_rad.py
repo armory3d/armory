@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class DegToRadNode(Node, ArmLogicTreeNode):
+class DegToRadNode(ArmLogicTreeNode):
     '''Degrees to radians node'''
     bl_idname = 'LNDegToRadNode'
     bl_label = 'Deg to Rad'

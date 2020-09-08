@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class MouseCoordsNode(Node, ArmLogicTreeNode):
+class MouseCoordsNode(ArmLogicTreeNode):
     '''Mouse coords node'''
     bl_idname = 'LNMouseCoordsNode'
     bl_label = 'Mouse Coords'

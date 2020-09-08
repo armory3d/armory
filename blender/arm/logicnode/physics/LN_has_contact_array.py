@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class HasContactArrayNode(Node, ArmLogicTreeNode):
+class HasContactArrayNode(ArmLogicTreeNode):
     '''Has contact array node'''
     bl_idname = 'LNHasContactArrayNode'
     bl_label = 'Has Contact Array'

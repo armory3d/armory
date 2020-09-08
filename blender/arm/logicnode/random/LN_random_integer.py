@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class RandomIntegerNode(Node, ArmLogicTreeNode):
+class RandomIntegerNode(ArmLogicTreeNode):
     """Random integer node"""
     bl_idname = 'LNRandomIntegerNode'
     bl_label = 'Random Integer'

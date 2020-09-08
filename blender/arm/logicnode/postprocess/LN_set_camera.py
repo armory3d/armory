@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CameraSetNode(Node, ArmLogicTreeNode):
+class CameraSetNode(ArmLogicTreeNode):
     """Set postprocessing effects of the camera."""
     bl_idname = 'LNCameraSetNode'
     bl_label = 'Set Camera Postprocessing'

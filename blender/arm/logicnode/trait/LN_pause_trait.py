@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class PauseTraitNode(Node, ArmLogicTreeNode):
+class PauseTraitNode(ArmLogicTreeNode):
     '''Pause trait node'''
     bl_idname = 'LNPauseTraitNode'
     bl_label = 'Pause Trait'

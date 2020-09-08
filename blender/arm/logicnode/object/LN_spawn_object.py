@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SpawnObjectNode(Node, ArmLogicTreeNode):
+class SpawnObjectNode(ArmLogicTreeNode):
     '''Spawn object node'''
     bl_idname = 'LNSpawnObjectNode'
     bl_label = 'Spawn Object'

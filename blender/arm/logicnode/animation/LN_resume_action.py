@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ResumeActionNode(Node, ArmLogicTreeNode):
+class ResumeActionNode(ArmLogicTreeNode):
     '''Resume action node'''
     bl_idname = 'LNResumeActionNode'
     bl_label = 'Resume Action'

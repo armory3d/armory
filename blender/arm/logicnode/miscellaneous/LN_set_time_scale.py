@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetTimeScaleNode(Node, ArmLogicTreeNode):
+class SetTimeScaleNode(ArmLogicTreeNode):
     '''Set time scale node'''
     bl_idname = 'LNSetTimeScaleNode'
     bl_label = 'Set Time Scale'

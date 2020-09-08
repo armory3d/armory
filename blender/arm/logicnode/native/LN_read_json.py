@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ReadJsonNode(Node, ArmLogicTreeNode):
+class ReadJsonNode(ArmLogicTreeNode):
     '''Read JSON node'''
     bl_idname = 'LNReadJsonNode'
     bl_label = 'Read JSON'

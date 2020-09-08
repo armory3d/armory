@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class BloomGetNode(Node, ArmLogicTreeNode):
+class BloomGetNode(ArmLogicTreeNode):
     '''Get Bloom Effect'''
     bl_idname = 'LNBloomGetNode'
     bl_label = 'Get Bloom'

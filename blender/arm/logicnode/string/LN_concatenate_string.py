@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ConcatenateStringNode(Node, ArmLogicTreeNode):
+class ConcatenateStringNode(ArmLogicTreeNode):
     '''Concatenate string node'''
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'

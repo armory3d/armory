@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ApplyTorqueNode(Node, ArmLogicTreeNode):
+class ApplyTorqueNode(ArmLogicTreeNode):
     '''Apply torque node'''
     bl_idname = 'LNApplyTorqueNode'
     bl_label = 'Apply Torque'

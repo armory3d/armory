@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class LenstextureSetNode(Node, ArmLogicTreeNode):
+class LenstextureSetNode(ArmLogicTreeNode):
     '''Set Lenstexture Effect'''
     bl_idname = 'LNLenstextureSetNode'
     bl_label = 'Set Lenstexture'

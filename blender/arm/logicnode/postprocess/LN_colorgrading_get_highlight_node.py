@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ColorgradingGetHighlightNode(Node, ArmLogicTreeNode):
+class ColorgradingGetHighlightNode(ArmLogicTreeNode):
     '''Colorgrading Get Highlight node'''
     bl_idname = 'LNColorgradingGetHighlightNode'
     bl_label = 'Colorgrading Get Highlight'

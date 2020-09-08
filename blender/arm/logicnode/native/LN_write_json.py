@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class WriteJsonNode(Node, ArmLogicTreeNode):
+class WriteJsonNode(ArmLogicTreeNode):
     '''Write JSON node'''
     bl_idname = 'LNWriteJsonNode'
     bl_label = 'Write JSON'

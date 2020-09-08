@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class RandomColorNode(Node, ArmLogicTreeNode):
+class RandomColorNode(ArmLogicTreeNode):
     """Random color node"""
     bl_idname = 'LNRandomColorNode'
     bl_label = 'Random Color'

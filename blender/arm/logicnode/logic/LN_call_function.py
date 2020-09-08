@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CallFunctionNode(Node, ArmLogicTreeNode):
+class CallFunctionNode(ArmLogicTreeNode):
     '''Call Haxe function node'''
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'

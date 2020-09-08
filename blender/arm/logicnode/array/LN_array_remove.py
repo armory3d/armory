@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArrayRemoveNode(Node, ArmLogicTreeNode):
+class ArrayRemoveNode(ArmLogicTreeNode):
     '''Array remove node'''
     bl_idname = 'LNArrayRemoveNode'
     bl_label = 'Array Remove'

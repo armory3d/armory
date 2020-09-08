@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SendGlobalEventNode(Node, ArmLogicTreeNode):
+class SendGlobalEventNode(ArmLogicTreeNode):
     '''Send global event node'''
     bl_idname = 'LNSendGlobalEventNode'
     bl_label = 'Send Global Event'

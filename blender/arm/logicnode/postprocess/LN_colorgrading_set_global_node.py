@@ -24,7 +24,7 @@ def set_data(self, context):
         data = myfile.read().replace('\n', '').replace('"','')
         self.property1 = data
 
-class ColorgradingSetGlobalNode(Node, ArmLogicTreeNode):
+class ColorgradingSetGlobalNode(ArmLogicTreeNode):
     '''Colorgrading Set Global node'''
     bl_idname = 'LNColorgradingSetGlobalNode'
     bl_label = 'Colorgrading Set Global'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetGroupNode(Node, ArmLogicTreeNode):
+class GetGroupNode(ArmLogicTreeNode):
     '''Get group node'''
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Collection'

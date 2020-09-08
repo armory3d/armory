@@ -3,14 +3,14 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SwitchNode(Node, ArmLogicTreeNode):
+class SwitchNode(ArmLogicTreeNode):
     '''Switch node'''
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
     bl_icon = 'NONE'
     min_inputs = 2
     min_outputs = 1
-    
+
     def __init__(self):
         array_nodes[str(id(self))] = self
 

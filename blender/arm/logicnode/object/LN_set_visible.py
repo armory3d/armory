@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetVisibleNode(Node, ArmLogicTreeNode):
+class SetVisibleNode(ArmLogicTreeNode):
     '''Set visible node'''
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Visible'

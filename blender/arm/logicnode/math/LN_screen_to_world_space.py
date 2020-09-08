@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ScreenToWorldSpaceNode(Node, ArmLogicTreeNode):
+class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     '''Screen to world space node'''
     bl_idname = 'LNScreenToWorldSpaceNode'
     bl_label = 'Screen To World Space'

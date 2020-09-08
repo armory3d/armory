@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetRotationNode(Node, ArmLogicTreeNode):
+class SetRotationNode(ArmLogicTreeNode):
     '''Set rotation node'''
     bl_idname = 'LNSetRotationNode'
     bl_label = 'Set Rotation'

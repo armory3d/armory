@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasSetRotationNode(Node, ArmLogicTreeNode):
+class CanvasSetRotationNode(ArmLogicTreeNode):
     '''Set canvas element rotation'''
     bl_idname = 'LNCanvasSetRotationNode'
     bl_label = 'Canvas Set Rotation'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ExpressionNode(Node, ArmLogicTreeNode):
+class ExpressionNode(ArmLogicTreeNode):
     '''Expression node'''
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'

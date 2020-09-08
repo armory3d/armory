@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 import arm.nodes_logic
 
-class TranslateOnLocalAxisNode(Node, ArmLogicTreeNode):
+class TranslateOnLocalAxisNode(ArmLogicTreeNode):
     '''TranslateOnLocalAxisNode'''
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'

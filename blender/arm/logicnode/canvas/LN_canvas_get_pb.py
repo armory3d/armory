@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasGetPBNode(Node, ArmLogicTreeNode):
+class CanvasGetPBNode(ArmLogicTreeNode):
     '''Get canvas progress bar'''
     bl_idname = 'LNCanvasGetPBNode'
     bl_label = 'Canvas Get Progress Bar'

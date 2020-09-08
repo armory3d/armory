@@ -3,7 +3,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class AlternateNode(Node, ArmLogicTreeNode):
+class AlternateNode(ArmLogicTreeNode):
     """Alternate node"""
     bl_idname = 'LNAlternateNode'
     bl_label = 'Alternate'

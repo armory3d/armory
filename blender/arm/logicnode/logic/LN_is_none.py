@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class IsNoneNode(Node, ArmLogicTreeNode):
+class IsNoneNode(ArmLogicTreeNode):
     """Is none node"""
     bl_idname = 'LNIsNoneNode'
     bl_label = 'Is None'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class AnimationStateNode(Node, ArmLogicTreeNode):
+class AnimationStateNode(ArmLogicTreeNode):
     '''Animation state node'''
     bl_idname = 'LNAnimationStateNode'
     bl_label = 'Animation State'

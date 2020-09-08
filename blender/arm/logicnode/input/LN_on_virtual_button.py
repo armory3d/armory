@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class OnVirtualButtonNode(Node, ArmLogicTreeNode):
+class OnVirtualButtonNode(ArmLogicTreeNode):
     '''On virtual button node'''
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'

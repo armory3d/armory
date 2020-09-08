@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class StopAgentNode(Node, ArmLogicTreeNode):
+class StopAgentNode(ArmLogicTreeNode):
     '''Stop agent node'''
     bl_idname = 'LNStopAgentNode'
     bl_label = 'Stop Agent'

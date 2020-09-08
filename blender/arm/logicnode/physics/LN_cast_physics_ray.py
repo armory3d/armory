@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CastPhysicsRayNode(Node, ArmLogicTreeNode):
+class CastPhysicsRayNode(ArmLogicTreeNode):
     """Cast physics ray node"""
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'

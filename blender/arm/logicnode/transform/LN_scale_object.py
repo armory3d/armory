@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ScaleObjectNode(Node, ArmLogicTreeNode):
+class ScaleObjectNode(ArmLogicTreeNode):
     '''Scale object node'''
     bl_idname = 'LNScaleObjectNode'
     bl_label = 'Scale Object'

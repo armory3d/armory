@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class FloatNode(Node, ArmLogicTreeNode):
+class FloatNode(ArmLogicTreeNode):
     '''Float node'''
     bl_idname = 'LNFloatNode'
     bl_label = 'Float'

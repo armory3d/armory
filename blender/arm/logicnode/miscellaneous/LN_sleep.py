@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SleepNode(Node, ArmLogicTreeNode):
+class SleepNode(ArmLogicTreeNode):
     '''Sleep node'''
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'

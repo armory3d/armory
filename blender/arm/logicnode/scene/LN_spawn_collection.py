@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 
-class SpawnCollectionNode(Node, ArmLogicTreeNode):
+class SpawnCollectionNode(ArmLogicTreeNode):
     """Spawns a collection to the current scene."""
     bl_idname = 'LNSpawnCollectionNode'
     bl_label = 'Spawn Collection'

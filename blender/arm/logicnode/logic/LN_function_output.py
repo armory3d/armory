@@ -3,7 +3,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class FunctionOutputNode(Node, ArmLogicTreeNode):
+class FunctionOutputNode(ArmLogicTreeNode):
     """Function output node"""
     bl_idname = 'LNFunctionOutputNode'
     bl_label = 'Function Output'

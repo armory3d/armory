@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class OnInitNode(Node, ArmLogicTreeNode):
+class OnInitNode(ArmLogicTreeNode):
     '''On init node'''
     bl_idname = 'LNOnInitNode'
     bl_label = 'On Init'

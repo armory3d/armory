@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ScriptNode(Node, ArmLogicTreeNode):
+class ScriptNode(ArmLogicTreeNode):
     '''Script node'''
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'

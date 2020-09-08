@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class PrintNode(Node, ArmLogicTreeNode):
+class PrintNode(ArmLogicTreeNode):
     '''Print node'''
     bl_idname = 'LNPrintNode'
     bl_label = 'Print'

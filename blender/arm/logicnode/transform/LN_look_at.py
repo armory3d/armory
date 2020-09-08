@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class LookAtNode(Node, ArmLogicTreeNode):
+class LookAtNode(ArmLogicTreeNode):
     '''Look at node'''
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'

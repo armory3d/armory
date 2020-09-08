@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class KeyboardNode(Node, ArmLogicTreeNode):
+class KeyboardNode(ArmLogicTreeNode):
     '''Keyboard node'''
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'

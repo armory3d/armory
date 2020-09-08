@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ContainsStringNode(Node, ArmLogicTreeNode):
+class ContainsStringNode(ArmLogicTreeNode):
     '''Contains string node'''
     bl_idname = 'LNContainsStringNode'
     bl_label = 'Contains String'

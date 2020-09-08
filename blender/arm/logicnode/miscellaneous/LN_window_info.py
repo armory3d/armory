@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class WindowInfoNode(Node, ArmLogicTreeNode):
+class WindowInfoNode(ArmLogicTreeNode):
     '''Window info node'''
     bl_idname = 'LNWindowInfoNode'
     bl_label = 'Window Info'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetGravityNode(Node, ArmLogicTreeNode):
+class SetGravityNode(ArmLogicTreeNode):
     '''Set Gravity node'''
     bl_idname = 'LNSetGravityNode'
     bl_label = 'Set Gravity'

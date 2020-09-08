@@ -3,7 +3,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class ArrayLoopNode(Node, ArmLogicTreeNode):
+class ArrayLoopNode(ArmLogicTreeNode):
     """ArrayLoop node"""
     bl_idname = 'LNArrayLoopNode'
     bl_label = 'Array Loop'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ColorArrayNode(Node, ArmLogicTreeNode):
+class ColorArrayNode(ArmLogicTreeNode):
     '''Color array node'''
     bl_idname = 'LNArrayColorNode'
     bl_label = 'Array Color'

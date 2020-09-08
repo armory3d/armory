@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetMouseLockNode(Node, ArmLogicTreeNode):
+class SetMouseLockNode(ArmLogicTreeNode):
     '''Set Mouse Lock node'''
     bl_idname = 'LNSetMouseLockNode'
     bl_label = 'Set Mouse Lock'

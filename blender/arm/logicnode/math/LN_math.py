@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class MathNode(Node, ArmLogicTreeNode):
+class MathNode(ArmLogicTreeNode):
     '''Math node'''
     bl_idname = 'LNMathNode'
     bl_label = 'Math'

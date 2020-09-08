@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetVelocityNode(Node, ArmLogicTreeNode):
+class GetVelocityNode(ArmLogicTreeNode):
     '''Get velocity node'''
     bl_idname = 'LNGetVelocityNode'
     bl_label = 'Get Velocity'

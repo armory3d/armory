@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ActiveSceneNode(Node, ArmLogicTreeNode):
+class ActiveSceneNode(ArmLogicTreeNode):
     '''Active scene node'''
     bl_idname = 'LNActiveSceneNode'
     bl_label = 'Active Scene'

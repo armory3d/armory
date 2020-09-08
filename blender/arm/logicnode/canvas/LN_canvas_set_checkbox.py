@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasSetCheckBoxNode(Node, ArmLogicTreeNode):
+class CanvasSetCheckBoxNode(ArmLogicTreeNode):
     '''Set canvas check box'''
     bl_idname = 'LNCanvasSetCheckBoxNode'
     bl_label = 'Canvas Set Checkbox'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetLightStrengthNode(Node, ArmLogicTreeNode):
+class SetLightStrengthNode(ArmLogicTreeNode):
     '''Set light strength node'''
     bl_idname = 'LNSetLightStrengthNode'
     bl_label = 'Set Light Strength'

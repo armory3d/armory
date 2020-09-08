@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetMaterialSlotNode(Node, ArmLogicTreeNode):
+class SetMaterialSlotNode(ArmLogicTreeNode):
     '''Set material slot node'''
     bl_idname = 'LNSetMaterialSlotNode'
     bl_label = 'Set Material Slot'

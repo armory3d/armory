@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SurfaceNode(Node, ArmLogicTreeNode):
+class SurfaceNode(ArmLogicTreeNode):
     '''Surface node'''
     bl_idname = 'LNMergedSurfaceNode'
     bl_label = 'Surface'

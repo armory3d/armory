@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArrayPopNode(Node, ArmLogicTreeNode):
+class ArrayPopNode(ArmLogicTreeNode):
     '''Array pop node'''
     bl_idname = 'LNArrayPopNode'
     bl_label = 'Array Pop'

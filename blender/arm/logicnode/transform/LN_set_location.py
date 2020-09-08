@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetLocationNode(Node, ArmLogicTreeNode):
+class SetLocationNode(ArmLogicTreeNode):
     '''Set location node'''
     bl_idname = 'LNSetLocationNode'
     bl_label = 'Set Location'

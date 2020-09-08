@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class RotateObjectAroundAxisNode(Node, ArmLogicTreeNode):
+class RotateObjectAroundAxisNode(ArmLogicTreeNode):
     '''Rotate object around axis node'''
     bl_idname = 'LNRotateObjectAroundAxisNode'
     bl_label = 'Rotate Object Around Axis'

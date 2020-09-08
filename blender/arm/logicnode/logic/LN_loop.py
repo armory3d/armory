@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class LoopNode(Node, ArmLogicTreeNode):
+class LoopNode(ArmLogicTreeNode):
     '''Loop node'''
     bl_idname = 'LNLoopNode'
     bl_label = 'Loop'

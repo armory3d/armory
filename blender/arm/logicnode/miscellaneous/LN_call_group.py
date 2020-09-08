@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 import arm.utils
 
-class CallGroupNode(Node, ArmLogicTreeNode):
+class CallGroupNode(ArmLogicTreeNode):
     """Call group node"""
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'

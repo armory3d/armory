@@ -10,7 +10,7 @@ def remove_extra_inputs(self, context):
             self.inputs.remove(self.inputs[-1])
 
 
-class GateNode(Node, ArmLogicTreeNode):
+class GateNode(ArmLogicTreeNode):
     """Gate node"""
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'

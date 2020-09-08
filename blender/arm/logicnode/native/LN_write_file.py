@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class WriteFileNode(Node, ArmLogicTreeNode):
+class WriteFileNode(ArmLogicTreeNode):
     '''Write File node'''
     bl_idname = 'LNWriteFileNode'
     bl_label = 'Write File'

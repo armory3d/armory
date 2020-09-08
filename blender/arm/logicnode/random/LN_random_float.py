@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class RandomFloatNode(Node, ArmLogicTreeNode):
+class RandomFloatNode(ArmLogicTreeNode):
     """Random float node"""
     bl_idname = 'LNRandomFloatNode'
     bl_label = 'Random Float'

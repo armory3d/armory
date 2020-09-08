@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class MaskNode(Node, ArmLogicTreeNode):
+class MaskNode(ArmLogicTreeNode):
     '''Mask node'''
     bl_idname = 'LNMaskNode'
     bl_label = 'Mask'

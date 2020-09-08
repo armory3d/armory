@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CaseStringNode(Node, ArmLogicTreeNode):
+class CaseStringNode(ArmLogicTreeNode):
     '''Converts strings's case node'''
     bl_idname = 'LNCaseStringNode'
     bl_label = 'Case String'

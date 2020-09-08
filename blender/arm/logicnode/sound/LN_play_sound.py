@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class PlaySoundNode(Node, ArmLogicTreeNode):
+class PlaySoundNode(ArmLogicTreeNode):
     """Play sound node"""
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'

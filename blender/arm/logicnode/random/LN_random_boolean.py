@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class RandomBooleanNode(Node, ArmLogicTreeNode):
+class RandomBooleanNode(ArmLogicTreeNode):
     """Random boolean node"""
     bl_idname = 'LNRandomBooleanNode'
     bl_label = 'Random Boolean'

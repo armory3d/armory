@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetParentBoneNode(Node, ArmLogicTreeNode):
+class SetParentBoneNode(ArmLogicTreeNode):
     '''Set parent bone node'''
     bl_idname = 'LNSetParentBoneNode'
     bl_label = 'Set Parent Bone'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class MixNode(Node, ArmLogicTreeNode):
+class MixNode(ArmLogicTreeNode):
     '''Mix node'''
     bl_idname = 'LNMixNode'
     bl_label = 'Interpolate'

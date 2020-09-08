@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class TransformNode(Node, ArmLogicTreeNode):
+class TransformNode(ArmLogicTreeNode):
     '''Transform node'''
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'

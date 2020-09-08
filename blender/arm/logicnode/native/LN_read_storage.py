@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ReadStorageNode(Node, ArmLogicTreeNode):
+class ReadStorageNode(ArmLogicTreeNode):
     '''ReadStorage node'''
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'

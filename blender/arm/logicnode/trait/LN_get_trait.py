@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetTraitNode(Node, ArmLogicTreeNode):
+class GetTraitNode(ArmLogicTreeNode):
     '''Get trait node'''
     bl_idname = 'LNGetTraitNode'
     bl_label = 'Get Trait'

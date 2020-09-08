@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class QuaternionNode(Node, ArmLogicTreeNode):
+class QuaternionNode(ArmLogicTreeNode):
     '''Quaternion node'''
     bl_idname = 'LNQuaternionNode'
     bl_label = 'Quaternion'

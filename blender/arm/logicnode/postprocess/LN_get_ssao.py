@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SSAOGetNode(Node, ArmLogicTreeNode):
+class SSAOGetNode(ArmLogicTreeNode):
     '''Get SSAO Effect'''
     bl_idname = 'LNSSAOGetNode'
     bl_label = 'Get SSAO'

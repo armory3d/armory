@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArrayInArrayNode(Node, ArmLogicTreeNode):
+class ArrayInArrayNode(ArmLogicTreeNode):
     '''In Array node'''
     bl_idname = 'LNArrayInArrayNode'
     bl_label = 'In Array'

@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SequenceNode(Node, ArmLogicTreeNode):
+class SequenceNode(ArmLogicTreeNode):
     '''Sequence node'''
     bl_idname = 'LNSequenceNode'
     bl_label = 'Sequence'

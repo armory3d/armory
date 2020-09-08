@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ParseFloatNode(Node, ArmLogicTreeNode):
+class ParseFloatNode(ArmLogicTreeNode):
     '''Parse float node'''
     bl_idname = 'LNParseFloatNode'
     bl_label = 'Parse float'

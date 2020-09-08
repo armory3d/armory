@@ -2,7 +2,7 @@ from bpy.types import Node
 from arm.logicnode.arm_nodes import *
 
 
-class RandomVectorNode(Node, ArmLogicTreeNode):
+class RandomVectorNode(ArmLogicTreeNode):
     """Random vector node"""
     bl_idname = 'LNRandomVectorNode'
     bl_label = 'Random Vector'

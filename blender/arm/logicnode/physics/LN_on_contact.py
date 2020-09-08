@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class OnContactNode(Node, ArmLogicTreeNode):
+class OnContactNode(ArmLogicTreeNode):
     '''On contact node'''
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'

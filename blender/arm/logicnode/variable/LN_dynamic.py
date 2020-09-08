@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class DynamicNode(Node, ArmLogicTreeNode):
+class DynamicNode(ArmLogicTreeNode):
     '''Dynamic node'''
     bl_idname = 'LNDynamicNode'
     bl_label = 'Dynamic'

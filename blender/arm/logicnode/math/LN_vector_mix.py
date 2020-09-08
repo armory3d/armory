@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class VectorMixNode(Node, ArmLogicTreeNode):
+class VectorMixNode(ArmLogicTreeNode):
     '''Vector mix node'''
     bl_idname = 'LNVectorMixNode'
     bl_label = 'Vector Mix'

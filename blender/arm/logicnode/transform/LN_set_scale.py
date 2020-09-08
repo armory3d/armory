@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SetScaleNode(Node, ArmLogicTreeNode):
+class SetScaleNode(ArmLogicTreeNode):
     '''Set scale node'''
     bl_idname = 'LNSetScaleNode'
     bl_label = 'Set Scale'

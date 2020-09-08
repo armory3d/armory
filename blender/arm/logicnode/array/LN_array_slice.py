@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArraySliceNode(Node, ArmLogicTreeNode):
+class ArraySliceNode(ArmLogicTreeNode):
     '''Array slice node'''
     bl_idname = 'LNArraySliceNode'
     bl_label = 'Array Slice'

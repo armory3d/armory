@@ -3,7 +3,7 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class SubStringNode(Node, ArmLogicTreeNode):
+class SubStringNode(ArmLogicTreeNode):
     '''Sub string node'''
     bl_idname = 'LNSubStringNode'
     bl_label = 'Sub String'
