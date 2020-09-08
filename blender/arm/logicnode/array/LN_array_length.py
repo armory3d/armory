@@ -10,7 +10,7 @@ class ArrayLengthNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.outputs.new('NodeSocketInt', 'Length')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_output('NodeSocketInt', 'Length')
 
 add_node(ArrayLengthNode, category=MODULE_AS_CATEGORY)

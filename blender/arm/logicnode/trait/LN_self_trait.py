@@ -10,6 +10,6 @@ class SelfTraitNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Trait')
+        self.add_output('NodeSocketShader', 'Trait')
 
 add_node(SelfTraitNode, category=MODULE_AS_CATEGORY)

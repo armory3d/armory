@@ -10,9 +10,9 @@ class CanvasGetRotationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketFloat', 'Rad')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketFloat', 'Rad')
 
 add_node(CanvasGetRotationNode, category=MODULE_AS_CATEGORY)

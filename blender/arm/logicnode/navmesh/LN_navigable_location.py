@@ -10,6 +10,6 @@ class NavigableLocationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Location')
+        self.add_output('NodeSocketShader', 'Location')
 
 add_node(NavigableLocationNode, category=MODULE_AS_CATEGORY)

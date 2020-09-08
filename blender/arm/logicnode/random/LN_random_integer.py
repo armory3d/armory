@@ -9,9 +9,9 @@ class RandomIntegerNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketInt', 'Min')
-        self.inputs.new('NodeSocketInt', 'Max').default_value = 2
-        self.outputs.new('NodeSocketInt', 'Int')
+        self.add_input('NodeSocketInt', 'Min')
+        self.add_input('NodeSocketInt', 'Max', default_value=2)
+        self.add_output('NodeSocketInt', 'Int')
 
 
 add_node(RandomIntegerNode, category=MODULE_AS_CATEGORY)

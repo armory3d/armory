@@ -10,6 +10,6 @@ class NoneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'None')
+        self.add_output('NodeSocketShader', 'None')
 
 add_node(NoneNode, category=MODULE_AS_CATEGORY)

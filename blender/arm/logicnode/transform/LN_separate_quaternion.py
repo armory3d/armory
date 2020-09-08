@@ -11,11 +11,11 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Quaternion')
-        self.outputs.new('NodeSocketFloat', 'X')
-        self.outputs.new('NodeSocketFloat', 'Y')
-        self.outputs.new('NodeSocketFloat', 'Z')
-        self.outputs.new('NodeSocketFloat', 'W')
+        self.add_input('NodeSocketVector', 'Quaternion')
+        self.add_output('NodeSocketFloat', 'X')
+        self.add_output('NodeSocketFloat', 'Y')
+        self.add_output('NodeSocketFloat', 'Z')
+        self.add_output('NodeSocketFloat', 'W')
 
 
 add_node(SeparateQuaternionNode, category=MODULE_AS_CATEGORY, section='quaternions')

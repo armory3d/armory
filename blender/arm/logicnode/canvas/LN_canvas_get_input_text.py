@@ -10,7 +10,7 @@ class CanvasGetInputTextNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('NodeSocketString', 'Value')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('NodeSocketString', 'Value')
 
 add_node(CanvasGetInputTextNode, category=MODULE_AS_CATEGORY)

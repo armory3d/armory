@@ -16,8 +16,8 @@ class GetWorldNode(ArmLogicTreeNode):
         name='', default='right')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketVector', 'Vector')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

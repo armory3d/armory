@@ -10,10 +10,10 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Transform')
-        self.outputs.new('NodeSocketVector', 'Vector')
-        self.outputs.new('NodeSocketVector', 'Quaternion XYZ')
-        self.outputs.new('NodeSocketFloat', 'Quaternion W')
+        self.add_input('NodeSocketShader', 'Transform')
+        self.add_output('NodeSocketVector', 'Vector')
+        self.add_output('NodeSocketVector', 'Quaternion XYZ')
+        self.add_output('NodeSocketFloat', 'Quaternion W')
 
     def on_property_update(self, context):
         """called by the EnumProperty, used to update the node socket labels"""

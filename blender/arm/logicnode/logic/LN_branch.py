@@ -9,10 +9,10 @@ class BranchNode(ArmLogicTreeNode):
     bl_label = 'Branch'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketBool', 'Bool')
-        self.outputs.new('ArmNodeSocketAction', 'True')
-        self.outputs.new('ArmNodeSocketAction', 'False')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketBool', 'Bool')
+        self.add_output('ArmNodeSocketAction', 'True')
+        self.add_output('ArmNodeSocketAction', 'False')
 
 
 add_node(BranchNode, category=MODULE_AS_CATEGORY)

@@ -10,9 +10,9 @@ class GetPropertyNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketString', 'Property')
-        self.outputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('NodeSocketString', 'Property')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Property')
+        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('NodeSocketString', 'Property')
 
 add_node(GetPropertyNode, category=MODULE_AS_CATEGORY, section='props')

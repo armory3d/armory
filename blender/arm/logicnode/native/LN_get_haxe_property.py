@@ -10,8 +10,8 @@ class GetHaxePropertyNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Dynamic')
-        self.inputs.new('NodeSocketString', 'Property')
-        self.outputs.new('NodeSocketShader', 'Value')
+        self.add_input('NodeSocketShader', 'Dynamic')
+        self.add_input('NodeSocketString', 'Property')
+        self.add_output('NodeSocketShader', 'Value')
 
 add_node(GetHaxePropertyNode, category=MODULE_AS_CATEGORY, section='haxe')

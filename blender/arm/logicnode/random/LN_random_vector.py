@@ -8,9 +8,9 @@ class RandomVectorNode(ArmLogicTreeNode):
     bl_label = 'Random Vector'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Min').default_value = [-1.0, -1.0, -1.0]
-        self.inputs.new('NodeSocketVector', 'Max').default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketVector', 'Min', default_value=[-1.0, -1.0, -1.0])
+        self.add_input('NodeSocketVector', 'Max', default_value=[1.0, 1.0, 1.0])
+        self.add_output('NodeSocketVector', 'Vector')
 
 
 add_node(RandomVectorNode, category=MODULE_AS_CATEGORY)

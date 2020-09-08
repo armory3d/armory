@@ -10,10 +10,10 @@ class BoneIKNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketString', 'Bone')
-        self.inputs.new('NodeSocketVector', 'Goal')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Bone')
+        self.add_input('NodeSocketVector', 'Goal')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(BoneIKNode, category=MODULE_AS_CATEGORY)

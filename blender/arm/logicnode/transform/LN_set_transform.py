@@ -10,9 +10,9 @@ class SetTransformNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketShader', 'Transform')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketShader', 'Transform')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetTransformNode, category=MODULE_AS_CATEGORY)

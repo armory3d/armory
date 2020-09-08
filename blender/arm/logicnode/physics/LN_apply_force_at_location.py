@@ -10,12 +10,12 @@ class ApplyForceAtLocationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Force')
-        self.inputs.new('NodeSocketBool', 'Force On Local Axis')
-        self.inputs.new('NodeSocketVector', 'Location')
-        self.inputs.new('NodeSocketBool', 'Location On Local Axis')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Force')
+        self.add_input('NodeSocketBool', 'Force On Local Axis')
+        self.add_input('NodeSocketVector', 'Location')
+        self.add_input('NodeSocketBool', 'Location On Local Axis')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ApplyForceAtLocationNode, category=MODULE_AS_CATEGORY, section='force')

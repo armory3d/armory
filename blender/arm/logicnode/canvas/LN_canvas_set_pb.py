@@ -10,10 +10,10 @@ class CanvasSetPBNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Element')
-        self.inputs.new('NodeSocketInt', 'At')
-        self.inputs.new('NodeSocketInt', 'Max')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_input('NodeSocketInt', 'At')
+        self.add_input('NodeSocketInt', 'Max')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(CanvasSetPBNode, category=MODULE_AS_CATEGORY)

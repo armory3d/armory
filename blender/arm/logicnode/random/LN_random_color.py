@@ -8,7 +8,7 @@ class RandomColorNode(ArmLogicTreeNode):
     bl_label = 'Random Color'
 
     def init(self, context):
-        self.outputs.new('NodeSocketColor', 'Color')
+        self.add_output('NodeSocketColor', 'Color')
 
 
 add_node(RandomColorNode, category=MODULE_AS_CATEGORY)

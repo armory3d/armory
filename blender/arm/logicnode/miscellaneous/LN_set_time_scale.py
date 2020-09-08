@@ -10,9 +10,8 @@ class SetTimeScaleNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'Scale')
-        self.inputs[-1].default_value = 1.0
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'Scale', default_value=1.0)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetTimeScaleNode, category=MODULE_AS_CATEGORY)

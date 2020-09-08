@@ -10,11 +10,11 @@ class LoopNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketInt', 'From')
-        self.inputs.new('NodeSocketInt', 'To')
-        self.outputs.new('ArmNodeSocketAction', 'Loop')
-        self.outputs.new('NodeSocketInt', 'Index')
-        self.outputs.new('ArmNodeSocketAction', 'Done')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketInt', 'From')
+        self.add_input('NodeSocketInt', 'To')
+        self.add_output('ArmNodeSocketAction', 'Loop')
+        self.add_output('NodeSocketInt', 'Index')
+        self.add_output('ArmNodeSocketAction', 'Done')
 
 add_node(LoopNode, category=MODULE_AS_CATEGORY, section='flow')

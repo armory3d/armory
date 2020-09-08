@@ -10,18 +10,13 @@ class LenstextureSetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'Center Min Clip')
-        self.inputs[-1].default_value = 0.1
-        self.inputs.new('NodeSocketFloat', 'Center Max Clip')
-        self.inputs[-1].default_value = 0.5
-        self.inputs.new('NodeSocketFloat', 'Luminance Min')
-        self.inputs[-1].default_value = 0.10
-        self.inputs.new('NodeSocketFloat', 'Luminance Max')
-        self.inputs[-1].default_value = 2.50
-        self.inputs.new('NodeSocketFloat', 'Brightness Exponent')
-        self.inputs[-1].default_value = 2.0
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'Center Min Clip', default_value=0.1)
+        self.add_input('NodeSocketFloat', 'Center Max Clip', default_value=0.5)
+        self.add_input('NodeSocketFloat', 'Luminance Min', default_value=0.10)
+        self.add_input('NodeSocketFloat', 'Luminance Max', default_value=2.50)
+        self.add_input('NodeSocketFloat', 'Brightness Exponent', default_value=2.0)
 
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(LenstextureSetNode, category=MODULE_AS_CATEGORY)

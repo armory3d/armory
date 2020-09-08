@@ -15,9 +15,9 @@ class SwitchNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('ArmNodeSocketAction', 'Default')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('ArmNodeSocketAction', 'Default')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

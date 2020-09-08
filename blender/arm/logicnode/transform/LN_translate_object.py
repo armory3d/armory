@@ -10,10 +10,10 @@ class TranslateObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.inputs.new('NodeSocketBool', 'On Local Axis')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketBool', 'On Local Axis')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(TranslateObjectNode, category=MODULE_AS_CATEGORY, section='location')

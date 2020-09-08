@@ -10,10 +10,10 @@ class SeparateColorNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketColor', 'Color')
-        self.inputs[-1].default_value = [0.8, 0.8, 0.8, 1]
-        self.outputs.new('NodeSocketFloat', 'R')
-        self.outputs.new('NodeSocketFloat', 'G')
-        self.outputs.new('NodeSocketFloat', 'B')
+        self.add_input('NodeSocketColor', 'Color', default_value=[0.8, 0.8, 0.8, 1])
+
+        self.add_output('NodeSocketFloat', 'R')
+        self.add_output('NodeSocketFloat', 'G')
+        self.add_output('NodeSocketFloat', 'B')
 
 add_node(SeparateColorNode, category=MODULE_AS_CATEGORY, section='color')

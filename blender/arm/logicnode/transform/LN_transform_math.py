@@ -10,8 +10,8 @@ class TransformMathNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Transform')
-        self.inputs.new('NodeSocketShader', 'Transform')
-        self.outputs.new('NodeSocketShader', 'Transform')
+        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('NodeSocketShader', 'Transform')
+        self.add_output('NodeSocketShader', 'Transform')
 
 add_node(TransformMathNode, category=MODULE_AS_CATEGORY)

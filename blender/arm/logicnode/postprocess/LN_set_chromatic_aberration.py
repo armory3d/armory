@@ -10,11 +10,9 @@ class ChromaticAberrationSetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'Strength')
-        self.inputs[-1].default_value = 2.0
-        self.inputs.new('NodeSocketInt', 'Samples')
-        self.inputs[-1].default_value = 32
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'Strength', default_value=2.0)
+        self.add_input('NodeSocketInt', 'Samples', default_value=32)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ChromaticAberrationSetNode, category=MODULE_AS_CATEGORY)

@@ -9,7 +9,7 @@ class RandomBooleanNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_output('NodeSocketBool', 'Bool')
 
 
 add_node(RandomBooleanNode, category=MODULE_AS_CATEGORY)

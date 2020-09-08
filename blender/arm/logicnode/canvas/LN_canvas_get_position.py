@@ -10,7 +10,7 @@ class CanvasGetPositionNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('NodeSocketInt', 'Value')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('NodeSocketInt', 'Value')
 
 add_node(CanvasGetPositionNode, category=MODULE_AS_CATEGORY)

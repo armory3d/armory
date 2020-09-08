@@ -10,9 +10,9 @@ class SetCameraNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetCameraNode, category=MODULE_AS_CATEGORY)

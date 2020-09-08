@@ -10,11 +10,10 @@ class ReadFileNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'File')
-        self.inputs.new('NodeSocketBool', 'Use cache')
-        self.inputs[-1].default_value = 1
-        self.outputs.new('ArmNodeSocketAction', 'Loaded')
-        self.outputs.new('NodeSocketString', 'String')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'File')
+        self.add_input('NodeSocketBool', 'Use cache', default_value=1)
+        self.add_output('ArmNodeSocketAction', 'Loaded')
+        self.add_output('NodeSocketString', 'String')
 
 add_node(ReadFileNode, category=MODULE_AS_CATEGORY, section='file')

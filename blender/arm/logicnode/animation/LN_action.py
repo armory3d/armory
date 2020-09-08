@@ -10,7 +10,7 @@ class AnimActionNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAnimAction', 'Action')
-        self.outputs.new('ArmNodeSocketAnimAction', 'Action')
+        self.add_input('ArmNodeSocketAnimAction', 'Action')
+        self.add_output('ArmNodeSocketAnimAction', 'Action')
 
 add_node(AnimActionNode, category=MODULE_AS_CATEGORY)

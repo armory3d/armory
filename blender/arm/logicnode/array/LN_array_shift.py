@@ -10,7 +10,7 @@ class ArrayShiftNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.outputs.new('NodeSocketShader', 'Value')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_output('NodeSocketShader', 'Value')
 
 add_node(ArrayShiftNode, category=MODULE_AS_CATEGORY)

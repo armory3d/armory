@@ -13,13 +13,13 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     property0: PointerProperty(name='Collection', type=bpy.types.Collection)
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Transform')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Transform')
 
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketArray', 'Top-Level Objects')
-        self.outputs.new('ArmNodeSocketArray', 'All Objects')
-        self.outputs.new('ArmNodeSocketObject', 'Owner Object')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketArray', 'Top-Level Objects')
+        self.add_output('ArmNodeSocketArray', 'All Objects')
+        self.add_output('ArmNodeSocketObject', 'Owner Object')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'collections', icon='NONE', text='')

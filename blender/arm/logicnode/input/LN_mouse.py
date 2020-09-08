@@ -21,8 +21,8 @@ class MouseNode(ArmLogicTreeNode):
         name='', default='left')
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketBool', 'State')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

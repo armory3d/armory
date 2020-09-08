@@ -10,12 +10,11 @@ class SpawnObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketShader', 'Transform')
-        self.inputs.new('NodeSocketBool', 'Children')
-        self.inputs[-1].default_value = True
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('NodeSocketBool', 'Children', default_value=True)
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketObject', 'Object')
 
 add_node(SpawnObjectNode, category=MODULE_AS_CATEGORY)

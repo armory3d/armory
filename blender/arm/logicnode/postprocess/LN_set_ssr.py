@@ -10,17 +10,12 @@ class SSRSetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'SSR Step')
-        self.inputs[-1].default_value = 0.04
-        self.inputs.new('NodeSocketFloat', 'SSR Step Min')
-        self.inputs[-1].default_value = 0.05
-        self.inputs.new('NodeSocketFloat', 'SSR Search')
-        self.inputs[-1].default_value = 5.0
-        self.inputs.new('NodeSocketFloat', 'SSR Falloff')
-        self.inputs[-1].default_value = 5.0
-        self.inputs.new('NodeSocketFloat', 'SSR Jitter')
-        self.inputs[-1].default_value = 0.6
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'SSR Step', default_value=0.04)
+        self.add_input('NodeSocketFloat', 'SSR Step Min', default_value=0.05)
+        self.add_input('NodeSocketFloat', 'SSR Search', default_value=5.0)
+        self.add_input('NodeSocketFloat', 'SSR Falloff', default_value=5.0)
+        self.add_input('NodeSocketFloat', 'SSR Jitter', default_value=0.6)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SSRSetNode, category=MODULE_AS_CATEGORY)

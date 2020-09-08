@@ -17,10 +17,10 @@ class ScriptNode(ArmLogicTreeNode):
     property0_: StringProperty(name='Text', default='')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketShader', 'Result')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'texts', icon='NONE', text='')

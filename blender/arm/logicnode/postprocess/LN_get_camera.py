@@ -10,15 +10,15 @@ class CameraGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'F-Stop')
-        self.outputs.new('NodeSocketFloat', 'Shutter Time')
-        self.outputs.new('NodeSocketFloat', 'ISO')
-        self.outputs.new('NodeSocketFloat', 'Exposure Compensation')
-        self.outputs.new('NodeSocketFloat', 'Fisheye Distortion')
-        self.outputs.new('NodeSocketBool', 'Auto Focus')
-        self.outputs.new('NodeSocketFloat', 'DOF Distance')
-        self.outputs.new('NodeSocketFloat', 'DOF Length')
-        self.outputs.new('NodeSocketFloat', 'DOF F-Stop')
-        self.outputs.new('NodeSocketFloat', 'Film Grain')
+        self.add_output('NodeSocketFloat', 'F-Stop')
+        self.add_output('NodeSocketFloat', 'Shutter Time')
+        self.add_output('NodeSocketFloat', 'ISO')
+        self.add_output('NodeSocketFloat', 'Exposure Compensation')
+        self.add_output('NodeSocketFloat', 'Fisheye Distortion')
+        self.add_output('NodeSocketBool', 'Auto Focus')
+        self.add_output('NodeSocketFloat', 'DOF Distance')
+        self.add_output('NodeSocketFloat', 'DOF Length')
+        self.add_output('NodeSocketFloat', 'DOF F-Stop')
+        self.add_output('NodeSocketFloat', 'Film Grain')
 
 add_node(CameraGetNode, category=MODULE_AS_CATEGORY)

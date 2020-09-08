@@ -10,10 +10,10 @@ class SetMaterialImageParamNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Material')
-        self.inputs.new('NodeSocketString', 'Node')
-        self.inputs.new('NodeSocketString', 'Image')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Material')
+        self.add_input('NodeSocketString', 'Node')
+        self.add_input('NodeSocketString', 'Image')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetMaterialImageParamNode, category=MODULE_AS_CATEGORY, section='params')

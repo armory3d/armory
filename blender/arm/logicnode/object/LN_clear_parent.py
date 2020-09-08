@@ -10,11 +10,10 @@ class ClearParentNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketBool', 'Keep Transform')
-        self.inputs[-1].default_value = True
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketBool', 'Keep Transform', default_value=True)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ClearParentNode, category=MODULE_AS_CATEGORY, section='relations')
 

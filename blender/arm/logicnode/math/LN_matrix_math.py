@@ -13,9 +13,9 @@ class MatrixMathNode(ArmLogicTreeNode):
         name='', default='Multiply')
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Matrix')
-        self.inputs.new('NodeSocketShader', 'Matrix')
-        self.outputs.new('NodeSocketShader', 'Matrix')
+        self.add_input('NodeSocketShader', 'Matrix')
+        self.add_input('NodeSocketShader', 'Matrix')
+        self.add_output('NodeSocketShader', 'Matrix')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

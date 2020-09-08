@@ -10,6 +10,6 @@ class SensorCoordsNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketVector', 'Coords')
+        self.add_output('NodeSocketVector', 'Coords')
 
 add_node(SensorCoordsNode, category=MODULE_AS_CATEGORY, section='sensor')

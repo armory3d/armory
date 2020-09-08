@@ -10,10 +10,9 @@ class SetLightColorNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketColor', 'Color')
-        self.inputs[-1].default_value = [1.0, 1.0, 1.0, 1.0]
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketColor', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetLightColorNode, category=MODULE_AS_CATEGORY)

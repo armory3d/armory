@@ -10,8 +10,8 @@ class ArrayInArrayNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('NodeSocketBool', 'Bool')
 
 add_node(ArrayInArrayNode, category=MODULE_AS_CATEGORY)

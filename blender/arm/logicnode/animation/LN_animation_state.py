@@ -10,9 +10,9 @@ class AnimationStateNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketBool', 'Is Playing')
-        self.outputs.new('NodeSocketString', 'Action')
-        self.outputs.new('NodeSocketInt', 'Frame')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketBool', 'Is Playing')
+        self.add_output('NodeSocketString', 'Action')
+        self.add_output('NodeSocketInt', 'Frame')
 
 add_node(AnimationStateNode, category=MODULE_AS_CATEGORY)

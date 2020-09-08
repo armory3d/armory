@@ -13,13 +13,13 @@ class ArrayAddNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.inputs.new('NodeSocketBool', 'Unique Values')
-        self.inputs.new('NodeSocketBool', 'Modify Original').default_value = True
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketArray', 'Array')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_input('NodeSocketBool', 'Unique Values')
+        self.add_input('NodeSocketBool', 'Modify Original', default_value=True)
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketArray', 'Array')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

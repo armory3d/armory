@@ -10,10 +10,10 @@ class ArrayRemoveNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.inputs.new('NodeSocketInt', 'Index')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketShader', 'Value')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_input('NodeSocketInt', 'Index')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketShader', 'Value')
 
 add_node(ArrayRemoveNode, category=MODULE_AS_CATEGORY)

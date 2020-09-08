@@ -34,13 +34,10 @@ class MixNode(ArmLogicTreeNode):
     property2_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Factor')
-        self.inputs[-1].default_value = 0.0
-        self.inputs.new('NodeSocketFloat', 'Value1')
-        self.inputs[-1].default_value = 0.0
-        self.inputs.new('NodeSocketFloat', 'Value2')
-        self.inputs[-1].default_value = 1.0
-        self.outputs.new('NodeSocketFloat', 'Value')
+        self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
+        self.add_input('NodeSocketFloat', 'Value1', default_value=0.0)
+        self.add_input('NodeSocketFloat', 'Value2', default_value=1.0)
+        self.add_output('NodeSocketFloat', 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property2_')

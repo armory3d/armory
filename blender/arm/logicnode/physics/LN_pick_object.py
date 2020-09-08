@@ -10,8 +10,8 @@ class PickObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Screen Coords')
-        self.outputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketVector', 'Hit')
+        self.add_input('NodeSocketVector', 'Screen Coords')
+        self.add_output('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketVector', 'Hit')
 
 add_node(PickObjectNode, category=MODULE_AS_CATEGORY, section='ray')

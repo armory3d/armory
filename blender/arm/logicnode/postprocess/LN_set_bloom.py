@@ -10,13 +10,10 @@ class BloomSetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'Threshold')
-        self.inputs[-1].default_value = 1.00
-        self.inputs.new('NodeSocketFloat', 'Strength')
-        self.inputs[-1].default_value = 3.50
-        self.inputs.new('NodeSocketFloat', 'Radius')
-        self.inputs[-1].default_value = 3.0
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'Threshold', default_value=1.00)
+        self.add_input('NodeSocketFloat', 'Strength', default_value=3.50)
+        self.add_input('NodeSocketFloat', 'Radius', default_value=3.0)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(BloomSetNode, category=MODULE_AS_CATEGORY)

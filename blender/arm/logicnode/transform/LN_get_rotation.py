@@ -10,12 +10,12 @@ class GetRotationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketVector', 'Euler Angles')
-        self.outputs.new('NodeSocketVector', 'Vector')
-        self.outputs.new('NodeSocketFloat', 'Angle (Radians)')
-        self.outputs.new('NodeSocketFloat', 'Angle (Degrees)')
-        self.outputs.new('NodeSocketVector', 'Quaternion XYZ')
-        self.outputs.new('NodeSocketFloat', 'Quaternion W')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketVector', 'Euler Angles')
+        self.add_output('NodeSocketVector', 'Vector')
+        self.add_output('NodeSocketFloat', 'Angle (Radians)')
+        self.add_output('NodeSocketFloat', 'Angle (Degrees)')
+        self.add_output('NodeSocketVector', 'Quaternion XYZ')
+        self.add_output('NodeSocketFloat', 'Quaternion W')
 
 add_node(GetRotationNode, category=MODULE_AS_CATEGORY, section='rotation')

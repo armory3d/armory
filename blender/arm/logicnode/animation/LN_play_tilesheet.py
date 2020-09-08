@@ -10,10 +10,10 @@ class PlayTilesheetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketString', 'Action')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketAction', 'Done')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Action')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Done')
 
 add_node(PlayTilesheetNode, category=MODULE_AS_CATEGORY, section='tilesheet')

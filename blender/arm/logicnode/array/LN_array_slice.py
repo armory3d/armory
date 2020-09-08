@@ -10,9 +10,9 @@ class ArraySliceNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketArray', 'Array')
-        self.inputs.new('NodeSocketInt', 'Index')
-        self.inputs.new('NodeSocketInt', 'End')
-        self.outputs.new('ArmNodeSocketArray', 'Array')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_input('NodeSocketInt', 'Index')
+        self.add_input('NodeSocketInt', 'End')
+        self.add_output('ArmNodeSocketArray', 'Array')
 
 add_node(ArraySliceNode, category=MODULE_AS_CATEGORY)

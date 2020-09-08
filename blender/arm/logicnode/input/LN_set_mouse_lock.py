@@ -10,8 +10,8 @@ class SetMouseLockNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketBool', 'Lock')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketBool', 'Lock')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetMouseLockNode, category=MODULE_AS_CATEGORY, section='mouse')

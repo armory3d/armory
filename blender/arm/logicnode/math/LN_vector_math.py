@@ -23,12 +23,10 @@ class VectorMathNode(ArmLogicTreeNode):
         name='', default='Add')
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.inputs[-1].default_value = [0.5, 0.5, 0.5]
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.inputs[-1].default_value = [0.5, 0.5, 0.5]
-        self.outputs.new('NodeSocketVector', 'Vector')
-        self.outputs.new('NodeSocketFloat', 'Value')
+        self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])
+        self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])
+        self.add_output('NodeSocketVector', 'Vector')
+        self.add_output('NodeSocketFloat', 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

@@ -10,10 +10,9 @@ class TransformNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Location')
-        self.inputs.new('NodeSocketVector', 'Rotation')
-        self.inputs.new('NodeSocketVector', 'Scale')
-        self.inputs[-1].default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('NodeSocketShader', 'Transform')
+        self.add_input('NodeSocketVector', 'Location')
+        self.add_input('NodeSocketVector', 'Rotation')
+        self.add_input('NodeSocketVector', 'Scale', default_value=[1.0, 1.0, 1.0])
+        self.add_output('NodeSocketShader', 'Transform')
 
 add_node(TransformNode, category=MODULE_AS_CATEGORY)

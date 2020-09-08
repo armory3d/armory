@@ -14,8 +14,8 @@ class GetObjectNode(ArmLogicTreeNode):
         description='The scene from which to take the object')
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Name')
-        self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Name')
+        self.add_output('ArmNodeSocketObject', 'Object')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, "scenes")

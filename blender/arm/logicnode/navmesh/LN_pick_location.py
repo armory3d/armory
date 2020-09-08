@@ -10,8 +10,8 @@ class PickLocationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Navmesh')
-        self.inputs.new('NodeSocketVector', 'Screen Coords')
-        self.outputs.new('NodeSocketVector', 'Location')
+        self.add_input('ArmNodeSocketObject', 'Navmesh')
+        self.add_input('NodeSocketVector', 'Screen Coords')
+        self.add_output('NodeSocketVector', 'Location')
 
 add_node(PickLocationNode, category=MODULE_AS_CATEGORY)

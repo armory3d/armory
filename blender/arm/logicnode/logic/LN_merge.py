@@ -13,7 +13,7 @@ class MergeNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

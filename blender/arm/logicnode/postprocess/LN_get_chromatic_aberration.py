@@ -10,7 +10,7 @@ class ChromaticAberrationGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Strength')
-        self.outputs.new('NodeSocketFloat', 'Samples')
+        self.add_output('NodeSocketFloat', 'Strength')
+        self.add_output('NodeSocketFloat', 'Samples')
 
 add_node(ChromaticAberrationGetNode, category=MODULE_AS_CATEGORY)

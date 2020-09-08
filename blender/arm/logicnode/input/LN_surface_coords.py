@@ -10,7 +10,7 @@ class SurfaceCoordsNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketVector', 'Coords')
-        self.outputs.new('NodeSocketVector', 'Movement')
+        self.add_output('NodeSocketVector', 'Coords')
+        self.add_output('NodeSocketVector', 'Movement')
 
 add_node(SurfaceCoordsNode, category=MODULE_AS_CATEGORY, section='surface')

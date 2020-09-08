@@ -10,7 +10,7 @@ class LengthStringNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketInt', 'length')
-        self.inputs.new('NodeSocketString', 'String')
+        self.add_output('NodeSocketInt', 'length')
+        self.add_input('NodeSocketString', 'String')
 
 add_node(LengthStringNode, category=MODULE_AS_CATEGORY)

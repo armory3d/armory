@@ -10,7 +10,7 @@ class DegToRadNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Degrees')
-        self.outputs.new('NodeSocketFloat', 'Radians')
+        self.add_input('NodeSocketFloat', 'Degrees')
+        self.add_output('NodeSocketFloat', 'Radians')
 
 add_node(DegToRadNode, category=MODULE_AS_CATEGORY, section='angle')

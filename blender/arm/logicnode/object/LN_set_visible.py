@@ -10,9 +10,9 @@ class SetVisibleNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketBool', 'Bool')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketBool', 'Bool')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetVisibleNode, category=MODULE_AS_CATEGORY, section='props')

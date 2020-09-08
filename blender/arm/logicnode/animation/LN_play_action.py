@@ -10,12 +10,11 @@ class PlayActionNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('ArmNodeSocketAnimAction', 'Action')
-        self.inputs.new('NodeSocketFloat', 'Blend')
-        self.inputs[-1].default_value = 0.2
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketAction', 'Done')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketAnimAction', 'Action')
+        self.add_input('NodeSocketFloat', 'Blend', default_value=0.2)
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Done')
 
 add_node(PlayActionNode, category=MODULE_AS_CATEGORY)

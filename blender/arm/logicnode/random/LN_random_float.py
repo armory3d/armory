@@ -8,10 +8,10 @@ class RandomFloatNode(ArmLogicTreeNode):
     bl_label = 'Random Float'
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Min')
-        self.inputs.new('NodeSocketFloat', 'Max').default_value = 1.0
-        # self.inputs.new('NodeSocketInt', 'Seed')
-        self.outputs.new('NodeSocketFloat', 'Float')
+        self.add_input('NodeSocketFloat', 'Min')
+        self.add_input('NodeSocketFloat', 'Max', default_value=1.0)
+        # self.add_input('NodeSocketInt', 'Seed')
+        self.add_output('NodeSocketFloat', 'Float')
 
 
 add_node(RandomFloatNode, category=MODULE_AS_CATEGORY)

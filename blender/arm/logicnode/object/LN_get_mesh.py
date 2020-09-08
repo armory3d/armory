@@ -10,7 +10,7 @@ class GetMeshNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketShader', 'Mesh')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketShader', 'Mesh')
 
 add_node(GetMeshNode, category=MODULE_AS_CATEGORY, section='props')

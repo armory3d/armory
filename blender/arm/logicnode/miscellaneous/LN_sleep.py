@@ -10,8 +10,8 @@ class SleepNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketFloat', 'Time')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketFloat', 'Time')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SleepNode, category=MODULE_AS_CATEGORY)

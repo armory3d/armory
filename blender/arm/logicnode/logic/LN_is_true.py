@@ -10,8 +10,8 @@ class IsTrueNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketBool', 'Value')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketBool', 'Value')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(IsTrueNode, category=MODULE_AS_CATEGORY)

@@ -34,13 +34,10 @@ class VectorMixNode(ArmLogicTreeNode):
     property2_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Factor')
-        self.inputs[-1].default_value = 0.0
-        self.inputs.new('NodeSocketVector', 'Vector1')
-        self.inputs[-1].default_value = [0.0, 0.0, 0.0]
-        self.inputs.new('NodeSocketVector', 'Vector2')
-        self.inputs[-1].default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
+        self.add_input('NodeSocketVector', 'Vector1', default_value=[0.0, 0.0, 0.0])
+        self.add_input('NodeSocketVector', 'Vector2', default_value=[1.0, 1.0, 1.0])
+        self.add_output('NodeSocketVector', 'Vector')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property2_')

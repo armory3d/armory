@@ -13,8 +13,8 @@ class ConcatenateStringNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Input 0')
-        self.outputs.new('NodeSocketString', 'String')
+        self.add_input('NodeSocketString', 'Input 0')
+        self.add_output('NodeSocketString', 'String')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

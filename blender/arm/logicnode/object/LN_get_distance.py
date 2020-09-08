@@ -10,8 +10,8 @@ class GetDistanceNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketFloat', 'Distance')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketFloat', 'Distance')
 
 add_node(GetDistanceNode, category=MODULE_AS_CATEGORY)

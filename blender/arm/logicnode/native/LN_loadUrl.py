@@ -10,7 +10,7 @@ class LoadUrlNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'URL')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'URL')
 
 add_node(LoadUrlNode, category=MODULE_AS_CATEGORY)

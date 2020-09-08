@@ -10,10 +10,10 @@ class SetMaterialRgbParamNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Material')
-        self.inputs.new('NodeSocketString', 'Node')
-        self.inputs.new('NodeSocketColor', 'Color')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Material')
+        self.add_input('NodeSocketString', 'Node')
+        self.add_input('NodeSocketColor', 'Color')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetMaterialRgbParamNode, category=MODULE_AS_CATEGORY, section='params')

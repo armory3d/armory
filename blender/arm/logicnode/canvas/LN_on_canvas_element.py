@@ -25,8 +25,8 @@ class OnCanvasElementNode(ArmLogicTreeNode):
         name='Mouse Button', default='left')
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

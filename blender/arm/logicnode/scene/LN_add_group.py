@@ -10,8 +10,8 @@ class AddGroupNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Collection')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Collection')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(AddGroupNode, category=MODULE_AS_CATEGORY, section='collection')

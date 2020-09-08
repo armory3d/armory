@@ -10,8 +10,8 @@ class SendGlobalEventNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Event')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Event')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SendGlobalEventNode, category=MODULE_AS_CATEGORY, section='custom')

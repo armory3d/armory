@@ -10,7 +10,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketVector', 'Vector')
+        self.add_output('NodeSocketVector', 'Vector')
 
 add_node(ScreenToWorldSpaceNode, category=MODULE_AS_CATEGORY, section='matrix')

@@ -10,7 +10,7 @@ class ObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketObject', 'Object')
 
 add_node(ObjectNode, category=MODULE_AS_CATEGORY)

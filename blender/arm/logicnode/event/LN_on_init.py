@@ -10,6 +10,6 @@ class OnInitNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(OnInitNode, category=MODULE_AS_CATEGORY)

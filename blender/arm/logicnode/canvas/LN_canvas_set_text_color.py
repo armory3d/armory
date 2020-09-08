@@ -10,12 +10,12 @@ class CanvasSetTextColorNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Element')
-        self.inputs.new('NodeSocketFloat', 'R')
-        self.inputs.new('NodeSocketFloat', 'G')
-        self.inputs.new('NodeSocketFloat', 'B')
-        self.inputs.new('NodeSocketFloat', 'A')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_input('NodeSocketFloat', 'R')
+        self.add_input('NodeSocketFloat', 'G')
+        self.add_input('NodeSocketFloat', 'B')
+        self.add_input('NodeSocketFloat', 'A')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(CanvasSetTextColorNode, category=MODULE_AS_CATEGORY)

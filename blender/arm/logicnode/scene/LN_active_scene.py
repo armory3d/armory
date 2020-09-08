@@ -10,6 +10,6 @@ class ActiveSceneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Scene')
+        self.add_output('NodeSocketShader', 'Scene')
 
 add_node(ActiveSceneNode, category=MODULE_AS_CATEGORY)

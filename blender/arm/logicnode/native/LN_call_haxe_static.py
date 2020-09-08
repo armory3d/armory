@@ -10,9 +10,9 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Function')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketShader', 'Result')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Function')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketShader', 'Result')
 
 add_node(CallHaxeStaticNode, category=MODULE_AS_CATEGORY, section='haxe')

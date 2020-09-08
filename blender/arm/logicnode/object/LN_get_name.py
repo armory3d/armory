@@ -10,7 +10,7 @@ class GetNameNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketString', 'Name')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketString', 'Name')
 
 add_node(GetNameNode, category=MODULE_AS_CATEGORY, section='props')

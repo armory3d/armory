@@ -18,9 +18,9 @@ class RpConfigNode(ArmLogicTreeNode):
         name='', default='SSGI')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketBool', 'On')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketBool', 'On')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

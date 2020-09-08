@@ -10,6 +10,6 @@ class SceneRootNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketObject', 'Object')
 
 add_node(SceneRootNode, category=MODULE_AS_CATEGORY)

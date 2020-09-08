@@ -10,12 +10,12 @@ class ColorgradingGetGlobalNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Whitebalance')
-        self.outputs.new('NodeSocketVector', 'Tint')
-        self.outputs.new('NodeSocketVector', 'Saturation')
-        self.outputs.new('NodeSocketVector', 'Contrast')
-        self.outputs.new('NodeSocketVector', 'Gamma')
-        self.outputs.new('NodeSocketVector', 'Gain')
-        self.outputs.new('NodeSocketVector', 'Offset')
+        self.add_output('NodeSocketFloat', 'Whitebalance')
+        self.add_output('NodeSocketVector', 'Tint')
+        self.add_output('NodeSocketVector', 'Saturation')
+        self.add_output('NodeSocketVector', 'Contrast')
+        self.add_output('NodeSocketVector', 'Gamma')
+        self.add_output('NodeSocketVector', 'Gain')
+        self.add_output('NodeSocketVector', 'Offset')
 
 add_node(ColorgradingGetGlobalNode, category=MODULE_AS_CATEGORY, section='colorgrading')

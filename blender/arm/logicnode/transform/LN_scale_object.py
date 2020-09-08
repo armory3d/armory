@@ -10,9 +10,9 @@ class ScaleObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Vector')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ScaleObjectNode, category=MODULE_AS_CATEGORY, section='scale')

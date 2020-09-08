@@ -10,10 +10,10 @@ class CanvasGetScaleNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketInt', 'Height')
-        self.outputs.new('NodeSocketInt', 'Width')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketInt', 'Height')
+        self.add_output('NodeSocketInt', 'Width')
 
 add_node(CanvasGetScaleNode, category=MODULE_AS_CATEGORY)

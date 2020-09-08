@@ -10,8 +10,8 @@ class WriteFileNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'File')
-        self.inputs.new('NodeSocketString', 'String')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'File')
+        self.add_input('NodeSocketString', 'String')
 
 add_node(WriteFileNode, category=MODULE_AS_CATEGORY, section='file')

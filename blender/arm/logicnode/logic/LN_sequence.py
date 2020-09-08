@@ -13,7 +13,7 @@ class SequenceNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketAction', 'In')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

@@ -10,12 +10,10 @@ class SetParentBoneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('ArmNodeSocketObject', 'Parent')
-        self.inputs[-1].default_value = 'Parent'
-        self.inputs.new('NodeSocketString', 'Bone')
-        self.inputs[-1].default_value = 'Bone'
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Parent', default_value='Parent')
+        self.add_input('NodeSocketString', 'Bone', default_value='Bone')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetParentBoneNode, category=MODULE_AS_CATEGORY, section='armature')

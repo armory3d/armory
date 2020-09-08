@@ -10,9 +10,9 @@ class WhileNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketBool', 'Condition')
-        self.outputs.new('ArmNodeSocketAction', 'Loop')
-        self.outputs.new('ArmNodeSocketAction', 'Done')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketBool', 'Condition')
+        self.add_output('ArmNodeSocketAction', 'Loop')
+        self.add_output('ArmNodeSocketAction', 'Done')
 
 add_node(WhileNode, category=MODULE_AS_CATEGORY, section='flow')

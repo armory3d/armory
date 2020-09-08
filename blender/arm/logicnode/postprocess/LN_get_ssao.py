@@ -10,8 +10,8 @@ class SSAOGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Radius')
-        self.outputs.new('NodeSocketFloat', 'Strength')
-        self.outputs.new('NodeSocketFloat', 'Max Steps')
+        self.add_output('NodeSocketFloat', 'Radius')
+        self.add_output('NodeSocketFloat', 'Strength')
+        self.add_output('NodeSocketFloat', 'Max Steps')
 
 add_node(SSAOGetNode, category=MODULE_AS_CATEGORY)

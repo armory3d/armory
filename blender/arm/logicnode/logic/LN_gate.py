@@ -33,11 +33,11 @@ class GateNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('ArmNodeSocketAction', 'True')
-        self.outputs.new('ArmNodeSocketAction', 'False')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('ArmNodeSocketAction', 'True')
+        self.add_output('ArmNodeSocketAction', 'False')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

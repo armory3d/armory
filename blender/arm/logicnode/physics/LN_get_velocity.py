@@ -10,12 +10,12 @@ class GetVelocityNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketVector', 'Linear')
-        # self.outputs.new('NodeSocketVector', 'Linear Factor') # TODO
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketVector', 'Linear')
+        # self.add_output('NodeSocketVector', 'Linear Factor') # TODO
         # self.outputs[-1].default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('NodeSocketVector', 'Angular')
-        # self.outputs.new('NodeSocketVector', 'Angular Factor') # TODO
+        self.add_output('NodeSocketVector', 'Angular')
+        # self.add_output('NodeSocketVector', 'Angular Factor') # TODO
         # self.outputs[-1].default_value = [1.0, 1.0, 1.0]
 
 add_node(GetVelocityNode, category=MODULE_AS_CATEGORY)

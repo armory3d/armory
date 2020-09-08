@@ -16,8 +16,8 @@ class RpShadowQualityNode(ArmLogicTreeNode):
         name='', default='Medium')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

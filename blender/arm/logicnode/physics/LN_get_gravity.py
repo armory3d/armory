@@ -10,6 +10,6 @@ class GetGravityNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Gravity')
+        self.add_input('NodeSocketVector', 'Gravity')
 
 add_node(GetGravityNode, category=MODULE_AS_CATEGORY)

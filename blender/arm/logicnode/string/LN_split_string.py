@@ -10,8 +10,8 @@ class SplitStringNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketArray', 'Array')
-        self.inputs.new('NodeSocketString', 'String')
-        self.inputs.new('NodeSocketString', 'Split')
+        self.add_output('ArmNodeSocketArray', 'Array')
+        self.add_input('NodeSocketString', 'String')
+        self.add_input('NodeSocketString', 'Split')
 
 add_node(SplitStringNode, category=MODULE_AS_CATEGORY)

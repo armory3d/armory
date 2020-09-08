@@ -10,7 +10,7 @@ class ParseFloatNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Float')
-        self.inputs.new('NodeSocketString', 'String')
+        self.add_output('NodeSocketFloat', 'Float')
+        self.add_input('NodeSocketString', 'String')
 
 add_node(ParseFloatNode, category=MODULE_AS_CATEGORY)

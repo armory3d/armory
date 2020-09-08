@@ -10,12 +10,12 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Impulse')
-        self.inputs.new('NodeSocketBool', 'Impulse On Local Axis')
-        self.inputs.new('NodeSocketVector', 'Location')
-        self.inputs.new('NodeSocketBool', 'Location On Local Axis')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Impulse')
+        self.add_input('NodeSocketBool', 'Impulse On Local Axis')
+        self.add_input('NodeSocketVector', 'Location')
+        self.add_input('NodeSocketBool', 'Location On Local Axis')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ApplyImpulseAtLocationNode, category=MODULE_AS_CATEGORY, section='force')

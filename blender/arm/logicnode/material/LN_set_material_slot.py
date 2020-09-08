@@ -10,10 +10,10 @@ class SetMaterialSlotNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketShader', 'Material')
-        self.inputs.new('NodeSocketInt', 'Slot')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketShader', 'Material')
+        self.add_input('NodeSocketInt', 'Slot')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetMaterialSlotNode, category=MODULE_AS_CATEGORY)

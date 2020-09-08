@@ -12,7 +12,7 @@ class TraitNode(ArmLogicTreeNode):
     property0: StringProperty(name='', default='')
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Trait')
+        self.add_output('NodeSocketShader', 'Trait')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

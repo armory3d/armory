@@ -15,10 +15,9 @@ class VolumeTriggerNode(ArmLogicTreeNode):
         name='', default='Enter')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('ArmNodeSocketObject', 'Volume')
-        self.inputs[-1].default_value = 'Volume'
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Volume', default_value='Volume')
+        self.add_output('NodeSocketBool', 'Bool')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

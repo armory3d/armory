@@ -10,8 +10,8 @@ class OnActionMarkerNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketString', 'Marker')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Marker')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(OnActionMarkerNode, category=MODULE_AS_CATEGORY, section='armature')

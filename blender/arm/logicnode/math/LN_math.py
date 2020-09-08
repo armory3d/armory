@@ -44,11 +44,9 @@ class MathNode(ArmLogicTreeNode):
     property1_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Value')
-        self.inputs[-1].default_value = 0.5
-        self.inputs.new('NodeSocketFloat', 'Value')
-        self.inputs[-1].default_value = 0.5
-        self.outputs.new('NodeSocketFloat', 'Value')
+        self.add_input('NodeSocketFloat', 'Value', default_value=0.5)
+        self.add_input('NodeSocketFloat', 'Value', default_value=0.5)
+        self.add_output('NodeSocketFloat', 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1_')

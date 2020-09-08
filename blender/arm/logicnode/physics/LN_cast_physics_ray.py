@@ -10,11 +10,11 @@ class CastPhysicsRayNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'From')
-        self.inputs.new('NodeSocketVector', 'To')
-        self.inputs.new('NodeSocketInt', 'Collision Filter Mask')
-        self.outputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketVector', 'Hit')
-        self.outputs.new('NodeSocketVector', 'Normal')
+        self.add_input('NodeSocketVector', 'From')
+        self.add_input('NodeSocketVector', 'To')
+        self.add_input('NodeSocketInt', 'Collision Filter Mask')
+        self.add_output('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketVector', 'Hit')
+        self.add_output('NodeSocketVector', 'Normal')
 
 add_node(CastPhysicsRayNode, category=MODULE_AS_CATEGORY, section='ray')

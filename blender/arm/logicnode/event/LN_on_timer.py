@@ -10,8 +10,8 @@ class OnTimerNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Duration')
-        self.inputs.new('NodeSocketBool', 'Repeat')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('NodeSocketFloat', 'Duration')
+        self.add_input('NodeSocketBool', 'Repeat')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(OnTimerNode, category=MODULE_AS_CATEGORY)

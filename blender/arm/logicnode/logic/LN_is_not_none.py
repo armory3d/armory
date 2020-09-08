@@ -10,8 +10,8 @@ class IsNotNoneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(IsNotNoneNode, category=MODULE_AS_CATEGORY)

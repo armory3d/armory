@@ -10,10 +10,11 @@ class VectorNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'X')
-        self.inputs.new('NodeSocketFloat', 'Y')
-        self.inputs.new('NodeSocketFloat', 'Z')
+        self.add_input('NodeSocketFloat', 'X')
+        self.add_input('NodeSocketFloat', 'Y')
+        self.add_input('NodeSocketFloat', 'Z')
 
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_output('NodeSocketVector', 'Vector', is_var=True)
+
 
 add_node(VectorNode, category=MODULE_AS_CATEGORY)

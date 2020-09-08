@@ -10,7 +10,7 @@ class DisplayInfoNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketInt', 'Width')
-        self.outputs.new('NodeSocketInt', 'Height')
+        self.add_output('NodeSocketInt', 'Width')
+        self.add_output('NodeSocketInt', 'Height')
 
 add_node(DisplayInfoNode, category=MODULE_AS_CATEGORY, section='screen')

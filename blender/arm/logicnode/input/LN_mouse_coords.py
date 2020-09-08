@@ -10,8 +10,8 @@ class MouseCoordsNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketVector', 'Coords')
-        self.outputs.new('NodeSocketVector', 'Movement')
-        self.outputs.new('NodeSocketInt', 'Wheel')
+        self.add_output('NodeSocketVector', 'Coords')
+        self.add_output('NodeSocketVector', 'Movement')
+        self.add_output('NodeSocketInt', 'Wheel')
 
 add_node(MouseCoordsNode, category=MODULE_AS_CATEGORY, section='mouse')

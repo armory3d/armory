@@ -10,9 +10,9 @@ class SubStringNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketString', 'String')
-        self.inputs.new('NodeSocketString', 'String')
-        self.inputs.new('NodeSocketInt', 'Start')
-        self.inputs.new('NodeSocketInt', 'End')
+        self.add_output('NodeSocketString', 'String')
+        self.add_input('NodeSocketString', 'String')
+        self.add_input('NodeSocketInt', 'Start')
+        self.add_input('NodeSocketInt', 'End')
 
 add_node(SubStringNode, category=MODULE_AS_CATEGORY)

@@ -11,12 +11,11 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
     bl_icon = 'ERROR'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Axis')
-        self.inputs[-1].default_value = [0, 0, 1]
-        self.inputs.new('NodeSocketFloat', 'Angle')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Axis', default_value=[0, 0, 1])
+        self.add_input('NodeSocketFloat', 'Angle')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

@@ -10,11 +10,11 @@ class RotateObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Euler Angles')
-        self.inputs.new('NodeSocketFloat', 'Angle / W')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketVector', 'Euler Angles')
+        self.add_input('NodeSocketFloat', 'Angle / W')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def on_property_update(self, context):
         """ called by the EnumProperty, used to update the node socket labels"""

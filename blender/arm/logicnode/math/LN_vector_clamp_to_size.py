@@ -10,10 +10,9 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'Vector')
-        self.inputs[-1].default_value = [0.5, 0.5, 0.5]
-        self.inputs.new('NodeSocketFloat', 'Min')
-        self.inputs.new('NodeSocketFloat', 'Max')
-        self.outputs.new('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])
+        self.add_input('NodeSocketFloat', 'Min')
+        self.add_input('NodeSocketFloat', 'Max')
+        self.add_output('NodeSocketVector', 'Vector')
 
 add_node(VectorClampToSizeNode, category=MODULE_AS_CATEGORY, section='vector')

@@ -14,11 +14,11 @@ class CallFunctionNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Trait/Any')
-        self.inputs.new('NodeSocketString', 'Function')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketShader', 'Result')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Trait/Any')
+        self.add_input('NodeSocketString', 'Function')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

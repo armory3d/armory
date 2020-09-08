@@ -10,8 +10,8 @@ class ReadStorageNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Key')
-        self.inputs.new('NodeSocketString', 'Default')
-        self.outputs.new('NodeSocketShader', 'Value')
+        self.add_input('NodeSocketString', 'Key')
+        self.add_input('NodeSocketString', 'Default')
+        self.add_output('NodeSocketShader', 'Value')
 
 add_node(ReadStorageNode, category=MODULE_AS_CATEGORY, section='file')

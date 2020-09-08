@@ -10,7 +10,7 @@ class CanvasGetCheckboxNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('NodeSocketBool', 'Value')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('NodeSocketBool', 'Value')
 
 add_node(CanvasGetCheckboxNode, category=MODULE_AS_CATEGORY)

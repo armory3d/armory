@@ -19,9 +19,9 @@ class LookAtNode(ArmLogicTreeNode):
         name='With', default='Z')
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', 'From Location')
-        self.inputs.new('NodeSocketVector', 'To Location')
-        self.outputs.new('NodeSocketVector', 'Rotation')
+        self.add_input('NodeSocketVector', 'From Location')
+        self.add_input('NodeSocketVector', 'To Location')
+        self.add_output('NodeSocketVector', 'Rotation')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

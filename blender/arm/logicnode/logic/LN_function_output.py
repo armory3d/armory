@@ -9,8 +9,8 @@ class FunctionOutputNode(ArmLogicTreeNode):
     bl_label = 'Function Output'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Value')
 
     function_name: StringProperty(name="Name")
 

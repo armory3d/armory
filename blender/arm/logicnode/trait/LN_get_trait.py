@@ -10,8 +10,8 @@ class GetTraitNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketString', 'Name')
-        self.outputs.new('NodeSocketShader', 'Trait')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketString', 'Name')
+        self.add_output('NodeSocketShader', 'Trait')
 
 add_node(GetTraitNode, category=MODULE_AS_CATEGORY)

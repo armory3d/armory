@@ -10,7 +10,7 @@ class ToBoolNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('NodeSocketBool', 'Bool')
 
 add_node(ToBoolNode, category=MODULE_AS_CATEGORY)

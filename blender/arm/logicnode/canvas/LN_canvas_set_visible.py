@@ -10,9 +10,9 @@ class CanvasSetVisibleNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'Element')
-        self.inputs.new('NodeSocketBool', 'Visible')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_input('NodeSocketBool', 'Visible')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(CanvasSetVisibleNode, category=MODULE_AS_CATEGORY)

@@ -15,8 +15,8 @@ class CaseStringNode(ArmLogicTreeNode):
         name='', default='Upper Case')
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'String')
-        self.outputs.new('NodeSocketString', 'String')
+        self.add_input('NodeSocketString', 'String')
+        self.add_output('NodeSocketString', 'String')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

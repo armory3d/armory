@@ -10,6 +10,6 @@ class DynamicNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Dynamic')
+        self.add_output('NodeSocketShader', 'Dynamic')
 
 add_node(DynamicNode, category=MODULE_AS_CATEGORY)

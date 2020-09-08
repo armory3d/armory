@@ -10,12 +10,11 @@ class BlendActionNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('ArmNodeSocketAnimAction', 'Action 1')
-        self.inputs.new('ArmNodeSocketAnimAction', 'Action 2')
-        self.inputs.new('NodeSocketFloat', 'Factor')
-        self.inputs[-1].default_value = 0.5
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketAnimAction', 'Action 1')
+        self.add_input('ArmNodeSocketAnimAction', 'Action 2')
+        self.add_input('NodeSocketFloat', 'Factor', default_value = 0.5)
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(BlendActionNode, category=MODULE_AS_CATEGORY)

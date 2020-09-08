@@ -14,6 +14,6 @@ class MaskNode(ArmLogicTreeNode):
             label = 'Group {:02d}'.format(i)
             self.inputs.new('NodeSocketBool', label)
 
-        self.outputs.new('NodeSocketInt', 'Mask')
+        self.add_output('NodeSocketInt', 'Mask')
 
 add_node(MaskNode, category=MODULE_AS_CATEGORY)

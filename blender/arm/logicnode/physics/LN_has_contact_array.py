@@ -10,8 +10,8 @@ class HasContactArrayNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object 1')
-        self.inputs.new('ArmNodeSocketArray', 'Objects')
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketObject', 'Object 1')
+        self.add_input('ArmNodeSocketArray', 'Objects')
+        self.add_output('NodeSocketBool', 'Bool')
 
 add_node(HasContactArrayNode, category=MODULE_AS_CATEGORY, section='contact')

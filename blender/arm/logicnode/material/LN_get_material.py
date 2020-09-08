@@ -10,7 +10,7 @@ class GetMaterialNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketShader', 'Material')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('NodeSocketShader', 'Material')
 
 add_node(GetMaterialNode, category=MODULE_AS_CATEGORY)

@@ -10,7 +10,7 @@ class IntegerNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketInt', 'Value')
-        self.outputs.new('NodeSocketInt', 'Int')
+        self.add_input('NodeSocketInt', 'Value')
+        self.add_output('NodeSocketInt', 'Int')
 
 add_node(IntegerNode, category=MODULE_AS_CATEGORY)

@@ -12,7 +12,7 @@ class SceneNode(ArmLogicTreeNode):
     property0_get: PointerProperty(name='', type=bpy.types.Scene)
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Scene')
+        self.add_output('NodeSocketShader', 'Scene')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_get', bpy.data, 'scenes', icon='NONE', text='')

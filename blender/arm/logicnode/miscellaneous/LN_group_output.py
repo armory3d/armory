@@ -10,6 +10,6 @@ class GroupOutputNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketAction', 'In')
 
 add_node(GroupOutputNode, category=MODULE_AS_CATEGORY, section='group')

@@ -10,8 +10,8 @@ class WriteJsonNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketString', 'File')
-        self.inputs.new('NodeSocketShader', 'Dynamic')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'File')
+        self.add_input('NodeSocketShader', 'Dynamic')
 
 add_node(WriteJsonNode, category=MODULE_AS_CATEGORY, section='file')

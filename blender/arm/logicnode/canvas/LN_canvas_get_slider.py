@@ -10,7 +10,7 @@ class CanvasGetSliderNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Element')
-        self.outputs.new('NodeSocketFloat', 'Value')
+        self.add_input('NodeSocketString', 'Element')
+        self.add_output('NodeSocketFloat', 'Value')
 
 add_node(CanvasGetSliderNode, category=MODULE_AS_CATEGORY)

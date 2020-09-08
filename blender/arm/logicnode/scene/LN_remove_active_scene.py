@@ -10,7 +10,7 @@ class RemoveActiveSceneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(RemoveActiveSceneNode, category=MODULE_AS_CATEGORY)

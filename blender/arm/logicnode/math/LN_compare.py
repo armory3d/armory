@@ -31,9 +31,9 @@ class CompareNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.outputs.new('NodeSocketBool', 'Bool')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('NodeSocketShader', 'Value')
+        self.add_output('NodeSocketBool', 'Bool')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

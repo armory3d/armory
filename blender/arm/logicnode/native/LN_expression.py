@@ -12,9 +12,9 @@ class ExpressionNode(ArmLogicTreeNode):
     property0: StringProperty(name='', default='')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketShader', 'Result')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

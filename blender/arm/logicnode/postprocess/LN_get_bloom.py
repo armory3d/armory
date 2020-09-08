@@ -10,8 +10,8 @@ class BloomGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Threshold')
-        self.outputs.new('NodeSocketFloat', 'Strength')
-        self.outputs.new('NodeSocketFloat', 'Radius')
+        self.add_output('NodeSocketFloat', 'Threshold')
+        self.add_output('NodeSocketFloat', 'Strength')
+        self.add_output('NodeSocketFloat', 'Radius')
 
 add_node(BloomGetNode, category=MODULE_AS_CATEGORY)

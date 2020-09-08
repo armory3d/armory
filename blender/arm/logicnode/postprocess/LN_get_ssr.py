@@ -10,10 +10,10 @@ class SSRGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'SSR Step')
-        self.outputs.new('NodeSocketFloat', 'SSR Step Min')
-        self.outputs.new('NodeSocketFloat', 'SSR Search')
-        self.outputs.new('NodeSocketFloat', 'SSR Falloff')
-        self.outputs.new('NodeSocketFloat', 'SSR Jitter')
+        self.add_output('NodeSocketFloat', 'SSR Step')
+        self.add_output('NodeSocketFloat', 'SSR Step Min')
+        self.add_output('NodeSocketFloat', 'SSR Search')
+        self.add_output('NodeSocketFloat', 'SSR Falloff')
+        self.add_output('NodeSocketFloat', 'SSR Jitter')
 
 add_node(SSRGetNode, category=MODULE_AS_CATEGORY)

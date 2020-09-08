@@ -10,10 +10,10 @@ class LenstextureGetNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Center Min Clip')
-        self.outputs.new('NodeSocketFloat', 'Center Max Clip')
-        self.outputs.new('NodeSocketFloat', 'Luminance Min')
-        self.outputs.new('NodeSocketFloat', 'Luminance Max')
-        self.outputs.new('NodeSocketFloat', 'Brightness Exponent')
+        self.add_output('NodeSocketFloat', 'Center Min Clip')
+        self.add_output('NodeSocketFloat', 'Center Max Clip')
+        self.add_output('NodeSocketFloat', 'Luminance Min')
+        self.add_output('NodeSocketFloat', 'Luminance Max')
+        self.add_output('NodeSocketFloat', 'Brightness Exponent')
 
 add_node(LenstextureGetNode, category=MODULE_AS_CATEGORY)

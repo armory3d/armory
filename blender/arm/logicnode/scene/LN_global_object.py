@@ -10,6 +10,6 @@ class GlobalObjectNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketObject', 'Object')
 
 add_node(GlobalObjectNode, category=MODULE_AS_CATEGORY)

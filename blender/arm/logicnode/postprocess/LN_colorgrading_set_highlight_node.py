@@ -40,39 +40,27 @@ class ColorgradingSetHighlightNode(ArmLogicTreeNode):
 
 
     def draw_nodes_uniform(self, context):
-        self.inputs.new('NodeSocketFloat', 'HighlightMin')
-        self.inputs[-1].default_value = 0
-        self.inputs.new('NodeSocketFloat', 'Saturation')
-        self.inputs[-1].default_value = 1
-        self.inputs.new('NodeSocketFloat', 'Contrast')
-        self.inputs[-1].default_value = 1
-        self.inputs.new('NodeSocketFloat', 'Gamma')
-        self.inputs[-1].default_value = 1
-        self.inputs.new('NodeSocketFloat', 'Gain')
-        self.inputs[-1].default_value = 1
-        self.inputs.new('NodeSocketFloat', 'Offset')
-        self.inputs[-1].default_value = 1
+        self.add_input('NodeSocketFloat', 'HighlightMin', default_value=0)
+        self.add_input('NodeSocketFloat', 'Saturation', default_value=1)
+        self.add_input('NodeSocketFloat', 'Contrast', default_value=1)
+        self.add_input('NodeSocketFloat', 'Gamma', default_value=1)
+        self.add_input('NodeSocketFloat', 'Gain', default_value=1)
+        self.add_input('NodeSocketFloat', 'Offset', default_value=1)
 
     def draw_nodes_rgb(self, context):
-        self.inputs.new('NodeSocketFloat', 'HighlightMin')
-        self.inputs[-1].default_value = 0
-        self.inputs.new('NodeSocketVector', 'Saturation')
-        self.inputs[-1].default_value = [1,1,1]
-        self.inputs.new('NodeSocketVector', 'Contrast')
-        self.inputs[-1].default_value = [1,1,1]
-        self.inputs.new('NodeSocketVector', 'Gamma')
-        self.inputs[-1].default_value = [1,1,1]
-        self.inputs.new('NodeSocketVector', 'Gain')
-        self.inputs[-1].default_value = [1,1,1]
-        self.inputs.new('NodeSocketVector', 'Offset')
-        self.inputs[-1].default_value = [1,1,1]
+        self.add_input('NodeSocketFloat', 'HighlightMin', default_value=0)
+        self.add_input('NodeSocketVector', 'Saturation', default_value=[1,1,1])
+        self.add_input('NodeSocketVector', 'Contrast', default_value=[1,1,1])
+        self.add_input('NodeSocketVector', 'Gamma', default_value=[1,1,1])
+        self.add_input('NodeSocketVector', 'Gain', default_value=[1,1,1])
+        self.add_input('NodeSocketVector', 'Offset', default_value=[1,1,1])
 
     def draw_nodes_colorwheel(self, context):
         pass
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)
 
     def draw_buttons(self, context, layout):

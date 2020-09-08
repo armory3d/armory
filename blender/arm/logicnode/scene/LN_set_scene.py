@@ -10,9 +10,9 @@ class SetSceneNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Scene')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmNodeSocketObject', 'Root')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketShader', 'Scene')
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketObject', 'Root')
 
 add_node(SetSceneNode, category=MODULE_AS_CATEGORY)
