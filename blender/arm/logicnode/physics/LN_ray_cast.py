@@ -1,6 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
-class CastPhysicsRayNode(ArmLogicTreeNode):
+class RayCastNode(ArmLogicTreeNode):
     """Cast physics ray node"""
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'
@@ -14,4 +14,4 @@ class CastPhysicsRayNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Hit')
         self.add_output('NodeSocketVector', 'Normal')
 
-add_node(CastPhysicsRayNode, category=MODULE_AS_CATEGORY, section='ray')
+add_node(RayCastNode, category=MODULE_AS_CATEGORY, section='ray')
