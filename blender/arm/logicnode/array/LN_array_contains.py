@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
-class ArrayInArrayNode(ArmLogicTreeNode):
-    """In Array node"""
+class ArrayContainsNode(ArmLogicTreeNode):
+    """Array contains node"""
     bl_idname = 'LNArrayInArrayNode'
-    bl_label = 'In Array'
+    bl_label = 'Array Contains'
     bl_icon = 'NONE'
 
     def init(self, context):
@@ -11,4 +11,4 @@ class ArrayInArrayNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('NodeSocketBool', 'Bool')
 
-add_node(ArrayInArrayNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayContainsNode, category=MODULE_AS_CATEGORY)
