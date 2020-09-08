@@ -1,0 +1,43 @@
+import bpy
+from bpy.props import *
+from bpy.types import Node, NodeSocket
+from arm.logicnode.arm_nodes import *
+
+class VectorFromTransformNode(Node, ArmLogicTreeNode):
+    '''Vector from transform node'''
+    bl_idname = 'LNVectorFromTransformNode'
+    bl_label = 'Vector From Transform'
+    bl_icon = 'NONE'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', 'Transform')
+        self.outputs.new('NodeSocketVector', 'Vector')
+        self.outputs.new('NodeSocketVector', 'Quaternion XYZ')
+        self.outputs.new('NodeSocketFloat', 'Quaternion W')
+
+    def on_property_update(self, context):
+        """called by the EnumProperty, used to update the node socket labels"""
+        # note: the conditions on len(self.outputs) are take in account "old version" (pre-2020.9) nodes, which only have one output
+        if self.property0 == "Quaternion":
+            self.outputs[0].name = "Quaternion"
+            if len(self.outputs) > 1:
+                self.outputs[1].name = "Quaternion XYZ"
+                self.outputs[2].name = "Quaternion W"
+        else:
+            self.outputs[0].name = "Vector"
+            if len(self.outputs) > 1:
+                self.outputs[1].name = "[quaternion only]"
+                self.outputs[2].name = "[quaternion only]"
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
+
+    property0: EnumProperty(
+        items = [('Up', 'Up', 'Up'),
+                 ('Right', 'Right', 'Right'),
+                 ('Look', 'Look', 'Look'),
+                 ('Quaternion', 'Quaternion', 'Quaternion')],
+        name='', default='Look',
+        update=on_property_update)
+
+add_node(VectorFromTransformNode, category=MODULE_AS_CATEGORY)
