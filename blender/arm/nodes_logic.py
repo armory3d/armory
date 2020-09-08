@@ -73,12 +73,14 @@ def register_nodes():
     global registered_nodes
 
     # Re-register all nodes for now..
-    if len(registered_nodes) > 0:
+    if len(registered_nodes) > 0 or len(registered_categories) > 0:
         unregister_nodes()
 
-    for n in arm_nodes.nodes:
-        registered_nodes.append(n)
-        bpy.utils.register_class(n)
+    for node_type in arm_nodes.nodes:
+        # Don't register internal nodes, they are already registered
+        if not issubclass(node_type, bpy.types.NodeInternal):
+            registered_nodes.append(node_type)
+            bpy.utils.register_class(node_type)
 
     # Also add Blender's layout nodes
     arm_nodes.add_node(bpy.types.NodeReroute, 'Layout')
