@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class AddGroupNode(ArmLogicTreeNode):
-    '''Add Group node'''
+    """Add Group node"""
     bl_idname = 'LNAddGroupNode'
     bl_label = 'Add Collection'
     bl_icon = 'NONE'

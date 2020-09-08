@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SpawnObjectNode(ArmLogicTreeNode):
-    '''Spawn object node'''
+    """Spawn object node"""
     bl_idname = 'LNSpawnObjectNode'
     bl_label = 'Spawn Object'
     bl_icon = 'NONE'

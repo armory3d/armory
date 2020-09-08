@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MouseNode(ArmLogicTreeNode):
-    '''Mouse node'''
+    """Mouse node"""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
     bl_icon = 'NONE'

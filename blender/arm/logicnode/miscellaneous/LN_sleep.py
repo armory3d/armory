@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SleepNode(ArmLogicTreeNode):
-    '''Sleep node'''
+    """Sleep node"""
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'
     bl_icon = 'NONE'

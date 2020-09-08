@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 import arm.utils
 
 class MaterialNode(ArmLogicTreeNode):
-    '''Material node'''
+    """Material node"""
     bl_idname = 'LNMaterialNode'
     bl_label = 'Material'
     bl_icon = 'NONE'

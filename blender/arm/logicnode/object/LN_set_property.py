@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetPropertyNode(ArmLogicTreeNode):
-    '''Set property node'''
+    """Set property node"""
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Property'
     bl_icon = 'NONE'

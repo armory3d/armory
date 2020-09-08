@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetParticleSpeedNode(ArmLogicTreeNode):
-    '''Set particle speed node'''
+    """Set particle speed node"""
     bl_idname = 'LNSetParticleSpeedNode'
     bl_label = 'Set Particle Speed'
     bl_icon = 'NONE'

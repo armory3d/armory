@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnActionMarkerNode(ArmLogicTreeNode):
-    '''On action marker node'''
+    """On action marker node"""
     bl_idname = 'LNOnActionMarkerNode'
     bl_label = 'On Action Marker'
     bl_icon = 'NONE'

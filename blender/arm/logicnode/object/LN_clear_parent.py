@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ClearParentNode(ArmLogicTreeNode):
-    '''Clear parent node'''
+    """Clear parent node"""
     bl_idname = 'LNClearParentNode'
     bl_label = 'Clear Parent'
     bl_icon = 'NONE'

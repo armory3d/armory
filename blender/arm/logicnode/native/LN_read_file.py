@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ReadFileNode(ArmLogicTreeNode):
-    '''Read File node'''
+    """Read File node"""
     bl_idname = 'LNReadFileNode'
     bl_label = 'Read File'
     bl_icon = 'NONE'

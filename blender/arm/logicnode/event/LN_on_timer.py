@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnTimerNode(ArmLogicTreeNode):
-    '''On timer node'''
+    """On timer node"""
     bl_idname = 'LNOnTimerNode'
     bl_label = 'On Timer'
     bl_icon = 'NONE'

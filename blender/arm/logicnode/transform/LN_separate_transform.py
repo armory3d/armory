@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SeparateTransformNode(ArmLogicTreeNode):
-    '''Separate transform node'''
+    """Separate transform node"""
     bl_idname = 'LNSeparateTransformNode'
     bl_label = 'Separate Transform'
     bl_icon = 'NONE'

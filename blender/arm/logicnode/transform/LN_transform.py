@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class TransformNode(ArmLogicTreeNode):
-    '''Transform node'''
+    """Transform node"""
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'
     bl_icon = 'NONE'

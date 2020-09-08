@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetScaleNode(ArmLogicTreeNode):
-    '''Get canvas element scale'''
+    """Get canvas element scale"""
     bl_idname = 'LNCanvasGetScaleNode'
     bl_label = 'Canvas Get Scale'
     bl_icon = 'NONE'

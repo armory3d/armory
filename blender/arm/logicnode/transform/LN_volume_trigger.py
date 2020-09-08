@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class VolumeTriggerNode(ArmLogicTreeNode):
-    '''Volume trigger node'''
+    """Volume trigger node"""
     bl_idname = 'LNVolumeTriggerNode'
     bl_label = 'Volume Trigger'
     bl_icon = 'NONE'

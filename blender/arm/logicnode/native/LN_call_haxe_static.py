@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CallHaxeStaticNode(ArmLogicTreeNode):
-    '''Call static Haxe function node'''
+    """Call static Haxe function node"""
     bl_idname = 'LNCallHaxeStaticNode'
     bl_label = 'Call Haxe Static'
     bl_icon = 'NONE'

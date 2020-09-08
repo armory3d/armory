@@ -25,7 +25,7 @@ def set_data(self, context):
         self.property1 = data
 
 class ColorgradingSetMidtoneNode(ArmLogicTreeNode):
-    '''Colorgrading Set Midtone node'''
+    """Colorgrading Set Midtone node"""
     bl_idname = 'LNColorgradingSetMidtoneNode'
     bl_label = 'Colorgrading Set Midtone'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class IntegerNode(ArmLogicTreeNode):
-    '''Int node'''
+    """Int node"""
     bl_idname = 'LNIntegerNode'
     bl_label = 'Integer'
     bl_icon = 'NONE'

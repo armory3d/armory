@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetSliderNode(ArmLogicTreeNode):
-    '''Set canvas text'''
+    """Set canvas text"""
     bl_idname = 'LNCanvasGetSliderNode'
     bl_label = 'Canvas Get Slider'
     bl_icon = 'NONE'

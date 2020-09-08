@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnGamepadNode(ArmLogicTreeNode):
-    '''On gamepad node'''
+    """On gamepad node"""
     bl_idname = 'LNOnGamepadNode'
     bl_label = 'On Gamepad'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetCheckboxNode(ArmLogicTreeNode):
-    '''Get canvas checkbox value'''
+    """Get canvas checkbox value"""
     bl_idname = 'LNCanvasGetCheckboxNode'
     bl_label = 'Canvas Get Checkbox'
     bl_icon = 'NONE'

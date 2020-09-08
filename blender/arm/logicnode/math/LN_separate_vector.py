@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SeparateVectorNode(ArmLogicTreeNode):
-    '''Separate vector node'''
+    """Separate vector node"""
     bl_idname = 'LNSeparateVectorNode'
     bl_label = 'Separate XYZ'
     bl_icon = 'NONE'

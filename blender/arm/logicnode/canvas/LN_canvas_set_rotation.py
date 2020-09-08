@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetRotationNode(ArmLogicTreeNode):
-    '''Set canvas element rotation'''
+    """Set canvas element rotation"""
     bl_idname = 'LNCanvasSetRotationNode'
     bl_label = 'Canvas Set Rotation'
     bl_icon = 'NONE'

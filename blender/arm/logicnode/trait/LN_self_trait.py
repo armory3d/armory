@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SelfTraitNode(ArmLogicTreeNode):
-    '''Self trait node'''
+    """Self trait node"""
     bl_idname = 'LNSelfTraitNode'
     bl_label = 'Self Trait'
     bl_icon = 'NONE'

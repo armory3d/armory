@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MaskNode(ArmLogicTreeNode):
-    '''Mask node'''
+    """Mask node"""
     bl_idname = 'LNMaskNode'
     bl_label = 'Mask'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetPBNode(ArmLogicTreeNode):
-    '''Set canvas progress bar'''
+    """Set canvas progress bar"""
     bl_idname = 'LNCanvasSetPBNode'
     bl_label = 'Canvas Set Progress Bar'
     bl_icon = 'NONE'

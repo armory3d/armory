@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetGroupNode(ArmLogicTreeNode):
-    '''Get group node'''
+    """Get group node"""
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Collection'
     bl_icon = 'NONE'

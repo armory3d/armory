@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ExpressionNode(ArmLogicTreeNode):
-    '''Expression node'''
+    """Expression node"""
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
     bl_icon = 'NONE'

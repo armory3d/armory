@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 import arm.nodes_logic
 
 class TranslateOnLocalAxisNode(ArmLogicTreeNode):
-    '''TranslateOnLocalAxisNode'''
+    """TranslateOnLocalAxisNode"""
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'
     bl_icon = 'NONE'

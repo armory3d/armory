@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MatrixMathNode(ArmLogicTreeNode):
-    '''Matrix math node'''
+    """Matrix math node"""
     bl_idname = 'LNMatrixMathNode'
     bl_label = 'Matrix Math'
     bl_icon = 'NONE'

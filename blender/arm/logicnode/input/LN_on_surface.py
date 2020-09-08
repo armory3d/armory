@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnSurfaceNode(ArmLogicTreeNode):
-    '''On surface node'''
+    """On surface node"""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
     bl_icon = 'NONE'

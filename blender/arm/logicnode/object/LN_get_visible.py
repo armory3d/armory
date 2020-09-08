@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetVisibleNode(ArmLogicTreeNode):
-    '''Get visible node'''
+    """Get visible node"""
     bl_idname = 'LNGetVisibleNode'
     bl_label = 'Get Visible'
     bl_icon = 'NONE'

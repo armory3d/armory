@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class IsNotNoneNode(ArmLogicTreeNode):
-    '''Is not none node'''
+    """Is not none node"""
     bl_idname = 'LNIsNotNoneNode'
     bl_label = 'Is Not None'
     bl_icon = 'NONE'

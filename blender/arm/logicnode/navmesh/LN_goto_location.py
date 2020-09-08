@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GoToLocationNode(ArmLogicTreeNode):
-    '''Navigate to location node'''
+    """Navigate to location node"""
     bl_idname = 'LNGoToLocationNode'
     bl_label = 'Go To Location'
     bl_icon = 'NONE'

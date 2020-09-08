@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PickLocationNode(ArmLogicTreeNode):
-    '''Pick location node'''
+    """Pick location node"""
     bl_idname = 'LNPickLocationNode'
     bl_label = 'Pick Location'
     bl_icon = 'NONE'

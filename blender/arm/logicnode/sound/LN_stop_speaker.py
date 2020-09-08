@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class StopSpeakerNode(ArmLogicTreeNode):
-    '''Stop speaker node'''
+    """Stop speaker node"""
     bl_idname = 'LNStopSoundNode'
     bl_label = 'Stop Speaker'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PlayTilesheetNode(ArmLogicTreeNode):
-    '''Play tilesheet node'''
+    """Play tilesheet node"""
     bl_idname = 'LNPlayTilesheetNode'
     bl_label = 'Play Tilesheet'
     bl_icon = 'NONE'

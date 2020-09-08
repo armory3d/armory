@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class LenstextureGetNode(ArmLogicTreeNode):
-    '''Get Tonemapper Effect'''
+    """Get Tonemapper Effect"""
     bl_idname = 'LNLenstextureGetNode'
     bl_label = 'Get Lenstexture'
     bl_icon = 'NONE'

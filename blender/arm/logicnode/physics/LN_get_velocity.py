@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetVelocityNode(ArmLogicTreeNode):
-    '''Get velocity node'''
+    """Get velocity node"""
     bl_idname = 'LNGetVelocityNode'
     bl_label = 'Get Velocity'
     bl_icon = 'NONE'

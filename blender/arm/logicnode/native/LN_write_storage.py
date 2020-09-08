@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class WriteStorageNode(ArmLogicTreeNode):
-    '''WriteStorage node'''
+    """WriteStorage node"""
     bl_idname = 'LNWriteStorageNode'
     bl_label = 'Write Storage'
     bl_icon = 'NONE'

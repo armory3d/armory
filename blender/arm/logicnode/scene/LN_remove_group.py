@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RemoveGroupNode(ArmLogicTreeNode):
-    '''Remove Group node'''
+    """Remove Group node"""
     bl_idname = 'LNRemoveGroupNode'
     bl_label = 'Remove Collection'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PickObjectNode(ArmLogicTreeNode):
-    '''Pick closest object node'''
+    """Pick closest object node"""
     bl_idname = 'LNPickObjectNode'
     bl_label = 'Pick Object'
     bl_icon = 'NONE'

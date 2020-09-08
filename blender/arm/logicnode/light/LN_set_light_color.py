@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetLightColorNode(ArmLogicTreeNode):
-    '''Set light color node'''
+    """Set light color node"""
     bl_idname = 'LNSetLightColorNode'
     bl_label = 'Set Light Color'
     bl_icon = 'NONE'

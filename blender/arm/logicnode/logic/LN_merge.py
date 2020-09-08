@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MergeNode(ArmLogicTreeNode):
-    '''Merge node'''
+    """Merge node"""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
     bl_icon = 'NONE'

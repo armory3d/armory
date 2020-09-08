@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetSceneNode(ArmLogicTreeNode):
-    '''Set scene node'''
+    """Set scene node"""
     bl_idname = 'LNSetSceneNode'
     bl_label = 'Set Scene'
     bl_icon = 'NONE'

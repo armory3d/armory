@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SendGlobalEventNode(ArmLogicTreeNode):
-    '''Send global event node'''
+    """Send global event node"""
     bl_idname = 'LNSendGlobalEventNode'
     bl_label = 'Send Global Event'
     bl_icon = 'NONE'

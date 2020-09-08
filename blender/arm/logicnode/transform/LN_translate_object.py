@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class TranslateObjectNode(ArmLogicTreeNode):
-    '''Translate object node'''
+    """Translate object node"""
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
     bl_icon = 'NONE'

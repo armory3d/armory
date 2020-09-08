@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class BoneFKNode(ArmLogicTreeNode):
-    '''Bone Forward Kinematics node'''
+    """Bone Forward Kinematics node"""
     bl_idname = 'LNBoneFKNode'
     bl_label = 'Bone FK'
     bl_icon = 'NONE'

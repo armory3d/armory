@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SwitchNode(ArmLogicTreeNode):
-    '''Switch node'''
+    """Switch node"""
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class VectorFromTransformNode(ArmLogicTreeNode):
-    '''Vector from transform node'''
+    """Vector from transform node"""
     bl_idname = 'LNVectorFromTransformNode'
     bl_label = 'Vector From Transform'
     bl_icon = 'NONE'

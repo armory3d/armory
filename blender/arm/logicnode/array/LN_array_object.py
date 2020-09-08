@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ObjectArrayNode(ArmLogicTreeNode):
-    '''Object array node'''
+    """Object array node"""
     bl_idname = 'LNArrayObjectNode'
     bl_label = 'Array Object'
     bl_icon = 'NONE'

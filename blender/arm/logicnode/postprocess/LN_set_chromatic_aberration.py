@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ChromaticAberrationSetNode(ArmLogicTreeNode):
-    '''Set Chromatic Aberration Effect'''
+    """Set Chromatic Aberration Effect"""
     bl_idname = 'LNChromaticAberrationSetNode'
     bl_label = 'Set ChromaticAberration'
     bl_icon = 'NONE'

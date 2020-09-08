@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnContactNode(ArmLogicTreeNode):
-    '''On contact node'''
+    """On contact node"""
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'
     bl_icon = 'NONE'

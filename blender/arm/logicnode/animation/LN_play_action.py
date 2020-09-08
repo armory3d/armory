@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PlayActionNode(ArmLogicTreeNode):
-    '''Play action node'''
+    """Play action node"""
     bl_idname = 'LNPlayActionNode'
     bl_label = 'Play Action'
     bl_icon = 'NONE'

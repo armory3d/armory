@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PauseTraitNode(ArmLogicTreeNode):
-    '''Pause trait node'''
+    """Pause trait node"""
     bl_idname = 'LNPauseTraitNode'
     bl_label = 'Pause Trait'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class BoneIKNode(ArmLogicTreeNode):
-    '''Bone Inverse Kinematics node'''
+    """Bone Inverse Kinematics node"""
     bl_idname = 'LNBoneIKNode'
     bl_label = 'Bone IK'
     bl_icon = 'NONE'

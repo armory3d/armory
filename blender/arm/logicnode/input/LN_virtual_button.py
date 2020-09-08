@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class VirtualButtonNode(ArmLogicTreeNode):
-    '''Virtual button node'''
+    """Virtual button node"""
     bl_idname = 'LNMergedVirtualButtonNode'
     bl_label = 'Virtual Button'
     bl_icon = 'NONE'

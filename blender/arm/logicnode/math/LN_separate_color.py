@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SeparateColorNode(ArmLogicTreeNode):
-    '''Separate color node'''
+    """Separate color node"""
     bl_idname = 'LNSeparateColorNode'
     bl_label = 'Separate RGB'
     bl_icon = 'NONE'

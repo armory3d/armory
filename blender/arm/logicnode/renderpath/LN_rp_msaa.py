@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RpMSAANode(ArmLogicTreeNode):
-    '''Configure multi-sample anti-aliasing node'''
+    """Configure multi-sample anti-aliasing node"""
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Rp MSAA'
     bl_icon = 'NONE'

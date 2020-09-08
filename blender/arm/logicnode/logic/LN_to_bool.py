@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ToBoolNode(ArmLogicTreeNode):
-    '''To Bool Node'''
+    """To Bool Node"""
     bl_idname = 'LNToBoolNode'
     bl_label = 'To Bool'
     bl_icon = 'NONE'

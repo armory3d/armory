@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetGlobalNode(ArmLogicTreeNode):
-    '''Colorgrading Get Global node'''
+    """Colorgrading Get Global node"""
     bl_idname = 'LNColorgradingGetGlobalNode'
     bl_label = 'Colorgrading Get Global'
     bl_icon = 'NONE'

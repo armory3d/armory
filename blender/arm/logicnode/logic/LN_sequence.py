@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SequenceNode(ArmLogicTreeNode):
-    '''Sequence node'''
+    """Sequence node"""
     bl_idname = 'LNSequenceNode'
     bl_label = 'Sequence'
     bl_icon = 'NONE'

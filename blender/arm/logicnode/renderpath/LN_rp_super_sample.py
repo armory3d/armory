@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RpSuperSampleNode(ArmLogicTreeNode):
-    '''Configure super sampling node'''
+    """Configure super sampling node"""
     bl_idname = 'LNRpSuperSampleNode'
     bl_label = 'Rp Super-sampling'
     bl_icon = 'NONE'

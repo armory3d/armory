@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ShutdownNode(ArmLogicTreeNode):
-    '''Shutdown node'''
+    """Shutdown node"""
     bl_idname = 'LNShutdownNode'
     bl_label = 'Shutdown'
     bl_icon = 'NONE'

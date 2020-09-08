@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ConcatenateStringNode(ArmLogicTreeNode):
-    '''Concatenate string node'''
+    """Concatenate string node"""
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'
     bl_icon = 'NONE'

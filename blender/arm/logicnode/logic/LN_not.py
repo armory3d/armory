@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class NotNode(ArmLogicTreeNode):
-    '''Not node'''
+    """Not node"""
     bl_idname = 'LNNotNode'
     bl_label = 'Not'
     bl_icon = 'NONE'

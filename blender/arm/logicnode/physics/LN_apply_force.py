@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ApplyForceNode(ArmLogicTreeNode):
-    '''Apply force node'''
+    """Apply force node"""
     bl_idname = 'LNApplyForceNode'
     bl_label = 'Apply Force'
     bl_icon = 'NONE'

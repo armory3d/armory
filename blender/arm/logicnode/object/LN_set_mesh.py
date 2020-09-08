@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetMeshNode(ArmLogicTreeNode):
-    '''Set mesh node'''
+    """Set mesh node"""
     bl_idname = 'LNSetMeshNode'
     bl_label = 'Set Mesh'
     bl_icon = 'NONE'

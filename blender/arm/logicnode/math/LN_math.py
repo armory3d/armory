@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MathNode(ArmLogicTreeNode):
-    '''Math node'''
+    """Math node"""
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
     bl_icon = 'NONE'

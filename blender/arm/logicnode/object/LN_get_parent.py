@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetParentNode(ArmLogicTreeNode):
-    '''Get parent node'''
+    """Get parent node"""
     bl_idname = 'LNGetParentNode'
     bl_label = 'Get Parent'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PlaySpeakerNode(ArmLogicTreeNode):
-    '''Play speaker node'''
+    """Play speaker node"""
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
     bl_icon = 'NONE'

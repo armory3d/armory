@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PrintNode(ArmLogicTreeNode):
-    '''Print node'''
+    """Print node"""
     bl_idname = 'LNPrintNode'
     bl_label = 'Print'
     bl_icon = 'NONE'

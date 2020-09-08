@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetTextColorNode(ArmLogicTreeNode):
-    '''Set canvas text color'''
+    """Set canvas text color"""
     bl_idname = 'LNCanvasSetTextColorNode'
     bl_label = 'Canvas Set Text Color'
     bl_icon = 'NONE'

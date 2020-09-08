@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class FloatArrayNode(ArmLogicTreeNode):
-    '''Float array node'''
+    """Float array node"""
     bl_idname = 'LNArrayFloatNode'
     bl_label = 'Array Float'
     bl_icon = 'NONE'

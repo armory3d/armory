@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class WindowInfoNode(ArmLogicTreeNode):
-    '''Window info node'''
+    """Window info node"""
     bl_idname = 'LNWindowInfoNode'
     bl_label = 'Window Info'
     bl_icon = 'NONE'

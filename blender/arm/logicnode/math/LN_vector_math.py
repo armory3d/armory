@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class VectorMathNode(ArmLogicTreeNode):
-    '''Vector math node'''
+    """Vector math node"""
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
     bl_icon = 'NONE'

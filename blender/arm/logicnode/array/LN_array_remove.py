@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ArrayRemoveNode(ArmLogicTreeNode):
-    '''Array remove node'''
+    """Array remove node"""
     bl_idname = 'LNArrayRemoveNode'
     bl_label = 'Array Remove'
     bl_icon = 'NONE'

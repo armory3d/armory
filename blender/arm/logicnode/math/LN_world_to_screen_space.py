@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class WorldToScreenSpaceNode(ArmLogicTreeNode):
-    '''World to screen space node'''
+    """World to screen space node"""
     bl_idname = 'LNWorldToScreenSpaceNode'
     bl_label = 'World To Screen Space'
     bl_icon = 'NONE'

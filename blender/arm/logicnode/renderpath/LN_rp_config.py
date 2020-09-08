@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RpConfigNode(ArmLogicTreeNode):
-    '''Configure renderpath node'''
+    """Configure renderpath node"""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Rp Config'
     bl_icon = 'NONE'

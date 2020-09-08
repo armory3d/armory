@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ScaleObjectNode(ArmLogicTreeNode):
-    '''Scale object node'''
+    """Scale object node"""
     bl_idname = 'LNScaleObjectNode'
     bl_label = 'Scale Object'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class NavigableLocationNode(ArmLogicTreeNode):
-    '''Navigable location node'''
+    """Navigable location node"""
     bl_idname = 'LNNavigableLocationNode'
     bl_label = 'Navigable Location'
     bl_icon = 'NONE'

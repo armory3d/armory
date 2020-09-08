@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetAssetNode(ArmLogicTreeNode):
-    '''Set canvas asset'''
+    """Set canvas asset"""
     bl_idname = 'LNCanvasSetAssetNode'
     bl_label = 'Canvas Set Asset'
     bl_icon = 'NONE'

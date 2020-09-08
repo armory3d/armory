@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class LoopBreakNode(ArmLogicTreeNode):
-    '''Loop break node'''
+    """Loop break node"""
     bl_idname = 'LNLoopBreakNode'
     bl_label = 'Loop Break'
     bl_icon = 'NONE'

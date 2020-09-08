@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class BooleanArrayNode(ArmLogicTreeNode):
-    '''Boolean array node'''
+    """Boolean array node"""
     bl_idname = 'LNArrayBooleanNode'
     bl_label = 'Array Boolean'
     bl_icon = 'NONE'

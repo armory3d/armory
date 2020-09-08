@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class WhileNode(ArmLogicTreeNode):
-    '''While node'''
+    """While node"""
     bl_idname = 'LNWhileNode'
     bl_label = 'While'
     bl_icon = 'NONE'

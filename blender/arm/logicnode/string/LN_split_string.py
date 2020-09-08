@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SplitStringNode(ArmLogicTreeNode):
-    '''Split string node'''
+    """Split string node"""
     bl_idname = 'LNSplitStringNode'
     bl_label = 'Split String'
     bl_icon = 'NONE'

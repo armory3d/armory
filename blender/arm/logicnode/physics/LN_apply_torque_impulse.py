@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ApplyTorqueImpulseNode(ArmLogicTreeNode):
-    '''Apply torque node'''
+    """Apply torque node"""
     bl_idname = 'LNApplyTorqueImpulseNode'
     bl_label = 'Apply Torque Impulse'
     bl_icon = 'NONE'

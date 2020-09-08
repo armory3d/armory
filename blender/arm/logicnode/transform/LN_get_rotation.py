@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetRotationNode(ArmLogicTreeNode):
-    '''Get rotation node'''
+    """Get rotation node"""
     bl_idname = 'LNGetRotationNode'
     bl_label = 'Get Rotation'
     bl_icon = 'NONE'

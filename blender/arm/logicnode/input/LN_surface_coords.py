@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SurfaceCoordsNode(ArmLogicTreeNode):
-    '''Surface coords node'''
+    """Surface coords node"""
     bl_idname = 'LNSurfaceCoordsNode'
     bl_label = 'Surface Coords'
     bl_icon = 'NONE'

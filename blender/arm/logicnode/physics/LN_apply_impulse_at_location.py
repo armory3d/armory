@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
-    '''Apply impulse at location node'''
+    """Apply impulse at location node"""
     bl_idname = 'LNApplyImpulseAtLocationNode'
     bl_label = 'Apply Impulse At Location'
     bl_icon = 'NONE'

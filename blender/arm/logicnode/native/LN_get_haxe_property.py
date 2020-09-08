@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetHaxePropertyNode(ArmLogicTreeNode):
-    '''Get haxe property node'''
+    """Get haxe property node"""
     bl_idname = 'LNGetHaxePropertyNode'
     bl_label = 'Get Haxe Property'
     bl_icon = 'NONE'

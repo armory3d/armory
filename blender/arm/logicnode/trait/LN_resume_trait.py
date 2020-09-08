@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ResumeTraitNode(ArmLogicTreeNode):
-    '''Resume trait node'''
+    """Resume trait node"""
     bl_idname = 'LNResumeTraitNode'
     bl_label = 'Resume Trait'
     bl_icon = 'NONE'

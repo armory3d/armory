@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetMeshNode(ArmLogicTreeNode):
-    '''Get mesh node'''
+    """Get mesh node"""
     bl_idname = 'LNGetMeshNode'
     bl_label = 'Get Mesh'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
-    '''Colorgrading Get Midtone node'''
+    """Colorgrading Get Midtone node"""
     bl_idname = 'LNColorgradingGetMidtoneNode'
     bl_label = 'Colorgrading Get Midtone'
     bl_icon = 'NONE'

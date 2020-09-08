@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetNameNode(ArmLogicTreeNode):
-    '''Set name node'''
+    """Set name node"""
     bl_idname = 'LNSetNameNode'
     bl_label = 'Set Name'
     bl_icon = 'NONE'

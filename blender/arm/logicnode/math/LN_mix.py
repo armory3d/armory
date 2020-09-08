@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class MixNode(ArmLogicTreeNode):
-    '''Mix node'''
+    """Mix node"""
     bl_idname = 'LNMixNode'
     bl_label = 'Interpolate'
     bl_icon = 'NONE'

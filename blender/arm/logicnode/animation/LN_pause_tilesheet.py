@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class PauseTilesheetNode(ArmLogicTreeNode):
-    '''Pause tilesheet node'''
+    """Pause tilesheet node"""
     bl_idname = 'LNPauseTilesheetNode'
     bl_label = 'Pause Tilesheet'
     bl_icon = 'NONE'

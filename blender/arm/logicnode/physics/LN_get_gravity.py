@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetGravityNode(ArmLogicTreeNode):
-    '''Get Gravity node'''
+    """Get Gravity node"""
     bl_idname = 'LNGetGravityNode'
     bl_label = 'Get Gravity'
     bl_icon = 'NONE'

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ReadStorageNode(ArmLogicTreeNode):
-    '''ReadStorage node'''
+    """ReadStorage node"""
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
     bl_icon = 'NONE'

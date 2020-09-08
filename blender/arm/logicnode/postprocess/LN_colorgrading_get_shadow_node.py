@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetShadowNode(ArmLogicTreeNode):
-    '''Colorgrading Get Shadow node'''
+    """Colorgrading Get Shadow node"""
     bl_idname = 'LNColorgradingGetShadowNode'
     bl_label = 'Colorgrading Get Shadow'
     bl_icon = 'NONE'

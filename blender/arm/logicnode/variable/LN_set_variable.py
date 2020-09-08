@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetVariableNode(ArmLogicTreeNode):
-    '''Set variable node'''
+    """Set variable node"""
     bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
     bl_icon = 'NONE'

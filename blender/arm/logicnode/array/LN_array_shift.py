@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class ArrayShiftNode(ArmLogicTreeNode):
-    '''Array shift node'''
+    """Array shift node"""
     bl_idname = 'LNArrayShiftNode'
     bl_label = 'Array Shift'
     bl_icon = 'NONE'

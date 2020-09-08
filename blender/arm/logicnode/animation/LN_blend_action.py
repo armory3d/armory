@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class BlendActionNode(ArmLogicTreeNode):
-    '''Blend action node'''
+    """Blend action node"""
     bl_idname = 'LNBlendActionNode'
     bl_label = 'Blend Action'
     bl_icon = 'NONE'

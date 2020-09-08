@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class OnEventNode(ArmLogicTreeNode):
-    '''On event node'''
+    """On event node"""
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
     bl_icon = 'NONE'
