@@ -4,7 +4,6 @@ class SetActionSpeedNode(ArmLogicTreeNode):
     """Set action speed node"""
     bl_idname = 'LNSetActionSpeedNode'
     bl_label = 'Set Action Speed'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

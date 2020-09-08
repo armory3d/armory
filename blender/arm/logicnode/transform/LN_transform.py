@@ -4,7 +4,6 @@ class TransformNode(ArmLogicTreeNode):
     """Transform node"""
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'Location')

@@ -4,7 +4,6 @@ class GetCameraFovNode(ArmLogicTreeNode):
     """Get camera FOV node"""
     bl_idname = 'LNGetCameraFovNode'
     bl_label = 'Get Camera FOV'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')

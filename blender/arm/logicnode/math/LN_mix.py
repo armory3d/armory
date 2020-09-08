@@ -4,7 +4,6 @@ class MixNode(ArmLogicTreeNode):
     """Mix node"""
     bl_idname = 'LNMixNode'
     bl_label = 'Interpolate'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),

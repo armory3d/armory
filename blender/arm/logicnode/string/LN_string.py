@@ -4,7 +4,6 @@ class StringNode(ArmLogicTreeNode):
     """String node"""
     bl_idname = 'LNStringNode'
     bl_label = 'String'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketString', 'Value')

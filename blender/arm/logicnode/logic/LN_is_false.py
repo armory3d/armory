@@ -5,7 +5,6 @@ class IsFalseNode(ArmLogicTreeNode):
     """Is False node"""
     bl_idname = 'LNIsFalseNode'
     bl_label = 'Is False'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

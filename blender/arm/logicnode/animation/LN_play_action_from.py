@@ -4,7 +4,6 @@ class PlayActionFromNode(ArmLogicTreeNode):
     """Play action from node"""
     bl_idname = 'LNPlayActionFromNode'
     bl_label = 'Play Action From'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

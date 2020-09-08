@@ -4,7 +4,6 @@ class GetMaterialNode(ArmLogicTreeNode):
     """Get material node"""
     bl_idname = 'LNGetMaterialNode'
     bl_label = 'Get Material'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')

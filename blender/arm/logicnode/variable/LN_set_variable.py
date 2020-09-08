@@ -4,7 +4,6 @@ class SetVariableNode(ArmLogicTreeNode):
     """Set variable node"""
     bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -5,7 +5,6 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
     """TranslateOnLocalAxisNode"""
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

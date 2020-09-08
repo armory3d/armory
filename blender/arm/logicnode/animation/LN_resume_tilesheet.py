@@ -4,7 +4,6 @@ class ResumeTilesheetNode(ArmLogicTreeNode):
     """Resume tilesheet node"""
     bl_idname = 'LNResumeTilesheetNode'
     bl_label = 'Resume Tilesheet'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

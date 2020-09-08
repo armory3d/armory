@@ -4,7 +4,6 @@ class OnUpdateNode(ArmLogicTreeNode):
     """On update node"""
     bl_idname = 'LNOnUpdateNode'
     bl_label = 'On Update'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Update', 'Update', 'Update'),
                  ('Late Update', 'Late Update', 'Late Update'),

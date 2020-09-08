@@ -7,7 +7,6 @@ class SceneNode(ArmLogicTreeNode):
     """Scene node"""
     bl_idname = 'LNSceneNode'
     bl_label = 'Scene'
-    bl_icon = 'NONE'
 
     property0_get: PointerProperty(name='', type=bpy.types.Scene)
 

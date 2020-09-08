@@ -4,7 +4,6 @@ class PickObjectNode(ArmLogicTreeNode):
     """Pick closest object node"""
     bl_idname = 'LNPickObjectNode'
     bl_label = 'Pick Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'Screen Coords')

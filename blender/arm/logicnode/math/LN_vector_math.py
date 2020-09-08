@@ -4,7 +4,6 @@ class VectorMathNode(ArmLogicTreeNode):
     """Vector math node"""
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),

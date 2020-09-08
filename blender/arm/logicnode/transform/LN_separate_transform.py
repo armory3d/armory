@@ -4,7 +4,6 @@ class SeparateTransformNode(ArmLogicTreeNode):
     """Separate transform node"""
     bl_idname = 'LNSeparateTransformNode'
     bl_label = 'Separate Transform'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketShader', 'Transform')

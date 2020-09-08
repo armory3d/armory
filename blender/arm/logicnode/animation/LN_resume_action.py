@@ -4,7 +4,6 @@ class ResumeActionNode(ArmLogicTreeNode):
     """Resume action node"""
     bl_idname = 'LNResumeActionNode'
     bl_label = 'Resume Action'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

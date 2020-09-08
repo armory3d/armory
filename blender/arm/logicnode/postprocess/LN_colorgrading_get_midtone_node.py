@@ -4,7 +4,6 @@ class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
     """Colorgrading Get Midtone node"""
     bl_idname = 'LNColorgradingGetMidtoneNode'
     bl_label = 'Colorgrading Get Midtone'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketVector', 'Saturation')

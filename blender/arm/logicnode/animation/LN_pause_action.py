@@ -4,7 +4,6 @@ class PauseActionNode(ArmLogicTreeNode):
     """Pause action node"""
     bl_idname = 'LNPauseActionNode'
     bl_label = 'Pause Action'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -4,7 +4,6 @@ class CanvasSetLocationNode(ArmLogicTreeNode):
     """Set canvas element location"""
     bl_idname = 'LNCanvasSetLocationNode'
     bl_label = 'Canvas Set Location'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

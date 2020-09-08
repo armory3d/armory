@@ -4,7 +4,6 @@ class ExpressionNode(ArmLogicTreeNode):
     """Expression node"""
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
-    bl_icon = 'NONE'
 
     property0: StringProperty(name='', default='')
 

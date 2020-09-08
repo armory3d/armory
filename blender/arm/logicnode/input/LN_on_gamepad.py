@@ -4,7 +4,6 @@ class OnGamepadNode(ArmLogicTreeNode):
     """On gamepad node"""
     bl_idname = 'LNOnGamepadNode'
     bl_label = 'On Gamepad'
-    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),

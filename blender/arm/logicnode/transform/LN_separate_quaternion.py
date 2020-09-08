@@ -5,7 +5,6 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
 
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'Quaternion')

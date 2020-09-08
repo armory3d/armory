@@ -4,7 +4,6 @@ class RpSuperSampleNode(ArmLogicTreeNode):
     """Configure super sampling node"""
     bl_idname = 'LNRpSuperSampleNode'
     bl_label = 'Rp Super-sampling'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('1', '1', '1'),
                  ('1.5', '1.5', '1.5'),

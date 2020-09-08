@@ -4,7 +4,6 @@ class SetGravityEnabledNode(ArmLogicTreeNode):
     """Node to enable or disable gravity on a specific object."""
     bl_idname = 'LNSetGravityEnabledNode'
     bl_label = 'Set Gravity Enabled'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

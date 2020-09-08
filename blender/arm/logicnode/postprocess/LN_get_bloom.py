@@ -4,7 +4,6 @@ class BloomGetNode(ArmLogicTreeNode):
     """Get Bloom Effect"""
     bl_idname = 'LNBloomGetNode'
     bl_label = 'Get Bloom'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketFloat', 'Threshold')

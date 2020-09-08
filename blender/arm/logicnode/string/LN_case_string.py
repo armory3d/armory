@@ -4,7 +4,6 @@ class CaseStringNode(ArmLogicTreeNode):
     """Converts strings's case node"""
     bl_idname = 'LNCaseStringNode'
     bl_label = 'Case String'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Upper Case', 'Upper Case', 'Upper Case'),
                  ('Lower Case', 'Lower Case', 'Lower Case'),

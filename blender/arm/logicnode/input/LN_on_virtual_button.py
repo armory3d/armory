@@ -4,7 +4,6 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     """On virtual button node"""
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),

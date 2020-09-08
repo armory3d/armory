@@ -4,7 +4,6 @@ class IsNotNoneNode(ArmLogicTreeNode):
     """Is not none node"""
     bl_idname = 'LNIsNotNoneNode'
     bl_label = 'Is Not None'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

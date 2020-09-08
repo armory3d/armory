@@ -4,7 +4,6 @@ class ArrayLengthNode(ArmLogicTreeNode):
     """Array length node"""
     bl_idname = 'LNArrayLengthNode'
     bl_label = 'Array Length'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')

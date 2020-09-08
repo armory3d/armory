@@ -4,7 +4,6 @@ class SetCameraFovNode(ArmLogicTreeNode):
     """Set the camera's field of view."""
     bl_idname = 'LNSetCameraFovNode'
     bl_label = 'Set Camera FOV'
-    bl_icon = 'NONE'
     bl_description = 'Set the camera\'s field of view'
 
     def init(self, context):

@@ -4,7 +4,6 @@ class BlendActionNode(ArmLogicTreeNode):
     """Blend action node"""
     bl_idname = 'LNBlendActionNode'
     bl_label = 'Blend Action'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

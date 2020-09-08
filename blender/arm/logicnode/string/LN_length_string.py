@@ -4,7 +4,6 @@ class LengthStringNode(ArmLogicTreeNode):
     """String Length node"""
     bl_idname = 'LNLengthStringNode'
     bl_label = 'String Length'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketInt', 'length')

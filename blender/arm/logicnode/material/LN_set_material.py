@@ -4,7 +4,6 @@ class SetMaterialNode(ArmLogicTreeNode):
     """Set material node"""
     bl_idname = 'LNSetMaterialNode'
     bl_label = 'Set Material'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

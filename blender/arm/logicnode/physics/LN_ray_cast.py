@@ -4,7 +4,6 @@ class RayCastNode(ArmLogicTreeNode):
     """Cast physics ray node"""
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'From')

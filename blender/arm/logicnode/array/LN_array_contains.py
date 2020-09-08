@@ -4,7 +4,6 @@ class ArrayContainsNode(ArmLogicTreeNode):
     """Array contains node"""
     bl_idname = 'LNArrayInArrayNode'
     bl_label = 'Array Contains'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')

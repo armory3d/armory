@@ -4,7 +4,6 @@ class SleepNode(ArmLogicTreeNode):
     """Sleep node"""
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

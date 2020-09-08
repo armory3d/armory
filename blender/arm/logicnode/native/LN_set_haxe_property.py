@@ -4,7 +4,6 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
     """Set haxe property node"""
     bl_idname = 'LNSetHaxePropertyNode'
     bl_label = 'Set Haxe Property'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

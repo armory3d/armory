@@ -4,7 +4,6 @@ class MouseCoordsNode(ArmLogicTreeNode):
     """Mouse coords node"""
     bl_idname = 'LNMouseCoordsNode'
     bl_label = 'Mouse Coords'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketVector', 'Coords')

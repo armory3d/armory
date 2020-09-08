@@ -4,7 +4,6 @@ class LenstextureGetNode(ArmLogicTreeNode):
     """Get Tonemapper Effect"""
     bl_idname = 'LNLenstextureGetNode'
     bl_label = 'Get Lenstexture'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketFloat', 'Center Min Clip')

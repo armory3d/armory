@@ -4,7 +4,6 @@ class GetChildrenNode(ArmLogicTreeNode):
     """Get children node"""
     bl_idname = 'LNGetChildrenNode'
     bl_label = 'Get Children'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')

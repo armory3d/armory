@@ -4,7 +4,6 @@ class SetPropertyNode(ArmLogicTreeNode):
     """Set property node"""
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Property'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

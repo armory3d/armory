@@ -7,7 +7,6 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     """Spawns a collection to the current scene."""
     bl_idname = 'LNSpawnCollectionNode'
     bl_label = 'Spawn Collection'
-    bl_icon = 'NONE'
 
     property0: PointerProperty(name='Collection', type=bpy.types.Collection)
 

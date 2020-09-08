@@ -4,7 +4,6 @@ class CanvasSetSliderNode(ArmLogicTreeNode):
     """Set canvas text"""
     bl_idname = 'LNCanvasSetSliderNode'
     bl_label = 'Canvas Set Slider'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

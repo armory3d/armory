@@ -4,7 +4,6 @@ class ParseFloatNode(ArmLogicTreeNode):
     """Parse float node"""
     bl_idname = 'LNParseFloatNode'
     bl_label = 'Parse Float'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketFloat', 'Float')

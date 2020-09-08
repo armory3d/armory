@@ -4,7 +4,6 @@ class ColorgradingGetShadowNode(ArmLogicTreeNode):
     """Colorgrading Get Shadow node"""
     bl_idname = 'LNColorgradingGetShadowNode'
     bl_label = 'Colorgrading Get Shadow'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketFloat', 'ShadowMax')

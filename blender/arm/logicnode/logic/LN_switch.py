@@ -4,7 +4,6 @@ class SwitchNode(ArmLogicTreeNode):
     """Switch node"""
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
-    bl_icon = 'NONE'
     min_inputs = 2
     min_outputs = 1
 

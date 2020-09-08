@@ -4,7 +4,6 @@ class CanvasGetRotationNode(ArmLogicTreeNode):
     """Get canvas element rotation"""
     bl_idname = 'LNCanvasGetRotationNode'
     bl_label = 'Canvas Get Rotation'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

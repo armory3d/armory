@@ -4,7 +4,6 @@ class DisplayInfoNode(ArmLogicTreeNode):
     """Display info node"""
     bl_idname = 'LNDisplayInfoNode'
     bl_label = 'Display Info'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketInt', 'Width')

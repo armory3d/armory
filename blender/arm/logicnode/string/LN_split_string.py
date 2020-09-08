@@ -4,7 +4,6 @@ class SplitStringNode(ArmLogicTreeNode):
     """Split string node"""
     bl_idname = 'LNSplitStringNode'
     bl_label = 'Split String'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array')

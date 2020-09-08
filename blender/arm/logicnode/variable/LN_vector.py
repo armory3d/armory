@@ -4,7 +4,6 @@ class VectorNode(ArmLogicTreeNode):
     """Vector node"""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketFloat', 'X')

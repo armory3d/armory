@@ -4,7 +4,6 @@ class CanvasGetPBNode(ArmLogicTreeNode):
     """Get canvas progress bar"""
     bl_idname = 'LNCanvasGetPBNode'
     bl_label = 'Canvas Get Progress Bar'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -4,7 +4,6 @@ class SetParentNode(ArmLogicTreeNode):
     """Set parent node"""
     bl_idname = 'LNSetParentNode'
     bl_label = 'Set Parent'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

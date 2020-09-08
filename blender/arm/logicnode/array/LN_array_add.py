@@ -4,7 +4,6 @@ class ArrayAddNode(ArmLogicTreeNode):
     """Array add node"""
     bl_idname = 'LNArrayAddNode'
     bl_label = 'Array Add'
-    bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

@@ -4,7 +4,6 @@ class OnTimerNode(ArmLogicTreeNode):
     """On timer node"""
     bl_idname = 'LNOnTimerNode'
     bl_label = 'On Timer'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketFloat', 'Duration')

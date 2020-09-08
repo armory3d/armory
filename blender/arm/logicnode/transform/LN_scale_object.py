@@ -4,7 +4,6 @@ class ScaleObjectNode(ArmLogicTreeNode):
     """Scale object node"""
     bl_idname = 'LNScaleObjectNode'
     bl_label = 'Scale Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

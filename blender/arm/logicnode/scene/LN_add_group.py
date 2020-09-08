@@ -4,7 +4,6 @@ class AddGroupNode(ArmLogicTreeNode):
     """Add Group node"""
     bl_idname = 'LNAddGroupNode'
     bl_label = 'Add Collection'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

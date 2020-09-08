@@ -4,7 +4,6 @@ class MouseNode(ArmLogicTreeNode):
     """Mouse node"""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),

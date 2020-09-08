@@ -4,7 +4,6 @@ class RpConfigNode(ArmLogicTreeNode):
     """Configure renderpath node"""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Rp Config'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('SSGI', 'SSGI', 'SSGI'),
                  ('SSR', 'SSR', 'SSR'),

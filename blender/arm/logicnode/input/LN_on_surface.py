@@ -4,7 +4,6 @@ class OnSurfaceNode(ArmLogicTreeNode):
     """On surface node"""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),

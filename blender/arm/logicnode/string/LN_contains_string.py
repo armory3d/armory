@@ -4,7 +4,6 @@ class ContainsStringNode(ArmLogicTreeNode):
     """Contains string node"""
     bl_idname = 'LNContainsStringNode'
     bl_label = 'Contains String'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),

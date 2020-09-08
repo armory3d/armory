@@ -4,7 +4,6 @@ class DegToRadNode(ArmLogicTreeNode):
     """Degrees to radians node"""
     bl_idname = 'LNDegToRadNode'
     bl_label = 'Deg to Rad'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketFloat', 'Degrees')

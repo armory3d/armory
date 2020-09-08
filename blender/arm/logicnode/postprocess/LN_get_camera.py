@@ -4,7 +4,6 @@ class CameraGetNode(ArmLogicTreeNode):
     """Get postprocessing effects of the camera."""
     bl_idname = 'LNCameraGetNode'
     bl_label = 'Get Camera Postprocessing'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketFloat', 'F-Stop')

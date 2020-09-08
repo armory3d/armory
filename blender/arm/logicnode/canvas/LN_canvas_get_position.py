@@ -4,7 +4,6 @@ class CanvasGetPositionNode(ArmLogicTreeNode):
     """Get canvas radio and combo value"""
     bl_idname = 'LNCanvasGetPositionNode'
     bl_label = 'Canvas Get Position'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketString', 'Element')

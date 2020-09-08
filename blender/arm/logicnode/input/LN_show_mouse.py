@@ -4,7 +4,6 @@ class ShowMouseNode(ArmLogicTreeNode):
     """Show Mouse node"""
     bl_idname = 'LNShowMouseNode'
     bl_label = 'Show Mouse'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

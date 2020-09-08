@@ -7,7 +7,6 @@ class GetObjectNode(ArmLogicTreeNode):
     """Get object node"""
     bl_idname = 'LNGetObjectNode'
     bl_label = 'Get Object'
-    bl_icon = 'NONE'
 
     property0: PointerProperty(
         type=bpy.types.Scene, name='Scene',

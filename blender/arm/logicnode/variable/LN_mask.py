@@ -4,7 +4,6 @@ class MaskNode(ArmLogicTreeNode):
     """Mask node"""
     bl_idname = 'LNMaskNode'
     bl_label = 'Mask'
-    bl_icon = 'NONE'
 
     def init(self, context):
         for i in range(1, 21):

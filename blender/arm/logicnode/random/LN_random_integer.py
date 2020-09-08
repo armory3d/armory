@@ -5,7 +5,6 @@ class RandomIntegerNode(ArmLogicTreeNode):
     """Random integer node"""
     bl_idname = 'LNRandomIntegerNode'
     bl_label = 'Random Integer'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketInt', 'Min')

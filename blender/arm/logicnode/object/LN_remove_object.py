@@ -4,7 +4,6 @@ class RemoveObjectNode(ArmLogicTreeNode):
     """Remove object node"""
     bl_idname = 'LNRemoveObjectNode'
     bl_label = 'Remove Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

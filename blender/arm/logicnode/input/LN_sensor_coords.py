@@ -4,7 +4,6 @@ class SensorCoordsNode(ArmLogicTreeNode):
     """Sensor coords node"""
     bl_idname = 'LNSensorCoordsNode'
     bl_label = 'Sensor Coords'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketVector', 'Coords')

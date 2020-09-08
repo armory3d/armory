@@ -4,7 +4,6 @@ class SetScaleNode(ArmLogicTreeNode):
     """Set scale node"""
     bl_idname = 'LNSetScaleNode'
     bl_label = 'Set Scale'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -4,7 +4,6 @@ class SelfTraitNode(ArmLogicTreeNode):
     """Self trait node"""
     bl_idname = 'LNSelfTraitNode'
     bl_label = 'Self Trait'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketShader', 'Trait')

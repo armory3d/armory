@@ -7,7 +7,6 @@ class ScriptNode(ArmLogicTreeNode):
     """Script node"""
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'
-    bl_icon = 'NONE'
 
     @property
     def property0(self):

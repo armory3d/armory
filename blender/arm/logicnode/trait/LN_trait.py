@@ -4,7 +4,6 @@ class TraitNode(ArmLogicTreeNode):
     """Trait node"""
     bl_idname = 'LNTraitNode'
     bl_label = 'Trait'
-    bl_icon = 'NONE'
 
     property0: StringProperty(name='', default='')
 

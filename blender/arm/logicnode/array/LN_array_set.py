@@ -4,7 +4,6 @@ class ArraySetNode(ArmLogicTreeNode):
     """Array set node"""
     bl_idname = 'LNArraySetNode'
     bl_label = 'Array Set'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -4,7 +4,6 @@ class BooleanNode(ArmLogicTreeNode):
     """Bool node"""
     bl_idname = 'LNBooleanNode'
     bl_label = 'Boolean'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketBool', 'Value')

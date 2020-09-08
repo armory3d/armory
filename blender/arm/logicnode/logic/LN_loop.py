@@ -4,7 +4,6 @@ class LoopNode(ArmLogicTreeNode):
     """Loop node"""
     bl_idname = 'LNLoopNode'
     bl_label = 'Loop'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

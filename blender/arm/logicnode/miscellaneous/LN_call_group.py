@@ -8,7 +8,6 @@ class CallGroupNode(ArmLogicTreeNode):
     """Call group node"""
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
-    bl_icon = 'NONE'
 
     @property
     def property0(self):

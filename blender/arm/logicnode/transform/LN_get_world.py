@@ -4,7 +4,6 @@ class GetWorldNode(ArmLogicTreeNode):
     """Get world node"""
     bl_idname = 'LNGetWorldNode'
     bl_label = 'Get World'
-    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('right', 'right', 'right'),

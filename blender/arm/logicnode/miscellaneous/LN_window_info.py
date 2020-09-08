@@ -4,7 +4,6 @@ class WindowInfoNode(ArmLogicTreeNode):
     """Window info node"""
     bl_idname = 'LNWindowInfoNode'
     bl_label = 'Window Info'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketInt', 'Width')

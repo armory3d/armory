@@ -4,7 +4,6 @@ class GetHaxePropertyNode(ArmLogicTreeNode):
     """Get haxe property node"""
     bl_idname = 'LNGetHaxePropertyNode'
     bl_label = 'Get Haxe Property'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketShader', 'Dynamic')

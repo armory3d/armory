@@ -5,7 +5,6 @@ class RandomBooleanNode(ArmLogicTreeNode):
     """Random boolean node"""
     bl_idname = 'LNRandomBooleanNode'
     bl_label = 'Random Boolean'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketBool', 'Bool')

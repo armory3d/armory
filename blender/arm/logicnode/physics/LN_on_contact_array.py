@@ -4,7 +4,6 @@ class OnContactArrayNode(ArmLogicTreeNode):
     """On contact array node"""
     bl_idname = 'LNOnContactArrayNode'
     bl_label = 'On Contact Array'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),

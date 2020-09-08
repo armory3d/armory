@@ -4,7 +4,6 @@ class SSRSetNode(ArmLogicTreeNode):
     """Set SSR Effect"""
     bl_idname = 'LNSSRSetNode'
     bl_label = 'Set SSR'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

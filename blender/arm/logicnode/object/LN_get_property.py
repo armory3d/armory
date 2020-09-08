@@ -4,7 +4,6 @@ class GetPropertyNode(ArmLogicTreeNode):
     """Get property node"""
     bl_idname = 'LNGetPropertyNode'
     bl_label = 'Get Property'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')

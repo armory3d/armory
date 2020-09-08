@@ -4,7 +4,6 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
     """Vector clamp to size node"""
     bl_idname = 'LNVectorClampToSizeNode'
     bl_label = 'Vector Clamp To Size'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])

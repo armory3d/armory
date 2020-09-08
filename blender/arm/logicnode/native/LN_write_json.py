@@ -4,7 +4,6 @@ class WriteJsonNode(ArmLogicTreeNode):
     """Write JSON node"""
     bl_idname = 'LNWriteJsonNode'
     bl_label = 'Write JSON'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

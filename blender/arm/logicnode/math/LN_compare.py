@@ -9,7 +9,6 @@ class CompareNode(ArmLogicTreeNode):
     """Compare node"""
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),

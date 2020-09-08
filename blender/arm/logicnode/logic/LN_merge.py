@@ -4,7 +4,6 @@ class MergeNode(ArmLogicTreeNode):
     """Merge node"""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
-    bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

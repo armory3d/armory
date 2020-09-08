@@ -4,7 +4,6 @@ class ApplyTorqueImpulseNode(ArmLogicTreeNode):
     """Apply torque node"""
     bl_idname = 'LNApplyTorqueImpulseNode'
     bl_label = 'Apply Torque Impulse'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

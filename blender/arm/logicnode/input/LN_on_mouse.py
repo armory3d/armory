@@ -4,7 +4,6 @@ class OnMouseNode(ArmLogicTreeNode):
     """On mouse node"""
     bl_idname = 'LNOnMouseNode'
     bl_label = 'On Mouse'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),

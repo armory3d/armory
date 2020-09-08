@@ -4,7 +4,6 @@ class AppendTransformNode(ArmLogicTreeNode):
     """Append transform node"""
     bl_idname = 'LNAppendTransformNode'
     bl_label = 'Append Transform'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

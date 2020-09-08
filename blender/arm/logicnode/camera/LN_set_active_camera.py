@@ -4,7 +4,6 @@ class SetCameraNode(ArmLogicTreeNode):
     """Set the active camera of the active scene."""
     bl_idname = 'LNSetCameraNode'
     bl_label = 'Set Active Camera'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

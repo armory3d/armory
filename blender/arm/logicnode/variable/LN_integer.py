@@ -4,7 +4,6 @@ class IntegerNode(ArmLogicTreeNode):
     """Int node"""
     bl_idname = 'LNIntegerNode'
     bl_label = 'Integer'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketInt', 'Value')

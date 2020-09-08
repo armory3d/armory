@@ -4,7 +4,6 @@ class RpMSAANode(ArmLogicTreeNode):
     """Configure multi-sample anti-aliasing node"""
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Rp MSAA'
-    bl_icon = 'NONE'
     property0: EnumProperty(
         items = [('1', '1', '1'),
                  ('2', '2', '2'),

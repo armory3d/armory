@@ -4,7 +4,6 @@ class SendGlobalEventNode(ArmLogicTreeNode):
     """Send global event node"""
     bl_idname = 'LNSendGlobalEventNode'
     bl_label = 'Send Global Event'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

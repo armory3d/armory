@@ -7,7 +7,6 @@ class MeshNode(ArmLogicTreeNode):
     """Mesh node"""
     bl_idname = 'LNMeshNode'
     bl_label = 'Mesh'
-    bl_icon = 'NONE'
 
     property0_get: PointerProperty(name='', type=bpy.types.Mesh)
 

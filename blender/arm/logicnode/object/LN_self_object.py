@@ -4,7 +4,6 @@ class SelfObjectNode(ArmLogicTreeNode):
     """Returns the object that owns the current trait."""
     bl_idname = 'LNSelfNode'
     bl_label = 'Self Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')

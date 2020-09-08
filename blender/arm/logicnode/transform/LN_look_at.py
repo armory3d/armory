@@ -4,7 +4,6 @@ class LookAtNode(ArmLogicTreeNode):
     """Look at node"""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
-    bl_icon = 'NONE'
 
     property0: EnumProperty(
         items = [('X', ' X', 'X'),

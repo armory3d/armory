@@ -4,7 +4,6 @@ class StopAgentNode(ArmLogicTreeNode):
     """Stop agent node"""
     bl_idname = 'LNStopAgentNode'
     bl_label = 'Stop Agent'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

@@ -4,7 +4,6 @@ class WorldToScreenSpaceNode(ArmLogicTreeNode):
     """World to screen space node"""
     bl_idname = 'LNWorldToScreenSpaceNode'
     bl_label = 'World To Screen Space'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketVector', 'Vector')

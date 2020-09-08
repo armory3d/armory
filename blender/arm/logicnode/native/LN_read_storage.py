@@ -4,7 +4,6 @@ class ReadStorageNode(ArmLogicTreeNode):
     """ReadStorage node"""
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketString', 'Key')

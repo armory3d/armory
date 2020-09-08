@@ -4,7 +4,6 @@ class SSAOSetNode(ArmLogicTreeNode):
     """Set SSAO Effect"""
     bl_idname = 'LNSSAOSetNode'
     bl_label = 'Set SSAO'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

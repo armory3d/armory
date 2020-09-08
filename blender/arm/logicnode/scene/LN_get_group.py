@@ -4,7 +4,6 @@ class GetGroupNode(ArmLogicTreeNode):
     """Get group node"""
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Collection'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketString', 'Name')

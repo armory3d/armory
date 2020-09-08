@@ -4,7 +4,6 @@ class SetMeshNode(ArmLogicTreeNode):
     """Set mesh node"""
     bl_idname = 'LNSetMeshNode'
     bl_label = 'Set Mesh'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

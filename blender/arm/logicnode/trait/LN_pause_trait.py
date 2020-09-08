@@ -4,7 +4,6 @@ class PauseTraitNode(ArmLogicTreeNode):
     """Pause trait node"""
     bl_idname = 'LNPauseTraitNode'
     bl_label = 'Pause Trait'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

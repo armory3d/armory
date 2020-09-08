@@ -4,7 +4,6 @@ class SurfaceCoordsNode(ArmLogicTreeNode):
     """Surface coords node"""
     bl_idname = 'LNSurfaceCoordsNode'
     bl_label = 'Surface Coords'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_output('NodeSocketVector', 'Coords')

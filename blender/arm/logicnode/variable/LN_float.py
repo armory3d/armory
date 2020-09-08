@@ -4,7 +4,6 @@ class FloatNode(ArmLogicTreeNode):
     """Float node"""
     bl_idname = 'LNFloatNode'
     bl_label = 'Float'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('NodeSocketFloat', 'Value')

@@ -4,7 +4,6 @@ class CameraSetNode(ArmLogicTreeNode):
     """Set postprocessing effects of the camera."""
     bl_idname = 'LNCameraSetNode'
     bl_label = 'Set Camera Postprocessing'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

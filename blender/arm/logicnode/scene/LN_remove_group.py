@@ -4,7 +4,6 @@ class RemoveGroupNode(ArmLogicTreeNode):
     """Remove Group node"""
     bl_idname = 'LNRemoveGroupNode'
     bl_label = 'Remove Collection'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

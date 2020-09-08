@@ -4,7 +4,6 @@ class TranslateObjectNode(ArmLogicTreeNode):
     """Translate object node"""
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

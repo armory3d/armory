@@ -4,7 +4,6 @@ class RotateObjectNode(ArmLogicTreeNode):
     """Rotate object node"""
     bl_idname = 'LNRotateObjectNode'
     bl_label = 'Rotate Object'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

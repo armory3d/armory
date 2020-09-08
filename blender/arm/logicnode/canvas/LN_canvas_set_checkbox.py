@@ -4,7 +4,6 @@ class CanvasSetCheckBoxNode(ArmLogicTreeNode):
     """Set canvas check box"""
     bl_idname = 'LNCanvasSetCheckBoxNode'
     bl_label = 'Canvas Set Checkbox'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

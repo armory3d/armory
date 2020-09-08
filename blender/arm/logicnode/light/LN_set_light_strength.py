@@ -4,7 +4,6 @@ class SetLightStrengthNode(ArmLogicTreeNode):
     """Set light strength node"""
     bl_idname = 'LNSetLightStrengthNode'
     bl_label = 'Set Light Strength'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

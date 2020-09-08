@@ -4,7 +4,6 @@ class SetGravityNode(ArmLogicTreeNode):
     """Set Gravity node"""
     bl_idname = 'LNSetGravityNode'
     bl_label = 'Set Gravity'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

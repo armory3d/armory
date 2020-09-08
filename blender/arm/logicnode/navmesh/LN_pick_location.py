@@ -4,7 +4,6 @@ class PickLocationNode(ArmLogicTreeNode):
     """Pick location node"""
     bl_idname = 'LNPickLocationNode'
     bl_label = 'Pick Location'
-    bl_icon = 'NONE'
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Navmesh')
