@@ -10,7 +10,7 @@ class GetGravityNode extends LogicNode {
 
 #if arm_physics
         var physics = armory.trait.physics.PhysicsWorld.active;
-		return physics.world.getGravity();
+		return physics.getGravity();
 #end
 
 		return null;
