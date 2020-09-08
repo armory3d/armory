@@ -4,10 +4,10 @@ import pkgutil
 from arm.logicnode import arm_nodes
 
 # Register node menu categories
-arm_nodes.add_category('Logic', icon='OUTLINER', description="Test") #MOD_MASK | SELECT_DIFFERENCE
-arm_nodes.add_category('Event', icon='INFO', description="Test")
-arm_nodes.add_category('Input', icon='GREASEPENCIL', section="default") #EVENT_RETURN
-arm_nodes.add_category('Native', icon='MEMORY', section="default") #SYSTEM
+arm_nodes.add_category('Logic', icon='OUTLINER', section="basic") #MOD_MASK | SELECT_DIFFERENCE
+arm_nodes.add_category('Event', icon='INFO', section="basic")
+arm_nodes.add_category('Input', icon='GREASEPENCIL', section="basic") #EVENT_RETURN
+arm_nodes.add_category('Native', icon='MEMORY', section="basic") #SYSTEM
 
 arm_nodes.add_category('Camera', icon='OUTLINER_OB_CAMERA', section="data")
 arm_nodes.add_category('Material', icon='MATERIAL', section="data")
@@ -35,6 +35,10 @@ arm_nodes.add_category('Sound', icon='OUTLINER_OB_SPEAKER', section="sound")
 
 arm_nodes.add_category('Miscellaneous', icon='RESTRICT_COLOR_ON', section="misc")
 arm_nodes.add_category('Layout', icon='SEQ_STRIP_DUPLICATE', section="misc") # ANCHOR_LEFT | UV_ISLANDSEL
+
+# Make sure that logic node extension packs are displayed at the end
+# of the menu by default unless they declare it otherwise
+arm_nodes.add_category_section('default')
 
 # Import all nodes so that the modules are registered
 __all__ = []
