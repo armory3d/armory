@@ -2,6 +2,7 @@ from typing import Callable
 import webbrowser
 
 import bpy
+from bpy.props import BoolProperty, StringProperty
 from bpy.types import NodeTree
 import nodeitems_utils
 
@@ -53,6 +54,31 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
             ARM_MT_NodeAddOverride.overridden_draw(self, context)
 
 
+class ARM_OT_AddNodeOverride(bpy.types.Operator):
+    bl_idname = "arm.add_node_override"
+    bl_label = "Add Node"
+    bl_property = "type"
+
+    type: StringProperty(name="NodeItem type")
+    use_transform: BoolProperty(name="Use Transform")
+
+    def invoke(self, context, event):
+        bpy.ops.node.add_node(self.type, use_transform=self.use_transform)
+        return {"FINISHED"}
+
+    @classmethod
+    def description(cls, context, properties):
+        """Show the node's bl_description attribute as a tooltip or, if
+        it doesn't exist, its docstring."""
+        # Type name to type
+        nodetype = bpy.types.bpy_struct.bl_rna_get_subclass_py(properties.type)
+
+        if hasattr(nodetype, 'bl_description'):
+            return nodetype.bl_description.split('.')[0]
+
+        return nodetype.__doc__.split('.')[0]
+
+
 def get_category_draw_func(category: ArmNodeCategory):
     def draw_category_menu(self, context):
         layout = self.layout
@@ -62,7 +88,7 @@ def get_category_draw_func(category: ArmNodeCategory):
                 layout.separator()
 
             for node_item in node_section:
-                op = layout.operator("node.add_node", text=node_item.label)
+                op = layout.operator("arm.add_node_override", text=node_item.label)
                 op.type = node_item.nodetype
                 op.use_transform = True
 
@@ -360,6 +386,7 @@ def register():
     bpy.utils.register_class(ARMAddSetVarNode)
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
+    bpy.utils.register_class(ARM_OT_AddNodeOverride)
 
     register_nodes()
 
@@ -374,6 +401,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_Variables)
     bpy.utils.unregister_class(ARMAddVarNode)
     bpy.utils.unregister_class(ARMAddSetVarNode)
+    bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
 
     arm_sockets.unregister()
