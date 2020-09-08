@@ -6,14 +6,14 @@ from arm.logicnode.arm_nodes import *
 class ArrayNode(ArmLogicTreeNode):
     '''Array node'''
     bl_idname = 'LNArrayNode'
-    bl_label = 'Array'
+    bl_label = 'Array Dynamic'
     bl_icon = 'NONE'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.add_output('ArmNodeSocketArray', 'Array')
+        self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('NodeSocketInt', 'Length')
 
     def draw_buttons(self, context, layout):

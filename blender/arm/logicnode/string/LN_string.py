@@ -11,6 +11,6 @@ class StringNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('NodeSocketString', 'Value')
-        self.add_output('NodeSocketString', 'String')
+        self.add_output('NodeSocketString', 'String', is_var=True)
 
 add_node(StringNode, category=MODULE_AS_CATEGORY)

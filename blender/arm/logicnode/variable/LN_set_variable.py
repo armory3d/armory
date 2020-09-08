@@ -11,7 +11,7 @@ class SetVariableNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Variable')
+        self.add_input('NodeSocketShader', 'Variable', is_var=True)
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
 

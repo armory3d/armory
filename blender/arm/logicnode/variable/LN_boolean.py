@@ -11,6 +11,6 @@ class BooleanNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('NodeSocketBool', 'Value')
-        self.add_output('NodeSocketBool', 'Bool').display_shape = 'CIRCLE_DOT'
+        self.add_output('NodeSocketBool', 'Bool', is_var=True)
 
 add_node(BooleanNode, category=MODULE_AS_CATEGORY)

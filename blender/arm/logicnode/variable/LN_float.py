@@ -11,6 +11,6 @@ class FloatNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('NodeSocketFloat', 'Value')
-        self.add_output('NodeSocketFloat', 'Float')
+        self.add_output('NodeSocketFloat', 'Float', is_var=True)
 
 add_node(FloatNode, category=MODULE_AS_CATEGORY)

@@ -12,7 +12,7 @@ class MeshNode(ArmLogicTreeNode):
     property0_get: PointerProperty(name='', type=bpy.types.Mesh)
 
     def init(self, context):
-        self.add_output('NodeSocketShader', 'Mesh')
+        self.add_output('NodeSocketShader', 'Mesh', is_var=True)
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_get', bpy.data, 'meshes', icon='NONE', text='')

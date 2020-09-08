@@ -11,6 +11,6 @@ class IntegerNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('NodeSocketInt', 'Value')
-        self.add_output('NodeSocketInt', 'Int')
+        self.add_output('NodeSocketInt', 'Int', is_var=True)
 
 add_node(IntegerNode, category=MODULE_AS_CATEGORY)

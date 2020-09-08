@@ -21,7 +21,7 @@ class MaterialNode(ArmLogicTreeNode):
     property0: PointerProperty(name='', type=bpy.types.Material)
 
     def init(self, context):
-        self.add_output('NodeSocketShader', 'Material')
+        self.add_output('NodeSocketShader', 'Material', is_var=True)
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'materials', icon='NONE', text='')

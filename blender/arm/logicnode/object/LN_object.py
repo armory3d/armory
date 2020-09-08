@@ -11,6 +11,6 @@ class ObjectNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketObject', 'Object', is_var=True)
 
 add_node(ObjectNode, category=MODULE_AS_CATEGORY)

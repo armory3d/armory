@@ -35,8 +35,8 @@ class ArmLogicTreeNode(bpy.types.Node):
         if default_value is not None:
             socket.default_value = default_value
 
-        if is_var and not socket.display_shape.endswith('DOT'):
-            socket.display_shape += 'DOT'
+        if is_var and not socket.display_shape.endswith('_DOT'):
+            socket.display_shape += '_DOT'
 
         return socket
 
