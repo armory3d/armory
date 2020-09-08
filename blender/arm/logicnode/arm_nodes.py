@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import itertools
-from typing import Generator, List, Optional, Type
+from typing import Any, Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -22,6 +22,40 @@ class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
+
+    def add_input(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Adds a new input socket to the node.
+
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+        socket = self.inputs.new(socket_type, socket_name)
+
+        if default_value is not None:
+            socket.default_value = default_value
+
+        if is_var and not socket.display_shape.endswith('DOT'):
+            socket.display_shape += 'DOT'
+
+        return socket
+
+    def add_output(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Adds a new output socket to the node.
+
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+        socket = self.outputs.new(socket_type, socket_name)
+
+        if default_value is not None:
+            socket.default_value = default_value
+
+        if is_var and not socket.display_shape.endswith('_DOT'):
+            socket.display_shape += '_DOT'
+
+        return socket
 
 
 class ArmNodeAddInputButton(bpy.types.Operator):
