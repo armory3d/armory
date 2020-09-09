@@ -63,7 +63,7 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
     use_transform: BoolProperty(name="Use Transform")
 
     def invoke(self, context, event):
-        bpy.ops.node.add_node(self.type, use_transform=self.use_transform)
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
         return {"FINISHED"}
 
     @classmethod
