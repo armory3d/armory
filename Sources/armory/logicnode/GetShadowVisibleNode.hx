@@ -11,7 +11,7 @@ class GetShadowVisibleNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
 
-		if (object == null) return;
+		if (object == null) false;
 
 		return object.visibleShadow;
 	}
