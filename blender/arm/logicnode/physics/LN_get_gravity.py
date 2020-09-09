@@ -6,6 +6,6 @@ class GetGravityNode(ArmLogicTreeNode):
     bl_label = 'Get Gravity'
 
     def init(self, context):
-        self.add_input('NodeSocketVector', 'Gravity')
+        self.add_output('NodeSocketVector', 'Gravity')
 
 add_node(GetGravityNode, category=PKG_AS_CATEGORY)

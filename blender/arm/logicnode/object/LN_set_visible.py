@@ -8,7 +8,7 @@ class SetVisibleNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Bool')
+        self.add_input('NodeSocketBool', 'Visible')
         self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetVisibleNode, category=PKG_AS_CATEGORY, section='props')
