@@ -19,9 +19,12 @@ class ClearParentNode extends LogicNode {
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		if (rigidBody != null) rigidBody.syncTransform();
+		if (rigidBody != null) {
+		rigidBody.animated = false; // workaround
+		rigidBody.syncTransform();
+		}
 		#end
-		
+
 		iron.Scene.active.root.addChild(object, false);
 
 		runOutput(0);

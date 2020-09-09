@@ -24,10 +24,10 @@ class SetParentNode extends LogicNode {
 		if (object == null || parent == null || object.parent == parent) return;
 
 		object.parent.removeChild(object, isUnparent); // keepTransform
-		
+
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		if (rigidBody != null) rigidBody.setActivationState(0);
+		if (rigidBody != null) rigidBody.animated = true;
 		#end
 
 		parent.addChild(object, !isUnparent); // applyInverse
