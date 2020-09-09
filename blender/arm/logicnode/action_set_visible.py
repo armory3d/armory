@@ -12,7 +12,7 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketBool', 'Bool')
+        self.inputs.new('NodeSocketBool', 'Visible')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(SetVisibleNode, category='Action')
