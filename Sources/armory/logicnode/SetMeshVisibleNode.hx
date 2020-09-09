@@ -12,7 +12,7 @@ class SetMeshVisibleNode extends LogicNode {
 		var object: Object = inputs[1].get();
 		var visible: Bool = inputs[2].get();
 
-		if (object == null) return;
+		if (object == null) false;
 
 		object.visibleMesh = visible;
 
