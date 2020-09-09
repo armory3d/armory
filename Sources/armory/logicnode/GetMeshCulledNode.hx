@@ -11,7 +11,7 @@ class GetMeshCulledNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
 
-		if (object == null) false;
+		if (object == null) return;
 
 		return object.culledMesh;
 	}
