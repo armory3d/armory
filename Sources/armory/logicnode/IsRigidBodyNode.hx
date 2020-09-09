@@ -12,7 +12,7 @@ class IsRigidBodyNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
 
-		if (object == null) return;
+		if (object == null) false;
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
