@@ -11,8 +11,8 @@ class GetRigidBodyAttributesNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketInt', 'CollisionGroup')
-        self.outputs.new('NodeSocketInt', 'CollisionMask')
+        self.outputs.new('NodeSocketInt', 'Collision Group')
+        self.outputs.new('NodeSocketInt', 'Collision Mask')
         self.outputs.new('NodeSocketBool', 'Animated')
         self.outputs.new('NodeSocketBool', 'Static')
         self.outputs.new('NodeSocketFloat', 'Angular Damping')
