@@ -46,4 +46,4 @@ class CompareNode(ArmLogicTreeNode):
             op2.node_index = str(id(self))
 
 
-add_node(CompareNode, category=MODULE_AS_CATEGORY)
+add_node(CompareNode, category=PKG_AS_CATEGORY)

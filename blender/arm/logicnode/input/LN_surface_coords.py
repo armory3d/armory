@@ -9,4 +9,4 @@ class SurfaceCoordsNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Coords')
         self.add_output('NodeSocketVector', 'Movement')
 
-add_node(SurfaceCoordsNode, category=MODULE_AS_CATEGORY, section='surface')
+add_node(SurfaceCoordsNode, category=PKG_AS_CATEGORY, section='surface')

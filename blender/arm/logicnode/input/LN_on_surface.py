@@ -17,4 +17,4 @@ class OnSurfaceNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(OnSurfaceNode, category=MODULE_AS_CATEGORY, section='surface')
+add_node(OnSurfaceNode, category=PKG_AS_CATEGORY, section='surface')

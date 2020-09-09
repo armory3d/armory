@@ -12,4 +12,4 @@ class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
 
-add_node(ColorgradingGetMidtoneNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingGetMidtoneNode, category=PKG_AS_CATEGORY, section='colorgrading')

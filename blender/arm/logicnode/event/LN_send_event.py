@@ -11,4 +11,4 @@ class SendEventNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SendEventNode, category=MODULE_AS_CATEGORY, section='custom')
+add_node(SendEventNode, category=PKG_AS_CATEGORY, section='custom')

@@ -18,4 +18,4 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
         row = layout.row(align=True)
         row.label(text='Depreciated. Consider using "Rotate Object"')
 
-add_node(RotateObjectAroundAxisNode, category=MODULE_AS_CATEGORY, section='rotation')
+add_node(RotateObjectAroundAxisNode, category=PKG_AS_CATEGORY, section='rotation')

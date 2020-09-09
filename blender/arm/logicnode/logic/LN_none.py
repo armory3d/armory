@@ -8,4 +8,4 @@ class NoneNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('NodeSocketShader', 'None')
 
-add_node(NoneNode, category=MODULE_AS_CATEGORY)
+add_node(NoneNode, category=PKG_AS_CATEGORY)

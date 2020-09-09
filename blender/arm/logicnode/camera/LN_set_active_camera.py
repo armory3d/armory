@@ -11,4 +11,4 @@ class SetCameraNode(ArmLogicTreeNode):
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetCameraNode, category=MODULE_AS_CATEGORY)
+add_node(SetCameraNode, category=PKG_AS_CATEGORY)

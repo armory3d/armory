@@ -10,4 +10,4 @@ class OnTimerNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Repeat')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(OnTimerNode, category=MODULE_AS_CATEGORY)
+add_node(OnTimerNode, category=PKG_AS_CATEGORY)

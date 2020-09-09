@@ -9,4 +9,4 @@ class LoadUrlNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'URL')
 
-add_node(LoadUrlNode, category=MODULE_AS_CATEGORY)
+add_node(LoadUrlNode, category=PKG_AS_CATEGORY)

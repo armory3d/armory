@@ -15,4 +15,4 @@ class LenstextureSetNode(ArmLogicTreeNode):
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(LenstextureSetNode, category=MODULE_AS_CATEGORY)
+add_node(LenstextureSetNode, category=PKG_AS_CATEGORY)

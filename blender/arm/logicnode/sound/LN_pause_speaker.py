@@ -10,4 +10,4 @@ class PauseSpeakerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseSpeakerNode, category=MODULE_AS_CATEGORY)
+add_node(PauseSpeakerNode, category=PKG_AS_CATEGORY)

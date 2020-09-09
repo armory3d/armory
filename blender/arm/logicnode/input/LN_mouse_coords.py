@@ -10,4 +10,4 @@ class MouseCoordsNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Movement')
         self.add_output('NodeSocketInt', 'Wheel')
 
-add_node(MouseCoordsNode, category=MODULE_AS_CATEGORY, section='mouse')
+add_node(MouseCoordsNode, category=PKG_AS_CATEGORY, section='mouse')

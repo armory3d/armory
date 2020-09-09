@@ -18,4 +18,4 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnVirtualButtonNode, category=MODULE_AS_CATEGORY, section='virtual')
+add_node(OnVirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual')

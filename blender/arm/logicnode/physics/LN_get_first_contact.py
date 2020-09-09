@@ -9,4 +9,4 @@ class GetFirstContactNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketObject', 'Object')
 
-add_node(GetFirstContactNode, category=MODULE_AS_CATEGORY, section='contact')
+add_node(GetFirstContactNode, category=PKG_AS_CATEGORY, section='contact')

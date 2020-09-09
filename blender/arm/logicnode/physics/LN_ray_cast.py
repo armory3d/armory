@@ -13,4 +13,4 @@ class RayCastNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Hit')
         self.add_output('NodeSocketVector', 'Normal')
 
-add_node(RayCastNode, category=MODULE_AS_CATEGORY, section='ray')
+add_node(RayCastNode, category=PKG_AS_CATEGORY, section='ray')

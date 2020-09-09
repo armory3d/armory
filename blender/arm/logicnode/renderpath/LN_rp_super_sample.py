@@ -19,4 +19,4 @@ class RpSuperSampleNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(RpSuperSampleNode, category=MODULE_AS_CATEGORY)
+add_node(RpSuperSampleNode, category=PKG_AS_CATEGORY)

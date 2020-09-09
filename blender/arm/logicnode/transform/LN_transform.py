@@ -11,4 +11,4 @@ class TransformNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Scale', default_value=[1.0, 1.0, 1.0])
         self.add_output('NodeSocketShader', 'Transform')
 
-add_node(TransformNode, category=MODULE_AS_CATEGORY)
+add_node(TransformNode, category=PKG_AS_CATEGORY)

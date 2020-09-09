@@ -13,4 +13,4 @@ class LoopNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')
 
-add_node(LoopNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(LoopNode, category=PKG_AS_CATEGORY, section='flow')

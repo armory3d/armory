@@ -9,4 +9,4 @@ class RemoveActiveSceneNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(RemoveActiveSceneNode, category=MODULE_AS_CATEGORY)
+add_node(RemoveActiveSceneNode, category=PKG_AS_CATEGORY)

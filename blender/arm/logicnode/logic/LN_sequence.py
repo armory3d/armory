@@ -20,4 +20,4 @@ class SequenceNode(ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_output', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(SequenceNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(SequenceNode, category=PKG_AS_CATEGORY, section='flow')

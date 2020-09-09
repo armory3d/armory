@@ -8,4 +8,4 @@ class GlobalObjectNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')
 
-add_node(GlobalObjectNode, category=MODULE_AS_CATEGORY)
+add_node(GlobalObjectNode, category=PKG_AS_CATEGORY)

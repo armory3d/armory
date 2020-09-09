@@ -10,4 +10,4 @@ class SendGlobalEventNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Event')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SendGlobalEventNode, category=MODULE_AS_CATEGORY, section='custom')
+add_node(SendGlobalEventNode, category=PKG_AS_CATEGORY, section='custom')

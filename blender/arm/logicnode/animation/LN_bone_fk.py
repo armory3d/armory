@@ -12,4 +12,4 @@ class BoneFKNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(BoneFKNode, category=MODULE_AS_CATEGORY, section='armature')
+add_node(BoneFKNode, category=PKG_AS_CATEGORY, section='armature')

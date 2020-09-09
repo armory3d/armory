@@ -10,4 +10,4 @@ class PlaySpeakerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PlaySpeakerNode, category=MODULE_AS_CATEGORY)
+add_node(PlaySpeakerNode, category=PKG_AS_CATEGORY)

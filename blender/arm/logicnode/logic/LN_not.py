@@ -9,4 +9,4 @@ class NotNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Value')
         self.add_output('NodeSocketBool', 'Value')
 
-add_node(NotNode, category=MODULE_AS_CATEGORY)
+add_node(NotNode, category=PKG_AS_CATEGORY)

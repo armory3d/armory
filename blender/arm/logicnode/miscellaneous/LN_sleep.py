@@ -10,4 +10,4 @@ class SleepNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Time')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SleepNode, category=MODULE_AS_CATEGORY)
+add_node(SleepNode, category=PKG_AS_CATEGORY)

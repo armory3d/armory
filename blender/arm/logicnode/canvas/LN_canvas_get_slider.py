@@ -9,4 +9,4 @@ class CanvasGetSliderNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketFloat', 'Value')
 
-add_node(CanvasGetSliderNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetSliderNode, category=PKG_AS_CATEGORY)

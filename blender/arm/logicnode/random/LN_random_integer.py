@@ -12,4 +12,4 @@ class RandomIntegerNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'Int')
 
 
-add_node(RandomIntegerNode, category=MODULE_AS_CATEGORY)
+add_node(RandomIntegerNode, category=PKG_AS_CATEGORY)

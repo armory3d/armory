@@ -14,4 +14,4 @@ class GamepadCoordsNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Right Trigger')
         self.add_input('NodeSocketInt', 'Gamepad')
 
-add_node(GamepadCoordsNode, category=MODULE_AS_CATEGORY, section='gamepad')
+add_node(GamepadCoordsNode, category=PKG_AS_CATEGORY, section='gamepad')

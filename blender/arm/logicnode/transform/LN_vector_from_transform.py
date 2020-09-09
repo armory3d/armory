@@ -36,4 +36,4 @@ class VectorFromTransformNode(ArmLogicTreeNode):
         name='', default='Look',
         update=on_property_update)
 
-add_node(VectorFromTransformNode, category=MODULE_AS_CATEGORY)
+add_node(VectorFromTransformNode, category=PKG_AS_CATEGORY)

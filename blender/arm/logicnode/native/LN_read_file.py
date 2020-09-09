@@ -12,4 +12,4 @@ class ReadFileNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Loaded')
         self.add_output('NodeSocketString', 'String')
 
-add_node(ReadFileNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(ReadFileNode, category=PKG_AS_CATEGORY, section='file')

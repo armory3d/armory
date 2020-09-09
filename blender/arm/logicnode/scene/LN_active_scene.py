@@ -8,4 +8,4 @@ class ActiveSceneNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('NodeSocketShader', 'Scene')
 
-add_node(ActiveSceneNode, category=MODULE_AS_CATEGORY)
+add_node(ActiveSceneNode, category=PKG_AS_CATEGORY)

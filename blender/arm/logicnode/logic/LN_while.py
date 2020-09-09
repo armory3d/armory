@@ -11,4 +11,4 @@ class WhileNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Loop')
         self.add_output('ArmNodeSocketAction', 'Done')
 
-add_node(WhileNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(WhileNode, category=PKG_AS_CATEGORY, section='flow')

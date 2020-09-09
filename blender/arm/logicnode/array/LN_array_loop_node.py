@@ -15,4 +15,4 @@ class ArrayLoopNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Done')
 
 
-add_node(ArrayLoopNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayLoopNode, category=PKG_AS_CATEGORY)

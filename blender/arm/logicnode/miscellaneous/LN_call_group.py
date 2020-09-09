@@ -22,4 +22,4 @@ class CallGroupNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'node_groups', icon='NONE', text='')
 
-add_node(CallGroupNode, category=MODULE_AS_CATEGORY, section='group')
+add_node(CallGroupNode, category=PKG_AS_CATEGORY, section='group')

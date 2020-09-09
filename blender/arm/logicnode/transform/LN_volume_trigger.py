@@ -18,4 +18,4 @@ class VolumeTriggerNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(VolumeTriggerNode, category=MODULE_AS_CATEGORY, section='misc')
+add_node(VolumeTriggerNode, category=PKG_AS_CATEGORY, section='misc')

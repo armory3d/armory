@@ -12,4 +12,4 @@ class SetMaterialImageParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Image')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialImageParamNode, category=MODULE_AS_CATEGORY, section='params')
+add_node(SetMaterialImageParamNode, category=PKG_AS_CATEGORY, section='params')

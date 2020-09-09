@@ -12,4 +12,4 @@ class SSAOSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Max Steps', default_value=8)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SSAOSetNode, category=MODULE_AS_CATEGORY)
+add_node(SSAOSetNode, category=PKG_AS_CATEGORY)

@@ -10,4 +10,4 @@ class WriteFileNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'File')
         self.add_input('NodeSocketString', 'String')
 
-add_node(WriteFileNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(WriteFileNode, category=PKG_AS_CATEGORY, section='file')

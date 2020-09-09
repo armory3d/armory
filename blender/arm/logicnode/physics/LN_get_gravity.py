@@ -8,4 +8,4 @@ class GetGravityNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_input('NodeSocketVector', 'Gravity')
 
-add_node(GetGravityNode, category=MODULE_AS_CATEGORY)
+add_node(GetGravityNode, category=PKG_AS_CATEGORY)

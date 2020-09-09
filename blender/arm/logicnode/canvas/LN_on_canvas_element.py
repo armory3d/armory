@@ -31,4 +31,4 @@ class OnCanvasElementNode(ArmLogicTreeNode):
             layout.prop(self, 'property1')
             layout.prop(self, 'property2')
 
-add_node(OnCanvasElementNode, category=MODULE_AS_CATEGORY)
+add_node(OnCanvasElementNode, category=PKG_AS_CATEGORY)

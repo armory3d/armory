@@ -12,4 +12,4 @@ class SetMaterialRgbParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketColor', 'Color')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialRgbParamNode, category=MODULE_AS_CATEGORY, section='params')
+add_node(SetMaterialRgbParamNode, category=PKG_AS_CATEGORY, section='params')

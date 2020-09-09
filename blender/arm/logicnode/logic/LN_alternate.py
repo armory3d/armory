@@ -12,4 +12,4 @@ class AlternateNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', '1')
 
 
-add_node(AlternateNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(AlternateNode, category=PKG_AS_CATEGORY, section='flow')

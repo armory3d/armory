@@ -69,4 +69,4 @@ class ColorgradingSetShadowNode(ArmLogicTreeNode):
             layout.prop(self, 'filepath')
             layout.prop(self, 'property1')
 
-add_node(ColorgradingSetShadowNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingSetShadowNode, category=PKG_AS_CATEGORY, section='colorgrading')

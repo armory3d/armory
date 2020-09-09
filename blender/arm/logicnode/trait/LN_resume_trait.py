@@ -10,4 +10,4 @@ class ResumeTraitNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ResumeTraitNode, category=MODULE_AS_CATEGORY)
+add_node(ResumeTraitNode, category=PKG_AS_CATEGORY)

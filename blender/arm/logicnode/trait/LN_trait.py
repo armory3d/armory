@@ -13,4 +13,4 @@ class TraitNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(TraitNode, category=MODULE_AS_CATEGORY)
+add_node(TraitNode, category=PKG_AS_CATEGORY)

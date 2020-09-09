@@ -12,4 +12,4 @@ class ReadJsonNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Loaded')
         self.add_output('NodeSocketShader', 'Dynamic')
 
-add_node(ReadJsonNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(ReadJsonNode, category=PKG_AS_CATEGORY, section='file')

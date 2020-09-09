@@ -15,4 +15,4 @@ class ExpressionNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(ExpressionNode, category=MODULE_AS_CATEGORY, section='haxe')
+add_node(ExpressionNode, category=PKG_AS_CATEGORY, section='haxe')

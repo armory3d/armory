@@ -12,4 +12,4 @@ class SeparateColorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'G')
         self.add_output('NodeSocketFloat', 'B')
 
-add_node(SeparateColorNode, category=MODULE_AS_CATEGORY, section='color')
+add_node(SeparateColorNode, category=PKG_AS_CATEGORY, section='color')

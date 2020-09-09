@@ -10,4 +10,4 @@ class WriteJsonNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'File')
         self.add_input('NodeSocketShader', 'Dynamic')
 
-add_node(WriteJsonNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(WriteJsonNode, category=PKG_AS_CATEGORY, section='file')

@@ -12,4 +12,4 @@ class PlayTilesheetNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
 
-add_node(PlayTilesheetNode, category=MODULE_AS_CATEGORY, section='tilesheet')
+add_node(PlayTilesheetNode, category=PKG_AS_CATEGORY, section='tilesheet')

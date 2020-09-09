@@ -11,4 +11,4 @@ class SetVisibleNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Bool')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetVisibleNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(SetVisibleNode, category=PKG_AS_CATEGORY, section='props')

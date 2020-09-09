@@ -68,4 +68,4 @@ class ColorgradingSetMidtoneNode(ArmLogicTreeNode):
             layout.prop(self, 'filepath')
             layout.prop(self, 'property1')
 
-add_node(ColorgradingSetMidtoneNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingSetMidtoneNode, category=PKG_AS_CATEGORY, section='colorgrading')

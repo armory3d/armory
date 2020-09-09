@@ -14,4 +14,4 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Inverse')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(TranslateOnLocalAxisNode, category=MODULE_AS_CATEGORY, section='location')
+add_node(TranslateOnLocalAxisNode, category=PKG_AS_CATEGORY, section='location')

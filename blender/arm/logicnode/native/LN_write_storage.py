@@ -11,4 +11,4 @@ class WriteStorageNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(WriteStorageNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(WriteStorageNode, category=PKG_AS_CATEGORY, section='file')

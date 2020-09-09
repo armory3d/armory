@@ -10,4 +10,4 @@ class PauseTilesheetNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseTilesheetNode, category=MODULE_AS_CATEGORY, section='tilesheet')
+add_node(PauseTilesheetNode, category=PKG_AS_CATEGORY, section='tilesheet')

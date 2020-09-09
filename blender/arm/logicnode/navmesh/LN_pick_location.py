@@ -10,4 +10,4 @@ class PickLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Screen Coords')
         self.add_output('NodeSocketVector', 'Location')
 
-add_node(PickLocationNode, category=MODULE_AS_CATEGORY)
+add_node(PickLocationNode, category=PKG_AS_CATEGORY)

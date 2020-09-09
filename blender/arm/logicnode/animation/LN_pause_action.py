@@ -10,4 +10,4 @@ class PauseActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseActionNode, category=MODULE_AS_CATEGORY)
+add_node(PauseActionNode, category=PKG_AS_CATEGORY)

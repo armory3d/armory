@@ -74,4 +74,4 @@ class KeyboardNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(KeyboardNode, category=MODULE_AS_CATEGORY, section='keyboard')
+add_node(KeyboardNode, category=PKG_AS_CATEGORY, section='keyboard')

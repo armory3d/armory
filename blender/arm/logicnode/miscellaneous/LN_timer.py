@@ -20,4 +20,4 @@ class TimerNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Progress')
         self.add_output('NodeSocketFloat', 'Repetitions')
 
-add_node(TimerNode, category=MODULE_AS_CATEGORY)
+add_node(TimerNode, category=PKG_AS_CATEGORY)

@@ -9,4 +9,4 @@ class LengthStringNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'length')
         self.add_input('NodeSocketString', 'String')
 
-add_node(LengthStringNode, category=MODULE_AS_CATEGORY)
+add_node(LengthStringNode, category=PKG_AS_CATEGORY)

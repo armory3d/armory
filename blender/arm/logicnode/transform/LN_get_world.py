@@ -18,4 +18,4 @@ class GetWorldNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(GetWorldNode, category=MODULE_AS_CATEGORY, section='rotation')
+add_node(GetWorldNode, category=PKG_AS_CATEGORY, section='rotation')

@@ -11,4 +11,4 @@ class CanvasSetTextNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Text')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(CanvasSetTextNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasSetTextNode, category=PKG_AS_CATEGORY)

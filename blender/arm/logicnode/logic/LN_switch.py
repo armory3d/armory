@@ -27,4 +27,4 @@ class SwitchNode(ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_input_output', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(SwitchNode, category=MODULE_AS_CATEGORY)
+add_node(SwitchNode, category=PKG_AS_CATEGORY)

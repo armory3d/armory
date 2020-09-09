@@ -12,4 +12,4 @@ class OnEventNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(OnEventNode, category=MODULE_AS_CATEGORY, section='custom')
+add_node(OnEventNode, category=PKG_AS_CATEGORY, section='custom')

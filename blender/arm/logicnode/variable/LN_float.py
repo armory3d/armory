@@ -9,4 +9,4 @@ class FloatNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Value')
         self.add_output('NodeSocketFloat', 'Float', is_var=True)
 
-add_node(FloatNode, category=MODULE_AS_CATEGORY)
+add_node(FloatNode, category=PKG_AS_CATEGORY)

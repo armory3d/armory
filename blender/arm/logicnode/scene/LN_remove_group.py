@@ -10,4 +10,4 @@ class RemoveGroupNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Collection')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(RemoveGroupNode, category=MODULE_AS_CATEGORY, section='collection')
+add_node(RemoveGroupNode, category=PKG_AS_CATEGORY, section='collection')

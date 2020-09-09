@@ -23,4 +23,4 @@ class SpawnCollectionNode(ArmLogicTreeNode):
         layout.prop_search(self, 'property0', bpy.data, 'collections', icon='NONE', text='')
 
 
-add_node(SpawnCollectionNode, category=MODULE_AS_CATEGORY, section='collection')
+add_node(SpawnCollectionNode, category=PKG_AS_CATEGORY, section='collection')

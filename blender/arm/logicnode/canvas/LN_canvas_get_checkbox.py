@@ -9,4 +9,4 @@ class CanvasGetCheckboxNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketBool', 'Value')
 
-add_node(CanvasGetCheckboxNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetCheckboxNode, category=PKG_AS_CATEGORY)

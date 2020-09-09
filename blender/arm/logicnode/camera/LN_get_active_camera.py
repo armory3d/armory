@@ -8,4 +8,4 @@ class ActiveCameraNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')
 
-add_node(ActiveCameraNode, category=MODULE_AS_CATEGORY)
+add_node(ActiveCameraNode, category=PKG_AS_CATEGORY)

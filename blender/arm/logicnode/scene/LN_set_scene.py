@@ -11,4 +11,4 @@ class SetSceneNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Root')
 
-add_node(SetSceneNode, category=MODULE_AS_CATEGORY)
+add_node(SetSceneNode, category=PKG_AS_CATEGORY)

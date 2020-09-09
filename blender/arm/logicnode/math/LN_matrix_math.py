@@ -16,4 +16,4 @@ class MatrixMathNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(MatrixMathNode, category=MODULE_AS_CATEGORY, section='matrix')
+add_node(MatrixMathNode, category=PKG_AS_CATEGORY, section='matrix')

@@ -11,4 +11,4 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')
 
-add_node(CallHaxeStaticNode, category=MODULE_AS_CATEGORY, section='haxe')
+add_node(CallHaxeStaticNode, category=PKG_AS_CATEGORY, section='haxe')

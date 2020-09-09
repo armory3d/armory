@@ -19,4 +19,4 @@ class ContainsStringNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(ContainsStringNode, category=MODULE_AS_CATEGORY)
+add_node(ContainsStringNode, category=PKG_AS_CATEGORY)

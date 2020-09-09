@@ -11,4 +11,4 @@ class SetLightStrengthNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Strength', default_value=100)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetLightStrengthNode, category=MODULE_AS_CATEGORY)
+add_node(SetLightStrengthNode, category=PKG_AS_CATEGORY)

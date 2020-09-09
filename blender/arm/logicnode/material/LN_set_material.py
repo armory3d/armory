@@ -11,4 +11,4 @@ class SetMaterialNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Material')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialNode, category=MODULE_AS_CATEGORY)
+add_node(SetMaterialNode, category=PKG_AS_CATEGORY)

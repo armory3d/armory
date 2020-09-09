@@ -9,4 +9,4 @@ class BooleanNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Value')
         self.add_output('NodeSocketBool', 'Bool', is_var=True)
 
-add_node(BooleanNode, category=MODULE_AS_CATEGORY)
+add_node(BooleanNode, category=PKG_AS_CATEGORY)

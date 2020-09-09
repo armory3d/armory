@@ -9,4 +9,4 @@ class GetGroupNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Name')
         self.add_output('ArmNodeSocketArray', 'Array')
 
-add_node(GetGroupNode, category=MODULE_AS_CATEGORY, section='collection')
+add_node(GetGroupNode, category=PKG_AS_CATEGORY, section='collection')

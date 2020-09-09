@@ -12,4 +12,4 @@ class CanvasGetLocationNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'X')
         self.add_output('NodeSocketFloat', 'Y')
 
-add_node(CanvasGetLocationNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetLocationNode, category=PKG_AS_CATEGORY)

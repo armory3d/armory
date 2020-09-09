@@ -16,4 +16,4 @@ class GroupNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'collections', icon='NONE', text='')
 
-add_node(GroupNode, category=MODULE_AS_CATEGORY, section='collection')
+add_node(GroupNode, category=PKG_AS_CATEGORY, section='collection')

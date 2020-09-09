@@ -10,4 +10,4 @@ class ArrayContainsNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('NodeSocketBool', 'Bool')
 
-add_node(ArrayContainsNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayContainsNode, category=PKG_AS_CATEGORY)

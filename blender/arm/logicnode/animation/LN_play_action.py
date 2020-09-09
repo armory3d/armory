@@ -13,4 +13,4 @@ class PlayActionNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
 
-add_node(PlayActionNode, category=MODULE_AS_CATEGORY)
+add_node(PlayActionNode, category=PKG_AS_CATEGORY)

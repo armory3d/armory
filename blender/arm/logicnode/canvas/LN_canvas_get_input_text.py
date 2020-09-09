@@ -9,4 +9,4 @@ class CanvasGetInputTextNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketString', 'Value')
 
-add_node(CanvasGetInputTextNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetInputTextNode, category=PKG_AS_CATEGORY)

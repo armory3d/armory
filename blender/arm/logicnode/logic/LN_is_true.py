@@ -10,4 +10,4 @@ class IsTrueNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(IsTrueNode, category=MODULE_AS_CATEGORY)
+add_node(IsTrueNode, category=PKG_AS_CATEGORY)

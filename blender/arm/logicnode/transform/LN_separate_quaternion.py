@@ -14,4 +14,4 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'W')
 
 
-add_node(SeparateQuaternionNode, category=MODULE_AS_CATEGORY, section='quaternions')
+add_node(SeparateQuaternionNode, category=PKG_AS_CATEGORY, section='quaternions')

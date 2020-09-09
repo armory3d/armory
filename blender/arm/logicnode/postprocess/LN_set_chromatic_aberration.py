@@ -11,4 +11,4 @@ class ChromaticAberrationSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Samples', default_value=32)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ChromaticAberrationSetNode, category=MODULE_AS_CATEGORY)
+add_node(ChromaticAberrationSetNode, category=PKG_AS_CATEGORY)

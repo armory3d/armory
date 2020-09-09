@@ -14,4 +14,4 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Location On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ApplyImpulseAtLocationNode, category=MODULE_AS_CATEGORY, section='force')
+add_node(ApplyImpulseAtLocationNode, category=PKG_AS_CATEGORY, section='force')

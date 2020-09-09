@@ -12,4 +12,4 @@ class SSRGetNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'SSR Falloff')
         self.add_output('NodeSocketFloat', 'SSR Jitter')
 
-add_node(SSRGetNode, category=MODULE_AS_CATEGORY)
+add_node(SSRGetNode, category=PKG_AS_CATEGORY)

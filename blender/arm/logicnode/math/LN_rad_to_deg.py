@@ -9,4 +9,4 @@ class RadToDegNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Radians')
         self.add_output('NodeSocketFloat', 'Degrees')
 
-add_node(RadToDegNode, category=MODULE_AS_CATEGORY, section='angle')
+add_node(RadToDegNode, category=PKG_AS_CATEGORY, section='angle')

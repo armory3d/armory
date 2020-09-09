@@ -14,4 +14,4 @@ class GetRotationNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Quaternion XYZ')
         self.add_output('NodeSocketFloat', 'Quaternion W')
 
-add_node(GetRotationNode, category=MODULE_AS_CATEGORY, section='rotation')
+add_node(GetRotationNode, category=PKG_AS_CATEGORY, section='rotation')

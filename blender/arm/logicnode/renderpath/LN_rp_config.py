@@ -21,4 +21,4 @@ class RpConfigNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(RpConfigNode, category=MODULE_AS_CATEGORY)
+add_node(RpConfigNode, category=PKG_AS_CATEGORY)

@@ -10,4 +10,4 @@ class OnActionMarkerNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Marker')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(OnActionMarkerNode, category=MODULE_AS_CATEGORY, section='armature')
+add_node(OnActionMarkerNode, category=PKG_AS_CATEGORY, section='armature')

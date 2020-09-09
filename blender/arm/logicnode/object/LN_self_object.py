@@ -8,4 +8,4 @@ class SelfObjectNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')
 
-add_node(SelfObjectNode, category=MODULE_AS_CATEGORY)
+add_node(SelfObjectNode, category=PKG_AS_CATEGORY)

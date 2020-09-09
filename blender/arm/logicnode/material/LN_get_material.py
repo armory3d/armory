@@ -9,4 +9,4 @@ class GetMaterialNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketShader', 'Material')
 
-add_node(GetMaterialNode, category=MODULE_AS_CATEGORY)
+add_node(GetMaterialNode, category=PKG_AS_CATEGORY)

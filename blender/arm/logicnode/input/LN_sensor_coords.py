@@ -8,4 +8,4 @@ class SensorCoordsNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('NodeSocketVector', 'Coords')
 
-add_node(SensorCoordsNode, category=MODULE_AS_CATEGORY, section='sensor')
+add_node(SensorCoordsNode, category=PKG_AS_CATEGORY, section='sensor')

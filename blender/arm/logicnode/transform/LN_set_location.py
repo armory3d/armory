@@ -11,4 +11,4 @@ class SetLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Location')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetLocationNode, category=MODULE_AS_CATEGORY, section='location')
+add_node(SetLocationNode, category=PKG_AS_CATEGORY, section='location')

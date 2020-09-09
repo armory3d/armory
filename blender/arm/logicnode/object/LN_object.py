@@ -9,4 +9,4 @@ class ObjectNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketObject', 'Object', is_var=True)
 
-add_node(ObjectNode, category=MODULE_AS_CATEGORY)
+add_node(ObjectNode, category=PKG_AS_CATEGORY)

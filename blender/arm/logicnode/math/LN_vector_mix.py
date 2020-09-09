@@ -41,4 +41,4 @@ class VectorMixNode(ArmLogicTreeNode):
         if self.property0 != 'Linear':
             layout.prop(self, 'property1')
 
-add_node(VectorMixNode, category=MODULE_AS_CATEGORY, section='vector')
+add_node(VectorMixNode, category=PKG_AS_CATEGORY, section='vector')

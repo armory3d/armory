@@ -9,4 +9,4 @@ class ColorNode(ArmLogicTreeNode):
         self.add_input('NodeSocketColor', 'Color', default_value=[0.8, 0.8, 0.8, 1.0])
         self.add_output('NodeSocketColor', 'Color', is_var=True)
 
-add_node(ColorNode, category=MODULE_AS_CATEGORY)
+add_node(ColorNode, category=PKG_AS_CATEGORY)

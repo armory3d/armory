@@ -26,4 +26,4 @@ class CallFunctionNode(ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(CallFunctionNode, category=MODULE_AS_CATEGORY, section='function')
+add_node(CallFunctionNode, category=PKG_AS_CATEGORY, section='function')

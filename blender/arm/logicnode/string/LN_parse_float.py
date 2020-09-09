@@ -9,4 +9,4 @@ class ParseFloatNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Float')
         self.add_input('NodeSocketString', 'String')
 
-add_node(ParseFloatNode, category=MODULE_AS_CATEGORY, section='parse')
+add_node(ParseFloatNode, category=PKG_AS_CATEGORY, section='parse')

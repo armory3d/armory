@@ -9,4 +9,4 @@ class ArrayShiftNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(ArrayShiftNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayShiftNode, category=PKG_AS_CATEGORY)

@@ -43,4 +43,4 @@ class GamepadNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(GamepadNode, category=MODULE_AS_CATEGORY, section='gamepad')
+add_node(GamepadNode, category=PKG_AS_CATEGORY, section='gamepad')

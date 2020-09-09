@@ -48,4 +48,4 @@ class MathNode(ArmLogicTreeNode):
         layout.prop(self, 'property1_')
         layout.prop(self, 'property0')
 
-add_node(MathNode, category=MODULE_AS_CATEGORY)
+add_node(MathNode, category=PKG_AS_CATEGORY)

@@ -8,9 +8,9 @@ from bpy.props import *
 from nodeitems_utils import NodeItem
 
 # When passed as a category to add_node(), this will use the capitalized
-# name of the parent package of the node as the category to make
-# renaming categories easier.
-MODULE_AS_CATEGORY = "__modcat__"
+# name of the package of the node as the category to make renaming
+# categories easier.
+PKG_AS_CATEGORY = "__pkgcat__"
 
 nodes = []
 category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
@@ -324,7 +324,7 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     """
     global nodes
 
-    if category == MODULE_AS_CATEGORY:
+    if category == PKG_AS_CATEGORY:
         category = node_type.__module__.rsplit('.', 2)[1].capitalize()
 
     nodes.append(node_type)

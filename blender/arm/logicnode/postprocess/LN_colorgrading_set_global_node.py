@@ -71,4 +71,4 @@ class ColorgradingSetGlobalNode(ArmLogicTreeNode):
             layout.prop(self, 'filepath')
             layout.prop(self, 'property1')
 
-add_node(ColorgradingSetGlobalNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingSetGlobalNode, category=PKG_AS_CATEGORY, section='colorgrading')

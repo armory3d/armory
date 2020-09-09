@@ -11,4 +11,4 @@ class SetNameNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Name')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetNameNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(SetNameNode, category=PKG_AS_CATEGORY, section='props')

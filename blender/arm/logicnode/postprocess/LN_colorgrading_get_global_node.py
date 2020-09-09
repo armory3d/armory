@@ -14,4 +14,4 @@ class ColorgradingGetGlobalNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
 
-add_node(ColorgradingGetGlobalNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingGetGlobalNode, category=PKG_AS_CATEGORY, section='colorgrading')

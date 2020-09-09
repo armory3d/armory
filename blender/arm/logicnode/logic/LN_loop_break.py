@@ -8,4 +8,4 @@ class LoopBreakNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
-add_node(LoopBreakNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(LoopBreakNode, category=PKG_AS_CATEGORY, section='flow')

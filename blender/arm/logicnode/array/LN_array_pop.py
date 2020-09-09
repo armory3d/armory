@@ -9,4 +9,4 @@ class ArrayPopNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(ArrayPopNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayPopNode, category=PKG_AS_CATEGORY)

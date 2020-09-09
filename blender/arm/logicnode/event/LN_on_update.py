@@ -16,4 +16,4 @@ class OnUpdateNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(OnUpdateNode, category=MODULE_AS_CATEGORY)
+add_node(OnUpdateNode, category=PKG_AS_CATEGORY)

@@ -10,4 +10,4 @@ class GetHaxePropertyNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Property')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(GetHaxePropertyNode, category=MODULE_AS_CATEGORY, section='haxe')
+add_node(GetHaxePropertyNode, category=PKG_AS_CATEGORY, section='haxe')

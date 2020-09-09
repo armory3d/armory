@@ -12,4 +12,4 @@ class ApplyImpulseNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ApplyImpulseNode, category=MODULE_AS_CATEGORY, section='force')
+add_node(ApplyImpulseNode, category=PKG_AS_CATEGORY, section='force')

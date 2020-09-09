@@ -13,4 +13,4 @@ class ColorgradingGetHighlightNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
 
-add_node(ColorgradingGetHighlightNode, category=MODULE_AS_CATEGORY, section='colorgrading')
+add_node(ColorgradingGetHighlightNode, category=PKG_AS_CATEGORY, section='colorgrading')

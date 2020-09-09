@@ -28,4 +28,4 @@ class FunctionNode(ArmLogicTreeNode):
         op2.node_index = str(id(self))
 
 
-add_node(FunctionNode, category=MODULE_AS_CATEGORY, section='function')
+add_node(FunctionNode, category=PKG_AS_CATEGORY, section='function')

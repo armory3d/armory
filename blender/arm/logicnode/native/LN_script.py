@@ -24,4 +24,4 @@ class ScriptNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'texts', icon='NONE', text='')
 
-add_node(ScriptNode, category=MODULE_AS_CATEGORY, section='haxe')
+add_node(ScriptNode, category=PKG_AS_CATEGORY, section='haxe')

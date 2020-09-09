@@ -11,4 +11,4 @@ class InverseNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
 
 
-add_node(InverseNode, category=MODULE_AS_CATEGORY, section='flow')
+add_node(InverseNode, category=PKG_AS_CATEGORY, section='flow')

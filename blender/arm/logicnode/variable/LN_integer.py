@@ -9,4 +9,4 @@ class IntegerNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Value')
         self.add_output('NodeSocketInt', 'Int', is_var=True)
 
-add_node(IntegerNode, category=MODULE_AS_CATEGORY)
+add_node(IntegerNode, category=PKG_AS_CATEGORY)

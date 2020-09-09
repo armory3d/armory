@@ -12,4 +12,4 @@ class TranslateObjectNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(TranslateObjectNode, category=MODULE_AS_CATEGORY, section='location')
+add_node(TranslateObjectNode, category=PKG_AS_CATEGORY, section='location')

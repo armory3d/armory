@@ -10,4 +10,4 @@ class SetTimeScaleNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Scale', default_value=1.0)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetTimeScaleNode, category=MODULE_AS_CATEGORY)
+add_node(SetTimeScaleNode, category=PKG_AS_CATEGORY)

@@ -11,4 +11,4 @@ class SetMeshNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Mesh')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMeshNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(SetMeshNode, category=PKG_AS_CATEGORY, section='props')

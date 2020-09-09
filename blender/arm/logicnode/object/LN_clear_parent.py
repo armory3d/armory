@@ -11,5 +11,5 @@ class ClearParentNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Keep Transform', default_value=True)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ClearParentNode, category=MODULE_AS_CATEGORY, section='relations')
+add_node(ClearParentNode, category=PKG_AS_CATEGORY, section='relations')
 

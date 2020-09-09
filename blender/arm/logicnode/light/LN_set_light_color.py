@@ -11,4 +11,4 @@ class SetLightColorNode(ArmLogicTreeNode):
         self.add_input('NodeSocketColor', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetLightColorNode, category=MODULE_AS_CATEGORY)
+add_node(SetLightColorNode, category=PKG_AS_CATEGORY)

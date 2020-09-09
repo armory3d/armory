@@ -10,4 +10,4 @@ class RandomColorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketColor', 'Color')
 
 
-add_node(RandomColorNode, category=MODULE_AS_CATEGORY)
+add_node(RandomColorNode, category=PKG_AS_CATEGORY)

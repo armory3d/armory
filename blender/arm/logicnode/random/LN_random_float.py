@@ -13,4 +13,4 @@ class RandomFloatNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Float')
 
 
-add_node(RandomFloatNode, category=MODULE_AS_CATEGORY)
+add_node(RandomFloatNode, category=PKG_AS_CATEGORY)

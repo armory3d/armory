@@ -10,4 +10,4 @@ class SetMouseLockNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Lock')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMouseLockNode, category=MODULE_AS_CATEGORY, section='mouse')
+add_node(SetMouseLockNode, category=PKG_AS_CATEGORY, section='mouse')

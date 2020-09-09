@@ -9,4 +9,4 @@ class ShutdownNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ShutdownNode, category=MODULE_AS_CATEGORY)
+add_node(ShutdownNode, category=PKG_AS_CATEGORY)

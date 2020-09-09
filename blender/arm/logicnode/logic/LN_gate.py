@@ -51,4 +51,4 @@ class GateNode(ArmLogicTreeNode):
             op2.node_index = str(id(self))
 
 
-add_node(GateNode, category=MODULE_AS_CATEGORY)
+add_node(GateNode, category=PKG_AS_CATEGORY)

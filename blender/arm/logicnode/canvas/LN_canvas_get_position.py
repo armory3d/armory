@@ -9,4 +9,4 @@ class CanvasGetPositionNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketInt', 'Value')
 
-add_node(CanvasGetPositionNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetPositionNode, category=PKG_AS_CATEGORY)

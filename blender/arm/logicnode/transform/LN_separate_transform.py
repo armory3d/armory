@@ -11,4 +11,4 @@ class SeparateTransformNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Rotation')
         self.add_output('NodeSocketVector', 'Scale')
 
-add_node(SeparateTransformNode, category=MODULE_AS_CATEGORY)
+add_node(SeparateTransformNode, category=PKG_AS_CATEGORY)

@@ -18,4 +18,4 @@ class OnContactArrayNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(OnContactArrayNode, category=MODULE_AS_CATEGORY, section='contact')
+add_node(OnContactArrayNode, category=PKG_AS_CATEGORY, section='contact')

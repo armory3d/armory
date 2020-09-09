@@ -11,4 +11,4 @@ class SeparateVectorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Y')
         self.add_output('NodeSocketFloat', 'Z')
 
-add_node(SeparateVectorNode, category=MODULE_AS_CATEGORY, section='vector')
+add_node(SeparateVectorNode, category=PKG_AS_CATEGORY, section='vector')

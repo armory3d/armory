@@ -9,4 +9,4 @@ class GetNameNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketString', 'Name')
 
-add_node(GetNameNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(GetNameNode, category=PKG_AS_CATEGORY, section='props')

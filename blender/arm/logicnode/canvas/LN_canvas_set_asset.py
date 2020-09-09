@@ -11,4 +11,4 @@ class CanvasSetAssetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Asset')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(CanvasSetAssetNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasSetAssetNode, category=PKG_AS_CATEGORY)

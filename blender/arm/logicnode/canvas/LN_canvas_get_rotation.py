@@ -11,4 +11,4 @@ class CanvasGetRotationNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketFloat', 'Rad')
 
-add_node(CanvasGetRotationNode, category=MODULE_AS_CATEGORY)
+add_node(CanvasGetRotationNode, category=PKG_AS_CATEGORY)

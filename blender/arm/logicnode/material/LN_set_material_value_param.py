@@ -12,4 +12,4 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialValueParamNode, category=MODULE_AS_CATEGORY, section='params')
+add_node(SetMaterialValueParamNode, category=PKG_AS_CATEGORY, section='params')

@@ -12,4 +12,4 @@ class RandomVectorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Vector')
 
 
-add_node(RandomVectorNode, category=MODULE_AS_CATEGORY)
+add_node(RandomVectorNode, category=PKG_AS_CATEGORY)

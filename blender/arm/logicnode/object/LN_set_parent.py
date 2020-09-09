@@ -11,4 +11,4 @@ class SetParentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Parent', default_value='Parent')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetParentNode, category=MODULE_AS_CATEGORY, section='relations')
+add_node(SetParentNode, category=PKG_AS_CATEGORY, section='relations')

@@ -10,4 +10,4 @@ class GetDistanceNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketFloat', 'Distance')
 
-add_node(GetDistanceNode, category=MODULE_AS_CATEGORY)
+add_node(GetDistanceNode, category=PKG_AS_CATEGORY)

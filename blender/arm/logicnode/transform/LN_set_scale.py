@@ -11,4 +11,4 @@ class SetScaleNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Scale')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetScaleNode, category=MODULE_AS_CATEGORY, section='scale')
+add_node(SetScaleNode, category=PKG_AS_CATEGORY, section='scale')

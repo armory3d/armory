@@ -11,4 +11,4 @@ class SetVariableNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetVariableNode, category=MODULE_AS_CATEGORY, section='set')
+add_node(SetVariableNode, category=PKG_AS_CATEGORY, section='set')

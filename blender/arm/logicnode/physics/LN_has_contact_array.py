@@ -10,4 +10,4 @@ class HasContactArrayNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Objects')
         self.add_output('NodeSocketBool', 'Bool')
 
-add_node(HasContactArrayNode, category=MODULE_AS_CATEGORY, section='contact')
+add_node(HasContactArrayNode, category=PKG_AS_CATEGORY, section='contact')

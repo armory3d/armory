@@ -10,4 +10,4 @@ class PickObjectNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketVector', 'Hit')
 
-add_node(PickObjectNode, category=MODULE_AS_CATEGORY, section='ray')
+add_node(PickObjectNode, category=PKG_AS_CATEGORY, section='ray')

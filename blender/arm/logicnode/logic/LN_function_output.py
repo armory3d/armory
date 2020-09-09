@@ -17,4 +17,4 @@ class FunctionOutputNode(ArmLogicTreeNode):
         row.prop(self, 'function_name')
 
 
-add_node(FunctionOutputNode, category=MODULE_AS_CATEGORY, section='function')
+add_node(FunctionOutputNode, category=PKG_AS_CATEGORY, section='function')

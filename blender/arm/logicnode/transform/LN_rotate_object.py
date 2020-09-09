@@ -44,4 +44,4 @@ class RotateObjectNode(ArmLogicTreeNode):
         name='', default='Euler Angles',
         update = on_property_update)
 
-add_node(RotateObjectNode, category=MODULE_AS_CATEGORY, section='rotation')
+add_node(RotateObjectNode, category=PKG_AS_CATEGORY, section='rotation')

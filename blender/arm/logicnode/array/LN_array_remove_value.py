@@ -24,4 +24,4 @@ class ArrayRemoveValueNode(ArmLogicTreeNode):
     #     op2 = row.operator('arm.node_remove_input_value', text='', icon='X', emboss=True)
     #     op2.node_index = str(id(self))
 
-add_node(ArrayRemoveValueNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayRemoveValueNode, category=PKG_AS_CATEGORY)

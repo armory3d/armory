@@ -14,4 +14,4 @@ class SetVelocityNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Angular Factor', default_value=[1.0, 1.0, 1.0])
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetVelocityNode, category=MODULE_AS_CATEGORY)
+add_node(SetVelocityNode, category=PKG_AS_CATEGORY)

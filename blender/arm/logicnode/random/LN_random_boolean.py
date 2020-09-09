@@ -10,4 +10,4 @@ class RandomBooleanNode(ArmLogicTreeNode):
         self.add_output('NodeSocketBool', 'Bool')
 
 
-add_node(RandomBooleanNode, category=MODULE_AS_CATEGORY)
+add_node(RandomBooleanNode, category=PKG_AS_CATEGORY)

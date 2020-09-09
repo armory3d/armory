@@ -12,4 +12,4 @@ class SetParentBoneNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Bone', default_value='Bone')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetParentBoneNode, category=MODULE_AS_CATEGORY, section='armature')
+add_node(SetParentBoneNode, category=PKG_AS_CATEGORY, section='armature')

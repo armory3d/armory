@@ -9,4 +9,4 @@ class WorldToScreenSpaceNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Vector')
         self.add_output('NodeSocketVector', 'Vector')
 
-add_node(WorldToScreenSpaceNode, category=MODULE_AS_CATEGORY, section='matrix')
+add_node(WorldToScreenSpaceNode, category=PKG_AS_CATEGORY, section='matrix')

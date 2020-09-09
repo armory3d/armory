@@ -10,4 +10,4 @@ class ResumeTilesheetNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ResumeTilesheetNode, category=MODULE_AS_CATEGORY)
+add_node(ResumeTilesheetNode, category=PKG_AS_CATEGORY)

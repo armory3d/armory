@@ -12,4 +12,4 @@ class IsFalseNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
 
 
-add_node(IsFalseNode, category=MODULE_AS_CATEGORY)
+add_node(IsFalseNode, category=PKG_AS_CATEGORY)

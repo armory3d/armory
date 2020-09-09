@@ -51,4 +51,4 @@ class PlaySoundNode(ArmLogicTreeNode):
             row.enabled = False
         row.prop(self, 'property4')
 
-add_node(PlaySoundNode, category=MODULE_AS_CATEGORY)
+add_node(PlaySoundNode, category=PKG_AS_CATEGORY)

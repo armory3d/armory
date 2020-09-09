@@ -11,4 +11,4 @@ class SetActionSpeedNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Speed', default_value=1.0)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetActionSpeedNode, category=MODULE_AS_CATEGORY)
+add_node(SetActionSpeedNode, category=PKG_AS_CATEGORY)

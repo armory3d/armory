@@ -10,4 +10,4 @@ class ArrayGetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Index')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(ArrayGetNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayGetNode, category=PKG_AS_CATEGORY)

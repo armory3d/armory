@@ -9,4 +9,4 @@ class GetMeshNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketShader', 'Mesh')
 
-add_node(GetMeshNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(GetMeshNode, category=PKG_AS_CATEGORY, section='props')

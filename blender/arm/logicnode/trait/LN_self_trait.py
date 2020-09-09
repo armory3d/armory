@@ -8,4 +8,4 @@ class SelfTraitNode(ArmLogicTreeNode):
     def init(self, context):
         self.add_output('NodeSocketShader', 'Trait')
 
-add_node(SelfTraitNode, category=MODULE_AS_CATEGORY)
+add_node(SelfTraitNode, category=PKG_AS_CATEGORY)

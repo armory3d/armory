@@ -12,4 +12,4 @@ class BloomSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Radius', default_value=3.0)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(BloomSetNode, category=MODULE_AS_CATEGORY)
+add_node(BloomSetNode, category=PKG_AS_CATEGORY)

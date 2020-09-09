@@ -12,4 +12,4 @@ class SetMaterialSlotNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Slot')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialSlotNode, category=MODULE_AS_CATEGORY)
+add_node(SetMaterialSlotNode, category=PKG_AS_CATEGORY)

@@ -9,4 +9,4 @@ class GetLocationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketVector', 'Location')
 
-add_node(GetLocationNode, category=MODULE_AS_CATEGORY, section='location')
+add_node(GetLocationNode, category=PKG_AS_CATEGORY, section='location')

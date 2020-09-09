@@ -9,4 +9,4 @@ class GetScaleNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketVector', 'Scale')
 
-add_node(GetScaleNode, category=MODULE_AS_CATEGORY, section='scale')
+add_node(GetScaleNode, category=PKG_AS_CATEGORY, section='scale')

@@ -13,4 +13,4 @@ class VectorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Vector', is_var=True)
 
 
-add_node(VectorNode, category=MODULE_AS_CATEGORY)
+add_node(VectorNode, category=PKG_AS_CATEGORY)

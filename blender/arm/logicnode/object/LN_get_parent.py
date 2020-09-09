@@ -9,4 +9,4 @@ class GetParentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketObject', 'Object')
 
-add_node(GetParentNode, category=MODULE_AS_CATEGORY, section='relations')
+add_node(GetParentNode, category=PKG_AS_CATEGORY, section='relations')

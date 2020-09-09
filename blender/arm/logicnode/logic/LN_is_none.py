@@ -12,4 +12,4 @@ class IsNoneNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
 
 
-add_node(IsNoneNode, category=MODULE_AS_CATEGORY)
+add_node(IsNoneNode, category=PKG_AS_CATEGORY)

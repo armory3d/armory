@@ -10,4 +10,4 @@ class StopAgentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(StopAgentNode, category=MODULE_AS_CATEGORY)
+add_node(StopAgentNode, category=PKG_AS_CATEGORY)

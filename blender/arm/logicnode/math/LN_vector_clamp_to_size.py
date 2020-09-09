@@ -11,4 +11,4 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Max')
         self.add_output('NodeSocketVector', 'Vector')
 
-add_node(VectorClampToSizeNode, category=MODULE_AS_CATEGORY, section='vector')
+add_node(VectorClampToSizeNode, category=PKG_AS_CATEGORY, section='vector')

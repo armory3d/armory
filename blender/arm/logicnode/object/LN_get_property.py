@@ -11,4 +11,4 @@ class GetPropertyNode(ArmLogicTreeNode):
         self.add_output('NodeSocketShader', 'Value')
         self.add_output('NodeSocketString', 'Property')
 
-add_node(GetPropertyNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(GetPropertyNode, category=PKG_AS_CATEGORY, section='props')

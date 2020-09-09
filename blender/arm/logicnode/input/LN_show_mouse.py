@@ -10,4 +10,4 @@ class ShowMouseNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Show')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ShowMouseNode, category=MODULE_AS_CATEGORY, section='mouse')
+add_node(ShowMouseNode, category=PKG_AS_CATEGORY, section='mouse')

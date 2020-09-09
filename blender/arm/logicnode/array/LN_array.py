@@ -21,4 +21,4 @@ class ArrayNode(ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(ArrayNode, category=MODULE_AS_CATEGORY, section='variable')
+add_node(ArrayNode, category=PKG_AS_CATEGORY, section='variable')

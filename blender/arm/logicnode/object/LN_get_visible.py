@@ -9,4 +9,4 @@ class GetVisibleNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketBool', 'Visible')
 
-add_node(GetVisibleNode, category=MODULE_AS_CATEGORY, section='props')
+add_node(GetVisibleNode, category=PKG_AS_CATEGORY, section='props')

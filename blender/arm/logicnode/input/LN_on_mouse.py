@@ -23,4 +23,4 @@ class OnMouseNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnMouseNode, category=MODULE_AS_CATEGORY, section='mouse')
+add_node(OnMouseNode, category=PKG_AS_CATEGORY, section='mouse')

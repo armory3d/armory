@@ -11,4 +11,4 @@ class AnimationStateNode(ArmLogicTreeNode):
         self.add_output('NodeSocketString', 'Action')
         self.add_output('NodeSocketInt', 'Frame')
 
-add_node(AnimationStateNode, category=MODULE_AS_CATEGORY)
+add_node(AnimationStateNode, category=PKG_AS_CATEGORY)

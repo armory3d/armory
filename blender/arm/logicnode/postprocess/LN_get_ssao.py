@@ -10,4 +10,4 @@ class SSAOGetNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Strength')
         self.add_output('NodeSocketFloat', 'Max Steps')
 
-add_node(SSAOGetNode, category=MODULE_AS_CATEGORY)
+add_node(SSAOGetNode, category=PKG_AS_CATEGORY)

@@ -17,4 +17,4 @@ class CaseStringNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(CaseStringNode, category=MODULE_AS_CATEGORY)
+add_node(CaseStringNode, category=PKG_AS_CATEGORY)

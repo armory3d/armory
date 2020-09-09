@@ -11,4 +11,4 @@ class ApplyTorqueNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Torque')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ApplyTorqueNode, category=MODULE_AS_CATEGORY, section='force')
+add_node(ApplyTorqueNode, category=PKG_AS_CATEGORY, section='force')

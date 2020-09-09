@@ -10,4 +10,4 @@ class ReadStorageNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Default')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(ReadStorageNode, category=MODULE_AS_CATEGORY, section='file')
+add_node(ReadStorageNode, category=PKG_AS_CATEGORY, section='file')
