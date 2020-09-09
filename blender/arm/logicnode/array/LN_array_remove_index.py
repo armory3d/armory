@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
-class ArrayRemoveNode(ArmLogicTreeNode):
-    """Array remove node"""
+class ArrayRemoveIndexNode(ArmLogicTreeNode):
+    """Removes an element from an array given by its index."""
     bl_idname = 'LNArrayRemoveNode'
-    bl_label = 'Array Remove'
+    bl_label = 'Array Remove By Index'
 
     def init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
@@ -12,4 +12,4 @@ class ArrayRemoveNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Value')
 
-add_node(ArrayRemoveNode, category=MODULE_AS_CATEGORY)
+add_node(ArrayRemoveIndexNode, category=MODULE_AS_CATEGORY)
