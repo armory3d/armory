@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetShadowVisibleNode(Node, ArmLogicTreeNode):
-    '''Get Shadow Visible node'''
+    """Get Shadow Visible node"""
     bl_idname = 'LNGetShadowVisibleNode'
     bl_label = 'Get Shadow Visible'
     bl_icon = 'NONE'

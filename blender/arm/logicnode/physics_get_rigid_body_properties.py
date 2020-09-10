@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetRigidBodyPropertiesNode(Node, ArmLogicTreeNode):
-    '''Get Rigid Body Properties node'''
+    """Get Rigid Body Properties node"""
     bl_idname = 'LNGetRigidBodyPropertiesNode'
     bl_label = 'Get Rigid Body Properties'
     bl_icon = 'NONE'

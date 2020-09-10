@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetMeshOffscreenNode(Node, ArmLogicTreeNode):
-    '''Get Mesh Offscreen node'''
+    """Get Mesh Offscreen node"""
     bl_idname = 'LNGetMeshOffscreenNode'
     bl_label = 'Get Mesh Offscreen'
     bl_icon = 'NONE'

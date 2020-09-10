@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetShadowOffscreenNode(Node, ArmLogicTreeNode):
-    '''Get Shadow Offscreen node'''
+    """Get Shadow Offscreen node"""
     bl_idname = 'LNGetShadowOffscreenNode'
     bl_label = 'Get Shadow Offscreen'
     bl_icon = 'NONE'

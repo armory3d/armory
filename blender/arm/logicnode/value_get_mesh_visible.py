@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetMeshVisibleNode(Node, ArmLogicTreeNode):
-    '''Get Mesh Visible node'''
+    """Get Mesh Visible node"""
     bl_idname = 'LNGetMeshVisibleNode'
     bl_label = 'Get Mesh Visible'
     bl_icon = 'NONE'
