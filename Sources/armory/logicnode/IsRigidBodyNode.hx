@@ -1,8 +1,9 @@
 package armory.logicnode;
 
 import iron.object.Object;
+import armory.trait.physics.RigidBody;
 
-class GetVisibleNode extends LogicNode {
+class IsRigidBodyNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -13,6 +14,10 @@ class GetVisibleNode extends LogicNode {
 
 		if (object == null) return null;
 
-		return object.visible;
+		#if arm_physics
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null) return true;
+		return false;
+		#end
 	}
 }

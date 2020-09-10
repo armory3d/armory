@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-class GetVisibleNode extends LogicNode {
+class GetMeshOffscreenNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -13,6 +13,6 @@ class GetVisibleNode extends LogicNode {
 
 		if (object == null) return null;
 
-		return object.visible;
+		return object.culledMesh;
 	}
 }
