@@ -4,6 +4,8 @@ import iron.object.Object;
 
 class SetVisibleNode extends LogicNode {
 
+	public var property0: String;
+
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -14,7 +16,14 @@ class SetVisibleNode extends LogicNode {
 
 		if (object == null) return;
 
-		object.visible = visible;
+		switch (property0) {
+		case "Object":
+			object.visible = visible;
+		case "Mesh":
+			object.visibleMesh = visible;
+		case "Shadow":
+			object.visibleShadow = visible;
+		}
 
 		runOutput(0);
 	}
