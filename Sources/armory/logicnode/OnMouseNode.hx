@@ -5,6 +5,7 @@ class OnMouseNode extends LogicNode {
 	public var property0: String;
 	public var property1: String;
 
+	@:deprecated("The 'On Mouse' node is deprecated and will be removed in future SDK versions. Please use 'Mouse' instead.")
 	public function new(tree: LogicTree) {
 		super(tree);
 

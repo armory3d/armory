@@ -5,6 +5,7 @@ class OnKeyboardNode extends LogicNode {
 	public var property0: String;
 	public var property1: String;
 
+	@:deprecated("The 'On Keyboard' node is deprecated and will be removed in future SDK versions. Please use 'Keyboard' instead.")
 	public function new(tree: LogicTree) {
 		super(tree);
 
