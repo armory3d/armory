@@ -19,6 +19,7 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketBool', 'Visible')
+        self.inputs.new('NodeSocketBool', 'Children')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
