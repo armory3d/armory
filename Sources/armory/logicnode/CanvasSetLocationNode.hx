@@ -19,8 +19,11 @@ class CanvasSetLocationNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).x = newX;
-		canvas.getElement(element).y = newY;
+		var e = canvas.getElement(element);
+		if (e != null) {
+			e.x = newX;
+			e.y = newY;
+		}
 		runOutput(0);
 	}
 

@@ -19,6 +19,9 @@ class CanvasGetPBNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
+		var e = canvas.getElement(element);
+		if (e == null) return;
+
 		at = canvas.getElement(element).progress_at;
         max = canvas.getElement(element).progress_total;
 		runOutput(0);

@@ -19,8 +19,11 @@ class CanvasGetScaleNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		height = canvas.getElement(element).height;
-        width = canvas.getElement(element).width;
+		var e = canvas.getElement(element);
+		if (e == null) return;
+
+		height = e.height;
+        width = e.width;
 		runOutput(0);
 	}
 
