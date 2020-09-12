@@ -1,21 +1,23 @@
 from typing import Callable
+import os.path
+import time
 import webbrowser
 
 import bpy
 from bpy.props import BoolProperty, StringProperty
-from bpy.types import NodeTree
+#from bpy.types import NodeTree, Node
 import nodeitems_utils
 
-from arm.logicnode import *
 from arm.logicnode import arm_nodes
 from arm.logicnode.arm_nodes import ArmNodeCategory
 from arm.logicnode import arm_sockets
+from arm.logicnode import *
 
 registered_nodes = []
 registered_categories = []
 
 
-class ArmLogicTree(NodeTree):
+class ArmLogicTree(bpy.types.NodeTree):
     """Logic nodes"""
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
@@ -278,89 +280,138 @@ class ARMAddSetVarNode(bpy.types.Operator):
         self.setNodeRef = setNode
         return({'FINISHED'})
 
-# node replacement code
-replacements = {}
 
-def add_replacement(item):
-    replacements[item.from_node] = item
+def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
+    """Replaces the given node with its replacement."""
 
-def get_replaced_nodes():
-    return replacements.keys()
-
-def get_replacement_for_node(node):
-    return replacements[node.bl_idname]
-
-class Replacement:
-    # represents a single replacement rule, this can replace exactly one node with another
-    #
-    # from_node: the node type to be removed
-    # to_node: the node type which takes from_node's place
-    # *SocketMapping: a map which defines how the sockets of the old node shall be connected to the new node
-    # {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
-    def __init__(self, from_node, to_node, in_socket_mapping, out_socket_mapping, property_mapping):
-        self.from_node = from_node
-        self.to_node = to_node
-        self.in_socket_mapping = in_socket_mapping
-        self.out_socket_mapping = out_socket_mapping
-        self.property_mapping = property_mapping
-
-# actual replacement code
-def replace(tree, node):
-    replacement = get_replacement_for_node(node)
-    newnode = tree.nodes.new(replacement.to_node)
-    newnode.location = node.location
-    newnode.parent = node.parent
-
-    parent = node.parent
-    while parent is not None:
-        newnode.location[0] += parent.location[0]
-        newnode.location[1] += parent.location[1]
-        parent = parent.parent
+    # the node can either return a NodeReplacement object (for simple replacements)
+    # or a brand new node, for more complex stuff.
+    response = node.get_replacement_node(tree)
     
-    
-    # map properties
-    for prop in replacement.property_mapping.keys():
-        setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
+    if isinstance(response, bpy.types.Node):
+        newnode = response
+        # some misc. properties
+        newnode.parent = node.parent
+        newnode.location = node.location
+        newnode.select = node.select
+    elif isinstance(response, list):  # a list of nodes:
+        for node in response:
+            newnode.parent = node.parent
+            newnode.location = node.location
+            newnode.select = node.select
+    elif isinstance(response, arm_nodes.NodeReplacement):
+        replacement = response
+        # if the returned object is a NodeReplacement, check that it corresponds to the node (also, create the new node)
+        if node.bl_idname != replacement.from_node or node.arm_version != replacement.from_node_version:
+            raise LookupError("the provided NodeReplacement doesn't seem to correspond to the node needing replacement")
+        newnode = tree.nodes.new(response.to_node)
+        if newnode.arm_version != replacement.to_node_version:
+            raise LookupError("the provided NodeReplacement doesn't seem to correspond to the node needing replacement")
 
-    # map unconnected inputs
-    for in_socket in replacement.in_socket_mapping.keys():
-        if not node.inputs[in_socket].is_linked:
-            newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
+        # some misc. properties
+        newnode.parent = node.parent
+        newnode.location = node.location
+        newnode.select = node.select
 
-    # map connected inputs
-    for link in tree.links:
-        if link.from_node == node:
-            # this is an output link
-            for i in range(0, len(node.outputs)):
-                # check the outputs
-                # i represents the socket index
-                # do we want to remap it & is it the one referenced in the current link
-                if i in replacement.out_socket_mapping.keys() and node.outputs[i] == link.from_socket:
-                    tree.links.new(newnode.outputs[replacement.out_socket_mapping.get(i)], link.to_socket)
-        
-        if link.to_node == node:
-            # this is an input link
-            for i in range(0, len(node.inputs)):
-                # check the inputs
-                # i represents the socket index
-                # do we want to remap it & is it the one referenced socket in the current link
-                if i in replacement.in_socket_mapping.keys() and node.inputs[i] == link.to_socket:
-                    tree.links.new(newnode.inputs[replacement.in_socket_mapping.get(i)], link.from_socket)
+        # now, use the `replacement` to hook up the new node correctly
+        # start by applying defaults
+        for prop_name, prop_value in replacement.property_defaults.items():
+            setattr(newnode, prop_name, prop_value)
+        for input_id, input_value in replacement.input_defaults.items():
+            input_socket = newnode.inputs[input_id]
+            if isinstance(input_socket, arm_sockets.ArmCustomSocket):
+                if input_socket.arm_socket_type != 'NONE':
+                    input_socket.default_value_raw = input_value
+            else:
+                input_socket.default_value = input_value
+
+        # map properties
+        for src_prop_name, dest_prop_name in replacement.property_mapping.items():
+            setattr(newnode, dest_prop_name, getattr(node, src_prop_name))
+
+        # map inputs
+        for src_socket_id, dest_socket_id in replacement.in_socket_mapping.items():
+            src_socket = node.inputs[src_socket_id]
+            dest_socket = newnode.inputs[dest_socket_id]
+            if src_socket.is_linked:
+                # an input socket only has one link
+                datasource_socket = src_socket.links[0].from_socket
+                tree.links.new(datasource_socket, dest_socket)
+            else:
+                if isinstance(dest_socket, arm_sockets.ArmCustomSocket):
+                    if dest_socket.arm_socket_type != 'NONE':
+                        dest_socket.default_value_raw = src_socket.default_value_raw
+                else:
+                    dest_socket.default_value = src_socket.default_value
+
+        # map outputs
+        for src_socket_id, dest_socket_id in replacement.out_socket_mapping.items():
+            dest_socket = newnode.outputs[dest_socket_id]
+            for link in node.outputs[src_socket_id].links:
+                tree.links.new(dest_socket, link.to_socket)
+    else:
+        print(response)
     tree.nodes.remove(node)
 
+
 def replaceAll():
+    global replacement_errors
+    list_of_errors = set()
     for tree in bpy.data.node_groups:
         if tree.bl_idname == "ArmLogicTreeType":
             for node in tree.nodes:
-                if node.bl_idname in get_replaced_nodes():
-                    print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
-                    replace(tree, node)
-        
-    
+                if not isinstance(type(node).arm_version, int):
+                    continue  # TODO: that's a line to remove when all node classes will have their own version set.
+                if not node.is_registered_node_type():
+                    # node type deleted. That's unusual. Or it has been replaced for a looong time.
+                    list_of_errors.add( ('unregistered', None, tree.name) )
+                if node.arm_version < type(node).arm_version:
+                    try:
+                        replace(tree, node)
+                    except LookupError as err:
+                        list_of_errors.add( ('update failed', node.bl_idname, tree.name) )
+                    except Exception as err:
+                        list_of_errors.add( ('misc.', node.bl_idname, tree.name) )
+                elif node.arm_version > type(node).arm_version:
+                    list_of_errors.add(  ('future version', node.bl_idname, tree.name) )
+
+    # if possible, make a popup about the errors.
+    # also write an error report.
+    if len(list_of_errors) > 0:
+        print('there were errors in node replacement')
+        basedir = os.path.dirname(bpy.data.filepath)
+        reportfile = os.path.join(
+            basedir, 'node_update_failure.{:s}.txt'.format(
+                time.strftime("%Y-%m-%dT%H-%M-%S%z")
+            )
+        )
+        reportf = open(reportfile, 'w')
+        for error_type, node_class, tree_name in list_of_errors:
+            if error_type == 'unregistered':
+                print(f"A node whose class doesn't exist was found in node tree \"{tree_name}\"", file=reportf)
+            elif error_type == 'update failed':
+                print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
+                      f"because update isn't implemented (anymore?) for this version of the node", file=reportf)
+            elif error_type == 'future version':
+                print(f"A node of type {node_class} in tree \"{tree_name}\" seemingly comes from a future version of armory. "
+                      f"Please check whether your version of armory is up to date", file=reportf)
+            elif error_type == 'misc.':
+                print(f"", file=reportf)
+            else:
+                print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
+                      f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
+        reportf.close()
+
+        replacement_errors = list_of_errors
+        bpy.ops.arm.show_node_update_errors()
+        replacement_errors = None
+
+
 class ReplaceNodesOperator(bpy.types.Operator):
-    '''Automatically replaces deprecated nodes.'''
+    """Automatically replaces deprecated nodes."""
     bl_idname = "node.replace"
     bl_label = "Replace Nodes"
+    bl_description = "Replace deprecated nodes"
 
     def execute(self, context):
         replaceAll()
@@ -368,11 +419,12 @@ class ReplaceNodesOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
+        return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
-# TODO: deprecated
-# Input Replacement Rules
-# add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+
+# Node Replacement Rules (TODO port them)
+#add_replacement(NodeReplacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+#add_replacement(NodeReplacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
     arm_sockets.register()

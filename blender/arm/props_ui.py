@@ -1,4 +1,5 @@
 import os
+import time
 
 import bpy
 
@@ -9,6 +10,7 @@ import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.props_properties
+import arm.nodes_logic
 import arm.proxy
 import arm.utils
 
@@ -1773,6 +1775,191 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')
 
+class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
+    bl_label = 'Show old file version info'
+    bl_idname = 'arm.show_old_file_version_info'
+    bl_description = ('Displays an info panel that warns about opening a file'
+                       'which was created in a previous version of Armory')
+    # bl_options = {'INTERNAL'}
+
+    wrd = None
+
+    def draw_message_box(self, context):
+        file_version = ARM_OT_ShowFileVersionInfo.wrd.arm_version
+        current_version = props.arm_version
+
+
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        if current_version == file_version:
+            layout.label('This file was saved in', icon='INFO')
+            layout.label('the current Armory version', icon='BLANK1')
+            layout.separator()
+            layout.label(f'(version: {current_version}')
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.discard_popup', text='Ok')
+
+        # this will help order versions better, somewhat.
+        # note: this is NOT complete
+        current_version = tuple( current_version.split('.') )
+        file_version = tuple( file_version.split('.') )
+
+        if current_version > file_version:
+            layout.label(text='Warning: This file was saved in a', icon='ERROR')
+            layout.label(text='previous version of Armory!', icon='BLANK1')
+            layout.separator()
+
+            layout.label(text='Please inform yourself about breaking changes!', icon='BLANK1')
+            layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+            layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+            layout.separator()
+            layout.separator()
+            layout.label(text='Should Armory try to automatically update', icon='BLANK1')
+            layout.label(text='the file to the current SDK version?', icon='BLANK1')
+            layout.separator()
+
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.update_file_sdk', text='Yes')
+            row.active_default = False
+            row.operator('arm.discard_popup', text='No')
+        else:
+            layout.label(text='Warning: This file was saved in a', icon='ERROR')
+            layout.label(text='future version of Armory!', icon='BLANK1')
+            layout.separator()
+
+            layout.label(text='It is impossible to downgrade a file,', icon='BLANK1')
+            layout.label(text='Something will probably be broken here.', icon='BLANK1')
+            layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+            layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+            layout.separator()
+            layout.separator()
+            layout.label(text='Please check how this file was created', icon='BLANK1')
+            layout.separator()
+
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.discard_popup', text='Ok')
+
+    def execute(self, context):
+        ARM_OT_ShowFileVersionInfo.wrd = bpy.data.worlds['Arm']
+        context.window_manager.popover(ARM_OT_ShowFileVersionInfo.draw_message_box, ui_units_x=16)
+
+        return {"FINISHED"}
+
+
+class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
+    bl_label = 'Show upgrade failure details'
+    bl_idname = 'arm.show_node_update_errors'
+    bl_description = ('Displays an info panel that shows the different errors that occurred when upgrading nodes')
+
+    wrd = None  # a helper internal variable
+
+    def draw_message_box(self, context):
+        list_of_errors = arm.nodes_logic.replacement_errors.copy()
+        # note: list_of_errors is a set of tuples: `(error_type, node_class, tree_name)`
+        # where `error_type` can be "unregistered", "update failed", "future version" or "misc."
+
+        file_version = ARM_OT_ShowNodeUpdateErrors.wrd.arm_version
+        current_version = props.arm_version
+
+        # this will help order versions better, somewhat.
+        # note: this is NOT complete
+        current_version_2 = tuple( current_version.split('.') )
+        file_version_2 = tuple( file_version.split('.') )
+        is_armory_upgrade = (current_version_2 > file_version_2)
+
+        error_types = set()
+        errored_trees = set()
+        errored_nodes = set()
+        for error_entry in list_of_errors:
+            error_types.add(error_entry[0])
+            errored_nodes.add(error_entry[1])
+            errored_trees.add(error_entry[2])
+
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        layout.label(text="Some nodes failed to be updated to the current armory version", icon="ERROR")
+        if current_version==file_version:
+            layout.label(text="(This might be because you are using a development snapshot, or a homemade version ;) )", icon='BLANK1')
+        elif not is_armory_upgrade:
+            layout.label(text="(Please note that it is not possible do downgrade nodes to a previous version either.", icon='BLANK1')
+            layout.label(text="This might be the cause of your problem.)", icon='BLANK1')
+
+        layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+        layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+        layout.separator()
+
+        if 'update failed' in error_types:
+            layout.label(text="Some nodes do not have an update procedure to deal with the version saved in this file.", icon='BLANK1')
+            if current_version==file_version:
+                layout.label(text="(if you are a developer, this might be because you didn't implement it yet.)", icon='BLANK1')
+        if 'unregistered' in error_types:
+            if is_armory_upgrade:
+                layout.label(text='Some nodes seem to be too old to be understood by armory anymore', icon='BLANK1')
+            else:
+                layout.label(text="Some nodes are unknown to armory, either because they are too new or too old.", icon='BLANK1')
+        if 'future version' in error_types:
+            if is_armory_upgrade:
+                layout.label(text='Somehow, some nodes seem to have been created with a future version of armory.', icon='BLANK1')
+            else:
+                layout.label(text='Some nodes seem to have been created with a future version of armory.', icon='BLANK1')
+        if 'misc.' in error_types:
+            layout.label(text="Some nodes' update procedure failed to complete")
+
+        layout.separator()
+        layout.label(text='the nodes impacted are the following:', icon='BLANK1')
+        for node in errored_nodes:
+            layout.label(text=f'   {node}', icon='BLANK1')
+        layout.separator()
+        layout.label(text='the node trees impacted are the following:', icon='BLANK1')
+        for tree in errored_trees:
+            layout.label(text=f'   "{tree}"', icon='BLANK1')
+
+        layout.separator()
+        layout.label(text="A detailed error report has been saved next to the blender file.", icon='BLANK1')
+        layout.label(text="the file name is \"node_update_failure\", followed by the current time.", icon='BLANK1')
+        layout.separator()
+
+        row = layout.row(align=True)
+        row.active_default = False
+        row.operator('arm.discard_popup', text='Ok')
+
+    def execute(self, context):
+        ARM_OT_ShowNodeUpdateErrors.wrd = bpy.data.worlds['Arm']
+        context.window_manager.popover(ARM_OT_ShowNodeUpdateErrors.draw_message_box, ui_units_x=32)
+        return {"FINISHED"}
+
+
+class ARM_OT_UpdateFileSDK(bpy.types.Operator):
+    bl_idname = 'arm.update_file_sdk'
+    bl_label = 'Update file to current SDK version'
+    bl_description = bl_label
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        wrd = bpy.data.worlds['Arm']
+        # This allows for seamless migration from ealier versions of Armory
+        for rp in wrd.arm_rplist: # TODO: deprecated
+            if rp.rp_gi != 'Off':
+                rp.rp_gi = 'Off'
+                rp.rp_voxelao = True
+
+        # Replace deprecated nodes
+        arm.nodes_logic.replaceAll()
+
+        wrd.arm_version = props.arm_version
+        wrd.arm_commit = props.arm_commit
+
+        arm.make.clean()
+        print(f'Project updated to SDK {props.arm_version}. Please save the .blend file.')
+
+        return {'FINISHED'}
 
 class ARM_OT_DiscardPopup(bpy.types.Operator):
     """Empty operator for discarding dialogs."""
@@ -1833,6 +2020,9 @@ def register():
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
+    bpy.utils.register_class(ARM_OT_UpdateFileSDK)
+    bpy.utils.register_class(ARM_OT_ShowFileVersionInfo)
+    bpy.utils.register_class(ARM_OT_ShowNodeUpdateErrors)
     bpy.utils.register_class(ARM_OT_DiscardPopup)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
@@ -1844,6 +2034,9 @@ def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
 
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
+    bpy.utils.unregister_class(ARM_OT_ShowNodeUpdateErrors)
+    bpy.utils.unregister_class(ARM_OT_ShowFileVersionInfo)
+    bpy.utils.unregister_class(ARM_OT_UpdateFileSDK)
     bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ModifiersPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)
