@@ -7,8 +7,10 @@ class GetMouseVisibleNode(ArmLogicTreeNode):
     """Get Mouse Visible node"""
     bl_idname = 'LNGetMouseVisibleNode'
     bl_label = 'Get Mouse Visible'
+    arm_version = 1
 
     def init(self, context):
+        super(GetMouseVisibleNode, self).init(context)
         self.outputs.new('NodeSocketBool', 'Visible')
 
 add_node(GetMouseVisibleNode, category=PKG_AS_CATEGORY, section='mouse')

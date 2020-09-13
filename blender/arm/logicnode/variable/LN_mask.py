@@ -4,8 +4,10 @@ class MaskNode(ArmLogicTreeNode):
     """Mask node"""
     bl_idname = 'LNMaskNode'
     bl_label = 'Mask'
+    arm_version = 1
 
     def init(self, context):
+        super(MaskNode, self).init(context)
         for i in range(1, 21):
             label = 'Group {:02d}'.format(i)
             self.inputs.new('NodeSocketBool', label)

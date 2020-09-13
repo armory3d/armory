@@ -28,6 +28,7 @@ class ColorgradingSetHighlightNode(ArmLogicTreeNode):
     """Colorgrading Set Highlight node"""
     bl_idname = 'LNColorgradingSetHighlightNode'
     bl_label = 'Colorgrading Set Highlight'
+    arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(
@@ -58,6 +59,7 @@ class ColorgradingSetHighlightNode(ArmLogicTreeNode):
         pass
 
     def init(self, context):
+        super(ColorgradingSetHighlightNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)

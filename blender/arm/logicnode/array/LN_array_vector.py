@@ -4,11 +4,13 @@ class VectorArrayNode(ArmLogicTreeNode):
     """Vector array node"""
     bl_idname = 'LNArrayVectorNode'
     bl_label = 'Array Vector'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(VectorArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('NodeSocketInt', 'Length')
 

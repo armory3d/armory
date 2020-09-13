@@ -4,11 +4,13 @@ class ArrayAddNode(ArmLogicTreeNode):
     """Array add node"""
     bl_idname = 'LNArrayAddNode'
     bl_label = 'Array Add'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(ArrayAddNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketBool', 'Unique Values')

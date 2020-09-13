@@ -4,8 +4,10 @@ class ReadStorageNode(ArmLogicTreeNode):
     """ReadStorage node"""
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
+    arm_version = 1
 
     def init(self, context):
+        super(ReadStorageNode, self).init(context)
         self.add_input('NodeSocketString', 'Key')
         self.add_input('NodeSocketString', 'Default')
         self.add_output('NodeSocketShader', 'Value')

@@ -7,8 +7,10 @@ class RemovePhysicsNode (ArmLogicTreeNode):
     """Remove Physics Node"""
     bl_idname = 'LNRemovePhysicsNode'
     bl_label = 'Remove Physics'
+    arm_version = 1
 
     def init(self, context):
+        super(RemovePhysicsNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('ArmNodeSocketAction', 'Out')

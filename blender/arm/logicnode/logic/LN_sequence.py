@@ -4,11 +4,13 @@ class SequenceNode(ArmLogicTreeNode):
     """Sequence node"""
     bl_idname = 'LNSequenceNode'
     bl_label = 'Sequence'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(SequenceNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
 
     def draw_buttons(self, context, layout):

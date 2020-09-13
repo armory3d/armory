@@ -4,11 +4,13 @@ class BooleanArrayNode(ArmLogicTreeNode):
     """Boolean array node"""
     bl_idname = 'LNArrayBooleanNode'
     bl_label = 'Array Boolean'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(BooleanArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('NodeSocketInt', 'Length')
 

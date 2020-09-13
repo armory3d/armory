@@ -4,8 +4,10 @@ class ResumeTraitNode(ArmLogicTreeNode):
     """Resume trait node"""
     bl_idname = 'LNResumeTraitNode'
     bl_label = 'Resume Trait'
+    arm_version = 1
 
     def init(self, context):
+        super(ResumeTraitNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')

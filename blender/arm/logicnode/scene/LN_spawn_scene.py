@@ -4,8 +4,10 @@ class SpawnSceneNode(ArmLogicTreeNode):
     """Spawn scene node"""
     bl_idname = 'LNSpawnSceneNode'
     bl_label = 'Spawn Scene'
+    arm_version = 1
 
     def init(self, context):
+        super(SpawnSceneNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Scene')
         self.add_input('NodeSocketShader', 'Transform')

@@ -7,12 +7,14 @@ class GetObjectNode(ArmLogicTreeNode):
     """Get object node"""
     bl_idname = 'LNGetObjectNode'
     bl_label = 'Get Object'
+    arm_version = 1
 
     property0: PointerProperty(
         type=bpy.types.Scene, name='Scene',
         description='The scene from which to take the object')
 
     def init(self, context):
+        super(GetObjectNode, self).init(context)
         self.add_input('NodeSocketString', 'Name')
         self.add_output('ArmNodeSocketObject', 'Object')
 

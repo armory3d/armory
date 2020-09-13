@@ -4,8 +4,10 @@ class PlaySpeakerNode(ArmLogicTreeNode):
     """Play speaker node"""
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
+    arm_version = 1
 
     def init(self, context):
+        super(PlaySpeakerNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')

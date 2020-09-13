@@ -4,8 +4,10 @@ class PlayTilesheetNode(ArmLogicTreeNode):
     """Play tilesheet node"""
     bl_idname = 'LNPlayTilesheetNode'
     bl_label = 'Play Tilesheet'
+    arm_version = 1
 
     def init(self, context):
+        super(PlayTilesheetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Action')

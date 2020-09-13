@@ -4,11 +4,13 @@ class ConcatenateStringNode(ArmLogicTreeNode):
     """Concatenate string node"""
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(ConcatenateStringNode, self).init(context)
         self.add_input('NodeSocketString', 'Input 0')
         self.add_output('NodeSocketString', 'String')
 

@@ -4,6 +4,7 @@ class OnSurfaceNode(ArmLogicTreeNode):
     """On surface node"""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),
@@ -12,6 +13,7 @@ class OnSurfaceNode(ArmLogicTreeNode):
         name='', default='Touched')
 
     def init(self, context):
+        super(OnSurfaceNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

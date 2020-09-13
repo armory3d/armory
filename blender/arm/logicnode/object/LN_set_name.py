@@ -4,8 +4,10 @@ class SetNameNode(ArmLogicTreeNode):
     """Set name node"""
     bl_idname = 'LNSetNameNode'
     bl_label = 'Set Name'
+    arm_version = 1
 
     def init(self, context):
+        super(SetNameNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Name')

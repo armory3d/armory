@@ -4,6 +4,7 @@ class MouseNode(ArmLogicTreeNode):
     """Mouse node"""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -17,6 +18,7 @@ class MouseNode(ArmLogicTreeNode):
         name='', default='left')
 
     def init(self, context):
+        super(MouseNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketBool', 'State')
 

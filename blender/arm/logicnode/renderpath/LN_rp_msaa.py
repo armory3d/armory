@@ -4,6 +4,7 @@ class RpMSAANode(ArmLogicTreeNode):
     """Configure multi-sample anti-aliasing node"""
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Rp MSAA'
+    arm_version = 1
     property0: EnumProperty(
         items = [('1', '1', '1'),
                  ('2', '2', '2'),
@@ -14,6 +15,7 @@ class RpMSAANode(ArmLogicTreeNode):
         name='', default='1')
 
     def init(self, context):
+        super(RpMSAANode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
 

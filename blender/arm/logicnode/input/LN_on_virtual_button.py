@@ -4,6 +4,7 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     """On virtual button node"""
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -12,6 +13,7 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     property1: StringProperty(name='', default='button')
 
     def init(self, context):
+        super(OnVirtualButtonNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

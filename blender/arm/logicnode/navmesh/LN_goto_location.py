@@ -4,8 +4,10 @@ class GoToLocationNode(ArmLogicTreeNode):
     """Navigate to location node"""
     bl_idname = 'LNGoToLocationNode'
     bl_label = 'Go To Location'
+    arm_version = 1
 
     def init(self, context):
+        super(GoToLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Location')

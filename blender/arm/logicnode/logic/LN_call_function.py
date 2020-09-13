@@ -4,12 +4,14 @@ class CallFunctionNode(ArmLogicTreeNode):
     """Call Haxe function node"""
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'
+    arm_version = 1
     min_inputs = 3
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(CallFunctionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait/Any')
         self.add_input('NodeSocketString', 'Function')

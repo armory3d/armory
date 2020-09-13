@@ -15,11 +15,11 @@ class SetVisibleNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SetVisibleNode, self).init(context)
-        self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketBool', 'Visible')
-        self.inputs.new('NodeSocketBool', 'Children')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('NodeSocketBool', 'Visible')
+        self.add_input('NodeSocketBool', 'Children')
+        self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

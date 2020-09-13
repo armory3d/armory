@@ -4,8 +4,10 @@ class VectorNode(ArmLogicTreeNode):
     """Vector node"""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
+    arm_version=1
 
     def init(self, context):
+        super(VectorNode, self).init(context)
         self.add_input('NodeSocketFloat', 'X')
         self.add_input('NodeSocketFloat', 'Y')
         self.add_input('NodeSocketFloat', 'Z')

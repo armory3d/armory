@@ -4,6 +4,7 @@ class MixNode(ArmLogicTreeNode):
     """Mix node"""
     bl_idname = 'LNMixNode'
     bl_label = 'Interpolate'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),
@@ -30,6 +31,7 @@ class MixNode(ArmLogicTreeNode):
     property2_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
+        super(MixNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
         self.add_input('NodeSocketFloat', 'Value1', default_value=0.0)
         self.add_input('NodeSocketFloat', 'Value2', default_value=1.0)

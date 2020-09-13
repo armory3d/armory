@@ -9,6 +9,7 @@ class CompareNode(ArmLogicTreeNode):
     """Compare node"""
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
@@ -27,6 +28,7 @@ class CompareNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(CompareNode, self).init(context)
         self.add_input('NodeSocketShader', 'Value')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('NodeSocketBool', 'Bool')

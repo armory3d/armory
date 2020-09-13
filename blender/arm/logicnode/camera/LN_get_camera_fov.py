@@ -4,8 +4,10 @@ class GetCameraFovNode(ArmLogicTreeNode):
     """Get camera FOV node"""
     bl_idname = 'LNGetCameraFovNode'
     bl_label = 'Get Camera FOV'
+    arm_version = 1
 
     def init(self, context):
+        super(GetCameraFovNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketFloat', 'FOV')
 

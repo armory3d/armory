@@ -4,8 +4,10 @@ class SetMaterialSlotNode(ArmLogicTreeNode):
     """Set material slot node"""
     bl_idname = 'LNSetMaterialSlotNode'
     bl_label = 'Set Material Slot'
+    arm_version = 1
 
     def init(self, context):
+        super(SetMaterialSlotNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Material')

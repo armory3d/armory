@@ -4,6 +4,7 @@ class OnCanvasElementNode(ArmLogicTreeNode):
     """On canvas element node"""
     bl_idname = 'LNOnCanvasElementNode'
     bl_label = 'On Canvas Element'
+    arm_version = 1
 
     property0: EnumProperty(
         items=[('click', 'Click', 'Listen to mouse clicks'),
@@ -21,6 +22,7 @@ class OnCanvasElementNode(ArmLogicTreeNode):
         name='Mouse Button', default='left')
 
     def init(self, context):
+        super(OnCanvasElementNode, self).init(context)
         self.add_input('NodeSocketString', 'Element')
         self.add_output('ArmNodeSocketAction', 'Out')
 

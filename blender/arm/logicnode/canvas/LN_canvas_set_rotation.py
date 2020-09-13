@@ -4,8 +4,10 @@ class CanvasSetRotationNode(ArmLogicTreeNode):
     """Set canvas element rotation"""
     bl_idname = 'LNCanvasSetRotationNode'
     bl_label = 'Canvas Set Rotation'
+    arm_version = 1
 
     def init(self, context):
+        super(CanvasSetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketFloat', 'Rad')
