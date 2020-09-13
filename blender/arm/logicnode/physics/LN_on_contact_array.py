@@ -4,6 +4,7 @@ class OnContactArrayNode(ArmLogicTreeNode):
     """On contact array node"""
     bl_idname = 'LNOnContactArrayNode'
     bl_label = 'On Contact Array'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),
@@ -11,6 +12,7 @@ class OnContactArrayNode(ArmLogicTreeNode):
         name='', default='Begin')
 
     def init(self, context):
+        super(OnContactArrayNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object 1')
         self.add_input('ArmNodeSocketArray', 'Objects')
         self.add_output('ArmNodeSocketAction', 'Out')

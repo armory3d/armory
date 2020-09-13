@@ -4,11 +4,13 @@ class StringArrayNode(ArmLogicTreeNode):
     """String array node"""
     bl_idname = 'LNArrayStringNode'
     bl_label = 'Array String'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(StringArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('NodeSocketInt', 'Length')
 

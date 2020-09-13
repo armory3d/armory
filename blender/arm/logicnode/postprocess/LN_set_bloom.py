@@ -4,8 +4,10 @@ class BloomSetNode(ArmLogicTreeNode):
     """Set Bloom Effect"""
     bl_idname = 'LNBloomSetNode'
     bl_label = 'Set Bloom'
+    arm_version = 1
 
     def init(self, context):
+        super(BloomSetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketFloat', 'Threshold', default_value=1.00)
         self.add_input('NodeSocketFloat', 'Strength', default_value=3.50)

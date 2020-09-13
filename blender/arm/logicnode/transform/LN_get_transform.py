@@ -4,8 +4,10 @@ class GetTransformNode(ArmLogicTreeNode):
     """Get transform node"""
     bl_idname = 'LNGetTransformNode'
     bl_label = 'Get Transform'
+    arm_version = 1
 
     def init(self, context):
+        super(GetTransformNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketShader', 'Transform')
 

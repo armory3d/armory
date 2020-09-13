@@ -4,8 +4,10 @@ class PauseTraitNode(ArmLogicTreeNode):
     """Pause trait node"""
     bl_idname = 'LNPauseTraitNode'
     bl_label = 'Pause Trait'
+    arm_version = 1
 
     def init(self, context):
+        super(PauseTraitNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')

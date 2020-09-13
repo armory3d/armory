@@ -4,8 +4,10 @@ class ApplyTorqueNode(ArmLogicTreeNode):
     """Apply torque node"""
     bl_idname = 'LNApplyTorqueNode'
     bl_label = 'Apply Torque'
+    arm_version = 1
 
     def init(self, context):
+        super(ApplyTorqueNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Torque')

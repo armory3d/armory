@@ -4,6 +4,7 @@ class VectorMixNode(ArmLogicTreeNode):
     """Vector mix node"""
     bl_idname = 'LNVectorMixNode'
     bl_label = 'Vector Mix'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),
@@ -30,6 +31,7 @@ class VectorMixNode(ArmLogicTreeNode):
     property2_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
+        super(VectorMixNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
         self.add_input('NodeSocketVector', 'Vector1', default_value=[0.0, 0.0, 0.0])
         self.add_input('NodeSocketVector', 'Vector2', default_value=[1.0, 1.0, 1.0])

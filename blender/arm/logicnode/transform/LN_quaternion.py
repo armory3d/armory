@@ -4,8 +4,10 @@ class QuaternionNode(ArmLogicTreeNode):
     """Quaternion node"""
     bl_idname = 'LNQuaternionNode'
     bl_label = 'Quaternion'
+    arm_version = 1
 
     def init(self, context):
+        super(QuaternionNode, self).init(context)
         self.add_input('NodeSocketFloat', 'X')
         self.add_input('NodeSocketFloat', 'Y')
         self.add_input('NodeSocketFloat', 'Z')

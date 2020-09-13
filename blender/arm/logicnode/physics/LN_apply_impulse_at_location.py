@@ -4,8 +4,10 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
     """Apply impulse at location node"""
     bl_idname = 'LNApplyImpulseAtLocationNode'
     bl_label = 'Apply Impulse At Location'
+    arm_version = 1
 
     def init(self, context):
+        super(ApplyImpulseAtLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Impulse')

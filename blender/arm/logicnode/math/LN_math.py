@@ -4,6 +4,7 @@ class MathNode(ArmLogicTreeNode):
     """Math node"""
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
@@ -40,6 +41,7 @@ class MathNode(ArmLogicTreeNode):
     property1_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
+        super(MathNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Value', default_value=0.5)
         self.add_input('NodeSocketFloat', 'Value', default_value=0.5)
         self.add_output('NodeSocketFloat', 'Value')

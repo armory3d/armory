@@ -5,8 +5,10 @@ class ArrayLoopNode(ArmLogicTreeNode):
     """ArrayLoop node"""
     bl_idname = 'LNArrayLoopNode'
     bl_label = 'Array Loop'
+    arm_version = 1
 
     def init(self, context):
+        super(ArrayLoopNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('ArmNodeSocketAction', 'Loop')

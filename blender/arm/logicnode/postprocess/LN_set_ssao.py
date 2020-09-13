@@ -4,8 +4,10 @@ class SSAOSetNode(ArmLogicTreeNode):
     """Set SSAO Effect"""
     bl_idname = 'LNSSAOSetNode'
     bl_label = 'Set SSAO'
+    arm_version = 1
 
     def init(self, context):
+        super(SSAOSetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketFloat', 'Radius', default_value=1.0)
         self.add_input('NodeSocketFloat', 'Strength', default_value=5.0)

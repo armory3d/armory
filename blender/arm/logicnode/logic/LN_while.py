@@ -4,8 +4,10 @@ class WhileNode(ArmLogicTreeNode):
     """While node"""
     bl_idname = 'LNWhileNode'
     bl_label = 'While'
+    arm_version = 1
 
     def init(self, context):
+        super(WhileNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'Condition')
         self.add_output('ArmNodeSocketAction', 'Loop')

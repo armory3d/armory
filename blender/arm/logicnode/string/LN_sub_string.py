@@ -4,8 +4,10 @@ class SubStringNode(ArmLogicTreeNode):
     """Sub string node"""
     bl_idname = 'LNSubStringNode'
     bl_label = 'Sub String'
+    arm_version = 1
 
     def init(self, context):
+        super(SubStringNode, self).init(context)
         self.add_output('NodeSocketString', 'String')
         self.add_input('NodeSocketString', 'String')
         self.add_input('NodeSocketInt', 'Start')

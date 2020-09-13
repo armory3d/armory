@@ -4,6 +4,7 @@ class RpShadowQualityNode(ArmLogicTreeNode):
     """Configure shadow quality node"""
     bl_idname = 'LNRpShadowQualityNode'
     bl_label = 'Rp Shadow Quality'
+    arm_version = 1
     property0: EnumProperty(
         items = [('High', 'High', 'High'),
                  ('Medium', 'Medium', 'Medium'),
@@ -12,6 +13,7 @@ class RpShadowQualityNode(ArmLogicTreeNode):
         name='', default='Medium')
 
     def init(self, context):
+        super(RpShadowQualityNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
 

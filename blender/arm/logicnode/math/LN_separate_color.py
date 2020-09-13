@@ -4,8 +4,10 @@ class SeparateColorNode(ArmLogicTreeNode):
     """Separate color node"""
     bl_idname = 'LNSeparateColorNode'
     bl_label = 'Separate RGB'
+    arm_version = 1
 
     def init(self, context):
+        super(SeparateColorNode, self).init(context)
         self.add_input('NodeSocketColor', 'Color', default_value=[0.8, 0.8, 0.8, 1])
 
         self.add_output('NodeSocketFloat', 'R')

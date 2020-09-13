@@ -5,8 +5,10 @@ class BranchNode(ArmLogicTreeNode):
     """Branch node"""
     bl_idname = 'LNBranchNode'
     bl_label = 'Branch'
+    arm_version = 1
 
     def init(self, context):
+        super(BranchNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'Bool')
         self.add_output('ArmNodeSocketAction', 'True')

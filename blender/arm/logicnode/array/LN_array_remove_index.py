@@ -4,8 +4,10 @@ class ArrayRemoveIndexNode(ArmLogicTreeNode):
     """Removes an element from an array given by its index."""
     bl_idname = 'LNArrayRemoveNode'
     bl_label = 'Array Remove By Index'
+    arm_version = 1
 
     def init(self, context):
+        super(ArrayRemoveIndexNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketInt', 'Index')

@@ -4,8 +4,10 @@ class CanvasSetScaleNode(ArmLogicTreeNode):
     """Set canvas element scale"""
     bl_idname = 'LNCanvasSetScaleNode'
     bl_label = 'Canvas Set Scale'
+    arm_version = 1
 
     def init(self, context):
+        super(CanvasSetScaleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketInt', 'Height')

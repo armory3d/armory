@@ -4,6 +4,7 @@ class OnUpdateNode(ArmLogicTreeNode):
     """On update node"""
     bl_idname = 'LNOnUpdateNode'
     bl_label = 'On Update'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Update', 'Update', 'Update'),
                  ('Late Update', 'Late Update', 'Late Update'),
@@ -11,6 +12,7 @@ class OnUpdateNode(ArmLogicTreeNode):
         name='On', default='Update')
 
     def init(self, context):
+        super(OnUpdateNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

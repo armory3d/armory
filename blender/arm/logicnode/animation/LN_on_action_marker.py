@@ -4,8 +4,10 @@ class OnActionMarkerNode(ArmLogicTreeNode):
     """On action marker node"""
     bl_idname = 'LNOnActionMarkerNode'
     bl_label = 'On Action Marker'
+    arm_version = 1
 
     def init(self, context):
+        super(OnActionMarkerNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Marker')
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -4,11 +4,13 @@ class IntegerArrayNode(ArmLogicTreeNode):
     """Integer array node"""
     bl_idname = 'LNArrayIntegerNode'
     bl_label = 'Array Integer'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(IntegerArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketInt', 'Length')
 

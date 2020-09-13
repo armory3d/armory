@@ -4,6 +4,7 @@ class VolumeTriggerNode(ArmLogicTreeNode):
     """Volume trigger node"""
     bl_idname = 'LNVolumeTriggerNode'
     bl_label = 'Volume Trigger'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Enter', 'Enter', 'Enter'),
                  ('Leave', 'Leave', 'Leave'),
@@ -11,6 +12,7 @@ class VolumeTriggerNode(ArmLogicTreeNode):
         name='', default='Enter')
 
     def init(self, context):
+        super(VolumeTriggerNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketObject', 'Volume', default_value='Volume')
         self.add_output('NodeSocketBool', 'Bool')

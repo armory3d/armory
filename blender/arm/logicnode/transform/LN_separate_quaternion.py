@@ -5,8 +5,10 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
 
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"
+    arm_version = 1
 
     def init(self, context):
+        super(SeparateQuaternionNode, self).init(context)
         self.add_input('NodeSocketVector', 'Quaternion')
         self.add_output('NodeSocketFloat', 'X')
         self.add_output('NodeSocketFloat', 'Y')
