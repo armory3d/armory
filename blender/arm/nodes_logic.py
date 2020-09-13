@@ -401,7 +401,8 @@ def replaceAll():
                 print(f"A node of type {node_class} in tree \"{tree_name}\" Doesn't have version information attached to it."
                       f"if might come from an armory addon. If so, please check that the version of said addon is compatible with armory", file=reportf)
             elif error_type == 'misc.':
-                print(f"", file=reportf)
+                print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
+                      f"because the node's update procedure itself failed.", file=reportf)
             else:
                 print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
                       f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
