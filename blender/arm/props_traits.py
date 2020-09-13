@@ -471,6 +471,94 @@ class ArmNewScriptDialog(bpy.types.Operator):
     def draw(self, context):
         self.layout.prop(self, "class_name")
 
+class ArmNewTreeNodeDialog(bpy.types.Operator):
+    bl_idname = "arm.new_treenode"
+    bl_label = "New Node Tree"
+    bl_description = 'Create a blank Node Tree'
+    bl_options = {'INTERNAL'}
+
+    is_object: BoolProperty(name="Object Node Tree", description="Is this an object Node Tree?", default=False)
+    class_name: StringProperty(name="Name", description="The Node Tree name")
+
+    def execute(self, context):
+        if self.is_object:
+            obj = context.object
+        else:
+            obj = context.scene
+        self.class_name = self.class_name.replace(' ', '')
+        # Create new node tree
+        node_tree = bpy.data.node_groups.new(self.class_name, 'ArmLogicTreeType')
+        # Set new node tree
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        if item.node_tree_prop is None:
+            item.node_tree_prop = node_tree
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        if not arm.utils.check_saved(self):
+            return {'CANCELLED'}
+        self.class_name = 'MyNodeTree'
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "class_name")
+        
+class ArmEditTreeNodeDialog(bpy.types.Operator):
+    bl_idname = "arm.edit_treenode"
+    bl_label = "Edit Node Tree"
+    bl_description = 'Edit this Node Tree in the Logic Node Editor'
+    bl_options = {'INTERNAL'}
+
+    is_object: BoolProperty(name="Object Node Tree", description="Is this an object Node Tree?", default=False)
+
+    def execute(self, context):
+        if self.is_object:
+            obj = context.object
+        else:
+            obj = context.scene
+        # Check len node tree list
+        if len(obj.arm_traitlist) > 0:
+            item = obj.arm_traitlist[obj.arm_traitlist_index]
+            # Loop for all spaces
+            context_screen = context.screen
+            if item is not None and context_screen is not None:
+                areas = context_screen.areas
+                for area in areas:
+                    for space in area.spaces:
+                        if space.type == 'NODE_EDITOR':
+                            if space.tree_type == 'ArmLogicTreeType':
+                                # Set Node Tree
+                                space.node_tree = item.node_tree_prop
+        return {'FINISHED'}
+
+class ArmGetTreeNodeDialog(bpy.types.Operator):
+    bl_idname = "arm.get_treenode"
+    bl_label = "From Node Editor"
+    bl_description = 'Use the Node Tree from the opened Node Tree Editor for this trait'
+    bl_options = {'INTERNAL'}
+
+    is_object: BoolProperty(name="Object Node Tree", description="Is this an object Node Tree?", default=False)
+
+    def execute(self, context):
+        if self.is_object:
+            obj = context.object
+        else:
+            obj = context.scene
+        # Check len node tree list
+        if len(obj.arm_traitlist) > 0:
+            item = obj.arm_traitlist[obj.arm_traitlist_index]
+            # Loop for all spaces
+            context_screen = context.screen
+            if item is not None and context_screen is not None:
+                areas = context_screen.areas
+                for area in areas:
+                    for space in area.spaces:
+                        if space.type == 'NODE_EDITOR':
+                            if space.tree_type == 'ArmLogicTreeType' and space.node_tree is not None:
+                                # Set Node Tree in Item
+                                item.node_tree_prop = space.node_tree
+        return {'FINISHED'}
+
 class ArmNewCanvasDialog(bpy.types.Operator):
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
@@ -560,7 +648,6 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         obj = bpy.context.scene
         draw_traits(layout, obj, is_object=False)
 
-
 class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
     bl_label = 'Copy Traits from Active Object'
     bl_idname = 'arm.copy_traits_to_active'
@@ -634,7 +721,6 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
             bpy.ops.arm.copy_traits_to_active()
 
         return {'INTERFACE'}
-
 
 def draw_traits(layout, obj, is_object):
     rows = 2
@@ -738,6 +824,48 @@ def draw_traits(layout, obj, is_object):
             row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
 
         elif item.type_prop == 'Logic Nodes':
+            # Row for buttons
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            # New
+            column = row.column(align=True)
+            column.alignment = 'EXPAND'
+            op = column.operator("arm.new_treenode", text="New Node Tree", icon="ADD")
+            op.is_object = is_object
+            # At least one check is active Logic Node Editor
+            is_check_logic_node_editor = False            
+            context_screen = bpy.context.screen
+            # Loop for all spaces
+            if context_screen is not None:
+                areas = context_screen.areas
+                for area in areas:
+                    for space in area.spaces:
+                        if space.type == 'NODE_EDITOR':
+                            if space.tree_type == 'ArmLogicTreeType' and space.node_tree is not None:
+                                is_check_logic_node_editor = True
+                                break
+                        if is_check_logic_node_editor:
+                            break
+            # Edit
+            column = row.column(align=True)
+            column.alignment = 'EXPAND'
+            if item.node_tree_prop is None:
+                column.enabled = False
+            else:
+                column.enabled = is_check_logic_node_editor
+            op = column.operator("arm.edit_treenode", text="Edit Node Tree", icon="NODETREE")
+            op.is_object = is_object
+            # Get from Node Tree Editor
+            column = row.column(align=True)
+            column.alignment = 'EXPAND'
+            if item is None:
+                column.enabled = False
+            else:
+                column.enabled = is_check_logic_node_editor                                
+            op = column.operator("arm.get_treenode", text="From Node Editor", icon="IMPORT")
+            op.is_object = is_object
+
+            # Row for search
             row = layout.row()
             row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
 
@@ -770,6 +898,9 @@ def register():
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmEditCanvasButton)
     bpy.utils.register_class(ArmNewScriptDialog)
+    bpy.utils.register_class(ArmNewTreeNodeDialog)
+    bpy.utils.register_class(ArmEditTreeNodeDialog)
+    bpy.utils.register_class(ArmGetTreeNodeDialog)
     bpy.utils.register_class(ArmNewCanvasDialog)
     bpy.utils.register_class(ArmNewWasmButton)
     bpy.utils.register_class(ArmRefreshScriptsButton)
@@ -802,6 +933,9 @@ def unregister():
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmEditCanvasButton)
     bpy.utils.unregister_class(ArmNewScriptDialog)
+    bpy.utils.unregister_class(ArmGetTreeNodeDialog)
+    bpy.utils.unregister_class(ArmEditTreeNodeDialog)
+    bpy.utils.unregister_class(ArmNewTreeNodeDialog)
     bpy.utils.unregister_class(ArmNewCanvasDialog)
     bpy.utils.unregister_class(ArmNewWasmButton)
     bpy.utils.unregister_class(ArmRefreshScriptsButton)
