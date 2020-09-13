@@ -1,0 +1,15 @@
+from arm.logicnode.arm_nodes import *
+
+class ReadJsonNode(ArmLogicTreeNode):
+    """Read JSON node"""
+    bl_idname = 'LNReadJsonNode'
+    bl_label = 'Read JSON'
+
+    def init(self, context):
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'File')
+        self.add_input('NodeSocketBool', 'Use cache', default_value=1)
+        self.add_output('ArmNodeSocketAction', 'Loaded')
+        self.add_output('NodeSocketShader', 'Dynamic')
+
+add_node(ReadJsonNode, category=PKG_AS_CATEGORY, section='file')

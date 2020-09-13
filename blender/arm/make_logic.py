@@ -248,7 +248,7 @@ def build_default_node(inp: bpy.types.NodeSocket):
     """Creates a new node to give a not connected input socket a value"""
     null_node = 'new armory.logicnode.NullNode(this)'
 
-    if isinstance(inp, arm.logicnode.arm_nodes.ArmCustomSocket):
+    if isinstance(inp, arm.logicnode.arm_sockets.ArmCustomSocket):
         # ArmCustomSockets need to implement get_default_value()
         default_value = inp.get_default_value()
         if default_value is None:

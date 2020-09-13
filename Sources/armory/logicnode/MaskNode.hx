@@ -2,6 +2,8 @@ package armory.logicnode;
 
 class MaskNode extends LogicNode {
 
+	public var value: Int;
+
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -13,5 +15,9 @@ class MaskNode extends LogicNode {
 			if (bit) ret |= (1 << v);
 		}
 		return ret;
+	}
+
+	override function set(value: Dynamic) {
+		this.value = value;
 	}
 }

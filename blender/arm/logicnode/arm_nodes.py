@@ -1,123 +1,65 @@
+import itertools
+from collections import OrderedDict
+from typing import Any, Generator, List, Optional, Type
+from typing import OrderedDict as ODict  # Prevent naming conflicts
+
 import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
-import arm.utils
+
+# When passed as a category to add_node(), this will use the capitalized
+# name of the package of the node as the category to make renaming
+# categories easier.
+PKG_AS_CATEGORY = "__pkgcat__"
 
 nodes = []
-category_items = {}
+category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
-object_sockets = dict()
 array_nodes = dict()
 
-class ArmLogicTreeNode:
+
+class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
 
-class ArmActionSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketAction'
-    bl_label = 'Action Socket'
+    def add_input(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Adds a new input socket to the node.
 
-    def draw(self, context, layout, node, text):
-        layout.label(text=self.name)
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+        socket = self.inputs.new(socket_type, socket_name)
 
-    def draw_color(self, context, node):
-        return (0.8, 0.3, 0.3, 1)
+        if default_value is not None:
+            socket.default_value = default_value
 
-class ArmCustomSocket(bpy.types.NodeSocket):
-    """
-    A custom socket that can be used to define more socket types for
-    logic node packs. Do not use this type directly (it is not
-    registered)!
-    """
-    bl_idname = 'ArmCustomSocket'
-    bl_label = 'Custom Socket'
+        if is_var and not socket.display_shape.endswith('_DOT'):
+            socket.display_shape += '_DOT'
 
-    def get_default_value(self):
-        """Override this for values of unconnected input sockets."""
-        return None
+        return socket
 
-class ArmArraySocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketArray'
-    bl_label = 'Array Socket'
+    def add_output(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Adds a new output socket to the node.
 
-    def draw(self, context, layout, node, text):
-        layout.label(text=self.name)
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+        socket = self.outputs.new(socket_type, socket_name)
 
-    def draw_color(self, context, node):
-        return (0.8, 0.4, 0.0, 1)
+        if default_value is not None:
+            socket.default_value = default_value
 
-class ArmObjectSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketObject'
-    bl_label = 'Object Socket'
-    default_value_get: PointerProperty(name='Object', type=bpy.types.Object)
+        if is_var and not socket.display_shape.endswith('_DOT'):
+            socket.display_shape += '_DOT'
 
-    def get_default_value(self):
-        if self.default_value_get == None:
-            return ''
-        if self.default_value_get.name not in bpy.data.objects:
-            return self.default_value_get.name
-        return arm.utils.asset_name(bpy.data.objects[self.default_value_get.name])
+        return socket
 
-    def __init__(self):
-        global object_sockets
-        # Buckle up..
-        # Match id strings to socket dict to retrieve socket in eyedropper operator
-        object_sockets[str(id(self))] = self
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            row = layout.row(align=True)
-            row.prop_search(self, 'default_value_get', bpy.context.scene, 'objects', icon='NONE', text=self.name)
-            op = row.operator('arm.node_eyedrop', text='', icon='EYEDROPPER', emboss=True)
-            op.socket_index = str(id(self))
-
-    def draw_color(self, context, node):
-        return (0.15, 0.55, 0.75, 1)
-
-class ArmNodeEyedropButton(bpy.types.Operator):
-    '''Pick selected object'''
-    bl_idname = 'arm.node_eyedrop'
-    bl_label = 'Eyedrop'
-    socket_index: StringProperty(name='Socket Index', default='')
-
-    def execute(self, context):
-        global object_sockets
-        obj = bpy.context.active_object
-        if obj != None:
-            object_sockets[self.socket_index].default_value_get = obj
-        return{'FINISHED'}
-
-class ArmAnimActionSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketAnimAction'
-    bl_label = 'Action Socket'
-    default_value_get: PointerProperty(name='Action', type=bpy.types.Action)
-
-    def get_default_value(self):
-        if self.default_value_get == None:
-            return ''
-        if self.default_value_get.name not in bpy.data.actions:
-            return self.default_value_get.name
-        name = arm.utils.asset_name(bpy.data.actions[self.default_value_get.name])
-        return arm.utils.safestr(name)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            layout.prop_search(self, 'default_value_get', bpy.data, 'actions', icon='NONE', text='')
-
-    def draw_color(self, context, node):
-        return (0.8, 0.8, 0.8, 1)
 
 class ArmNodeAddInputButton(bpy.types.Operator):
-    '''Add new input'''
+    """Add new input"""
     bl_idname = 'arm.node_add_input'
     bl_label = 'Add Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -132,7 +74,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddInputValueButton(bpy.types.Operator):
-    '''Add new input'''
+    """Add new input"""
     bl_idname = 'arm.node_add_input_value'
     bl_label = 'Add Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -145,7 +87,7 @@ class ArmNodeAddInputValueButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputButton(bpy.types.Operator):
-    '''Remove last input'''
+    """Remove last input"""
     bl_idname = 'arm.node_remove_input'
     bl_label = 'Remove Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -160,7 +102,7 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputValueButton(bpy.types.Operator):
-    '''Remove last input'''
+    """Remove last input"""
     bl_idname = 'arm.node_remove_input_value'
     bl_label = 'Remove Input'
     node_index: StringProperty(name='Node Index', default='')
@@ -175,7 +117,7 @@ class ArmNodeRemoveInputValueButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddOutputButton(bpy.types.Operator):
-    '''Add new output'''
+    """Add new output"""
     bl_idname = 'arm.node_add_output'
     bl_label = 'Add Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -190,7 +132,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveOutputButton(bpy.types.Operator):
-    '''Remove last output'''
+    """Remove last output"""
     bl_idname = 'arm.node_remove_output'
     bl_label = 'Remove Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -205,7 +147,7 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeAddInputOutputButton(bpy.types.Operator):
-    '''Add new input and output'''
+    """Add new input and output"""
     bl_idname = 'arm.node_add_input_output'
     bl_label = 'Add Input Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -225,7 +167,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
-    '''Remove last input and output'''
+    """Remove last input and output"""
     bl_idname = 'arm.node_remove_input_output'
     bl_label = 'Remove Input Output'
     node_index: StringProperty(name='Node Index', default='')
@@ -243,18 +185,159 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
             outs.remove(outs.values()[-1])
         return{'FINISHED'}
 
-def add_node(node_class, category):
-    global nodes
-    nodes.append(node_class)
-    if category_items.get(category) == None:
-        category_items[category] = []
-    category_items[category].append(NodeItem(node_class.bl_idname))
 
-bpy.utils.register_class(ArmActionSocket)
-bpy.utils.register_class(ArmArraySocket)
-bpy.utils.register_class(ArmObjectSocket)
-bpy.utils.register_class(ArmNodeEyedropButton)
-bpy.utils.register_class(ArmAnimActionSocket)
+class ArmNodeSearch(bpy.types.Operator):
+    bl_idname = "arm.node_search"
+    bl_label = "Search..."
+    bl_options = {"REGISTER"}
+    bl_property = "item"
+
+    def get_search_items(self, context):
+        items = []
+        for node in get_all_nodes():
+            items.append((node.nodetype, node.label, ""))
+        return items
+
+    item: EnumProperty(items=get_search_items)
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
+    @classmethod
+    def description(cls, context, properties):
+        if cls.poll(context):
+            return "Search for a logic node"
+        else:
+            return "Search for a logic node. This operator is not available" \
+                   " without an active node tree"
+
+    def invoke(self, context, event):
+        context.window_manager.invoke_search_popup(self)
+        return {"CANCELLED"}
+
+    def execute(self, context):
+        """Called when a node is added."""
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.item, use_transform=True)
+        return {"FINISHED"}
+
+
+class ArmNodeCategory:
+    """Represents a category (=directory) of logic nodes."""
+    def __init__(self, name: str, icon: str, description: str):
+        self.name = name
+        self.icon = icon
+        self.description = description
+        self.node_sections: ODict[str, List[NodeItem]] = OrderedDict()
+
+    def register_node(self, node_type: Type[bpy.types.Node], node_section: str) -> None:
+        """Registers a node to this category so that it will be
+        displayed int the `Add node` menu."""
+        self.add_node_section(node_section)
+
+        # Internal node types seem to have no bl_idname attribute
+        if issubclass(node_type, bpy.types.NodeInternal):
+            item = NodeItem(node_type.__name__)
+        else:
+            item = NodeItem(node_type.bl_idname)
+
+        self.node_sections[node_section].append(item)
+
+    def get_all_nodes(self) -> Generator[NodeItem, None, None]:
+        """Returns all nodes that are registered into this category."""
+        yield from itertools.chain(*self.node_sections.values())
+
+    def add_node_section(self, name: str):
+        """Adds a node section to this category."""
+        if name not in self.node_sections:
+            self.node_sections[name] = []
+
+    def sort_nodes(self):
+        for node_section in self.node_sections:
+            self.node_sections[node_section] = sorted(self.node_sections[node_section], key=lambda item: item.label)
+
+
+def category_exists(name: str) -> bool:
+    for category_section in category_items:
+        for c in category_items[category_section]:
+            if c.name == name:
+                return True
+
+    return False
+
+
+def get_category(name: str) -> Optional[ArmNodeCategory]:
+    for category_section in category_items:
+        for c in category_items[category_section]:
+            if c.name == name:
+                return c
+
+    return None
+
+
+def get_all_categories() -> Generator[ArmNodeCategory, None, None]:
+    for section_categories in category_items.values():
+        yield from itertools.chain(section_categories)
+
+
+def get_all_nodes() -> Generator[NodeItem, None, None]:
+    for category in get_all_categories():
+        yield from itertools.chain(category.get_all_nodes())
+
+
+def add_category_section(name: str) -> None:
+    """Adds a section of categories to the node menu to group multiple
+    categories visually together. The given name only acts as an ID and
+    is not displayed in the user inferface."""
+    global category_items
+    if name not in category_items:
+        category_items[name] = []
+
+
+def add_node_section(name: str, category: str) -> None:
+    """Adds a section of nodes to the sub menu of the given category to
+    group multiple nodes visually together. The given name only acts as
+    an ID and is not displayed in the user inferface."""
+    node_category = get_category(category)
+
+    if node_category is not None:
+        node_category.add_node_section(name)
+
+
+def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', description: str = '') -> Optional[ArmNodeCategory]:
+    """Adds a category of nodes to the node menu."""
+    global category_items
+
+    add_category_section(section)
+    if not category_exists(category):
+        node_category = ArmNodeCategory(category, icon, description)
+        category_items[section].append(node_category)
+        return node_category
+
+    return None
+
+
+def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default') -> None:
+    """
+    Registers a node to the given category. If no section is given, the
+    node is put into the default section that does always exist.
+    """
+    global nodes
+
+    if category == PKG_AS_CATEGORY:
+        category = node_type.__module__.rsplit('.', 2)[1].capitalize()
+
+    nodes.append(node_type)
+    node_category = get_category(category)
+
+    if node_category is None:
+        node_category = add_category(category)
+
+    node_category.register_node(node_type, section)
+    node_type.bl_icon = node_category.icon
+
+
+bpy.utils.register_class(ArmNodeSearch)
 bpy.utils.register_class(ArmNodeAddInputButton)
 bpy.utils.register_class(ArmNodeAddInputValueButton)
 bpy.utils.register_class(ArmNodeRemoveInputButton)

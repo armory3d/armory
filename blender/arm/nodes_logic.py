@@ -1,12 +1,19 @@
-import bpy
-from bpy.types import NodeTree
-from bpy.props import *
-import nodeitems_utils
-from nodeitems_utils import NodeCategory, NodeItem
-from arm.logicnode import *
+from typing import Callable
 import webbrowser
 
+import bpy
+from bpy.props import BoolProperty, StringProperty
+from bpy.types import NodeTree
+import nodeitems_utils
+
+from arm.logicnode import *
+from arm.logicnode import arm_nodes
+from arm.logicnode.arm_nodes import ArmNodeCategory
+from arm.logicnode import arm_sockets
+
 registered_nodes = []
+registered_categories = []
+
 
 class ArmLogicTree(NodeTree):
     """Logic nodes"""
@@ -14,56 +21,124 @@ class ArmLogicTree(NodeTree):
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
 
-class LogicNodeCategory(NodeCategory):
+
+class ARM_MT_NodeAddOverride(bpy.types.Menu):
+    """
+    Overrides the `Add node` menu. If called from the logic node
+    editor, the custom menu is drawn, otherwise the default one is drawn.
+
+    Todo: Find a better solution to custom menus, this will conflict
+    with other add-ons overriding this menu.
+    """
+    bl_idname = "NODE_MT_add"
+    bl_label = "Add"
+    bl_translation_context = bpy.app.translations.contexts.operator_default
+
+    overridden_draw: Callable = None
+
+    def draw(self, context):
+        if context.space_data.tree_type == 'ArmLogicTreeType':
+            layout = self.layout
+
+            # Invoke the search
+            layout.operator_context = "INVOKE_DEFAULT"
+            layout.operator('arm.node_search', icon="VIEWZOOM")
+
+            for category_section in arm_nodes.category_items.values():
+                layout.separator()
+
+                for category in category_section:
+                    layout.menu(f'ARM_MT_{category.name.lower()}_menu', text=category.name, icon=category.icon)
+
+        else:
+            ARM_MT_NodeAddOverride.overridden_draw(self, context)
+
+
+class ARM_OT_AddNodeOverride(bpy.types.Operator):
+    bl_idname = "arm.add_node_override"
+    bl_label = "Add Node"
+    bl_property = "type"
+
+    type: StringProperty(name="NodeItem type")
+    use_transform: BoolProperty(name="Use Transform")
+
+    def invoke(self, context, event):
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
+        return {"FINISHED"}
+
     @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'ArmLogicTreeType'
+    def description(cls, context, properties):
+        """Show the node's bl_description attribute as a tooltip or, if
+        it doesn't exist, its docstring."""
+        # Type name to type
+        nodetype = bpy.types.bpy_struct.bl_rna_get_subclass_py(properties.type)
+
+        if hasattr(nodetype, 'bl_description'):
+            return nodetype.bl_description.split('.')[0]
+
+        return nodetype.__doc__.split('.')[0]
+
+
+def get_category_draw_func(category: ArmNodeCategory):
+    def draw_category_menu(self, context):
+        layout = self.layout
+
+        for index, node_section in enumerate(category.node_sections.values()):
+            if index != 0:
+                layout.separator()
+
+            for node_item in node_section:
+                op = layout.operator("arm.add_node_override", text=node_item.label)
+                op.type = node_item.nodetype
+                op.use_transform = True
+
+    return draw_category_menu
+
 
 def register_nodes():
     global registered_nodes
 
     # Re-register all nodes for now..
-    if len(registered_nodes) > 0:
+    if len(registered_nodes) > 0 or len(registered_categories) > 0:
         unregister_nodes()
 
-    for n in arm_nodes.nodes:
-        registered_nodes.append(n)
-        bpy.utils.register_class(n)
+    for node_type in arm_nodes.nodes:
+        # Don't register internal nodes, they are already registered
+        if not issubclass(node_type, bpy.types.NodeInternal):
+            registered_nodes.append(node_type)
+            bpy.utils.register_class(node_type)
 
-    node_categories = []
+    # Also add Blender's layout nodes
+    arm_nodes.add_node(bpy.types.NodeReroute, 'Layout')
+    arm_nodes.add_node(bpy.types.NodeFrame, 'Layout')
 
-    for category in sorted(arm_nodes.category_items):
-        if category == 'Layout':
-            # Handled separately
-            continue
+    # Generate and register category menus
+    for category_section in arm_nodes.category_items.values():
+        for category in category_section:
+            category.sort_nodes()
+            menu_class = type(f'ARM_MT_{category.name}Menu', (bpy.types.Menu, ), {
+                'bl_space_type': 'NODE_EDITOR',
+                'bl_idname': f'ARM_MT_{category.name.lower()}_menu',
+                'bl_label': category.name,
+                'bl_description': category.description,
+                'draw': get_category_draw_func(category)
+            })
+            registered_categories.append(menu_class)
 
-        sorted_items = sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
-        node_categories.append(
-            LogicNodeCategory('Logic' + category + 'Nodes', category, items=sorted_items)
-        )
+            bpy.utils.register_class(menu_class)
 
-    # Add special layout nodes known from Blender's node editors
-    if 'Layout' in arm_nodes.category_items:
-        # Clone with [:] to prevent double entries
-        layout_items = arm_nodes.category_items['Layout'][:]
-    else:
-        layout_items = []
-
-    layout_items += [NodeItem('NodeReroute'), NodeItem('NodeFrame')]
-    layout_items = sorted(layout_items, key=lambda item: item.nodetype)
-
-    node_categories.append(
-        LogicNodeCategory('LogicLayoutNodes', 'Layout', description='Layout Nodes', items=layout_items)
-    )
-
-    nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
 
 def unregister_nodes():
-    global registered_nodes
+    global registered_nodes, registered_categories
+
     for n in registered_nodes:
         bpy.utils.unregister_class(n)
+    for c in registered_categories:
+        bpy.utils.unregister_class(c)
+
     registered_nodes = []
-    nodeitems_utils.unregister_node_categories('ArmLogicNodes')
+    registered_categories = []
+
 
 class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_label = 'Armory Logic Node'
@@ -82,16 +157,16 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
             layout.operator('arm.open_node_source')
 
 class ArmOpenNodeSource(bpy.types.Operator):
-    '''Expose Haxe source'''
+    """Expose Haxe source"""
     bl_idname = 'arm.open_node_source'
     bl_label = 'Open Node Source'
- 
+
     def execute(self, context):
-        if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
+        if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
             name = context.active_node.bl_idname[2:]
             webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
         return{'FINISHED'}
-    
+
 #Node Variables Panel
 class ARM_PT_Variables(bpy.types.Panel):
     bl_label = 'Armory Node Variables'
@@ -99,12 +174,12 @@ class ARM_PT_Variables(bpy.types.Panel):
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
-            
+
     def draw(self, context):
         layout = self.layout
 
         nodes = list(filter(lambda node: node.arm_logic_id != "", list(context.space_data.node_tree.nodes)))
-        
+
         IDs = []
         for n in nodes:
              if not n.arm_logic_id in IDs:
@@ -118,28 +193,28 @@ class ARM_PT_Variables(bpy.types.Panel):
             getN.ntype = ID
             setN = row.operator('arm.add_setvar_node')
             setN.ntype = ID
-            
+
 class ARMAddVarNode(bpy.types.Operator):
     '''Add a linked node of that Variable'''
     bl_idname = 'arm.add_var_node'
     bl_label = 'Add Get'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-    
-    ntype = bpy.props.StringProperty()
+
+    ntype: bpy.props.StringProperty()
     nodeRef = None
-    
+
     def invoke(self, context, event):
         context.window_manager.modal_handler_add(self)
         self.execute(context)
         return {'RUNNING_MODAL'}
-    
+
     def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':           
+        if event.type == 'MOUSEMOVE':
             self.nodeRef.location = context.space_data.cursor_location
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
-    
+
     def execute(self, context):
         nodes = context.space_data.node_tree.nodes
         node = nodes.new("LNDynamicNode")
@@ -153,31 +228,31 @@ class ARMAddVarNode(bpy.types.Operator):
         global nodeRef
         self.nodeRef = node
         return({'FINISHED'})
-    
+
 class ARMAddSetVarNode(bpy.types.Operator):
     '''Add a node to set this Variable'''
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Set'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-    
-    ntype = bpy.props.StringProperty()
+
+    ntype: bpy.props.StringProperty()
     nodeRef = None
     setNodeRef = None
-    
+
     def invoke(self, context, event):
         context.window_manager.modal_handler_add(self)
         self.execute(context)
         return {'RUNNING_MODAL'}
-    
+
     def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':           
+        if event.type == 'MOUSEMOVE':
             self.setNodeRef.location = context.space_data.cursor_location
             self.nodeRef.location[0] = context.space_data.cursor_location[0]+10
             self.nodeRef.location[1] = context.space_data.cursor_location[1]-10
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
-    
+
     def execute(self, context):
         nodes = context.space_data.node_tree.nodes
         node = nodes.new("LNDynamicNode")
@@ -208,7 +283,7 @@ replacements = {}
 
 def add_replacement(item):
     replacements[item.from_node] = item
-    
+
 def get_replaced_nodes():
     return replacements.keys()
 
@@ -246,12 +321,12 @@ def replace(tree, node):
     # map properties
     for prop in replacement.property_mapping.keys():
         setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
-    
+
     # map unconnected inputs
     for in_socket in replacement.in_socket_mapping.keys():
         if not node.inputs[in_socket].is_linked:
             newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
-    
+
     # map connected inputs
     for link in tree.links:
         if link.from_node == node:
@@ -300,6 +375,8 @@ class ReplaceNodesOperator(bpy.types.Operator):
 # add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
+    arm_sockets.register()
+
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
@@ -307,14 +384,24 @@ def register():
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
     bpy.utils.register_class(ARMAddSetVarNode)
+    ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
+    bpy.utils.register_class(ARM_MT_NodeAddOverride)
+    bpy.utils.register_class(ARM_OT_AddNodeOverride)
+
     register_nodes()
 
+
 def unregister():
-    bpy.utils.unregister_class(ReplaceNodesOperator)
     unregister_nodes()
+
+    bpy.utils.unregister_class(ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
     bpy.utils.unregister_class(ARM_PT_Variables)
     bpy.utils.unregister_class(ARMAddVarNode)
     bpy.utils.unregister_class(ARMAddSetVarNode)
+    bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
+    bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+
+    arm_sockets.unregister()
