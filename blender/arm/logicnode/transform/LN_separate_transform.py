@@ -4,8 +4,10 @@ class SeparateTransformNode(ArmLogicTreeNode):
     """Separate transform node"""
     bl_idname = 'LNSeparateTransformNode'
     bl_label = 'Separate Transform'
+    arm_version = 1
 
     def init(self, context):
+        super(SeparateTransformNode, self).init(context)
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('NodeSocketVector', 'Location')
         self.add_output('NodeSocketVector', 'Rotation')

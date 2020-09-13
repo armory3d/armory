@@ -5,8 +5,10 @@ class RandomFloatNode(ArmLogicTreeNode):
     """Random float node"""
     bl_idname = 'LNRandomFloatNode'
     bl_label = 'Random Float'
+    arm_version = 1
 
     def init(self, context):
+        super(RandomFloatNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Min')
         self.add_input('NodeSocketFloat', 'Max', default_value=1.0)
         # self.add_input('NodeSocketInt', 'Seed')

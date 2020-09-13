@@ -4,8 +4,10 @@ class SeparateVectorNode(ArmLogicTreeNode):
     """Separate vector node"""
     bl_idname = 'LNSeparateVectorNode'
     bl_label = 'Separate XYZ'
+    arm_version = 1
 
     def init(self, context):
+        super(SeparateVectorNode, self).init(context)
         self.add_input('NodeSocketVector', 'Vector')
         self.add_output('NodeSocketFloat', 'X')
         self.add_output('NodeSocketFloat', 'Y')

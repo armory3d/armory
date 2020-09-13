@@ -28,6 +28,7 @@ class ColorgradingSetMidtoneNode(ArmLogicTreeNode):
     """Colorgrading Set Midtone node"""
     bl_idname = 'LNColorgradingSetMidtoneNode'
     bl_label = 'Colorgrading Set Midtone'
+    arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(
@@ -57,6 +58,7 @@ class ColorgradingSetMidtoneNode(ArmLogicTreeNode):
         pass
 
     def init(self, context):
+        super(ColorgradingSetMidtoneNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)

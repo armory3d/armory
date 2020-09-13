@@ -7,10 +7,12 @@ class GroupNode(ArmLogicTreeNode):
     """Group node"""
     bl_idname = 'LNGroupNode'
     bl_label = 'Collection'
+    arm_version = 1
 
     property0: PointerProperty(name='', type=bpy.types.Collection)
 
     def init(self, context):
+        super(GroupNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array')
 
     def draw_buttons(self, context, layout):

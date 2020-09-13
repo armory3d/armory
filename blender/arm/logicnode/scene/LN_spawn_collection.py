@@ -7,10 +7,12 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     """Spawns a collection to the current scene."""
     bl_idname = 'LNSpawnCollectionNode'
     bl_label = 'Spawn Collection'
+    arm_version = 1
 
     property0: PointerProperty(name='Collection', type=bpy.types.Collection)
 
     def init(self, context):
+        super(SpawnCollectionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Transform')
 

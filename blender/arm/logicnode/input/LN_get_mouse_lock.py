@@ -7,8 +7,10 @@ class GetMouseLockNode(ArmLogicTreeNode):
     """Get Mouse Lock node"""
     bl_idname = 'LNGetMouseLockNode'
     bl_label = 'Get Mouse Lock'
+    arm_version = 1
 
     def init(self, context):
+        super(GetMouseLockNode, self).init(context)
         self.outputs.new('NodeSocketBool', 'Lock')
 
 add_node(GetMouseLockNode, category=PKG_AS_CATEGORY, section='mouse')

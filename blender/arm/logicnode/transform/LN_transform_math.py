@@ -4,8 +4,10 @@ class TransformMathNode(ArmLogicTreeNode):
     """Transform math node"""
     bl_idname = 'LNTransformMathNode'
     bl_label = 'Transform Math'
+    arm_version = 1
 
     def init(self, context):
+        super(TransformMathNode, self).init(context)
         self.add_input('NodeSocketShader', 'Transform')
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('NodeSocketShader', 'Transform')

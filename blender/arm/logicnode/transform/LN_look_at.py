@@ -4,6 +4,7 @@ class LookAtNode(ArmLogicTreeNode):
     """Look at node"""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
+    arm_version = 1
 
     property0: EnumProperty(
         items = [('X', ' X', 'X'),
@@ -15,6 +16,7 @@ class LookAtNode(ArmLogicTreeNode):
         name='With', default='Z')
 
     def init(self, context):
+        super(LookAtNode, self).init(context)
         self.add_input('NodeSocketVector', 'From Location')
         self.add_input('NodeSocketVector', 'To Location')
         self.add_output('NodeSocketVector', 'Rotation')

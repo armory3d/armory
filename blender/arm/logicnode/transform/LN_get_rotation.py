@@ -4,8 +4,10 @@ class GetRotationNode(ArmLogicTreeNode):
     """Get rotation node"""
     bl_idname = 'LNGetRotationNode'
     bl_label = 'Get Rotation'
+    arm_version = 1
 
     def init(self, context):
+        super(GetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketVector', 'Euler Angles')
         self.add_output('NodeSocketVector', 'Vector')

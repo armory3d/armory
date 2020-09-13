@@ -5,8 +5,10 @@ class FunctionOutputNode(ArmLogicTreeNode):
     """Function output node"""
     bl_idname = 'LNFunctionOutputNode'
     bl_label = 'Function Output'
+    arm_version = 1
 
     def init(self, context):
+        super(FunctionOutputNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
 

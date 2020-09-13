@@ -4,6 +4,7 @@ class KeyboardNode(ArmLogicTreeNode):
     """Keyboard node"""
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
+    arm_version = 1
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -67,6 +68,7 @@ class KeyboardNode(ArmLogicTreeNode):
         name='', default='space')
 
     def init(self, context):
+        super(KeyboardNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketBool', 'State')
 

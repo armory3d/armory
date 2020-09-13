@@ -4,8 +4,10 @@ class GamepadCoordsNode(ArmLogicTreeNode):
     """Gamepad coords node"""
     bl_idname = 'LNGamepadCoordsNode'
     bl_label = 'Gamepad Coords'
+    arm_version = 1
 
     def init(self, context):
+        super(GamepadCoordsNode, self).init(context)
         self.add_output('NodeSocketVector', 'Left Stick')
         self.add_output('NodeSocketVector', 'Right Stick')
         self.add_output('NodeSocketVector', 'Left Movement')

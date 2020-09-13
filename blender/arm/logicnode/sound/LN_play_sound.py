@@ -7,6 +7,7 @@ class PlaySoundNode(ArmLogicTreeNode):
     """Play sound node"""
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
+    arm_version = 1
 
     property0: PointerProperty(name='', type=bpy.types.Sound)
     property1: BoolProperty(
@@ -28,6 +29,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         min=0)
 
     def init(self, context):
+        super(PlaySoundNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')

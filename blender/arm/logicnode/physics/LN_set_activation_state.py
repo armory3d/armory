@@ -8,6 +8,7 @@ class SetActivationStateNode(ArmLogicTreeNode):
     bl_idname = 'LNSetActivationStateNode'
     bl_label = 'Set Activation State'
     bl_icon = 'NONE'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Inactive', 'Inactive', 'Inactive'),
                  ('Active', 'Active', 'Active'),
@@ -17,6 +18,7 @@ class SetActivationStateNode(ArmLogicTreeNode):
         name='', default='Inactive')
 
     def init(self, context):
+        super(SetActivationStateNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('ArmNodeSocketAction', 'Out')

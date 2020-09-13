@@ -246,40 +246,39 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp: bpy.types.NodeSocket):
     """Creates a new node to give a not connected input socket a value"""
-    null_node = 'new armory.logicnode.NullNode(this)'
 
-    if isinstance(inp, arm.logicnode.arm_sockets.ArmCustomSocket):
+    is_custom_socket = isinstance(inp, arm.logicnode.arm_sockets.ArmCustomSocket)
+
+    if is_custom_socket:
         # ArmCustomSockets need to implement get_default_value()
         default_value = inp.get_default_value()
-        if default_value is None:
-            return null_node
         if isinstance(default_value, str):
-            default_value = f'"{default_value}"'
+            default_value = '"{:s}"'.format( default_value.replace('"', '\\"') )
+        inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
+    else:
+        default_value = inp.default_value
+        inp_type = inp.type
 
+
+    if inp_type == 'VECTOR':
+        return f'new armory.logicnode.VectorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
+    elif inp_type == 'RGBA':
+        return f'new armory.logicnode.ColorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]}, {default_value[3]})'
+    elif inp_type == 'RGB':
+        return f'new armory.logicnode.ColorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
+    elif inp_type == 'VALUE':
+        return f'new armory.logicnode.FloatNode(this, {default_value})'
+    elif inp_type == 'INT':
+        return f'new armory.logicnode.IntegerNode(this, {default_value})'
+    elif inp_type == 'BOOLEAN':
+        return f'new armory.logicnode.BooleanNode(this, {str(default_value).lower()})'
+    elif inp_type == 'STRING':
+        return f'new armory.logicnode.StringNode(this, {default_value})'
+    elif inp_type == 'NONE':
+        return 'new armory.logicnode.NullNode(this)'
+    elif inp_type == 'OBJECT':
+        return f'new armory.logicnode.ObjectNode(this, {default_value})'
+    elif is_custom_socket:
         return f'new armory.logicnode.DynamicNode(this, {default_value})'
-
-    if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
-        return null_node
-    if inp.bl_idname == 'ArmNodeSocketObject':
-        return f'new armory.logicnode.ObjectNode(this, "{inp.get_default_value()}")'
-    if inp.bl_idname == 'ArmNodeSocketAnimAction':
-        # Backslashes are not allowed in f-strings so we need this variable
-        default_value = inp.get_default_value().replace("\"", "\\\"")
-        return f'new armory.logicnode.StringNode(this, "{default_value}")'
-    if inp.type == 'VECTOR':
-        return f'new armory.logicnode.VectorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]})'
-    elif inp.type == 'RGBA':
-        return f'new armory.logicnode.ColorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]}, {inp.default_value[3]})'
-    elif inp.type == 'RGB':
-        return f'new armory.logicnode.ColorNode(this, {inp.default_value[0]}, {inp.default_value[1]}, {inp.default_value[2]})'
-    elif inp.type == 'VALUE':
-        return f'new armory.logicnode.FloatNode(this, {inp.default_value})'
-    elif inp.type == 'INT':
-        return f'new armory.logicnode.IntegerNode(this, {inp.default_value})'
-    elif inp.type == 'BOOLEAN':
-        return f'new armory.logicnode.BooleanNode(this, {str(inp.default_value).lower()})'
-    elif inp.type == 'STRING':
-        default_value = inp.default_value.replace("\"", "\\\"")
-        return f'new armory.logicnode.StringNode(this, "{default_value}")'
-
-    return null_node
+    else:
+        return 'new armory.logicnode.NullNode(this)'

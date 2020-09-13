@@ -4,8 +4,10 @@ class RayCastNode(ArmLogicTreeNode):
     """Cast physics ray node"""
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'
+    arm_version = 1
 
     def init(self, context):
+        super(RayCastNode, self).init(context)
         self.add_input('NodeSocketVector', 'From')
         self.add_input('NodeSocketVector', 'To')
         self.add_input('NodeSocketInt', 'Collision Group Mask')

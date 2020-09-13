@@ -4,8 +4,10 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
     """Set haxe property node"""
     bl_idname = 'LNSetHaxePropertyNode'
     bl_label = 'Set Haxe Property'
+    arm_version = 1
 
     def init(self, context):
+        super(SetHaxePropertyNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Dynamic')
         self.add_input('NodeSocketString', 'Property')

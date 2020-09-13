@@ -4,8 +4,10 @@ class ColorgradingGetGlobalNode(ArmLogicTreeNode):
     """Colorgrading Get Global node"""
     bl_idname = 'LNColorgradingGetGlobalNode'
     bl_label = 'Colorgrading Get Global'
+    arm_version = 1
 
     def init(self, context):
+        super(ColorgradingGetGlobalNode, self).init(context)
         self.add_output('NodeSocketFloat', 'Whitebalance')
         self.add_output('NodeSocketVector', 'Tint')
         self.add_output('NodeSocketVector', 'Saturation')
