@@ -1861,7 +1861,7 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
     def draw_message_box(self, context):
         list_of_errors = arm.nodes_logic.replacement_errors.copy()
         # note: list_of_errors is a set of tuples: `(error_type, node_class, tree_name)`
-        # where `error_type` can be "unregistered", "update failed", "future version" or "misc."
+        # where `error_type` can be "unregistered", "update failed", "future version", "bad version", or "misc."
 
         file_version = ARM_OT_ShowNodeUpdateErrors.wrd.arm_version
         current_version = props.arm_version
@@ -1899,6 +1899,8 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
             layout.label(text="Some nodes do not have an update procedure to deal with the version saved in this file.", icon='BLANK1')
             if current_version==file_version:
                 layout.label(text="(if you are a developer, this might be because you didn't implement it yet.)", icon='BLANK1')
+        if 'bad version' in error_types:
+            layout.label(text="Some nodes do not have version information attached to them.", icon='BLANK1')
         if 'unregistered' in error_types:
             if is_armory_upgrade:
                 layout.label(text='Some nodes seem to be too old to be understood by armory anymore', icon='BLANK1')

@@ -11,6 +11,7 @@ class GateNode(ArmLogicTreeNode):
     """Gate node"""
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
+    arm_version = 1
 
     min_inputs = 3
     property0: EnumProperty(
@@ -30,6 +31,7 @@ class GateNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(GateNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
         self.add_input('NodeSocketShader', 'Value')

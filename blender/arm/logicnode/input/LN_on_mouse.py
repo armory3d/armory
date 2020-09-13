@@ -4,6 +4,7 @@ class OnMouseNode(ArmLogicTreeNode):
     """On mouse node"""
     bl_idname = 'LNOnMouseNode'
     bl_label = 'On Mouse'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -17,6 +18,7 @@ class OnMouseNode(ArmLogicTreeNode):
         name='', default='left')
 
     def init(self, context):
+        super(OnMouseNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

@@ -4,8 +4,10 @@ class GetVelocityNode(ArmLogicTreeNode):
     """Get velocity node"""
     bl_idname = 'LNGetVelocityNode'
     bl_label = 'Get Velocity'
+    arm_version = 1
 
     def init(self, context):
+        super(GetVelocityNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketVector', 'Linear')
         # self.add_output('NodeSocketVector', 'Linear Factor') # TODO

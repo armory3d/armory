@@ -4,6 +4,7 @@ class GetChildNode(ArmLogicTreeNode):
     """Get child node"""
     bl_idname = 'LNGetChildNode'
     bl_label = 'Get Child'
+    arm_version = 1
     property0: EnumProperty(
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
@@ -13,6 +14,7 @@ class GetChildNode(ArmLogicTreeNode):
         name='', default='By Name')
 
     def init(self, context):
+        super(GetChildNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Child')
         self.add_output('ArmNodeSocketObject', 'Object')

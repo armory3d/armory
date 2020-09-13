@@ -4,8 +4,10 @@ class ArraySpliceNode(ArmLogicTreeNode):
     """Array splice node"""
     bl_idname = 'LNArraySpliceNode'
     bl_label = 'Array Splice'
+    arm_version = 1
 
     def init(self, context):
+        super(ArraySpliceNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketInt', 'Index')

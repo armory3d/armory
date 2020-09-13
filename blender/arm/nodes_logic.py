@@ -360,12 +360,14 @@ def replaceAll():
     for tree in bpy.data.node_groups:
         if tree.bl_idname == "ArmLogicTreeType":
             for node in tree.nodes:
-                if not isinstance(type(node).arm_version, int):
-                    continue  # TODO: that's a line to remove when all node classes will have their own version set.
-                if not node.is_registered_node_type():
+                if isinstance(node, (bpy.types.NodeFrame, bpy.types.NodeReroute) ):
+                    pass
+                elif not node.is_registered_node_type():
                     # node type deleted. That's unusual. Or it has been replaced for a looong time.
                     list_of_errors.add( ('unregistered', None, tree.name) )
-                if node.arm_version < type(node).arm_version:
+                elif not isinstance(type(node).arm_version, int):
+                    list_of_errors.add( ('bad version', node.bl_idname, tree.name) )
+                elif node.arm_version < type(node).arm_version:
                     try:
                         replace(tree, node)
                     except LookupError as err:
@@ -395,6 +397,9 @@ def replaceAll():
             elif error_type == 'future version':
                 print(f"A node of type {node_class} in tree \"{tree_name}\" seemingly comes from a future version of armory. "
                       f"Please check whether your version of armory is up to date", file=reportf)
+            elif error_type == 'bad version':
+                print(f"A node of type {node_class} in tree \"{tree_name}\" Doesn't have version information attached to it."
+                      f"if might come from an armory addon. If so, please check that the version of said addon is compatible with armory", file=reportf)
             elif error_type == 'misc.':
                 print(f"", file=reportf)
             else:

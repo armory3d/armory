@@ -4,6 +4,7 @@ class SurfaceNode(ArmLogicTreeNode):
     """Surface node"""
     bl_idname = 'LNMergedSurfaceNode'
     bl_label = 'Surface'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),
@@ -12,6 +13,7 @@ class SurfaceNode(ArmLogicTreeNode):
         name='', default='Touched')
 
     def init(self, context):
+        super(SurfaceNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketBool', 'State')
 

@@ -4,8 +4,10 @@ class ColorgradingGetShadowNode(ArmLogicTreeNode):
     """Colorgrading Get Shadow node"""
     bl_idname = 'LNColorgradingGetShadowNode'
     bl_label = 'Colorgrading Get Shadow'
+    arm_version = 1
 
     def init(self, context):
+        super(ColorgradingGetShadowNode, self).init(context)
         self.add_output('NodeSocketFloat', 'ShadowMax')
         self.add_output('NodeSocketVector', 'Saturation')
         self.add_output('NodeSocketVector', 'Contrast')

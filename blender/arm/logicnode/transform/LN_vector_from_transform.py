@@ -4,8 +4,10 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     """Vector from transform node"""
     bl_idname = 'LNVectorFromTransformNode'
     bl_label = 'Vector From Transform'
+    arm_version = 1
 
     def init(self, context):
+        super(VectorFromTransformNode, self).init(context)
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('NodeSocketVector', 'Vector')
         self.add_output('NodeSocketVector', 'Quaternion XYZ')

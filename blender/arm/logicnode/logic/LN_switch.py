@@ -4,6 +4,7 @@ class SwitchNode(ArmLogicTreeNode):
     """Switch node"""
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
+    arm_version = 1
     min_inputs = 2
     min_outputs = 1
 
@@ -11,6 +12,7 @@ class SwitchNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(SwitchNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Default')

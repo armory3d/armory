@@ -4,6 +4,7 @@ class OnGamepadNode(ArmLogicTreeNode):
     """On gamepad node"""
     bl_idname = 'LNOnGamepadNode'
     bl_label = 'On Gamepad'
+    arm_version = 1
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -35,6 +36,7 @@ class OnGamepadNode(ArmLogicTreeNode):
         name='', default='cross')
 
     def init(self, context):
+        super(OnGamepadNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_input('NodeSocketInt', 'Gamepad')
 

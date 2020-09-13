@@ -4,8 +4,10 @@ class ResumeTilesheetNode(ArmLogicTreeNode):
     """Resume tilesheet node"""
     bl_idname = 'LNResumeTilesheetNode'
     bl_label = 'Resume Tilesheet'
+    arm_version = 1
 
     def init(self, context):
+        super(ResumeTilesheetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')

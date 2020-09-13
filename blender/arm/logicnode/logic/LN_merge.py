@@ -4,11 +4,13 @@ class MergeNode(ArmLogicTreeNode):
     """Merge node"""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(MergeNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

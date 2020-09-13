@@ -4,11 +4,13 @@ class ColorArrayNode(ArmLogicTreeNode):
     """Color array node"""
     bl_idname = 'LNArrayColorNode'
     bl_label = 'Array Color'
+    arm_version = 1
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(ColorArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('NodeSocketInt', 'Length')
 

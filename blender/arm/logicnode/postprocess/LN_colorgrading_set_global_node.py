@@ -28,6 +28,7 @@ class ColorgradingSetGlobalNode(ArmLogicTreeNode):
     """Colorgrading Set Global node"""
     bl_idname = 'LNColorgradingSetGlobalNode'
     bl_label = 'Colorgrading Set Global'
+    arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
     property0 : EnumProperty(
@@ -60,6 +61,7 @@ class ColorgradingSetGlobalNode(ArmLogicTreeNode):
         pass
 
     def init(self, context):
+        super(ColorgradingSetGlobalNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)

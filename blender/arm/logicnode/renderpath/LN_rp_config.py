@@ -4,6 +4,7 @@ class RpConfigNode(ArmLogicTreeNode):
     """Configure renderpath node"""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Rp Config'
+    arm_version = 1
     property0: EnumProperty(
         items = [('SSGI', 'SSGI', 'SSGI'),
                  ('SSR', 'SSR', 'SSR'),
@@ -14,6 +15,7 @@ class RpConfigNode(ArmLogicTreeNode):
         name='', default='SSGI')
 
     def init(self, context):
+        super(RpConfigNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'On')
         self.add_output('ArmNodeSocketAction', 'Out')

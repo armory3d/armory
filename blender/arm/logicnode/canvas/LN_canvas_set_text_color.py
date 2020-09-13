@@ -4,8 +4,10 @@ class CanvasSetTextColorNode(ArmLogicTreeNode):
     """Set canvas text color"""
     bl_idname = 'LNCanvasSetTextColorNode'
     bl_label = 'Canvas Set Text Color'
+    arm_version = 1
 
     def init(self, context):
+        super(CanvasSetTextColorNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketFloat', 'R')

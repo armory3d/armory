@@ -4,6 +4,7 @@ class VectorMathNode(ArmLogicTreeNode):
     """Vector math node"""
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),
@@ -19,6 +20,7 @@ class VectorMathNode(ArmLogicTreeNode):
         name='', default='Add')
 
     def init(self, context):
+        super(VectorMathNode, self).init(context)
         self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])
         self.add_input('NodeSocketVector', 'Vector', default_value=[0.5, 0.5, 0.5])
         self.add_output('NodeSocketVector', 'Vector')

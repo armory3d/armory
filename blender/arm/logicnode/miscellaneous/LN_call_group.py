@@ -8,6 +8,7 @@ class CallGroupNode(ArmLogicTreeNode):
     """Call group node"""
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
+    arm_version = 1
 
     @property
     def property0(self):
@@ -16,6 +17,7 @@ class CallGroupNode(ArmLogicTreeNode):
     property0_: PointerProperty(name='Group', type=bpy.types.NodeTree)
 
     def init(self, context):
+        super(CallGroupNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
 

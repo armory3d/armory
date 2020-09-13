@@ -7,6 +7,7 @@ class ScriptNode(ArmLogicTreeNode):
     """Script node"""
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'
+    arm_version = 1
 
     @property
     def property0(self):
@@ -16,6 +17,7 @@ class ScriptNode(ArmLogicTreeNode):
     property0_: StringProperty(name='Text', default='')
 
     def init(self, context):
+        super(ScriptNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('ArmNodeSocketAction', 'Out')

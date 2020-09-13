@@ -4,8 +4,10 @@ class SSRSetNode(ArmLogicTreeNode):
     """Set SSR Effect"""
     bl_idname = 'LNSSRSetNode'
     bl_label = 'Set SSR'
+    arm_version = 1
 
     def init(self, context):
+        super(SSRSetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketFloat', 'SSR Step', default_value=0.04)
         self.add_input('NodeSocketFloat', 'SSR Step Min', default_value=0.05)

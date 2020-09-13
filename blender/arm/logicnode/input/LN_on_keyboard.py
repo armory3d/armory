@@ -4,6 +4,7 @@ class OnKeyboardNode(ArmLogicTreeNode):
     """On keyboard node"""
     bl_idname = 'LNOnKeyboardNode'
     bl_label = 'On Keyboard'
+    arm_version = 1
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -67,6 +68,7 @@ class OnKeyboardNode(ArmLogicTreeNode):
         name='', default='space')
 
     def init(self, context):
+        super(OnKeyboardNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

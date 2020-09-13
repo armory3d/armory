@@ -4,11 +4,13 @@ class ArrayRemoveValueNode(ArmLogicTreeNode):
     """Removes an element from an array given by its value."""
     bl_idname = 'LNArrayRemoveValueNode'
     bl_label = 'Array Remove By Value'
+    arm_version = 1
 
     # def __init__(self):
         # array_nodes[str(id(self))] = self
 
     def init(self, context):
+        super(ArrayRemoveValueNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketShader', 'Value')

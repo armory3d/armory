@@ -4,10 +4,12 @@ class ExpressionNode(ArmLogicTreeNode):
     """Expression node"""
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
+    arm_version = 1
 
     property0: StringProperty(name='', default='')
 
     def init(self, context):
+        super(ExpressionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')
