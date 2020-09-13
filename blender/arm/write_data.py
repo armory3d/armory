@@ -51,6 +51,9 @@ let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """')
 project.addSources('Sources');
 """)
 
+        # Let libraries differentiate between Armory and pure Kha
+        assets.add_khafile_def('armory')
+
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
             for file in glob.glob("Bundled/**", recursive=True):
