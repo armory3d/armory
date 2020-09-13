@@ -4,7 +4,7 @@ class GetObjectOffscreenNode(ArmLogicTreeNode):
     """Get Object Offscreen node"""
     bl_idname = 'LNGetObjectOffscreenNode'
     bl_label = 'Get Object Offscreen'
-    bl_icon = 'NONE'
+    arm_version = 1
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

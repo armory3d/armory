@@ -4,7 +4,7 @@ class SetVisibleNode(ArmLogicTreeNode):
     """Set Visible node"""
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Visible'
-    bl_icon = 'NONE'
+    arm_version = 1
     property0: EnumProperty(
         items = [('Object', 'Object', 'Object'),
                  ('Mesh', 'Mesh', 'Mesh'),

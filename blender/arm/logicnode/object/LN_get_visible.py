@@ -4,7 +4,7 @@ class GetVisibleNode(ArmLogicTreeNode):
     """Get Visible node"""
     bl_idname = 'LNGetVisibleNode'
     bl_label = 'Get Visible'
-    bl_icon = 'NONE'
+    arm_version = 1
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
