@@ -9,8 +9,7 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
     arm_version=2
 
     def init(self, context):
-        super().init(context)
-        print("init() getting called")
+        super(RotateObjectAroundAxisNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Axis', default_value=[0, 0, 1])

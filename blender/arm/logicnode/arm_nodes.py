@@ -106,8 +106,8 @@ class NodeReplacement:
     """
 
     def __init__(self, from_node: str, from_node_version: int, to_node: str, to_node_version: int,
-                 in_socket_mapping: Dict[int, int], out_socket_mapping: Dict[int, int], property_mapping: Dict[str, str] = {},
-                 input_defaults: Dict[int, any] = {}, property_defaults: Dict[str, any]={}):
+                 in_socket_mapping: Dict[int, int], out_socket_mapping: Dict[int, int], property_mapping: Optional[Dict[str, str]] = None,
+                 input_defaults: Optional[Dict[int, any]] = None, property_defaults: Optional[Dict[str, any]] = None):
         self.from_node = from_node
         self.to_node = to_node
         self.from_node_version = from_node_version
@@ -115,10 +115,10 @@ class NodeReplacement:
 
         self.in_socket_mapping = in_socket_mapping
         self.out_socket_mapping = out_socket_mapping
-        self.property_mapping = property_mapping
+        self.property_mapping = {} if property_mapping is None else property_mapping
 
-        self.input_defaults = input_defaults
-        self.property_defaults = property_defaults
+        self.input_defaults = {} if input_defaults is None else input_defaults
+        self.property_defaults = {} if property_defaults is None else property_defaults
 
     @classmethod
     def Identity(cls, node: ArmLogicTreeNode):
