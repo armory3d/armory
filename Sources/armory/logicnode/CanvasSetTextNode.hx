@@ -18,7 +18,8 @@ class CanvasSetTextNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).text = text;
+		var e = canvas.getElement(element);
+		if (e != null) e.text = text;
 		runOutput(0);
 	}
 

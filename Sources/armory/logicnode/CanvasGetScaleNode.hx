@@ -19,8 +19,11 @@ class CanvasGetScaleNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		height = canvas.getElement(element).height;
-        width = canvas.getElement(element).width;
+		var e = canvas.getElement(element);
+		if (e == null) return;
+
+		height = e.height;
+		width = e.width;
 		runOutput(0);
 	}
 
@@ -33,7 +36,7 @@ class CanvasGetScaleNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 		update();
 	}
-    override function get(from: Int): Dynamic {
+	override function get(from: Int): Dynamic {
 		if (from == 1) return height;
 		else if (from == 2) return width;
 		else return 0;

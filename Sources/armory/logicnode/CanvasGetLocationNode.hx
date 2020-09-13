@@ -19,8 +19,11 @@ class CanvasGetLocationNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		x = canvas.getElement(element).x;
-        y = canvas.getElement(element).y;
+		var e = canvas.getElement(element);
+		if (e == null) return;
+
+		x = e.x;
+		y = e.y;
 		runOutput(0);
 	}
 

@@ -18,8 +18,10 @@ class CanvasGetRotationNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		rad = canvas.getElement(element).rotation;
+		var e = canvas.getElement(element);
+		if (e == null) return;
 
+		rad = e.rotation;
 		runOutput(0);
 	}
 
