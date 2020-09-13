@@ -7,6 +7,7 @@ class GetVisibleNode(ArmLogicTreeNode):
     arm_version = 1
 
     def init(self, context):
+        super(GetVisibleNode, self).init(context)
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketBool', 'Object')
         self.outputs.new('NodeSocketBool', 'Mesh')

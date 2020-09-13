@@ -5,6 +5,7 @@ class SetVisibleNode(ArmLogicTreeNode):
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Visible'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Object', 'Object', 'Object'),
                  ('Mesh', 'Mesh', 'Mesh'),
@@ -13,6 +14,7 @@ class SetVisibleNode(ArmLogicTreeNode):
         name='', default='Object')
 
     def init(self, context):
+        super(SetVisibleNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketBool', 'Visible')

@@ -7,6 +7,7 @@ class GetObjectOffscreenNode(ArmLogicTreeNode):
     arm_version = 1
 
     def init(self, context):
+        super(GetObjectOffscreenNode, self).init(context)
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketBool', 'Object')
         self.outputs.new('NodeSocketBool', 'Mesh')
