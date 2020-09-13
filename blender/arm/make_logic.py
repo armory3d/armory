@@ -253,12 +253,13 @@ def build_default_node(inp: bpy.types.NodeSocket):
         # ArmCustomSockets need to implement get_default_value()
         default_value = inp.get_default_value()
         if isinstance(default_value, str):
-            default_value = '"{:s}"'.format( default_value.replace('"', '\\"') )
+            default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
         inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
     else:
         default_value = inp.default_value
+        if isinstance(default_value, str):
+            default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
         inp_type = inp.type
-
 
     if inp_type == 'VECTOR':
         return f'new armory.logicnode.VectorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
