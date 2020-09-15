@@ -11,6 +11,7 @@ import nodeitems_utils
 from arm.logicnode import arm_nodes
 from arm.logicnode.arm_nodes import ArmNodeCategory
 from arm.logicnode import arm_sockets
+# Do not remove this line as it runs all node modules for registering!
 from arm.logicnode import *
 
 registered_nodes = []
@@ -79,6 +80,10 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
             return nodetype.bl_description.split('.')[0]
 
         return nodetype.__doc__.split('.')[0]
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
 
 def get_category_draw_func(category: ArmNodeCategory):
@@ -287,7 +292,7 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
     # the node can either return a NodeReplacement object (for simple replacements)
     # or a brand new node, for more complex stuff.
     response = node.get_replacement_node(tree)
-    
+
     if isinstance(response, bpy.types.Node):
         newnode = response
         # some misc. properties
