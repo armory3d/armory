@@ -261,6 +261,10 @@ def build_default_node(inp: bpy.types.NodeSocket):
             default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
         inp_type = inp.type
 
+    # Don't write 'None' into the Haxe code
+    if default_value is None:
+        default_value = 'null'
+
     if inp_type == 'VECTOR':
         return f'new armory.logicnode.VectorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
     elif inp_type == 'RGBA':
