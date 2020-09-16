@@ -256,7 +256,10 @@ def build_default_node(inp: bpy.types.NodeSocket):
             default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
         inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
     else:
-        default_value = inp.default_value
+        if hasattr(inp, 'default_value'):
+            default_value = inp.default_value
+        else:
+            default_value = None
         if isinstance(default_value, str):
             default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
         inp_type = inp.type
