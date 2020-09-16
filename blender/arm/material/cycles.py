@@ -35,10 +35,11 @@ curshader: Shader
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
+    custom_particle_node = node_by_name(nodes, 'ArmCustomParticleNode')
     if output_node != None:
-        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
+        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only, custom_particle_node)
 
-def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
+def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only, custom_particle_node):
     global parsed # Compute nodes only once
     global parents
     global normal_parsed
@@ -115,6 +116,17 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
             curshader = vert
         out_disp = parse_displacement_input(node.inputs[2])
         curshader.write('vec3 disp = {0};'.format(out_disp))
+    
+    if custom_particle_node != None:
+        if (not (_parse_displacement and disp_enabled() and node.inputs[2].is_linked)):
+            parsed = {}
+            parents = []
+            normal_parsed = False
+        CPNode = custom_particle_node
+        normal_parsed = False
+
+        curshader = vert
+        custom_particle_node.parse(curshader, con)
 
 def parse_group(node, socket): # Entering group
     index = socket_index(node, socket)
@@ -1674,6 +1686,11 @@ def to_vec3(v):
 def node_by_type(nodes, ntype):
     for n in nodes:
         if n.type == ntype:
+            return n
+
+def node_by_name(nodes, name):
+    for n in nodes:
+        if n.bl_idname == name:
             return n
 
 def socket_index(node, socket):
