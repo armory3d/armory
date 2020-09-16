@@ -66,6 +66,7 @@ class ShaderDataNode(Node):
     def parse(self, frag: Shader, vert: Shader) -> str:
         if self.input_type == "uniform":
             frag.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
+            vert.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
 
             if self.variable_type == "sampler2D":
                 frag.add_uniform('vec2 screenSize', link='_screenSize')
