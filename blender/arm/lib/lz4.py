@@ -1,5 +1,5 @@
 """
-Port of the Armorpaint LZ4 compression module based on
+Port of the Iron LZ4 compression module based on
 https://github.com/gorhill/lz4-wasm. Original license:
 
 BSD 2-Clause License
