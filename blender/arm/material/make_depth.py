@@ -29,6 +29,9 @@ def make(context_id, rpasses, shadowmap=False):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
 
     parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
+
+    parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
+
     if parse_opacity:
         frag.write('vec3 n;') # Discard at compile time
         frag.write('float dotNV;')
@@ -36,6 +39,9 @@ def make(context_id, rpasses, shadowmap=False):
 
     if con_depth.is_elem('bone'):
         make_skin.skin_pos(vert)
+
+    if (not is_disp and parse_custom_particle):
+        cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
 
     if con_depth.is_elem('ipos'):
         make_inst.inst_pos(con_depth, vert)
@@ -49,6 +55,10 @@ def make(context_id, rpasses, shadowmap=False):
             frag.ins = vert.outs
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('vec3 wnormal = normalize(N * vec3(nor.xy, pos.w));')
+            if(con_depth.is_elem('ipos')):
+                vert.write('wposition = vec4(W * spos).xyz;')
+                if(con_depth.is_elem('irot')):
+                    vert.write('wnormal = transpose(inverse(mirot)) * wnormal;')
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
@@ -138,7 +148,8 @@ def make(context_id, rpasses, shadowmap=False):
             vert.write('gl_Position = WVP * spos;')
 
         if parse_opacity:
-            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
+            if (not parse_custom_particle):
+                cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
 
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
