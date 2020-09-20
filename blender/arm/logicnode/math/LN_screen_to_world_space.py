@@ -8,7 +8,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ScreenToWorldSpaceNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Vector')
-        self.add_output('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketVector', 'Screen')
+        self.add_output('NodeSocketVector', 'World')
 
 add_node(ScreenToWorldSpaceNode, category=PKG_AS_CATEGORY, section='matrix')

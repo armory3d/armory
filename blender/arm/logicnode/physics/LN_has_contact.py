@@ -8,8 +8,8 @@ class HasContactNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(HasContactNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object 1')
-        self.add_input('ArmNodeSocketObject', 'Object 2')
-        self.add_output('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body 1')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body 2')
+        self.add_output('NodeSocketBool', 'Has Contact')
 
 add_node(HasContactNode, category=PKG_AS_CATEGORY, section='contact')

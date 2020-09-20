@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class LoadUrlNode(ArmLogicTreeNode):
     """Load Url"""
     bl_idname = 'LNLoadUrlNode'
-    bl_label = 'Load Url (Browser only)'
+    bl_label = 'Load URL (Browser Only)'
     arm_version = 1
 
     def init(self, context):

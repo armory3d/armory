@@ -8,7 +8,7 @@ class BooleanNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(BooleanNode, self).init(context)
-        self.add_input('NodeSocketBool', 'Value')
-        self.add_output('NodeSocketBool', 'Bool', is_var=True)
+        self.add_input('NodeSocketBool', 'Bool In')
+        self.add_output('NodeSocketBool', 'Bool Out', is_var=True)
 
 add_node(BooleanNode, category=PKG_AS_CATEGORY)

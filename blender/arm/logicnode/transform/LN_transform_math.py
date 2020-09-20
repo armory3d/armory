@@ -8,8 +8,8 @@ class TransformMathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(TransformMathNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Transform')
-        self.add_input('NodeSocketShader', 'Transform')
-        self.add_output('NodeSocketShader', 'Transform')
+        self.add_input('NodeSocketShader', 'Transform 1')
+        self.add_input('NodeSocketShader', 'Transform 2')
+        self.add_output('NodeSocketShader', 'Result')
 
 add_node(TransformMathNode, category=PKG_AS_CATEGORY)

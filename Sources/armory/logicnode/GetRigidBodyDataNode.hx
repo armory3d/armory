@@ -22,7 +22,8 @@ class GetRigidBodyDataNode extends LogicNode {
 			if (rigidBody == null) return false;
 			return true;
 
-			//case 1: rigidBody.btshape;
+			//case 1: ; // collision shape
+			//case 2: ; // activation state
 			case 1: rigidBody.group;
 			case 2: rigidBody.mask;
 			case 3: rigidBody.animated;

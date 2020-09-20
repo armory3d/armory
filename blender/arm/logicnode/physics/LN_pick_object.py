@@ -9,7 +9,7 @@ class PickObjectNode(ArmLogicTreeNode):
     def init(self, context):
         super(PickObjectNode, self).init(context)
         self.add_input('NodeSocketVector', 'Screen Coords')
-        self.add_output('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketObject', 'Rigid Body')
         self.add_output('NodeSocketVector', 'Hit')
 
 add_node(PickObjectNode, category=PKG_AS_CATEGORY, section='ray')

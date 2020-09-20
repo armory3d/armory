@@ -9,7 +9,7 @@ class ApplyForceAtLocationNode(ArmLogicTreeNode):
     def init(self, context):
         super(ApplyForceAtLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
         self.add_input('NodeSocketVector', 'Force')
         self.add_input('NodeSocketBool', 'Force On Local Axis')
         self.add_input('NodeSocketVector', 'Location')

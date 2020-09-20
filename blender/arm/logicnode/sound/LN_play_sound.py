@@ -34,7 +34,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('ArmNodeSocketAction', 'Running')
+        self.add_output('ArmNodeSocketAction', 'Is Running')
         self.add_output('ArmNodeSocketAction', 'Done')
 
     def draw_buttons(self, context, layout):

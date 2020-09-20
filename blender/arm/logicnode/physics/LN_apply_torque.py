@@ -9,7 +9,7 @@ class ApplyTorqueNode(ArmLogicTreeNode):
     def init(self, context):
         super(ApplyTorqueNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
         self.add_input('NodeSocketVector', 'Torque')
         self.add_output('ArmNodeSocketAction', 'Out')
 
