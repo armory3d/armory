@@ -8,8 +8,8 @@ class SubStringNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SubStringNode, self).init(context)
-        self.add_output('NodeSocketString', 'String')
-        self.add_input('NodeSocketString', 'String')
+        self.add_output('NodeSocketString', 'String In')
+        self.add_input('NodeSocketString', 'String Out')
         self.add_input('NodeSocketInt', 'Start')
         self.add_input('NodeSocketInt', 'End')
 

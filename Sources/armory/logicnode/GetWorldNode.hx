@@ -6,7 +6,7 @@ import iron.math.Vec4;
 class GetWorldNode extends LogicNode {
 
 	public var property0: String;
-	
+
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -18,11 +18,11 @@ class GetWorldNode extends LogicNode {
 		}
 
 		switch (property0) {
-			case "right":
+			case "Right":
 				return object.transform.world.right();
-			case "look":
+			case "Look":
 				return object.transform.world.look();
-			case "up":
+			case "Up":
 				return object.transform.world.up();
 		}
 		return null;

@@ -8,7 +8,7 @@ class ObjectNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ObjectNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('ArmNodeSocketObject', 'Object', is_var=True)
+        self.add_input('ArmNodeSocketObject', 'Object In')
+        self.add_output('ArmNodeSocketObject', 'Object Out', is_var=True)
 
 add_node(ObjectNode, category=PKG_AS_CATEGORY)

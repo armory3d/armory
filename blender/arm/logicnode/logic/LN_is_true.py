@@ -9,7 +9,7 @@ class IsTrueNode(ArmLogicTreeNode):
     def init(self, context):
         super(IsTrueNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Value')
+        self.add_input('NodeSocketBool', 'Bool')
         self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(IsTrueNode, category=PKG_AS_CATEGORY)

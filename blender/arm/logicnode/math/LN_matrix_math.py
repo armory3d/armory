@@ -11,9 +11,9 @@ class MatrixMathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MatrixMathNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Matrix')
-        self.add_input('NodeSocketShader', 'Matrix')
-        self.add_output('NodeSocketShader', 'Matrix')
+        self.add_input('NodeSocketShader', 'Matrix 1')
+        self.add_input('NodeSocketShader', 'Matrix 2')
+        self.add_output('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

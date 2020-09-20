@@ -7,10 +7,10 @@ class GetWorldNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('right', 'right', 'right'),
-                 ('look', 'look', 'look'),
-                 ('up', 'up', 'up')],
-        name='', default='right')
+        items = [('Right', 'Right', 'Right'),
+                 ('Look', 'Look', 'Look'),
+                 ('Up', 'Up', 'Up')],
+        name='', default='Look')
 
     def init(self, context):
         super(GetWorldNode, self).init(context)

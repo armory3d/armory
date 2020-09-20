@@ -8,8 +8,7 @@ class SeparateColorNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SeparateColorNode, self).init(context)
-        self.add_input('NodeSocketColor', 'Color', default_value=[0.8, 0.8, 0.8, 1])
-
+        self.add_input('NodeSocketColor', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_output('NodeSocketFloat', 'R')
         self.add_output('NodeSocketFloat', 'G')
         self.add_output('NodeSocketFloat', 'B')

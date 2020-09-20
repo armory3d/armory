@@ -8,8 +8,8 @@ class HasContactArrayNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(HasContactArrayNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object 1')
-        self.add_input('ArmNodeSocketArray', 'Objects')
-        self.add_output('NodeSocketBool', 'Bool')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
+        self.add_input('ArmNodeSocketArray', 'Rigid Bodies')
+        self.add_output('NodeSocketBool', 'Has Contact')
 
 add_node(HasContactArrayNode, category=PKG_AS_CATEGORY, section='contact')

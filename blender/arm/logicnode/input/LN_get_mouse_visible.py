@@ -11,6 +11,6 @@ class GetMouseVisibleNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetMouseVisibleNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Visible')
+        self.outputs.new('NodeSocketBool', 'Is Visible')
 
 add_node(GetMouseVisibleNode, category=PKG_AS_CATEGORY, section='mouse')
