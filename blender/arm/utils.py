@@ -11,6 +11,7 @@ import numpy as np
 import bpy
 
 import arm.lib.armpack
+from arm.lib.lz4 import LZ4
 import arm.log as log
 import arm.make_state as state
 
@@ -23,7 +24,13 @@ class NumpyEncoder(json.JSONEncoder):
 
 def write_arm(filepath, output):
     if filepath.endswith('.lz4'):
-        pass
+        with open(filepath, 'wb') as f:
+            packed = arm.lib.armpack.packb(output)
+            # Prepend packed data size for decoding. Haxe can't unpack
+            # an unsigned int64 so we use a signed int64 here
+            f.write(np.int64(LZ4.encode_bound(len(packed))).tobytes())
+
+            f.write(LZ4.encode(packed))
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:

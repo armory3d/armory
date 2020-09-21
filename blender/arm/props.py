@@ -77,7 +77,7 @@ def init_properties():
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True, update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression with LZ4 when publishing. Warning: This will slow down export!", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_single_data_file = BoolProperty(name="Single Data File", description="Pack exported meshes and materials into single file", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_write_config = BoolProperty(name="Write Config", description="Allow this project to be configured at runtime via a JSON file", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=assets.invalidate_compiler_cache)

@@ -2003,6 +2003,8 @@ class ArmoryExporter:
         """Exports the scene."""
         profile_time = time.time()
         print('Exporting ' + arm.utils.asset_name(self.scene))
+        if self.compress_enabled:
+            print('Scene data will be compressed which might take a while.')
 
         current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
 
