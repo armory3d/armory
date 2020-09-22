@@ -144,6 +144,16 @@ def get_sdk_path():
     else:
         return addon_prefs.sdk_path
 
+def get_last_commit():
+    p = get_sdk_path() + 'armory/.git/refs/heads/master'
+
+    try:
+        file = open(p, 'r')
+        commit = file.readline()
+    except:
+        commit = ''
+    return commit
+
 def get_ide_bin():
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons["armory"].preferences

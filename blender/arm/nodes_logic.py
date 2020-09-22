@@ -13,6 +13,8 @@ from arm.logicnode.arm_nodes import ArmNodeCategory
 from arm.logicnode import arm_sockets
 # Do not remove this line as it runs all node modules for registering!
 from arm.logicnode import *
+import arm.utils
+from pathlib import Path
 
 registered_nodes = []
 registered_categories = []
@@ -169,9 +171,31 @@ class ArmOpenNodeSource(bpy.types.Operator):
     bl_label = 'Open Node Source'
 
     def execute(self, context):
-        if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
-            name = context.active_node.bl_idname[2:]
-            webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
+        if context.selected_nodes is not None and context.active_node.bl_idname.startswith('LN'):
+            if len(context.selected_nodes) == 1:
+                name = context.selected_nodes[0].bl_idname[2:]
+                version = arm.utils.get_last_commit()
+                if version == '':
+                    version = 'master'
+
+                webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/Sources/armory/logicnode/{name}.hx')
+        return{'FINISHED'}
+
+class ArmOpenNodePythonSource(bpy.types.Operator):
+    """Expose Python source"""
+    bl_idname = 'arm.open_node_python_source'
+    bl_label = 'Open Node Python Source'
+
+    def execute(self, context):
+        if context.selected_nodes is not None:
+            if len(context.selected_nodes) == 1:
+                node = context.selected_nodes[0]
+                if node.bl_idname.startswith('LN') and node.arm_version is not None:
+                    version = arm.utils.get_last_commit()
+                    if version == '':
+                        version = 'master'
+                    rel_path = node.__module__.replace('.', '/')
+                    webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/blender/{rel_path}.py')
         return{'FINISHED'}
 
 #Node Variables Panel
@@ -441,12 +465,24 @@ class ReplaceNodesOperator(bpy.types.Operator):
 
 
 
+# https://blender.stackexchange.com/questions/150101/python-how-to-add-items-in-context-menu-in-2-8
+def draw_custom_logicnode_menu(self, context):
+    if context.space_data.tree_type == 'ArmLogicTreeType' \
+        and context.selected_nodes is not None \
+        and context.active_node.bl_idname.startswith('LN'):
+        if len(context.selected_nodes) == 1:
+            layout = self.layout
+            layout.separator()
+            layout.operator("arm.open_node_source", text="Open .hx source in the browser")
+            layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
+
 def register():
     arm_sockets.register()
 
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
+    bpy.utils.register_class(ArmOpenNodePythonSource)
     bpy.utils.register_class(ReplaceNodesOperator)
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
@@ -454,6 +490,8 @@ def register():
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
+
+    bpy.types.NODE_MT_context_menu.append(draw_custom_logicnode_menu)
 
     register_nodes()
 
@@ -465,10 +503,13 @@ def unregister():
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
+    bpy.utils.unregister_class(ArmOpenNodePythonSource)
     bpy.utils.unregister_class(ARM_PT_Variables)
     bpy.utils.unregister_class(ARMAddVarNode)
     bpy.utils.unregister_class(ARMAddSetVarNode)
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+
+    bpy.types.NODE_MT_context_menu.remove(draw_custom_logicnode_menu)
 
     arm_sockets.unregister()
