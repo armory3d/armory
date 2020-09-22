@@ -11,6 +11,6 @@ class GetMouseLockNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetMouseLockNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Lock')
+        self.outputs.new('NodeSocketBool', 'Is Locked')
 
 add_node(GetMouseLockNode, category=PKG_AS_CATEGORY, section='mouse')

@@ -9,7 +9,7 @@ class SetGravityEnabledNode(ArmLogicTreeNode):
     def init(self, context):
         super(SetGravityEnabledNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
         self.add_input('NodeSocketBool', 'Enabled')
         self.add_output('ArmNodeSocketAction', 'Out')
 

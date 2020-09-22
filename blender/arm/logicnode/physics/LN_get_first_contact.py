@@ -8,7 +8,7 @@ class GetFirstContactNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetFirstContactNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
+        self.add_output('ArmNodeSocketObject', 'First Contact')
 
 add_node(GetFirstContactNode, category=PKG_AS_CATEGORY, section='contact')

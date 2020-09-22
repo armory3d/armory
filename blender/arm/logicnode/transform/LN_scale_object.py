@@ -10,7 +10,7 @@ class ScaleObjectNode(ArmLogicTreeNode):
         super(ScaleObjectNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Vector')
+        self.add_input('NodeSocketVector', 'Scale')
         self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(ScaleObjectNode, category=PKG_AS_CATEGORY, section='scale')

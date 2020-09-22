@@ -8,7 +8,7 @@ class GetChildrenNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetChildrenNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('ArmNodeSocketArray', 'Array')
+        self.add_input('ArmNodeSocketObject', 'Parent')
+        self.add_output('ArmNodeSocketArray', 'Children')
 
 add_node(GetChildrenNode, category=PKG_AS_CATEGORY, section='relations')

@@ -8,7 +8,7 @@ class FloatNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(FloatNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Value')
-        self.add_output('NodeSocketFloat', 'Float', is_var=True)
+        self.add_input('NodeSocketFloat', 'Float In')
+        self.add_output('NodeSocketFloat', 'Float Out', is_var=True)
 
 add_node(FloatNode, category=PKG_AS_CATEGORY)

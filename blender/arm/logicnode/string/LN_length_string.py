@@ -8,7 +8,7 @@ class LengthStringNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(LengthStringNode, self).init(context)
-        self.add_output('NodeSocketInt', 'length')
+        self.add_output('NodeSocketInt', 'Length')
         self.add_input('NodeSocketString', 'String')
 
 add_node(LengthStringNode, category=PKG_AS_CATEGORY)

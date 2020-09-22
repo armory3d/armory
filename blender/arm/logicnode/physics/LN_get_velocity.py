@@ -8,7 +8,7 @@ class GetVelocityNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetVelocityNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketObject', 'Rigid Body')
         self.add_output('NodeSocketVector', 'Linear')
         # self.add_output('NodeSocketVector', 'Linear Factor') # TODO
         # self.outputs[-1].default_value = [1.0, 1.0, 1.0]

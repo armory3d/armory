@@ -9,8 +9,8 @@ class SetLightStrengthNode(ArmLogicTreeNode):
     def init(self, context):
         super(SetLightStrengthNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketFloat', 'Strength', default_value=100)
+        self.add_input('ArmNodeSocketObject', 'Light')
+        self.add_input('NodeSocketFloat', 'Strength', default_value=250)
         self.add_output('ArmNodeSocketAction', 'Out')
 
 add_node(SetLightStrengthNode, category=PKG_AS_CATEGORY)
