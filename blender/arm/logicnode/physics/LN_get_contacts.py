@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetContactsNode(ArmLogicTreeNode):
-    """Get contacts node"""
+    """Use to get the contacts of a rigid body."""
     bl_idname = 'LNGetContactsNode'
     bl_label = 'Get Contacts'
     arm_version = 1

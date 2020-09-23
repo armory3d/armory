@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ContainsStringNode(ArmLogicTreeNode):
-    """Contains string node"""
+    """Use to get if a string contains a specific text."""
     bl_idname = 'LNContainsStringNode'
     bl_label = 'Contains String'
     arm_version = 1

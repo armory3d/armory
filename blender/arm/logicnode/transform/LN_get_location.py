@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetLocationNode(ArmLogicTreeNode):
-    """Get location node"""
+    """Use to get the location of an object."""
     bl_idname = 'LNGetLocationNode'
     bl_label = 'Get Location'
     arm_version = 1

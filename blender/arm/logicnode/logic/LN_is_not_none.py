@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class IsNotNoneNode(ArmLogicTreeNode):
-    """Is not none node"""
+    """Runs the output if the input value is not null."""
     bl_idname = 'LNIsNotNoneNode'
     bl_label = 'Is Not None'
     arm_version = 1

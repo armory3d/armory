@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StopSpeakerNode(ArmLogicTreeNode):
-    """Stop speaker node"""
+    """Use to stop a speaker."""
     bl_idname = 'LNStopSoundNode'
     bl_label = 'Stop Speaker'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class BooleanArrayNode(ArmLogicTreeNode):
-    """Boolean array node"""
+    """Use to make an array of boolean elements."""
     bl_idname = 'LNArrayBooleanNode'
     bl_label = 'Array Boolean'
     arm_version = 1

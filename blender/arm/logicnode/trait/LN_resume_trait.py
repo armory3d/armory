@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ResumeTraitNode(ArmLogicTreeNode):
-    """Resume trait node"""
+    """Use to resume a trait."""
     bl_idname = 'LNResumeTraitNode'
     bl_label = 'Resume Trait'
     arm_version = 1

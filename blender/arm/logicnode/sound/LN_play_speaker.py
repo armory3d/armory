@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PlaySpeakerNode(ArmLogicTreeNode):
-    """Play speaker node"""
+    """Use to play a speaker."""
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
     arm_version = 1

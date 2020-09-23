@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LoopBreakNode(ArmLogicTreeNode):
-    """Loop break node"""
+    """TO DO."""
     bl_idname = 'LNLoopBreakNode'
     bl_label = 'Loop Break'
     arm_version = 1

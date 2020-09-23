@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CameraGetNode(ArmLogicTreeNode):
-    """Get postprocessing effects of the camera."""
+    """Use to get the post-processing effects of a camera."""
     bl_idname = 'LNCameraGetNode'
     bl_label = 'Get Camera Postprocessing'
     arm_version = 1

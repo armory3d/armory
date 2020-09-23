@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnEventNode(ArmLogicTreeNode):
-    """On event node"""
+    """Runs the output when the event is received."""
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
     arm_version = 1

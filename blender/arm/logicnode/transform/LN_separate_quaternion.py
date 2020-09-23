@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SeparateQuaternionNode(ArmLogicTreeNode):
-
+    """Use to separate a transform."""
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"
     arm_version = 1

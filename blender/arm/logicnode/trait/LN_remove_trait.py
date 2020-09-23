@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RemoveTraitNode(ArmLogicTreeNode):
-    """Remove trait node"""
+    """Use to remove a trait."""
     bl_idname = 'LNRemoveTraitNode'
     bl_label = 'Remove Trait'
     arm_version = 1

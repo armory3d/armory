@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayGetNode(ArmLogicTreeNode):
-    """Array get node"""
+    """Use to get a value of an array using the element index."""
     bl_idname = 'LNArrayGetNode'
     bl_label = 'Array Get'
     arm_version = 1

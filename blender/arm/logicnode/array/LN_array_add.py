@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayAddNode(ArmLogicTreeNode):
-    """Array add node"""
+    """Use to add a value to an array."""
     bl_idname = 'LNArrayAddNode'
     bl_label = 'Array Add'
     arm_version = 1

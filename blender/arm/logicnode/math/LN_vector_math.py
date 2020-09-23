@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorMathNode(ArmLogicTreeNode):
-    """Vector math node"""
+    """Use to operate vectors. You must check in the Wiki what each operator does, because some of them uses only the first input."""
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
     arm_version = 1

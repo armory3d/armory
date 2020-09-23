@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GamepadNode(ArmLogicTreeNode):
-    """Gamepad node"""
+    """Runs the output when the action over the gamepad is done."""
     bl_idname = 'LNMergedGamepadNode'
     bl_label = 'Gamepad'
     arm_version = 1

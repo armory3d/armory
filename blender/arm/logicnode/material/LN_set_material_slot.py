@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialSlotNode(ArmLogicTreeNode):
-    """Set material slot node"""
+    """TO DO."""
     bl_idname = 'LNSetMaterialSlotNode'
     bl_label = 'Set Material Slot'
     arm_version = 1

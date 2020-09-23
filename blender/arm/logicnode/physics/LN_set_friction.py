@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetFrictionNode (ArmLogicTreeNode):
-    """Set Friction Node"""
+    """Use to set the friction of a rigid body."""
     bl_idname = 'LNSetFrictionNode'
     bl_label = 'Set Friction'
     bl_icon = 'NONE'

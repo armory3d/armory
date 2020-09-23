@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RayCastNode(ArmLogicTreeNode):
-    """Cast physics ray node"""
+    """Use to cast a physics ray."""
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'
     arm_version = 1

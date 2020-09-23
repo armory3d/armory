@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class RandomVectorNode(ArmLogicTreeNode):
-    """Random vector node"""
+    """Use to generate a random vector."""
     bl_idname = 'LNRandomVectorNode'
     bl_label = 'Random Vector'
     arm_version = 1

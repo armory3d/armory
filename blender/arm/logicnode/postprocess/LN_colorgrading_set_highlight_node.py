@@ -25,7 +25,7 @@ def set_data(self, context):
         self.property1 = data
 
 class ColorgradingSetHighlightNode(ArmLogicTreeNode):
-    """Colorgrading Set Highlight node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingSetHighlightNode'
     bl_label = 'Colorgrading Set Highlight'
     arm_version = 1

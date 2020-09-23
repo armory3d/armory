@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class HasContactNode(ArmLogicTreeNode):
-    """Has contact node"""
+    """Use to get if a rigid body has contact with another rigid body."""
     bl_idname = 'LNHasContactNode'
     bl_label = 'Has Contact'
     arm_version = 1

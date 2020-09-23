@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SSAOSetNode(ArmLogicTreeNode):
-    """Set SSAO Effect"""
+    """Use to set the SSAO post-processing settings."""
     bl_idname = 'LNSSAOSetNode'
     bl_label = 'Set SSAO'
     arm_version = 1

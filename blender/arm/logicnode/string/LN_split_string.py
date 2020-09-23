@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SplitStringNode(ArmLogicTreeNode):
-    """Split string node"""
+    """Use to split a string."""
     bl_idname = 'LNSplitStringNode'
     bl_label = 'Split String'
     arm_version = 1

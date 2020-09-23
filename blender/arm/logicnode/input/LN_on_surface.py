@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnSurfaceNode(ArmLogicTreeNode):
-    """On surface node"""
+    """Deprecated. Is recommended to use Surface node instead."""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
     arm_version = 1

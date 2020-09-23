@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorNode(ArmLogicTreeNode):
-    """Vector node"""
+    """Use to hold a vector as a variable."""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
     arm_version=1

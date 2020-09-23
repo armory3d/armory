@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpSuperSampleNode(ArmLogicTreeNode):
-    """Configure super sampling node"""
+    """Use to set the supersampling quality."""
     bl_idname = 'LNRpSuperSampleNode'
     bl_label = 'Rp Super-sampling'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GoToLocationNode(ArmLogicTreeNode):
-    """Navigate to location node"""
+    """Use to make a navmesh agent go to location."""
     bl_idname = 'LNGoToLocationNode'
     bl_label = 'Go To Location'
     arm_version = 1

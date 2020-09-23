@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class NotNode(ArmLogicTreeNode):
-    """Not node"""
+    """Use to invert a boolean value."""
     bl_idname = 'LNNotNode'
     bl_label = 'Not'
     arm_version = 1

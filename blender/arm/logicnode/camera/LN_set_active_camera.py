@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetCameraNode(ArmLogicTreeNode):
-    """Set the active camera of the active scene."""
+    """Use to set the active camera."""
     bl_idname = 'LNSetCameraNode'
     bl_label = 'Set Active Camera'
     arm_version = 1

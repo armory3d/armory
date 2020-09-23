@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LoopNode(ArmLogicTreeNode):
-    """Loop node"""
+    """TO DO."""
     bl_idname = 'LNLoopNode'
     bl_label = 'Loop'
     arm_version = 1

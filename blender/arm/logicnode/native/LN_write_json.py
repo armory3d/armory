@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class WriteJsonNode(ArmLogicTreeNode):
-    """Write JSON node"""
+    """Use to write the content of a JSON file."""
     bl_idname = 'LNWriteJsonNode'
     bl_label = 'Write JSON'
     arm_version = 1

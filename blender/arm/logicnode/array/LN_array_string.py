@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StringArrayNode(ArmLogicTreeNode):
-    """String array node"""
+    """Use to make an array of string elements."""
     bl_idname = 'LNArrayStringNode'
     bl_label = 'Array String'
     arm_version = 1

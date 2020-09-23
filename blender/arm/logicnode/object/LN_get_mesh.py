@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetMeshNode(ArmLogicTreeNode):
-    """Get mesh node"""
+    """Use to get the mesh of an object."""
     bl_idname = 'LNGetMeshNode'
     bl_label = 'Get Mesh'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetCursorStateNode(ArmLogicTreeNode):
-    """Set Cursor State node"""
+    """Use to set the state of the cursor."""
     bl_idname = 'LNSetCursorStateNode'
     bl_label = 'Set Cursor State'
     arm_version = 1

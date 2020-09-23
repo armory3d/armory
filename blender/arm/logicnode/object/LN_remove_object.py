@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RemoveObjectNode(ArmLogicTreeNode):
-    """Remove object node"""
+    """Use to delete an object from the scene."""
     bl_idname = 'LNRemoveObjectNode'
     bl_label = 'Remove Object'
     arm_version = 1

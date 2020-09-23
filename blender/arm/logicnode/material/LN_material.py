@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class MaterialNode(ArmLogicTreeNode):
-    """Material node"""
+    """Use to hold a material as a variable."""
     bl_idname = 'LNMaterialNode'
     bl_label = 'Material'
     arm_version = 1

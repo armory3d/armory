@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SeparateColorNode(ArmLogicTreeNode):
-    """Separate color node"""
+    """Use to split a color into RGB values."""
     bl_idname = 'LNSeparateColorNode'
     bl_label = 'Separate RGB'
     arm_version = 1

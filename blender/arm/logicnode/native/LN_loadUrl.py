@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class LoadUrlNode(ArmLogicTreeNode):
-    """Load Url"""
+    """Use to load a URL in a new tab. Works only for Browsers."""
     bl_idname = 'LNLoadUrlNode'
-    bl_label = 'Load URL (Browser Only)'
+    bl_label = 'Load URL'
     arm_version = 1
 
     def init(self, context):

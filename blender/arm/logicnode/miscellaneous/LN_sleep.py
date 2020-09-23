@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SleepNode(ArmLogicTreeNode):
-    """Sleep node"""
+    """Use to delay between an running output and a input."""
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'
     arm_version = 1

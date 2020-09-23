@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnMouseNode(ArmLogicTreeNode):
-    """On mouse node"""
+    """Deprecated. Is recommended to use 'Mouse' node instead."""
     bl_idname = 'LNOnMouseNode'
     bl_label = 'On Mouse'
     arm_version = 1

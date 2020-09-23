@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnGamepadNode(ArmLogicTreeNode):
-    """On gamepad node"""
+    """Deprecated. Is recommended to use 'Gamepad' node instead."""
     bl_idname = 'LNOnGamepadNode'
     bl_label = 'On Gamepad'
     arm_version = 1

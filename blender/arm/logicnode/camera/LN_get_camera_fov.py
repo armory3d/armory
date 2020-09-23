@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetCameraFovNode(ArmLogicTreeNode):
-    """Get camera FOV node"""
+    """Use to get the FOV of a camera."""
     bl_idname = 'LNGetCameraFovNode'
     bl_label = 'Get Camera FOV'
     arm_version = 1

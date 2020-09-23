@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayLengthNode(ArmLogicTreeNode):
-    """Array length node"""
+    """Use to get the length of an array."""
     bl_idname = 'LNArrayLengthNode'
     bl_label = 'Array Length'
     arm_version = 1

@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class FunctionNode(ArmLogicTreeNode):
-    """Function node"""
+    """Runs the output when the function is called."""
     bl_idname = 'LNFunctionNode'
     bl_label = 'Function'
     arm_version = 1

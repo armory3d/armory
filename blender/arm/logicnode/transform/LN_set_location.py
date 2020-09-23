@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetLocationNode(ArmLogicTreeNode):
-    """Set location node"""
+    """Use to set the location of an object."""
     bl_idname = 'LNSetLocationNode'
     bl_label = 'Set Location'
     arm_version = 1

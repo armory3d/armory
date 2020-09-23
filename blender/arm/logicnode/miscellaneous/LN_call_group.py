@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class CallGroupNode(ArmLogicTreeNode):
-    """Call group node"""
+    """Use to call a group of nodes."""
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
     arm_version = 1

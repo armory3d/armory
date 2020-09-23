@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetTextColorNode(ArmLogicTreeNode):
-    """Set canvas text color"""
+    """Use to set an UI text color."""
     bl_idname = 'LNCanvasSetTextColorNode'
     bl_label = 'Canvas Set Text Color'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ApplyForceAtLocationNode(ArmLogicTreeNode):
-    """Apply force at location node"""
+    """Use to apply force to a rigid body in at a specific location."""
     bl_idname = 'LNApplyForceAtLocationNode'
     bl_label = 'Apply Force At Location'
     arm_version = 1

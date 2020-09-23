@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnVirtualButtonNode(ArmLogicTreeNode):
-    """On virtual button node"""
+    """Deprecated. Is recommended to use 'Virtual Button' node instead."""
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'
     arm_version = 1

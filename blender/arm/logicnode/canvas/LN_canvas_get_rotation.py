@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetRotationNode(ArmLogicTreeNode):
-    """Get canvas element rotation"""
+    """Use to get the rotation of an UI element."""
     bl_idname = 'LNCanvasGetRotationNode'
     bl_label = 'Canvas Get Rotation'
     arm_version = 1

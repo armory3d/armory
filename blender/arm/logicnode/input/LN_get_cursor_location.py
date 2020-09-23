@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetCursorLocationNode(ArmLogicTreeNode):
-    """Get Cursor Location node"""
+    """Use to get the location of the cursor in the screen (in pixels)."""
     bl_idname = 'LNGetCursorLocationNode'
     bl_label = 'Get Cursor Location'
     arm_version = 1

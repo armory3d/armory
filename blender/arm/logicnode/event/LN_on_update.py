@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnUpdateNode(ArmLogicTreeNode):
-    """On update node"""
+    """Runs the output in every update."""
     bl_idname = 'LNOnUpdateNode'
     bl_label = 'On Update'
     arm_version = 1

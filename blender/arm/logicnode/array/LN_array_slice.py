@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySliceNode(ArmLogicTreeNode):
-    """Array slice node"""
+    """TO DO. Search for haxe array slice."""
     bl_idname = 'LNArraySliceNode'
     bl_label = 'Array Slice'
     arm_version = 1

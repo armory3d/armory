@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetHaxePropertyNode(ArmLogicTreeNode):
-    """Get haxe property node"""
+    """Use to get a haxe property."""
     bl_idname = 'LNGetHaxePropertyNode'
     bl_label = 'Get Haxe Property'
     arm_version = 1

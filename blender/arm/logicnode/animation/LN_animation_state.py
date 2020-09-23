@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class AnimationStateNode(ArmLogicTreeNode):
-    """Animation state node"""
+    """Use to get information about the current animation of an object."""
     bl_idname = 'LNAnimationStateNode'
     bl_label = 'Animation State'
     arm_version = 1

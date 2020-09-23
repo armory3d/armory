@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ToBoolNode(ArmLogicTreeNode):
-    """To Bool Node"""
+    """Convert an output to boolean. If the output is running, the boolean is true; if not, the boolean is false."""
     bl_idname = 'LNToBoolNode'
     bl_label = 'To Bool'
     arm_version = 1

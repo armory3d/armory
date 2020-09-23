@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class BooleanNode(ArmLogicTreeNode):
-    """Bool node"""
+    """Use to hold a boolean as a variable."""
     bl_idname = 'LNBooleanNode'
     bl_label = 'Boolean'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayNode(ArmLogicTreeNode):
-    """Array node"""
+    """Use to hold an array as a variable."""
     bl_idname = 'LNArrayNode'
     bl_label = 'Array Dynamic'
     arm_version = 1

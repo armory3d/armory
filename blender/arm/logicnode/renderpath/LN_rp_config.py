@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpConfigNode(ArmLogicTreeNode):
-    """Configure renderpath node"""
+    """Use to configure renderpath node."""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Rp Config'
     arm_version = 1

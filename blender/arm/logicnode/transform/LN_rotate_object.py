@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RotateObjectNode(ArmLogicTreeNode):
-    """Rotate object node"""
+    """Use to rotate an object."""
     bl_idname = 'LNRotateObjectNode'
     bl_label = 'Rotate Object'
     arm_version = 1

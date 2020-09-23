@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class IntegerArrayNode(ArmLogicTreeNode):
-    """Integer array node"""
+    """Use to make an array of integer elements."""
     bl_idname = 'LNArrayIntegerNode'
     bl_label = 'Array Integer'
     arm_version = 1

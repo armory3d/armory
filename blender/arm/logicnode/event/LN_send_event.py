@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SendEventNode(ArmLogicTreeNode):
-    """Send event node"""
+    """Use to send a event to a object."""
     bl_idname = 'LNSendEventNode'
     bl_label = 'Send Event'
     arm_version = 1

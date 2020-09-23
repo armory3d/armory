@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetTransformNode(ArmLogicTreeNode):
-    """Get transform node"""
+    """Use to get the transform of an object."""
     bl_idname = 'LNGetTransformNode'
     bl_label = 'Get Transform'
     arm_version = 1

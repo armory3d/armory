@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnContactArrayNode(ArmLogicTreeNode):
-    """On contact array node"""
+    """Runs the output when the rigid body make contact with other rigid bodies."""
     bl_idname = 'LNOnContactArrayNode'
     bl_label = 'On Contact Array'
     arm_version = 1

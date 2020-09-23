@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class FunctionOutputNode(ArmLogicTreeNode):
-    """Function output node"""
+    """Use to define the connected node chain as a function."""
     bl_idname = 'LNFunctionOutputNode'
     bl_label = 'Function Output'
     arm_version = 1

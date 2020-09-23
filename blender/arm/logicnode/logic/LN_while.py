@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class WhileNode(ArmLogicTreeNode):
-    """While node"""
+    """TO DO."""
     bl_idname = 'LNWhileNode'
     bl_label = 'While'
     arm_version = 1

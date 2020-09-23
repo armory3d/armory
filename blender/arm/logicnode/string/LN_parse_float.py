@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ParseFloatNode(ArmLogicTreeNode):
-    """Parse float node"""
+    """Use to get the floats that are in a string."""
     bl_idname = 'LNParseFloatNode'
     bl_label = 'Parse Float'
     arm_version = 1

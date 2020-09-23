@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SwitchNode(ArmLogicTreeNode):
-    """Switch node"""
+    """Runs the outputs depending of the value. Example: If 'value' is equal to 'case 1', the output 'case 1' will run."""
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch'
     arm_version = 1

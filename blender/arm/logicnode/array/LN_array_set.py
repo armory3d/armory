@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySetNode(ArmLogicTreeNode):
-    """Array set node"""
+    """Use to set the value of an array element by index."""
     bl_idname = 'LNArraySetNode'
     bl_label = 'Array Set'
     arm_version = 1

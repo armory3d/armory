@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class RandomIntegerNode(ArmLogicTreeNode):
-    """Random integer node"""
+    """Use to generate a random integer."""
     bl_idname = 'LNRandomIntegerNode'
     bl_label = 'Random Integer'
     arm_version = 1

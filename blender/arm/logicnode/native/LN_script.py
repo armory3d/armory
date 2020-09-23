@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class ScriptNode(ArmLogicTreeNode):
-    """Script node"""
+    """Use to execute a script."""
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GroupOutputNode(ArmLogicTreeNode):
-    """Group output node"""
+    """Use to define a node chain as a node group."""
     bl_idname = 'LNGroupOutputNode'
     bl_label = 'Node Group Output'
     arm_version = 1

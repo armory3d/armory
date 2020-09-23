@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnVolumeTriggerNode(ArmLogicTreeNode):
-    """On volume trigger node"""
+    """Runs the output when the object enter, overlap or leave the trigger."""
     bl_idname = 'LNOnVolumeTriggerNode'
     bl_label = 'On Volume Trigger'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetParentNode(ArmLogicTreeNode):
-    """Set parent node"""
+    """Use to set the parent of an object."""
     bl_idname = 'LNSetParentNode'
     bl_label = 'Set Parent'
     arm_version = 1

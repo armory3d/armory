@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetInputTextNode(ArmLogicTreeNode):
-    """Get canvas input text"""
+    """Use to get the input text of an UI element."""
     bl_idname = 'LNCanvasGetInputTextNode'
     bl_label = 'Canvas Get Input Text'
     arm_version = 1

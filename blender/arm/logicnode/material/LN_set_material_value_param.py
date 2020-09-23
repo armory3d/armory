@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialValueParamNode(ArmLogicTreeNode):
-    """Set material value param node"""
+    """TO DO."""
     bl_idname = 'LNSetMaterialValueParamNode'
     bl_label = 'Set Material Value Param'
     arm_version = 1

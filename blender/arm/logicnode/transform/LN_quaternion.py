@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class QuaternionNode(ArmLogicTreeNode):
-    """Quaternion node"""
+    """TO DO."""
     bl_idname = 'LNQuaternionNode'
     bl_label = 'Quaternion'
     arm_version = 1

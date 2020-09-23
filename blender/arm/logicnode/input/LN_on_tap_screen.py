@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 # Class OnTapScreen
 class OnTapScreen(ArmLogicTreeNode):
-    """On Tap Screen Node"""
+    """Runs the output when the action over the screen is done."""
     bl_idname = 'LNOnTapScreen'
     bl_label = 'On Tap Screen'
     arm_version = 1

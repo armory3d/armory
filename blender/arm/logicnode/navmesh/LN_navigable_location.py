@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class NavigableLocationNode(ArmLogicTreeNode):
-    """Navigable location node"""
+    """TO DO."""
     bl_idname = 'LNNavigableLocationNode'
     bl_label = 'Navigable Location'
     arm_version = 1

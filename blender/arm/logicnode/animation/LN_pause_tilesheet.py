@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PauseTilesheetNode(ArmLogicTreeNode):
-    """Pause tilesheet node"""
+    """Use to pause a tilesheet."""
     bl_idname = 'LNPauseTilesheetNode'
     bl_label = 'Pause Tilesheet'
     arm_version = 1

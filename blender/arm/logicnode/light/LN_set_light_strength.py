@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetLightStrengthNode(ArmLogicTreeNode):
-    """Set light strength node"""
+    """Use to set the strenght of a light."""
     bl_idname = 'LNSetLightStrengthNode'
     bl_label = 'Set Light Strength'
     arm_version = 1

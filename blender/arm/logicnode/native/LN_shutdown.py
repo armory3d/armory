@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ShutdownNode(ArmLogicTreeNode):
-    """Shutdown node"""
+    """Use to close the application."""
     bl_idname = 'LNShutdownNode'
     bl_label = 'Shutdown'
     arm_version = 1

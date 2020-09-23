@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StopAgentNode(ArmLogicTreeNode):
-    """Stop agent node"""
+    """Use to stop a navmesh agent."""
     bl_idname = 'LNStopAgentNode'
     bl_label = 'Stop Agent'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PrintNode(ArmLogicTreeNode):
-    """Print node"""
+    """Use to print a content in the console."""
     bl_idname = 'LNPrintNode'
     bl_label = 'Print'
     arm_version = 1

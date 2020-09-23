@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GlobalObjectNode(ArmLogicTreeNode):
-    """Global object node"""
+    """TO DO."""
     bl_idname = 'LNGlobalObjectNode'
     bl_label = 'Global Object'
     arm_version = 1

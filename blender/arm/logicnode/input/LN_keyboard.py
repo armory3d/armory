@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class KeyboardNode(ArmLogicTreeNode):
-    """Keyboard node"""
+    """Runs the output when the action over the key is done."""
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
     arm_version = 1

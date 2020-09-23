@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class MeshNode(ArmLogicTreeNode):
-    """Mesh node"""
+    """Use to hold a mesh as a variable."""
     bl_idname = 'LNMeshNode'
     bl_label = 'Mesh'
     arm_version = 1

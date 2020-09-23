@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetPropertyNode(ArmLogicTreeNode):
-    """Get property node"""
+    """Use to get the property value of an object."""
     bl_idname = 'LNGetPropertyNode'
     bl_label = 'Get Property'
     arm_version = 1

@@ -6,7 +6,7 @@ def remove_extra_inputs(self, context):
             self.inputs.remove(self.inputs[-1])
 
 class CompareNode(ArmLogicTreeNode):
-    """Compare node"""
+    """Use to compare values."""
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'
     arm_version = 1
