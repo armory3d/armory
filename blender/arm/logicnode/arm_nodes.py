@@ -450,7 +450,7 @@ def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', 
     return None
 
 
-def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default', is_obselete: bool = False) -> None:
+def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'default', is_obsolete: bool = False) -> None:
     """
     Registers a node to the given category. If no section is given, the
     node is put into the default section that does always exist.
@@ -463,8 +463,8 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     nodes.append(node_type)
     node_category = get_category(category)
 
-    if is_obselete:
-        # We need the obselete nodes to be registered in order to have them replaced,
+    if is_obsolete:
+        # We need the obsolete nodes to be registered in order to have them replaced,
         # but do not add them to the menu.
         return
 
