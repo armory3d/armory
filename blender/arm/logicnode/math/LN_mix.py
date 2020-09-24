@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class MixNode(ArmLogicTreeNode):
     """Use to interpolate between two values."""
     bl_idname = 'LNMixNode'
-    bl_label = 'Interpolate'
+    bl_label = 'Mix'
     arm_version = 1
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),

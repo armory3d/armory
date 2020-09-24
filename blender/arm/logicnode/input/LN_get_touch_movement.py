@@ -15,4 +15,4 @@ class GetTouchMovementNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Multiplied X')
         self.add_output('NodeSocketFloat', 'Multiplied Y')
 
-add_node(GetTouchMovementNode, category=PKG_AS_CATEGORY, section='mouse')
+add_node(GetTouchMovementNode, category=PKG_AS_CATEGORY, section='surface')

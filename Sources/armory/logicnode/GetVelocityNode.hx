@@ -19,8 +19,6 @@ class GetVelocityNode extends LogicNode {
 		if (rb != null) {
 			if (from == 0) return rb.getLinearVelocity();
 			else if (from == 1) return rb.getAngularVelocity();
-			// rb.getLinearFactor(); // TODO
-			// rb.getAngularFactor(); // TODO
 		}
 #end
 		return null;

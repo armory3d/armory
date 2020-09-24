@@ -1,0 +1,15 @@
+from arm.logicnode.arm_nodes import *
+
+class RemoveGroupNode(ArmLogicTreeNode):
+    """Use to delete a collection from the scene."""
+    bl_idname = 'LNRemoveGroupNode'
+    bl_label = 'Delete Collection'
+    arm_version = 1
+
+    def init(self, context):
+        super(RemoveGroupNode, self).init(context)
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_input('NodeSocketString', 'Collection')
+        self.add_output('ArmNodeSocketAction', 'Out')
+
+add_node(RemoveGroupNode, category=PKG_AS_CATEGORY, section='collection')

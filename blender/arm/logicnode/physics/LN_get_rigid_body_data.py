@@ -9,8 +9,6 @@ class GetRigidBodyDataNode(ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketBool', 'Is Rigid Body')
-        #self.outputs.new('NodeSocketString', 'Collision Shape')
-        #self.outputs.new('NodeSocketInt', 'Activation State')
         self.outputs.new('NodeSocketInt', 'Collision Group')
         self.outputs.new('NodeSocketInt', 'Collision Mask')
         self.outputs.new('NodeSocketBool', 'Is Animated')
@@ -19,5 +17,10 @@ class GetRigidBodyDataNode(ArmLogicTreeNode):
         self.outputs.new('NodeSocketFloat', 'Linear Damping')
         self.outputs.new('NodeSocketFloat', 'Friction')
         self.outputs.new('NodeSocketFloat', 'Mass')
+        #self.outputs.new('NodeSocketString', 'Collision Shape')
+        #self.outputs.new('NodeSocketInt', 'Activation State')
+        #self.outputs.new('NodeSocketBool', 'Is Gravity Enabled')
+        #self.outputs.new(NodeSocketVector', Angular Factor')
+        #self.outputs.new('NodeSocketVector', Linear Factor')
 
 add_node(GetRigidBodyDataNode, category=PKG_AS_CATEGORY, section='props')

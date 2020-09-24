@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class SendGlobalEventNode(ArmLogicTreeNode):
-    """Use to send a event to all objects."""
+    """Use to send an event to all objects in the scene."""
     bl_idname = 'LNSendGlobalEventNode'
-    bl_label = 'Send Global Event'
+    bl_label = 'Send Event'
     arm_version = 1
 
     def init(self, context):
