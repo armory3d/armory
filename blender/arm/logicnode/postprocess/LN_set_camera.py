@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CameraSetNode(ArmLogicTreeNode):
-    """Set postprocessing effects of the camera."""
+    """Uset to set the post-processing effects of a camera."""
     bl_idname = 'LNCameraSetNode'
     bl_label = 'Set Camera Postprocessing'
     arm_version = 1

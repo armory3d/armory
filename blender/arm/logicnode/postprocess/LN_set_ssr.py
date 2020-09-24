@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SSRSetNode(ArmLogicTreeNode):
-    """Set SSR Effect"""
+    """Use to set the SSR post-processing settings."""
     bl_idname = 'LNSSRSetNode'
     bl_label = 'Set SSR'
     arm_version = 1

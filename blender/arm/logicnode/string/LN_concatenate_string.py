@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ConcatenateStringNode(ArmLogicTreeNode):
-    """Concatenate string node"""
+    """Use to concatenate a string."""
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SpawnSceneNode(ArmLogicTreeNode):
-    """Spawn scene node"""
+    """Use to spawn a scene."""
     bl_idname = 'LNSpawnSceneNode'
     bl_label = 'Spawn Scene'
     arm_version = 1

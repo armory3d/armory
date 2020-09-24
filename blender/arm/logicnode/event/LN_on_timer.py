@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnTimerNode(ArmLogicTreeNode):
-    """On timer node"""
+    """Runs the output when the time is reached."""
     bl_idname = 'LNOnTimerNode'
     bl_label = 'On Timer'
     arm_version = 1

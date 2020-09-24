@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpMSAANode(ArmLogicTreeNode):
-    """Configure multi-sample anti-aliasing node"""
+    """Use to set the MSAA quality."""
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Rp MSAA'
     arm_version = 1

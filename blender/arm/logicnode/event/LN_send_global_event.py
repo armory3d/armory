@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SendGlobalEventNode(ArmLogicTreeNode):
-    """Send global event node"""
+    """Use to send a event to all objects."""
     bl_idname = 'LNSendGlobalEventNode'
     bl_label = 'Send Global Event'
     arm_version = 1

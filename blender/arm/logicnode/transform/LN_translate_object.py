@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TranslateObjectNode(ArmLogicTreeNode):
-    """Translate object node"""
+    """Use to translate an object."""
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
     arm_version = 1

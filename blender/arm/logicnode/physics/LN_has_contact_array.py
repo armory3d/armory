@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class HasContactArrayNode(ArmLogicTreeNode):
-    """Has contact array node"""
+    """Use to get if a rigid body has contact with other rigid bodies."""
     bl_idname = 'LNHasContactArrayNode'
     bl_label = 'Has Contact Array'
     arm_version = 1

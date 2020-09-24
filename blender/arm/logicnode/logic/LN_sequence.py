@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SequenceNode(ArmLogicTreeNode):
-    """Sequence node"""
+    """Runs the outputs one per time sequentially."""
     bl_idname = 'LNSequenceNode'
     bl_label = 'Sequence'
     arm_version = 1

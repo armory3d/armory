@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayRemoveValueNode(ArmLogicTreeNode):
-    """Removes an element from an array given by its value."""
+    """Use to remove a value from an array."""
     bl_idname = 'LNArrayRemoveValueNode'
     bl_label = 'Array Remove By Value'
     arm_version = 1

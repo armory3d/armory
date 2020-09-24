@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetRotationNode(ArmLogicTreeNode):
-    """Set canvas element rotation"""
+    """Use to set the rotation of an UI element."""
     bl_idname = 'LNCanvasSetRotationNode'
     bl_label = 'Canvas Set Rotation'
     arm_version = 1

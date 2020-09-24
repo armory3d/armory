@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetGroupNode(ArmLogicTreeNode):
-    """Get group node"""
+    """Use to get a collection."""
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Collection'
     arm_version = 1

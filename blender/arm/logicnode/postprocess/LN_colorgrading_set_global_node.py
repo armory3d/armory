@@ -25,7 +25,7 @@ def set_data(self, context):
         self.property1 = data
 
 class ColorgradingSetGlobalNode(ArmLogicTreeNode):
-    """Colorgrading Set Global node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingSetGlobalNode'
     bl_label = 'Colorgrading Set Global'
     arm_version = 1

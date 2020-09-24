@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialRgbParamNode(ArmLogicTreeNode):
-    """Set material rgb param node"""
+    """TO DO."""
     bl_idname = 'LNSetMaterialRgbParamNode'
     bl_label = 'Set Material RGB Param'
     arm_version = 1

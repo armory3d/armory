@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetMaterialNode(ArmLogicTreeNode):
-    """Get material node"""
+    """Use to get the material of an object."""
     bl_idname = 'LNGetMaterialNode'
     bl_label = 'Get Material'
     arm_version = 1

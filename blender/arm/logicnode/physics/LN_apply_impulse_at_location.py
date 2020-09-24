@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
-    """Apply impulse at location node"""
+    """Use to apply impulse in a rigid body at a specific location."""
     bl_idname = 'LNApplyImpulseAtLocationNode'
     bl_label = 'Apply Impulse At Location'
     arm_version = 1

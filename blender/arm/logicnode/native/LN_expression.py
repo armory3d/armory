@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ExpressionNode(ArmLogicTreeNode):
-    """Expression node"""
+    """Use to get the value of an defined expression."""
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
     arm_version = 1

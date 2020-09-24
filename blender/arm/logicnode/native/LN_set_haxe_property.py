@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetHaxePropertyNode(ArmLogicTreeNode):
-    """Set haxe property node"""
+    """Use to set the content of a haxe property."""
     bl_idname = 'LNSetHaxePropertyNode'
     bl_label = 'Set Haxe Property'
     arm_version = 1

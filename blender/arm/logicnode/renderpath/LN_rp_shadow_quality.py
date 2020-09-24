@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpShadowQualityNode(ArmLogicTreeNode):
-    """Configure shadow quality node"""
+    """Use to set the shadow quality."""
     bl_idname = 'LNRpShadowQualityNode'
     bl_label = 'Rp Shadow Quality'
     arm_version = 1

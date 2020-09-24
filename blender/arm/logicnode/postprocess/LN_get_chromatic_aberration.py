@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ChromaticAberrationGetNode(ArmLogicTreeNode):
-    """Get Chromatic Aberration Effect"""
+    """Use to get the chromatic aberration post-processing settings."""
     bl_idname = 'LNChromaticAberrationGetNode'
     bl_label = 'Get ChromaticAberration'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetPositionNode(ArmLogicTreeNode):
-    """Get canvas radio and combo value"""
+    """TO DO."""
     bl_idname = 'LNCanvasGetPositionNode'
     bl_label = 'Canvas Get Position'
     arm_version = 1

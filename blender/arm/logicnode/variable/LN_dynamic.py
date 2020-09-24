@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class DynamicNode(ArmLogicTreeNode):
-    """Dynamic node"""
+    """Use to hold a dynamic value as a variable."""
     bl_idname = 'LNDynamicNode'
     bl_label = 'Dynamic'
     arm_version = 1

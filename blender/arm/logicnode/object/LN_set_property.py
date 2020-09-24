@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetPropertyNode(ArmLogicTreeNode):
-    """Set property node"""
+    """Use to set the value of an object property."""
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Property'
     arm_version = 1

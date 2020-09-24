@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RemovePhysicsNode (ArmLogicTreeNode):
-    """Remove Physics Node"""
+    """Use to remove a rigid body from an object."""
     bl_idname = 'LNRemovePhysicsNode'
     bl_label = 'Remove Physics'
     arm_version = 1

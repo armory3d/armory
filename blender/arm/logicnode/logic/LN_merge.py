@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MergeNode(ArmLogicTreeNode):
-    """Merge node"""
+    """Runs the output when any connected input is running. The output execution will vary depending of inputs connected to it running."""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
     arm_version = 1

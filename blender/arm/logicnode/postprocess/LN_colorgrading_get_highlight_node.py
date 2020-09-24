@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetHighlightNode(ArmLogicTreeNode):
-    """Colorgrading Get Highlight node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingGetHighlightNode'
     bl_label = 'Colorgrading Get Highlight'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetRotationNode(ArmLogicTreeNode):
-    """Set rotation node"""
+    """Use to set the rotation of an object."""
     bl_idname = 'LNSetRotationNode'
     bl_label = 'Set Rotation'
     arm_version = 1

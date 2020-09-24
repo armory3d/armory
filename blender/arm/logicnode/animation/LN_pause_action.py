@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PauseActionNode(ArmLogicTreeNode):
-    """Pause action node"""
+    """Use to pause an action."""
     bl_idname = 'LNPauseActionNode'
     bl_label = 'Pause Action'
     arm_version = 1

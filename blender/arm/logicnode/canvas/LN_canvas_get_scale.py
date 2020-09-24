@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetScaleNode(ArmLogicTreeNode):
-    """Get canvas element scale"""
+    """Use to get the scale of an UI element."""
     bl_idname = 'LNCanvasGetScaleNode'
     bl_label = 'Canvas Get Scale'
     arm_version = 1

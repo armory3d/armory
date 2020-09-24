@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetChildrenNode(ArmLogicTreeNode):
-    """Get children node"""
+    """Use to get the children of an object."""
     bl_idname = 'LNGetChildrenNode'
     bl_label = 'Get Children'
     arm_version = 1

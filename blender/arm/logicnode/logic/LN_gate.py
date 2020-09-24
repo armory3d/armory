@@ -6,9 +6,8 @@ def remove_extra_inputs(self, context):
         while len(self.inputs) > self.min_inputs:
             self.inputs.remove(self.inputs[-1])
 
-
 class GateNode(ArmLogicTreeNode):
-    """Gate node"""
+    """Runs the output True if the condition is true and the output False if the condition is false. Similar: Compare node."""
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
     arm_version = 1

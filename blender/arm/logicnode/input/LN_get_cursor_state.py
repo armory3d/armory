@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetCursorStateNode(ArmLogicTreeNode):
-    """Get Cursor State node"""
+    """Use to get the state of the cursor."""
     bl_idname = 'LNGetCursorStateNode'
     bl_label = 'Get Cursor State'
     arm_version = 1

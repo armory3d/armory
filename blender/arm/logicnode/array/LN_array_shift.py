@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayShiftNode(ArmLogicTreeNode):
-    """Array shift node"""
+    """Use to remove the first element of an array."""
     bl_idname = 'LNArrayShiftNode'
     bl_label = 'Array Shift'
     arm_version = 1

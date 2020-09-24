@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetVariableNode(ArmLogicTreeNode):
-    """Set variable node"""
+    """Use to set the value of a variable."""
     bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
     arm_version = 1

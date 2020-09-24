@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialImageParamNode(ArmLogicTreeNode):
-    """Set material image param node"""
+    """TO DO."""
     bl_idname = 'LNSetMaterialImageParamNode'
     bl_label = 'Set Material Image Param'
     arm_version = 1

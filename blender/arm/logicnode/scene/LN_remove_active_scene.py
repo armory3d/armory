@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RemoveActiveSceneNode(ArmLogicTreeNode):
-    """Remove active scene node"""
+    """Use to remove the active scene."""
     bl_idname = 'LNRemoveActiveSceneNode'
     bl_label = 'Remove Active Scene'
     arm_version = 1

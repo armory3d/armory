@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LenstextureGetNode(ArmLogicTreeNode):
-    """Get Tonemapper Effect"""
+    """Use to get the lens texture settings."""
     bl_idname = 'LNLenstextureGetNode'
     bl_label = 'Get Lenstexture'
     arm_version = 1

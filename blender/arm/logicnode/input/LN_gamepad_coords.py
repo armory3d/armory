@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GamepadCoordsNode(ArmLogicTreeNode):
-    """Gamepad coords node"""
+    """Use to get the coordinates of a gamepad."""
     bl_idname = 'LNGamepadCoordsNode'
     bl_label = 'Gamepad Coords'
     arm_version = 1

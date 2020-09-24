@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialNode(ArmLogicTreeNode):
-    """Set material node"""
+    """Use to set the material of an object."""
     bl_idname = 'LNSetMaterialNode'
     bl_label = 'Set Material'
     arm_version = 1

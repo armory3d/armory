@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetSliderNode(ArmLogicTreeNode):
-    """Set canvas text"""
+    """Use to set the value of an UI slider."""
     bl_idname = 'LNCanvasSetSliderNode'
     bl_label = 'Canvas Set Slider'
     arm_version = 1

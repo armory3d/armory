@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetShadowNode(ArmLogicTreeNode):
-    """Colorgrading Get Shadow node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingGetShadowNode'
     bl_label = 'Colorgrading Get Shadow'
     arm_version = 1

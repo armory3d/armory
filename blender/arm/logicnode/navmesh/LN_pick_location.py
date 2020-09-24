@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PickLocationNode(ArmLogicTreeNode):
-    """Pick location node"""
+    """Use to pick a location in a navmesh."""
     bl_idname = 'LNPickLocationNode'
     bl_label = 'Pick Location'
     arm_version = 1

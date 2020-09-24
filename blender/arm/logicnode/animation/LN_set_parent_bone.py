@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetParentBoneNode(ArmLogicTreeNode):
-    """Set parent bone node"""
+    """Use to set an object parent to a bone."""
     bl_idname = 'LNSetParentBoneNode'
     bl_label = 'Set Parent Bone'
     arm_version = 1

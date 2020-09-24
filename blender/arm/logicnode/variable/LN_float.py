@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class FloatNode(ArmLogicTreeNode):
-    """Float node"""
+    """Use to hold a float as a variable."""
     bl_idname = 'LNFloatNode'
     bl_label = 'Float'
     arm_version = 1

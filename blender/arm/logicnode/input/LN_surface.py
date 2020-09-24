@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SurfaceNode(ArmLogicTreeNode):
-    """Surface node"""
+    """Runs the output when the defined action over the screen is done."""
     bl_idname = 'LNMergedSurfaceNode'
     bl_label = 'Surface'
     arm_version = 1

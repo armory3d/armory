@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetPBNode(ArmLogicTreeNode):
-    """Get canvas progress bar"""
+    """Use to get the value of a UI progress bar."""
     bl_idname = 'LNCanvasGetPBNode'
     bl_label = 'Canvas Get Progress Bar'
     arm_version = 1

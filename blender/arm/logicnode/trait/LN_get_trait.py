@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetTraitNode(ArmLogicTreeNode):
-    """Get trait node"""
+    """Use to get a trait from an object."""
     bl_idname = 'LNGetTraitNode'
     bl_label = 'Get Trait'
     arm_version = 1

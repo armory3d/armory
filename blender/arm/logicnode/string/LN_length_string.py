@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LengthStringNode(ArmLogicTreeNode):
-    """String Length node"""
+    """Use to get the length of a string."""
     bl_idname = 'LNLengthStringNode'
     bl_label = 'String Length'
     arm_version = 1

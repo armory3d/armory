@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayPopNode(ArmLogicTreeNode):
-    """Array pop node"""
+    """Use to remove the last element of an array."""
     bl_idname = 'LNArrayPopNode'
     bl_label = 'Array Pop'
     arm_version = 1

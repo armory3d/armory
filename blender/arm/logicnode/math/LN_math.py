@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MathNode(ArmLogicTreeNode):
-    """Math node"""
+    """Use to operate values. You must check in the Wiki what each operator does, because some of them uses only the first input."""
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
     arm_version = 1

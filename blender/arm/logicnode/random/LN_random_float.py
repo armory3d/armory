@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class RandomFloatNode(ArmLogicTreeNode):
-    """Random float node"""
+    """Use to generate a random float."""
     bl_idname = 'LNRandomFloatNode'
     bl_label = 'Random Float'
     arm_version = 1

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetActivationStateNode(ArmLogicTreeNode):
-    """Set Activation State Node"""
+    """Use to set the activation state of a rigid body."""
     bl_idname = 'LNSetActivationStateNode'
     bl_label = 'Set Activation State'
     bl_icon = 'NONE'

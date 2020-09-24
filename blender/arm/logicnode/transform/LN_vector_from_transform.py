@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorFromTransformNode(ArmLogicTreeNode):
-    """Vector from transform node"""
+    """Use to get a vector from a transform."""
     bl_idname = 'LNVectorFromTransformNode'
     bl_label = 'Vector From Transform'
     arm_version = 1

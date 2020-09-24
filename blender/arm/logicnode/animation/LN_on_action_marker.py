@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnActionMarkerNode(ArmLogicTreeNode):
-    """On action marker node"""
+    """Runs the output when the object action trespasses the action marker."""
     bl_idname = 'LNOnActionMarkerNode'
     bl_label = 'On Action Marker'
     arm_version = 1

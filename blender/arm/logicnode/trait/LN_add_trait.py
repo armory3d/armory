@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class AddTraitNode(ArmLogicTreeNode):
-    """Add trait node"""
+    """Use to add a trait to an object."""
     bl_idname = 'LNAddTraitNode'
     bl_label = 'Add Trait'
     arm_version = 1

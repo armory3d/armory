@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetScaleNode(ArmLogicTreeNode):
-    """Get scale node"""
+    """Use to get the scale of an object."""
     bl_idname = 'LNGetScaleNode'
     bl_label = 'Get Scale'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
-    """Colorgrading Get Midtone node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingGetMidtoneNode'
     bl_label = 'Colorgrading Get Midtone'
     arm_version = 1

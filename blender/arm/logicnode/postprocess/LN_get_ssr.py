@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SSRGetNode(ArmLogicTreeNode):
-    """Get SSR Effect"""
+    """Use to get the SSR post-processing settings."""
     bl_idname = 'LNSSRGetNode'
     bl_label = 'Get SSR'
     arm_version = 1

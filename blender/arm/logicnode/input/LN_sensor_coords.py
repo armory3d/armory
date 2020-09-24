@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SensorCoordsNode(ArmLogicTreeNode):
-    """Sensor coords node"""
+    """TO DO."""
     bl_idname = 'LNSensorCoordsNode'
     bl_label = 'Sensor Coords'
     arm_version = 1

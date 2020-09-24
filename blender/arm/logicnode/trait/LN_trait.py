@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TraitNode(ArmLogicTreeNode):
-    """Trait node"""
+    """Use to hold a trait as a variable."""
     bl_idname = 'LNTraitNode'
     bl_label = 'Trait'
     arm_version = 1

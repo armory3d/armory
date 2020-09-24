@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class NoneNode(ArmLogicTreeNode):
-    """None node"""
+    """A null value that can be used in comparisons and conditions."""
     bl_idname = 'LNNoneNode'
     bl_label = 'None'
     arm_version = 1

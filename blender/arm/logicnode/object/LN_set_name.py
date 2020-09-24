@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetNameNode(ArmLogicTreeNode):
-    """Set name node"""
+    """Use to set the name of an object."""
     bl_idname = 'LNSetNameNode'
     bl_label = 'Set Name'
     arm_version = 1

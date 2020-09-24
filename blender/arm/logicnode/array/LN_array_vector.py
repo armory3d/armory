@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorArrayNode(ArmLogicTreeNode):
-    """Vector array node"""
+    """Use to make an array of vector elements."""
     bl_idname = 'LNArrayVectorNode'
     bl_label = 'Array Vector'
     arm_version = 1

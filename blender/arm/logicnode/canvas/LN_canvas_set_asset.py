@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetAssetNode(ArmLogicTreeNode):
-    """Set canvas asset"""
+    """Use to set the asset of an UI element."""
     bl_idname = 'LNCanvasSetAssetNode'
     bl_label = 'Canvas Set Asset'
     arm_version = 1

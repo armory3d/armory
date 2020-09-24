@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class WorldToScreenSpaceNode(ArmLogicTreeNode):
-    """World to screen space node"""
+    """Use to convert world coordinates to screen coordinates."""
     bl_idname = 'LNWorldToScreenSpaceNode'
     bl_label = 'World To Screen Space'
     arm_version = 1

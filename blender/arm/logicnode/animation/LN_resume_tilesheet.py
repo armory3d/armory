@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ResumeTilesheetNode(ArmLogicTreeNode):
-    """Resume tilesheet node"""
+    """Use to resume a tilesheet."""
     bl_idname = 'LNResumeTilesheetNode'
     bl_label = 'Resume Tilesheet'
     arm_version = 1

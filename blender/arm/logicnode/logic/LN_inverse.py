@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class InverseNode(ArmLogicTreeNode):
-    """Inverse node"""
+    """Runs the output if the input is not running."""
     bl_idname = 'LNInverseNode'
     bl_label = 'Inverse'
     arm_version = 1

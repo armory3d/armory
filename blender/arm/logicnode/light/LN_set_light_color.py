@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetLightColorNode(ArmLogicTreeNode):
-    """Set light color node"""
+    """Use to set the color of a light."""
     bl_idname = 'LNSetLightColorNode'
     bl_label = 'Set Light Color'
     arm_version = 1

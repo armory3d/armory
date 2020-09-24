@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnKeyboardNode(ArmLogicTreeNode):
-    """On keyboard node"""
+    """Deprecated. Is recommended to use 'Keyboard' node instead."""
     bl_idname = 'LNOnKeyboardNode'
     bl_label = 'On Keyboard'
     arm_version = 1

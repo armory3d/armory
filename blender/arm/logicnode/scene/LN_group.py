@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class GroupNode(ArmLogicTreeNode):
-    """Group node"""
+    """TO DO."""
     bl_idname = 'LNGroupNode'
     bl_label = 'Collection'
     arm_version = 1

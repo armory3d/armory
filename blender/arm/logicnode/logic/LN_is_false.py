@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class IsFalseNode(ArmLogicTreeNode):
-    """Is False node"""
+    """Runs the output if the input is false."""
     bl_idname = 'LNIsFalseNode'
     bl_label = 'Is False'
     arm_version = 1

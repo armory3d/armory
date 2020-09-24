@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorgradingGetGlobalNode(ArmLogicTreeNode):
-    """Colorgrading Get Global node"""
+    """TO DO."""
     bl_idname = 'LNColorgradingGetGlobalNode'
     bl_label = 'Colorgrading Get Global'
     arm_version = 1

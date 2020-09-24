@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ShowMouseNode(ArmLogicTreeNode):
-    """Show Mouse node"""
+    """Deprecated. Is recommended to use 'Set Cursor State' node instead."""
     bl_idname = 'LNShowMouseNode'
     bl_label = 'Show Mouse'
     arm_version = 1

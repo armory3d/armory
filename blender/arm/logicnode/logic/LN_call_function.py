@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CallFunctionNode(ArmLogicTreeNode):
-    """Call Haxe function node"""
+    """Use to call a haxe function."""
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'
     arm_version = 1

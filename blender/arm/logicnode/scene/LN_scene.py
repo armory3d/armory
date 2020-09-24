@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SceneNode(ArmLogicTreeNode):
-    """Scene node"""
+    """TO DO."""
     bl_idname = 'LNSceneNode'
     bl_label = 'Scene'
     arm_version = 1
