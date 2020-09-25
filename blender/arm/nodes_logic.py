@@ -171,14 +171,14 @@ class ArmOpenNodeSource(bpy.types.Operator):
     bl_label = 'Open Node Source'
 
     def execute(self, context):
-        if context.selected_nodes is not None and context.active_node.bl_idname.startswith('LN'):
+        if context.selected_nodes is not None:
             if len(context.selected_nodes) == 1:
-                name = context.selected_nodes[0].bl_idname[2:]
-                version = arm.utils.get_last_commit()
-                if version == '':
-                    version = 'master'
-
-                webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/Sources/armory/logicnode/{name}.hx')
+                if context.selected_nodes[0].bl_idname.startswith('LN'):
+                    name = context.selected_nodes[0].bl_idname[2:]
+                    version = arm.utils.get_last_commit()
+                    if version == '':
+                        version = 'master'
+                    webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/Sources/armory/logicnode/{name}.hx')
         return{'FINISHED'}
 
 class ArmOpenNodePythonSource(bpy.types.Operator):
@@ -468,13 +468,13 @@ class ReplaceNodesOperator(bpy.types.Operator):
 # https://blender.stackexchange.com/questions/150101/python-how-to-add-items-in-context-menu-in-2-8
 def draw_custom_logicnode_menu(self, context):
     if context.space_data.tree_type == 'ArmLogicTreeType' \
-        and context.selected_nodes is not None \
-        and context.active_node.bl_idname.startswith('LN'):
+        and context.selected_nodes is not None:
         if len(context.selected_nodes) == 1:
-            layout = self.layout
-            layout.separator()
-            layout.operator("arm.open_node_source", text="Open .hx source in the browser")
-            layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
+            if context.selected_nodes[0].bl_idname.startswith('LN'):
+                layout = self.layout
+                layout.separator()
+                layout.operator("arm.open_node_source", text="Open .hx source in the browser")
+                layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
 
 def register():
     arm_sockets.register()
