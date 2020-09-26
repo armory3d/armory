@@ -22,6 +22,20 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
+
+class WorkingDir:
+    """Context manager for safely changing the current working directory."""
+    def __init__(self, cwd: str):
+        self.cwd = cwd
+        self.prev_cwd = os.getcwd()
+
+    def __enter__(self):
+        os.chdir(self.cwd)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        os.chdir(self.prev_cwd)
+
+
 def write_arm(filepath, output):
     if filepath.endswith('.lz4'):
         with open(filepath, 'wb') as f:
@@ -231,9 +245,10 @@ def krom_paths():
 def fetch_bundled_script_names():
     wrd = bpy.data.worlds['Arm']
     wrd.arm_bundled_scripts_list.clear()
-    os.chdir(get_sdk_path() + '/armory/Sources/armory/trait')
-    for file in glob.glob('*.hx'):
-        wrd.arm_bundled_scripts_list.add().name = file.rsplit('.', 1)[0]
+
+    with WorkingDir(get_sdk_path() + '/armory/Sources/armory/trait'):
+        for file in glob.glob('*.hx'):
+            wrd.arm_bundled_scripts_list.add().name = file.rsplit('.', 1)[0]
 
 script_props = {}
 script_props_defaults = {}
@@ -407,26 +422,25 @@ def fetch_script_names():
     wrd.arm_scripts_list.clear()
     sources_path = os.path.join(get_fp(), 'Sources', safestr(wrd.arm_project_package))
     if os.path.isdir(sources_path):
-        os.chdir(sources_path)
-        # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
-        for file in glob.glob('**/*.hx', recursive=True):
-            mod = file.rsplit('.', 1)[0]
-            mod = mod.replace('\\', '/')
-            mod_parts = mod.rsplit('/')
-            if re.match('^[A-Z][A-Za-z0-9_]*$', mod_parts[-1]):
-                wrd.arm_scripts_list.add().name = mod.replace('/', '.')
-                fetch_script_props(file)
+        with WorkingDir(sources_path):
+            # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
+            for file in glob.glob('**/*.hx', recursive=True):
+                mod = file.rsplit('.', 1)[0]
+                mod = mod.replace('\\', '/')
+                mod_parts = mod.rsplit('/')
+                if re.match('^[A-Z][A-Za-z0-9_]*$', mod_parts[-1]):
+                    wrd.arm_scripts_list.add().name = mod.replace('/', '.')
+                    fetch_script_props(file)
 
     # Canvas
     wrd.arm_canvas_list.clear()
     canvas_path = get_fp() + '/Bundled/canvas'
     if os.path.isdir(canvas_path):
-        os.chdir(canvas_path)
-        for file in glob.glob('*.json'):
-            if file == "_themes.json":
-                continue
-            wrd.arm_canvas_list.add().name = file.rsplit('.', 1)[0]
-    os.chdir(get_fp())
+        with WorkingDir(canvas_path):
+            for file in glob.glob('*.json'):
+                if file == "_themes.json":
+                    continue
+                wrd.arm_canvas_list.add().name = file.rsplit('.', 1)[0]
 
 def fetch_wasm_names():
     if bpy.data.filepath == "":
@@ -436,11 +450,10 @@ def fetch_wasm_names():
     wrd.arm_wasm_list.clear()
     sources_path = get_fp() + '/Bundled'
     if os.path.isdir(sources_path):
-        os.chdir(sources_path)
-        for file in glob.glob('*.wasm'):
-            name = file.rsplit('.', 1)[0]
-            wrd.arm_wasm_list.add().name = name
-    os.chdir(get_fp())
+        with WorkingDir(sources_path):
+            for file in glob.glob('*.wasm'):
+                name = file.rsplit('.', 1)[0]
+                wrd.arm_wasm_list.add().name = name
 
 def fetch_trait_props():
     for o in bpy.data.objects:
