@@ -198,6 +198,27 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
                     webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/blender/{rel_path}.py')
         return{'FINISHED'}
 
+class ArmOpenNodeWikiEntry(bpy.types.Operator):
+    """Expose Python source"""
+    bl_idname = 'arm.open_node_documentation'
+    bl_label = 'Open Node Documentation'
+
+    def to_wiki_id(self, node_name):
+        """convert from the conventional node name to its wiki counterpart's anchor or id
+            expected node_name format: LN_[a-z_]+
+        """
+        return node_name.replace('_','-')[3:]
+
+    def execute(self, context):
+        if context.selected_nodes is not None:
+            if len(context.selected_nodes) == 1:
+                node = context.selected_nodes[0]
+                if node.bl_idname.startswith('LN') and node.arm_version is not None:
+                    wiki_id = self.to_wiki_id(node.__module__.rsplit('.', 2).pop())
+                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference#{wiki_id}')
+        return{'FINISHED'}
+
+
 #Node Variables Panel
 class ARM_PT_Variables(bpy.types.Panel):
     bl_label = 'Armory Node Variables'
@@ -473,6 +494,7 @@ def draw_custom_logicnode_menu(self, context):
             if context.selected_nodes[0].bl_idname.startswith('LN'):
                 layout = self.layout
                 layout.separator()
+                layout.operator("arm.open_node_documentation", text="Show documentation for this node")
                 layout.operator("arm.open_node_source", text="Open .hx source in the browser")
                 layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
 
@@ -483,6 +505,7 @@ def register():
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
     bpy.utils.register_class(ArmOpenNodePythonSource)
+    bpy.utils.register_class(ArmOpenNodeWikiEntry)
     bpy.utils.register_class(ReplaceNodesOperator)
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
@@ -504,6 +527,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
     bpy.utils.unregister_class(ArmOpenNodePythonSource)
+    bpy.utils.unregister_class(ArmOpenNodeWikiEntry)
     bpy.utils.unregister_class(ARM_PT_Variables)
     bpy.utils.unregister_class(ARMAddVarNode)
     bpy.utils.unregister_class(ARMAddSetVarNode)
