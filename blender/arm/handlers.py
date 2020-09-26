@@ -133,6 +133,7 @@ def on_load_post(context):
 
     # Show trait users as collections
     arm.utils.update_trait_collections()
+    props.update_armory_world()
 
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')

@@ -3,8 +3,10 @@ from arm.logicnode.arm_nodes import *
 class OnKeyboardNode(ArmLogicTreeNode):
     """Deprecated. Is recommended to use 'Keyboard' node instead."""
     bl_idname = 'LNOnKeyboardNode'
-    bl_label = 'On Keyboard'
-    arm_version = 1
+    bl_label = "On Keyboard (Depreciated)"
+    bl_descrition = "Please use the \"Keyboard\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -75,4 +77,15 @@ class OnKeyboardNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnKeyboardNode, category=PKG_AS_CATEGORY, section='keyboard')
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            "LNOnKeyboardNode", self.arm_version,
+            "LNMergedKeyboardNode", 1,
+            in_socket_mapping={}, out_socket_mapping={0: 0},
+            property_mapping={"property0": "property0", "property1": "property1"}
+        )
+
+add_node(OnKeyboardNode, category='input', section='keyboard', is_obsolete=True)

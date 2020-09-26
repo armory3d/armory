@@ -300,7 +300,7 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
         newnode.location = node.location
         newnode.select = node.select
     elif isinstance(response, list):  # a list of nodes:
-        for node in response:
+        for newnode in response:
             newnode.parent = node.parent
             newnode.location = node.location
             newnode.select = node.select
@@ -327,7 +327,8 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
             if isinstance(input_socket, arm_sockets.ArmCustomSocket):
                 if input_socket.arm_socket_type != 'NONE':
                     input_socket.default_value_raw = input_value
-            else:
+            elif input_socket.type != 'SHADER':
+                # note: shader-type sockets don't have a default value...
                 input_socket.default_value = input_value
 
         # map properties
@@ -346,7 +347,8 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
                 if isinstance(dest_socket, arm_sockets.ArmCustomSocket):
                     if dest_socket.arm_socket_type != 'NONE':
                         dest_socket.default_value_raw = src_socket.default_value_raw
-                else:
+                elif dest_socket.type != 'SHADER':
+                    # note: shader-type sockets don't have a default value...
                     dest_socket.default_value = src_socket.default_value
 
         # map outputs
@@ -364,9 +366,13 @@ def replaceAll():
     list_of_errors = set()
     for tree in bpy.data.node_groups:
         if tree.bl_idname == "ArmLogicTreeType":
-            for node in tree.nodes:
+            for node in list(tree.nodes):
+            # add the list() to make a "static" copy
+            # (note: one can iterate it, because and nodes which get removed from the tree leave python objects in the list)
                 if isinstance(node, (bpy.types.NodeFrame, bpy.types.NodeReroute) ):
                     pass
+                elif node.type=='':
+                    pass  # that node has been removed from the tree without replace() being called on it somehow.
                 elif not node.is_registered_node_type():
                     # node type deleted. That's unusual. Or it has been replaced for a looong time.
                     list_of_errors.add( ('unregistered', None, tree.name) )
@@ -403,8 +409,9 @@ def replaceAll():
                 print(f"A node of type {node_class} in tree \"{tree_name}\" seemingly comes from a future version of armory. "
                       f"Please check whether your version of armory is up to date", file=reportf)
             elif error_type == 'bad version':
-                print(f"A node of type {node_class} in tree \"{tree_name}\" Doesn't have version information attached to it."
-                      f"if might come from an armory addon. If so, please check that the version of said addon is compatible with armory", file=reportf)
+                print(f"A node of type {node_class} in tree \"{tree_name}\" Doesn't have version information attached to it. "
+                      f"If so, please check that the nodes in the file are compatible with the in-code node classes. "
+                      f"If this nodes comes from an add-on, please check that it is compatible with this version of armory.", file=reportf)
             elif error_type == 'misc.':
                 print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
                       f"because the node's update procedure itself failed.", file=reportf)
@@ -433,9 +440,6 @@ class ReplaceNodesOperator(bpy.types.Operator):
         return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
 
-# Node Replacement Rules (TODO port them)
-#add_replacement(NodeReplacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-#add_replacement(NodeReplacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
     arm_sockets.register()

@@ -301,10 +301,12 @@ def create_wrd():
         wrd.arm_commit = arm_commit
 
 def init_properties_on_load():
-    global arm_version
     if not 'Arm' in bpy.data.worlds:
         init_properties()
     arm.utils.fetch_script_names()
+
+def update_armory_world():
+    global arm_version
     wrd = bpy.data.worlds['Arm']
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
