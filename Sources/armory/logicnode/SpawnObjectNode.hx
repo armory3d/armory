@@ -14,12 +14,12 @@ class SpawnObjectNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-
-		var objectName = "";
 		var objectInput = inputs[1].get();
-		if (objectInput == null) objectName = cast(inputs[1].node, ObjectNode).objectName;
-		else objectName = objectInput.name;
+		if (objectInput == null) return;
+
+		var objectName = objectInput.name;
 		if (objectName == "") objectName = tree.object.name;
+
 		var m: Mat4 = inputs[2].get();
 		matrices.push(m != null ? m.clone() : null);
 		var spawnChildren: Bool = inputs.length > 3 ? inputs[3].get() : true; // TODO
