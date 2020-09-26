@@ -22,8 +22,6 @@ class GetRigidBodyDataNode extends LogicNode {
 			if (rigidBody == null) return false;
 			return true;
 
-			//case 1: ; // collision shape
-			//case 2: ; // activation state
 			case 1: rigidBody.group;
 			case 2: rigidBody.mask;
 			case 3: rigidBody.animated;
@@ -32,6 +30,11 @@ class GetRigidBodyDataNode extends LogicNode {
 			case 6: rigidBody.linearDamping;
 			case 7: rigidBody.friction;
 			case 8: rigidBody.mass;
+			//case 9: ; // collision shape
+			//case 10: ; // activation state
+			//case 11: ; // is gravity enabled
+			//case 12: ; // angular factor
+			//case 13: ; // linear factor
 		default: null;
 		}
 		#end
