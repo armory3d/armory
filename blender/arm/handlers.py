@@ -134,6 +134,9 @@ def on_load_post(context):
                     blender.register()
                     sys.path.remove(fp)
 
+        # Register newly added nodes and node categories
+        arm.nodes_logic.register_nodes()
+
     # Show trait users as collections
     arm.utils.update_trait_collections()
 
