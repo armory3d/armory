@@ -1,13 +1,16 @@
+import importlib
 import os
 import sys
+
 import bpy
-import importlib
 from bpy.app.handlers import persistent
-import arm.utils
-import arm.props as props
+
+import arm.api
+import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
-import arm.api
+import arm.props as props
+import arm.utils
 
 @persistent
 def on_depsgraph_update_post(self):
@@ -130,6 +133,9 @@ def on_load_post(context):
                     importlib.reload(blender)
                     blender.register()
                     sys.path.remove(fp)
+
+        # Register newly added nodes and node categories
+        arm.nodes_logic.register_nodes()
 
     # Show trait users as collections
     arm.utils.update_trait_collections()
