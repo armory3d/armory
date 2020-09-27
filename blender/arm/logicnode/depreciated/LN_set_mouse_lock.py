@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMouseLockNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Set Cursor State' node instead."""
+    """Deprecated. It is recommended to use the 'Set Cursor State' node instead."""
     bl_idname = 'LNSetMouseLockNode'
-    bl_label = 'Set Mouse Lock (Depreciated)'
+    bl_label = 'Set Mouse Lock (Deprecated)'
     bl_description = "Please use the \"Set Cursor State\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2

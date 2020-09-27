@@ -4,8 +4,9 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetMouseLockNode(ArmLogicTreeNode):
+    """Deprecated. It is recommended to use the 'Get Cursor State' node instead."""
     bl_idname = 'LNGetMouseLockNode'
-    bl_label = 'Get Mouse Lock (Depreciated)'
+    bl_label = 'Get Mouse Lock (Deprecated)'
     bl_description = "Please use the \"Get Cursor State\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2

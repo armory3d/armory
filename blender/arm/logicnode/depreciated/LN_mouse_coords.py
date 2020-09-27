@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class MouseCoordsNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Get Cursor Location' and 'Get Mouse Movement' nodes instead."""
+    """Deprecated. It is recommended to use 'Get Cursor Location' node and the 'Get Mouse Movement' node instead."""
     bl_idname = 'LNMouseCoordsNode'
-    bl_label = 'Mouse Coords (Depreciated)'
+    bl_label = 'Mouse Coords (Deprecated)'
     bl_description = "Please use the \"Get Cursor Location\" and \"Get Mouse Movement\" nodes instead"
     bl_icon = 'ERROR'
     arm_version = 2

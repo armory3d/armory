@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class RotateObjectAroundAxisNode(ArmLogicTreeNode):
-    """Use to rotate an object around an axis. Deprecated."""
+    """Deprecated. It is recommended to use the 'Rotate Object' node instead."""
     bl_idname = 'LNRotateObjectAroundAxisNode'
-    bl_label = 'Rotate Object Around Axis (Depreciated)'
+    bl_label = 'Rotate Object Around Axis (Deprecated)'
     bl_description = "Please use the \"Rotate Object\" node instead"
     bl_icon = 'ERROR'
     arm_version=2

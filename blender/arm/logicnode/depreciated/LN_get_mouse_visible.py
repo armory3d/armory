@@ -4,9 +4,9 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetMouseVisibleNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Get Cursor State' node instead."""
+    """Deprecated. It is recommended to use the 'Get Cursor State' node instead."""
     bl_idname = 'LNGetMouseVisibleNode'
-    bl_label = 'Get Mouse Visible (Depreciated)'
+    bl_label = 'Get Mouse Visible (Deprecated)'
     bl_description = "Please use the \"Get Cursor State\" node instead"
     bl_icon='ERROR'
     arm_version = 2
