@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class CallHaxeStaticNode(ArmLogicTreeNode):
-    """Use to call a static haxe function."""
+    """Call a static haxe function.
+
+    @input Function: the full module path to the function.
+    @output Result: the result of the function."""
     bl_idname = 'LNCallHaxeStaticNode'
     bl_label = 'Call Haxe Static'
     arm_version = 1

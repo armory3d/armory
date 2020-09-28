@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetTouchLocationNode(ArmLogicTreeNode):
-    """Use to get the location of the touch (in pixels)."""
+    """Get the location of the last touch event in screen coordinates (pixels)."""
     bl_idname = 'LNGetTouchLocationNode'
     bl_label = 'Get Touch Location'
     arm_version = 1

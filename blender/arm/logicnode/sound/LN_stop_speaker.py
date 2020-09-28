@@ -1,7 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class StopSpeakerNode(ArmLogicTreeNode):
-    """Use to stop a speaker."""
+    """Stops playback of a speaker object, the playback position will be
+    reset to the start.
+
+    @seeNode Pause Speaker
+    @seeNode Play Speaker
+    """
     bl_idname = 'LNStopSoundNode'
     bl_label = 'Stop Speaker'
     arm_version = 1

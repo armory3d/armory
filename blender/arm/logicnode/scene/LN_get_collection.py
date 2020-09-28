@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class GetGroupNode(ArmLogicTreeNode):
-    """Use to get a collection."""
+    """Searches for a collection of objects with the given name and
+    outputs the collection's objects as an array, if found.
+
+    @seeNode Collection"""
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Collection'
     arm_version = 1

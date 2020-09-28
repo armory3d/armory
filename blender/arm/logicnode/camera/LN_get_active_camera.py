@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class ActiveCameraNode(ArmLogicTreeNode):
-    """Use to get the the active camera."""
+    """Get the the active camera.
+
+    @seeNode Set Active Camera"""
     bl_idname = 'LNActiveCameraNode'
     bl_label = 'Get Active Camera'
     arm_version = 1

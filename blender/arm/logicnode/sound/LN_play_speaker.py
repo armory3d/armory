@@ -1,7 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class PlaySpeakerNode(ArmLogicTreeNode):
-    """Use to play a speaker."""
+    """Starts the playback of a speaker object. If the playback was
+    paused it is resumed from the paused position.
+
+    @seeNode Pause Speaker
+    @seeNode Play Speaker
+    """
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
     arm_version = 1

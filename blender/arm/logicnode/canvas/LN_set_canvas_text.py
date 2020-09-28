@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetTextNode(ArmLogicTreeNode):
-    """Use to set the content of an UI text."""
+    """Set the text of a element that is given by its name."""
     bl_idname = 'LNCanvasSetTextNode'
     bl_label = 'Set Canvas Text'
     arm_version = 1

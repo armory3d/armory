@@ -4,10 +4,12 @@ import pkgutil
 from arm.logicnode import arm_nodes
 
 # Register node menu categories
-arm_nodes.add_category('Logic', icon='OUTLINER', section="basic")
+arm_nodes.add_category('Logic', icon='OUTLINER', section="basic",
+                       description="Logic nodes are used to control execution flow using branching, loops, gates etc.")
 arm_nodes.add_category('Event', icon='INFO', section="basic")
 arm_nodes.add_category('Input', icon='GREASEPENCIL', section="basic")
-arm_nodes.add_category('Native', icon='MEMORY', section="basic")
+arm_nodes.add_category('Native', icon='MEMORY', section="basic",
+                       description="The Native category contains nodes which interact with the system (Input/Output functionality, etc.) or Haxe.")
 
 arm_nodes.add_category('Camera', icon='OUTLINER_OB_CAMERA', section="data")
 arm_nodes.add_category('Material', icon='MATERIAL', section="data")
@@ -27,7 +29,8 @@ arm_nodes.add_category('Random', icon='SEQ_HISTOGRAM', section="values")
 arm_nodes.add_category('String', icon='SORTALPHA', section="values")
 arm_nodes.add_category('Variable', icon='OPTIONS', section="values")
 
-arm_nodes.add_category('Canvas', icon='RENDERLAYERS', section="graphics")
+arm_nodes.add_category('Canvas', icon='RENDERLAYERS', section="graphics",
+                       description="Note: To get the canvas, be sure that the node(s) and the canvas (UI) is attached to the same object.")
 arm_nodes.add_category('Postprocess', icon='FREEZE', section="graphics")
 arm_nodes.add_category('Renderpath', icon='STICKY_UVS_LOC', section="graphics")
 

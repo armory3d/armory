@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class WriteStorageNode(ArmLogicTreeNode):
-    """Use to store a content into a file."""
+    """Use to store a content into a file.
+
+    @seeNode Read Storage"""
     bl_idname = 'LNWriteStorageNode'
     bl_label = 'Write Storage'
     arm_version = 1

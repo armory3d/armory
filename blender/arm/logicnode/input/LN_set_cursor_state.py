@@ -1,7 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
 class SetCursorStateNode(ArmLogicTreeNode):
-    """Use to set the state of the cursor."""
+    """Set the state of the mouse cursor.
+
+    @seeNode Get Cursor State
+
+    @option Hide Locked: hide and lock or unhide and unlock the mouse cursor.
+    @output Hide: hide/unhide the mouse cursor.
+    @output Lock: lock/unlock the mouse cursor."""
     bl_idname = 'LNSetCursorStateNode'
     bl_label = 'Set Cursor State'
     arm_version = 1

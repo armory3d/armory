@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetRotationNode(ArmLogicTreeNode):
-    """Use to get the rotation of an object."""
+    """Returns the current rotation of the given object."""
     bl_idname = 'LNGetRotationNode'
     bl_label = 'Get Object Rotation'
     arm_version = 1

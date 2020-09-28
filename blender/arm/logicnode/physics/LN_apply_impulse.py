@@ -1,7 +1,16 @@
 from arm.logicnode.arm_nodes import *
 
 class ApplyImpulseNode(ArmLogicTreeNode):
-    """Use to apply impulse in a rigid body."""
+    """Applies a specified impulse to a given rigid body.
+
+    @seeNode Apply Impulse At Location
+    @seeNode Apply Force
+    @seeNode Apply Force At Location
+
+    @input Impulse: the impulse vector
+    @input On Local Axis: if `true`, interpret the impulse vector as in
+        object space
+    """
     bl_idname = 'LNApplyImpulseNode'
     bl_label = 'Apply Impulse'
     arm_version = 1

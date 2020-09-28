@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetMouseMovementNode(ArmLogicTreeNode):
-    """Use to get the movement coordinates of the mouse."""
+    """Get the movement coordinates of the mouse."""
     bl_idname = 'LNGetMouseMovementNode'
     bl_label = 'Get Mouse Movement'
     arm_version = 1

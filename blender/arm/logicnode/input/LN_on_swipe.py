@@ -17,9 +17,9 @@ class NodeAddOutputButton(bpy.types.Operator):
         return ''
 
     def execute(self, context):
-        global array_nodes 
-        node = array_nodes[self.node_index]    
-        outs = node.outputs        
+        global array_nodes
+        node = array_nodes[self.node_index]
+        outs = node.outputs
         outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
         outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
         outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
@@ -45,7 +45,7 @@ class NodeRemoveOutputButton(bpy.types.Operator):
 
 # Class SwipeNode
 class OnSwipeNode(ArmLogicTreeNode):
-    """Runs the output when the swipe is done."""
+    """Activates the output when there is a swipe event."""
     bl_idname = 'LNOnSwipeNode'
     bl_label = 'On Swipe'
     arm_version = 1
@@ -55,8 +55,8 @@ class OnSwipeNode(ArmLogicTreeNode):
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):      
-        super(OnSwipeNode, self).init(context)  
+    def init(self, context):
+        super(OnSwipeNode, self).init(context)
         self.inputs.new('NodeSocketFloat', 'Time')
         self.inputs[-1].default_value = 0.15
         self.inputs.new('NodeSocketInt', 'Min Length (px)')
@@ -68,14 +68,14 @@ class OnSwipeNode(ArmLogicTreeNode):
 
     # Draw node buttons
     def draw_buttons(self, context, layout):
-        row = layout.row(align=True) 
+        row = layout.row(align=True)
         column = row.column(align=True)
-        # Button add output    
+        # Button add output
         op = column.operator('arm.add_output_4_parameters', text='Add 4 States', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
         # Disable/Enabled button
         if (len(self.outputs) == self.max_outputs):
-            column.enabled = False 
+            column.enabled = False
         # Button remove output
         column = row.column(align=True)
         op2 = column.operator('arm.remove_output_4_parameters', text='', icon='X', emboss=True)

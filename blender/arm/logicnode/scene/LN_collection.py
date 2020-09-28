@@ -4,7 +4,9 @@ from arm.logicnode.arm_nodes import *
 
 
 class GroupNode(ArmLogicTreeNode):
-    """TO DO."""
+    """Returns the collection's objects as an array.
+
+    @seeNode Get Collection"""
     bl_idname = 'LNGroupNode'
     bl_label = 'Collection'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MouseNode(ArmLogicTreeNode):
-    """Runs the output when the action over the button is done."""
+    """Activates the output when there is a mouse button event."""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
     arm_version = 1

@@ -1,7 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
 class GetContactsNode(ArmLogicTreeNode):
-    """Use to get the contacts of a rigid body."""
+    """Returns an array with all objects that are colliding with the
+    given object.
+
+    @seeNode Get First Contact
+    """
     bl_idname = 'LNGetContactsNode'
     bl_label = 'Get Contacts'
     arm_version = 1
