@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class ReadStorageNode(ArmLogicTreeNode):
-    """Use to read a stored content."""
+    """Use to read a stored content.
+
+    @seeNode Write Storage"""
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
     arm_version = 1

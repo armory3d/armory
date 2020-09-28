@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class InverseNode(ArmLogicTreeNode):
-    """Runs the output only if the connected input is not running."""
+    """Activates the output if the input is not active."""
     bl_idname = 'LNInverseNode'
     bl_label = 'Inverse Output'
     arm_version = 1

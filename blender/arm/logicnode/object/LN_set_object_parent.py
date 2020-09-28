@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class SetParentNode(ArmLogicTreeNode):
-    """Use to set the parent of an object."""
+    """Set the direct parent (nearest in the hierarchy) of an object.
+
+    @seeNode Get Object Parent"""
     bl_idname = 'LNSetParentNode'
     bl_label = 'Set Object Parent'
     arm_version = 1

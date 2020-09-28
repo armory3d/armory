@@ -2,7 +2,10 @@ from arm.logicnode.arm_nodes import *
 
 
 class IsNoneNode(ArmLogicTreeNode):
-    """Runs the output if the input value is null."""
+    """Passes through its activation only if the plugged in value is
+    `null` (no value).
+
+    @seeNode Is Not None"""
     bl_idname = 'LNIsNoneNode'
     bl_label = 'Is None'
     arm_version = 1

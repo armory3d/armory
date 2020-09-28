@@ -13,7 +13,7 @@ class ArrayAddNode extends LogicNode {
 		if (ar == null) return;
 
 		// "Modify Original" == `false` -> Copy the input array
-		if (!inputs[3].get()) {
+		if (!inputs[2].get()) {
 			ar = ar.copy();
 		}
 
@@ -24,7 +24,7 @@ class ArrayAddNode extends LogicNode {
 				// "Unique Values" options only supports primitive data types
 				// for now, a custom indexOf() or contains() method would be
 				// required to compare values of other types
-				if (!inputs[2].get() || ar.indexOf(value) == -1) {
+				if (!inputs[3].get() || ar.indexOf(value) == -1) {
 					ar.push(value);
 				}
 			}

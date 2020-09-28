@@ -1,7 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class LoopBreakNode(ArmLogicTreeNode):
-    """TO DO."""
+    """Terminates the currently executing loop (only one loop is
+    executed at once).
+
+    @seeNode Loop
+    @seeNode While
+    """
     bl_idname = 'LNLoopBreakNode'
     bl_label = 'Loop Break'
     arm_version = 1

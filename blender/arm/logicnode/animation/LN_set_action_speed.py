@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetActionSpeedNode(ArmLogicTreeNode):
-    """Use to set the speed of an action."""
+    """Set the current action playback speed."""
     bl_idname = 'LNSetActionSpeedNode'
     bl_label = 'Set Action Speed'
     arm_version = 1

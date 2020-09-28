@@ -1,10 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorNode(ArmLogicTreeNode):
-    """Use to hold a vector as a variable."""
+    """Stores a three-dimensional vector as a variable."""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
-    arm_version=1
+    arm_version = 1
 
     def init(self, context):
         super(VectorNode, self).init(context)

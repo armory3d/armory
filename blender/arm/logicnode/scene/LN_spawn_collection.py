@@ -4,7 +4,26 @@ from arm.logicnode.arm_nodes import *
 
 
 class SpawnCollectionNode(ArmLogicTreeNode):
-    """Use to spawn a collection to the current scene."""
+    """
+    When activated, this node spawns a new instance of the selected
+    collection. Each spawned instance has an empty owner object to
+    control the instance as a whole (like Blender uses it for collection
+    instances).
+
+    @input In: activates the node.
+    @input Transform: the transformation of the instance that should be
+        spawned. Please note that the collection's instance offset is
+        also taken into account.
+
+    @output Out: activated when a collection instance was spawned. It is
+        not activated when no collection is selected.
+    @output Top-Level Objects: all objects in the last spawned
+        collection that are direct children of the owner object of the
+        collection's instance.
+    @output All Objects: all objects in the last spawned collection.
+    @output Owner Object: The owning object of the last spawned
+        collection's instance.
+    """
     bl_idname = 'LNSpawnCollectionNode'
     bl_label = 'Spawn Collection'
     arm_version = 1

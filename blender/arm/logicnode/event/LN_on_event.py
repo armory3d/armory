@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class OnEventNode(ArmLogicTreeNode):
-    """Runs the output when the event is received."""
+    """Activates the output when the given event is received.
+
+    @seeNode Send Event To Object
+    @seeNode Send Event"""
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
     arm_version = 1

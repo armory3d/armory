@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PlayTilesheetNode(ArmLogicTreeNode):
-    """Use to play a tilesheet."""
+    """Play a tilesheet action."""
     bl_idname = 'LNPlayTilesheetNode'
     bl_label = 'Play Tilesheet'
     arm_version = 1

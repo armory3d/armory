@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class SetGravityNode(ArmLogicTreeNode):
-    """Use to set the gravity of the world."""
+    """Set the world gravity.
+
+    @seeNode Get World Gravity
+    """
     bl_idname = 'LNSetGravityNode'
     bl_label = 'Set Gravity'
     arm_version = 1

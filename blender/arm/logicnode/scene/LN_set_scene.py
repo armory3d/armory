@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetSceneNode(ArmLogicTreeNode):
-    """Use to set the active scene."""
+    """Set the active scene."""
     bl_idname = 'LNSetSceneNode'
     bl_label = 'Set Scene'
     arm_version = 1

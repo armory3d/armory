@@ -1,7 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
 class SetPropertyNode(ArmLogicTreeNode):
-    """Use to set the value of an object property."""
+    """Set the value of an object property.
+
+    This node can be used to share variables between different traits.
+    If the trait(s) you want to access the variable with are on
+    different objects, use the *[`Global Object`](#global-object)*
+    node to store the data. Every trait can access this one.
+
+    @seeNode Get Object Property"""
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Object Property'
     arm_version = 1

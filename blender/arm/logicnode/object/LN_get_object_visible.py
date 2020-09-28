@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class GetVisibleNode(ArmLogicTreeNode):
-    """Use to get if an object or its components are visible."""
+    """Returns whether a given object or its visual components are
+    visible.
+
+    @seeNode Set Object Visible"""
     bl_idname = 'LNGetVisibleNode'
     bl_label = 'Get Object Visible'
     arm_version = 1

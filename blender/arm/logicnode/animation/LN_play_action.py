@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PlayActionNode(ArmLogicTreeNode):
-    """Use to play an action."""
+    """Play an action."""
     bl_idname = 'LNPlayActionNode'
     bl_label = 'Play Action'
     arm_version = 1

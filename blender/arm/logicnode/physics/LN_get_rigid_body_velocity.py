@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetVelocityNode(ArmLogicTreeNode):
-    """Use to get the world velocity of a rigid body."""
+    """Get the world velocity of a rigid body."""
     bl_idname = 'LNGetVelocityNode'
     bl_label = 'Get Rigid Body Velocity'
     arm_version = 1

@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class SceneRootNode(ArmLogicTreeNode):
-    """Use to get all objects in the scene. Never name a object as 'Root'."""
+    """The root object of the current scene."""
     bl_idname = 'LNSceneRootNode'
-    bl_label = 'Get Scene Objects'
+    bl_label = 'Get Scene Root'
     arm_version = 1
 
     def init(self, context):

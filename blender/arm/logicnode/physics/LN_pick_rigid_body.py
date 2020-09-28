@@ -1,7 +1,8 @@
 from arm.logicnode.arm_nodes import *
 
 class PickObjectNode(ArmLogicTreeNode):
-    """Use to pick the rigid body in a location using the screen coordinates."""
+    """Use to pick the rigid body in a location using the screen
+    coordinates (only x/y values are used)."""
     bl_idname = 'LNPickObjectNode'
     bl_label = 'Pick Rigid Body'
     arm_version = 1

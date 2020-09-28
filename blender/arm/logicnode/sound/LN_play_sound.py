@@ -4,7 +4,28 @@ from arm.logicnode.arm_nodes import *
 
 
 class PlaySoundNode(ArmLogicTreeNode):
-    """Use to play a sound."""
+    """Plays a sound.
+
+    @input Play: Plays the sound, or if paused, resumes the playback.
+        The exact behaviour depends on the Retrigger option (see below).
+    @input Pause: Pauses the playing sound. If no sound is playing,
+        nothing happens.
+    @input Stop: Stops the playing sound. If the playback is paused,
+        this will reset the playback position to the start of the sound.
+
+    @output Out: activated once when Play is activated.
+    @output Running: activated while the playback is active.
+    @output Done: activated when the playback has finished or was
+        stopped manually.
+
+    @option Sound: The sound that will be played.
+    @option Loop: Whether to loop the playback.
+    @option Retrigger: If true, the playback position will be reset to
+        the beginning on each activation of Play. If false, the playback
+        will continue at the current position.
+    @option Sample Rate: Manually override the sample rate of the sound
+        (this controls the pitch and the playback speed).
+    """
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
     arm_version = 1
@@ -16,7 +37,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         default=False)
     property2: BoolProperty(
         name='Retrigger',
-        description='Play the sound from the beginning everytime',
+        description='Play the sound from the beginning every time',
         default=False)
     property3: BoolProperty(
         name='Use Custom Sample Rate',

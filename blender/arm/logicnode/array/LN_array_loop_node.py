@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class ArrayLoopNode(ArmLogicTreeNode):
-    """Use to loop trought an array."""
+    """Loop through each item of the given array."""
     bl_idname = 'LNArrayLoopNode'
     bl_label = 'Array Loop'
     arm_version = 1

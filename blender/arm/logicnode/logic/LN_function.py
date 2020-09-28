@@ -2,9 +2,11 @@ from arm.logicnode.arm_nodes import *
 
 
 class FunctionNode(ArmLogicTreeNode):
-    """Runs the output when the function is called."""
+    """Creates a reusable function that can be called by the
+    [Call Function](#call-function) node."""
     bl_idname = 'LNFunctionNode'
     bl_label = 'Function'
+    bl_description = 'Creates a reusable function that can be called by the Call Function node'
     arm_version = 1
     min_outputs = 1
 

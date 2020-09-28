@@ -1,7 +1,15 @@
 from arm.logicnode.arm_nodes import *
 
 class GamepadNode(ArmLogicTreeNode):
-    """Runs the output when the action over the gamepad is done."""
+    """Activates the output when there is a gamepad event.
+
+    @seeNode Gamepad Coords
+
+    @input Gamepad: the ID of the gamepad.
+
+    @option State: the state of the gamepad button to listen to.
+    @option Button: the gamepad button that should activate the output.
+    """
     bl_idname = 'LNMergedGamepadNode'
     bl_label = 'Gamepad'
     arm_version = 1

@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class SetVisibleNode(ArmLogicTreeNode):
-    """Use to set if an object is visible."""
+    """Set the visibility of a given object.
+
+    @seeNode Get Object Visible"""
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Object Visible'
     arm_version = 1

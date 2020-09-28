@@ -1,7 +1,19 @@
 from arm.logicnode.arm_nodes import *
 
 class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
-    """Use to apply impulse in a rigid body at a specific location."""
+    """Applies an impulse to a rigid body at a specified position.
+
+    @seeNode Apply Impulse
+    @seeNode Apply Force
+    @seeNode Apply Force At Location
+
+    @input Impulse: the impulse vector
+    @input Impulse On Local Axis: if `true`, interpret the impulse vector as in
+        object space
+    @input Location: the location where to apply the impulse
+    @input Location On Local Axis: if `true`, use the location relative
+        to the objects location, otherwise use world coordinates
+    """
     bl_idname = 'LNApplyImpulseAtLocationNode'
     bl_label = 'Apply Impulse At Location'
     arm_version = 1

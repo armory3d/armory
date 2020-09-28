@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class MergeNode(ArmLogicTreeNode):
-    """Runs the output when any connected input is running. The output execution will vary depending of inputs connected to it running."""
+    """Activates the output when any connected input is active.
+
+    @option New: Add a new input socket.
+    @option X Button: Remove the lowermost input socket."""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
     arm_version = 1

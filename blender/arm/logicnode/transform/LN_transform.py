@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TransformNode(ArmLogicTreeNode):
-    """TO DO."""
+    """Stores location, rotation, scale values in vector form."""
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'
     arm_version = 1

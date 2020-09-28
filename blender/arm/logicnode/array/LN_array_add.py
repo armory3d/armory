@@ -1,7 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayAddNode(ArmLogicTreeNode):
-    """Use to add a value to an array."""
+    """Add a value to an array.
+
+    @input Array: the array to manipulate.
+    @input Modify Original: if `false`, the input array is copied before adding the value.
+    @input Unique Values: if `true`, values may occur only once in that array (only primitive data types are supported).
+    """
     bl_idname = 'LNArrayAddNode'
     bl_label = 'Array Add'
     arm_version = 1
@@ -13,8 +18,8 @@ class ArrayAddNode(ArmLogicTreeNode):
         super(ArrayAddNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketBool', 'Unique Values')
         self.add_input('NodeSocketBool', 'Modify Original', default_value=True)
+        self.add_input('NodeSocketBool', 'Unique Values')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketArray', 'Array')

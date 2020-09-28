@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class ReadFileNode(ArmLogicTreeNode):
-    """Use to get the content of a file."""
+    """Get the content of a file.
+
+    @seeNode Write File"""
     bl_idname = 'LNReadFileNode'
     bl_label = 'Read File'
     arm_version = 1

@@ -1,10 +1,20 @@
 from arm.logicnode.arm_nodes import *
 
 class OnContactNode(ArmLogicTreeNode):
-    """Runs the output when the rigid body make contact with another rigid body."""
+    """Activates the output when the rigid body make contact with
+    another rigid body.
+
+    @option Begin: the output is activated on the first frame when the
+        two objects have contact
+    @option End: the output is activated on the frame after the last
+        frame when the two objects had contact
+    @option Overlap: the output is activated on each frame the object
+        have contact
+    """
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),

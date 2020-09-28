@@ -1,7 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySliceNode(ArmLogicTreeNode):
-    """TO DO. Search for haxe array slice."""
+    """Creates a shallow copy of the given array in the specified range.
+
+    @see [Haxe API](https://api.haxe.org/Array.html#slice)"""
     bl_idname = 'LNArraySliceNode'
     bl_label = 'Array Slice'
     arm_version = 1
