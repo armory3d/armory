@@ -1,10 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class RotateObjectAroundAxisNode(ArmLogicTreeNode):
-    """Use to rotate an object around an axis. Deprecated."""
+    """Deprecated. It is recommended to use the 'Rotate Object' node instead."""
     bl_idname = 'LNRotateObjectAroundAxisNode'
-    bl_label = 'Rotate Object Around Axis'
-    bl_description = 'Rotate Object Around Axis (Depreciated: use "Rotate Object")'
+    bl_label = 'Rotate Object Around Axis (Deprecated)'
+    bl_description = "Please use the \"Rotate Object\" node instead"
     bl_icon = 'ERROR'
     arm_version=2
 
@@ -26,9 +26,5 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
             property_defaults={'property0': "Angle Axies (Radians)"}
         )
 
-    def draw_buttons(self, context, layout):
-        row = layout.row(align=True)
-        row.label(text='Depreciated. Consider using "Rotate Object"')
 
-add_node(RotateObjectAroundAxisNode, category=PKG_AS_CATEGORY, section='rotation', is_obsolete=True)
-
+add_node(RotateObjectAroundAxisNode, category='transform', section='rotation', is_obsolete=True)

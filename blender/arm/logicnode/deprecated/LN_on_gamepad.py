@@ -1,10 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class OnGamepadNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Gamepad' node instead."""
+    """Deprecated. It is recommended to use the 'Gamepad' node instead."""
     bl_idname = 'LNOnGamepadNode'
-    bl_label = 'On Gamepad'
-    arm_version = 1
+    bl_label = "On Gamepad (Deprecated)"
+    bl_description = "Please use the \"Gamepad\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -44,4 +46,15 @@ class OnGamepadNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnGamepadNode, category=PKG_AS_CATEGORY, section='gamepad')
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            "LNOnGamepadNode", self.arm_version,
+            "LNMergedGamepadNode", 1,
+            in_socket_mapping={0: 0}, out_socket_mapping={0: 0},
+            property_mapping={"property0": "property0", "property1": "property1"}
+        )
+
+add_node(OnGamepadNode, category='input', section='gamepad', is_obsolete=True)

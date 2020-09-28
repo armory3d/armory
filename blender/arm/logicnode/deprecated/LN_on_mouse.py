@@ -1,10 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
 class OnMouseNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Mouse' node instead."""
+    """Deprecated. It is recommended to use the 'Mouse' node instead."""
     bl_idname = 'LNOnMouseNode'
-    bl_label = 'On Mouse'
-    arm_version = 1
+    bl_label = "On Mouse (Deprecated)"
+    bl_description = "Please use the \"Mouse\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
+
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -25,4 +28,15 @@ class OnMouseNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnMouseNode, category=PKG_AS_CATEGORY, section='mouse')
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            "LNOnMouseNode", self.arm_version,
+            "LNMergedMouseNode", 1,
+            in_socket_mapping={}, out_socket_mapping={0: 0},
+            property_mapping={"property0": "property0", "property1": "property1"}
+        )
+
+add_node(OnMouseNode, category='input', section='mouse', is_obsolete=True)
