@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class VirtualButtonNode(ArmLogicTreeNode):
     """Runs the output when the action over the virtual button is done."""
     bl_idname = 'LNMergedVirtualButtonNode'
-    bl_label = 'On Virtual Button'
+    bl_label = 'Virtual Button'
     arm_version = 1
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),

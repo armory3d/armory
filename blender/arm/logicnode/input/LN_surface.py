@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SurfaceNode(ArmLogicTreeNode):
     """Runs the output when the defined action over the screen is done."""
     bl_idname = 'LNMergedSurfaceNode'
-    bl_label = 'On Surface'
+    bl_label = 'Surface'
     arm_version = 1
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
