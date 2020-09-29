@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class GetRigidBodyDataNode(ArmLogicTreeNode):
     """Use to get the data of a rigid body."""
     bl_idname = 'LNGetRigidBodyDataNode'
-    bl_label = 'Get Rigid Body Data'
+    bl_label = 'Get RB Data'
     arm_version = 1
 
     def init(self, context):

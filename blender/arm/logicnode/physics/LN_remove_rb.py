@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class RemovePhysicsNode (ArmLogicTreeNode):
     """Use to delete a rigid body from an object."""
     bl_idname = 'LNRemovePhysicsNode'
-    bl_label = 'Remove Rigid Body'
+    bl_label = 'Remove RB'
     arm_version = 1
 
     def init(self, context):

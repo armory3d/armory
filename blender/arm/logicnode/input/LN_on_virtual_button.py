@@ -1,8 +1,8 @@
 from arm.logicnode.arm_nodes import *
 
-class OnVirtualButtonNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use 'Virtual Button' node instead."""
-    bl_idname = 'LNOnVirtualButtonNode'
+class VirtualButtonNode(ArmLogicTreeNode):
+    """Runs the output when the action over the virtual button is done."""
+    bl_idname = 'LNMergedVirtualButtonNode'
     bl_label = 'On Virtual Button'
     arm_version = 1
     property0: EnumProperty(
@@ -13,11 +13,12 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     property1: StringProperty(name='', default='button')
 
     def init(self, context):
-        super(OnVirtualButtonNode, self).init(context)
+        super(VirtualButtonNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnVirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual')
+add_node(VirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual')

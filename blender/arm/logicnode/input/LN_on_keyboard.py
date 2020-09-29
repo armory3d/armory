@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class KeyboardNode(ArmLogicTreeNode):
     """Activates the output when there is a keyboard event."""
     bl_idname = 'LNMergedKeyboardNode'
-    bl_label = 'Keyboard'
+    bl_label = 'On Keyboard'
     arm_version = 1
 
     property0: EnumProperty(

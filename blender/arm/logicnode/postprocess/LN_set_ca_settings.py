@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class ChromaticAberrationSetNode(ArmLogicTreeNode):
     """Use to set the chromatic aberration post-processing settings."""
     bl_idname = 'LNChromaticAberrationSetNode'
-    bl_label = 'Set Chromatic Aberration Settings'
+    bl_label = 'Set CA Settings'
     arm_version = 1
 
     def init(self, context):

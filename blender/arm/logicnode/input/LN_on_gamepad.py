@@ -11,7 +11,7 @@ class GamepadNode(ArmLogicTreeNode):
     @option Button: the gamepad button that should activate the output.
     """
     bl_idname = 'LNMergedGamepadNode'
-    bl_label = 'Gamepad'
+    bl_label = 'On Gamepad'
     arm_version = 1
 
     property0: EnumProperty(

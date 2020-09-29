@@ -7,7 +7,7 @@ class GetContactsNode(ArmLogicTreeNode):
     @seeNode Get First Contact
     """
     bl_idname = 'LNGetContactsNode'
-    bl_label = 'Get Contacts'
+    bl_label = 'Get RB Contacts'
     arm_version = 1
 
     def init(self, context):

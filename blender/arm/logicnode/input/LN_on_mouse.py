@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class MouseNode(ArmLogicTreeNode):
     """Activates the output when there is a mouse button event."""
     bl_idname = 'LNMergedMouseNode'
-    bl_label = 'Mouse'
+    bl_label = 'On Mouse'
     arm_version = 1
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
