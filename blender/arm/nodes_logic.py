@@ -79,6 +79,9 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
         if hasattr(nodetype, 'bl_description'):
             return nodetype.bl_description.split('.')[0]
 
+        if nodetype.__doc__ is None:
+            return ""
+
         return nodetype.__doc__.split('.')[0]
 
     @classmethod
