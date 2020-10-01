@@ -12,7 +12,7 @@ class SSAOGetNode extends LogicNode {
 			case 0: armory.renderpath.Postprocess.ssao_uniforms[0];
 			case 1: armory.renderpath.Postprocess.ssao_uniforms[1];
 			case 2: armory.renderpath.Postprocess.ssao_uniforms[2];
-			default: null;
+			default: 0.0;
 		}
 	}
 }
