@@ -1,5 +1,5 @@
 package armory.logicnode;
-import iron.math.Vec3;
+import iron.math.Vec4;
 import iron.math.Vec2;
 
 class OnSwipeNode extends LogicNode {
@@ -22,12 +22,6 @@ class OnSwipeNode extends LogicNode {
 
 	// Update
 	function update() {
-		// In parameter
-		if (inputs.length > 1)
-		{
-			time_delta = inputs[0].get();
-			minimal_length = inputs[1].get();
-		}
 		var surface = iron.system.Input.getSurface();
 		// Check swipe end
 		if (swipe == true) {
@@ -51,6 +45,12 @@ class OnSwipeNode extends LogicNode {
 		}		
 		// Check swipe start
 		else if ((surface.started() == true)) {
+			// In parameter
+			if (inputs.length > 1)
+			{
+				time_delta = inputs[0].get();
+				minimal_length = inputs[1].get();
+			}
 			point_start.x = surface.x;
 			point_start.y = surface.y;
 			swipe = true;
@@ -187,7 +187,7 @@ class OnSwipeNode extends LogicNode {
 			// Out value - Direction (Vector)
 			case 1: { 
 				direction = direction.normalize();
-				return new Vec3(direction.x, direction.y, 0);
+				return new Vec4(direction.x, direction.y, 0, 0);
 			}
 			// Out value - Length (px)
 			case 2: return length;
