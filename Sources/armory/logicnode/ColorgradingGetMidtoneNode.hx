@@ -14,7 +14,7 @@ class ColorgradingGetMidtoneNode extends LogicNode {
             		case 3: armory.renderpath.Postprocess.colorgrading_midtone_uniforms[3];
             		case 4: armory.renderpath.Postprocess.colorgrading_midtone_uniforms[4];
             		case 5: armory.renderpath.Postprocess.colorgrading_midtone_uniforms[5];
-            		default: null;
+            		default: 0.0;
 		}
 	}
 

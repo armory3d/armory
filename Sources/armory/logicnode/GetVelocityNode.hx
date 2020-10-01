@@ -22,6 +22,6 @@ class GetVelocityNode extends LogicNode {
 			default: null;
 		}
 #end
-
+	return null;
 	}
 }
