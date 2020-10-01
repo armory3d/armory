@@ -4,7 +4,9 @@ class OnSurfaceNode(ArmLogicTreeNode):
     """Deprecated. Is recommended to use Surface node instead."""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
-    arm_version = 1
+    bl_description = "Please use the \"Surface\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),
@@ -19,4 +21,4 @@ class OnSurfaceNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(OnSurfaceNode, category=PKG_AS_CATEGORY, section='surface')
+add_node(OnSurfaceNode, category=PKG_AS_CATEGORY, section='surface', is_obsolete=True)

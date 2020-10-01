@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class NotNode(ArmLogicTreeNode):
     """Inverts a plugged in boolean, so if its input is `true` it outputs `false`."""
     bl_idname = 'LNNotNode'
-    bl_label = 'Inverse Bool'
+    bl_label = 'Invert Bool'
     arm_version = 1
 
     def init(self, context):

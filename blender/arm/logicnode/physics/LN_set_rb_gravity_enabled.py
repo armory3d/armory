@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SetGravityEnabledNode(ArmLogicTreeNode):
     """Use to set if the gravity is enabled for a rigid body."""
     bl_idname = 'LNSetGravityEnabledNode'
-    bl_label = 'Set Rigid Body Gravity'
+    bl_label = 'Set RB Gravity Enabled'
     arm_version = 1
 
     def init(self, context):

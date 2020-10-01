@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class VectorMixNode(ArmLogicTreeNode):
     """Use to interpolate between vectors."""
     bl_idname = 'LNVectorMixNode'
-    bl_label = 'Vector Mix'
+    bl_label = 'Mix Vector'
     arm_version = 1
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),

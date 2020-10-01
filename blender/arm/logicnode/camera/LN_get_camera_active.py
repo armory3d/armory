@@ -5,7 +5,7 @@ class ActiveCameraNode(ArmLogicTreeNode):
 
     @seeNode Set Active Camera"""
     bl_idname = 'LNActiveCameraNode'
-    bl_label = 'Get Active Camera'
+    bl_label = 'Get Camera Active'
     arm_version = 1
 
     def init(self, context):

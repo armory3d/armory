@@ -6,7 +6,7 @@ class SetGravityNode(ArmLogicTreeNode):
     @seeNode Get World Gravity
     """
     bl_idname = 'LNSetGravityNode'
-    bl_label = 'Set Gravity'
+    bl_label = 'Set World Gravity'
     arm_version = 1
 
     def init(self, context):

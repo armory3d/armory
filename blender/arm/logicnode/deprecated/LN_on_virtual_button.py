@@ -4,7 +4,9 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     """Deprecated. Is recommended to use 'Virtual Button' node instead."""
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'
-    arm_version = 1
+    bl_description = "Please use the \"Virtual Button\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -20,4 +22,4 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(OnVirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual')
+add_node(OnVirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual', is_obsolete=True)

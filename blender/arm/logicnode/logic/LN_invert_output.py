@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 class InverseNode(ArmLogicTreeNode):
     """Activates the output if the input is not active."""
     bl_idname = 'LNInverseNode'
-    bl_label = 'Inverse Output'
+    bl_label = 'Invert Output'
     arm_version = 1
 
     def init(self, context):
