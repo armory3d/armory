@@ -13,7 +13,7 @@ class LenstextureGetNode extends LogicNode {
             		case 2: armory.renderpath.Postprocess.lenstexture_uniforms[2];
             		case 3: armory.renderpath.Postprocess.lenstexture_uniforms[3];
             		case 4: armory.renderpath.Postprocess.lenstexture_uniforms[4];
-            		default: null;
+            		default: 0.0;
 		}
 	}
 }
