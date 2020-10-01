@@ -10,7 +10,7 @@ class ChromaticAberrationGetNode extends LogicNode {
 		return switch (from) {
 			case 0: armory.renderpath.Postprocess.chromatic_aberration_uniforms[0];
 			case 1: armory.renderpath.Postprocess.chromatic_aberration_uniforms[1];
-			default: null;
+			default: 0.0;
 		}
 	}
 }
