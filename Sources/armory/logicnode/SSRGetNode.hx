@@ -7,18 +7,14 @@ class SSRGetNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-        if(from == 0) {
-            return armory.renderpath.Postprocess.ssr_uniforms[0];
-        } else if (from == 1) {
-            return armory.renderpath.Postprocess.ssr_uniforms[1];
-        }  else if (from == 2) {
-            return armory.renderpath.Postprocess.ssr_uniforms[2];
-        }  else if (from == 3) {
-            return armory.renderpath.Postprocess.ssr_uniforms[3];
-        }  else if (from == 4) {
-            return armory.renderpath.Postprocess.ssr_uniforms[4];
-        } else {
-            return 0.0;
-        }
-    }
+
+		return switch (from) {
+			case 0: armory.renderpath.Postprocess.ssr_uniforms[0];
+			case 1: armory.renderpath.Postprocess.ssr_uniforms[1];
+			case 2: armory.renderpath.Postprocess.ssr_uniforms[2];
+			case 3: armory.renderpath.Postprocess.ssr_uniforms[3];
+			case 4: armory.renderpath.Postprocess.ssr_uniforms[4];
+			default: null;
+		}
+	}
 }

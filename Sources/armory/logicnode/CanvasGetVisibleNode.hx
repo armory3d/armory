@@ -14,6 +14,7 @@ class CanvasGetVisibleNode extends LogicNode {
 #if arm_ui
 	override function get(from: Int): Dynamic { // Null<Bool>
 		var element: String = inputs[0].get();
+
 		if (canvas == null) canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
 		if (canvas == null || !canvas.ready) return null;

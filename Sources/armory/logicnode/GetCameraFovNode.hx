@@ -11,7 +11,7 @@ class GetCameraFovNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var camera: CameraObject = inputs[0].get();
 
-		if (camera == null) return 0.0;
+		if (camera == null) return null;
 
 		return camera.data.raw.fov;
 	}

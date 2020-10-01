@@ -18,7 +18,7 @@ class GetCursorLocationNode extends LogicNode {
 			case 1: mouse.y;
 			case 2: mouse.x * -1;
 			case 3: mouse.y * -1;
-		default: null;
+			default: null;
 		}
 	}
 }

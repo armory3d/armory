@@ -16,8 +16,10 @@ class GetFirstContactNode extends LogicNode {
 #if arm_physics
 		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rbs = physics.getContacts(object.getTrait(RigidBody));
+
 		if (rbs != null && rbs.length > 0) return rbs[0].object;
 #end
+
 		return null;
 	}
 }

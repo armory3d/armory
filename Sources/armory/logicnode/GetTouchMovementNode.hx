@@ -20,7 +20,7 @@ class GetTouchMovementNode extends LogicNode {
 			case 1: touch.movementY;
 			case 2: touch.movementX * multX;
 			case 3: touch.movementY * multY;
-		default: null;
+			default: null;
 		}
 	}
 }
