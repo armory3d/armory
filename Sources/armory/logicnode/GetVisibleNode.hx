@@ -17,7 +17,7 @@ class GetVisibleNode extends LogicNode {
 			case 0: object.visible;
 			case 1: object.visibleMesh;
 			case 2: object.visibleShadow;
-		default: null;
+			default: null;
 		}
 
 	}

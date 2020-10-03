@@ -18,7 +18,7 @@ class GetTouchLocationNode extends LogicNode {
 			case 1: touch.y;
 			case 2: touch.x * -1;
 			case 3: touch.y * -1;
-		default: null;
+			default: null;
 		}
 	}
 }

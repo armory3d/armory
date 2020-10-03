@@ -11,11 +11,13 @@ class GetRotationNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
+
 		if (object == null) {
 			return null;
 		}
 
 		var rot = object.transform.rot;
+
 		switch (from) {
 			case 0:
 				// euler angles

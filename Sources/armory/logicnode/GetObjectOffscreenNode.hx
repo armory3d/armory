@@ -17,7 +17,7 @@ class GetObjectOffscreenNode extends LogicNode {
 			case 0: object.culled;
 			case 1: object.culledMesh;
 			case 2: object.culledShadow;
-		default: null;
+			default: null;
 		}
 
 	}

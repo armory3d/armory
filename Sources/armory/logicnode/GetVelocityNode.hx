@@ -16,11 +16,12 @@ class GetVelocityNode extends LogicNode {
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
 
-		if (rb != null) {
-			if (from == 0) return rb.getLinearVelocity();
-			else if (from == 1) return rb.getAngularVelocity();
+		return switch (from) {
+			case 0: rb.getLinearVelocity();
+			case 1: rb.getAngularVelocity();
+			default: null;
 		}
 #end
-		return null;
+	return null;
 	}
 }

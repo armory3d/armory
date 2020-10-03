@@ -12,6 +12,7 @@ class GetMouseVisibleNode extends LogicNode {
 		var mouse = iron.system.Input.getMouse();
 
 		if (mouse.hidden == false) return true;
+
 		return false;
 	}
 }

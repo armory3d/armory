@@ -13,18 +13,14 @@ class GetWorldNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
-		if (object == null) {
-			return null;
-		}
 
-		switch (property0) {
-			case "Right":
-				return object.transform.world.right();
-			case "Look":
-				return object.transform.world.look();
-			case "Up":
-				return object.transform.world.up();
+		if (object == null) return null;
+
+		return switch (property0) {
+			case "Right": object.transform.world.right();
+			case "Look": return object.transform.world.look();
+			case "Up": return object.transform.world.up();
+			default: null;
 		}
-		return null;
 	}
 }

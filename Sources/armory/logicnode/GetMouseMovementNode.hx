@@ -23,7 +23,7 @@ class GetMouseMovementNode extends LogicNode {
 			case 3: mouse.movementX * multX;
 			case 4: mouse.movementY * multY;
 			case 5: mouse.wheelDelta * multDelta;
-		default: null;
+			default: null;
 		}
 	}
 }
