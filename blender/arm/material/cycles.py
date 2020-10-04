@@ -199,7 +199,7 @@ def parse_shader(node, socket) -> Tuple[str, ...]:
             if parse_surface:
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    arm.log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 out_basecol = parse_vector_input(node.inputs[0])
@@ -1275,9 +1275,6 @@ def get_sdk_path():
 
 def disp_enabled():
     return arm.utils.disp_enabled(arm.make_state.target)
-
-def warn(text):
-    arm.log.warn(text)
 
 def assets_add(path):
     arm.assets.add(path)
