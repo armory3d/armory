@@ -458,7 +458,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'VECT_TRANSFORM': nodes_vector.parse_vectortransform,
         'COMBXYZ': nodes_converter.parse_combxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
-        'DISPLACEMENT': nodes_displacement.parse_displacement,
+        'DISPLACEMENT': nodes_vector.parse_displacement,
     }
 
     if node.type in node_parser_funcs:
