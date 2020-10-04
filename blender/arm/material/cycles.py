@@ -16,7 +16,7 @@
 #
 import os
 import shutil
-from typing import Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import bpy
 from mathutils import Euler, Vector
@@ -27,23 +27,32 @@ import arm.make_state
 import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
-from arm.material.shader import Shader
+from arm.material.cycles_nodes import *
+from arm.material.shader import Shader, ShaderContext
 
 emission_found = False
-particle_info = None # Particle info export
+particle_info: Dict = None # Particle info export
+
+con: ShaderContext
+# Active shader - frag for surface / tese for displacement
 curshader: Shader
 
-def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
+def parse(nodes, con: ShaderContext,
+          vert: Shader, frag: Shader, geom: Shader, tesc: Shader, tese: Shader,
+          parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     custom_particle_node = node_by_name(nodes, 'ArmCustomParticleNode')
-    if output_node != None:
+    if output_node is not None:
         parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only, custom_particle_node)
 
-def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only, custom_particle_node):
+def parse_output(node, _con: ShaderContext,
+                 _vert: Shader, _frag: Shader, _geom: Shader, _tesc: Shader, _tese: Shader,
+                 _parse_surface: bool, _parse_opacity: bool, _parse_displacement: bool, _basecol_only: bool,
+                 custom_particle_node: bpy.types.Node):
     global parsed # Compute nodes only once
     global parents
     global normal_parsed
-    global curshader # Active shader - frag for surface / tese for displacement
+    global curshader
     global con
     global vert
     global frag
@@ -116,7 +125,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
             curshader = vert
         out_disp = parse_displacement_input(node.inputs[2])
         curshader.write('vec3 disp = {0};'.format(out_disp))
-    
+
     if custom_particle_node != None:
         if (not (_parse_displacement and disp_enabled() and node.inputs[2].is_linked)):
             parsed = {}
@@ -139,7 +148,7 @@ def parse_group(node, socket): # Entering group
     parents.pop()
     return out_group
 
-def parse_group_input(node, socket):
+def parse_group_input(node: bpy.types.Node, socket: bpy.types.NodeSocket):
     index = socket_index(node, socket)
     parent = parents.pop() # Leaving group
     inp = parent.inputs[index]
@@ -147,7 +156,7 @@ def parse_group_input(node, socket):
     parents.append(parent) # Return to group
     return res
 
-def parse_input(inp):
+def parse_input(inp: bpy.types.NodeSocket):
     if inp.type == 'SHADER':
         return parse_shader_input(inp)
     elif inp.type == 'RGB':
@@ -159,7 +168,7 @@ def parse_input(inp):
     elif inp.type == 'VALUE':
         return parse_value_input(inp)
 
-def parse_shader_input(inp):
+def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
     if inp.is_linked:
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
@@ -175,7 +184,7 @@ def parse_shader_input(inp):
         out_emission = '0.0'
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission
 
-def parse_shader(node, socket):
+def parse_shader(node, socket) -> Tuple[str, ...]:
     global emission_found
     out_basecol = 'vec3(0.8)'
     out_roughness = '0.0'
@@ -371,7 +380,7 @@ def parse_displacement_input(inp):
     else:
         return None
 
-def parse_vector_input(inp) -> str:
+def parse_vector_input(inp: bpy.types.NodeSocket) -> str:
     if inp.is_linked:
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
@@ -392,6 +401,7 @@ def parse_vector_input(inp) -> str:
                 return to_vec3(inp.default_value)
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
+    """Parses the vector/color output value from the given node and socket."""
     global particle_info
     global sample_bump
     global sample_bump_res
@@ -1096,7 +1106,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
-def parse_value_input(inp) -> str:
+def parse_value_input(inp: bpy.types.NodeSocket) -> str:
     if inp.is_linked:
         link = inp.links[0]
 
@@ -1560,9 +1570,9 @@ def write_normal(inp):
         if normal_res != None:
             curshader.write('n = {0};'.format(normal_res))
 
-def is_parsed(s):
+def is_parsed(node_store_name: str):
     global parsed
-    return s in parsed
+    return node_store_name in parsed
 
 def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
@@ -1599,18 +1609,18 @@ def write_procedurals():
         procedurals_written = True
     return
 
-def glsl_type(t):
-    if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
+def glsl_type(typestr: str):
+    if typestr in ('RGB', 'RGBA', 'VECTOR'):
         return 'vec3'
     else:
         return 'float'
 
-def to_uniform(inp):
+def to_uniform(inp: bpy.types.NodeSocket):
     uname = safesrc(inp.node.name) + safesrc(inp.name)
     curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
-def store_var_name(node):
+def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
@@ -1683,22 +1693,22 @@ def to_vec1(v):
 def to_vec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
 
-def node_by_type(nodes, ntype):
+def node_by_type(nodes, ntype: str) -> bpy.types.Node:
     for n in nodes:
         if n.type == ntype:
             return n
 
-def node_by_name(nodes, name):
+def node_by_name(nodes, name: str) -> bpy.types.Node:
     for n in nodes:
         if n.bl_idname == name:
             return n
 
-def socket_index(node, socket):
+def socket_index(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> int:
     for i in range(0, len(node.outputs)):
         if node.outputs[i] == socket:
             return i
 
-def node_name(s):
+def node_name(s: str) -> str:
     for p in parents:
         s = p.name + '_' + s
     if curshader.write_textures > 0:
@@ -1710,13 +1720,13 @@ def node_name(s):
 
 ##
 
-def make_texture(image_node, tex_name, matname=None):
-    tex = {}
-    tex['name'] = tex_name
-    image = image_node.image
+def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matname: str = None) -> Optional[Dict[str, Any]]:
+    tex = {'name': tex_name}
+
     if matname is None:
         matname = mat_state.material.name
 
+    image = image_node.image
     if image is None:
         return None
 
