@@ -28,7 +28,7 @@ import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
 from arm.material.cycles_nodes import *
-from arm.material.shader import Shader, ShaderContext
+from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 
 emission_found = False
 particle_info: Dict = None # Particle info export
@@ -156,24 +156,25 @@ def parse_group_input(node: bpy.types.Node, socket: bpy.types.NodeSocket):
     parents.append(parent) # Return to group
     return res
 
+
 def parse_input(inp: bpy.types.NodeSocket):
     if inp.type == 'SHADER':
         return parse_shader_input(inp)
-    elif inp.type == 'RGB':
-        return parse_vector_input(inp)
-    elif inp.type == 'RGBA':
-        return parse_vector_input(inp)
-    elif inp.type == 'VECTOR':
+    elif inp.type in ('RGB', 'RGBA', 'VECTOR'):
         return parse_vector_input(inp)
     elif inp.type == 'VALUE':
         return parse_value_input(inp)
 
+
 def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
+    # Use parsed result from node
     if inp.is_linked:
-        l = inp.links[0]
-        if l.from_node.type == 'REROUTE':
-            return parse_shader_input(l.from_node.inputs[0])
-        return parse_shader(l.from_node, l.from_socket)
+        link = inp.links[0]
+        if link.from_node.type == 'REROUTE':
+            return parse_shader_input(link.from_node.inputs[0])
+        return parse_shader(link.from_node, link.from_socket)
+
+    # Use direct socket value
     else:
         out_basecol = 'vec3(0.8)'
         out_roughness = '0.0'
@@ -183,6 +184,7 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
         out_opacity = '1.0'
         out_emission = '0.0'
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission
+
 
 def parse_shader(node, socket) -> Tuple[str, ...]:
     global emission_found
@@ -380,25 +382,32 @@ def parse_displacement_input(inp):
     else:
         return None
 
-def parse_vector_input(inp: bpy.types.NodeSocket) -> str:
+
+def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
+    """Return the parsed result the given input socket."""
+    # Use parsed result from node
     if inp.is_linked:
-        l = inp.links[0]
-        if l.from_node.type == 'REROUTE':
-            return parse_vector_input(l.from_node.inputs[0])
-        res_var = write_result(l)
-        st = l.from_socket.type
-        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
+        link = inp.links[0]
+        if link.from_node.type == 'REROUTE':
+            return parse_vector_input(link.from_node.inputs[0])
+        res_var = write_result(link)
+        st = link.from_socket.type
+        if st in ('RGB', 'RGBA', 'VECTOR'):
             return res_var
-        else: # VALUE
-            return 'vec3({0})'.format(res_var)
+        else:  # VALUE
+            return f'vec3({res_var})'
+
+    # Unlinked reroute
+    elif inp.type == 'VALUE':
+        return to_vec3([0.0, 0.0, 0.0])
+
+    # Use direct socket value
     else:
-        if inp.type == 'VALUE': # Unlinked reroute
-            return to_vec3([0.0, 0.0, 0.0])
+        if mat_batch() and inp.is_uniform:
+            return to_uniform(inp)
         else:
-            if mat_batch() and inp.is_uniform:
-                return to_uniform(inp)
-            else:
-                return to_vec3(inp.default_value)
+            return to_vec3(inp.default_value)
+
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
@@ -408,8 +417,8 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
     # Use switch-like lookup via dictionary
     # (better performance, better code readability)
+    # 'NODE_TYPE': parser_function
     node_parser_funcs: Dict[str, Callable] = {
-        # 'NODE_TYPE': parser_function
         'ATTRIBUTE': nodes_input.parse_attribute,
         'GROUP': parse_group,
         'GROUP_INPUT': parse_group_input,
@@ -500,7 +509,9 @@ def parse_normal_map_color_input(inp, strength_input=None):
         con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
-def parse_value_input(inp: bpy.types.NodeSocket) -> str:
+
+def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
+    # Use parsed result from node
     if inp.is_linked:
         link = inp.links[0]
 
@@ -509,17 +520,20 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> str:
 
         res_var = write_result(link)
         socket_type = link.from_socket.type
-        if socket_type == 'RGB' or socket_type == 'RGBA' or socket_type == 'VECTOR':
+        if socket_type in ('RGB', 'RGBA', 'VECTOR'):
             # RGB to BW
             return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
         # VALUE
         else:
             return res_var
+
+    # Use value from socket
     else:
         if mat_batch() and inp.is_uniform:
             return to_uniform(inp)
         else:
             return to_vec1(inp.default_value)
+
 
 def parse_value(node, socket):
     global particle_info
@@ -968,21 +982,30 @@ def is_parsed(node_store_name: str):
     global parsed
     return node_store_name in parsed
 
+
 def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
+    """Return the name of the variable that stores the parsed result
+    from the given node and socket."""
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
+
 def write_result(link: bpy.types.NodeLink) -> Optional[str]:
+    """Write the parsed result of the given node link to the shader."""
     global parsed
+
     res_var = res_var_name(link.from_node, link.from_socket)
+
     # Unparsed node
     if not is_parsed(res_var):
         parsed[res_var] = True
         st = link.from_socket.type
-        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
+
+        if st in ('RGB', 'RGBA', 'VECTOR'):
             res = parse_vector(link.from_node, link.from_socket)
             if res is None:
                 return None
-            curshader.write('vec3 {0} = {1};'.format(res_var, res))
+            curshader.write(f'vec3 {res_var} = {res};')
+
         elif st == 'VALUE':
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
@@ -990,11 +1013,14 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
             if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
                 curshader.add_const('float', res_var, res)
             else:
-                curshader.write('float {0} = {1};'.format(res_var, res))
+                curshader.write(f'float {res_var} = {res};')
+
     # Normal map already parsed, return
     elif link.from_node.type == 'NORMAL_MAP':
         return None
+
     return res_var
+
 
 def write_procedurals():
     global procedurals_written
@@ -1102,7 +1128,9 @@ def socket_index(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> int:
         if node.outputs[i] == socket:
             return i
 
+
 def node_name(s: str) -> str:
+    """Return a unique and safe name for a node for shader code usage."""
     for p in parents:
         s = p.name + '_' + s
     if curshader.write_textures > 0:
