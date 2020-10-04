@@ -1,5 +1,11 @@
-import bpy
 import arm.utils
+
+# Type aliases for type hints to make it easier to see which kind of
+# shader data type is stored in a string
+vec2str = str
+vec3str = str
+vec4str = str
+
 
 class ShaderData:
 
@@ -8,8 +14,7 @@ class ShaderData:
         self.contexts = []
         self.global_elems = [] # bone, weight, ipos, irot, iscl
         self.sd = {}
-        self.data = {}
-        self.data['shader_datas'] = [self.sd]
+        self.data = {'shader_datas': [self.sd]}
         self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.sd['name'] = self.matname + '_data'
         self.sd['contexts'] = []
