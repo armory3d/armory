@@ -2,6 +2,7 @@ import arm.utils
 
 # Type aliases for type hints to make it easier to see which kind of
 # shader data type is stored in a string
+floatstr = str
 vec2str = str
 vec3str = str
 vec4str = str
