@@ -28,6 +28,7 @@ import arm.log
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
 from arm.material.cycles_nodes import *
+from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 
 emission_found = False
@@ -186,15 +187,11 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission
 
 
-def parse_shader(node, socket) -> Tuple[str, ...]:
+def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[str, ...]:
     global emission_found
-    out_basecol = 'vec3(0.8)'
-    out_roughness = '0.0'
-    out_metallic = '0.0'
-    out_occlusion = '1.0'
-    out_specular = '1.0'
-    out_opacity = '1.0'
-    out_emission = '0.0'
+
+    # TODO: Temporary solution
+    parser_state = ParserState(ParserContext.OBJECT, None)
 
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
@@ -204,174 +201,58 @@ def parse_shader(node, socket) -> Tuple[str, ...]:
                     arm.log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
-                out_basecol = parse_vector_input(node.inputs[0])
+                parser_state.out_basecol = parse_vector_input(node.inputs[0])
                 # Occlusion
-                out_occlusion = parse_value_input(node.inputs[2])
+                parser_state.out_occlusion = parse_value_input(node.inputs[2])
                 # Roughness
-                out_roughness = parse_value_input(node.inputs[3])
+                parser_state.out_roughness = parse_value_input(node.inputs[3])
                 # Metallic
-                out_metallic = parse_value_input(node.inputs[4])
+                parser_state.out_metallic = parse_value_input(node.inputs[4])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    out_emission = parse_value_input(node.inputs[6])
+                    parser_state.out_emission = parse_value_input(node.inputs[6])
                     emission_found = True
             if parse_opacity:
-                out_opacity = parse_value_input(node.inputs[1])
+                parser_state.out_opacity = parse_value_input(node.inputs[1])
         else:
             return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
         return parse_group_input(node, socket)
 
-    elif node.type == 'MIX_SHADER':
-        prefix = '' if node.inputs[0].is_linked else 'const '
-        fac = parse_value_input(node.inputs[0])
-        fac_var = node_name(node.name) + '_fac'
-        fac_inv_var = node_name(node.name) + '_fac_inv'
-        curshader.write('{0}float {1} = {2};'.format(prefix, fac_var, fac))
-        curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
-        bc1, rough1, met1, occ1, spec1, opac1, emi1 = parse_shader_input(node.inputs[1])
-        bc2, rough2, met2, occ2, spec2, opac2, emi2 = parse_shader_input(node.inputs[2])
-        if parse_surface:
-            out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
-            out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
-            out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
-            out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
-            out_specular = '({0} * {3} + {1} * {2})'.format(spec1, spec2, fac_var, fac_inv_var)
-            out_emission = '({0} * {3} + {1} * {2})'.format(emi1, emi2, fac_var, fac_inv_var)
-        if parse_opacity:
-            out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
+    # Use switch-like lookup via dictionary
+    # (better performance, better code readability)
+    # 'NODE_TYPE': parser_function
+    node_parser_funcs: Dict[str, Callable] = {
+        'MIX_SHADER': nodes_shader.parse_mixshader,
+        'ADD_SHADER': nodes_shader.parse_addshader,
+        'BSDF_PRINCIPLED': nodes_shader.parse_bsdfprincipled,
+        'BSDF_DIFFUSE': nodes_shader.parse_bsdfdiffuse,
+        'BSDF_GLOSSY': nodes_shader.parse_bsdfdiffuse,
+        'AMBIENT_OCCLUSION': nodes_shader.parse_ambientocclusion,
+        'BSDF_ANISOTROPIC': nodes_shader.parse_bsdfanisotropic,
+        'EMISSION': nodes_shader.parse_emission,
+        'BSDF_GLASS': nodes_shader.parse_bsdfglass,
+        'HOLDOUT': nodes_shader.parse_holdout,
+        'SUBSURFACE_SCATTERING': nodes_shader.parse_subsurfacescattering,
+        'BSDF_TRANSLUCENT': nodes_shader.parse_bsdftranslucent,
+        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftranslucent,
+        'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
+    }
 
-    elif node.type == 'ADD_SHADER':
-        bc1, rough1, met1, occ1, spec1, opac1, emi1 = parse_shader_input(node.inputs[0])
-        bc2, rough2, met2, occ2, spec2, opac2, emi2 = parse_shader_input(node.inputs[1])
-        if parse_surface:
-            out_basecol = '({0} + {1})'.format(bc1, bc2)
-            out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
-            out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
-            out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
-            out_specular = '({0} * 0.5 + {1} * 0.5)'.format(spec1, spec2)
-            out_emission = '({0} * 0.5 + {1} * 0.5)'.format(emi1, emi2)
-        if parse_opacity:
-            out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
+    if node.type in node_parser_funcs:
+        node_parser_funcs[node.type](node, socket, parser_state)
 
-    elif node.type == 'BSDF_PRINCIPLED':
-        if parse_surface:
-            write_normal(node.inputs[19])
-            out_basecol = parse_vector_input(node.inputs[0])
-            # subsurface = parse_vector_input(node.inputs[1])
-            # subsurface_radius = parse_vector_input(node.inputs[2])
-            # subsurface_color = parse_vector_input(node.inputs[3])
-            out_metallic = parse_value_input(node.inputs[4])
-            out_specular = parse_value_input(node.inputs[5])
-            # specular_tint = parse_vector_input(node.inputs[6])
-            out_roughness = parse_value_input(node.inputs[7])
-            # aniso = parse_vector_input(node.inputs[8])
-            # aniso_rot = parse_vector_input(node.inputs[9])
-            # sheen = parse_vector_input(node.inputs[10])
-            # sheen_tint = parse_vector_input(node.inputs[11])
-            # clearcoat = parse_vector_input(node.inputs[12])
-            # clearcoat_rough = parse_vector_input(node.inputs[13])
-            # ior = parse_vector_input(node.inputs[14])
-            # transmission = parse_vector_input(node.inputs[15])
-            # transmission_roughness = parse_vector_input(node.inputs[16])
-            if node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0:
-                out_emission = '({0}.x)'.format(parse_vector_input(node.inputs[17]))
-                emission_found = True
-            # clearcoar_normal = parse_vector_input(node.inputs[20])
-            # tangent = parse_vector_input(node.inputs[21])
-        if parse_opacity:
-            if len(node.inputs) > 20:
-                out_opacity = parse_value_input(node.inputs[18])
+    elif node.type == 'CUSTOM':
+        if node.bl_idname == 'ArmShaderDataNode':
+            return node.parse(frag, vert)
 
-    elif node.type == 'BSDF_DIFFUSE':
-        if parse_surface:
-            write_normal(node.inputs[2])
-            out_basecol = parse_vector_input(node.inputs[0])
-            out_roughness = parse_value_input(node.inputs[1])
-            out_specular = '0.0'
+    elif node.type not in ('GROUP', 'GROUP_INPUT'):
+        # TODO: Print node tree name (save in ParserState)
+        arm.log.warn(f'Material node type {node.type} not supported')
 
-    elif node.type == 'BSDF_GLOSSY':
-        if parse_surface:
-            write_normal(node.inputs[2])
-            out_basecol = parse_vector_input(node.inputs[0])
-            out_roughness = parse_value_input(node.inputs[1])
-            out_metallic = '1.0'
+    return parser_state.get_outs()
 
-    elif node.type == 'AMBIENT_OCCLUSION':
-        if parse_surface:
-            # Single channel
-            out_occlusion = parse_vector_input(node.inputs[0]) + '.r'
-
-    elif node.type == 'BSDF_ANISOTROPIC':
-        if parse_surface:
-            write_normal(node.inputs[4])
-            # Revert to glossy
-            out_basecol = parse_vector_input(node.inputs[0])
-            out_roughness = parse_value_input(node.inputs[1])
-            out_metallic = '1.0'
-
-    elif node.type == 'EMISSION':
-        if parse_surface:
-            # Multiply basecol
-            out_basecol = parse_vector_input(node.inputs[0])
-            out_emission = '1.0'
-            emission_found = True
-            emission_strength = parse_value_input(node.inputs[1])
-            out_basecol = '({0} * {1})'.format(out_basecol, emission_strength)
-
-    elif node.type == 'BSDF_GLASS':
-        if parse_surface:
-            write_normal(node.inputs[3])
-            out_roughness = parse_value_input(node.inputs[1])
-        if parse_opacity:
-            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
-
-    elif node.type == 'BSDF_HAIR':
-        pass
-
-    elif node.type == 'HOLDOUT':
-        if parse_surface:
-            # Occlude
-            out_occlusion = '0.0'
-
-    elif node.type == 'BSDF_REFRACTION':
-        # write_normal(node.inputs[3])
-        pass
-
-    elif node.type == 'SUBSURFACE_SCATTERING':
-        if parse_surface:
-            write_normal(node.inputs[4])
-            out_basecol = parse_vector_input(node.inputs[0])
-
-    elif node.type == 'BSDF_TOON':
-        # write_normal(node.inputs[3])
-        pass
-
-    elif node.type == 'BSDF_TRANSLUCENT':
-        if parse_surface:
-            write_normal(node.inputs[1])
-        if parse_opacity:
-            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
-
-    elif node.type == 'BSDF_TRANSPARENT':
-        if parse_opacity:
-            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
-
-    elif node.type == 'BSDF_VELVET':
-        if parse_surface:
-            write_normal(node.inputs[2])
-            out_basecol = parse_vector_input(node.inputs[0])
-            out_roughness = '1.0'
-            out_metallic = '1.0'
-
-    elif node.type == 'VOLUME_ABSORPTION':
-        pass
-
-    elif node.type == 'VOLUME_SCATTER':
-        pass
-
-    return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission
 
 def parse_displacement_input(inp):
     if inp.is_linked:
