@@ -19,7 +19,6 @@ import shutil
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import bpy
-from mathutils import Euler, Vector
 
 import arm.assets
 import arm.utils
@@ -292,10 +291,6 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
-    global particle_info
-    global sample_bump
-    global sample_bump_res
-
     # Use switch-like lookup via dictionary
     # (better performance, better code readability)
     # 'NODE_TYPE': parser_function
@@ -417,9 +412,6 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
 
 
 def parse_value(node, socket):
-    global particle_info
-    global sample_bump
-
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             # Displacement
@@ -433,401 +425,53 @@ def parse_value(node, socket):
     elif node.type == 'GROUP_INPUT':
         return parse_group_input(node, socket)
 
-    elif node.type == 'ATTRIBUTE':
-        if node.attribute_name == 'time':
-            curshader.add_uniform('float time', link='_time')
-            return 'time'
+    # Use switch-like lookup via dictionary
+    # (better performance, better code readability)
+    # 'NODE_TYPE': parser_function
+    node_parser_funcs: Dict[str, Callable] = {
+        'ATTRIBUTE': nodes_input.parse_attribute,
+        'CAMERA': nodes_input.parse_camera,
+        'FRESNEL': nodes_input.parse_fresnel,
+        'NEW_GEOMETRY': nodes_input.parse_geometry,
+        'HAIR_INFO': nodes_input.parse_hairinfo,
+        'LAYER_WEIGHT': nodes_input.parse_layerweight,
+        'LIGHT_PATH': nodes_input.parse_lightpath,
+        'OBJECT_INFO': nodes_input.parse_objectinfo,
+        'PARTICLE_INFO': nodes_input.parse_particleinfo,
+        'VALUE': nodes_input.parse_value,
+        'WIREFRAME': nodes_input.parse_wireframe,
+        'TEX_BRICK': nodes_texture.parse_tex_brick,
+        'TEX_CHECKER': nodes_texture.parse_tex_checker,
+        'TEX_GRADIENT': nodes_texture.parse_tex_gradient,
+        'TEX_IMAGE': nodes_texture.parse_tex_image,
+        'TEX_MAGIC': nodes_texture.parse_tex_magic,
+        'TEX_MUSGRAVE': nodes_texture.parse_tex_musgrave,
+        'TEX_NOISE': nodes_texture.parse_tex_noise,
+        'TEX_POINTDENSITY': nodes_texture.parse_tex_pointdensity,
+        'TEX_VORONOI': nodes_texture.parse_tex_voronoi,
+        'TEX_WAVE': nodes_texture.parse_tex_wave,
+        'LIGHT_FALLOFF': nodes_color.parse_lightfalloff,
+        'NORMAL': nodes_vector.parse_normal,
+        'VALTORGB': nodes_converter.parse_valtorgb,
+        'MATH': nodes_converter.parse_math,
+        'RGBTOBW': nodes_converter.parse_rgbtobw,
+        'SEPHSV': nodes_converter.parse_sephsv,
+        'SEPRGB': nodes_converter.parse_seprgb,
+        'SEPXYZ': nodes_converter.parse_xyz,
+        'VECT_MATH': nodes_converter.parse_vectormath,
+    }
 
-        # Return 0.0 till drivers are implemented
-        else:
-            return '0.0'
-
-    elif node.type == 'CAMERA':
-        # View Z Depth
-        if socket == node.outputs[1]:
-            curshader.add_include('std/math.glsl')
-            curshader.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
-            return 'linearize(gl_FragCoord.z, cameraProj)'
-        # View Distance
-        else:
-            curshader.add_uniform('vec3 eye', link='_cameraPosition')
-            return 'distance(eye, wposition)'
-
-    elif node.type == 'FRESNEL':
-        curshader.add_function(c_functions.str_fresnel)
-        ior = parse_value_input(node.inputs[0])
-        if node.inputs[1].is_linked:
-            dotnv = 'dot({0}, vVec)'.format(parse_vector_input(node.inputs[1]))
-        else:
-            dotnv = 'dotNV'
-        return 'fresnel({0}, {1})'.format(ior, dotnv)
-
-    elif node.type == 'NEW_GEOMETRY':
-        if socket == node.outputs[6]: # Backfacing
-            return '(1.0 - float(gl_FrontFacing))'
-        elif socket == node.outputs[7]: # Pointiness
-            return '0.0'
-
-    elif node.type == 'HAIR_INFO':
-        # Is Strand
-        # Intercept
-        # Thickness
-        return '0.5'
-
-    elif node.type == 'LAYER_WEIGHT':
-        blend = parse_value_input(node.inputs[0])
-        if node.inputs[1].is_linked:
-            dotnv = 'dot({0}, vVec)'.format(parse_vector_input(node.inputs[1]))
-        else:
-            dotnv = 'dotNV'
-        if socket == node.outputs[0]: # Fresnel
-            curshader.add_function(c_functions.str_fresnel)
-            return 'fresnel(1.0 / (1.0 - {0}), {1})'.format(blend, dotnv)
-        elif socket == node.outputs[1]: # Facing
-            return '(1.0 - pow({0}, ({1} < 0.5) ? 2.0 * {1} : 0.5 / (1.0 - {1})))'.format(dotnv, blend)
-
-    elif node.type == 'LIGHT_PATH':
-        if socket == node.outputs[0]: # Is Camera Ray
-            return '1.0'
-        elif socket == node.outputs[1]: # Is Shadow Ray
-            return '0.0'
-        elif socket == node.outputs[2]: # Is Diffuse Ray
-            return '1.0'
-        elif socket == node.outputs[3]: # Is Glossy Ray
-            return '1.0'
-        elif socket == node.outputs[4]: # Is Singular Ray
-            return '0.0'
-        elif socket == node.outputs[5]: # Is Reflection Ray
-            return '0.0'
-        elif socket == node.outputs[6]: # Is Transmission Ray
-            return '0.0'
-        elif socket == node.outputs[7]: # Ray Length
-            return '0.0'
-        elif socket == node.outputs[8]: # Ray Depth
-            return '0.0'
-        elif socket == node.outputs[9]: # Transparent Depth
-            return '0.0'
-        elif socket == node.outputs[10]: # Transmission Depth
-            return '0.0'
-
-    elif node.type == 'OBJECT_INFO':
-        if socket == node.outputs[2]: # Object Index
-            curshader.add_uniform('float objectInfoIndex', link='_objectInfoIndex')
-            return 'objectInfoIndex'
-        elif socket == node.outputs[3]: # Material Index
-            curshader.add_uniform('float objectInfoMaterialIndex', link='_objectInfoMaterialIndex')
-            return 'objectInfoMaterialIndex'
-        elif socket == node.outputs[4]: # Random
-            curshader.add_uniform('float objectInfoRandom', link='_objectInfoRandom')
-            return 'objectInfoRandom'
-
-    elif node.type == 'PARTICLE_INFO':
-        if socket == node.outputs[0]: # Index
-            particle_info['index'] = True
-            return 'p_index' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
-        elif socket == node.outputs[1]: # Age
-            particle_info['age'] = True
-            return 'p_age' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
-        elif socket == node.outputs[2]: # Lifetime
-            particle_info['lifetime'] = True
-            return 'p_lifetime' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
-        elif socket == node.outputs[4]: # Size
-            particle_info['size'] = True
-            return '1.0'
-
-    elif node.type == 'VALUE':
-        if node.arm_material_param:
-            nn = 'param_' + node_name(node.name)
-            curshader.add_uniform('float {0}'.format(nn), link='{0}'.format(node.name))
-            return nn
-        else:
-            return to_vec1(node.outputs[0].default_value)
-
-    elif node.type == 'WIREFRAME':
-        #node.use_pixel_size
-        # size = parse_value_input(node.inputs[0])
-        return '0.0'
-
-    elif node.type == 'TEX_BRICK':
-        curshader.add_function(c_functions.str_tex_brick)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[4])
-        res = 'tex_brick_f({0} * {1})'.format(co, scale)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'TEX_CHECKER':
-        curshader.add_function(c_functions.str_tex_checker)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[3])
-        res = 'tex_checker_f({0}, {1})'.format(co, scale)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'TEX_GRADIENT':
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        grad = node.gradient_type
-        if grad == 'LINEAR':
-            f = '{0}.x'.format(co)
-        elif grad == 'QUADRATIC':
-            f = '0.0'
-        elif grad == 'EASING':
-            f = '0.0'
-        elif grad == 'DIAGONAL':
-            f = '({0}.x + {0}.y) * 0.5'.format(co)
-        elif grad == 'RADIAL':
-            f = 'atan({0}.y, {0}.x) / PI2 + 0.5'.format(co)
-        elif grad == 'QUADRATIC_SPHERE':
-            f = '0.0'
-        elif grad == 'SPHERICAL':
-            f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
-        res = '(clamp({0}, 0.0, 1.0))'.format(f)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'TEX_IMAGE':
-        # Already fetched
-        if is_parsed(store_var_name(node)):
-            return '{0}.a'.format(store_var_name(node))
-        tex_name = safesrc(node.name)
-        tex = make_texture(node, tex_name)
-        tex_link = node.name if node.arm_material_param else None
-        if tex != None:
-            curshader.write_textures += 1
-            res = '{0}.a'.format(texture_store(node, tex, tex_name, tex_link=tex_link))
-            curshader.write_textures -= 1
-            return res
-        elif node.image == None: # Empty texture
-            tex = {}
-            tex['name'] = tex_name
-            tex['file'] = ''
-            return '{0}.a'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
-        else:
-            tex_store = store_var_name(node) # Pink color for missing texture
-            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
-            return '{0}.a'.format(tex_store)
-
-    elif node.type == 'TEX_MAGIC':
-        curshader.add_function(c_functions.str_tex_magic)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        res = 'tex_magic_f({0} * {1} * 4.0)'.format(co, scale)
-        if sample_bump:
-            write_bump(node, res, 0.1)
-        return res
-
-    elif node.type == 'TEX_MUSGRAVE':
-        # Fall back to noise
-        curshader.add_function(c_functions.str_tex_musgrave)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        # detail = parse_value_input(node.inputs[2])
-        # distortion = parse_value_input(node.inputs[3])
-        res = 'tex_musgrave_f({0} * {1} * 0.5)'.format(co, scale)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'TEX_NOISE':
-        write_procedurals()
-        curshader.add_function(c_functions.str_tex_noise)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
-        assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[2])
-        detail = parse_value_input(node.inputs[3])
-        distortion = parse_value_input(node.inputs[4])
-        res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
-        if sample_bump:
-            write_bump(node, res, 0.1)
-        return res
-
-    elif node.type == 'TEX_POINTDENSITY':
-        return '0.0'
-
-    elif node.type == 'TEX_VORONOI':
-        write_procedurals()
-        outp = 0
-        if socket.type == 'RGBA':
-            outp = 1
-        elif socket.type == 'VECTOR':
-            outp = 2
-        m = 0
-        if node.distance == 'MANHATTAN':
-            m = 1
-        elif node.distance == 'CHEBYCHEV':
-            m = 2
-        elif node.distance == 'MINKOWSKI':
-            m = 3
-        curshader.add_function(c_functions.str_tex_voronoi)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[2])
-        exp = parse_value_input(node.inputs[4])
-        randomness = parse_value_input(node.inputs[5])
-        res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5}).x'.format(co, randomness, m, outp, scale, exp)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'TEX_WAVE':
-        write_procedurals()
-        curshader.add_function(c_functions.str_tex_wave)
-        if node.inputs[0].is_linked:
-            co = parse_vector_input(node.inputs[0])
-        else:
-            co = 'bposition'
-        scale = parse_value_input(node.inputs[1])
-        distortion = parse_value_input(node.inputs[2])
-        detail = parse_value_input(node.inputs[3])
-        detail_scale = parse_value_input(node.inputs[4])
-        if node.wave_profile == 'SIN':
-            wave_profile = 0
-        else:
-            wave_profile = 1
-        if node.wave_type == 'BANDS':
-            wave_type = 0
-        else:
-            wave_type = 1
-        res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
-        if sample_bump:
-            write_bump(node, res)
-        return res
-
-    elif node.type == 'LIGHT_FALLOFF':
-        # Constant, linear, quadratic
-        # Shaders default to quadratic for now
-        return '1.0'
-
-    elif node.type == 'NORMAL':
-        nor = parse_vector_input(node.inputs[0])
-        return 'dot({0}, {1})'.format(to_vec3(node.outputs[0].default_value), nor)
-
-    elif node.type == 'VALTORGB': # ColorRamp
-        return '1.0'
-
-    elif node.type == 'MATH':
-        val1 = parse_value_input(node.inputs[0])
-        val2 = parse_value_input(node.inputs[1])
-        op = node.operation
-        if op == 'ADD':
-            out_val = '({0} + {1})'.format(val1, val2)
-        elif op == 'SUBTRACT':
-            out_val = '({0} - {1})'.format(val1, val2)
-        elif op == 'MULTIPLY':
-            out_val = '({0} * {1})'.format(val1, val2)
-        elif op == 'DIVIDE':
-            out_val = '({0} / {1})'.format(val1, val2)
-        elif op == 'POWER':
-            out_val = 'pow({0}, {1})'.format(val1, val2)
-        elif op == 'LOGARITHM':
-            out_val = 'log({0})'.format(val1)
-        elif op == 'SQRT':
-            out_val = 'sqrt({0})'.format(val1)
-        elif op == 'ABSOLUTE':
-            out_val = 'abs({0})'.format(val1)
-        elif op == 'MINIMUM':
-            out_val = 'min({0}, {1})'.format(val1, val2)
-        elif op == 'MAXIMUM':
-            out_val = 'max({0}, {1})'.format(val1, val2)
-        elif op == 'LESS_THAN':
-            out_val = 'float({0} < {1})'.format(val1, val2)
-        elif op == 'GREATER_THAN':
-            out_val = 'float({0} > {1})'.format(val1, val2)
-        elif op == 'ROUND':
-            # out_val = 'round({0})'.format(val1)
-            out_val = 'floor({0} + 0.5)'.format(val1)
-        elif op == 'FLOOR':
-            out_val = 'floor({0})'.format(val1)
-        elif op == 'CEIL':
-            out_val = 'ceil({0})'.format(val1)
-        elif op == 'FRACT':
-            out_val = 'fract({0})'.format(val1)
-        elif op == 'MODULO':
-            # out_val = 'float({0} % {1})'.format(val1, val2)
-            out_val = 'mod({0}, {1})'.format(val1, val2)
-        elif op == 'SINE':
-            out_val = 'sin({0})'.format(val1)
-        elif op == 'COSINE':
-            out_val = 'cos({0})'.format(val1)
-        elif op == 'TANGENT':
-            out_val = 'tan({0})'.format(val1)
-        elif op == 'ARCSINE':
-            out_val = 'asin({0})'.format(val1)
-        elif op == 'ARCCOSINE':
-            out_val = 'acos({0})'.format(val1)
-        elif op == 'ARCTANGENT':
-            out_val = 'atan({0})'.format(val1)
-        elif op == 'ARCTAN2':
-            out_val = 'atan({0}, {1})'.format(val1, val2)
-        if node.use_clamp:
-            return 'clamp({0}, 0.0, 1.0)'.format(out_val)
-        else:
-            return out_val
-
-    elif node.type == 'RGBTOBW':
-        col = parse_vector_input(node.inputs[0])
-        return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
-
-    elif node.type == 'SEPHSV':
-        return '0.0'
-
-    elif node.type == 'SEPRGB':
-        col = parse_vector_input(node.inputs[0])
-        if socket == node.outputs[0]:
-            return '{0}.r'.format(col)
-        elif socket == node.outputs[1]:
-            return '{0}.g'.format(col)
-        elif socket == node.outputs[2]:
-            return '{0}.b'.format(col)
-
-    elif node.type == 'SEPXYZ':
-        vec = parse_vector_input(node.inputs[0])
-        if socket == node.outputs[0]:
-            return '{0}.x'.format(vec)
-        elif socket == node.outputs[1]:
-            return '{0}.y'.format(vec)
-        elif socket == node.outputs[2]:
-            return '{0}.z'.format(vec)
-
-    elif node.type == 'VECT_MATH':
-        vec1 = parse_vector_input(node.inputs[0])
-        vec2 = parse_vector_input(node.inputs[1])
-        op = node.operation
-        if op == 'DOT_PRODUCT':
-            return 'dot({0}, {1})'.format(vec1, vec2)
-        else:
-            return '0.0'
+    if node.type in node_parser_funcs:
+        return node_parser_funcs[node.type](node, socket)
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(frag, vert)
 
-##
+    else:
+        arm.log.warn(f'Material node type {node.type} not supported')
+        return '0.0'
+
 
 def vector_curve(name, fac, points):
     # Write Ys array

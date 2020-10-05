@@ -2,7 +2,7 @@ import bpy
 
 import arm.material.cycles as cycles
 import arm.material.cycles_functions as c_functions
-from arm.material.shader import vec3str
+from arm.material.shader import floatstr, vec3str
 
 
 def parse_brightcontrast(node: bpy.types.ShaderNodeBrightContrast, out_socket: bpy.types.NodeSocket) -> vec3str:
@@ -98,3 +98,9 @@ def parse_curvergb(node: bpy.types.ShaderNodeRGBCurve, out_socket: bpy.types.Nod
     return '(sqrt(vec3({0}, {1}, {2}) * vec3({4}, {5}, {6})) * {3})'.format(
         cycles.vector_curve(name + '0', vec + '.x', curves[0].points), cycles.vector_curve(name + '1', vec + '.y', curves[1].points), cycles.vector_curve(name + '2', vec + '.z', curves[2].points), fac,
         cycles.vector_curve(name + '3a', vec + '.x', curves[3].points), cycles.vector_curve(name + '3b', vec + '.y', curves[3].points), cycles.vector_curve(name + '3c', vec + '.z', curves[3].points))
+
+
+def parse_lightfalloff(node: bpy.types.ShaderNodeLightFalloff, out_socket: bpy.types.NodeSocket) -> floatstr:
+    # Constant, linear, quadratic
+    # Shaders default to quadratic for now
+    return '1.0'

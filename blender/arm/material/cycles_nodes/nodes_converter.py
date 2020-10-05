@@ -1,8 +1,10 @@
+from typing import Union
+
 import bpy
 
 import arm.material.cycles as cycles
 import arm.material.cycles_functions as c_functions
-from arm.material.shader import vec3str
+from arm.material.shader import floatstr, vec3str
 
 
 def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket) -> vec3str:
@@ -72,7 +74,11 @@ def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.N
     return cycles.to_vec3([rgb[0], rgb[1], rgb[2]])
 
 
-def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket) -> vec3str:
+def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket) -> Union[floatstr, vec3str]:
+    # Alpha (TODO: make ColorRamp calculation vec4-based and split afterwards)
+    if out_socket == node.outputs[1]:
+        return '1.0'
+
     input_fac: bpy.types.NodeSocket = node.inputs[0]
 
     fac: str = cycles.parse_value_input(input_fac) if input_fac.is_linked else cycles.to_vec1(input_fac.default_value)
@@ -148,19 +154,124 @@ def parse_wavelength(node: bpy.types.ShaderNodeWavelength, out_socket: bpy.types
     return f'wavelength_to_rgb(({wl} - 450.0) / 150.0)'
 
 
-def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types.NodeSocket) -> vec3str:
+def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types.NodeSocket) -> Union[floatstr, vec3str]:
     vec1 = cycles.parse_vector_input(node.inputs[0])
     vec2 = cycles.parse_vector_input(node.inputs[1])
     op = node.operation
+
+    if out_socket.type == 'VECTOR':
+        if op == 'ADD':
+            return f'({vec1} + {vec2})'
+        elif op == 'SUBTRACT':
+            return f'({vec1} - {vec2})'
+        elif op == 'AVERAGE':
+            return f'(({vec1} + {vec2}) / 2.0)'
+        elif op == 'DOT_PRODUCT':
+            return f'vec3(dot({vec1}, {vec2}))'
+        elif op == 'CROSS_PRODUCT':
+            return f'cross({vec1}, {vec2})'
+        elif op == 'NORMALIZE':
+            return f'normalize({vec1})'
+
+        return vec1
+
+    # Float output
+    if op == 'DOT_PRODUCT':
+        return f'dot({vec1}, {vec2})'
+    elif op == 'DISTANCE':
+        return f'distance({vec1}, {vec2})'
+    elif op == 'DISTANCE':
+        return f'length({vec1})'
+    else:
+        return '0.0'
+
+
+def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket) -> floatstr:
+    val1 = cycles.parse_value_input(node.inputs[0])
+    val2 = cycles.parse_value_input(node.inputs[1])
+    op = node.operation
     if op == 'ADD':
-        return f'({vec1} + {vec2})'
+        out_val = '({0} + {1})'.format(val1, val2)
     elif op == 'SUBTRACT':
-        return f'({vec1} - {vec2})'
-    elif op == 'AVERAGE':
-        return f'(({vec1} + {vec2}) / 2.0)'
-    elif op == 'DOT_PRODUCT':
-        return f'vec3(dot({vec1}, {vec2}))'
-    elif op == 'CROSS_PRODUCT':
-        return f'cross({vec1}, {vec2})'
-    elif op == 'NORMALIZE':
-        return f'normalize({vec1})'
+        out_val = '({0} - {1})'.format(val1, val2)
+    elif op == 'MULTIPLY':
+        out_val = '({0} * {1})'.format(val1, val2)
+    elif op == 'DIVIDE':
+        out_val = '({0} / {1})'.format(val1, val2)
+    elif op == 'POWER':
+        out_val = 'pow({0}, {1})'.format(val1, val2)
+    elif op == 'LOGARITHM':
+        out_val = 'log({0})'.format(val1)
+    elif op == 'SQRT':
+        out_val = 'sqrt({0})'.format(val1)
+    elif op == 'ABSOLUTE':
+        out_val = 'abs({0})'.format(val1)
+    elif op == 'MINIMUM':
+        out_val = 'min({0}, {1})'.format(val1, val2)
+    elif op == 'MAXIMUM':
+        out_val = 'max({0}, {1})'.format(val1, val2)
+    elif op == 'LESS_THAN':
+        out_val = 'float({0} < {1})'.format(val1, val2)
+    elif op == 'GREATER_THAN':
+        out_val = 'float({0} > {1})'.format(val1, val2)
+    elif op == 'ROUND':
+        # out_val = 'round({0})'.format(val1)
+        out_val = 'floor({0} + 0.5)'.format(val1)
+    elif op == 'FLOOR':
+        out_val = 'floor({0})'.format(val1)
+    elif op == 'CEIL':
+        out_val = 'ceil({0})'.format(val1)
+    elif op == 'FRACT':
+        out_val = 'fract({0})'.format(val1)
+    elif op == 'MODULO':
+        # out_val = 'float({0} % {1})'.format(val1, val2)
+        out_val = 'mod({0}, {1})'.format(val1, val2)
+    elif op == 'SINE':
+        out_val = 'sin({0})'.format(val1)
+    elif op == 'COSINE':
+        out_val = 'cos({0})'.format(val1)
+    elif op == 'TANGENT':
+        out_val = 'tan({0})'.format(val1)
+    elif op == 'ARCSINE':
+        out_val = 'asin({0})'.format(val1)
+    elif op == 'ARCCOSINE':
+        out_val = 'acos({0})'.format(val1)
+    elif op == 'ARCTANGENT':
+        out_val = 'atan({0})'.format(val1)
+    elif op == 'ARCTAN2':
+        out_val = 'atan({0}, {1})'.format(val1, val2)
+
+    if node.use_clamp:
+        return 'clamp({0}, 0.0, 1.0)'.format(out_val)
+    else:
+        return out_val
+
+
+def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeSocket) -> floatstr:
+    col = cycles.parse_vector_input(node.inputs[0])
+    return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
+
+
+def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket) -> floatstr:
+    # TODO
+    return '0.0'
+
+
+def parse_seprgb(node: bpy.types.ShaderNodeSeparateRGB, out_socket: bpy.types.NodeSocket) -> floatstr:
+    col = cycles.parse_vector_input(node.inputs[0])
+    if out_socket == node.outputs[0]:
+        return '{0}.r'.format(col)
+    elif out_socket == node.outputs[1]:
+        return '{0}.g'.format(col)
+    elif out_socket == node.outputs[2]:
+        return '{0}.b'.format(col)
+
+
+def parse_sepxyz(node: bpy.types.ShaderNodeSeparateXYZ, out_socket: bpy.types.NodeSocket) -> floatstr:
+    vec = cycles.parse_vector_input(node.inputs[0])
+    if out_socket == node.outputs[0]:
+        return '{0}.x'.format(vec)
+    elif out_socket == node.outputs[1]:
+        return '{0}.y'.format(vec)
+    elif out_socket == node.outputs[2]:
+        return '{0}.z'.format(vec)

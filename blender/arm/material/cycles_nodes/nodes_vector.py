@@ -1,8 +1,10 @@
+from typing import Union
+
 import bpy
 from mathutils import Euler, Vector
 
 import arm.material.cycles as cycles
-from arm.material.shader import vec3str
+from arm.material.shader import floatstr, vec3str
 
 
 def parse_curvevec(node: bpy.types.ShaderNodeVectorCurve, out_socket: bpy.types.NodeSocket) -> vec3str:
@@ -102,12 +104,12 @@ def parse_mapping(node: bpy.types.ShaderNodeMapping, out_socket: bpy.types.NodeS
     return out
 
 
-def parse_normal(node: bpy.types.ShaderNodeNormal, out_socket: bpy.types.NodeSocket) -> vec3str:
+def parse_normal(node: bpy.types.ShaderNodeNormal, out_socket: bpy.types.NodeSocket) -> Union[floatstr, vec3str]:
     if out_socket == node.outputs[0]:
         return cycles.to_vec3(node.outputs[0].default_value)
     elif out_socket == node.outputs[1]: # TODO: is parse_value path preferred?
         nor = cycles.parse_vector_input(node.inputs[0])
-        return 'vec3(dot({0}, {1}))'.format(cycles.to_vec3(node.outputs[0].default_value), nor)
+        return f'dot({cycles.to_vec3(node.outputs[0].default_value)}, {nor})'
 
 
 def parse_normalmap(node: bpy.types.ShaderNodeNormalMap, out_socket: bpy.types.NodeSocket) -> vec3str:
