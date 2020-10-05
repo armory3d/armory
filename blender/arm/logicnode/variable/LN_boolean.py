@@ -1,8 +1,8 @@
 from arm.logicnode.arm_nodes import *
 
 class BooleanNode(ArmLogicTreeNode):
-    """Stores a boolean as a variable. A boolean value has just two
-    states: `true` and `false`."""
+    """Stores the given boolean as a variable. A boolean value has just two
+    states: `True` and `False`."""
     bl_idname = 'LNBooleanNode'
     bl_label = 'Boolean'
     arm_version = 1

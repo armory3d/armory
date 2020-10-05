@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class FunctionOutputNode(ArmLogicTreeNode):
-    """Set the return value for the specified function.
+    """Sets the return value for the given function.
 
     @seeNode Function"""
     bl_idname = 'LNFunctionOutputNode'

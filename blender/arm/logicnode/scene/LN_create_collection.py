@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CreateCollectionNode(ArmLogicTreeNode):
-    """Use to create a collection."""
+    """Creates a collection."""
     bl_idname = 'LNAddGroupNode'
     bl_label = 'Create Collection'
     arm_version = 1

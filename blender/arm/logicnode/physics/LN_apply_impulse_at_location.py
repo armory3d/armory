@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
-    """Applies an impulse to a rigid body at a specified position.
+    """Applies impulse in the given rigid body at the given position.
 
     @seeNode Apply Impulse
     @seeNode Apply Force
@@ -21,7 +21,7 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
     def init(self, context):
         super(ApplyImpulseAtLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmNodeSocketObject', 'Rigid Body')
+        self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketVector', 'Impulse')
         self.add_input('NodeSocketBool', 'Impulse On Local Axis')
         self.add_input('NodeSocketVector', 'Location')

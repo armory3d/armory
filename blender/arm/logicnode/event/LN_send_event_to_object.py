@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SendEventNode(ArmLogicTreeNode):
-    """Send an event to an object.
+    """Sends the given event to the given object.
 
     @seeNode Send Event
     @seeNode On Event

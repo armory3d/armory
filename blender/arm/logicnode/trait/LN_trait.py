@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TraitNode(ArmLogicTreeNode):
-    """Use to hold a trait as a variable. If the trait was not found or
+    """Store the given trait as a variable. If the trait was not found or
     was not exported, an error is thrown ([more information](https://github.com/armory3d/armory/wiki/troubleshooting#trait-not-exported)).
     """
     bl_idname = 'LNTraitNode'

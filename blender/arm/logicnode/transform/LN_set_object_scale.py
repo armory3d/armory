@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetScaleNode(ArmLogicTreeNode):
-    """Use to set the scale of an object."""
+    """Sets the scale of the given object."""
     bl_idname = 'LNSetScaleNode'
     bl_label = 'Set Object Scale'
     arm_version = 1

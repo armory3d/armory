@@ -1,8 +1,8 @@
-from arm.logicnode.arm_nodes import *
+			from arm.logicnode.arm_nodes import *
 
 # Class OnTapScreen
 class OnTapScreen(ArmLogicTreeNode):
-    """Activates the output when there is a tap event."""
+    """Activates the output when the given tap action is done."""
     bl_idname = 'LNOnTapScreen'
     bl_label = 'On Tap Screen'
     arm_version = 1

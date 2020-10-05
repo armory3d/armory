@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorMixNode(ArmLogicTreeNode):
-    """Use to interpolate between vectors."""
+    """Interpolates between the two given vectors."""
     bl_idname = 'LNVectorMixNode'
     bl_label = 'Mix Vector'
     arm_version = 1

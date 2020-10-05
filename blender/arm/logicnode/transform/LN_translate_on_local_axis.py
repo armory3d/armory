@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class TranslateOnLocalAxisNode(ArmLogicTreeNode):
-    """Use to translate an object in the local axis."""
+    """Translates (moves) the given object using the given vector in the local coordinates."""
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'
     arm_version = 1

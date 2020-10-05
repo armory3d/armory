@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SwitchNode(ArmLogicTreeNode):
-    """Runs the outputs depending of the value. Example: If 'value' is equal to 'case 1', the output 'case 1' will run.
+    """Activates the outputs depending of the value. If 'value' is equal to 'case 1', the output 'case 1' will be activated.
 
     @output Default: Activated if the input value does not match any case.
     """

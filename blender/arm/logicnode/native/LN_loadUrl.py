@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LoadUrlNode(ArmLogicTreeNode):
-    """Load a URL in a new tab (works only for web browsers)."""
+    """Load the given URL in a new tab (works only for web browsers)."""
     bl_idname = 'LNLoadUrlNode'
     bl_label = 'Load URL'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnCanvasElementNode(ArmLogicTreeNode):
-    """Will run the output if an action over an UI element is done."""
+    """Activates the output whether an action over the given UI element is done."""
     bl_idname = 'LNOnCanvasElementNode'
     bl_label = 'On Canvas Element'
     arm_version = 1

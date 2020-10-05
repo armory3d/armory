@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorNode(ArmLogicTreeNode):
-    """Stores a three-dimensional vector as a variable."""
+    """Stores the given 3D vector as a variable."""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
     arm_version = 1

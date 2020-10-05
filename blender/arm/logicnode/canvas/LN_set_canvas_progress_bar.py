@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetPBNode(ArmLogicTreeNode):
-    """Use to set the value of an UI progress bar."""
+    """Sets the value of the given UI progress bar."""
     bl_idname = 'LNCanvasSetPBNode'
     bl_label = 'Set Canvas Progress Bar'
     arm_version = 1

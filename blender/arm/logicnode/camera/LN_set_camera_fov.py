@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetCameraFovNode(ArmLogicTreeNode):
-    """Set the field of view (FOV) of a camera.
+    """Sets the field of view (FOV) of the given camera.
 
     @seeNode Get Camera FOV"""
     bl_idname = 'LNSetCameraFovNode'

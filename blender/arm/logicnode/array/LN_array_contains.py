@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayContainsNode(ArmLogicTreeNode):
-    """Get if an array contains a specific value."""
+    """Returns whether the given array contains the given value."""
     bl_idname = 'LNArrayInArrayNode'
     bl_label = 'Array Contains'
     arm_version = 1

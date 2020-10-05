@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SubStringNode(ArmLogicTreeNode):
-    """Use to get a part of a string."""
+    """Returns a part of the given string."""
     bl_idname = 'LNSubStringNode'
     bl_label = 'Sub String'
     arm_version = 1

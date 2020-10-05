@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TranslateObjectNode(ArmLogicTreeNode):
-    """Translates (moves) a given object by a specified vector in world coordinates."""
+    """Translates (moves) the given object using the given vector in world coordinates."""
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
     arm_version = 1

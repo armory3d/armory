@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ResumeActionNode(ArmLogicTreeNode):
-    """Resume an action."""
+    """Resumes the given action."""
     bl_idname = 'LNResumeActionNode'
     bl_label = 'Resume Action'
     arm_version = 1

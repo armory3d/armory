@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayGetNode(ArmLogicTreeNode):
-    """Get the value of an array at the specified index."""
+    """Returns the value of the given array at the given index."""
     bl_idname = 'LNArrayGetNode'
     bl_label = 'Array Get'
     arm_version = 1

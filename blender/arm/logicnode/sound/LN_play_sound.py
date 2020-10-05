@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class PlaySoundNode(ArmLogicTreeNode):
-    """Plays a sound.
+    """Plays the given sound.
 
     @input Play: Plays the sound, or if paused, resumes the playback.
         The exact behaviour depends on the Retrigger option (see below).

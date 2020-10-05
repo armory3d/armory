@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class DegToRadNode(ArmLogicTreeNode):
-    """Use to convert degrees to radians."""
+    """Converts degrees to radians."""
     bl_idname = 'LNDegToRadNode'
     bl_label = 'Deg to Rad'
     arm_version = 1

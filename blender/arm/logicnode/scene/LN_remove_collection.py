@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RemoveGroupNode(ArmLogicTreeNode):
-    """Use to delete a collection from the scene."""
+    """Removes the given collection from the scene."""
     bl_idname = 'LNRemoveGroupNode'
     bl_label = 'Remove Collection'
     arm_version = 1

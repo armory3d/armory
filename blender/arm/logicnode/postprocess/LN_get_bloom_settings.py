@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class BloomGetNode(ArmLogicTreeNode):
-    """Use to get the bloom post-processing settings."""
+    """Returns the bloom post-processing settings."""
     bl_idname = 'LNBloomGetNode'
     bl_label = 'Get Bloom Settings'
     arm_version = 1

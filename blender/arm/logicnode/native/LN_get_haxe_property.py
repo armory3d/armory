@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetHaxePropertyNode(ArmLogicTreeNode):
-    """Get a property of an Haxe object (via the Reflection API).
+    """Returns a property of an Haxe object (via the Reflection API).
 
     @seeNode Set Haxe Property"""
     bl_idname = 'LNGetHaxePropertyNode'

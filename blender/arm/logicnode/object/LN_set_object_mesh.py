@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMeshNode(ArmLogicTreeNode):
-    """Use to set the mesh of an object."""
+    """Sets the mesh of the given object."""
     bl_idname = 'LNSetMeshNode'
     bl_label = 'Set Object Mesh'
     arm_version = 1

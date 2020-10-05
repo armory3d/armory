@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class BranchNode(ArmLogicTreeNode):
-    """When activated, activates its "True" or "False" output, according
+    """Activates its "True" or "False" output, according
     to the state of the plugged-in boolean."""
     bl_idname = 'LNBranchNode'
     bl_label = 'Branch'

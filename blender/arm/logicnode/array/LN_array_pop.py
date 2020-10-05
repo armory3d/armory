@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayPopNode(ArmLogicTreeNode):
-    """Remove the last element of an array.
+    """Removes the last element of the given array.
 
     @see [Haxe API](https://api.haxe.org/Array.html#pop)"""
     bl_idname = 'LNArrayPopNode'

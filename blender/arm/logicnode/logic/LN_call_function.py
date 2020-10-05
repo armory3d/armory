@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CallFunctionNode(ArmLogicTreeNode):
-    """Calls a function that was created by the [Function](#function) node."""
+    """Calls the given function that was created by the [Function](#function) node."""
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'
     bl_description = 'Calls a function that was created by the Function node.'

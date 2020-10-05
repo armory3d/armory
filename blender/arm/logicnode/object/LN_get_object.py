@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class GetObjectNode(ArmLogicTreeNode):
-    """Searches for an object by its name and returns it."""
+    """Search for the given object by its name and returns it."""
     bl_idname = 'LNGetObjectNode'
     bl_label = 'Get Object'
     arm_version = 1

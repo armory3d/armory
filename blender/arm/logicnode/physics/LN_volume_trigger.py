@@ -1,8 +1,8 @@
 from arm.logicnode.arm_nodes import *
 
 class VolumeTriggerNode(ArmLogicTreeNode):
-    """Returns `true` if a rigid body enters, overlaps or leaves the
-    given volume object.
+    """Returns `true` if the given rigid body enters, overlaps or leaves the
+    given volume trigger.
 
     @input Object: this object is taken as the entering object
     @input Volume: this object is used as the volume"""
@@ -17,7 +17,7 @@ class VolumeTriggerNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VolumeTriggerNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Rigid Body')
+        self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmNodeSocketObject', 'Trigger')
         self.add_output('NodeSocketBool', 'Bool')
 

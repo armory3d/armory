@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SpawnObjectNode(ArmLogicTreeNode):
-    """Use to spawn an object. The spawned object has the same name of its instance, but they are threated as different objects."""
+    """Spawns the given object. The spawned object has the same name of its instance, but they are threated as different objects."""
     bl_idname = 'LNSpawnObjectNode'
     bl_label = 'Spawn Object'
     arm_version = 1

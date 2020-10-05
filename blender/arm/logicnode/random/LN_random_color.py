@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class RandomColorNode(ArmLogicTreeNode):
-    """Use to generate a random color."""
+    """Generates a random color."""
     bl_idname = 'LNRandomColorNode'
     bl_label = 'Random Color'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MatrixMathNode(ArmLogicTreeNode):
-    """Use to multiply matrices."""
+    """Multiplies matrices."""
     bl_idname = 'LNMatrixMathNode'
     bl_label = 'Matrix Math'
     arm_version = 1

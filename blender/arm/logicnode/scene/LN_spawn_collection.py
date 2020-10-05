@@ -5,10 +5,9 @@ from arm.logicnode.arm_nodes import *
 
 class SpawnCollectionNode(ArmLogicTreeNode):
     """
-    When activated, this node spawns a new instance of the selected
-    collection. Each spawned instance has an empty owner object to
-    control the instance as a whole (like Blender uses it for collection
-    instances).
+    Spawns a new instance of the selected collection. Each spawned instance 
+    has an empty owner object to control the instance as a whole (like Blender 
+    uses it for collection instances).
 
     @input In: activates the node.
     @input Transform: the transformation of the instance that should be

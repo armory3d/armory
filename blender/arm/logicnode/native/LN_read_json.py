@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ReadJsonNode(ArmLogicTreeNode):
-    """Get the content of a JSON file.
+    """Returns the content of the given JSON file.
 
     @seeNode Write JSON"""
     bl_idname = 'LNReadJsonNode'

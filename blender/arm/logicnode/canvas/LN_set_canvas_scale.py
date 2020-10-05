@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetScaleNode(ArmLogicTreeNode):
-    """Use to set the scale of an UI element."""
+    """Sets the scale of the given UI element."""
     bl_idname = 'LNCanvasSetScaleNode'
     bl_label = 'Set Canvas Scale'
     arm_version = 1

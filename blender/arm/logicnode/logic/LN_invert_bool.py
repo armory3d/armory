@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class NotNode(ArmLogicTreeNode):
-    """Inverts a plugged in boolean, so if its input is `true` it outputs `false`."""
+    """Inverts the plugged-in boolean. If its input is `true` it outputs `false`."""
     bl_idname = 'LNNotNode'
     bl_label = 'Invert Bool'
     arm_version = 1

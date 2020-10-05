@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetObjectOffscreenNode(ArmLogicTreeNode):
-    """Use to get if an object is offscreen. Don't works if culling is disabled."""
+    """Returns if the given object is offscreen. Don't works if culling is disabled."""
     bl_idname = 'LNGetObjectOffscreenNode'
     bl_label = 'Get Object Offscreen'
     arm_version = 1
