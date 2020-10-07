@@ -25,7 +25,7 @@ class RayCastNode(ArmLogicTreeNode):
         super(RayCastNode, self).init(context)
         self.add_input('NodeSocketVector', 'From')
         self.add_input('NodeSocketVector', 'To')
-        self.add_input('NodeSocketInt', 'Collision Group Mask')
+        self.add_input('NodeSocketInt', 'Collision Group Mask', default_value=1)
         self.add_output('ArmNodeSocketObject', 'RB')
         self.add_output('NodeSocketVector', 'Hit')
         self.add_output('NodeSocketVector', 'Normal')
