@@ -49,6 +49,7 @@ def parse(nodes, con: ShaderContext,
     state.parse_surface = parse_surface
     state.parse_opacity = parse_opacity
     state.parse_displacement = parse_displacement
+    state.basecol_only = basecol_only
 
     state.con = con
 
@@ -61,26 +62,24 @@ def parse(nodes, con: ShaderContext,
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node is not None:
         custom_particle_node = node_by_name(nodes, 'ArmCustomParticleNode')
-        parse_material_output(output_node, basecol_only, custom_particle_node)
+        parse_material_output(output_node, custom_particle_node)
 
     # Make sure that individual functions in this module aren't called with an incorrect/old parser state, set it to
     # None so that it will raise exceptions when not set
     state = None
 
 
-def parse_material_output(node: bpy.types.Node, _basecol_only: bool, custom_particle_node: bpy.types.Node):
+def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.Node):
     global parsed # Compute nodes only once
     global parents
     global normal_parsed
     global parse_surface
     global parse_opacity
-    global basecol_only
     global particle_info
 
     parse_surface = state.parse_surface
     parse_opacity = state.parse_opacity
     parse_displacement = state.parse_displacement
-    basecol_only = _basecol_only
     state.emission_found = False
     particle_info = {
         'index': False,
@@ -365,12 +364,9 @@ def parse_normal_map_color_input(inp, strength_input=None):
 
     frag = state.frag
 
-    if basecol_only:
+    if state.basecol_only or not inp.is_linked or normal_parsed:
         return
-    if not inp.is_linked:
-        return
-    if normal_parsed:
-        return
+
     normal_parsed = True
     frag.write_normal += 1
     if not get_arm_export_tangents() or mat_get_material().arm_decal: # Compute TBN matrix

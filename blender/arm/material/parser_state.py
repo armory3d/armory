@@ -39,6 +39,7 @@ class ParserState:
         self.parse_surface = True
         self.parse_opacity = True
         self.parse_displacement = True
+        self.basecol_only = False
 
         self.emission_found = False
         self.procedurals_written = False
