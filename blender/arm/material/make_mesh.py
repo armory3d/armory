@@ -598,9 +598,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    frag.write_init("""
-    vec3 vVec = normalize(eyeDir);
-    float dotNV = max(dot(n, vVec), 0.0);
+    frag.write_init("""vec3 vVec = normalize(eyeDir);
+\tfloat dotNV = max(dot(n, vVec), 0.0);
 """)
 
     sh = tese if tese is not None else vert

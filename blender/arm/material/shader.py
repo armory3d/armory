@@ -283,8 +283,12 @@ class Shader:
         self.main_attribs = self.main_attribs.replace(old, new)
         self.uniforms = [u.replace(old, new) for u in self.uniforms]
 
-    def write_init(self, s):
-        self.main_init = s + '\n' + self.main_init
+    def write_init(self, s, unique=True):
+        """Prepend to the main function. If `unique` is true (default), look for other occurences first."""
+        if unique and self.contains(s):
+            return
+
+        self.main_init = '\t' + s + '\n' + self.main_init
 
     def write(self, s):
         if self.lock:
