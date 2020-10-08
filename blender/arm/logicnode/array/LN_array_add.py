@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayAddNode(ArmLogicTreeNode):
-    """Add a value to an array.
+    """Adds the given value to the given array.
 
     @input Array: the array to manipulate.
     @input Modify Original: if `false`, the input array is copied before adding the value.

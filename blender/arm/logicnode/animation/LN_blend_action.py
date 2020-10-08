@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class BlendActionNode(ArmLogicTreeNode):
-    """Interpolate between two different actions."""
+    """Interpolates between the two given actions."""
     bl_idname = 'LNBlendActionNode'
     bl_label = 'Blend Action'
     arm_version = 1

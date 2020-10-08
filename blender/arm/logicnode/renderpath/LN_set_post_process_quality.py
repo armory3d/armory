@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpConfigNode(ArmLogicTreeNode):
-    """Use to configure renderpath node."""
+    """Sets the post process quality."""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Set Post Process Quality'
     arm_version = 1

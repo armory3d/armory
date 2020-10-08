@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class OnApplicationStateNode(ArmLogicTreeNode):
-    """Listen to different application state changes."""
+    """Listens to different application state changes."""
     bl_idname = 'LNOnApplicationStateNode'
     bl_label = 'On Application State'
     arm_version = 1

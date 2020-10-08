@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CallHaxeStaticNode(ArmLogicTreeNode):
-    """Call a static haxe function.
+    """Calls the given static Haxe function.
 
     @input Function: the full module path to the function.
     @output Result: the result of the function."""

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SSAOGetNode(ArmLogicTreeNode):
-    """Use to get the SSAO post-processing settings."""
+    """Returns the SSAO post-processing settings."""
     bl_idname = 'LNSSAOGetNode'
     bl_label = 'Get SSAO Settings'
     arm_version = 1

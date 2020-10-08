@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetCheckboxNode(ArmLogicTreeNode):
-    """Use to get if an UI checkbox is checked."""
+    """Returns whether the given UI checkbox is checked."""
     bl_idname = 'LNCanvasGetCheckboxNode'
     bl_label = 'Get Canvas Checkbox'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetParticleSpeedNode(ArmLogicTreeNode):
-    """Set the speed of a particle source."""
+    """Sets the speed of the given particle source."""
     bl_idname = 'LNSetParticleSpeedNode'
     bl_label = 'Set Particle Speed'
     arm_version = 1

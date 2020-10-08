@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class BoneIKNode(ArmLogicTreeNode):
-    """Apply inverse kinematics in an object bone."""
+    """Applies inverse kinematics in the given object bone."""
     bl_idname = 'LNBoneIKNode'
     bl_label = 'Bone IK'
     arm_version = 1

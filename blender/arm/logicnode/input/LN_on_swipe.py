@@ -45,7 +45,7 @@ class NodeRemoveOutputButton(bpy.types.Operator):
 
 # Class SwipeNode
 class OnSwipeNode(ArmLogicTreeNode):
-    """Activates the output when there is a swipe event."""
+    """Activates the output when the given swipe action is done."""
     bl_idname = 'LNOnSwipeNode'
     bl_label = 'On Swipe'
     arm_version = 1

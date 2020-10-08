@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetWorldNode(ArmLogicTreeNode):
-    """Use to get the world orientation of an object."""
+    """Returns the world orientation of the given object."""
     bl_idname = 'LNGetWorldNode'
     bl_label = 'Get World Orientation'
     arm_version = 1

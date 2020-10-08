@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class IntegerNode(ArmLogicTreeNode):
-    """Stores an integer (a whole number) as a variable."""
+    """Stores the given integer (a whole number) as a variable."""
     bl_idname = 'LNIntegerNode'
     bl_label = 'Integer'
     arm_version = 1

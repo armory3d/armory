@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MixNode(ArmLogicTreeNode):
-    """Use to interpolate between two values."""
+    """Interpolates between the two given values."""
     bl_idname = 'LNMixNode'
     bl_label = 'Mix'
     arm_version = 1

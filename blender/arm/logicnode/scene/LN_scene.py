@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SceneNode(ArmLogicTreeNode):
-    """Holds a scene value."""
+    """Stores the given scene as a variable."""
     bl_idname = 'LNSceneNode'
     bl_label = 'Scene'
     arm_version = 1

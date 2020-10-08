@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetLocationNode(ArmLogicTreeNode):
-    """Use to get the location of an UI element (in pixels)."""
+    """Returns the location of the given UI element (pixels)."""
     bl_idname = 'LNCanvasGetLocationNode'
     bl_label = 'Get Canvas Location'
     arm_version = 1

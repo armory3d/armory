@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class FloatArrayNode(ArmLogicTreeNode):
-    """Use to make an array of float elements."""
+    """Stores an array of float elements as a variable."""
     bl_idname = 'LNArrayFloatNode'
     bl_label = 'Array Float'
     arm_version = 1

@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class DisplayInfoNode(ArmLogicTreeNode):
-    """Use to get the display resolution. You may be searching for 'Get Window Resolution' node."""
+    """Returns the current display resolution.
+    
+    @seeNode Get Window Resolution
+    """
     bl_idname = 'LNDisplayInfoNode'
     bl_label = 'Get Display Resolution'
     arm_version = 1

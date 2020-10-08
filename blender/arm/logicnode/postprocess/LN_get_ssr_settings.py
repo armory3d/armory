@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SSRGetNode(ArmLogicTreeNode):
-    """Use to get the SSR post-processing settings."""
+    """Returns the SSR post-processing settings."""
     bl_idname = 'LNSSRGetNode'
     bl_label = 'Get SSR Settings'
     arm_version = 1

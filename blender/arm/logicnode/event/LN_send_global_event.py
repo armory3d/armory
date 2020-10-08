@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SendGlobalEventNode(ArmLogicTreeNode):
-    """Send an event to all objects in the scene.
+    """Sends the given event to all objects in the scene.
 
     @seeNode Send Event To Object
     @seeNode On Event

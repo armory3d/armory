@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LenstextureSetNode(ArmLogicTreeNode):
-    """Use to set the lens texture settings."""
+    """Set the lens texture settings."""
     bl_idname = 'LNLenstextureSetNode'
     bl_label = 'Set Lenstexture'
     arm_version = 1

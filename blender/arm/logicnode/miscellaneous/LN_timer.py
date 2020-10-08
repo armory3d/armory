@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TimerNode(ArmLogicTreeNode):
-    """Timer node. Check the Wiki for more details."""
+    """Creates a timer."""
     bl_idname = 'LNTimerNode'
     bl_label = 'Timer'
     arm_version = 1

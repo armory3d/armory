@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class GetCursorStateNode(ArmLogicTreeNode):
-    """Get the state of the mouse cursor.
+    """Returns the state of the mouse cursor.
 
     @seeNode Set Cursor State
 

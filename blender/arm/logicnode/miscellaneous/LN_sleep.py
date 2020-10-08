@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SleepNode(ArmLogicTreeNode):
-    """Waits a specified amount of time (in seconds) until passing
+    """Waits a specified amount of seconds until passing
     through the incoming signal."""
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'

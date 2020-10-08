@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnContactArrayNode(ArmLogicTreeNode):
-    """Runs the output when the rigid body make contact with other rigid bodies."""
+    """Activates the output when the given rigid body make contact with other given rigid bodies."""
     bl_idname = 'LNOnContactArrayNode'
     bl_label = 'On Contact Array'
     arm_version = 1
@@ -13,8 +13,8 @@ class OnContactArrayNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(OnContactArrayNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'Rigid Body')
-        self.add_input('ArmNodeSocketArray', 'Rigid Bodies')
+        self.add_input('ArmNodeSocketObject', 'RB')
+        self.add_input('ArmNodeSocketArray', 'RBs')
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

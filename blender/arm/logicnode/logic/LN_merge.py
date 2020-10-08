@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class MergeNode(ArmLogicTreeNode):
-    """Activates the output when any connected input is active.
+    """Activates the output when any connected input is activated.
 
     @option New: Add a new input socket.
     @option X Button: Remove the lowermost input socket."""

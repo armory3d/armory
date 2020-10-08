@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 # Class GetSystemName
 class GetSystemName(ArmLogicTreeNode):
-    """Get System Name Node"""
+    """Returns the name of the current system."""
     bl_idname = 'LNGetSystemName'
     bl_label = 'Get System Name'
     arm_version = 1

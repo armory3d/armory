@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SeparateTransformNode(ArmLogicTreeNode):
-    """Separate transform node"""
+    """Separates the transform of the given object."""
     bl_idname = 'LNSeparateTransformNode'
     bl_label = 'Separate Transform'
     arm_version = 1

@@ -4,7 +4,7 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class CanvasGetVisibleNode(ArmLogicTreeNode):
-    """Use to get if an UI element is visible."""
+    """Returns whether the given UI element is visible."""
     bl_idname = 'LNCanvasGetVisibleNode'
     bl_label = 'Get Canvas Visible'
     arm_version = 1

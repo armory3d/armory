@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ObjectArrayNode(ArmLogicTreeNode):
-    """Use to make an array of object elements."""
+    """Stores an array of object elements as a variable."""
     bl_idname = 'LNArrayObjectNode'
     bl_label = 'Array Object'
     arm_version = 1

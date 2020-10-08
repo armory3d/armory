@@ -10,9 +10,10 @@ class GetMaterialNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var object: MeshObject = inputs[0].get();
+		var slot: Int = inputs[1].get();
 
 		if (object == null) return null;
 
-		return object.materials[0];
+		return object.materials[slot];
 	}
 }

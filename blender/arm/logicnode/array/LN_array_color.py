@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorArrayNode(ArmLogicTreeNode):
-    """Use to make an array of color elements."""
+    """Stores an array of color elements as a variable."""
     bl_idname = 'LNArrayColorNode'
     bl_label = 'Array Color'
     arm_version = 1

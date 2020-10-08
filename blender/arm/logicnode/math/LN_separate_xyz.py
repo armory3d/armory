@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SeparateVectorNode(ArmLogicTreeNode):
-    """Use to split a vector into XYZ values."""
+    """Splits the given vector into XYZ values."""
     bl_idname = 'LNSeparateVectorNode'
     bl_label = 'Separate XYZ'
     arm_version = 1

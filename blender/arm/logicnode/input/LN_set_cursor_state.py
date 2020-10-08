@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetCursorStateNode(ArmLogicTreeNode):
-    """Set the state of the mouse cursor.
+    """Sets the state of the mouse cursor.
 
     @seeNode Get Cursor State
 

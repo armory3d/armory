@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class RpMSAANode(ArmLogicTreeNode):
-    """Use to set the MSAA quality."""
+    """Sets the MSAA quality."""
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Set MSAA Quality'
     arm_version = 1

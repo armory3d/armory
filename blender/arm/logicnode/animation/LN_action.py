@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class AnimActionNode(ArmLogicTreeNode):
-    """Hold an action as a variable."""
+    """Stores the given action as a variable."""
     bl_idname = 'LNAnimActionNode'
     bl_label = 'Action'
     arm_version = 1

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SelfObjectNode(ArmLogicTreeNode):
-    """Use to get the object that owns the current trait."""
+    """Returns the object that owns the trait."""
     bl_idname = 'LNSelfNode'
     bl_label = 'Self Object'
     arm_version = 1

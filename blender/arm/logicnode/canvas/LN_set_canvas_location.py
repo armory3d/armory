@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetLocationNode(ArmLogicTreeNode):
-    """Use to set the location of an UI element."""
+    """Sets the location of the given UI element."""
     bl_idname = 'LNCanvasSetLocationNode'
     bl_label = 'Set Canvas Location'
     arm_version = 1

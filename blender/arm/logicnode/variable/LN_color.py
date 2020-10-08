@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ColorNode(ArmLogicTreeNode):
-    """Stores a color as a variable."""
+    """Stores the given color as a variable."""
     bl_idname = 'LNColorNode'
     bl_label = 'Color'
     arm_version = 1

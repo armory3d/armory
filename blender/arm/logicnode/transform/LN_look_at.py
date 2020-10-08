@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LookAtNode(ArmLogicTreeNode):
-    """Use to make an object indicate to a specific location."""
+    """TO DO."""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
     arm_version = 1

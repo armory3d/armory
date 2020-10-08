@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ExpressionNode(ArmLogicTreeNode):
-    """Evaluate a Haxe expression and get its output.
+    """Evaluates a Haxe expression and returns its output.
 
     @output Result: the result of the expression."""
     bl_idname = 'LNExpressionNode'

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class IsTrueNode(ArmLogicTreeNode):
-    """Passes through its activation only if the plugged in boolean
+    """Passes through its activation only if the plugged-in boolean
     equals `true`.
 
     @seeNode Is False"""

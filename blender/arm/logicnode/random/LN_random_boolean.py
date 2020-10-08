@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class RandomBooleanNode(ArmLogicTreeNode):
-    """Use to generate a random boolean."""
+    """Generates a random boolean."""
     bl_idname = 'LNRandomBooleanNode'
     bl_label = 'Random Boolean'
     arm_version = 1

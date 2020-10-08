@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CaseStringNode(ArmLogicTreeNode):
-    """Use to convert a strings case."""
+    """Changes the given string case."""
     bl_idname = 'LNCaseStringNode'
     bl_label = 'String Case'
     arm_version = 1

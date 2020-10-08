@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class AlternateNode(ArmLogicTreeNode):
-    """Runs the outputs 0 and 1 alternating every time it is activated."""
+    """Activates the outputs 0 and 1 alternating every time it is active."""
     bl_idname = 'LNAlternateNode'
     bl_label = 'Alternate'
     arm_version = 1

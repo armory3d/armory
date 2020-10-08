@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetTimeScaleNode(ArmLogicTreeNode):
-    """Use to set the global time scale."""
+    """Sets the global time scale."""
     bl_idname = 'LNSetTimeScaleNode'
     bl_label = 'Set Time Scale'
     arm_version = 1

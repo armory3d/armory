@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class PlayActionFromNode(ArmLogicTreeNode):
-    """Play an action from a defined frame."""
+    """Plays action starting from the given frame."""
     bl_idname = 'LNPlayActionFromNode'
     bl_label = 'Play Action From'
     arm_version = 1

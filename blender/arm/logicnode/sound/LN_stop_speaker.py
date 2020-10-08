@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StopSpeakerNode(ArmLogicTreeNode):
-    """Stops playback of a speaker object, the playback position will be
+    """Stops playback of the given speaker object. The playback position will be
     reset to the start.
 
     @seeNode Pause Speaker

@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class TransformMathNode(ArmLogicTreeNode):
-    """Use to operate transform values."""
+    """Operates the two given transform values."""
     bl_idname = 'LNTransformMathNode'
     bl_label = 'Transform Math'
     arm_version = 1

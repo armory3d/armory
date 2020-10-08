@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetVariableNode(ArmLogicTreeNode):
-    """Set the value of a given variable.
+    """Sets the value of the given variable.
 
     @input Variable: this socket must be connected to a variable node
         (recognized by the little dot inside the socket). The value that

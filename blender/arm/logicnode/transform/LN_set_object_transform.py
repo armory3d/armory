@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetTransformNode(ArmLogicTreeNode):
-    """Use to set the transform of an object."""
+    """Sets the transform of the given object."""
     bl_idname = 'LNSetTransformNode'
     bl_label = 'Set Object Transform'
     arm_version = 1

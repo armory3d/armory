@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetTouchMovementNode(ArmLogicTreeNode):
-    """Get the movement values of the current touch event."""
+    """Returns the movement values of the current touch event."""
     bl_idname = 'LNGetTouchMovementNode'
     bl_label = 'Get Touch Movement'
     arm_version = 1

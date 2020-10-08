@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class WriteFileNode(ArmLogicTreeNode):
-    """Use to write a content inside a file.
+    """Writes the given content in the given file.
 
     @seeNode Read File"""
     bl_idname = 'LNWriteFileNode'
