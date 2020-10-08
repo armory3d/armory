@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Union
 
 import bpy
 
-from arm.material.shader import Shader, vec3str, floatstr
+from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
 
 
 class ParserContext(Enum):
@@ -24,6 +24,13 @@ class ParserState:
 
         # Active shader - frag for surface / tese for displacement
         self.curshader: Shader = None
+        self.con: ShaderContext = None
+
+        self.vert: Shader = None
+        self.frag: Shader = None
+        self.geom: Shader = None
+        self.tesc: Shader = None
+        self.tese: Shader = None
 
         # Cache for computing nodes only once
         self.parsed_nodes: Dict[str, bpy.types.Node] = {}
@@ -33,12 +40,12 @@ class ParserState:
         self.parse_opacity = True
         self.parse_displacement = True
 
+        self.emission_found = False
+        self.procedurals_written = False
+
         # TODO: document those attributes
         self.sample_bump = False
         self.sample_bump_res = ''
-
-        # TODO: document those attributes
-        self.particle_info: Dict[str, bool] = {}
 
         # Shader output values
         self.out_basecol: vec3str = 'vec3(0.8)'

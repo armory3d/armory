@@ -30,53 +30,60 @@ from arm.material.cycles_nodes import *
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 
-emission_found = False
 particle_info: Dict = None # Particle info export
 
-con: ShaderContext
-# Active shader - frag for surface / tese for displacement
-curshader: Shader
+state: Optional[ParserState]
+
+particle_info: Dict[str, bool]
+
+parents = []
+parsed = {}
+
 
 def parse(nodes, con: ShaderContext,
           vert: Shader, frag: Shader, geom: Shader, tesc: Shader, tese: Shader,
           parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
-    output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
-    custom_particle_node = node_by_name(nodes, 'ArmCustomParticleNode')
-    if output_node is not None:
-        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only, custom_particle_node)
+    global state
 
-def parse_output(node, _con: ShaderContext,
-                 _vert: Shader, _frag: Shader, _geom: Shader, _tesc: Shader, _tese: Shader,
-                 _parse_surface: bool, _parse_opacity: bool, _parse_displacement: bool, _basecol_only: bool,
-                 custom_particle_node: bpy.types.Node):
+    # TODO: Set context object instead of passing None. Also check if the state reset is ok here (node cache is cleared e.g.).
+    state = ParserState(ParserContext.OBJECT, None)
+
+    state.parse_surface = parse_surface
+    state.parse_opacity = parse_opacity
+    state.parse_displacement = parse_displacement
+
+    state.con = con
+
+    state.vert = vert
+    state.frag = frag
+    state.geom = geom
+    state.tesc = tesc
+    state.tese = tese
+
+    output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
+    if output_node is not None:
+        custom_particle_node = node_by_name(nodes, 'ArmCustomParticleNode')
+        parse_material_output(output_node, basecol_only, custom_particle_node)
+
+    # Make sure that individual functions in this module aren't called with an incorrect/old parser state, set it to
+    # None so that it will raise exceptions when not set
+    state = None
+
+
+def parse_material_output(node: bpy.types.Node, _basecol_only: bool, custom_particle_node: bpy.types.Node):
     global parsed # Compute nodes only once
     global parents
     global normal_parsed
-    global curshader
-    global con
-    global vert
-    global frag
-    global geom
-    global tesc
-    global tese
     global parse_surface
     global parse_opacity
     global basecol_only
-    global emission_found
     global particle_info
-    global sample_bump
-    global sample_bump_res
-    global procedurals_written
-    con = _con
-    vert = _vert
-    frag = _frag
-    geom = _geom
-    tesc = _tesc
-    tese = _tese
-    parse_surface = _parse_surface
-    parse_opacity = _parse_opacity
+
+    parse_surface = state.parse_surface
+    parse_opacity = state.parse_opacity
+    parse_displacement = state.parse_displacement
     basecol_only = _basecol_only
-    emission_found = False
+    state.emission_found = False
     particle_info = {
         'index': False,
         'age': False,
@@ -86,9 +93,9 @@ def parse_output(node, _con: ShaderContext,
         'velocity': False,
         'angular_velocity': False
     }
-    sample_bump = False
-    sample_bump_res = ''
-    procedurals_written = False
+    state.sample_bump = False
+    state.sample_bump_res = ''
+    state.procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
     # Surface
@@ -96,57 +103,59 @@ def parse_output(node, _con: ShaderContext,
         parsed = {}
         parents = []
         normal_parsed = False
-        curshader = frag
+        curshader = state.frag
+        state.curshader = curshader
 
         out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission = parse_shader_input(node.inputs[0])
         if parse_surface:
-            frag.write('basecol = {0};'.format(out_basecol))
-            frag.write('roughness = {0};'.format(out_roughness))
-            frag.write('metallic = {0};'.format(out_metallic))
-            frag.write('occlusion = {0};'.format(out_occlusion))
-            frag.write('specular = {0};'.format(out_specular))
+            curshader.write('basecol = {0};'.format(out_basecol))
+            curshader.write('roughness = {0};'.format(out_roughness))
+            curshader.write('metallic = {0};'.format(out_metallic))
+            curshader.write('occlusion = {0};'.format(out_occlusion))
+            curshader.write('specular = {0};'.format(out_specular))
             if '_Emission' in wrd.world_defs:
-                frag.write('emission = {0};'.format(out_emission))
+                curshader.write('emission = {0};'.format(out_emission))
         if parse_opacity:
-            frag.write('opacity = {0} - 0.0002;'.format(out_opacity))
+            curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
 
     # Volume
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if _parse_displacement and disp_enabled() and node.inputs[2].is_linked:
+    if parse_displacement and disp_enabled() and node.inputs[2].is_linked:
         parsed = {}
         parents = []
         normal_parsed = False
         rpdat = arm.utils.get_rp()
-        if rpdat.arm_rp_displacement == 'Tessellation' and tese != None:
-            curshader = tese
+        if rpdat.arm_rp_displacement == 'Tessellation' and state.tese is not None:
+            state.curshader = state.tese
         else:
-            curshader = vert
+            state.curshader = state.vert
         out_disp = parse_displacement_input(node.inputs[2])
-        curshader.write('vec3 disp = {0};'.format(out_disp))
+        state.curshader.write('vec3 disp = {0};'.format(out_disp))
 
-    if custom_particle_node != None:
-        if (not (_parse_displacement and disp_enabled() and node.inputs[2].is_linked)):
+    if custom_particle_node is not None:
+        if not (parse_displacement and disp_enabled() and node.inputs[2].is_linked):
             parsed = {}
             parents = []
             normal_parsed = False
-        CPNode = custom_particle_node
         normal_parsed = False
 
-        curshader = vert
-        custom_particle_node.parse(curshader, con)
+        state.curshader = state.vert
+        custom_particle_node.parse(state.curshader, state.con)
+
 
 def parse_group(node, socket): # Entering group
     index = socket_index(node, socket)
     output_node = node_by_type(node.node_tree.nodes, 'GROUP_OUTPUT')
-    if output_node == None:
+    if output_node is None:
         return
     inp = output_node.inputs[index]
     parents.append(node)
     out_group = parse_input(inp)
     parents.pop()
     return out_group
+
 
 def parse_group_input(node: bpy.types.Node, socket: bpy.types.NodeSocket):
     index = socket_index(node, socket)
@@ -167,7 +176,7 @@ def parse_input(inp: bpy.types.NodeSocket):
 
 
 def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
-    # Use parsed result from node
+    # Follow input
     if inp.is_linked:
         link = inp.links[0]
         if link.from_node.type == 'REROUTE':
@@ -187,11 +196,6 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
 
 
 def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[str, ...]:
-    global emission_found
-
-    # TODO: Temporary solution
-    parser_state = ParserState(ParserContext.OBJECT, None)
-
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             if parse_surface:
@@ -200,19 +204,19 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                     arm.log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
-                parser_state.out_basecol = parse_vector_input(node.inputs[0])
+                state.out_basecol = parse_vector_input(node.inputs[0])
                 # Occlusion
-                parser_state.out_occlusion = parse_value_input(node.inputs[2])
+                state.out_occlusion = parse_value_input(node.inputs[2])
                 # Roughness
-                parser_state.out_roughness = parse_value_input(node.inputs[3])
+                state.out_roughness = parse_value_input(node.inputs[3])
                 # Metallic
-                parser_state.out_metallic = parse_value_input(node.inputs[4])
+                state.out_metallic = parse_value_input(node.inputs[4])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    parser_state.out_emission = parse_value_input(node.inputs[6])
-                    emission_found = True
+                    state.out_emission = parse_value_input(node.inputs[6])
+                    state.emission_found = True
             if parse_opacity:
-                parser_state.out_opacity = parse_value_input(node.inputs[1])
+                state.out_opacity = parse_value_input(node.inputs[1])
         else:
             return parse_group(node, socket)
 
@@ -240,17 +244,17 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
     }
 
     if node.type in node_parser_funcs:
-        node_parser_funcs[node.type](node, socket, parser_state)
+        node_parser_funcs[node.type](node, socket, state)
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(frag, vert)
+            return node.parse(state.frag, state.vert)
 
     elif node.type not in ('GROUP', 'GROUP_INPUT'):
         # TODO: Print node tree name (save in ParserState)
         arm.log.warn(f'Material node type {node.type} not supported')
 
-    return parser_state.get_outs()
+    return state.get_outs()
 
 
 def parse_displacement_input(inp):
@@ -264,8 +268,8 @@ def parse_displacement_input(inp):
 
 
 def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
-    """Return the parsed result the given input socket."""
-    # Use parsed result from node
+    """Return the parsed result of the given input socket."""
+    # Follow input
     if inp.is_linked:
         link = inp.links[0]
         if link.from_node.type == 'REROUTE':
@@ -347,11 +351,11 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     }
 
     if node.type in node_parser_funcs:
-        return node_parser_funcs[node.type](node, socket)
+        return node_parser_funcs[node.type](node, socket, state)
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(frag, vert)
+            return node.parse(state.frag, state.vert)
 
     else:
         arm.log.warn(f'Material node type {node.type} not supported')
@@ -360,7 +364,9 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
 def parse_normal_map_color_input(inp, strength_input=None):
     global normal_parsed
-    global frag
+
+    frag = state.frag
+
     if basecol_only:
         return
     if not inp.is_linked:
@@ -382,12 +388,12 @@ def parse_normal_map_color_input(inp, strength_input=None):
             if strength != '1.0':
                 frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
-        con.add_elem('tang', 'short4norm')
+        state.con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
 
 def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
-    # Use parsed result from node
+    # Follow input
     if inp.is_linked:
         link = inp.links[0]
 
@@ -462,11 +468,11 @@ def parse_value(node, socket):
     }
 
     if node.type in node_parser_funcs:
-        return node_parser_funcs[node.type](node, socket)
+        return node_parser_funcs[node.type](node, socket, state)
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(frag, vert)
+            return node.parse(state.frag, state.vert)
 
     else:
         arm.log.warn(f'Material node type {node.type} not supported')
@@ -474,6 +480,8 @@ def parse_value(node, socket):
 
 
 def vector_curve(name, fac, points):
+    curshader = state.curshader
+
     # Write Ys array
     ys_var = name + '_ys'
     curshader.write('float {0}[{1}];'.format(ys_var, len(points))) # TODO: Make const
@@ -529,16 +537,16 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
             res = parse_vector(link.from_node, link.from_socket)
             if res is None:
                 return None
-            curshader.write(f'vec3 {res_var} = {res};')
+            state.curshader.write(f'vec3 {res_var} = {res};')
 
         elif st == 'VALUE':
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
                 return None
             if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
-                curshader.add_const('float', res_var, res)
+                state.curshader.add_const('float', res_var, res)
             else:
-                curshader.write(f'float {res_var} = {res};')
+                state.curshader.write(f'float {res_var} = {res};')
 
     # Normal map already parsed, return
     elif link.from_node.type == 'NORMAL_MAP':
@@ -548,10 +556,9 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
 
 
 def write_procedurals():
-    global procedurals_written
-    if(not procedurals_written):
-        curshader.add_function(c_functions.str_tex_proc)
-        procedurals_written = True
+    if not state.procedurals_written:
+        state.curshader.add_function(c_functions.str_tex_proc)
+        state.procedurals_written = True
     return
 
 def glsl_type(typestr: str):
@@ -562,22 +569,23 @@ def glsl_type(typestr: str):
 
 def to_uniform(inp: bpy.types.NodeSocket):
     uname = safesrc(inp.node.name) + safesrc(inp.name)
-    curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
+    state.curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
 def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
-    global sample_bump
-    global sample_bump_res
     global parsed
+
+    curshader = state.curshader
+
     tex_store = store_var_name(node)
     if is_parsed(tex_store):
         return tex_store
     parsed[tex_store] = True
     mat_bind_texture(tex)
-    con.add_elem('tex', 'short2norm')
+    state.con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
     triplanar = node.projection == 'BOX'
     if node.inputs[0].is_linked:
@@ -601,21 +609,19 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
         else:
             curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
-    if sample_bump:
-        sample_bump_res = tex_store
+    if state.sample_bump:
+        state.sample_bump_res = tex_store
         curshader.write('float {0}_1 = textureOffset({1}, {2}.xy, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
         curshader.write('float {0}_2 = textureOffset({1}, {2}.xy, ivec2(2, 0)).r;'.format(tex_store, tex_name, uv_name))
         curshader.write('float {0}_3 = textureOffset({1}, {2}.xy, ivec2(0, -2)).r;'.format(tex_store, tex_name, uv_name))
         curshader.write('float {0}_4 = textureOffset({1}, {2}.xy, ivec2(0, 2)).r;'.format(tex_store, tex_name, uv_name))
-        sample_bump = False
+        state.sample_bump = False
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     return tex_store
 
 def write_bump(node, res, scl=0.001):
-    global sample_bump
-    global sample_bump_res
-    sample_bump_res = store_var_name(node) + '_bump'
+    state.sample_bump_res = store_var_name(node) + '_bump'
     # Testing.. get function parts..
     ar = res.split('(', 1)
     pre = ar[0] + '('
@@ -626,11 +632,13 @@ def write_bump(node, res, scl=0.001):
     else:
         co = ar[1][:-1]
         post = ')'
-    curshader.write('float {0}_1 = {1}{2} + vec3(-{4}, 0.0, 0.0){3};'.format(sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_2 = {1}{2} + vec3({4},  0.0, {4}){3};'.format(sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_3 = {1}{2} + vec3(0.0, -{4}, 0.0){3};'.format(sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_4 = {1}{2} + vec3(0.0, {4}, -{4}){3};'.format(sample_bump_res, pre, co, post, scl))
-    sample_bump = False
+
+    curshader = state.curshader
+    curshader.write('float {0}_1 = {1}{2} + vec3(-{4}, 0.0, 0.0){3};'.format(state.sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_2 = {1}{2} + vec3({4},  0.0, {4}){3};'.format(state.sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_3 = {1}{2} + vec3(0.0, -{4}, 0.0){3};'.format(state.sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_4 = {1}{2} + vec3(0.0, {4}, -{4}){3};'.format(state.sample_bump_res, pre, co, post, scl))
+    state.sample_bump = False
 
 def to_vec1(v):
     return str(v)
@@ -658,7 +666,7 @@ def node_name(s: str) -> str:
     """Return a unique and safe name for a node for shader code usage."""
     for p in parents:
         s = p.name + '_' + s
-    if curshader.write_textures > 0:
+    if state.curshader.write_textures > 0:
         s += '_texread'
     s = safesrc(s)
     if '__' in s: # Consecutive _ are reserved

@@ -2,13 +2,14 @@ from typing import Union
 
 import bpy
 
-import arm.material.cycles as cycles
+import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
+from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
 
-def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket) -> vec3str:
-    t = float(cycles.parse_value_input(node.inputs[0]))
+def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    t = float(c.parse_value_input(node.inputs[0]))
 
     rgb = [0, 0, 0]
     blackbody_table_r = [
@@ -71,41 +72,41 @@ def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.N
         rgb[2] = ((b[0] * t + b[1]) * t + b[2]) * t + b[3]
 
     # Pass constant
-    return cycles.to_vec3([rgb[0], rgb[1], rgb[2]])
+    return c.to_vec3([rgb[0], rgb[1], rgb[2]])
 
 
-def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket) -> Union[floatstr, vec3str]:
+def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     # Alpha (TODO: make ColorRamp calculation vec4-based and split afterwards)
     if out_socket == node.outputs[1]:
         return '1.0'
 
     input_fac: bpy.types.NodeSocket = node.inputs[0]
 
-    fac: str = cycles.parse_value_input(input_fac) if input_fac.is_linked else cycles.to_vec1(input_fac.default_value)
+    fac: str = c.parse_value_input(input_fac) if input_fac.is_linked else c.to_vec1(input_fac.default_value)
     interp = node.color_ramp.interpolation
     elems = node.color_ramp.elements
 
     if len(elems) == 1:
-        return cycles.to_vec3(elems[0].color)
+        return c.to_vec3(elems[0].color)
 
     # Write color array
     # The last entry is included twice so that the interpolation
     # between indices works (no out of bounds error)
-    cols_var = cycles.node_name(node.name).upper() + '_COLS'
+    cols_var = c.node_name(node.name).upper() + '_COLS'
     cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
     cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
-    cycles.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+    state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
 
-    fac_var = cycles.node_name(node.name) + '_fac'
-    cycles.curshader.write(f'float {fac_var} = {fac};')
+    fac_var = c.node_name(node.name) + '_fac'
+    state.curshader.write(f'float {fac_var} = {fac};')
 
     # Get index of the nearest left element relative to the factor
     index = '0 + '
     index += ' + '.join([f'(({fac_var} > {elems[i].position}) ? 1 : 0)' for i in range(1, len(elems))])
 
     # Write index
-    index_var = cycles.node_name(node.name) + '_i'
-    cycles.curshader.write(f'int {index_var} = {index};')
+    index_var = c.node_name(node.name) + '_i'
+    state.curshader.write(f'int {index_var} = {index};')
 
     if interp == 'CONSTANT':
         return f'{cols_var}[{index_var}]'
@@ -113,50 +114,50 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
     # Linear interpolation
     else:
         # Write factor array
-        facs_var = cycles.node_name(node.name).upper() + '_FACS'
+        facs_var = c.node_name(node.name).upper() + '_FACS'
         facs_entries = ', '.join(str(elem.position) for elem in elems)
         # Add one more entry at the rightmost position so that the
         # interpolation between indices works (no out of bounds error)
         facs_entries += ', 1.0'
-        cycles.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
+        state.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
 
         # Mix color
         # float f = (pos - start) * (1.0 / (finish - start))
         return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
 
 
-def parse_combhsv(node: bpy.types.ShaderNodeCombineHSV, out_socket: bpy.types.NodeSocket) -> vec3str:
-    cycles.curshader.add_function(c_functions.str_hue_sat)
-    h = cycles.parse_value_input(node.inputs[0])
-    s = cycles.parse_value_input(node.inputs[1])
-    v = cycles.parse_value_input(node.inputs[2])
+def parse_combhsv(node: bpy.types.ShaderNodeCombineHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    state.curshader.add_function(c_functions.str_hue_sat)
+    h = c.parse_value_input(node.inputs[0])
+    s = c.parse_value_input(node.inputs[1])
+    v = c.parse_value_input(node.inputs[2])
     return f'hsv_to_rgb(vec3({h}, {s}, {v}))'
 
 
-def parse_combrgb(node: bpy.types.ShaderNodeCombineRGB, out_socket: bpy.types.NodeSocket) -> vec3str:
-    r = cycles.parse_value_input(node.inputs[0])
-    g = cycles.parse_value_input(node.inputs[1])
-    b = cycles.parse_value_input(node.inputs[2])
+def parse_combrgb(node: bpy.types.ShaderNodeCombineRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    r = c.parse_value_input(node.inputs[0])
+    g = c.parse_value_input(node.inputs[1])
+    b = c.parse_value_input(node.inputs[2])
     return f'vec3({r}, {g}, {b})'
 
 
-def parse_combxyz(node: bpy.types.ShaderNodeCombineXYZ, out_socket: bpy.types.NodeSocket) -> vec3str:
-    x = cycles.parse_value_input(node.inputs[0])
-    y = cycles.parse_value_input(node.inputs[1])
-    z = cycles.parse_value_input(node.inputs[2])
+def parse_combxyz(node: bpy.types.ShaderNodeCombineXYZ, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    x = c.parse_value_input(node.inputs[0])
+    y = c.parse_value_input(node.inputs[1])
+    z = c.parse_value_input(node.inputs[2])
     return f'vec3({x}, {y}, {z})'
 
 
-def parse_wavelength(node: bpy.types.ShaderNodeWavelength, out_socket: bpy.types.NodeSocket) -> vec3str:
-    cycles.curshader.add_function(c_functions.str_wavelength_to_rgb)
-    wl = cycles.parse_value_input(node.inputs[0])
+def parse_wavelength(node: bpy.types.ShaderNodeWavelength, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    state.curshader.add_function(c_functions.str_wavelength_to_rgb)
+    wl = c.parse_value_input(node.inputs[0])
     # Roughly map to cycles - 450 to 600 nanometers
     return f'wavelength_to_rgb(({wl} - 450.0) / 150.0)'
 
 
-def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types.NodeSocket) -> Union[floatstr, vec3str]:
-    vec1 = cycles.parse_vector_input(node.inputs[0])
-    vec2 = cycles.parse_vector_input(node.inputs[1])
+def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
+    vec1 = c.parse_vector_input(node.inputs[0])
+    vec2 = c.parse_vector_input(node.inputs[1])
     op = node.operation
 
     if out_socket.type == 'VECTOR':
@@ -186,9 +187,9 @@ def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types
         return '0.0'
 
 
-def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket) -> floatstr:
-    val1 = cycles.parse_value_input(node.inputs[0])
-    val2 = cycles.parse_value_input(node.inputs[1])
+def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    val1 = c.parse_value_input(node.inputs[0])
+    val2 = c.parse_value_input(node.inputs[1])
     op = node.operation
     if op == 'ADD':
         out_val = '({0} + {1})'.format(val1, val2)
@@ -247,8 +248,8 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket)
         return out_val
 
 
-def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeSocket) -> floatstr:
-    col = cycles.parse_vector_input(node.inputs[0])
+def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    col = c.parse_vector_input(node.inputs[0])
     return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
 
 
@@ -257,8 +258,8 @@ def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.No
     return '0.0'
 
 
-def parse_seprgb(node: bpy.types.ShaderNodeSeparateRGB, out_socket: bpy.types.NodeSocket) -> floatstr:
-    col = cycles.parse_vector_input(node.inputs[0])
+def parse_seprgb(node: bpy.types.ShaderNodeSeparateRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    col = c.parse_vector_input(node.inputs[0])
     if out_socket == node.outputs[0]:
         return '{0}.r'.format(col)
     elif out_socket == node.outputs[1]:
@@ -267,8 +268,8 @@ def parse_seprgb(node: bpy.types.ShaderNodeSeparateRGB, out_socket: bpy.types.No
         return '{0}.b'.format(col)
 
 
-def parse_sepxyz(node: bpy.types.ShaderNodeSeparateXYZ, out_socket: bpy.types.NodeSocket) -> floatstr:
-    vec = cycles.parse_vector_input(node.inputs[0])
+def parse_sepxyz(node: bpy.types.ShaderNodeSeparateXYZ, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    vec = c.parse_vector_input(node.inputs[0])
     if out_socket == node.outputs[0]:
         return '{0}.x'.format(vec)
     elif out_socket == node.outputs[1]:
