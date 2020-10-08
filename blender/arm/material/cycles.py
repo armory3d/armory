@@ -317,7 +317,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'VERTEX_COLOR': nodes_input.parse_vertex_color,
         'BRIGHTCONTRAST': nodes_color.parse_brightcontrast,
         'GAMMA': nodes_color.parse_gamma,
-        'HUESAT': nodes_color.parse_huesat,
+        'HUE_SAT': nodes_color.parse_huesat,
         'INVERT': nodes_color.parse_invert,
         'MIX_RGB': nodes_color.parse_mixrgb,
         'BLACKBODY': nodes_converter.parse_blackbody,
