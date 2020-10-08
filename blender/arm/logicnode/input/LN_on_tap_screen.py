@@ -1,4 +1,4 @@
-			from arm.logicnode.arm_nodes import *
+from arm.logicnode.arm_nodes import *
 
 # Class OnTapScreen
 class OnTapScreen(ArmLogicTreeNode):
