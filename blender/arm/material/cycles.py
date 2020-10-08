@@ -24,17 +24,15 @@ import arm.assets
 import arm.utils
 import arm.make_state
 import arm.log
-import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
 from arm.material.cycles_nodes import *
+import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 
-particle_info: Dict = None # Particle info export
+particle_info: Dict[str, bool] = None # Particle info export
 
 state: Optional[ParserState]
-
-particle_info: Dict[str, bool]
 
 parents = []
 parsed = {}
