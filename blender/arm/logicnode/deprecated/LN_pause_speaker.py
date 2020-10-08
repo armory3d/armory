@@ -9,7 +9,9 @@ class PauseSpeakerNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNPauseSoundNode'
     bl_label = 'Pause Speaker'
-    arm_version = 1
+    bl_description = "Please use the \"Set Speaker Enabled\" node instead"
+    bl_icon='ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(PauseSpeakerNode, self).init(context)
@@ -17,4 +19,4 @@ class PauseSpeakerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseSpeakerNode, category=PKG_AS_CATEGORY)
+add_node(PauseSpeakerNode, category=PKG_AS_CATEGORY, is_obsolete=True)

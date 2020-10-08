@@ -11,4 +11,4 @@ class AnimActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAnimAction', 'Action')
         self.add_output('ArmNodeSocketAnimAction', 'Action', is_var=True)
 
-add_node(AnimActionNode, category=PKG_AS_CATEGORY)
+add_node(AnimActionNode, category=PKG_AS_CATEGORY, section='action')

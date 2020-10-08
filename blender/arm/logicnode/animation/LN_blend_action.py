@@ -15,4 +15,4 @@ class BlendActionNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Factor', default_value = 0.5)
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(BlendActionNode, category=PKG_AS_CATEGORY)
+add_node(BlendActionNode, category=PKG_AS_CATEGORY, section='action')

@@ -9,7 +9,9 @@ class PlaySpeakerNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
-    arm_version = 1
+    bl_description = "Please use the \"Set Speaker Enabled\" node instead"
+    bl_icon='ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(PlaySpeakerNode, self).init(context)
@@ -17,4 +19,4 @@ class PlaySpeakerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PlaySpeakerNode, category=PKG_AS_CATEGORY)
+add_node(PlaySpeakerNode, category=PKG_AS_CATEGORY, is_obsolete=True)

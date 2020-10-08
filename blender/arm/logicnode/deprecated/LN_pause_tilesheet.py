@@ -4,7 +4,9 @@ class PauseTilesheetNode(ArmLogicTreeNode):
     """Pauses the given tilesheet action."""
     bl_idname = 'LNPauseTilesheetNode'
     bl_label = 'Pause Tilesheet'
-    arm_version = 1
+    bl_description = "Please use the \"Set Tilesheet Enabled\" node instead"
+    bl_icon='ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(PauseTilesheetNode, self).init(context)
@@ -12,4 +14,4 @@ class PauseTilesheetNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseTilesheetNode, category=PKG_AS_CATEGORY, section='tilesheet')
+add_node(PauseTilesheetNode, category=PKG_AS_CATEGORY, section='tilesheet', is_obsolete=True)
