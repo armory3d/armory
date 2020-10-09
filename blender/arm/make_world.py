@@ -5,7 +5,9 @@ import bpy
 import arm.assets as assets
 import arm.log as log
 from arm.material import make_shader
+from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import ShaderContext, Shader
+import arm.material.cycles as cycles
 import arm.node_utils as node_utils
 import arm.utils
 import arm.write_probes as write_probes
@@ -64,7 +66,7 @@ def create_world_shaders(world: bpy.types.World):
     vec4 position = SMVP * vec4(pos, 1.0);
     gl_Position = vec4(position);''')
 
-    build_node_tree(world, frag)
+    build_node_tree(world, frag, shader_context)
 
     # TODO: Rework shader export so that it doesn't depend on materials
     # to prevent workaround code like this
@@ -88,7 +90,7 @@ def create_world_shaders(world: bpy.types.World):
     shader_datas.append({'contexts': [shader_context.data], 'name': pass_name})
 
 
-def build_node_tree(world: bpy.types.World, frag: Shader):
+def build_node_tree(world: bpy.types.World, frag: Shader, con: ShaderContext):
     """Generates the shader code for the given world."""
     world_name = arm.utils.safestr(world.name)
     world.world_defs = ''
@@ -98,12 +100,19 @@ def build_node_tree(world: bpy.types.World, frag: Shader):
     if callback is not None:
         callback()
 
+    # film_transparent, do not render
+    if bpy.context.scene is not None and bpy.context.scene.render.film_transparent:
+        world.world_defs += '_EnvCol'
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
+        frag.write('fragColor.rgb = backgroundCol;')
+        return
+
     # Traverse world node tree
     is_parsed = False
     if world.node_tree is not None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node is not None:
-            is_parsed = parse_world_output(world, output_node, frag)
+            is_parsed = parse_world_output(world, output_node, frag, con)
 
     # No world nodes/no output node, use background color
     if not is_parsed:
@@ -125,12 +134,6 @@ def build_node_tree(world: bpy.types.World, frag: Shader):
             world.arm_envtex_irr_name = world_name
         write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
 
-    # film_transparent
-    if bpy.context.scene is not None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
-        world.world_defs += '_EnvTransp'
-        world.world_defs += '_EnvCol'
-        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:
         world.world_defs += '_EnvClouds'
@@ -142,21 +145,36 @@ def build_node_tree(world: bpy.types.World, frag: Shader):
     if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
         frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
-    frag_write_main(world, frag)
+    # Clear background color
+    if '_EnvCol' in world.world_defs:
+        frag.write('fragColor.rgb = backgroundCol;')
+
+    elif '_EnvTex' in world.world_defs and '_EnvLDR' in world.world_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
+
+    if '_EnvClouds' in world.world_defs:
+        frag.write_init('vec3 n = normalize(normal);')
+        frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
+
+    if '_EnvLDR' in world.world_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+
+    # Mark as non-opaque
+    frag.write('fragColor.a = 0.0;')
 
 
-def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader) -> bool:
+def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader, con: ShaderContext) -> bool:
     """Parse the world's output node. Return `False` when the node has
     no connected surface input."""
-    if not node_output.inputs[0].is_linked:
+    surface_node = node_utils.find_node_by_link(world.node_tree, node_output, node_output.inputs[0])
+    if surface_node is None:
         return False
 
-    surface_node = node_utils.find_node_by_link(world.node_tree, node_output, node_output.inputs[0])
-    parse_surface(world, surface_node, frag)
+    parse_surface(world, surface_node, frag, con)
     return True
 
 
-def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader):
+def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader, con: ShaderContext):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
@@ -166,195 +184,32 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
 
+        parser_state = ParserState(ParserContext.WORLD, world)
+        parser_state.con = con
+        parser_state.curshader = frag
+        parser_state.frag = frag
+        cycles.state = parser_state
+
         # Extract environment strength
         # Todo: follow/parse strength input
         world.arm_envtex_strength = node_surface.inputs[1].default_value
 
         # Color
-        if node_surface.inputs[0].is_linked:
-            color_node = node_utils.find_node_by_link(world.node_tree, node_surface, node_surface.inputs[0])
-            parse_color(world, color_node, frag)
-        else:
+        out = cycles.parse_vector_input(node_surface.inputs[0])
+        frag.write(f'fragColor.rgb = {out};')
+
+        if not node_surface.inputs[0].is_linked:
+            solid_mat = rpdat.arm_material_model == 'Solid'
+            if rpdat.arm_irradiance and not solid_mat:
+                world.world_defs += '_Irr'
             world.arm_envtex_color = node_surface.inputs[0].default_value
+            world.arm_envtex_strength = 1.0
 
+    else:
+        log.warn(f'World node type {node_surface.type} must not be connected to the world output node!')
 
-def parse_color(world: bpy.types.World, node: bpy.types.Node, frag: Shader):
-    wrd = bpy.data.worlds['Arm']
-    rpdat = arm.utils.get_rp()
-    mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
-
-    # Env map included
-    if node.type == 'TEX_ENVIRONMENT' and node.image is not None:
-        world.world_defs += '_EnvTex'
-
-        frag.add_include('std/math.glsl')
-        frag.add_uniform('sampler2D envmap', link='_envmap')
-
-        image = node.image
-        filepath = image.filepath
-
-        if image.packed_file is None and not os.path.isfile(arm.utils.asset_path(filepath)):
-            log.warn(world.name + ' - unable to open ' + image.filepath)
-            return
-
-        # Reference image name
-        tex_file = arm.utils.extract_filename(image.filepath)
-        base = tex_file.rsplit('.', 1)
-        ext = base[1].lower()
-
-        if ext == 'hdr':
-            target_format = 'HDR'
-        else:
-            target_format = 'JPEG'
-        do_convert = ext != 'hdr' and ext != 'jpg'
-        if do_convert:
-            if ext == 'exr':
-                tex_file = base[0] + '.hdr'
-                target_format = 'HDR'
-            else:
-                tex_file = base[0] + '.jpg'
-                target_format = 'JPEG'
-
-        if image.packed_file is not None:
-            # Extract packed data
-            unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
-            if not os.path.exists(unpack_path):
-                os.makedirs(unpack_path)
-            unpack_filepath = unpack_path + '/' + tex_file
-            filepath = unpack_filepath
-
-            if do_convert:
-                if not os.path.isfile(unpack_filepath):
-                    arm.utils.unpack_image(image, unpack_filepath, file_format=target_format)
-
-            elif not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != image.packed_file.size:
-                with open(unpack_filepath, 'wb') as f:
-                    f.write(image.packed_file.data)
-
-            assets.add(unpack_filepath)
-        else:
-            if do_convert:
-                unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
-                if not os.path.exists(unpack_path):
-                    os.makedirs(unpack_path)
-                converted_path = unpack_path + '/' + tex_file
-                filepath = converted_path
-                # TODO: delete cache when file changes
-                if not os.path.isfile(converted_path):
-                    arm.utils.convert_image(image, converted_path, file_format=target_format)
-                assets.add(converted_path)
-            else:
-                # Link image path to assets
-                assets.add(arm.utils.asset_path(image.filepath))
-
-        # Generate prefiltered envmaps
-        world.arm_envtex_name = tex_file
-        world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
-        disable_hdr = target_format == 'JPEG'
-
-        mip_count = world.arm_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
-
-        world.arm_envtex_num_mips = mip_count
-
-        # Append LDR define
-        if disable_hdr:
-            world.world_defs += '_EnvLDR'
-        # Append radiance define
-        if rpdat.arm_irradiance and rpdat.arm_radiance and not mobile_mat:
-            wrd.world_defs += '_Rad'
-
-    # Static image background
-    elif node.type == 'TEX_IMAGE':
-        world.world_defs += '_EnvImg'
-
-        # Background texture
-        frag.add_uniform('sampler2D envmap', link='_envmap')
-        frag.add_uniform('vec2 screenSize', link='_screenSize')
-
-        image = node.image
-        filepath = image.filepath
-
-        if image.packed_file is not None:
-            # Extract packed data
-            filepath = arm.utils.build_dir() + '/compiled/Assets/unpacked'
-            unpack_path = arm.utils.get_fp() + filepath
-            if not os.path.exists(unpack_path):
-                os.makedirs(unpack_path)
-            unpack_filepath = unpack_path + '/' + image.name
-            if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
-                with open(unpack_filepath, 'wb') as f:
-                    f.write(image.packed_file.data)
-            assets.add(unpack_filepath)
-        else:
-            # Link image path to assets
-            assets.add(arm.utils.asset_path(image.filepath))
-
-        # Reference image name
-        tex_file = arm.utils.extract_filename(image.filepath)
-        base = tex_file.rsplit('.', 1)
-        ext = base[1].lower()
-
-        if ext == 'hdr':
-            target_format = 'HDR'
-        else:
-            target_format = 'JPEG'
-
-        # Generate prefiltered envmaps
-        world.arm_envtex_name = tex_file
-        world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
-
-        disable_hdr = target_format == 'JPEG'
-
-        mip_count = world.arm_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
-
-        world.arm_envtex_num_mips = mip_count
-
-    # Append sky define
-    elif node.type == 'TEX_SKY':
-        # Match to cycles
-        world.arm_envtex_strength *= 0.1
-
-        world.world_defs += '_EnvSky'
-        assets.add_khafile_def('arm_hosek')
-        frag.add_uniform('vec3 A', link="_hosekA")
-        frag.add_uniform('vec3 B', link="_hosekB")
-        frag.add_uniform('vec3 C', link="_hosekC")
-        frag.add_uniform('vec3 D', link="_hosekD")
-        frag.add_uniform('vec3 E', link="_hosekE")
-        frag.add_uniform('vec3 F', link="_hosekF")
-        frag.add_uniform('vec3 G', link="_hosekG")
-        frag.add_uniform('vec3 H', link="_hosekH")
-        frag.add_uniform('vec3 I', link="_hosekI")
-        frag.add_uniform('vec3 Z', link="_hosekZ")
-        frag.add_uniform('vec3 hosekSunDirection', link="_hosekSunDirection")
-        frag.add_function('''vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
-\tvec3 chi = (1 + cos_gamma * cos_gamma) / pow(1 + H * H - 2 * cos_gamma * H, vec3(1.5));
-\treturn (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
-}''')
-
-        world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
-        world.arm_envtex_turbidity = node.turbidity
-        world.arm_envtex_ground_albedo = node.ground_albedo
-
-        # Irradiance json file name
-        wname = arm.utils.safestr(world.name)
-        world.arm_envtex_irr_name = wname
-        write_probes.write_sky_irradiance(wname)
-
-        # Radiance
-        if rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
-            wrd.world_defs += '_Rad'
-            hosek_path = 'armory/Assets/hosek/'
-            sdk_path = arm.utils.get_sdk_path()
-            # Use fake maps for now
-            assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance.hdr')
-            for i in range(0, 8):
-                assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
-
-            world.arm_envtex_name = 'hosek'
-            world.arm_envtex_num_mips = 8
+    # Invalidate the parser state for subsequent executions
+    cycles.state = None
 
 
 def frag_write_clouds(world: bpy.types.World, frag: Shader):
@@ -440,43 +295,3 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
 
 \treturn vec3(C) + sky * T;
 }''')
-
-
-def frag_write_main(world: bpy.types.World, frag: Shader):
-    if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvClouds' in world.world_defs:
-        frag.write('vec3 n = normalize(normal);')
-
-    if '_EnvCol' in world.world_defs:
-        frag.write('fragColor.rgb = backgroundCol;')
-        if '_EnvTransp' in world.world_defs:
-            frag.write('return;')
-
-    # Static background image
-    elif '_EnvImg' in world.world_defs:
-        # Will have to get rid of gl_FragCoord, pass texture coords from
-        # vertex shader
-        frag.write('vec2 texco = gl_FragCoord.xy / screenSize;')
-        frag.write('fragColor.rgb = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;')
-
-    # Environment texture
-    # Also check for _EnvSky to prevent case when sky radiance is enabled
-    elif '_EnvTex' in world.world_defs and '_EnvSky' not in world.world_defs:
-        frag.write('fragColor.rgb = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;')
-
-        if '_EnvLDR' in world.world_defs:
-            frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
-
-    if '_EnvSky' in world.world_defs:
-        frag.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
-        frag.write('float cos_gamma = dot(n, hosekSunDirection);')
-        frag.write('float gamma_val = acos(cos_gamma);')
-        frag.write('fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;')
-
-    if '_EnvClouds' in world.world_defs:
-        frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
-
-    if '_EnvLDR' in world.world_defs:
-        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
-
-    # Mark as non-opaque
-    frag.write('fragColor.a = 0.0;')

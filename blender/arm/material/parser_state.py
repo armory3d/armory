@@ -43,6 +43,9 @@ class ParserState:
 
         self.emission_found = False
         self.procedurals_written = False
+        # Already exported radiance/irradiance (currently we can only convert
+        # an already existing texture as radiance/irradiance)
+        self.radiance_written = False
 
         # TODO: document those attributes
         self.sample_bump = False
