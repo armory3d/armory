@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Tuple, Union
+from typing import List, Set, Tuple, Union
 
 import bpy
 
@@ -36,7 +36,7 @@ class ParserState:
         self.parents: List[bpy.types.Node] = []
 
         # Cache for computing nodes only once
-        self.parsed_nodes: Dict[str, bpy.types.Node] = {}
+        self.parsed: Set[str] = set()
 
         # What to parse from the node tree
         self.parse_surface = True
@@ -53,6 +53,7 @@ class ParserState:
         # TODO: document those attributes
         self.sample_bump = False
         self.sample_bump_res = ''
+        self.normal_parsed = False
 
         # Shader output values
         self.out_basecol: vec3str = 'vec3(0.8)'

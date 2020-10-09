@@ -30,11 +30,10 @@ from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 import arm.utils
 
-particle_info: Dict[str, bool] = None # Particle info export
+# Particle info export
+particle_info: Dict[str, bool] = {}
 
 state: Optional[ParserState]
-
-parsed = {}
 
 
 def parse(nodes, con: ShaderContext,
@@ -42,7 +41,7 @@ def parse(nodes, con: ShaderContext,
           parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     global state
 
-    # TODO: Set context object instead of passing None. Also check if the state reset is ok here (node cache is cleared e.g.).
+    # TODO: Set context object instead of passing None
     state = ParserState(ParserContext.OBJECT, None)
 
     state.parse_surface = parse_surface
@@ -69,10 +68,6 @@ def parse(nodes, con: ShaderContext,
 
 
 def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.Node):
-    global parsed # Compute nodes only once
-    global normal_parsed
-    global parse_surface
-    global parse_opacity
     global particle_info
 
     parse_surface = state.parse_surface
@@ -95,8 +90,9 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
 
     # Surface
     if parse_surface or parse_opacity:
-        parsed = {}
-        normal_parsed = False
+        state.parents = []
+        state.parsed = set()
+        state.normal_parsed = False
         curshader = state.frag
         state.curshader = curshader
 
@@ -117,8 +113,9 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
 
     # Displacement
     if parse_displacement and disp_enabled() and node.inputs[2].is_linked:
-        parsed = {}
-        normal_parsed = False
+        state.parents = []
+        state.parsed = set()
+        state.normal_parsed = False
         rpdat = arm.utils.get_rp()
         if rpdat.arm_rp_displacement == 'Tessellation' and state.tese is not None:
             state.curshader = state.tese
@@ -129,9 +126,9 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
 
     if custom_particle_node is not None:
         if not (parse_displacement and disp_enabled() and node.inputs[2].is_linked):
-            parsed = {}
-            normal_parsed = False
-        normal_parsed = False
+            state.parents = []
+            state.parsed = set()
+        state.normal_parsed = False
 
         state.curshader = state.vert
         custom_particle_node.parse(state.curshader, state.con)
@@ -213,7 +210,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
 
     elif node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
-            if parse_surface:
+            if state.parse_surface:
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
                     log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
@@ -230,7 +227,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
                     state.out_emission = parse_value_input(node.inputs[6])
                     state.emission_found = True
-            if parse_opacity:
+            if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
         else:
             return parse_group(node, socket)
@@ -358,14 +355,12 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
 
 def parse_normal_map_color_input(inp, strength_input=None):
-    global normal_parsed
-
     frag = state.frag
 
-    if state.basecol_only or not inp.is_linked or normal_parsed:
+    if state.basecol_only or not inp.is_linked or state.normal_parsed:
         return
 
-    normal_parsed = True
+    state.normal_parsed = True
     frag.write_normal += 1
     if not get_arm_export_tangents() or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
@@ -502,9 +497,9 @@ def write_normal(inp):
         if normal_res != None:
             state.curshader.write('n = {0};'.format(normal_res))
 
+
 def is_parsed(node_store_name: str):
-    global parsed
-    return node_store_name in parsed
+    return node_store_name in state.parsed
 
 
 def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
@@ -515,13 +510,11 @@ def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
 def write_result(link: bpy.types.NodeLink) -> Optional[str]:
     """Write the parsed result of the given node link to the shader."""
-    global parsed
-
     res_var = res_var_name(link.from_node, link.from_socket)
 
     # Unparsed node
     if not is_parsed(res_var):
-        parsed[res_var] = True
+        state.parsed.add(res_var)
         st = link.from_socket.type
 
         if st in ('RGB', 'RGBA', 'VECTOR'):
@@ -569,14 +562,12 @@ def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
-    global parsed
-
     curshader = state.curshader
 
     tex_store = store_var_name(node)
     if is_parsed(tex_store):
         return tex_store
-    parsed[tex_store] = True
+    state.parsed.add(tex_store)
     mat_bind_texture(tex)
     state.con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
@@ -592,7 +583,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     if triplanar:
         if not curshader.has_include('std/mapping.glsl'):
             curshader.add_include('std/mapping.glsl')
-        if normal_parsed:
+        if state.normal_parsed:
             nor = 'TBN[2]'
         else:
             nor = 'n'
