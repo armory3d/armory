@@ -503,7 +503,7 @@ def write_normal(inp):
     if inp.is_linked and inp.links[0].from_node.type != 'GROUP_INPUT':
         normal_res = parse_vector_input(inp)
         if normal_res != None:
-            curshader.write('n = {0};'.format(normal_res))
+            state.curshader.write('n = {0};'.format(normal_res))
 
 def is_parsed(node_store_name: str):
     global parsed
