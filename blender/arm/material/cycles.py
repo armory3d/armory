@@ -461,7 +461,7 @@ def parse_value(node, socket):
         'RGBTOBW': nodes_converter.parse_rgbtobw,
         'SEPHSV': nodes_converter.parse_sephsv,
         'SEPRGB': nodes_converter.parse_seprgb,
-        'SEPXYZ': nodes_converter.parse_xyz,
+        'SEPXYZ': nodes_converter.parse_sepxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
     }
 
