@@ -292,13 +292,17 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
+    if node.type == 'GROUP':
+        return parse_group(node, socket)
+
+    elif node.type == 'GROUP_INPUT':
+        return parse_group_input(node, socket)
+
     # Use switch-like lookup via dictionary
     # (better performance, better code readability)
     # 'NODE_TYPE': parser_function
     node_parser_funcs: Dict[str, Callable] = {
         'ATTRIBUTE': nodes_input.parse_attribute,
-        'GROUP': parse_group,
-        'GROUP_INPUT': parse_group_input,
 
         # RGB outputs
         'RGB': nodes_input.parse_rgb,
@@ -354,7 +358,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    else:
+    elif node.type not in ('GROUP', 'GROUP_INPUT'):
         log.warn(f'Material node type {node.type} not supported')
         return "vec3(0, 0, 0)"
 
@@ -468,7 +472,7 @@ def parse_value(node, socket):
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    else:
+    elif node.type not in ('GROUP', 'GROUP_INPUT'):
         log.warn(f'Material node type {node.type} not supported')
         return '0.0'
 
