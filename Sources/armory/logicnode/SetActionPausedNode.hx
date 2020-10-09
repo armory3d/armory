@@ -10,7 +10,7 @@ class SetActionPausedNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
-		var enabled: Bool = inputs [2].get();
+		var paused: Bool = inputs [2].get();
 
 		if (object == null) return;
 
@@ -18,7 +18,7 @@ class SetActionPausedNode extends LogicNode {
 
 		if (animation == null) animation = object.getParentArmature(object.name);
 
-		enabled ? animation.resume() : animation.pause();
+		paused ? animation.resume() : animation.pause();
 
 		runOutput(0);
 	}

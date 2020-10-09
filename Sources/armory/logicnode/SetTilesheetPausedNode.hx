@@ -10,11 +10,11 @@ class SetTilesheetPausedNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: MeshObject = inputs[1].get();
-		var enabled: Bool = inputs[2].get();
+		var paused: Bool = inputs[2].get();
 
 		if (object == null) return;
 
-		enabled ? object.tilesheet.resume() : object.tilesheet.pause();
+		paused ? object.tilesheet.resume() : object.tilesheet.pause();
 
 		runOutput(0);
 	}
