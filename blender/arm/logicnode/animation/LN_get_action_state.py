@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class AnimationStateNode(ArmLogicTreeNode):
     """Returns the information about the current action of the given object."""
     bl_idname = 'LNAnimationStateNode'
-    bl_label = 'Action State'
+    bl_label = 'Get Action State'
     arm_version = 1
 
     def init(self, context):
