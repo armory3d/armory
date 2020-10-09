@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import bpy
 
@@ -31,6 +31,9 @@ class ParserState:
         self.geom: Shader = None
         self.tesc: Shader = None
         self.tese: Shader = None
+
+        # Group stack (last in the list = innermost group)
+        self.parents: List[bpy.types.Node] = []
 
         # Cache for computing nodes only once
         self.parsed_nodes: Dict[str, bpy.types.Node] = {}

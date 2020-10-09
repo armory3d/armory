@@ -34,7 +34,6 @@ particle_info: Dict[str, bool] = None # Particle info export
 
 state: Optional[ParserState]
 
-parents = []
 parsed = {}
 
 
@@ -71,7 +70,6 @@ def parse(nodes, con: ShaderContext,
 
 def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.Node):
     global parsed # Compute nodes only once
-    global parents
     global normal_parsed
     global parse_surface
     global parse_opacity
@@ -98,7 +96,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     # Surface
     if parse_surface or parse_opacity:
         parsed = {}
-        parents = []
         normal_parsed = False
         curshader = state.frag
         state.curshader = curshader
@@ -121,7 +118,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     # Displacement
     if parse_displacement and disp_enabled() and node.inputs[2].is_linked:
         parsed = {}
-        parents = []
         normal_parsed = False
         rpdat = arm.utils.get_rp()
         if rpdat.arm_rp_displacement == 'Tessellation' and state.tese is not None:
@@ -134,7 +130,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     if custom_particle_node is not None:
         if not (parse_displacement and disp_enabled() and node.inputs[2].is_linked):
             parsed = {}
-            parents = []
             normal_parsed = False
         normal_parsed = False
 
@@ -148,18 +143,18 @@ def parse_group(node, socket): # Entering group
     if output_node is None:
         return
     inp = output_node.inputs[index]
-    parents.append(node)
+    state.parents.append(node)
     out_group = parse_input(inp)
-    parents.pop()
+    state.parents.pop()
     return out_group
 
 
 def parse_group_input(node: bpy.types.Node, socket: bpy.types.NodeSocket):
     index = socket_index(node, socket)
-    parent = parents.pop() # Leaving group
+    parent = state.parents.pop() # Leaving group
     inp = parent.inputs[index]
     res = parse_input(inp)
-    parents.append(parent) # Return to group
+    state.parents.append(parent) # Return to group
     return res
 
 
@@ -662,7 +657,7 @@ def socket_index(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> int:
 
 def node_name(s: str) -> str:
     """Return a unique and safe name for a node for shader code usage."""
-    for p in parents:
+    for p in state.parents:
         s = p.name + '_' + s
     if state.curshader.write_textures > 0:
         s += '_texread'
