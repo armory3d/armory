@@ -66,7 +66,7 @@ def create_world_shaders(world: bpy.types.World):
     vec4 position = SMVP * vec4(pos, 1.0);
     gl_Position = vec4(position);''')
 
-    build_node_tree(world, frag, shader_context)
+    build_node_tree(world, frag, vert, shader_context)
 
     # TODO: Rework shader export so that it doesn't depend on materials
     # to prevent workaround code like this
@@ -90,7 +90,7 @@ def create_world_shaders(world: bpy.types.World):
     shader_datas.append({'contexts': [shader_context.data], 'name': pass_name})
 
 
-def build_node_tree(world: bpy.types.World, frag: Shader, con: ShaderContext):
+def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: ShaderContext):
     """Generates the shader code for the given world."""
     world_name = arm.utils.safestr(world.name)
     world.world_defs = ''
@@ -161,6 +161,13 @@ def build_node_tree(world: bpy.types.World, frag: Shader, con: ShaderContext):
 
     # Mark as non-opaque
     frag.write('fragColor.a = 0.0;')
+
+    # Hack to make procedural textures work
+    frag_bpos = (frag.contains('bposition') and not frag.contains('vec3 bposition')) or vert.contains('bposition')
+    if frag_bpos:
+        frag.add_in('vec3 bposition')
+        vert.add_out('vec3 bposition')
+        vert.write('bposition = nor;')
 
 
 def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader, con: ShaderContext) -> bool:
