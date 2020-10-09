@@ -21,14 +21,14 @@ from typing import Any, Callable, Dict, Optional, Tuple
 import bpy
 
 import arm.assets
-import arm.utils
+import arm.log as log
 import arm.make_state
-import arm.log
 import arm.material.cycles_functions as c_functions
 from arm.material.cycles_nodes import *
 import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
+import arm.utils
 
 particle_info: Dict[str, bool] = None # Particle info export
 
@@ -198,7 +198,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
             if parse_surface:
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    arm.log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 state.out_basecol = parse_vector_input(node.inputs[0])
@@ -249,7 +249,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
 
     elif node.type not in ('GROUP', 'GROUP_INPUT'):
         # TODO: Print node tree name (save in ParserState)
-        arm.log.warn(f'Material node type {node.type} not supported')
+        log.warn(f'Material node type {node.type} not supported')
 
     return state.get_outs()
 
@@ -355,7 +355,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
             return node.parse(state.frag, state.vert)
 
     else:
-        arm.log.warn(f'Material node type {node.type} not supported')
+        log.warn(f'Material node type {node.type} not supported')
         return "vec3(0, 0, 0)"
 
 
@@ -469,7 +469,7 @@ def parse_value(node, socket):
             return node.parse(state.frag, state.vert)
 
     else:
-        arm.log.warn(f'Material node type {node.type} not supported')
+        log.warn(f'Material node type {node.type} not supported')
         return '0.0'
 
 
@@ -530,14 +530,14 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
         if st in ('RGB', 'RGBA', 'VECTOR'):
             res = parse_vector(link.from_node, link.from_socket)
             if res is None:
-                arm.log.error(f'{link.from_node.name} returned `None` while parsing!')
+                log.error(f'{link.from_node.name} returned `None` while parsing!')
                 return None
             state.curshader.write(f'vec3 {res_var} = {res};')
 
         elif st == 'VALUE':
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
-                arm.log.error(f'{link.from_node.name} returned `None` while parsing!')
+                log.error(f'{link.from_node.name} returned `None` while parsing!')
                 return None
             if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
                 state.curshader.add_const('float', res_var, res)
@@ -601,7 +601,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
             nor = 'n'
         curshader.write('vec4 {0} = vec4(triplanarMapping({1}, {2}, {3}), 0.0);'.format(tex_store, tex_name, nor, uv_name))
     else:
-        if mat_texture_grad():
+        if mat_state.texture_grad:
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
         else:
             curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
@@ -700,7 +700,7 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
             arm.utils.convert_image(image, filepath, "JPEG")
 
         else:
-            arm.log.warn(matname + '/' + image.name + ' - invalid file path')
+            log.warn(matname + '/' + image.name + ' - invalid file path')
             return None
 
     # Reference image name
@@ -710,7 +710,7 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
     s = tex['file'].rsplit('.', 1)
 
     if len(s) == 1:
-        arm.log.warn(matname + '/' + image.name + ' - file extension required for image name')
+        log.warn(matname + '/' + image.name + ' - file extension required for image name')
         return None
 
     ext = s[1].lower()
@@ -746,7 +746,7 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
 
     else:
         if not os.path.isfile(arm.utils.asset_path(filepath)):
-            arm.log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + filepath + ')')
+            log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + filepath + ')')
             return None
 
         if do_convert:
@@ -818,17 +818,11 @@ def is_ascii(s):
 
 ##
 
-def get_rp_renderer():
-    return arm.utils.get_rp().rp_renderer
-
 def get_arm_export_tangents():
     return bpy.data.worlds['Arm'].arm_export_tangents
 
 def safesrc(name):
     return arm.utils.safesrc(name)
-
-def get_sdk_path():
-    return arm.utils.get_sdk_path()
 
 def disp_enabled():
     return arm.utils.disp_enabled(arm.make_state.target)
@@ -847,9 +841,6 @@ def mat_batch():
 
 def mat_bind_texture(tex):
     mat_state.bind_textures.append(tex)
-
-def mat_texture_grad():
-    return mat_state.texture_grad
 
 def mat_get_material():
     return mat_state.material
