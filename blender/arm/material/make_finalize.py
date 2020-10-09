@@ -12,7 +12,7 @@ def make(con_mesh):
     # TODO: enable from cycles.py
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
         frag.write_init('float dotNV = max(dot(n, vVec), 0.0);')
-    
+
     write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
         if tese != None:
@@ -27,7 +27,7 @@ def make(con_mesh):
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
         frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    
+
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
         export_wpos = True
@@ -35,7 +35,7 @@ def make(con_mesh):
         export_wpos = True
     if vert.contains('wposition'):
         write_wpos = True
-    
+
     if export_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
@@ -49,7 +49,7 @@ def make(con_mesh):
         vert.add_out('vec3 mposition')
         vert.add_uniform('float posUnpack', link='_posUnpack')
         vert.write_attrib('mposition = spos.xyz * posUnpack;')
-    
+
     if tese != None:
         if frag_mpos:
             make_tess.interpolate(tese, 'mposition', 3, declare_out=True)
@@ -71,7 +71,7 @@ def make(con_mesh):
         vert.write_attrib('if (dim.z == 0) bposition.z = 0;')
         vert.write_attrib('if (dim.y == 0) bposition.y = 0;')
         vert.write_attrib('if (dim.x == 0) bposition.x = 0;')
-    
+
     if tese != None:
         if frag_bpos:
             make_tess.interpolate(tese, 'bposition', 3, declare_out=True)
