@@ -530,12 +530,14 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
         if st in ('RGB', 'RGBA', 'VECTOR'):
             res = parse_vector(link.from_node, link.from_socket)
             if res is None:
+                arm.log.error(f'{link.from_node.name} returned `None` while parsing!')
                 return None
             state.curshader.write(f'vec3 {res_var} = {res};')
 
         elif st == 'VALUE':
             res = parse_value(link.from_node, link.from_socket)
             if res is None:
+                arm.log.error(f'{link.from_node.name} returned `None` while parsing!')
                 return None
             if link.from_node.type == "VALUE" and not link.from_node.arm_material_param:
                 state.curshader.add_const('float', res_var, res)
