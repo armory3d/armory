@@ -193,7 +193,30 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
 
 
 def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[str, ...]:
-    if node.type == 'GROUP':
+    # Use switch-like lookup via dictionary
+    # (better performance, better code readability)
+    # 'NODE_TYPE': parser_function
+    node_parser_funcs: Dict[str, Callable] = {
+        'MIX_SHADER': nodes_shader.parse_mixshader,
+        'ADD_SHADER': nodes_shader.parse_addshader,
+        'BSDF_PRINCIPLED': nodes_shader.parse_bsdfprincipled,
+        'BSDF_DIFFUSE': nodes_shader.parse_bsdfdiffuse,
+        'BSDF_GLOSSY': nodes_shader.parse_bsdfdiffuse,
+        'AMBIENT_OCCLUSION': nodes_shader.parse_ambientocclusion,
+        'BSDF_ANISOTROPIC': nodes_shader.parse_bsdfanisotropic,
+        'EMISSION': nodes_shader.parse_emission,
+        'BSDF_GLASS': nodes_shader.parse_bsdfglass,
+        'HOLDOUT': nodes_shader.parse_holdout,
+        'SUBSURFACE_SCATTERING': nodes_shader.parse_subsurfacescattering,
+        'BSDF_TRANSLUCENT': nodes_shader.parse_bsdftranslucent,
+        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftranslucent,
+        'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
+    }
+
+    if node.type in node_parser_funcs:
+        node_parser_funcs[node.type](node, socket, state)
+
+    elif node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             if parse_surface:
                 # Normal
@@ -220,34 +243,11 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
     elif node.type == 'GROUP_INPUT':
         return parse_group_input(node, socket)
 
-    # Use switch-like lookup via dictionary
-    # (better performance, better code readability)
-    # 'NODE_TYPE': parser_function
-    node_parser_funcs: Dict[str, Callable] = {
-        'MIX_SHADER': nodes_shader.parse_mixshader,
-        'ADD_SHADER': nodes_shader.parse_addshader,
-        'BSDF_PRINCIPLED': nodes_shader.parse_bsdfprincipled,
-        'BSDF_DIFFUSE': nodes_shader.parse_bsdfdiffuse,
-        'BSDF_GLOSSY': nodes_shader.parse_bsdfdiffuse,
-        'AMBIENT_OCCLUSION': nodes_shader.parse_ambientocclusion,
-        'BSDF_ANISOTROPIC': nodes_shader.parse_bsdfanisotropic,
-        'EMISSION': nodes_shader.parse_emission,
-        'BSDF_GLASS': nodes_shader.parse_bsdfglass,
-        'HOLDOUT': nodes_shader.parse_holdout,
-        'SUBSURFACE_SCATTERING': nodes_shader.parse_subsurfacescattering,
-        'BSDF_TRANSLUCENT': nodes_shader.parse_bsdftranslucent,
-        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftranslucent,
-        'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
-    }
-
-    if node.type in node_parser_funcs:
-        node_parser_funcs[node.type](node, socket, state)
-
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    elif node.type not in ('GROUP', 'GROUP_INPUT'):
+    else:
         # TODO: Print node tree name (save in ParserState)
         log.warn(f'Material node type {node.type} not supported')
 
@@ -292,12 +292,6 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
-    if node.type == 'GROUP':
-        return parse_group(node, socket)
-
-    elif node.type == 'GROUP_INPUT':
-        return parse_group_input(node, socket)
-
     # Use switch-like lookup via dictionary
     # (better performance, better code readability)
     # 'NODE_TYPE': parser_function
@@ -354,13 +348,18 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     if node.type in node_parser_funcs:
         return node_parser_funcs[node.type](node, socket, state)
 
+    elif node.type == 'GROUP':
+        return parse_group(node, socket)
+
+    elif node.type == 'GROUP_INPUT':
+        return parse_group_input(node, socket)
+
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    elif node.type not in ('GROUP', 'GROUP_INPUT'):
-        log.warn(f'Material node type {node.type} not supported')
-        return "vec3(0, 0, 0)"
+    log.warn(f'Material node type {node.type} not supported')
+    return "vec3(0, 0, 0)"
 
 
 def parse_normal_map_color_input(inp, strength_input=None):
@@ -416,19 +415,6 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
 
 
 def parse_value(node, socket):
-    if node.type == 'GROUP':
-        if node.node_tree.name.startswith('Armory PBR'):
-            # Displacement
-            if socket == node.outputs[1]:
-                return parse_value_input(node.inputs[7])
-            else:
-                return None
-        else:
-            return parse_group(node, socket)
-
-    elif node.type == 'GROUP_INPUT':
-        return parse_group_input(node, socket)
-
     # Use switch-like lookup via dictionary
     # (better performance, better code readability)
     # 'NODE_TYPE': parser_function
@@ -468,13 +454,25 @@ def parse_value(node, socket):
     if node.type in node_parser_funcs:
         return node_parser_funcs[node.type](node, socket, state)
 
+    elif node.type == 'GROUP':
+        if node.node_tree.name.startswith('Armory PBR'):
+            # Displacement
+            if socket == node.outputs[1]:
+                return parse_value_input(node.inputs[7])
+            else:
+                return None
+        else:
+            return parse_group(node, socket)
+
+    elif node.type == 'GROUP_INPUT':
+        return parse_group_input(node, socket)
+
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    elif node.type not in ('GROUP', 'GROUP_INPUT'):
-        log.warn(f'Material node type {node.type} not supported')
-        return '0.0'
+    log.warn(f'Material node type {node.type} not supported')
+    return '0.0'
 
 
 def vector_curve(name, fac, points):
