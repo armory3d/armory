@@ -283,9 +283,6 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
-    # Use switch-like lookup via dictionary
-    # (better performance, better code readability)
-    # 'NODE_TYPE': parser_function
     node_parser_funcs: Dict[str, Callable] = {
         'ATTRIBUTE': nodes_input.parse_attribute,
 
@@ -404,9 +401,6 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
 
 
 def parse_value(node, socket):
-    # Use switch-like lookup via dictionary
-    # (better performance, better code readability)
-    # 'NODE_TYPE': parser_function
     node_parser_funcs: Dict[str, Callable] = {
         'ATTRIBUTE': nodes_input.parse_attribute,
         'CAMERA': nodes_input.parse_camera,
