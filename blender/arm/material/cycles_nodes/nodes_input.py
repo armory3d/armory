@@ -3,7 +3,7 @@ from typing import Union
 
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
-from arm.material.parser_state import ParserState
+from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
 
@@ -120,24 +120,42 @@ def parse_hairinfo(node: bpy.types.ShaderNodeHairInfo, out_socket: bpy.types.Nod
 def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     # Location
     if out_socket == node.outputs[0]:
+        if state.context == ParserContext.WORLD:
+            return c.to_vec3((0.0, 0.0, 0.0))
         return 'wposition'
 
     # TODO: Color
     elif out_socket == node.outputs[1]:
-        return 'wposition' # c.to_vec3(object.color)
+        if state.context == ParserContext.WORLD:
+            # Use world strength like Blender
+            background_node = c.node_by_type(state.world.node_tree.nodes, 'BACKGROUND')
+            if background_node is None:
+                return c.to_vec3((0.0, 0.0, 0.0))
+            return c.to_vec3([background_node.inputs[1].default_value] * 3)
+
+        # TODO: Implement object color in Iron
+        # state.curshader.add_uniform('vec3 objectInfoColor', link='_objectInfoColor')
+        # return 'objectInfoColor'
+        return c.to_vec3((1.0, 1.0, 1.0))
 
     # Object Index
     elif out_socket == node.outputs[2]:
+        if state.context == ParserContext.WORLD:
+            return '0.0'
         state.curshader.add_uniform('float objectInfoIndex', link='_objectInfoIndex')
         return 'objectInfoIndex'
 
     # Material Index
     elif out_socket == node.outputs[3]:
+        if state.context == ParserContext.WORLD:
+            return '0.0'
         state.curshader.add_uniform('float objectInfoMaterialIndex', link='_objectInfoMaterialIndex')
         return 'objectInfoMaterialIndex'
 
     # Random
     elif out_socket == node.outputs[4]:
+        if state.context == ParserContext.WORLD:
+            return '0.0'
         state.curshader.add_uniform('float objectInfoRandom', link='_objectInfoRandom')
         return 'objectInfoRandom'
 
@@ -204,7 +222,9 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     elif out_socket == node.outputs[4]: # Camera
         return 'vec3(0.0)' # 'vposition'
     elif out_socket == node.outputs[5]: # Window
-        return 'vec3(0.0)' # 'wvpposition'
+        # TODO: Don't use gl_FragCoord here, it uses different axes on different graphics APIs
+        state.frag.add_uniform('vec2 screenSize', link='_screenSize')
+        return f'vec3(gl_FragCoord.xy / screenSize, 0.0)'
     elif out_socket == node.outputs[6]: # Reflection
         return 'vec3(0.0)'
 

@@ -62,6 +62,8 @@ def create_world_shaders(world: bpy.types.World):
     frag.add_in('vec3 normal')
     frag.add_out('vec4 fragColor')
 
+    frag.write_attrib('vec3 n = normalize(normal);')
+
     vert.write('''normal = nor;
     vec4 position = SMVP * vec4(pos, 1.0);
     gl_Position = vec4(position);''')
@@ -157,7 +159,6 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
 
     if '_EnvClouds' in world.world_defs:
-        frag.write_init('vec3 n = normalize(normal);')
         frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
 
     if '_EnvLDR' in world.world_defs:
@@ -171,7 +172,21 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
     if frag_bpos:
         frag.add_in('vec3 bposition')
         vert.add_out('vec3 bposition')
+        # Use normals for now
         vert.write('bposition = nor;')
+
+    frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
+    if frag_mpos:
+        frag.add_in('vec3 mposition')
+        vert.add_out('vec3 mposition')
+        # Use normals for now
+        vert.write('mposition = nor;')
+
+    if frag.contains('texCoord') and not frag.contains('vec2 texCoord'):
+        frag.add_in('vec2 texCoord')
+        vert.add_out('vec2 texCoord')
+        # World has no UV map
+        vert.write('texCoord = vec2(1.0, 1.0);')
 
 
 def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader, con: ShaderContext) -> bool:

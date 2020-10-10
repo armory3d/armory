@@ -351,7 +351,6 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
 
         state.radiance_written = True
 
-    curshader.write_init('vec3 n = normalize(normal);')
     curshader.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
     curshader.write('float cos_gamma = dot(n, hosekSunDirection);')
     curshader.write('float gamma_val = acos(cos_gamma);')
@@ -457,8 +456,6 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
     # Append radiance define
     if rpdat.arm_irradiance and rpdat.arm_radiance and not mobile_mat:
         wrd.world_defs += '_Rad'
-
-    curshader.write_init('vec3 n = normalize(normal);')
 
     return 'texture(envmap, envMapEquirect(n)).rgb * envmapStrength'
 
