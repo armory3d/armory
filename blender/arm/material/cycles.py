@@ -200,7 +200,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
         'HOLDOUT': nodes_shader.parse_holdout,
         'SUBSURFACE_SCATTERING': nodes_shader.parse_subsurfacescattering,
         'BSDF_TRANSLUCENT': nodes_shader.parse_bsdftranslucent,
-        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftranslucent,
+        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftransparent,
         'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
     }
 
