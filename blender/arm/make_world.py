@@ -130,16 +130,13 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
 
-    # Clear to color if no texture or sky is provided
-    if '_EnvSky' not in world.world_defs and '_EnvTex' not in world.world_defs:
-        if '_EnvImg' not in world.world_defs:
-            world.world_defs += '_EnvCol'
-            frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-
+    # Irradiance/Radiance: clear to color if no texture or sky is provided
+    if rpdat.arm_irradiance or rpdat.arm_irradiance:
+        if '_EnvSky' not in world.world_defs and '_EnvTex' not in world.world_defs and '_EnvImg' not in world.world_defs:
             # Irradiance json file name
             world.arm_envtex_name = world_name
             world.arm_envtex_irr_name = world_name
-        write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
+            write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
 
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:
