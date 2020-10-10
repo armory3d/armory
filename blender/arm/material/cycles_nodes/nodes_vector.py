@@ -121,7 +121,7 @@ def parse_normalmap(node: bpy.types.ShaderNodeNormalMap, out_socket: bpy.types.N
         # map = node.uv_map
         # Color
         c.parse_normal_map_color_input(node.inputs[1], node.inputs[0])
-        return None
+        return 'n'
 
 
 def parse_vectortransform(node: bpy.types.ShaderNodeVectorTransform, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
