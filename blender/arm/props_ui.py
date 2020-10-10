@@ -1394,7 +1394,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
             row = layout.row(align=True)
-            
+
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -1766,6 +1766,12 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
+
+    @classmethod
+    def poll(cls, context):
+        return (context.space_data.tree_type == 'ShaderNodeTree'
+                and context.space_data.edit_tree
+                and context.space_data.shader_type == 'OBJECT')
 
     def draw(self, context):
         layout = self.layout
