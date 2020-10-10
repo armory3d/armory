@@ -4,7 +4,9 @@ class PauseActionNode(ArmLogicTreeNode):
     """Pauses the given action."""
     bl_idname = 'LNPauseActionNode'
     bl_label = 'Pause Action'
-    arm_version = 1
+    bl_description = "Please use the \"Set Action Paused\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(PauseActionNode, self).init(context)
@@ -12,4 +14,4 @@ class PauseActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(PauseActionNode, category=PKG_AS_CATEGORY)
+add_node(PauseActionNode, category=PKG_AS_CATEGORY, is_obsolete=True)

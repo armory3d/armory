@@ -3,8 +3,9 @@ from arm.logicnode.arm_nodes import *
 class ResumeTraitNode(ArmLogicTreeNode):
     """Resumes the given trait."""
     bl_idname = 'LNResumeTraitNode'
-    bl_label = 'Resume Trait'
-    arm_version = 1
+    bl_description = "Please use the \"Set Trait Paused\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(ResumeTraitNode, self).init(context)
@@ -12,4 +13,4 @@ class ResumeTraitNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ResumeTraitNode, category=PKG_AS_CATEGORY)
+add_node(ResumeTraitNode, category=PKG_AS_CATEGORY, is_obsolete=True)

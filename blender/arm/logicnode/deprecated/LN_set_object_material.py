@@ -3,8 +3,9 @@ from arm.logicnode.arm_nodes import *
 class SetMaterialNode(ArmLogicTreeNode):
     """Sets the material of the given object."""
     bl_idname = 'LNSetMaterialNode'
-    bl_label = 'Set Object Material'
-    arm_version = 1
+    bl_description = "Please use the \"Set Object Material Slot\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(SetMaterialNode, self).init(context)
@@ -13,4 +14,4 @@ class SetMaterialNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Material')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(SetMaterialNode, category=PKG_AS_CATEGORY)
+add_node(SetMaterialNode, category=PKG_AS_CATEGORY, is_obsolete=True)

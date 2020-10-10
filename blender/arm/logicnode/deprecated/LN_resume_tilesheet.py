@@ -4,7 +4,9 @@ class ResumeTilesheetNode(ArmLogicTreeNode):
     """Resumes the given tilesheet action."""
     bl_idname = 'LNResumeTilesheetNode'
     bl_label = 'Resume Tilesheet'
-    arm_version = 1
+    bl_description = "Please use the \"Set Tilesheet Paused\" node instead"
+    bl_icon = 'ERROR'
+    arm_version = 2
 
     def init(self, context):
         super(ResumeTilesheetNode, self).init(context)
@@ -12,4 +14,4 @@ class ResumeTilesheetNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(ResumeTilesheetNode, category=PKG_AS_CATEGORY)
+add_node(ResumeTilesheetNode, category=PKG_AS_CATEGORY, is_obsolete=True)
