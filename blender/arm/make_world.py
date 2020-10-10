@@ -107,6 +107,13 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         frag.write('fragColor.rgb = backgroundCol;')
         return
 
+    parser_state = ParserState(ParserContext.WORLD, world)
+    parser_state.con = con
+    parser_state.curshader = frag
+    parser_state.frag = frag
+    parser_state.vert = vert
+    cycles.state = parser_state
+
     # Traverse world node tree
     is_parsed = False
     if world.node_tree is not None:
@@ -190,12 +197,6 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
         # Append irradiance define
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
-
-        parser_state = ParserState(ParserContext.WORLD, world)
-        parser_state.con = con
-        parser_state.curshader = frag
-        parser_state.frag = frag
-        cycles.state = parser_state
 
         # Extract environment strength
         # Todo: follow/parse strength input
