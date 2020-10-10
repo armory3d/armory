@@ -14,6 +14,7 @@ import arm.lib.armpack
 from arm.lib.lz4 import LZ4
 import arm.log as log
 import arm.make_state as state
+import arm.props_renderpath
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -112,7 +113,7 @@ def get_gapi():
         return 'webgl'
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
-def get_rp():
+def get_rp() -> arm.props_renderpath.ArmRPListItem:
     wrd = bpy.data.worlds['Arm']
     return wrd.arm_rplist[wrd.arm_rplist_index]
 
