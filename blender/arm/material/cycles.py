@@ -41,8 +41,7 @@ def parse(nodes, con: ShaderContext,
           parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     global state
 
-    # TODO: Set context object instead of passing None
-    state = ParserState(ParserContext.OBJECT, None)
+    state = ParserState(ParserContext.OBJECT)
 
     state.parse_surface = parse_surface
     state.parse_opacity = parse_opacity

@@ -153,7 +153,7 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
     # World context
     # TODO: Merge with above implementation to also allow mappings other than using view coordinates
     else:
-        world = state.context_data
+        world = state.world
         world.world_defs += '_EnvImg'
 
         # Background texture
@@ -298,7 +298,7 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
         # Pass through
         return c.to_vec3([0.0, 0.0, 0.0])
 
-    world = state.context_data
+    world = state.world
     curshader = state.curshader
 
     # Match to cycles
@@ -367,7 +367,7 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
     if node.image is None:
         return c.to_vec3([1.0, 0.0, 1.0])
 
-    world = state.context_data
+    world = state.world
     world.world_defs += '_EnvTex'
 
     curshader = state.curshader

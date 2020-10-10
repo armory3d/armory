@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Set, Tuple, Union
+from typing import List, Set, Tuple, Union, Optional
 
 import bpy
 
@@ -15,12 +15,12 @@ class ParserContext(Enum):
 
 
 class ParserState:
-    """Dataclass to keep track of the current state while parsing a
-    shader tree. The parser context defines which kind of tree on which
-    Blender data (object or world) is parsed."""
-    def __init__(self, context: ParserContext, context_data: Union[bpy.types.Object, bpy.types.World]):
+    """Dataclass to keep track of the current state while parsing a shader tree."""
+    def __init__(self, context: ParserContext, world: Optional[bpy.types.World] = None):
         self.context = context
-        self.context_data = context_data
+
+        # The current world, if parsing a world node tree
+        self.world = world
 
         # Active shader - frag for surface / tese for displacement
         self.curshader: Shader = None
