@@ -23,7 +23,7 @@ def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.No
         co = 'bposition'
 
     # Color
-    if out_socket == node.sockets[0]:
+    if out_socket == node.outputs[0]:
         col1 = c.parse_vector_input(node.inputs[1])
         col2 = c.parse_vector_input(node.inputs[2])
         col3 = c.parse_vector_input(node.inputs[3])
@@ -49,7 +49,7 @@ def parse_tex_checker(node: bpy.types.ShaderNodeTexChecker, out_socket: bpy.type
         co = 'bposition'
 
     # Color
-    if out_socket == node.sockets[0]:
+    if out_socket == node.outputs[0]:
         col1 = c.parse_vector_input(node.inputs[1])
         col2 = c.parse_vector_input(node.inputs[2])
         scale = c.parse_value_input(node.inputs[3])
