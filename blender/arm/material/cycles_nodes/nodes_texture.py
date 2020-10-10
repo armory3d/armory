@@ -5,7 +5,6 @@ import bpy
 
 import arm.assets as assets
 import arm.log as log
-import arm.make_world as make_world
 import arm.material.cycles_functions as c_functions
 import arm.material.cycles as c
 from arm.material.parser_state import ParserState, ParserContext
@@ -141,7 +140,7 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
             tex_store = c.store_var_name(node)
 
             if use_color_out:
-                state.parsed[tex_store] = True
+                state.parsed.add(tex_store)
                 state.curshader.write_textures += 1
                 state.curshader.write(f'vec4 {tex_store} = vec4(1.0, 0.0, 1.0, 1.0);')
                 state.curshader.write_textures -= 1
@@ -446,9 +445,9 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
 
         state.radiance_written = True
 
-    # Append LDR define
-    if disable_hdr:
-        world.world_defs += '_EnvLDR'
+        # Append LDR define
+        if disable_hdr:
+            world.world_defs += '_EnvLDR'
 
     wrd = bpy.data.worlds['Arm']
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
