@@ -124,7 +124,7 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
             return c.to_vec3((0.0, 0.0, 0.0))
         return 'wposition'
 
-    # TODO: Color
+    # Color
     elif out_socket == node.outputs[1]:
         if state.context == ParserContext.WORLD:
             # Use world strength like Blender
