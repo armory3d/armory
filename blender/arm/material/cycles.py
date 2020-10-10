@@ -192,7 +192,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
         'ADD_SHADER': nodes_shader.parse_addshader,
         'BSDF_PRINCIPLED': nodes_shader.parse_bsdfprincipled,
         'BSDF_DIFFUSE': nodes_shader.parse_bsdfdiffuse,
-        'BSDF_GLOSSY': nodes_shader.parse_bsdfdiffuse,
+        'BSDF_GLOSSY': nodes_shader.parse_bsdfglossy,
         'AMBIENT_OCCLUSION': nodes_shader.parse_ambientocclusion,
         'BSDF_ANISOTROPIC': nodes_shader.parse_bsdfanisotropic,
         'EMISSION': nodes_shader.parse_emission,
