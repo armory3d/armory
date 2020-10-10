@@ -19,9 +19,9 @@ class DebugConsole extends Trait {
 #if (!arm_debug)
 	public function new() { super(); }
 #else
-
-	public var visible = true;
-	var ui: Zui;
+	
+	public static var visible = true;
+	static var ui: Zui;
 	var scaleFactor = 1.0;
 
 	var lastTime = 0.0;
@@ -56,25 +56,64 @@ class DebugConsole extends Trait {
 	public static var debugFloat = 1.0;
 	public static var watchNodes: Array<armory.logicnode.LogicNode> = [];
 
-	public function new(scaleFactor = 1.0) {
-		super();
+	public static var position_console: PositionStateEnum = PositionStateEnum.RIGHT;
+	var shortcut_visible = kha.input.KeyCode.Tilde;
+	var shortcut_scale_in = kha.input.KeyCode.OpenBracket;
+	var shortcut_scale_out = kha.input.KeyCode.CloseBracket;
 
+	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
+	keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket, keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
+		super();		
 		this.scaleFactor = scaleFactor;
 
 		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
 			ui = new Zui({scaleFactor: scaleFactor, font: font});
+			// Set settings
+			setScale(scaleDebugConsole);
+			setVisible(visibleDebugConsole == 1);
+			switch(positionDebugConsole) {
+				case 0: setPosition(PositionStateEnum.LEFT);
+				case 1: setPosition(PositionStateEnum.CENTER);
+				case 2: setPosition(PositionStateEnum.RIGHT);
+			}			
+			shortcut_visible = keyCodeVisible;
+			shortcut_scale_in = keyCodeScaleIn;
+			shortcut_scale_out = keyCodeScaleOut;
+
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
 			if (haxeTrace == null) {
 				haxeTrace = haxe.Log.trace;
 				haxe.Log.trace = consoleTrace;
-			}
+			}			
 			// Toggle console
-			kha.input.Keyboard.get().notify(null, null, function(char: String) {
-				if (char == "~") visible = !visible;
-				else if (char == "[") { debugFloat -= 0.1; trace(debugFloat); }
-				else if (char == "]") { debugFloat += 0.1; trace(debugFloat); }
-			});
+			kha.input.Keyboard.get().notify(null, function(key: kha.input.KeyCode) {
+				// DebugFloat
+				if (key == kha.input.KeyCode.OpenBracket) {
+					debugFloat -= 0.1; 
+					trace("debugFloat = "+ debugFloat);
+				}
+				else if (key == kha.input.KeyCode.CloseBracket){
+					debugFloat += 0.1; 
+					trace("debugFloat = "+ debugFloat);
+				}
+				// Shortcut - Visible
+				if (key == shortcut_visible) visible = !visible;
+				// Scale In
+				else if (key == shortcut_scale_in) {
+					var debugScale = getScale() - 0.1;
+					if (debugScale > 0.3) {
+						setScale(debugScale);
+					} 
+				}
+				// Scale Out
+				else if (key == shortcut_scale_out) { 
+					var debugScale = getScale() + 0.1;
+					if (debugScale < 10.0) {
+						setScale(debugScale);
+					} 
+				}				
+			}, null);
 		});
 	}
 
@@ -127,10 +166,17 @@ class DebugConsole extends Trait {
 		if (!visible) return;
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
-		var ww = Std.int(280 * scaleFactor);
+		var ww = Std.int(280 * scaleFactor * getScale());
+		// RIGHT
 		var wx = iron.App.w() - ww;
 		var wy = 0;
 		var wh = iron.App.h();
+		// Check position
+		switch (position_console) {
+            case PositionStateEnum.LEFT: wx = 0;
+            case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
+            case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
+        }
 
 		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
 		var bindG = true;
@@ -654,5 +700,35 @@ class DebugConsole extends Trait {
 		f *= Math.pow(10, precision);
 		return Math.round(f) / Math.pow(10, precision);
 	}
+
+	public static function getVisible(): Bool {
+		return visible;
+	}
+
+	public static function setVisible(value: Bool) {
+		visible = value;
+	}
+
+	public static function getScale(): Float {
+		return ui.SCALE();
+	}
+
+	public static function setScale(value: Float) {
+		ui.setScale(value);
+	}
+
+	public static function setPosition(value: PositionStateEnum) {
+		position_console = value;
+	}
+
+	public static function getPosition(): PositionStateEnum {
+		return position_console;
+	}	
 #end
+}
+
+enum PositionStateEnum {
+	LEFT;
+	CENTER;
+	RIGHT;
 }

@@ -199,6 +199,26 @@ def get_save_on_build():
     addon_prefs = preferences.addons['armory'].preferences
     return False if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
 
+def get_debug_console_auto():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
+    return False if not hasattr(addon_prefs, 'debug_console_auto') else addon_prefs.debug_console_auto
+
+def get_debug_console_visible_sc():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
+    return 192 if not hasattr(addon_prefs, 'debug_console_visible_sc') else addon_prefs.debug_console_visible_sc
+
+def get_debug_console_scale_in_sc():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
+    return 219 if not hasattr(addon_prefs, 'debug_console_scale_in_sc') else addon_prefs.debug_console_scale_in_sc
+
+def get_debug_console_scale_out_sc():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
+    return 221 if not hasattr(addon_prefs, 'debug_console_scale_out_sc') else addon_prefs.debug_console_scale_out_sc
+
 def get_viewport_controls():
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons['armory'].preferences

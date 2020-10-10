@@ -445,9 +445,6 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.enabled = wrd.arm_ui != 'Disabled'
-        row.prop(wrd, 'arm_debug_console')
         layout.prop(wrd, 'arm_verbose_output')
         layout.prop(wrd, 'arm_cache_build')
         layout.prop(wrd, 'arm_live_patch')
@@ -461,6 +458,32 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_loadscreen')
         layout.prop(wrd, 'arm_texture_quality')
         layout.prop(wrd, 'arm_sound_quality')
+
+class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
+    bl_label = "Debug Console"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ProjectFlagsPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        row = layout.row()
+        row.enabled = wrd.arm_ui != 'Disabled'
+        row.prop(wrd, 'arm_debug_console')
+        row = layout.row()
+        row.enabled = wrd.arm_debug_console
+        row.prop(wrd, 'arm_debug_console_position')
+        row = layout.row()
+        row.enabled = wrd.arm_debug_console
+        row.prop(wrd, 'arm_debug_console_scale')
+        row = layout.row()
+        row.enabled = wrd.arm_debug_console
+        row.prop(wrd, 'arm_debug_console_visible')
 
 class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"
@@ -1990,6 +2013,7 @@ def register():
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
+    bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
     bpy.utils.register_class(ARM_PT_ProjectWindowPanel)
     bpy.utils.register_class(ARM_PT_ProjectModulesPanel)
     bpy.utils.register_class(ARM_PT_RenderPathPanel)
@@ -2053,6 +2077,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryProjectPanel)
+    bpy.utils.unregister_class(ARM_PT_ProjectFlagsDebugConsolePanel)
     bpy.utils.unregister_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.unregister_class(ARM_PT_ProjectWindowPanel)
     bpy.utils.unregister_class(ARM_PT_ProjectModulesPanel)
