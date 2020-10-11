@@ -269,7 +269,7 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     distortion = c.parse_value_input(node.inputs[4])#
 
     # Color
-    if out_socket == node.outputs[0]:
+    if out_socket == node.outputs[1]:
         res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
     # Fac
     else:
