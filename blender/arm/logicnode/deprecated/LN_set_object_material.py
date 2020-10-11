@@ -3,6 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SetMaterialNode(ArmLogicTreeNode):
     """Sets the material of the given object."""
     bl_idname = 'LNSetMaterialNode'
+    bl_label = 'Set Object Material'
     bl_description = "Please use the \"Set Object Material Slot\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2
