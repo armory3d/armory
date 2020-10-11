@@ -121,7 +121,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
     if world.node_tree is not None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node is not None:
-            is_parsed = parse_world_output(world, output_node, frag, con)
+            is_parsed = parse_world_output(world, output_node, frag)
 
     # No world nodes/no output node, use background color
     if not is_parsed:
@@ -189,18 +189,18 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         vert.write('texCoord = vec2(1.0, 1.0);')
 
 
-def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader, con: ShaderContext) -> bool:
+def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag: Shader) -> bool:
     """Parse the world's output node. Return `False` when the node has
     no connected surface input."""
     surface_node = node_utils.find_node_by_link(world.node_tree, node_output, node_output.inputs[0])
     if surface_node is None:
         return False
 
-    parse_surface(world, surface_node, frag, con)
+    parse_surface(world, surface_node, frag)
     return True
 
 
-def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader, con: ShaderContext):
+def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
