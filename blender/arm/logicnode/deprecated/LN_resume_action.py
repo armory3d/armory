@@ -3,6 +3,7 @@ from arm.logicnode.arm_nodes import *
 class ResumeActionNode(ArmLogicTreeNode):
     """Resumes the given action."""
     bl_idname = 'LNResumeActionNode'
+    bl_label = 'Resume Action'
     bl_description = "Please use the \"Set Action Paused\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2
