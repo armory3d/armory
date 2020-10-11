@@ -1,5 +1,12 @@
-import bpy
 import arm.utils
+
+# Type aliases for type hints to make it easier to see which kind of
+# shader data type is stored in a string
+floatstr = str
+vec2str = str
+vec3str = str
+vec4str = str
+
 
 class ShaderData:
 
@@ -8,8 +15,7 @@ class ShaderData:
         self.contexts = []
         self.global_elems = [] # bone, weight, ipos, irot, iscl
         self.sd = {}
-        self.data = {}
-        self.data['shader_datas'] = [self.sd]
+        self.data = {'shader_datas': [self.sd]}
         self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.sd['name'] = self.matname + '_data'
         self.sd['contexts'] = []
@@ -277,8 +283,12 @@ class Shader:
         self.main_attribs = self.main_attribs.replace(old, new)
         self.uniforms = [u.replace(old, new) for u in self.uniforms]
 
-    def write_init(self, s):
-        self.main_init = s + '\n' + self.main_init
+    def write_init(self, s, unique=True):
+        """Prepend to the main function. If `unique` is true (default), look for other occurences first."""
+        if unique and self.contains(s):
+            return
+
+        self.main_init = '\t' + s + '\n' + self.main_init
 
     def write(self, s):
         if self.lock:

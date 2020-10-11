@@ -159,6 +159,10 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Node'
 
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -222,13 +226,16 @@ class ArmOpenNodeWikiEntry(bpy.types.Operator):
         return{'FINISHED'}
 
 
-#Node Variables Panel
 class ARM_PT_Variables(bpy.types.Panel):
     bl_label = 'Armory Node Variables'
     bl_idname = 'ARM_PT_Variables'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
     def draw(self, context):
         layout = self.layout
