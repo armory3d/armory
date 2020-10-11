@@ -3,6 +3,7 @@ from arm.logicnode.arm_nodes import *
 class PauseTraitNode(ArmLogicTreeNode):
     """Pauses the given trait."""
     bl_idname = 'LNPauseTraitNode'
+    bl_label = 'Pause Trait'
     bl_description = "Please use the \"Set Trait Paused\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2

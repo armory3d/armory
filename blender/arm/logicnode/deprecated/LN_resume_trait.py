@@ -3,6 +3,7 @@ from arm.logicnode.arm_nodes import *
 class ResumeTraitNode(ArmLogicTreeNode):
     """Resumes the given trait."""
     bl_idname = 'LNResumeTraitNode'
+    bl_label = 'Resume Trait'
     bl_description = "Please use the \"Set Trait Paused\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2
