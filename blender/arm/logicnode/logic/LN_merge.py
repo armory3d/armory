@@ -11,6 +11,7 @@ class MergeNode(ArmLogicTreeNode):
     arm_version = 1
 
     def __init__(self):
+        super(MergeNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):

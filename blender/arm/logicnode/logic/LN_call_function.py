@@ -10,6 +10,7 @@ class CallFunctionNode(ArmLogicTreeNode):
     min_inputs = 3
 
     def __init__(self):
+        super(CallFunctionNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):

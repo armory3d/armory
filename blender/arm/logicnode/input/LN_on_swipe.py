@@ -54,6 +54,7 @@ class OnSwipeNode(ArmLogicTreeNode):
     max_outputs = 12
 
     def __init__(self):
+        super(OnSwipeNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):

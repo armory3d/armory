@@ -34,6 +34,7 @@ class GateNode(ArmLogicTreeNode):
     property1: FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
 
     def __init__(self):
+        super(GateNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):
