@@ -16,7 +16,7 @@ class GetTilesheetStateNode extends LogicNode {
 		var tilesheet = object.tilesheet;
 
 		return switch (from) {
-			case 0: tilesheet.action;
+			case 0: tilesheet.action.name;
 			case 1: tilesheet.frame;
 			case 2: tilesheet.paused;
 			default: null;
