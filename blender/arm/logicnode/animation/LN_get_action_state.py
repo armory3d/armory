@@ -9,8 +9,8 @@ class AnimationStateNode(ArmLogicTreeNode):
     def init(self, context):
         super(AnimationStateNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('NodeSocketBool', 'Is Playing')
         self.add_output('NodeSocketString', 'Action')
         self.add_output('NodeSocketInt', 'Frame')
+        self.add_output('NodeSocketBool', 'Is Paused')
 
 add_node(AnimationStateNode, category=PKG_AS_CATEGORY)

@@ -12,7 +12,7 @@ class SetTraitPausedNode extends LogicNode {
 
 		if (trait == null || !Std.is(trait, LogicTree)) return;
 
-		paused ? cast(trait, LogicTree).resume() : cast(trait, LogicTree).pause();
+		paused ? cast(trait, LogicTree).pause() : cast(trait, LogicTree).resume();
 
 		runOutput(0);
 	}

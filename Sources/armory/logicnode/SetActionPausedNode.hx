@@ -18,7 +18,7 @@ class SetActionPausedNode extends LogicNode {
 
 		if (animation == null) animation = object.getParentArmature(object.name);
 
-		paused ? animation.resume() : animation.pause();
+		paused ? animation.pause() : animation.resume();
 
 		runOutput(0);
 	}
