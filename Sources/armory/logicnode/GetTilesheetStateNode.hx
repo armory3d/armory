@@ -11,7 +11,7 @@ class GetTilesheetStateNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var object: MeshObject = inputs[0].get();
 
-		if (object == null) return;
+		if (object == null) return null;
 
 		var tilesheet = object.tilesheet;
 
