@@ -9,7 +9,7 @@ class GetTilesheetStateNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetTilesheetStateNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('NodeSocketString', 'Tilesheet')
+        self.add_output('NodeSocketString', 'Name')
         self.add_output('NodeSocketInt', 'Frame')
         self.add_output('NodeSocketBool', 'Is Paused')
 
