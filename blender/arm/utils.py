@@ -135,8 +135,7 @@ def bundled_sdk_path():
 # Passed by load_post handler when armsdk is found in project folder
 use_local_sdk = False
 def get_sdk_path():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons["armory"].preferences
+    addon_prefs = get_arm_preferences()
     p = bundled_sdk_path()
     if use_local_sdk:
         return get_fp() + '/armsdk/'
@@ -155,20 +154,21 @@ def get_last_commit():
         commit = ''
     return commit
 
-def get_ide_bin():
+
+def get_arm_preferences() -> bpy.types.AddonPreferences:
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons["armory"].preferences
+    return preferences.addons["armory"].preferences
+
+
+def get_ide_bin():
+    addon_prefs = get_arm_preferences()
     return '' if not hasattr(addon_prefs, 'ide_bin') else addon_prefs.ide_bin
 
 def get_ffmpeg_path():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
-    return addon_prefs.ffmpeg_path
+    return get_arm_preferences().ffmpeg_path
 
 def get_renderdoc_path():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
-    p = addon_prefs.renderdoc_path
+    p = get_arm_preferences().renderdoc_path
     if p == '' and get_os() == 'win':
         pdefault = 'C:\\Program Files\\RenderDoc\\qrenderdoc.exe'
         if os.path.exists(pdefault):
@@ -176,64 +176,52 @@ def get_renderdoc_path():
     return p
 
 def get_code_editor():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
 
 def get_ui_scale():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
 
 def get_khamake_threads():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 1 if not hasattr(addon_prefs, 'khamake_threads') else addon_prefs.khamake_threads
 
 def get_compilation_server():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'compilation_server') else addon_prefs.compilation_server
 
 def get_save_on_build():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
 
 def get_debug_console_auto():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'debug_console_auto') else addon_prefs.debug_console_auto
 
 def get_debug_console_visible_sc():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 192 if not hasattr(addon_prefs, 'debug_console_visible_sc') else addon_prefs.debug_console_visible_sc
 
 def get_debug_console_scale_in_sc():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 219 if not hasattr(addon_prefs, 'debug_console_scale_in_sc') else addon_prefs.debug_console_scale_in_sc
 
 def get_debug_console_scale_out_sc():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 221 if not hasattr(addon_prefs, 'debug_console_scale_out_sc') else addon_prefs.debug_console_scale_out_sc
 
 def get_viewport_controls():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return 'qwerty' if not hasattr(addon_prefs, 'viewport_controls') else addon_prefs.viewport_controls
 
 def get_legacy_shaders():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'legacy_shaders') else addon_prefs.legacy_shaders
 
 def get_relative_paths():
-    # Convert absolute paths to relative
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
+    """Whether to convert absolute paths to relative"""
+    addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'relative_paths') else addon_prefs.relative_paths
 
 def get_node_path():
@@ -780,15 +768,15 @@ def open_editor(hx_path=None):
     else:
         raise FileNotFoundError(f'Code editor executable not found: {ide_bin}. You can change the path in the Armory preferences.')
 
-def open_folder():
+def open_folder(folder_path: str):
     if arm.utils.get_os() == 'win':
-        subprocess.run(['explorer', arm.utils.get_fp()])
+        subprocess.run(['explorer', folder_path])
     elif arm.utils.get_os() == 'mac':
-        subprocess.run(['open', arm.utils.get_fp()])
+        subprocess.run(['open', folder_path])
     elif arm.utils.get_os() == 'linux':
-        subprocess.run(['xdg-open', arm.utils.get_fp()])
+        subprocess.run(['xdg-open', folder_path])
     else:
-        webbrowser.open('file://' + arm.utils.get_fp())
+        webbrowser.open('file://' + folder_path)
 
 def generate_sublime_project(subl_project_path):
     """Generates a [project_name].sublime-project file."""
