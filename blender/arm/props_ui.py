@@ -665,7 +665,7 @@ class ArmoryOpenProjectFolderButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        arm.utils.open_folder()
+        arm.utils.open_folder(arm.utils.get_fp())
         return{'FINISHED'}
 
 class ArmoryOpenEditorButton(bpy.types.Operator):
