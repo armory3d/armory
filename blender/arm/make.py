@@ -541,7 +541,7 @@ def build_success():
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
         target_name = arm.utils.get_kha_target(state.target)
-        files_path = arm.utils.get_fp_build() + '/' + target_name
+        files_path = os.path.join(arm.utils.get_fp_build(), target_name)
 
         if (target_name == 'html5' or target_name == 'krom') and wrd.arm_minify_js:
             # Minify JS
@@ -587,17 +587,26 @@ def build_success():
             files_path = new_files_path
 
         if target_name == 'html5':
-            print('Exported HTML5 package to ' + files_path)
+            project_path = files_path
+            print('Exported HTML5 package to ' + project_path)
         elif target_name.startswith('ios') or target_name.startswith('osx'): # TODO: to macos
-            print('Exported XCode project to ' + files_path + '-build')
+            project_path = files_path + '-build'
+            print('Exported XCode project to ' + project_path)
         elif target_name.startswith('windows'):
-            print('Exported Visual Studio 2017 project to ' + files_path + '-build')
+            project_path = files_path + '-build'
+            print('Exported Visual Studio 2017 project to ' + project_path)
         elif target_name.startswith('android'):
-            print('Exported Android Studio project to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
+            project_path = files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name)
+            print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
-            print('Exported Krom package to ' + files_path)
+            project_path = files_path
+            print('Exported Krom package to ' + project_path)
         else:
-            print('Exported makefiles to ' + files_path + '-build')
+            project_path = files_path + '-build'
+            print('Exported makefiles to ' + project_path)
+
+        if arm.utils.get_arm_preferences().open_build_directory:
+            arm.utils.open_folder(project_path)
 
 def clean():
     os.chdir(arm.utils.get_fp())
