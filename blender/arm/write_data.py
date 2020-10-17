@@ -291,6 +291,36 @@ project.addSources('Sources');
             khafile.write("project.targetOptions.android_native.package = '{0}';\n".format(arm.utils.safestr(bundle)))
             if wrd.arm_winorient != 'Multi':
                 khafile.write("project.targetOptions.android_native.screenOrientation = '{0}';\n".format(wrd.arm_winorient.lower()))
+            # Android SDK Versions
+            khafile.write("project.targetOptions.android_native.compileSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_compile))
+            khafile.write("project.targetOptions.android_native.minSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_min))
+            khafile.write("project.targetOptions.android_native.targetSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_target))
+            # Permissions
+            if len(wrd.arm_exporter_android_permission_list) > 0: 
+                perms = '' 
+                for item in wrd.arm_exporter_android_permission_list:
+                    perm = "'android.permission."+ item.arm_android_permissions +"'"
+                    # Checking In
+                    if perms.find(perm) == -1:
+                        if len(perms) > 0:
+                            perms = perms +', '+ perm
+                        else:
+                            perms = perm
+                if len(perms) > 0:
+                    khafile.write("project.targetOptions.android_native.permissions = [{0}];\n".format(perms))
+            # Android ABI Filters
+            if len(wrd.arm_exporter_android_abi_list) > 0: 
+                abis = '' 
+                for item in wrd.arm_exporter_android_abi_list:
+                    abi = "'"+ item.arm_android_abi +"'"
+                    # Checking In
+                    if abis.find(abi) == -1:
+                        if len(abis) > 0:
+                            abis = abis +', '+ abi
+                        else:
+                            abis = abi
+                if len(abis) > 0:
+                    khafile.write("project.targetOptions.android_native.abiFilters = [{0}];\n".format(abis))
         elif state.target.startswith('ios'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
             khafile.write("project.targetOptions.ios.bundle = '{0}';\n".format(arm.utils.safestr(bundle)))

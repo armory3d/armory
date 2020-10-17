@@ -408,8 +408,8 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col = layout.column()
         col.prop(wrd, 'arm_project_name')
         col.prop(wrd, 'arm_project_package')
-        col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_bundle')
+        col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_icon')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
@@ -417,6 +417,126 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
+
+class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
+    bl_label = "Android Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED' }
+    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        is_check = False
+        for item in wrd.arm_exporterlist:
+            is_check = item.arm_project_target == 'android-hl'
+            if is_check:
+                break
+        return is_check
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.enabled = item.arm_project_target == 'android-hl'
+            # Options
+            row = layout.row()
+            row.prop(wrd, 'arm_winorient')
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_sdk_compile')          
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_sdk_min')
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_sdk_target')
+
+class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
+    bl_label = "Permissions"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED' }
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        is_check = False
+        for item in wrd.arm_exporterlist:
+            is_check = item.arm_project_target == 'android-hl'
+            if is_check:
+                break
+        return is_check
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.enabled = item.arm_project_target == 'android-hl'
+            # Permission
+            row = layout.row()
+            rows = 2
+            if len(wrd.arm_exporter_android_permission_list) > 1:
+                rows = 4
+            row.template_list("ARM_UL_Exporter_AndroidPermissionList", "The_List", wrd, "arm_exporter_android_permission_list", wrd, "arm_exporter_android_permission_list_index", rows=rows)
+            col = row.column(align=True)
+            col.operator("arm_exporter_android_permission_list.new_item", icon='ADD', text="")
+            col.operator("arm_exporter_android_permission_list.delete_item", icon='REMOVE', text="")
+            row = layout.row()
+
+            if wrd.arm_exporter_android_permission_list_index >= 0 and len(wrd.arm_exporter_android_permission_list) > 0:
+                item = wrd.arm_exporter_android_permission_list[wrd.arm_exporter_android_permission_list_index]
+                row = layout.row()
+                row.prop(item, 'arm_android_permissions')
+
+class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
+    bl_label = "Android ABI Filters"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        is_check = False
+        for item in wrd.arm_exporterlist:
+            is_check = item.arm_project_target == 'android-hl'
+            if is_check:
+                break
+        return is_check
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.enabled = item.arm_project_target == 'android-hl'
+            # ABIs
+            row = layout.row()            
+            rows = 2
+            if len(wrd.arm_exporter_android_abi_list) > 1:
+                rows = 4
+            row.template_list("ARM_UL_Exporter_AndroidAbiList", "The_List", wrd, "arm_exporter_android_abi_list", wrd, "arm_exporter_android_abi_list_index", rows=rows)
+            col = row.column(align=True)
+            col.operator("arm_exporter_android_abi_list.new_item", icon='ADD', text="")
+            col.operator("arm_exporter_android_abi_list.delete_item", icon='REMOVE', text="")
+            row = layout.row()
+
+            if wrd.arm_exporter_android_abi_list_index >= 0 and len(wrd.arm_exporter_android_abi_list) > 0:
+                item = wrd.arm_exporter_android_abi_list[wrd.arm_exporter_android_abi_list_index]
+                row = layout.row()
+                row.prop(item, 'arm_android_abi')
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -499,7 +619,6 @@ class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_winmode')
-        layout.prop(wrd, 'arm_winorient')
         layout.prop(wrd, 'arm_winresize')
         col = layout.column()
         col.enabled = wrd.arm_winresize
@@ -1417,7 +1536,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
             row = layout.row(align=True)
-
+            
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -2017,6 +2136,9 @@ def register():
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
@@ -2081,6 +2203,9 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.unregister_class(ARM_PT_ProjectFlagsDebugConsolePanel)
