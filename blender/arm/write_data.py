@@ -43,7 +43,7 @@ def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_pu
     rel_path = arm.utils.get_relative_paths() # Convert absolute paths to relative
     wrd = bpy.data.worlds['Arm']
 
-    with open('khafile.js', 'w') as khafile:
+    with open('khafile.js', 'w', encoding="utf-8") as khafile:
         khafile.write(
 """// Auto-generated
 let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """');
@@ -380,7 +380,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     elif rpdat.rp_driver != 'Armory':
         pathpack = rpdat.rp_driver.lower()
 
-    with open('Sources/Main.hx', 'w') as f:
+    with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
 package ;

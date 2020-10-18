@@ -313,9 +313,9 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         if not os.path.isfile(target_hx_path):
             # Rewrite package and copy
-            sf = open(source_hx_path)
+            sf = open(source_hx_path, encoding="utf-8")
             sf.readline()
-            tf = open(target_hx_path, 'w')
+            tf = open(target_hx_path, 'w', encoding="utf-8")
             tf.write('package ' + pkg + ';\n')
             shutil.copyfileobj(sf, tf)
             sf.close()
@@ -502,7 +502,7 @@ class ArmNewTreeNodeDialog(bpy.types.Operator):
 
     def draw(self, context):
         self.layout.prop(self, "class_name")
-        
+
 class ArmEditTreeNodeDialog(bpy.types.Operator):
     bl_idname = "arm.edit_treenode"
     bl_label = "Edit Node Tree"
@@ -833,7 +833,7 @@ def draw_traits(layout, obj, is_object):
             op = column.operator("arm.new_treenode", text="New Node Tree", icon="ADD")
             op.is_object = is_object
             # At least one check is active Logic Node Editor
-            is_check_logic_node_editor = False            
+            is_check_logic_node_editor = False
             context_screen = bpy.context.screen
             # Loop for all spaces
             if context_screen is not None:
@@ -861,7 +861,7 @@ def draw_traits(layout, obj, is_object):
             if item is None:
                 column.enabled = False
             else:
-                column.enabled = is_check_logic_node_editor                                
+                column.enabled = is_check_logic_node_editor
             op = column.operator("arm.get_treenode", text="From Node Editor", icon="IMPORT")
             op.is_object = is_object
 
