@@ -15,7 +15,7 @@ from arm.lib.lz4 import LZ4
 import arm.log as log
 import arm.make_state as state
 import arm.props_renderpath
-
+from enum import Enum, unique
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -843,6 +843,35 @@ def check_default_props():
     if wrd.arm_project_name == '':
         # Take blend file name
         wrd.arm_project_name = arm.utils.blend_name()
+
+# Enum Permissions Name
+class PermissionName(Enum):
+    ACCESS_COARSE_LOCATION = 'ACCESS_COARSE_LOCATION'
+    ACCESS_NETWORK_STATE = 'ACCESS_NETWORK_STATE'
+    ACCESS_FINE_LOCATION = 'ACCESS_FINE_LOCATION'
+    ACCESS_WIFI_STATE = 'ACCESS_WIFI_STATE'
+    BLUETOOTH = 'BLUETOOTH'
+    BLUETOOTH_ADMIN = 'BLUETOOTH_ADMIN'
+    CAMERA = 'CAMERA'
+    EXPAND_STATUS_BAR = 'EXPAND_STATUS_BAR'
+    FOREGROUND_SERVICE = 'FOREGROUND_SERVICE'
+    GET_ACCOUNTS = 'GET_ACCOUNTS'
+    INTERNET = 'INTERNET'
+    READ_EXTERNAL_STORAGE = 'READ_EXTERNAL_STORAGE'
+    VIBRATE = 'VIBRATE'
+    WRITE_EXTERNAL_STORAGE = 'WRITE_EXTERNAL_STORAGE'
+
+# Add permission for target android
+def add_permission_target_android(permission_name_enum):
+    wrd = bpy.data.worlds['Arm']
+    check = False
+    for item in wrd.arm_exporter_android_permission_list:
+        if (item.arm_android_permissions.upper() == str(permission_name_enum.value).upper()):
+            check = True
+            break
+    if not check:
+        wrd.arm_exporter_android_permission_list.add()
+        wrd.arm_exporter_android_permission_list[len(wrd.arm_exporter_android_permission_list) - 1].arm_android_permissions = str(permission_name_enum.value).upper()
 
 def register(local_sdk=False):
     global use_local_sdk
