@@ -273,7 +273,7 @@ script_props = {}
 script_props_defaults = {}
 script_warnings = {}
 def fetch_script_props(file):
-    with open(file) as f:
+    with open(file, encoding="utf-8") as f:
         name = file.rsplit('.', 1)[0]
         if 'Sources' in name:
             name = name[name.index('Sources') + 8:]

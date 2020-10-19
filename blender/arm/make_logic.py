@@ -62,7 +62,7 @@ def build_node_tree(node_group):
     if node_group.arm_cached and os.path.isfile(file):
         return
 
-    with open(file, 'w') as f:
+    with open(file, 'w', encoding="utf-8") as f:
         f.write('package ' + pack_path + '.node;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tvar functionNodes:Map<String, armory.logicnode.FunctionNode>;\n\n')
