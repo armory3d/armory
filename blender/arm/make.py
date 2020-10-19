@@ -596,7 +596,7 @@ def build_success():
             project_path = files_path + '-build'
             print('Exported Visual Studio 2017 project to ' + project_path)
         elif target_name.startswith('android'):
-            project_path = files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name)
+            project_path = os.path.join(files_path + '-build', arm.utils.safestr(wrd.arm_project_name))
             print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
             project_path = files_path
