@@ -90,11 +90,11 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
-    float visibility = 0.0;
+	float visibility = 0.0;
 
 #ifdef _Sun
 	#ifdef _CSM
-    mat4 LWVP = mat4(casData[4], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
+	mat4 LWVP = mat4(casData[4], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
 	#endif
 	vec4 lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
