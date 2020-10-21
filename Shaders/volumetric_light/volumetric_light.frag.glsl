@@ -86,9 +86,11 @@ const float lighting = 0.4;
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
 	curPos += stepLenWorld * viewVecNorm;
 	const float density = 1.0;
-	
+
 	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
+
+    float visibility = 0.0;
 
 #ifdef _Sun
 	#ifdef _CSM
@@ -96,20 +98,20 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	#endif
 	vec4 lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
-	float visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias));
+	visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias));
 #endif
 
 #ifdef _SinglePoint
 	#ifdef _Spot
 	vec4 lPos = LWVPSpot0 * vec4(curPos, 1.0);
-	float visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
+	visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
 	float spotEffect = dot(spotDir, normalize(pointPos - curPos)); // lightDir
 	if (spotEffect < spotData.x) { // x - cutoff, y - cutoff - exponent
 		visibility *= smoothstep(spotData.y, spotData.x, spotEffect);
 	}
 	#else
 	vec3 ld = pointPos - curPos;
-	float visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));
+	visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));
 	#endif
 #endif
 
