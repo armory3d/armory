@@ -2,6 +2,7 @@ from typing import Union
 
 import bpy
 
+import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
@@ -156,24 +157,68 @@ def parse_wavelength(node: bpy.types.ShaderNodeWavelength, out_socket: bpy.types
 
 
 def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
+    op = node.operation
+
     vec1 = c.parse_vector_input(node.inputs[0])
     vec2 = c.parse_vector_input(node.inputs[1])
-    op = node.operation
 
     if out_socket.type == 'VECTOR':
         if op == 'ADD':
             return f'({vec1} + {vec2})'
         elif op == 'SUBTRACT':
             return f'({vec1} - {vec2})'
-        elif op == 'AVERAGE':
-            return f'(({vec1} + {vec2}) / 2.0)'
-        elif op == 'DOT_PRODUCT':
-            return f'vec3(dot({vec1}, {vec2}))'
-        elif op == 'CROSS_PRODUCT':
-            return f'cross({vec1}, {vec2})'
+        elif op == 'MULTIPLY':
+            return f'({vec1} * {vec2})'
+        elif op == 'DIVIDE':
+            state.curshader.add_function(c_functions.str_safe_divide)
+            return f'safe_divide({vec1}, {vec2}'
+
         elif op == 'NORMALIZE':
             return f'normalize({vec1})'
+        elif op == 'SCALE':
+            # Scale is input 3 despite being visually on another position (see the python tooltip in Blender)
+            scale = c.parse_value_input(node.inputs[3])
+            return f'{vec1} * {scale}'
 
+        elif op == 'REFLECT':
+            return f'reflect({vec1}, normalize({vec2}))'
+        elif op == 'PROJECT':
+            state.curshader.add_function(c_functions.str_project)
+            return f'project({vec1}, {vec2})'
+        elif op == 'CROSS_PRODUCT':
+            return f'cross({vec1}, {vec2})'
+
+        elif op == 'SINE':
+            return f'sin({vec1})'
+        elif op == 'COSINE':
+            return f'cos({vec1})'
+        elif op == 'TANGENT':
+            return f'tan({vec1})'
+
+        elif op == 'MODULO':
+            return f'mod({vec1}, {vec2})'
+        elif op == 'FRACTION':
+            return f'fract({vec1})'
+
+        elif op == 'SNAP':
+            state.curshader.add_function(c_functions.str_safe_divide)
+            return f'floor(safe_divide({vec1}, {vec2})) * {vec2}'
+        elif op == 'WRAP':
+            vec3 = c.parse_vector_input(node.inputs[2])
+            state.curshader.add_function(c_functions.str_wrap)
+            return f'wrap({vec1}, {vec2}, {vec3})'
+        elif op == 'CEIL':
+            return f'ceil({vec1})'
+        elif op == 'FLOOR':
+            return f'floor({vec1})'
+        elif op == 'MAXIMUM':
+            return f'max({vec1}, {vec2})'
+        elif op == 'MINIMUM':
+            return f'min({vec1}, {vec2})'
+        elif op == 'ABSOLUTE':
+            return f'abs({vec1})'
+
+        log.warn(f'Vectormath node: unsupported operation {node.operation}.')
         return vec1
 
     # Float output
@@ -181,10 +226,11 @@ def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types
         return f'dot({vec1}, {vec2})'
     elif op == 'DISTANCE':
         return f'distance({vec1}, {vec2})'
-    elif op == 'DISTANCE':
+    elif op == 'LENGTH':
         return f'length({vec1})'
-    else:
-        return '0.0'
+
+    log.warn(f'Vectormath node: unsupported operation {node.operation}.')
+    return '0.0'
 
 
 def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
