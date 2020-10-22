@@ -305,7 +305,7 @@ float fresnel(float eta, float c) {
 # Save division like Blender does it. If dividing by 0, the result is 0.
 # https://github.com/blender/blender/blob/df1e9b662bd6938f74579cea9d30341f3b6dd02b/intern/cycles/kernel/shaders/node_vector_math.osl
 str_safe_divide = """
-vec3 safe_divide(vec3 a, vec3 b) {
+vec3 safe_divide(const vec3 a, const vec3 b) {
 \treturn vec3((b.x != 0.0) ? a.x / b.x : 0.0,
 \t            (b.y != 0.0) ? a.y / b.y : 0.0,
 \t            (b.z != 0.0) ? a.z / b.z : 0.0);
@@ -314,7 +314,7 @@ vec3 safe_divide(vec3 a, vec3 b) {
 
 # https://github.com/blender/blender/blob/df1e9b662bd6938f74579cea9d30341f3b6dd02b/intern/cycles/kernel/shaders/node_vector_math.osl
 str_project = """
-vec3 project(vec3 v, vec3 v_proj) {
+vec3 project(const vec3 v, const vec3 v_proj) {
 \tfloat lenSquared = dot(v_proj, v_proj);
 \treturn (lenSquared != 0.0) ? (dot(v, v_proj) / lenSquared) * v_proj : vec3(0);
 }
@@ -322,11 +322,11 @@ vec3 project(vec3 v, vec3 v_proj) {
 
 # Adapted from godot engine math_funcs.h
 str_wrap = """
-float wrap(float value, float max, float min) {
+float wrap(const float value, const float max, const float min) {
 \tfloat range = max - min;
 \treturn (range != 0.0) ? value - (range * floor((value - min) / range)) : min;
 }
-vec3 wrap(vec3 value, vec3 max, vec3 min) {
+vec3 wrap(const vec3 value, const vec3 max, const vec3 min) {
 \treturn vec3(wrap(value.x, max.x, min.x),
 \t            wrap(value.y, max.y, min.y),
 \t            wrap(value.z, max.z, min.z));
