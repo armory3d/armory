@@ -8,6 +8,7 @@ last_scene = ''
 last_world_defs = ''
 proc_play = None
 proc_build = None
+proc_publish_build = None
 mod_scripts = []
 is_export = False
 is_play = False

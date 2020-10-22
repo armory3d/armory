@@ -5,6 +5,7 @@ import platform
 import re
 import subprocess
 import webbrowser
+import shlex
 
 import numpy as np
 
@@ -23,7 +24,6 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
-
 class WorkingDir:
     """Context manager for safely changing the current working directory."""
     def __init__(self, cwd: str):
@@ -35,7 +35,6 @@ class WorkingDir:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.prev_cwd)
-
 
 def write_arm(filepath, output):
     if filepath.endswith('.lz4'):
@@ -103,6 +102,9 @@ def get_os():
         return 'mac'
     else:
         return 'linux'
+
+def get_os_is_windows():
+    return True if get_os() == 'win' else False
 
 def get_gapi():
     wrd = bpy.data.worlds['Arm']
@@ -872,6 +874,57 @@ def add_permission_target_android(permission_name_enum):
     if not check:
         wrd.arm_exporter_android_permission_list.add()
         wrd.arm_exporter_android_permission_list[len(wrd.arm_exporter_android_permission_list) - 1].arm_android_permissions = str(permission_name_enum.value).upper()
+
+def get_project_android_build_apk():
+    wrd = bpy.data.worlds['Arm']
+    return wrd.arm_project_android_build_apk
+
+def get_android_sdk_root_path():
+    if os.getenv('ANDROID_SDK_ROOT') == None:
+        addon_prefs = get_arm_preferences()
+        return '' if not hasattr(addon_prefs, 'android_sdk_root_path') else addon_prefs.android_sdk_root_path
+    else:
+        return os.getenv('ANDROID_SDK_ROOT')
+
+def get_android_emulators_list():
+    err = ''
+    items = []
+    path_file = get_android_emulator_file()
+    if len(path_file) > 0:
+        cmd = path_file + " -list-avds"
+        if get_os_is_windows():
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        else:
+            process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
+        while True:
+            output = process.stdout.readline().decode("utf-8")
+            if len(output.strip()) == 0 and process.poll() is not None:
+                break
+            if output:
+                items.append(output.strip())
+    else:
+        err = 'File "'+ path_file +'" not found.'
+    return items, err
+
+def get_android_emulator_path():
+    return os.path.join(get_android_sdk_root_path(), "emulator")
+
+def get_android_emulator_file():
+    path_file = ''
+    if get_os_is_windows():
+        path_file = os.path.join(get_android_emulator_path(), "emulator.exe")
+    else:
+        path_file = os.path.join(get_android_emulator_path(), "emulator")
+    # File Exists
+    return '' if not os.path.isfile(path_file) else path_file
+
+def get_android_emulator_name():
+    wrd = bpy.data.worlds['Arm']
+    return '' if not len(wrd.arm_project_android_list_avd.strip()) > 0 else wrd.arm_project_android_list_avd.strip()
+
+def get_android_open_build_apk_directory():
+    addon_prefs = get_arm_preferences()
+    return False if not hasattr(addon_prefs, 'android_open_build_apk_directory') else addon_prefs.android_open_build_apk_directory
 
 def register(local_sdk=False):
     global use_local_sdk

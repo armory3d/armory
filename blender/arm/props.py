@@ -23,6 +23,11 @@ def init_properties():
     bpy.types.World.arm_project_android_sdk_compile = IntProperty(name="Compile Version SDK", description="Compile Android SDK Version", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=14, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_build_apk = BoolProperty(name="Building APK After Publishing", description="Starting APK build after publishing", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_run_avd = BoolProperty(name="Run Emulator After Building APK", description="Starting android emulator after APK build", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_list_avd = EnumProperty(
+        items=[(' ', ' ', ' ')],
+        name="Emulator", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
