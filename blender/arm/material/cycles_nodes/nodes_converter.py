@@ -171,7 +171,7 @@ def parse_vectormath(node: bpy.types.ShaderNodeVectorMath, out_socket: bpy.types
             return f'({vec1} * {vec2})'
         elif op == 'DIVIDE':
             state.curshader.add_function(c_functions.str_safe_divide)
-            return f'safe_divide({vec1}, {vec2}'
+            return f'safe_divide({vec1}, {vec2})'
 
         elif op == 'NORMALIZE':
             return f'normalize({vec1})'
