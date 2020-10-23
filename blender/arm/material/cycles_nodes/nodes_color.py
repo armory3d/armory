@@ -102,6 +102,5 @@ def parse_curvergb(node: bpy.types.ShaderNodeRGBCurve, out_socket: bpy.types.Nod
 
 
 def parse_lightfalloff(node: bpy.types.ShaderNodeLightFalloff, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
-    # Constant, linear, quadratic
-    # Shaders default to quadratic for now
-    return '1.0'
+    # https://github.com/blender/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_light_falloff.glsl
+    return c.parse_value_input(node.inputs['Strength'])
