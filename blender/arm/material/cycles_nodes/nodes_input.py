@@ -272,6 +272,7 @@ def parse_layerweight(node: bpy.types.ShaderNodeLayerWeight, out_socket: bpy.typ
 
 
 def parse_lightpath(node: bpy.types.ShaderNodeLightPath, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    # https://github.com/blender/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_light_path.glsl
     if out_socket == node.outputs[0]: # Is Camera Ray
         return '1.0'
     elif out_socket == node.outputs[1]: # Is Shadow Ray
@@ -287,7 +288,7 @@ def parse_lightpath(node: bpy.types.ShaderNodeLightPath, out_socket: bpy.types.N
     elif out_socket == node.outputs[6]: # Is Transmission Ray
         return '0.0'
     elif out_socket == node.outputs[7]: # Ray Length
-        return '0.0'
+        return '1.0'
     elif out_socket == node.outputs[8]: # Ray Depth
         return '0.0'
     elif out_socket == node.outputs[9]: # Transparent Depth
