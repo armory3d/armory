@@ -214,6 +214,8 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     if out_socket == node.outputs[0]: # Generated - bounds
         return 'bposition'
     elif out_socket == node.outputs[1]: # Normal
+        if state.context == ParserContext.WORLD:
+            return '-n'
         return 'n'
     elif out_socket == node.outputs[2]: # UV
         state.con.add_elem('tex', 'short2norm')
