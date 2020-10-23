@@ -1,5 +1,6 @@
 import bpy
 
+import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
@@ -42,49 +43,60 @@ def parse_invert(node: bpy.types.ShaderNodeInvert, out_socket: bpy.types.NodeSoc
 
 
 def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    fac = c.parse_value_input(node.inputs[0])
-    fac_var = c.node_name(node.name) + '_fac'
-    state.curshader.write('float {0} = {1};'.format(fac_var, fac))
     col1 = c.parse_vector_input(node.inputs[1])
     col2 = c.parse_vector_input(node.inputs[2])
+
+    # Store factor in variable for linked factor input
+    if node.inputs[0].is_linked:
+        fac = c.node_name(node.name) + '_fac'
+        state.curshader.write('float {0} = {1};'.format(fac, c.parse_value_input(node.inputs[0])))
+    else:
+        fac = c.parse_value_input(node.inputs[0])
+
+    # TODO: Do not mix if factor is constant 0.0 or 1.0?
+
     blend = node.blend_type
     if blend == 'MIX':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var)
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac)
     elif blend == 'ADD':
-        out_col = 'mix({0}, {0} + {1}, {2})'.format(col1, col2, fac_var)
+        out_col = 'mix({0}, {0} + {1}, {2})'.format(col1, col2, fac)
     elif blend == 'MULTIPLY':
-        out_col = 'mix({0}, {0} * {1}, {2})'.format(col1, col2, fac_var)
+        out_col = 'mix({0}, {0} * {1}, {2})'.format(col1, col2, fac)
     elif blend == 'SUBTRACT':
-        out_col = 'mix({0}, {0} - {1}, {2})'.format(col1, col2, fac_var)
+        out_col = 'mix({0}, {0} - {1}, {2})'.format(col1, col2, fac)
     elif blend == 'SCREEN':
-        out_col = '(vec3(1.0) - (vec3(1.0 - {2}) + {2} * (vec3(1.0) - {1})) * (vec3(1.0) - {0}))'.format(col1, col2, fac_var)
+        out_col = '(vec3(1.0) - (vec3(1.0 - {2}) + {2} * (vec3(1.0) - {1})) * (vec3(1.0) - {0}))'.format(col1, col2, fac)
     elif blend == 'DIVIDE':
-        out_col = '(vec3((1.0 - {2}) * {0} + {2} * {0} / {1}))'.format(col1, col2, fac_var)
+        out_col = '(vec3((1.0 - {2}) * {0} + {2} * {0} / {1}))'.format(col1, col2, fac)
     elif blend == 'DIFFERENCE':
-        out_col = 'mix({0}, abs({0} - {1}), {2})'.format(col1, col2, fac_var)
+        out_col = 'mix({0}, abs({0} - {1}), {2})'.format(col1, col2, fac)
     elif blend == 'DARKEN':
-        out_col = 'min({0}, {1} * {2})'.format(col1, col2, fac_var)
+        out_col = 'min({0}, {1} * {2})'.format(col1, col2, fac)
     elif blend == 'LIGHTEN':
-        out_col = 'max({0}, {1} * {2})'.format(col1, col2, fac_var)
+        out_col = 'max({0}, {1} * {2})'.format(col1, col2, fac)
     elif blend == 'OVERLAY':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'DODGE':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'BURN':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'HUE':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'SATURATION':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'VALUE':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'COLOR':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'SOFT_LIGHT':
         out_col = '((1.0 - {2}) * {0} + {2} * ((vec3(1.0) - {0}) * {1} * {0} + {0} * (vec3(1.0) - (vec3(1.0) - {1}) * (vec3(1.0) - {0}))));'.format(col1, col2, fac)
     elif blend == 'LINEAR_LIGHT':
-        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+        out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
         # out_col = '({0} + {2} * (2.0 * ({1} - vec3(0.5))))'.format(col1, col2, fac_var)
+    else:
+        log.warn(f'MixRGB node: unsupported blend type {node.blend_type}.')
+        return col1
+
     if node.use_clamp:
         return 'clamp({0}, vec3(0.0), vec3(1.0))'.format(out_col)
     return out_col
