@@ -2,6 +2,7 @@ from typing import Union
 
 import bpy
 
+import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
@@ -73,6 +74,23 @@ def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.N
 
     # Pass constant
     return c.to_vec3([rgb[0], rgb[1], rgb[2]])
+
+
+def parse_clamp(node: bpy.types.ShaderNodeClamp, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    value = c.parse_value_input(node.inputs['Value'])
+    minVal = c.parse_value_input(node.inputs['Min'])
+    maxVal = c.parse_value_input(node.inputs['Max'])
+
+    if node.clamp_type == 'MINMAX':
+        # Condition is minVal < maxVal, otherwise use 'RANGE' type
+        return f'clamp({value}, {minVal}, {maxVal})'
+
+    elif node.clamp_type == 'RANGE':
+        return f'{minVal} < {maxVal} ? clamp({value}, {minVal}, {maxVal}) : clamp({value}, {maxVal}, {minVal})'
+
+    else:
+        log.warn(f'Clamp node: unsupported clamp type {node.clamp_type}.')
+        return value
 
 
 def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:

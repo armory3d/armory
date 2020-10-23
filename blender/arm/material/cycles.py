@@ -425,6 +425,7 @@ def parse_value(node, socket):
         'TEX_WAVE': nodes_texture.parse_tex_wave,
         'LIGHT_FALLOFF': nodes_color.parse_lightfalloff,
         'NORMAL': nodes_vector.parse_normal,
+        'CLAMP': nodes_converter.parse_clamp,
         'VALTORGB': nodes_converter.parse_valtorgb,
         'MATH': nodes_converter.parse_math,
         'RGBTOBW': nodes_converter.parse_rgbtobw,
