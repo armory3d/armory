@@ -316,9 +316,18 @@ def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeS
     return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
 
 
-def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket) -> floatstr:
-    # TODO
-    return '0.0'
+def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    state.curshader.add_function(c_functions.str_hue_sat)
+
+    hsv_var = c.node_name(node.name) + '_hsv'
+    state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
+
+    if out_socket == node.outputs[0]:
+        return f'{hsv_var}.x'
+    elif out_socket == node.outputs[1]:
+        return f'{hsv_var}.y'
+    elif out_socket == node.outputs[2]:
+        return f'{hsv_var}.z'
 
 
 def parse_seprgb(node: bpy.types.ShaderNodeSeparateRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
