@@ -312,8 +312,7 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
 
 
 def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
-    col = c.parse_vector_input(node.inputs[0])
-    return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
+    return c.rgb_to_bw(c.parse_vector_input(node.inputs[0]))
 
 
 def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket) -> floatstr:
