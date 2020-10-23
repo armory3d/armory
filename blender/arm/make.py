@@ -7,6 +7,7 @@ import stat
 import subprocess
 import threading
 import webbrowser
+import shlex
 
 import bpy
 
@@ -607,6 +608,69 @@ def build_success():
 
         if arm.utils.get_arm_preferences().open_build_directory:
             arm.utils.open_folder(project_path)
+        
+        # Android build APK
+        if (arm.utils.get_project_android_build_apk()) and (len(arm.utils.get_android_sdk_root_path()) > 0):
+            print("\nBuilding APK")
+            # Check settings
+            path_sdk = arm.utils.get_android_sdk_root_path()
+            if len(path_sdk) > 0:
+                # Check Environment Variables - ANDROID_SDK_ROOT
+                if os.getenv('ANDROID_SDK_ROOT') == None:
+                    # Set value from settings  
+                    os.environ['ANDROID_SDK_ROOT'] = path_sdk
+            else:
+                project_path = ''
+
+            # Build start
+            if len(project_path) > 0:
+                os.chdir(project_path) # set work folder
+                if arm.utils.get_os_is_windows():
+                    state.proc_publish_build = run_proc(os.path.join(project_path, "gradlew.bat assembleDebug"), done_gradlew_build)
+                else:
+                    cmd = shlex.split(os.path.join(project_path, "gradlew assembleDebug"))
+                    state.proc_publish_build = run_proc(cmd, done_gradlew_build)
+            else:
+                print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
+
+def done_gradlew_build():
+    if state.proc_publish_build == None:
+        return 
+    result = state.proc_publish_build.poll()
+    if result == 0:
+        state.proc_publish_build = None
+
+        wrd = bpy.data.worlds['Arm']
+        path_apk = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
+        path_apk = os.path.join(path_apk + '-build', arm.utils.safestr(wrd.arm_project_name), "app", "build", "outputs", "apk", "debug")
+        
+        print("\nBuild APK to " + path_apk)
+        # Open directory with APK
+        if arm.utils.get_android_open_build_apk_directory():
+            arm.utils.open_folder(path_apk)
+        # Running emulator
+        if wrd.arm_project_android_run_avd:
+            run_android_emulators(arm.utils.get_android_emulator_name())
+        state.redraw_ui = True
+    else:
+        state.proc_publish_build = None
+        state.redraw_ui = True
+        os.environ['ANDROID_SDK_ROOT'] = ''
+        log.error('Building the APK failed, check console')
+
+def run_android_emulators(avd_name): 
+    if len(avd_name.strip()) == 0:
+        return
+    print('\nRunning Emulator "'+ avd_name +'"')
+    path_file = arm.utils.get_android_emulator_file()
+    if len(path_file) > 0:    
+        if arm.utils.get_os_is_windows():
+            run_proc(path_file + " -avd "+ avd_name, None)
+        else:
+            cmd = shlex.split(path_file + " -avd "+ avd_name)
+            run_proc(cmd, None)
+    else:
+        print('Update List Emulators Warning: File "'+ path_file +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
 
 def clean():
     os.chdir(arm.utils.get_fp())

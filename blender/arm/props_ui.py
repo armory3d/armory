@@ -2,6 +2,7 @@ import os
 import time
 
 import bpy
+from bpy.props import *
 
 import arm.api
 import arm.assets as assets
@@ -538,6 +539,48 @@ class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
                 row = layout.row()
                 row.prop(item, 'arm_android_abi')
 
+class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
+    bl_label = "Building APK"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        is_check = False
+        for item in wrd.arm_exporterlist:
+            is_check = item.arm_project_target == 'android-hl'
+            if is_check:
+                break
+        return is_check
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.enabled = item.arm_project_target == 'android-hl'
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_build_apk')
+            path = arm.utils.get_android_sdk_root_path()
+            row.enabled = len(path) > 0
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_list_avd')
+            col = row.column(align=True)
+            col.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
+            col.enabled = len(path) > 0
+            col = row.column(align=True)
+            col.operator('arm.run_android_emulator', text='', icon='PLAY')
+            col.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_run_avd')
+            row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
+
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
     bl_space_type = "PROPERTIES"
@@ -841,12 +884,10 @@ def draw_view3d_header(self, context):
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
 
-
 def draw_view3d_object_menu(self, context):
     self.layout.separator()
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
-
 
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
@@ -1535,8 +1576,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
-            row = layout.row(align=True)
-            
+            row = layout.row(align=True)         
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -1998,7 +2038,6 @@ class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
 
         return {"FINISHED"}
 
-
 class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
     bl_label = 'Show upgrade failure details'
     bl_idname = 'arm.show_node_update_errors'
@@ -2085,7 +2124,6 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
         context.window_manager.popover(ARM_OT_ShowNodeUpdateErrors.draw_message_box, ui_units_x=32)
         return {"FINISHED"}
 
-
 class ARM_OT_UpdateFileSDK(bpy.types.Operator):
     bl_idname = 'arm.update_file_sdk'
     bl_label = 'Update file to current SDK version'
@@ -2121,6 +2159,49 @@ class ARM_OT_DiscardPopup(bpy.types.Operator):
     def execute(self, context):
         return {'FINISHED'}
 
+class ArmoryUpdateListAndroidEmulatorButton(bpy.types.Operator):
+    '''Updating the list of emulators for the Android platform'''
+    bl_idname = 'arm.update_list_android_emulator'
+    bl_label = 'Update List Emulators'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if len(arm.utils.get_android_sdk_root_path()) == 0:
+            return {"CANCELLED"}
+        
+        os.environ['ANDROID_SDK_ROOT'] = arm.utils.get_android_sdk_root_path()
+        items, err = arm.utils.get_android_emulators_list()
+        if len(err) > 0:
+            print('Update List Emulators Warning: File "'+ arm.utils.get_android_emulator_file() +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
+            return{'FINISHED'}
+        items_enum = []
+        for i in items:
+            items_enum.append((i, i, i))
+        bpy.types.World.arm_project_android_list_avd = EnumProperty(items=items_enum, name="Emulator", update=assets.invalidate_compiler_cache)
+        return{'FINISHED'}
+
+class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
+    '''Launch Android emulator selected from the list'''
+    bl_idname = 'arm.run_android_emulator'
+    bl_label = 'Launch Emulator'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if len(arm.utils.get_android_sdk_root_path()) == 0:
+            return {"CANCELLED"}
+        
+        make.run_android_emulators(arm.utils.get_android_emulator_name())
+        return{'FINISHED'}
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
@@ -2139,6 +2220,7 @@ def register():
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
@@ -2178,6 +2260,8 @@ def register():
     bpy.utils.register_class(ARM_OT_ShowFileVersionInfo)
     bpy.utils.register_class(ARM_OT_ShowNodeUpdateErrors)
     bpy.utils.register_class(ARM_OT_DiscardPopup)
+    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
+    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
@@ -2186,7 +2270,9 @@ def register():
 def unregister():
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
-
+    
+    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
+    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
     bpy.utils.unregister_class(ARM_OT_ShowNodeUpdateErrors)
     bpy.utils.unregister_class(ARM_OT_ShowFileVersionInfo)
@@ -2203,6 +2289,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
