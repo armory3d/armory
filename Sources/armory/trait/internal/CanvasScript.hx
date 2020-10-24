@@ -8,6 +8,7 @@ import zui.Canvas;
 
 class CanvasScript extends Trait {
 
+	public var cnvName: String;
 #if arm_ui
 
 	var cui: Zui;
@@ -23,6 +24,7 @@ class CanvasScript extends Trait {
 	 */
 	public function new(canvasName: String, font: String = "font_default.ttf") {
 		super();
+		cnvName = canvasName;
 
 		iron.data.Data.getBlob(canvasName + ".json", function(blob: kha.Blob) {
 
@@ -147,7 +149,7 @@ class CanvasScript extends Trait {
 
 #else
 
-	public function new(canvasName: String) { super(); }
+	public function new(canvasName: String) { super(); cnvName = canvasName; }
 
 #end
 }
