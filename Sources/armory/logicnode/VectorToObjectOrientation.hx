@@ -3,7 +3,7 @@ package armory.logicnode;
 import iron.object.Object;
 import iron.math.Vec4;
 
-class VectorToObjectSpaceNode extends LogicNode {
+class VectorToObjectOrientationNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
