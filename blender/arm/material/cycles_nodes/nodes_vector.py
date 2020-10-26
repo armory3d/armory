@@ -106,11 +106,14 @@ def parse_mapping(node: bpy.types.ShaderNodeMapping, out_socket: bpy.types.NodeS
 
 
 def parse_normal(node: bpy.types.ShaderNodeNormal, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    if out_socket == node.outputs[0]:
-        return c.to_vec3(node.outputs[0].default_value)
-    elif out_socket == node.outputs[1]: # TODO: is parse_value path preferred?
-        nor = c.parse_vector_input(node.inputs[0])
-        return f'dot({c.to_vec3(node.outputs[0].default_value)}, {nor})'
+    nor1 = c.to_vec3(node.outputs['Normal'].default_value)
+
+    if out_socket == node.outputs['Normal']:
+        return nor1
+
+    elif out_socket == node.outputs['Dot']:
+        nor2 = c.parse_vector_input(node.inputs["Normal"])
+        return f'dot({nor1}, {nor2})'
 
 
 def parse_normalmap(node: bpy.types.ShaderNodeNormalMap, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:

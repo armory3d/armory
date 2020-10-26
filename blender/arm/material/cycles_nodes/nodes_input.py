@@ -1,6 +1,7 @@
 import bpy
 from typing import Union
 
+import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState, ParserContext
@@ -213,6 +214,8 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     if out_socket == node.outputs[0]: # Generated - bounds
         return 'bposition'
     elif out_socket == node.outputs[1]: # Normal
+        if state.context == ParserContext.WORLD:
+            return '-n'
         return 'n'
     elif out_socket == node.outputs[2]: # UV
         state.con.add_elem('tex', 'short2norm')
@@ -272,28 +275,36 @@ def parse_layerweight(node: bpy.types.ShaderNodeLayerWeight, out_socket: bpy.typ
 
 
 def parse_lightpath(node: bpy.types.ShaderNodeLightPath, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
-    if out_socket == node.outputs[0]: # Is Camera Ray
+    # https://github.com/blender/blender/blob/master/source/blender/gpu/shaders/material/gpu_shader_material_light_path.glsl
+    if out_socket == node.outputs['Is Camera Ray']:
         return '1.0'
-    elif out_socket == node.outputs[1]: # Is Shadow Ray
+    elif out_socket == node.outputs['Is Shadow Ray']:
         return '0.0'
-    elif out_socket == node.outputs[2]: # Is Diffuse Ray
+    elif out_socket == node.outputs['Is Diffuse Ray']:
         return '1.0'
-    elif out_socket == node.outputs[3]: # Is Glossy Ray
+    elif out_socket == node.outputs['Is Glossy Ray']:
         return '1.0'
-    elif out_socket == node.outputs[4]: # Is Singular Ray
+    elif out_socket == node.outputs['Is Singular Ray']:
         return '0.0'
-    elif out_socket == node.outputs[5]: # Is Reflection Ray
+    elif out_socket == node.outputs['Is Reflection Ray']:
         return '0.0'
-    elif out_socket == node.outputs[6]: # Is Transmission Ray
+    elif out_socket == node.outputs['Is Transmission Ray']:
         return '0.0'
-    elif out_socket == node.outputs[7]: # Ray Length
+    elif out_socket == node.outputs['Ray Length']:
+        return '1.0'
+    elif out_socket == node.outputs['Ray Depth']:
         return '0.0'
-    elif out_socket == node.outputs[8]: # Ray Depth
+    elif out_socket == node.outputs['Diffuse Depth']:
         return '0.0'
-    elif out_socket == node.outputs[9]: # Transparent Depth
+    elif out_socket == node.outputs['Glossy Depth']:
         return '0.0'
-    elif out_socket == node.outputs[10]: # Transmission Depth
+    elif out_socket == node.outputs['Transparent Depth']:
         return '0.0'
+    elif out_socket == node.outputs['Transmission Depth']:
+        return '0.0'
+
+    log.warn(f'Light Path node: unsupported output {out_socket.identifier}.')
+    return '0.0'
 
 
 def parse_value(node: bpy.types.ShaderNodeValue, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:

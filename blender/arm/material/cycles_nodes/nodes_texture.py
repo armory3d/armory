@@ -266,7 +266,8 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
 
     scale = c.parse_value_input(node.inputs[2])
     detail = c.parse_value_input(node.inputs[3])
-    distortion = c.parse_value_input(node.inputs[4])#
+    roughness = c.parse_value_input(node.inputs[4])
+    distortion = c.parse_value_input(node.inputs[5])
 
     # Color
     if out_socket == node.outputs[1]:
