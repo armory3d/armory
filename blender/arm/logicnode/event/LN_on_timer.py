@@ -17,5 +17,4 @@ class OnTimerNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketFloat', 'Progress')
 
-
 add_node(OnTimerNode, category=PKG_AS_CATEGORY)
