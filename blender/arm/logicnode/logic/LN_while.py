@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class WhileNode(ArmLogicTreeNode):
-    """Loops while the condition is `True`.
+    """Loops while the condition is `true`.
 
     @seeNode Loop
     @seeNode Loop Break
