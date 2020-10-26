@@ -9,7 +9,6 @@ class SnapshotNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-
 		var value: Dynamic = inputs[1].get();
 
 		snapshot = value;

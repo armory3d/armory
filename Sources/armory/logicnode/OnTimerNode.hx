@@ -12,7 +12,6 @@ class OnTimerNode extends LogicNode {
 	}
 
 	function update() {
-
 		if (duration <= 0.0) {
 			duration = inputs[0].get();
 			repeat = inputs[1].get();
