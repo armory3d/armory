@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class TimeNode(ArmLogicTreeNode):
     """Returns the application execution time and the delta time."""
     bl_idname = 'LNTimeNode'
-    bl_label = 'Time'
+    bl_label = 'Get Application Time'
     arm_version = 1
 
     def init(self, context):

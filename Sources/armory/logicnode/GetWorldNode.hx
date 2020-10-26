@@ -18,8 +18,8 @@ class GetWorldNode extends LogicNode {
 
 		return switch (property0) {
 			case "Right": object.transform.world.right();
-			case "Look": return object.transform.world.look();
-			case "Up": return object.transform.world.up();
+			case "Look": object.transform.world.look();
+			case "Up": object.transform.world.up();
 			default: null;
 		}
 	}

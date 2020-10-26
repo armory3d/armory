@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GetObjectTraitsNode(ArmLogicTreeNode):
-    """Returns the children of the given object."""
+    """Returns all traits from the given object."""
     bl_idname = 'LNGetObjectTraitsNode'
     bl_label = 'Get Object Traits'
     arm_version = 1

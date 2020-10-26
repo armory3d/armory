@@ -1,12 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class SwitchNode(ArmLogicTreeNode):
-    """Activates the outputs depending of the value. If 'value' is equal to 'case 1', the output 'case 1' will be activated.
+    """Activates the outputs depending of the value. If the "value" is equal to "case 1", the output "case 1" will be activated.
 
     @output Default: Activated if the input value does not match any case.
     """
     bl_idname = 'LNSwitchNode'
-    bl_label = 'Switch'
+    bl_label = 'Switch Output'
     arm_version = 1
     min_inputs = 2
     min_outputs = 1

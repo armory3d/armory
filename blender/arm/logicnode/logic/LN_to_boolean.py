@@ -4,7 +4,7 @@ class ToBoolNode(ArmLogicTreeNode):
     """Converts a signal to a boolean value. If the input signal is
     active, the boolean is `true`; if not, the boolean is `false`."""
     bl_idname = 'LNToBoolNode'
-    bl_label = 'To Bool'
+    bl_label = 'To Boolean'
     arm_version = 1
 
     def init(self, context):
