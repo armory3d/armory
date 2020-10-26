@@ -19,9 +19,13 @@ class OnTimerNode extends LogicNode {
 		}
 
 		duration -= iron.system.Time.delta;
+
 		if (duration <= 0.0) {
-			if (!repeat) tree.removeUpdate(update);
-			runOutput(0);
+			repeat ? runOutput(0): tree.removeUpdate(update);
 		}
+	}
+
+	override function get(from: Int): Dynamic {
+		return 1 - duration / inputs[0].get();
 	}
 }
