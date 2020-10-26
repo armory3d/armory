@@ -4,9 +4,9 @@ from arm.logicnode.arm_nodes import *
 
 
 class GetObjectNode(ArmLogicTreeNode):
-    """Search for the given object by its name and returns it."""
+    """Searches for a object that uses the given name and returns it."""
     bl_idname = 'LNGetObjectNode'
-    bl_label = 'Get Object'
+    bl_label = 'Get Object By Name'
     arm_version = 1
 
     property0: PointerProperty(
