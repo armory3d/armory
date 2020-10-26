@@ -90,7 +90,7 @@ class ARM_UL_TraitList(bpy.types.UIList):
         elif item.type_prop == "UI Canvas":
             custom_icon = "OBJECT_DATAMODE"
         elif item.type_prop == "Bundled Script":
-            custom_icon = 'OBJECT_DATAMODE'
+            custom_icon_value = icons_dict["bundle"].icon_id
         elif item.type_prop == "Logic Nodes":
             custom_icon = 'NODETREE'
 
@@ -918,6 +918,7 @@ def register():
     icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
     icons_dict.load("haxe", os.path.join(icons_dir, "haxe.png"), 'IMAGE')
     icons_dict.load("wasm", os.path.join(icons_dir, "wasm.png"), 'IMAGE')
+    icons_dict.load("bundle", os.path.join(icons_dir, "bundle.png"), 'IMAGE')
 
 def unregister():
     global icons_dict
