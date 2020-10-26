@@ -387,7 +387,7 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
         socket_type = link.from_socket.type
         if socket_type in ('RGB', 'RGBA', 'VECTOR'):
             # RGB to BW
-            return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+            return rgb_to_bw(res_var)
         # VALUE
         else:
             return res_var
@@ -541,8 +541,9 @@ def write_procedurals():
         state.procedurals_written = True
     return
 
-def glsl_type(typestr: str):
-    if typestr in ('RGB', 'RGBA', 'VECTOR'):
+def glsl_type(socket_type: str):
+    """Socket to glsl type."""
+    if socket_type in ('RGB', 'RGBA', 'VECTOR'):
         return 'vec3'
     else:
         return 'float'
@@ -598,8 +599,12 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     return tex_store
 
-def write_bump(node, res, scl=0.001):
+
+def write_bump(node: bpy.types.Node, out_socket: bpy.types.NodeSocket, res: str, scl=0.001):
+    """Sample texture values around the current texture coordinate for bump mapping. The result of the sampling is
+    stored in 4 variables named after state.sample_bump_res with _[0-3] appended."""
     state.sample_bump_res = store_var_name(node) + '_bump'
+
     # Testing.. get function parts..
     ar = res.split('(', 1)
     pre = ar[0] + '('
@@ -611,18 +616,37 @@ def write_bump(node, res, scl=0.001):
         co = ar[1][:-1]
         post = ')'
 
+    coordinate_offsets = (
+        f'vec3(-{scl}, 0.0, 0.0)',
+        f'vec3({scl}, 0.0, {scl})',
+        f'vec3(0.0, -{scl}, 0.0)',
+        f'vec3(0.0, {scl}, -{scl})'
+    )
+
+    needs_conversion_bw = glsl_type(out_socket.type) == "vec3"
     curshader = state.curshader
-    curshader.write('float {0}_1 = {1}{2} + vec3(-{4}, 0.0, 0.0){3};'.format(state.sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_2 = {1}{2} + vec3({4},  0.0, {4}){3};'.format(state.sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_3 = {1}{2} + vec3(0.0, -{4}, 0.0){3};'.format(state.sample_bump_res, pre, co, post, scl))
-    curshader.write('float {0}_4 = {1}{2} + vec3(0.0, {4}, -{4}){3};'.format(state.sample_bump_res, pre, co, post, scl))
+    for i in range(1, 5):
+        if needs_conversion_bw:
+            vec_var = f'{state.sample_bump_res}_vec{i}'
+            curshader.write(f'vec3 {vec_var} = {pre}{co} + {coordinate_offsets[i - 1]}{post};')
+            curshader.write(f'float {state.sample_bump_res}_{i} = {rgb_to_bw(vec_var)};')
+        else:
+            curshader.write(f'float {state.sample_bump_res}_{i} = {pre}{co} + {coordinate_offsets[i - 1]}{post};')
+
     state.sample_bump = False
+
 
 def to_vec1(v):
     return str(v)
 
+
 def to_vec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
+
+
+def rgb_to_bw(res_var: vec3str) -> floatstr:
+    return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+
 
 def node_by_type(nodes, ntype: str) -> bpy.types.Node:
     for n in nodes:
