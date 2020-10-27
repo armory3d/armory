@@ -6,6 +6,7 @@ import bpy
 from bpy.app.handlers import persistent
 
 import arm.api
+import arm.logicnode.arm_nodes
 import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
@@ -135,6 +136,7 @@ def on_load_post(context):
                     sys.path.remove(fp)
 
         # Register newly added nodes and node categories
+        arm.logicnode.arm_nodes.reset_globals()
         arm.nodes_logic.register_nodes()
 
     # Show trait users as collections

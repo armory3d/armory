@@ -491,6 +491,15 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     node_type.bl_icon = node_category.icon
 
 
+def reset_globals():
+    global nodes
+    global category_items
+    global array_nodes
+    nodes = []
+    category_items = OrderedDict()
+    array_nodes = dict()
+
+
 bpy.utils.register_class(ArmNodeSearch)
 bpy.utils.register_class(ArmNodeAddInputButton)
 bpy.utils.register_class(ArmNodeAddInputValueButton)
