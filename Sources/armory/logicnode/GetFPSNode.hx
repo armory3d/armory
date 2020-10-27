@@ -12,7 +12,7 @@ class GetFPSNode extends LogicNode {
             if ((fps == Math.POSITIVE_INFINITY) || (fps == Math.NEGATIVE_INFINITY) || (Math.isNaN(fps))) {
                 return 0;
             }
-        return fps;
+            return fps;
         }
         return null;
     }
