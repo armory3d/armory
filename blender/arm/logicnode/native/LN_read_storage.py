@@ -6,6 +6,7 @@ class ReadStorageNode(ArmLogicTreeNode):
     @seeNode Write Storage"""
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
+    arm_section = 'file'
     arm_version = 1
 
     def init(self, context):
@@ -13,5 +14,3 @@ class ReadStorageNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Key')
         self.add_input('NodeSocketString', 'Default')
         self.add_output('NodeSocketShader', 'Value')
-
-add_node(ReadStorageNode, category=PKG_AS_CATEGORY, section='file')

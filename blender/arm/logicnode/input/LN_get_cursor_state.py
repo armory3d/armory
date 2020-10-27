@@ -13,6 +13,7 @@ class GetCursorStateNode(ArmLogicTreeNode):
     @output Is Locked: `true` if the mouse cursor is locked."""
     bl_idname = 'LNGetCursorStateNode'
     bl_label = 'Get Cursor State'
+    arm_section = 'mouse'
     arm_version = 1
 
     def init(self, context):
@@ -20,5 +21,3 @@ class GetCursorStateNode(ArmLogicTreeNode):
         self.outputs.new('NodeSocketBool', 'Is Hidden Locked')
         self.outputs.new('NodeSocketBool', 'Is Hidden')
         self.outputs.new('NodeSocketBool', 'Is Locked')
-
-add_node(GetCursorStateNode, category=PKG_AS_CATEGORY, section='mouse')

@@ -1,7 +1,9 @@
 import importlib
+import inspect
 import pkgutil
 
-from arm.logicnode import arm_nodes
+import arm.logicnode.arm_nodes as arm_nodes
+import arm.logicnode.arm_sockets as arm_sockets
 
 # Register node menu categories
 arm_nodes.add_category('Logic', icon='OUTLINER', section="basic",
@@ -43,12 +45,19 @@ arm_nodes.add_category('Layout', icon='SEQ_STRIP_DUPLICATE', section="misc")
 # of the menu by default unless they declare it otherwise
 arm_nodes.add_category_section('default')
 
-# Import all nodes so that the modules are registered
-__all__ = []
-for loader, module_name, is_pkg in pkgutil.walk_packages(__path__):
-    __all__.append(module_name)
-    if is_pkg:
-        _module = loader.find_module(module_name).load_module(module_name)
-    else:
-        _module = importlib.import_module(f'{__name__}.{module_name}')
-    globals()[module_name] = _module
+
+def init_nodes():
+    """Calls the on_register() method on all logic nodes in order
+    to initialize them and to register them to Armory."""
+    for loader, module_name, is_pkg in pkgutil.walk_packages(__path__, __package__ + '.'):
+        if is_pkg:
+            # The package must be loaded as well so that the modules from that package can be accessed (see the
+            # pkgutil.walk_packages documentation for more information on this)
+            loader.find_module(module_name).load_module(module_name)
+        else:
+            _module = importlib.import_module(module_name)
+            for name, obj in inspect.getmembers(_module, inspect.isclass):
+                if name == "ArmLogicTreeNode":
+                    continue
+                if issubclass(obj, arm_nodes.ArmLogicTreeNode):
+                    obj.on_register()

@@ -12,6 +12,3 @@ class OnApplicationStateNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'On Foreground')
         self.add_output('ArmNodeSocketAction', 'On Background')
         self.add_output('ArmNodeSocketAction', 'On Shutdown')
-
-
-add_node(OnApplicationStateNode, category=PKG_AS_CATEGORY)

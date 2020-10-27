@@ -6,6 +6,8 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     bl_label = 'On Virtual Button'
     bl_description = "Please use the \"Virtual Button\" node instead"
     bl_icon = 'ERROR'
+    arm_section = 'virtual'
+    arm_is_obsolete = True
     arm_version = 2
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -21,5 +23,3 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
-
-add_node(OnVirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual', is_obsolete=True)

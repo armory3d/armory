@@ -10,5 +10,3 @@ class CanvasGetInputTextNode(ArmLogicTreeNode):
         super(CanvasGetInputTextNode, self).init(context)
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketString', 'Text')
-
-add_node(CanvasGetInputTextNode, category=PKG_AS_CATEGORY)

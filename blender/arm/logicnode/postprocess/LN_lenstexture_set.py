@@ -16,5 +16,3 @@ class LenstextureSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Brightness Exponent', default_value=2.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(LenstextureSetNode, category=PKG_AS_CATEGORY)

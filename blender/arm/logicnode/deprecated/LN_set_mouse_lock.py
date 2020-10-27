@@ -6,6 +6,9 @@ class SetMouseLockNode(ArmLogicTreeNode):
     bl_label = 'Set Mouse Lock (Deprecated)'
     bl_description = "Please use the \"Set Cursor State\" node instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -23,5 +26,3 @@ class SetMouseLockNode(ArmLogicTreeNode):
             in_socket_mapping = {0:0, 1:1}, out_socket_mapping={0:0},
             property_defaults={'property0': "Lock"}
         )
-
-add_node(SetMouseLockNode, category='input', section='mouse', is_obsolete=True)

@@ -4,6 +4,7 @@ class LookAtNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
+    arm_section = 'rotation'
     arm_version = 1
 
     property0: EnumProperty(
@@ -23,5 +24,3 @@ class LookAtNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(LookAtNode, category=PKG_AS_CATEGORY, section='rotation')

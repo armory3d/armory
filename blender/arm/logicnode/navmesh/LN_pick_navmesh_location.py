@@ -11,5 +11,3 @@ class PickLocationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'NavMesh')
         self.add_input('NodeSocketVector', 'Screen Coords')
         self.add_output('NodeSocketVector', 'Location')
-
-add_node(PickLocationNode, category=PKG_AS_CATEGORY)

@@ -12,5 +12,3 @@ class SetGravityEnabledNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketBool', 'Enabled')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetGravityEnabledNode, category=PKG_AS_CATEGORY)

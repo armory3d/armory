@@ -13,6 +13,7 @@ class OnContactNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'
+    arm_section = 'contact'
     arm_version = 1
 
     property0: EnumProperty(
@@ -29,5 +30,3 @@ class OnContactNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(OnContactNode, category=PKG_AS_CATEGORY, section='contact')

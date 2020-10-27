@@ -16,5 +16,3 @@ class VectorFromBooleanNode(ArmLogicTreeNode):
         self.inputs.new('NodeSocketBool', '-Z')
 
         self.outputs.new('NodeSocketVector', 'Vector')
-
-add_node(VectorFromBooleanNode, category=PKG_AS_CATEGORY)

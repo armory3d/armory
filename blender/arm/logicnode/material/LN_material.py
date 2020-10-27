@@ -26,5 +26,3 @@ class MaterialNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'materials', icon='NONE', text='')
-
-add_node(MaterialNode, category=PKG_AS_CATEGORY)

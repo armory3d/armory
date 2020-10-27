@@ -13,4 +13,3 @@ class GoToLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Location')
         self.add_output('ArmNodeSocketAction', 'Out')
 
-add_node(GoToLocationNode, category=PKG_AS_CATEGORY)

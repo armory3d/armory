@@ -4,6 +4,7 @@ class SeparateVectorNode(ArmLogicTreeNode):
     """Splits the given vector into XYZ values."""
     bl_idname = 'LNSeparateVectorNode'
     bl_label = 'Separate XYZ'
+    arm_section = 'vector'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class SeparateVectorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'X')
         self.add_output('NodeSocketFloat', 'Y')
         self.add_output('NodeSocketFloat', 'Z')
-
-add_node(SeparateVectorNode, category=PKG_AS_CATEGORY, section='vector')

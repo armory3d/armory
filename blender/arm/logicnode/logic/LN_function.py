@@ -7,6 +7,7 @@ class FunctionNode(ArmLogicTreeNode):
     bl_idname = 'LNFunctionNode'
     bl_label = 'Function'
     bl_description = 'Creates a reusable function that can be called by the Call Function node'
+    arm_section = 'function'
     arm_version = 1
     min_outputs = 1
 
@@ -31,5 +32,3 @@ class FunctionNode(ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_output', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-
-add_node(FunctionNode, category=PKG_AS_CATEGORY, section='function')

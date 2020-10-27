@@ -15,6 +15,3 @@ class IsNoneNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-
-add_node(IsNoneNode, category=PKG_AS_CATEGORY)

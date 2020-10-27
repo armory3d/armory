@@ -9,5 +9,3 @@ class NavigableLocationNode(ArmLogicTreeNode):
     def init(self, context):
         super(NavigableLocationNode, self).init(context)
         self.add_output('NodeSocketShader', 'Location')
-
-add_node(NavigableLocationNode, category=PKG_AS_CATEGORY)

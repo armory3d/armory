@@ -10,6 +10,3 @@ class RandomColorNode(ArmLogicTreeNode):
     def init(self, context):
         super(RandomColorNode, self).init(context)
         self.add_output('NodeSocketColor', 'Color')
-
-
-add_node(RandomColorNode, category=PKG_AS_CATEGORY)

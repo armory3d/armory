@@ -5,6 +5,7 @@ class PlayTilesheetNode(ArmLogicTreeNode):
     bl_idname = 'LNPlayTilesheetNode'
     bl_label = 'Play Tilesheet'
     arm_version = 1
+    arm_section = 'tilesheet'
 
     def init(self, context):
         super(PlayTilesheetNode, self).init(context)
@@ -13,5 +14,3 @@ class PlayTilesheetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Name')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
-
-add_node(PlayTilesheetNode, category=PKG_AS_CATEGORY, section='tilesheet')

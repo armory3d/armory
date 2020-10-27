@@ -13,6 +13,7 @@ class ApplyImpulseNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNApplyImpulseNode'
     bl_label = 'Apply Impulse'
+    arm_section = 'force'
     arm_version = 1
 
     def init(self, context):
@@ -22,5 +23,3 @@ class ApplyImpulseNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Impulse')
         self.add_input('NodeSocketBool', 'On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ApplyImpulseNode, category=PKG_AS_CATEGORY, section='force')

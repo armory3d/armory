@@ -11,5 +11,3 @@ class PrintNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'String')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(PrintNode, category=PKG_AS_CATEGORY)

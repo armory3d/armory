@@ -27,5 +27,3 @@ class ArrayRemoveValueNode(ArmLogicTreeNode):
     #     op.socket_type = 'NodeSocketShader'
     #     op2 = row.operator('arm.node_remove_input_value', text='', icon='X', emboss=True)
     #     op2.node_index = str(id(self))
-
-add_node(ArrayRemoveValueNode, category=PKG_AS_CATEGORY)

@@ -4,6 +4,7 @@ class ClearParentNode(ArmLogicTreeNode):
     """Removes the parent of the given object."""
     bl_idname = 'LNClearParentNode'
     bl_label = 'Remove Object Parent'
+    arm_section = 'relations'
     arm_version = 1
 
     def init(self, context):
@@ -12,6 +13,3 @@ class ClearParentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketBool', 'Keep Transform', default_value=True)
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ClearParentNode, category=PKG_AS_CATEGORY, section='relations')
-

@@ -4,6 +4,7 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
     """Keeps the vector value inside the given range."""
     bl_idname = 'LNVectorClampToSizeNode'
     bl_label = 'Vector Clamp To Size'
+    arm_section = 'vector'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Min')
         self.add_input('NodeSocketFloat', 'Max')
         self.add_output('NodeSocketVector', 'Vector Out')
-
-add_node(VectorClampToSizeNode, category=PKG_AS_CATEGORY, section='vector')

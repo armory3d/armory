@@ -9,6 +9,7 @@ class GamepadCoordsNode(ArmLogicTreeNode):
     bl_idname = 'LNGamepadCoordsNode'
     bl_label = 'Gamepad Coords'
     arm_version = 1
+    arm_section = 'gamepad'
 
     def init(self, context):
         super(GamepadCoordsNode, self).init(context)
@@ -19,5 +20,3 @@ class GamepadCoordsNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Left Trigger')
         self.add_output('NodeSocketFloat', 'Right Trigger')
         self.add_input('NodeSocketInt', 'Gamepad')
-
-add_node(GamepadCoordsNode, category=PKG_AS_CATEGORY, section='gamepad')

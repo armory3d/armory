@@ -4,6 +4,7 @@ class GetTouchMovementNode(ArmLogicTreeNode):
     """Returns the movement values of the current touch event."""
     bl_idname = 'LNGetTouchMovementNode'
     bl_label = 'Get Touch Movement'
+    arm_section = 'surface'
     arm_version = 1
 
     def init(self, context):
@@ -14,5 +15,3 @@ class GetTouchMovementNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Y')
         self.add_output('NodeSocketFloat', 'Multiplied X')
         self.add_output('NodeSocketFloat', 'Multiplied Y')
-
-add_node(GetTouchMovementNode, category=PKG_AS_CATEGORY, section='surface')

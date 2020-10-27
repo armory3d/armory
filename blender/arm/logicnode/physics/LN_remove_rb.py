@@ -14,5 +14,3 @@ class RemovePhysicsNode (ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
         self.outputs.new('ArmNodeSocketAction', 'Out')
-
-add_node(RemovePhysicsNode, category=PKG_AS_CATEGORY)

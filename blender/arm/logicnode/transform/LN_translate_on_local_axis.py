@@ -5,6 +5,7 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
     """Translates (moves) the given object using the given vector in the local coordinates."""
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'
+    arm_section = 'location'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Forward/Up/Right')
         self.add_input('NodeSocketBool', 'Inverse')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(TranslateOnLocalAxisNode, category=PKG_AS_CATEGORY, section='location')

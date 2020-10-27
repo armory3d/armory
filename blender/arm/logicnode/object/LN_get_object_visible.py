@@ -7,6 +7,7 @@ class GetVisibleNode(ArmLogicTreeNode):
     @seeNode Set Object Visible"""
     bl_idname = 'LNGetVisibleNode'
     bl_label = 'Get Object Visible'
+    arm_section = 'props'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class GetVisibleNode(ArmLogicTreeNode):
         self.add_output('NodeSocketBool', 'Is Object Visible')
         self.add_output('NodeSocketBool', 'Is Mesh Visible')
         self.add_output('NodeSocketBool', 'Is Shadow Visible')
-
-add_node(GetVisibleNode, category=PKG_AS_CATEGORY, section='props')

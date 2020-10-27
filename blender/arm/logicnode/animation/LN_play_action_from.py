@@ -15,5 +15,3 @@ class PlayActionFromNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Blend', default_value=0.2)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
-
-add_node(PlayActionFromNode, category=PKG_AS_CATEGORY)

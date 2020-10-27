@@ -7,11 +7,10 @@ class GetHaxePropertyNode(ArmLogicTreeNode):
     bl_idname = 'LNGetHaxePropertyNode'
     bl_label = 'Get Haxe Property'
     arm_version = 1
+    arm_section = 'haxe'
 
     def init(self, context):
         super(GetHaxePropertyNode, self).init(context)
         self.add_input('NodeSocketShader', 'Dynamic')
         self.add_input('NodeSocketString', 'Property')
         self.add_output('NodeSocketShader', 'Value')
-
-add_node(GetHaxePropertyNode, category=PKG_AS_CATEGORY, section='haxe')

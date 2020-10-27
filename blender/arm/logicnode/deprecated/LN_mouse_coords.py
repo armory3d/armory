@@ -6,6 +6,9 @@ class MouseCoordsNode(ArmLogicTreeNode):
     bl_label = 'Mouse Coords (Deprecated)'
     bl_description = "Please use the \"Get Cursor Location\" and \"Get Mouse Movement\" nodes instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -46,5 +49,3 @@ class MouseCoordsNode(ArmLogicTreeNode):
                 node_tree.links.new(newmain.outputs[2], link.to_socket)
 
         return all_new_nodes
-
-add_node(MouseCoordsNode, category='input', section='mouse', is_obsolete=True)

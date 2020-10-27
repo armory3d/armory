@@ -14,5 +14,3 @@ class SetCameraFovNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Camera')
         self.add_input('NodeSocketFloat', 'FOV', default_value=0.85)
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetCameraFovNode, category=PKG_AS_CATEGORY)

@@ -4,7 +4,9 @@ class MatrixMathNode(ArmLogicTreeNode):
     """Multiplies matrices."""
     bl_idname = 'LNMatrixMathNode'
     bl_label = 'Matrix Math'
+    arm_section = 'matrix'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Multiply', 'Multiply', 'Multiply')],
         name='', default='Multiply')
@@ -17,5 +19,3 @@ class MatrixMathNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(MatrixMathNode, category=PKG_AS_CATEGORY, section='matrix')

@@ -6,6 +6,7 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
     @seeNode Get Haxe Property"""
     bl_idname = 'LNSetHaxePropertyNode'
     bl_label = 'Set Haxe Property'
+    arm_section = 'haxe'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Property')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetHaxePropertyNode, category=PKG_AS_CATEGORY, section='haxe')

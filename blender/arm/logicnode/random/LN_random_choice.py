@@ -12,6 +12,3 @@ class RandomChoiceNode(ArmLogicTreeNode):
 
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketShader', 'Value')
-
-
-add_node(RandomChoiceNode, category=PKG_AS_CATEGORY)

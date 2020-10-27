@@ -6,6 +6,9 @@ class OnKeyboardNode(ArmLogicTreeNode):
     bl_label = "On Keyboard (Deprecated)"
     bl_descrition = "Please use the \"Keyboard\" node instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'keyboard'
+    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(
@@ -87,5 +90,3 @@ class OnKeyboardNode(ArmLogicTreeNode):
             in_socket_mapping={}, out_socket_mapping={0: 0},
             property_mapping={"property0": "property0", "property1": "property1"}
         )
-
-add_node(OnKeyboardNode, category='input', section='keyboard', is_obsolete=True)

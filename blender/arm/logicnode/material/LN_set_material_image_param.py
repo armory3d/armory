@@ -4,6 +4,7 @@ class SetMaterialImageParamNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNSetMaterialImageParamNode'
     bl_label = 'Set Material Image Param'
+    arm_section = 'params'
     arm_version = 1
 
     def init(self, context):
@@ -13,5 +14,3 @@ class SetMaterialImageParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Node')
         self.add_input('NodeSocketString', 'Image')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetMaterialImageParamNode, category=PKG_AS_CATEGORY, section='params')

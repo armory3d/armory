@@ -4,7 +4,9 @@ class GetChildNode(ArmLogicTreeNode):
     """Returns the child of the given object by the child object's name."""
     bl_idname = 'LNGetChildNode'
     bl_label = 'Get Object Child'
+    arm_section = 'relations'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
@@ -21,5 +23,3 @@ class GetChildNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(GetChildNode, category=PKG_AS_CATEGORY, section='relations')

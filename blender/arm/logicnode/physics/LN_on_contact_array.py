@@ -4,7 +4,9 @@ class OnContactArrayNode(ArmLogicTreeNode):
     """Activates the output when the given rigid body make contact with other given rigid bodies."""
     bl_idname = 'LNOnContactArrayNode'
     bl_label = 'On Contact Array'
+    arm_section = 'contact'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),
@@ -19,5 +21,3 @@ class OnContactArrayNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(OnContactArrayNode, category=PKG_AS_CATEGORY, section='contact')

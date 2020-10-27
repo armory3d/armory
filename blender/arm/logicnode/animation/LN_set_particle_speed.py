@@ -12,5 +12,3 @@ class SetParticleSpeedNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketFloat', 'Speed', default_value=1.0)
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetParticleSpeedNode, category=PKG_AS_CATEGORY)

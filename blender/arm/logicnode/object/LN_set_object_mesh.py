@@ -4,6 +4,7 @@ class SetMeshNode(ArmLogicTreeNode):
     """Sets the mesh of the given object."""
     bl_idname = 'LNSetMeshNode'
     bl_label = 'Set Object Mesh'
+    arm_section = 'props'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class SetMeshNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Mesh')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetMeshNode, category=PKG_AS_CATEGORY, section='props')

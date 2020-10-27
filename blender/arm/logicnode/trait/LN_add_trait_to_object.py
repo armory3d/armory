@@ -12,5 +12,3 @@ class AddTraitNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(AddTraitNode, category=PKG_AS_CATEGORY)

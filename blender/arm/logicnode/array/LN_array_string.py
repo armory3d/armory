@@ -5,6 +5,7 @@ class StringArrayNode(ArmLogicTreeNode):
     bl_idname = 'LNArrayStringNode'
     bl_label = 'Array String'
     arm_version = 1
+    arm_section = 'variable'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -22,5 +23,3 @@ class StringArrayNode(ArmLogicTreeNode):
         op.socket_type = 'NodeSocketString'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(StringArrayNode, category=PKG_AS_CATEGORY, section='variable')

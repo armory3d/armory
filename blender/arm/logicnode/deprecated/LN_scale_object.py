@@ -6,6 +6,8 @@ class ScaleObjectNode(ArmLogicTreeNode):
     bl_label = 'Scale Object'
     bl_description = "Please use the \"Set Object Scale\" node instead"
     bl_icon = 'ERROR'
+    arm_section = 'scale'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -14,5 +16,3 @@ class ScaleObjectNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Scale')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ScaleObjectNode, category=PKG_AS_CATEGORY, section='scale', is_obsolete=True)

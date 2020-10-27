@@ -10,6 +10,7 @@ class SetVariableNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
+    arm_section = 'set'
     arm_version = 1
 
     def init(self, context):
@@ -18,5 +19,3 @@ class SetVariableNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Variable', is_var=True)
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetVariableNode, category=PKG_AS_CATEGORY, section='set')

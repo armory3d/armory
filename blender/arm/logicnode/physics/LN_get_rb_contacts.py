@@ -8,11 +8,10 @@ class GetContactsNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNGetContactsNode'
     bl_label = 'Get RB Contacts'
+    arm_section = 'contact'
     arm_version = 1
 
     def init(self, context):
         super(GetContactsNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_output('ArmNodeSocketArray', 'Contacts')
-
-add_node(GetContactsNode, category=PKG_AS_CATEGORY, section='contact')

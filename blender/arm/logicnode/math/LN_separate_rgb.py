@@ -4,6 +4,7 @@ class SeparateColorNode(ArmLogicTreeNode):
     """Splits the given color into RGB values."""
     bl_idname = 'LNSeparateColorNode'
     bl_label = 'Separate RGB'
+    arm_section = 'color'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class SeparateColorNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'R')
         self.add_output('NodeSocketFloat', 'G')
         self.add_output('NodeSocketFloat', 'B')
-
-add_node(SeparateColorNode, category=PKG_AS_CATEGORY, section='color')

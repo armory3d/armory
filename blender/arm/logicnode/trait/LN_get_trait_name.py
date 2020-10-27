@@ -11,5 +11,3 @@ class GetTraitNameNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('NodeSocketString', 'Name')
         self.add_output('NodeSocketString', 'Class Type')
-
-add_node(GetTraitNameNode, category=PKG_AS_CATEGORY)

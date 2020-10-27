@@ -21,5 +21,3 @@ class TimerNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'Time Left')
         self.add_output('NodeSocketFloat', 'Progress')
         self.add_output('NodeSocketFloat', 'Repetitions')
-
-add_node(TimerNode, category=PKG_AS_CATEGORY)

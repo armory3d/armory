@@ -6,6 +6,9 @@ class OnMouseNode(ArmLogicTreeNode):
     bl_label = "On Mouse (Deprecated)"
     bl_description = "Please use the \"Mouse\" node instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(
@@ -38,5 +41,3 @@ class OnMouseNode(ArmLogicTreeNode):
             in_socket_mapping={}, out_socket_mapping={0: 0},
             property_mapping={"property0": "property0", "property1": "property1"}
         )
-
-add_node(OnMouseNode, category='input', section='mouse', is_obsolete=True)

@@ -19,6 +19,7 @@ class RayCastNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNCastPhysicsRayNode'
     bl_label = 'Ray Cast'
+    arm_section = 'ray'
     arm_version = 1
 
     def init(self, context):
@@ -29,5 +30,3 @@ class RayCastNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketObject', 'RB')
         self.add_output('NodeSocketVector', 'Hit')
         self.add_output('NodeSocketVector', 'Normal')
-
-add_node(RayCastNode, category=PKG_AS_CATEGORY, section='ray')

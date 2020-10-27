@@ -10,6 +10,7 @@ class SendEventNode(ArmLogicTreeNode):
     @input Object: the receiving object"""
     bl_idname = 'LNSendEventNode'
     bl_label = 'Send Event To Object'
+    arm_section = 'custom'
     arm_version = 1
 
     def init(self, context):
@@ -18,5 +19,3 @@ class SendEventNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Event')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SendEventNode, category=PKG_AS_CATEGORY, section='custom')

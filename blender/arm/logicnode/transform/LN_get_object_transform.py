@@ -12,5 +12,3 @@ class GetTransformNode(ArmLogicTreeNode):
         super(GetTransformNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('NodeSocketShader', 'Transform')
-
-add_node(GetTransformNode, category=PKG_AS_CATEGORY)

@@ -19,6 +19,10 @@ array_nodes = dict()
 
 
 class ArmLogicTreeNode(bpy.types.Node):
+    arm_category = PKG_AS_CATEGORY
+    arm_section = 'default'
+    arm_is_obsolete = False
+
     def init(self, context):
         # make sure a given node knows the version of the NodeClass from when it was created
         if isinstance(type(self).arm_version, int):
@@ -29,6 +33,16 @@ class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
+
+    @classmethod
+    def on_register(cls):
+        """Don't call this method register() as it will be triggered before Blender registers the class, resulting in
+        a double registration."""
+        add_node(cls, cls.arm_category, cls.arm_section, cls.arm_is_obsolete)
+
+    @classmethod
+    def on_unregister(cls):
+        pass
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         # needs to be overridden by individual node classes with arm_version>1
@@ -454,6 +468,8 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     """
     Registers a node to the given category. If no section is given, the
     node is put into the default section that does always exist.
+
+    Warning: Make sure that this function is not called multiple times per node!
     """
     global nodes
 

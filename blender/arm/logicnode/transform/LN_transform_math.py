@@ -11,5 +11,3 @@ class TransformMathNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Transform 1')
         self.add_input('NodeSocketShader', 'Transform 2')
         self.add_output('NodeSocketShader', 'Result')
-
-add_node(TransformMathNode, category=PKG_AS_CATEGORY)

@@ -12,5 +12,3 @@ class SetTraitPausedNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Trait')
         self.add_input('NodeSocketBool', 'Paused')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetTraitPausedNode, category=PKG_AS_CATEGORY)

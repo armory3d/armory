@@ -4,6 +4,7 @@ class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNColorgradingGetMidtoneNode'
     bl_label = 'Colorgrading Get Midtone'
+    arm_section = 'colorgrading'
     arm_version = 1
 
     def init(self, context):
@@ -13,5 +14,3 @@ class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gamma')
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
-
-add_node(ColorgradingGetMidtoneNode, category=PKG_AS_CATEGORY, section='colorgrading')

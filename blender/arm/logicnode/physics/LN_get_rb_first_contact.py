@@ -7,11 +7,10 @@ class GetFirstContactNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNGetFirstContactNode'
     bl_label = 'Get RB First Contact'
+    arm_section = 'contact'
     arm_version = 1
 
     def init(self, context):
         super(GetFirstContactNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_output('ArmNodeSocketObject', 'First Contact')
-
-add_node(GetFirstContactNode, category=PKG_AS_CATEGORY, section='contact')

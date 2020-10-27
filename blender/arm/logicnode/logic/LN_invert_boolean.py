@@ -10,5 +10,3 @@ class NotNode(ArmLogicTreeNode):
         super(NotNode, self).init(context)
         self.add_input('NodeSocketBool', 'Bool In')
         self.add_output('NodeSocketBool', 'Bool Out')
-
-add_node(NotNode, category=PKG_AS_CATEGORY)

@@ -12,5 +12,3 @@ class SubStringNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Start')
         self.add_input('NodeSocketInt', 'End')
         self.add_output('NodeSocketString', 'String Out')
-
-add_node(SubStringNode, category=PKG_AS_CATEGORY)

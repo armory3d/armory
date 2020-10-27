@@ -10,5 +10,3 @@ class TimeNode(ArmLogicTreeNode):
         super(TimeNode, self).init(context)
         self.add_output('NodeSocketFloat', 'Time')
         self.add_output('NodeSocketFloat', 'Delta')
-
-add_node(TimeNode, category=PKG_AS_CATEGORY)

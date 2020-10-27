@@ -13,5 +13,3 @@ class CanvasSetScaleNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Height')
         self.add_input('NodeSocketInt', 'Width')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CanvasSetScaleNode, category=PKG_AS_CATEGORY)

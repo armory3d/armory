@@ -1,20 +1,14 @@
-from typing import Callable
 import os.path
 import time
+from typing import Callable
 import webbrowser
 
 import bpy
 from bpy.props import BoolProperty, StringProperty
-#from bpy.types import NodeTree, Node
-import nodeitems_utils
 
-from arm.logicnode import arm_nodes
-from arm.logicnode.arm_nodes import ArmNodeCategory
-from arm.logicnode import arm_sockets
-# Do not remove this line as it runs all node modules for registering!
-from arm.logicnode import *
+import arm.logicnode.arm_nodes as arm_nodes
+import arm.logicnode
 import arm.utils
-from pathlib import Path
 
 registered_nodes = []
 registered_categories = []
@@ -91,7 +85,7 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
         return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
 
-def get_category_draw_func(category: ArmNodeCategory):
+def get_category_draw_func(category: arm_nodes.ArmNodeCategory):
     def draw_category_menu(self, context):
         layout = self.layout
 
@@ -113,6 +107,8 @@ def register_nodes():
     # Re-register all nodes for now..
     if len(registered_nodes) > 0 or len(registered_categories) > 0:
         unregister_nodes()
+
+    arm.logicnode.init_nodes()
 
     for node_type in arm_nodes.nodes:
         # Don't register internal nodes, they are already registered
@@ -144,6 +140,8 @@ def unregister_nodes():
     global registered_nodes, registered_categories
 
     for n in registered_nodes:
+        if issubclass(n, arm_nodes.ArmLogicTreeNode):
+            n.on_unregister()
         bpy.utils.unregister_class(n)
     for c in registered_categories:
         bpy.utils.unregister_class(c)
@@ -379,7 +377,7 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
             setattr(newnode, prop_name, prop_value)
         for input_id, input_value in replacement.input_defaults.items():
             input_socket = newnode.inputs[input_id]
-            if isinstance(input_socket, arm_sockets.ArmCustomSocket):
+            if isinstance(input_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
                 if input_socket.arm_socket_type != 'NONE':
                     input_socket.default_value_raw = input_value
             elif input_socket.type != 'SHADER':
@@ -399,7 +397,7 @@ def replace(tree: bpy.types.NodeTree, node: bpy.types.Node):
                 datasource_socket = src_socket.links[0].from_socket
                 tree.links.new(datasource_socket, dest_socket)
             else:
-                if isinstance(dest_socket, arm_sockets.ArmCustomSocket):
+                if isinstance(dest_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
                     if dest_socket.arm_socket_type != 'NONE':
                         dest_socket.default_value_raw = src_socket.default_value_raw
                 elif dest_socket.type != 'SHADER':
@@ -509,7 +507,7 @@ def draw_custom_logicnode_menu(self, context):
                 layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
 
 def register():
-    arm_sockets.register()
+    arm.logicnode.arm_sockets.register()
 
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
@@ -546,4 +544,4 @@ def unregister():
 
     bpy.types.NODE_MT_context_menu.remove(draw_custom_logicnode_menu)
 
-    arm_sockets.unregister()
+    arm.logicnode.arm_sockets.unregister()

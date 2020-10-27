@@ -13,5 +13,3 @@ class CanvasGetVisibleNode(ArmLogicTreeNode):
         super(CanvasGetVisibleNode, self).init(context)
         self.inputs.new('NodeSocketString', 'Element')
         self.outputs.new('NodeSocketBool', 'Is Visible')
-
-add_node(CanvasGetVisibleNode, category=PKG_AS_CATEGORY)

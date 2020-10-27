@@ -10,5 +10,3 @@ class GetObjectTraitsNode(ArmLogicTreeNode):
         super(GetObjectTraitsNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketArray', 'Traits')
-
-add_node(GetObjectTraitsNode, category=PKG_AS_CATEGORY)

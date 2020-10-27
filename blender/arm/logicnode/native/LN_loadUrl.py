@@ -10,5 +10,3 @@ class LoadUrlNode(ArmLogicTreeNode):
         super(LoadUrlNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'URL')
-
-add_node(LoadUrlNode, category=PKG_AS_CATEGORY)

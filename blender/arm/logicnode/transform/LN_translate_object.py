@@ -4,6 +4,7 @@ class TranslateObjectNode(ArmLogicTreeNode):
     """Translates (moves) the given object using the given vector in world coordinates."""
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
+    arm_section = 'location'
     arm_version = 1
 
     def init(self, context):
@@ -13,5 +14,3 @@ class TranslateObjectNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Vector')
         self.add_input('NodeSocketBool', 'On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(TranslateObjectNode, category=PKG_AS_CATEGORY, section='location')

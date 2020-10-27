@@ -31,5 +31,3 @@ class SwitchNode(ArmLogicTreeNode):
         op.in_index_name_offset = -1
         op2 = row.operator('arm.node_remove_input_output', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(SwitchNode, category=PKG_AS_CATEGORY)

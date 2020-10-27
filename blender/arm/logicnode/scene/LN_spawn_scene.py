@@ -13,5 +13,3 @@ class SpawnSceneNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Root')
-
-add_node(SpawnSceneNode, category=PKG_AS_CATEGORY)

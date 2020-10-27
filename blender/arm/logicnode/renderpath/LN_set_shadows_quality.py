@@ -19,5 +19,3 @@ class RpShadowQualityNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(RpShadowQualityNode, category=PKG_AS_CATEGORY)

@@ -15,6 +15,3 @@ class IsFalseNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'Bool')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-
-add_node(IsFalseNode, category=PKG_AS_CATEGORY)

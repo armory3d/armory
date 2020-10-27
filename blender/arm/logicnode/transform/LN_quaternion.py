@@ -4,6 +4,7 @@ class QuaternionNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNQuaternionNode'
     bl_label = 'Quaternion'
+    arm_section = 'quaternions'
     arm_version = 1
 
     def init(self, context):
@@ -16,5 +17,3 @@ class QuaternionNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Quaternion')
         self.add_output('NodeSocketVector', 'XYZ')
         self.add_output('NodeSocketFloat', 'W')
-
-add_node(QuaternionNode, category=PKG_AS_CATEGORY, section='quaternions')

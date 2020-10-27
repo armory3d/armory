@@ -11,5 +11,3 @@ class OnActionMarkerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Marker')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(OnActionMarkerNode, category=PKG_AS_CATEGORY)

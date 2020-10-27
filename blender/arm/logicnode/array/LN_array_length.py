@@ -10,5 +10,3 @@ class ArrayLengthNode(ArmLogicTreeNode):
         super(ArrayLengthNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketInt', 'Length')
-
-add_node(ArrayLengthNode, category=PKG_AS_CATEGORY)

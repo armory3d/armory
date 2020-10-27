@@ -25,5 +25,3 @@ class SetActivationStateNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(SetActivationStateNode, category=PKG_AS_CATEGORY)

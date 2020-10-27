@@ -32,5 +32,3 @@ class OnCanvasElementNode(ArmLogicTreeNode):
         if self.property0 == "click":
             layout.prop(self, 'property1')
             layout.prop(self, 'property2')
-
-add_node(OnCanvasElementNode, category=PKG_AS_CATEGORY)

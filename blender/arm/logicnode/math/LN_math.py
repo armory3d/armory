@@ -49,5 +49,3 @@ class MathNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1_')
         layout.prop(self, 'property0')
-
-add_node(MathNode, category=PKG_AS_CATEGORY)

@@ -4,6 +4,7 @@ class ColorgradingGetShadowNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNColorgradingGetShadowNode'
     bl_label = 'Colorgrading Get Shadow'
+    arm_section = 'colorgrading'
     arm_version = 1
 
     def init(self, context):
@@ -14,5 +15,3 @@ class ColorgradingGetShadowNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gamma')
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
-
-add_node(ColorgradingGetShadowNode, category=PKG_AS_CATEGORY, section='colorgrading')

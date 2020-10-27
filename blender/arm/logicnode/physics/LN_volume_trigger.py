@@ -8,7 +8,9 @@ class VolumeTriggerNode(ArmLogicTreeNode):
     @input Volume: this object is used as the volume"""
     bl_idname = 'LNVolumeTriggerNode'
     bl_label = 'Volume Trigger'
+    arm_section = 'misc'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Enter', 'Enter', 'Enter'),
                  ('Leave', 'Leave', 'Leave'),
@@ -23,5 +25,3 @@ class VolumeTriggerNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(VolumeTriggerNode, category=PKG_AS_CATEGORY, section='misc')

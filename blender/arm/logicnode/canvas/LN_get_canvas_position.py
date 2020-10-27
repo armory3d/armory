@@ -10,5 +10,3 @@ class CanvasGetPositionNode(ArmLogicTreeNode):
         super(CanvasGetPositionNode, self).init(context)
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketInt', 'Position')
-
-add_node(CanvasGetPositionNode, category=PKG_AS_CATEGORY)
