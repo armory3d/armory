@@ -34,6 +34,10 @@ class MixNode extends LogicNode {
 				ease = property1 == "In" ? Tween.easeCircIn : (property1 == "Out" ? Tween.easeCircOut : Tween.easeCircInOut);
 			case "Back":
 				ease = property1 == "In" ? Tween.easeBackIn : (property1 == "Out" ? Tween.easeBackOut : Tween.easeBackInOut);
+			case "Bounce":
+				ease = property1 == "In" ? Tween.easeBounceIn : (property1 == "Out" ? Tween.easeBounceOut : Tween.easeBounceInOut);
+			case "Elastic":
+				ease = property1 == "In" ? Tween.easeElasticIn : (property1 == "Out" ? Tween.easeElasticOut : Tween.easeElasticInOut);
 			default:
 				ease = Tween.easeLinear;
 		}

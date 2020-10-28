@@ -15,6 +15,8 @@ class MixNode(ArmLogicTreeNode):
                  ('Expo', 'Expo', 'Expo'),
                  ('Circ', 'Circ', 'Circ'),
                  ('Back', 'Back', 'Back'),
+                 ('Bounce', 'Bounce', 'Bounce'),
+                 ('Elastic', 'Elastic', 'Elastic'),
                  ],
         name='', default='Linear')
     property1: EnumProperty(
