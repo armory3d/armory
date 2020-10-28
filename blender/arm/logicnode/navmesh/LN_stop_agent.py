@@ -11,5 +11,3 @@ class StopAgentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(StopAgentNode, category=PKG_AS_CATEGORY)

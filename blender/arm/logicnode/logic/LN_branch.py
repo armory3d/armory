@@ -14,6 +14,3 @@ class BranchNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Bool')
         self.add_output('ArmNodeSocketAction', 'True')
         self.add_output('ArmNodeSocketAction', 'False')
-
-
-add_node(BranchNode, category=PKG_AS_CATEGORY)

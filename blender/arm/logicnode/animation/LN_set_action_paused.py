@@ -12,5 +12,3 @@ class SetActionPausedNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketBool', 'Paused')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetActionPausedNode, category=PKG_AS_CATEGORY)

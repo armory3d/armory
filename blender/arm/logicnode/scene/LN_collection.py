@@ -9,6 +9,7 @@ class GroupNode(ArmLogicTreeNode):
     @seeNode Get Collection"""
     bl_idname = 'LNGroupNode'
     bl_label = 'Collection'
+    arm_section = 'collection'
     arm_version = 1
 
     property0: PointerProperty(name='', type=bpy.types.Collection)
@@ -19,5 +20,3 @@ class GroupNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'collections', icon='NONE', text='')
-
-add_node(GroupNode, category=PKG_AS_CATEGORY, section='collection')

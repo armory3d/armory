@@ -10,6 +10,7 @@ class SetCursorStateNode(ArmLogicTreeNode):
     @output Lock: lock/unlock the mouse cursor."""
     bl_idname = 'LNSetCursorStateNode'
     bl_label = 'Set Cursor State'
+    arm_section = 'mouse'
     arm_version = 1
 
     property0: EnumProperty(
@@ -28,4 +29,3 @@ class SetCursorStateNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(SetCursorStateNode, category=PKG_AS_CATEGORY, section='mouse')

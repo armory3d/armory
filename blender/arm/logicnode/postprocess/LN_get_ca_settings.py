@@ -10,5 +10,3 @@ class ChromaticAberrationGetNode(ArmLogicTreeNode):
         super(ChromaticAberrationGetNode, self).init(context)
         self.add_output('NodeSocketFloat', 'Strength')
         self.add_output('NodeSocketFloat', 'Samples')
-
-add_node(ChromaticAberrationGetNode, category=PKG_AS_CATEGORY)

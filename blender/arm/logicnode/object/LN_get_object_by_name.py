@@ -20,5 +20,3 @@ class GetObjectNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, "scenes")
-
-add_node(GetObjectNode, category=PKG_AS_CATEGORY)

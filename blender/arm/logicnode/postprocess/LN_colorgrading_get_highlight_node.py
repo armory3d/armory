@@ -4,6 +4,7 @@ class ColorgradingGetHighlightNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNColorgradingGetHighlightNode'
     bl_label = 'Colorgrading Get Highlight'
+    arm_section = 'colorgrading'
     arm_version = 1
 
     def init(self, context):
@@ -14,5 +15,3 @@ class ColorgradingGetHighlightNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Gamma')
         self.add_output('NodeSocketVector', 'Gain')
         self.add_output('NodeSocketVector', 'Offset')
-
-add_node(ColorgradingGetHighlightNode, category=PKG_AS_CATEGORY, section='colorgrading')

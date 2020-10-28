@@ -9,5 +9,3 @@ class OnInitNode(ArmLogicTreeNode):
     def init(self, context):
         super(OnInitNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(OnInitNode, category=PKG_AS_CATEGORY)

@@ -6,11 +6,8 @@ class GetDebugConsoleSettings(ArmLogicTreeNode):
     bl_label = 'Get Debug Console Settings'
     arm_version = 1
 
-    def init(self, context):  
+    def init(self, context):
         super(GetDebugConsoleSettings, self).init(context)
-        self.add_output('NodeSocketBool', 'Visible') 
-        self.add_output('NodeSocketFloat', 'Scale') 
-        self.add_output('NodeSocketString', 'Position') 
-
-# Add Node
-add_node(GetDebugConsoleSettings, category=PKG_AS_CATEGORY)
+        self.add_output('NodeSocketBool', 'Visible')
+        self.add_output('NodeSocketFloat', 'Scale')
+        self.add_output('NodeSocketString', 'Position')

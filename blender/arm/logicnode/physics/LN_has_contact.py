@@ -4,6 +4,7 @@ class HasContactNode(ArmLogicTreeNode):
     """Returns whether the given rigid body has contact with another given rigid body."""
     bl_idname = 'LNHasContactNode'
     bl_label = 'Has Contact'
+    arm_section = 'contact'
     arm_version = 1
 
     def init(self, context):
@@ -11,5 +12,3 @@ class HasContactNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB 1')
         self.add_input('ArmNodeSocketObject', 'RB 2')
         self.add_output('NodeSocketBool', 'Has Contact')
-
-add_node(HasContactNode, category=PKG_AS_CATEGORY, section='contact')

@@ -11,5 +11,3 @@ class GetVelocityNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_output('NodeSocketVector', 'Linear')
         self.add_output('NodeSocketVector', 'Angular')
-
-add_node(GetVelocityNode, category=PKG_AS_CATEGORY)

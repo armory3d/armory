@@ -9,5 +9,3 @@ class SelfObjectNode(ArmLogicTreeNode):
     def init(self, context):
         super(SelfObjectNode, self).init(context)
         self.add_output('ArmNodeSocketObject', 'Object')
-
-add_node(SelfObjectNode, category=PKG_AS_CATEGORY)

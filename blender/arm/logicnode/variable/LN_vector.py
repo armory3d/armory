@@ -13,6 +13,3 @@ class VectorNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Z')
 
         self.add_output('NodeSocketVector', 'Vector', is_var=True)
-
-
-add_node(VectorNode, category=PKG_AS_CATEGORY)

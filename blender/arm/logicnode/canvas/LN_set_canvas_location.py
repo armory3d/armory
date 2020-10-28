@@ -13,5 +13,3 @@ class CanvasSetLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'X')
         self.add_input('NodeSocketFloat', 'Y')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CanvasSetLocationNode, category=PKG_AS_CATEGORY)

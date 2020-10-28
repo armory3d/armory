@@ -13,6 +13,3 @@ class RandomFloatNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Max', default_value=1.0)
         # self.add_input('NodeSocketInt', 'Seed')
         self.add_output('NodeSocketFloat', 'Float')
-
-
-add_node(RandomFloatNode, category=PKG_AS_CATEGORY)

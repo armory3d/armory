@@ -8,6 +8,7 @@ class CallGroupNode(ArmLogicTreeNode):
     """Calls the given group of nodes."""
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
+    arm_section = 'group'
     arm_version = 1
 
     @property
@@ -23,5 +24,3 @@ class CallGroupNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'node_groups', icon='NONE', text='')
-
-add_node(CallGroupNode, category=PKG_AS_CATEGORY, section='group')

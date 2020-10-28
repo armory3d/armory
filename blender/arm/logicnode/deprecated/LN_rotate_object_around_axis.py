@@ -5,8 +5,11 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
     bl_idname = 'LNRotateObjectAroundAxisNode'
     bl_label = 'Rotate Object Around Axis (Deprecated)'
     bl_description = "Please use the \"Rotate Object\" node instead"
+    arm_category = 'transform'
+    arm_section = 'rotation'
+    arm_is_obsolete = True
     bl_icon = 'ERROR'
-    arm_version=2
+    arm_version = 2
 
     def init(self, context):
         super(RotateObjectAroundAxisNode, self).init(context)
@@ -25,6 +28,3 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
             in_socket_mapping = {0:0, 1:1, 2:2, 3:3}, out_socket_mapping={0:0},
             property_defaults={'property0': "Angle Axies (Radians)"}
         )
-
-
-add_node(RotateObjectAroundAxisNode, category='transform', section='rotation', is_obsolete=True)

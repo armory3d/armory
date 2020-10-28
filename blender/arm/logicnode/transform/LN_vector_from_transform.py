@@ -37,5 +37,3 @@ class VectorFromTransformNode(ArmLogicTreeNode):
                  ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Look',
         update=on_property_update)
-
-add_node(VectorFromTransformNode, category=PKG_AS_CATEGORY)

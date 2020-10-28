@@ -10,5 +10,3 @@ class CanvasGetCheckboxNode(ArmLogicTreeNode):
         super(CanvasGetCheckboxNode, self).init(context)
         self.add_input('NodeSocketString', 'Element')
         self.add_output('NodeSocketBool', 'Is Checked')
-
-add_node(CanvasGetCheckboxNode, category=PKG_AS_CATEGORY)

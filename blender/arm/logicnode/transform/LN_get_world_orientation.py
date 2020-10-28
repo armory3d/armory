@@ -4,6 +4,7 @@ class GetWorldNode(ArmLogicTreeNode):
     """Returns the world orientation of the given object."""
     bl_idname = 'LNGetWorldNode'
     bl_label = 'Get World Orientation'
+    arm_section = 'rotation'
     arm_version = 1
 
     property0: EnumProperty(
@@ -19,5 +20,3 @@ class GetWorldNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(GetWorldNode, category=PKG_AS_CATEGORY, section='rotation')

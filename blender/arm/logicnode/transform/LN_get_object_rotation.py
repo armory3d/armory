@@ -4,6 +4,7 @@ class GetRotationNode(ArmLogicTreeNode):
     """Returns the current rotation of the given object."""
     bl_idname = 'LNGetRotationNode'
     bl_label = 'Get Object Rotation'
+    arm_section = 'rotation'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class GetRotationNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Angle (Degrees)')
         self.add_output('NodeSocketVector', 'Quaternion XYZ')
         self.add_output('NodeSocketFloat', 'Quaternion W')
-
-add_node(GetRotationNode, category=PKG_AS_CATEGORY, section='rotation')

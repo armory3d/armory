@@ -7,6 +7,7 @@ class ScriptNode(ArmLogicTreeNode):
     """Executes the given script."""
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'
+    arm_section = 'haxe'
     arm_version = 1
 
     @property
@@ -25,5 +26,3 @@ class ScriptNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'texts', icon='NONE', text='')
-
-add_node(ScriptNode, category=PKG_AS_CATEGORY, section='haxe')

@@ -5,6 +5,7 @@ class FloatArrayNode(ArmLogicTreeNode):
     bl_idname = 'LNArrayFloatNode'
     bl_label = 'Array Float'
     arm_version = 1
+    arm_section = 'variable'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -22,5 +23,3 @@ class FloatArrayNode(ArmLogicTreeNode):
         op.socket_type = 'NodeSocketFloat'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(FloatArrayNode, category=PKG_AS_CATEGORY, section='variable')

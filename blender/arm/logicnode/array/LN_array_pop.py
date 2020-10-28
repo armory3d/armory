@@ -12,5 +12,3 @@ class ArrayPopNode(ArmLogicTreeNode):
         super(ArrayPopNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_output('NodeSocketShader', 'Value')
-
-add_node(ArrayPopNode, category=PKG_AS_CATEGORY)

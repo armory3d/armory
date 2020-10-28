@@ -8,6 +8,8 @@ class OnEventNode(ArmLogicTreeNode):
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
     arm_version = 1
+    arm_section = 'custom'
+
     property0: StringProperty(name='', default='')
 
     def init(self, context):
@@ -16,5 +18,3 @@ class OnEventNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(OnEventNode, category=PKG_AS_CATEGORY, section='custom')

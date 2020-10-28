@@ -11,6 +11,7 @@ class SetPropertyNode(ArmLogicTreeNode):
     @seeNode Get Object Property"""
     bl_idname = 'LNSetPropertyNode'
     bl_label = 'Set Object Property'
+    arm_section = 'props'
     arm_version = 1
 
     def init(self, context):
@@ -20,5 +21,3 @@ class SetPropertyNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Property')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetPropertyNode, category=PKG_AS_CATEGORY, section='props')

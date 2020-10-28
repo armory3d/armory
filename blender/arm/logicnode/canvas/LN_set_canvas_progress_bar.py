@@ -13,5 +13,3 @@ class CanvasSetPBNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'At')
         self.add_input('NodeSocketInt', 'Max')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CanvasSetPBNode, category=PKG_AS_CATEGORY)

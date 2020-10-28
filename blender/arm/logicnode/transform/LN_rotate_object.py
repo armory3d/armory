@@ -4,6 +4,7 @@ class RotateObjectNode(ArmLogicTreeNode):
     """Rotates the given object."""
     bl_idname = 'LNRotateObjectNode'
     bl_label = 'Rotate Object'
+    arm_section = 'rotation'
     arm_version = 1
 
     def init(self, context):
@@ -45,5 +46,3 @@ class RotateObjectNode(ArmLogicTreeNode):
                  ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Euler Angles',
         update = on_property_update)
-
-add_node(RotateObjectNode, category=PKG_AS_CATEGORY, section='rotation')

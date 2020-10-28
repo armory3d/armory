@@ -5,10 +5,9 @@ class RadToDegNode(ArmLogicTreeNode):
     bl_idname = 'LNRadToDegNode'
     bl_label = 'Rad to Deg'
     arm_version = 1
+    arm_section = 'angle'
 
     def init(self, context):
         super(RadToDegNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Radians')
         self.add_output('NodeSocketFloat', 'Degrees')
-
-add_node(RadToDegNode, category=PKG_AS_CATEGORY, section='angle')

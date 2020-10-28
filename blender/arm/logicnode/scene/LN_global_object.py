@@ -10,5 +10,3 @@ class GlobalObjectNode(ArmLogicTreeNode):
     def init(self, context):
         super(GlobalObjectNode, self).init(context)
         self.add_output('ArmNodeSocketObject', 'Object')
-
-add_node(GlobalObjectNode, category=PKG_AS_CATEGORY)

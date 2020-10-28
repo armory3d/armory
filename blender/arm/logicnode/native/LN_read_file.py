@@ -6,6 +6,7 @@ class ReadFileNode(ArmLogicTreeNode):
     @seeNode Write File"""
     bl_idname = 'LNReadFileNode'
     bl_label = 'Read File'
+    arm_section = 'file'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class ReadFileNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Use cache', default_value=1)
         self.add_output('ArmNodeSocketAction', 'Loaded')
         self.add_output('NodeSocketString', 'String')
-
-add_node(ReadFileNode, category=PKG_AS_CATEGORY, section='file')

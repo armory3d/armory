@@ -12,5 +12,3 @@ class CanvasSetCheckBoxNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketBool', 'Check')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CanvasSetCheckBoxNode, category=PKG_AS_CATEGORY)

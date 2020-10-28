@@ -6,6 +6,7 @@ class SetVisibleNode(ArmLogicTreeNode):
     @seeNode Get Object Visible"""
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Object Visible'
+    arm_section = 'props'
     arm_version = 1
 
     property0: EnumProperty(
@@ -25,5 +26,3 @@ class SetVisibleNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(SetVisibleNode, category=PKG_AS_CATEGORY, section='props')

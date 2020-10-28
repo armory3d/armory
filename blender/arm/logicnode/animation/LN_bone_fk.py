@@ -5,6 +5,7 @@ class BoneFKNode(ArmLogicTreeNode):
     bl_idname = 'LNBoneFKNode'
     bl_label = 'Bone FK'
     arm_version = 1
+    arm_section = 'armature'
 
     def init(self, context):
         super(BoneFKNode, self).init(context)
@@ -13,5 +14,3 @@ class BoneFKNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Bone')
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(BoneFKNode, category=PKG_AS_CATEGORY, section='armature')

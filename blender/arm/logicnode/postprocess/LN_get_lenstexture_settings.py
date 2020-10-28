@@ -13,5 +13,3 @@ class LenstextureGetNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Luminance Min')
         self.add_output('NodeSocketFloat', 'Luminance Max')
         self.add_output('NodeSocketFloat', 'Brightness Exponent')
-
-add_node(LenstextureGetNode, category=PKG_AS_CATEGORY)

@@ -6,6 +6,7 @@ class ResumeActionNode(ArmLogicTreeNode):
     bl_label = 'Resume Action'
     bl_description = "Please use the \"Set Action Paused\" node instead"
     bl_icon = 'ERROR'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -13,5 +14,3 @@ class ResumeActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ResumeActionNode, category=PKG_AS_CATEGORY, is_obsolete=True)

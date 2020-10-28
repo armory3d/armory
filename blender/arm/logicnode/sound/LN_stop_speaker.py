@@ -16,5 +16,3 @@ class StopSpeakerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Speaker')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(StopSpeakerNode, category=PKG_AS_CATEGORY)

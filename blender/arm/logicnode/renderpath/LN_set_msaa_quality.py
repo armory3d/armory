@@ -21,5 +21,3 @@ class RpMSAANode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(RpMSAANode, category=PKG_AS_CATEGORY)

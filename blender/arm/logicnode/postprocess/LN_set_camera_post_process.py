@@ -21,5 +21,3 @@ class CameraSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Tonemapper', default_value=0.0)
         self.add_input('NodeSocketFloat', 'Film Grain', default_value=2.0)
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CameraSetNode, category=PKG_AS_CATEGORY)

@@ -13,6 +13,7 @@ class ApplyForceNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNApplyForceNode'
     bl_label = 'Apply Force'
+    arm_section = 'force'
     arm_version = 1
 
     def init(self, context):
@@ -22,5 +23,3 @@ class ApplyForceNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'Force')
         self.add_input('NodeSocketBool', 'On Local Axis')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ApplyForceNode, category=PKG_AS_CATEGORY, section='force')

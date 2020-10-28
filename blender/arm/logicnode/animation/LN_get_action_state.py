@@ -12,5 +12,3 @@ class AnimationStateNode(ArmLogicTreeNode):
         self.add_output('NodeSocketString', 'Action')
         self.add_output('NodeSocketInt', 'Frame')
         self.add_output('NodeSocketBool', 'Is Paused')
-
-add_node(AnimationStateNode, category=PKG_AS_CATEGORY)

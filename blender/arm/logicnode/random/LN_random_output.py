@@ -5,6 +5,7 @@ class RandomOutputNode(ArmLogicTreeNode):
     """Activate a random output when the input is activated."""
     bl_idname = 'LNRandomOutputNode'
     bl_label = 'Random Output'
+    arm_section = 'logic'
     arm_version = 1
 
     def __init__(self):
@@ -23,6 +24,3 @@ class RandomOutputNode(ArmLogicTreeNode):
         op.socket_type = 'ArmNodeSocketAction'
         op2 = row.operator('arm.node_remove_output', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-
-add_node(RandomOutputNode, category=PKG_AS_CATEGORY, section='logic')

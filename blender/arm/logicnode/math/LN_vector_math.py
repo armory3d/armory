@@ -4,7 +4,9 @@ class VectorMathNode(ArmLogicTreeNode):
     """Operates vectors. Some operations uses only the first input."""
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
+    arm_section = 'vector'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),
@@ -28,5 +30,3 @@ class VectorMathNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(VectorMathNode, category=PKG_AS_CATEGORY, section='vector')

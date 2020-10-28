@@ -49,6 +49,7 @@ class OnSwipeNode(ArmLogicTreeNode):
     bl_idname = 'LNOnSwipeNode'
     bl_label = 'On Swipe'
     arm_version = 1
+    arm_section = 'Input'
     min_outputs = 4
     max_outputs = 12
 
@@ -84,9 +85,14 @@ class OnSwipeNode(ArmLogicTreeNode):
         if (len(self.outputs) == self.min_outputs):
             column.enabled = False
 
-# Register custom class
-bpy.utils.register_class(NodeAddOutputButton)
-bpy.utils.register_class(NodeRemoveOutputButton)
+    @classmethod
+    def on_register(cls):
+        bpy.utils.register_class(NodeAddOutputButton)
+        bpy.utils.register_class(NodeRemoveOutputButton)
+        super().on_register()
 
-# Add Node
-add_node(OnSwipeNode, category=PKG_AS_CATEGORY, section='Input')
+    @classmethod
+    def on_unregister(cls):
+        super().on_unregister()
+        bpy.utils.unregister_class(NodeRemoveOutputButton)
+        bpy.utils.unregister_class(NodeAddOutputButton)

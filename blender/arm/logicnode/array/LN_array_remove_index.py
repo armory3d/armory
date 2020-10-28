@@ -15,5 +15,3 @@ class ArrayRemoveIndexNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Index')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Value')
-
-add_node(ArrayRemoveIndexNode, category=PKG_AS_CATEGORY)

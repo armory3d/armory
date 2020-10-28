@@ -28,6 +28,7 @@ class ColorgradingSetHighlightNode(ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNColorgradingSetHighlightNode'
     bl_label = 'Colorgrading Set Highlight'
+    arm_section = 'colorgrading'
     arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
@@ -70,5 +71,3 @@ class ColorgradingSetHighlightNode(ArmLogicTreeNode):
         if (self.property0 == 'Preset File'):
             layout.prop(self, 'filepath')
             layout.prop(self, 'property1')
-
-add_node(ColorgradingSetHighlightNode, category=PKG_AS_CATEGORY, section='colorgrading')

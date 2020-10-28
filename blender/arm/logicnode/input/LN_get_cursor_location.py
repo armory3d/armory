@@ -4,6 +4,7 @@ class GetCursorLocationNode(ArmLogicTreeNode):
     """Returns the mouse cursor location in screen coordinates (pixels)."""
     bl_idname = 'LNGetCursorLocationNode'
     bl_label = 'Get Cursor Location'
+    arm_section = 'mouse'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class GetCursorLocationNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'Y')
         self.add_output('NodeSocketInt', 'Inverted X')
         self.add_output('NodeSocketInt', 'Inverted Y')
-
-add_node(GetCursorLocationNode, category=PKG_AS_CATEGORY, section='mouse')

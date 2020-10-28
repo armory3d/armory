@@ -5,8 +5,8 @@ from arm.logicnode.arm_nodes import *
 
 class SpawnCollectionNode(ArmLogicTreeNode):
     """
-    Spawns a new instance of the selected collection. Each spawned instance 
-    has an empty owner object to control the instance as a whole (like Blender 
+    Spawns a new instance of the selected collection. Each spawned instance
+    has an empty owner object to control the instance as a whole (like Blender
     uses it for collection instances).
 
     @input In: activates the node.
@@ -25,6 +25,7 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNSpawnCollectionNode'
     bl_label = 'Spawn Collection'
+    arm_section = 'collection'
     arm_version = 1
 
     property0: PointerProperty(name='Collection', type=bpy.types.Collection)
@@ -41,6 +42,3 @@ class SpawnCollectionNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'collections', icon='NONE', text='')
-
-
-add_node(SpawnCollectionNode, category=PKG_AS_CATEGORY, section='collection')

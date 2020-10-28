@@ -4,6 +4,7 @@ class KeyboardNode(ArmLogicTreeNode):
     """Activates the output when the given keyboard action is done."""
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
+    arm_section = 'keyboard'
     arm_version = 1
 
     property0: EnumProperty(
@@ -76,4 +77,3 @@ class KeyboardNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
 
-add_node(KeyboardNode, category=PKG_AS_CATEGORY, section='keyboard')

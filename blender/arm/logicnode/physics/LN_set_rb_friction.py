@@ -16,5 +16,3 @@ class SetFrictionNode (ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketObject', 'RB')
         self.inputs.new('NodeSocketFloat', 'Friction')
         self.outputs.new('ArmNodeSocketAction', 'Out')
-
-add_node(SetFrictionNode, category=PKG_AS_CATEGORY)

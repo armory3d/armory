@@ -11,5 +11,3 @@ class ActiveCameraNode(ArmLogicTreeNode):
     def init(self, context):
         super(ActiveCameraNode, self).init(context)
         self.add_output('ArmNodeSocketObject', 'Camera')
-
-add_node(ActiveCameraNode, category=PKG_AS_CATEGORY)

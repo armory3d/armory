@@ -7,6 +7,7 @@ class MergeNode(ArmLogicTreeNode):
     @option X Button: Remove the lowermost input socket."""
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
+    arm_section = 'flow'
     arm_version = 1
 
     def __init__(self):
@@ -24,5 +25,3 @@ class MergeNode(ArmLogicTreeNode):
         op.socket_type = 'ArmNodeSocketAction'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(MergeNode, category=PKG_AS_CATEGORY, section='flow')

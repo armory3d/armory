@@ -5,6 +5,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     bl_idname = 'LNScreenToWorldSpaceNode'
     bl_label = 'Screen To World Space'
     node_index: StringProperty(name='Node Index', default='')
+    arm_section = 'matrix'
     arm_version = 1
     min_outputs = 2
     max_outputs = 8
@@ -13,7 +14,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     @property
     def property0(self):
         return True if self.property0_ else False
-        
+
     property0_: BoolProperty(name='Separator Out', default=False)
 
     def init(self, context):
@@ -30,7 +31,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
                 self.outputs.remove(self.outputs.values()[-1]) # Direction vector
                 self.add_output('NodeSocketFloat', 'X') # World X
                 self.add_output('NodeSocketFloat', 'Y') # World Y
-                self.add_output('NodeSocketFloat', 'Z') # World Z 
+                self.add_output('NodeSocketFloat', 'Z') # World Z
                 self.add_output('NodeSocketVector', 'Direction') # Vector
                 self.add_output('NodeSocketFloat', 'X') # Direction X
                 self.add_output('NodeSocketFloat', 'Y') # Direction Y
@@ -45,5 +46,3 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
                 self.outputs.remove(self.outputs.values()[-1]) # Y
                 self.outputs.remove(self.outputs.values()[-1]) # X
                 self.add_output('NodeSocketVector', 'Direction')
-
-add_node(ScreenToWorldSpaceNode, category=PKG_AS_CATEGORY, section='matrix')

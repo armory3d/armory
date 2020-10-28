@@ -10,5 +10,3 @@ class ShutdownNode(ArmLogicTreeNode):
         super(ShutdownNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ShutdownNode, category=PKG_AS_CATEGORY)

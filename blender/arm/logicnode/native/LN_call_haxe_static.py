@@ -7,6 +7,7 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
     @output Result: the result of the function."""
     bl_idname = 'LNCallHaxeStaticNode'
     bl_label = 'Call Haxe Static'
+    arm_section = 'haxe'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Function')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')
-
-add_node(CallHaxeStaticNode, category=PKG_AS_CATEGORY, section='haxe')

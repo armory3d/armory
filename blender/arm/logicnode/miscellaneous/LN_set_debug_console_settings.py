@@ -22,5 +22,3 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(SetDebugConsoleSettings, category=PKG_AS_CATEGORY)

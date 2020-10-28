@@ -8,7 +8,10 @@ class GetMouseVisibleNode(ArmLogicTreeNode):
     bl_idname = 'LNGetMouseVisibleNode'
     bl_label = 'Get Mouse Visible (Deprecated)'
     bl_description = "Please use the \"Get Cursor State\" node instead"
-    bl_icon='ERROR'
+    bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -26,5 +29,3 @@ class GetMouseVisibleNode(ArmLogicTreeNode):
             node_tree.links.new(secondnode.outputs[0], link.to_socket)
 
         return [mainnode, secondnode]
-
-add_node(GetMouseVisibleNode, category='input', section='mouse', is_obsolete=True)

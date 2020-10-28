@@ -12,5 +12,3 @@ class SetTransformNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Transform')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetTransformNode, category=PKG_AS_CATEGORY)

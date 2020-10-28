@@ -7,6 +7,7 @@ class ExpressionNode(ArmLogicTreeNode):
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
     arm_version = 1
+    arm_section = 'haxe'
 
     property0: StringProperty(name='', default='')
 
@@ -18,5 +19,3 @@ class ExpressionNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
-add_node(ExpressionNode, category=PKG_AS_CATEGORY, section='haxe')

@@ -8,6 +8,7 @@ class VectorToObjectOrientationNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNVectorToObjectOrientationNode'
     bl_label = 'Vector To Object Orientation'
+    arm_section = 'location'
     arm_version = 1
 
     def init(self, context):
@@ -15,5 +16,3 @@ class VectorToObjectOrientationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'World')
         self.add_output('NodeSocketVector', 'Local')
-
-add_node(VectorToObjectOrientationNode, category=PKG_AS_CATEGORY, section='location')

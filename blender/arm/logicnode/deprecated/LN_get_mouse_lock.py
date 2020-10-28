@@ -10,6 +10,9 @@ class GetMouseLockNode(ArmLogicTreeNode):
     bl_description = "Please use the \"Get Cursor State\" node instead"
     bl_icon = 'ERROR'
     arm_version = 2
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
 
     def init(self, context):
         super(GetMouseLockNode, self).init(context)
@@ -23,5 +26,3 @@ class GetMouseLockNode(ArmLogicTreeNode):
             'LNGetMouseLockNode', self.arm_version, 'LNGetCursorStateNode', 1,
             in_socket_mapping = {}, out_socket_mapping={0:2}
         )
-
-add_node(GetMouseLockNode, category='input', section='mouse', is_obsolete=True)

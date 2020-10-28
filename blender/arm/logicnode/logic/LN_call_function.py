@@ -5,6 +5,7 @@ class CallFunctionNode(ArmLogicTreeNode):
     bl_idname = 'LNCallFunctionNode'
     bl_label = 'Call Function'
     bl_description = 'Calls a function that was created by the Function node.'
+    arm_section = 'function'
     arm_version = 1
     min_inputs = 3
 
@@ -28,5 +29,3 @@ class CallFunctionNode(ArmLogicTreeNode):
         op.index_name_offset = -2
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(CallFunctionNode, category=PKG_AS_CATEGORY, section='function')

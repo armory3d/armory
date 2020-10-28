@@ -4,6 +4,7 @@ class CreateCollectionNode(ArmLogicTreeNode):
     """Creates a collection."""
     bl_idname = 'LNAddGroupNode'
     bl_label = 'Create Collection'
+    arm_section = 'collection'
     arm_version = 1
 
     def init(self, context):
@@ -11,5 +12,3 @@ class CreateCollectionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Collection')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(CreateCollectionNode, category=PKG_AS_CATEGORY, section='collection')

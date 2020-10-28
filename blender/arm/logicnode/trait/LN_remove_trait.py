@@ -11,5 +11,3 @@ class RemoveTraitNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(RemoveTraitNode, category=PKG_AS_CATEGORY)

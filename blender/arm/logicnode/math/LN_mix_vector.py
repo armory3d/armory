@@ -4,7 +4,9 @@ class VectorMixNode(ArmLogicTreeNode):
     """Interpolates between the two given vectors."""
     bl_idname = 'LNVectorMixNode'
     bl_label = 'Mix Vector'
+    arm_section = 'vector'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),
@@ -42,5 +44,3 @@ class VectorMixNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         if self.property0 != 'Linear':
             layout.prop(self, 'property1')
-
-add_node(VectorMixNode, category=PKG_AS_CATEGORY, section='vector')

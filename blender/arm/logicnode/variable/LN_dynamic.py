@@ -9,5 +9,3 @@ class DynamicNode(ArmLogicTreeNode):
     def init(self, context):
         super(DynamicNode, self).init(context)
         self.add_output('NodeSocketShader', 'Dynamic', is_var=True)
-
-add_node(DynamicNode, category=PKG_AS_CATEGORY)

@@ -5,6 +5,7 @@ class BooleanArrayNode(ArmLogicTreeNode):
     bl_idname = 'LNArrayBooleanNode'
     bl_label = 'Array Boolean'
     arm_version = 1
+    arm_section = 'variable'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -22,5 +23,3 @@ class BooleanArrayNode(ArmLogicTreeNode):
         op.socket_type = 'NodeSocketBool'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(BooleanArrayNode, category=PKG_AS_CATEGORY, section='variable')

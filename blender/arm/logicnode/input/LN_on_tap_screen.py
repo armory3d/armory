@@ -5,6 +5,7 @@ class OnTapScreen(ArmLogicTreeNode):
     """Activates the output when the given tap action is done."""
     bl_idname = 'LNOnTapScreen'
     bl_label = 'On Tap Screen'
+    arm_section = 'Input'
     arm_version = 1
 
     def init(self, context):
@@ -20,6 +21,3 @@ class OnTapScreen(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Tap')
         self.add_output('NodeSocketInt', 'Tap Number')
         self.add_output('NodeSocketVector', 'Coords')
-
-# Add Node
-add_node(OnTapScreen, category=PKG_AS_CATEGORY, section='Input')

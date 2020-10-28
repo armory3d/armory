@@ -5,6 +5,7 @@ class ObjectArrayNode(ArmLogicTreeNode):
     bl_idname = 'LNArrayObjectNode'
     bl_label = 'Array Object'
     arm_version = 1
+    arm_section = 'variable'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -22,5 +23,3 @@ class ObjectArrayNode(ArmLogicTreeNode):
         op.socket_type = 'ArmNodeSocketObject'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
-
-add_node(ObjectArrayNode, category=PKG_AS_CATEGORY, section='variable')

@@ -12,6 +12,3 @@ class RandomIntegerNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Min')
         self.add_input('NodeSocketInt', 'Max', default_value=2)
         self.add_output('NodeSocketInt', 'Int')
-
-
-add_node(RandomIntegerNode, category=PKG_AS_CATEGORY)

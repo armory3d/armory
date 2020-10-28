@@ -13,6 +13,7 @@ class GamepadNode(ArmLogicTreeNode):
     bl_idname = 'LNMergedGamepadNode'
     bl_label = 'Gamepad'
     arm_version = 1
+    arm_section = 'gamepad'
 
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -52,5 +53,3 @@ class GamepadNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
-
-add_node(GamepadNode, category=PKG_AS_CATEGORY, section='gamepad')

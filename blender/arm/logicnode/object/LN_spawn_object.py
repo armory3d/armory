@@ -14,5 +14,3 @@ class SpawnObjectNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Children', default_value=True)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Object')
-
-add_node(SpawnObjectNode, category=PKG_AS_CATEGORY)

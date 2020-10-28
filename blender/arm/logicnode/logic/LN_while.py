@@ -12,6 +12,7 @@ class WhileNode(ArmLogicTreeNode):
     @output Done: Activated when the loop is done executing"""
     bl_idname = 'LNWhileNode'
     bl_label = 'While'
+    arm_section = 'flow'
     arm_version = 1
 
     def init(self, context):
@@ -20,5 +21,3 @@ class WhileNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Condition')
         self.add_output('ArmNodeSocketAction', 'Loop')
         self.add_output('ArmNodeSocketAction', 'Done')
-
-add_node(WhileNode, category=PKG_AS_CATEGORY, section='flow')

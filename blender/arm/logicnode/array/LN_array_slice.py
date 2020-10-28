@@ -14,5 +14,3 @@ class ArraySliceNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Index')
         self.add_input('NodeSocketInt', 'End')
         self.add_output('ArmNodeSocketArray', 'Array')
-
-add_node(ArraySliceNode, category=PKG_AS_CATEGORY)

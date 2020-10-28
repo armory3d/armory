@@ -4,6 +4,7 @@ class GetMouseMovementNode(ArmLogicTreeNode):
     """Returns the movement coordinates of the mouse."""
     bl_idname = 'LNGetMouseMovementNode'
     bl_label = 'Get Mouse Movement'
+    arm_section = 'mouse'
     arm_version = 1
 
     def init(self, context):
@@ -17,5 +18,3 @@ class GetMouseMovementNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Multiplied X')
         self.add_output('NodeSocketFloat', 'Multiplied Y')
         self.add_output('NodeSocketFloat', 'Multiplied Delta')
-
-add_node(GetMouseMovementNode, category=PKG_AS_CATEGORY, section='mouse')

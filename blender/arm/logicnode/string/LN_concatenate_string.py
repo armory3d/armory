@@ -21,5 +21,3 @@ class ConcatenateStringNode(ArmLogicTreeNode):
         op.socket_type = 'NodeSocketString'
         op = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
-
-add_node(ConcatenateStringNode, category=PKG_AS_CATEGORY)

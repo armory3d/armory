@@ -4,6 +4,7 @@ class SetTilesheetPausedNode(ArmLogicTreeNode):
     """Sets the tilesheet paused state of the given object."""
     bl_idname = 'LNSetTilesheetPausedNode'
     bl_label = 'Set Tilesheet Paused'
+    arm_section = 'tilesheet'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class SetTilesheetPausedNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketBool', 'Paused')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetTilesheetPausedNode, category=PKG_AS_CATEGORY, section='tilesheet')

@@ -6,6 +6,9 @@ class OnGamepadNode(ArmLogicTreeNode):
     bl_label = "On Gamepad (Deprecated)"
     bl_description = "Please use the \"Gamepad\" node instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'gamepad'
+    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(
@@ -56,5 +59,3 @@ class OnGamepadNode(ArmLogicTreeNode):
             in_socket_mapping={0: 0}, out_socket_mapping={0: 0},
             property_mapping={"property0": "property0", "property1": "property1"}
         )
-
-add_node(OnGamepadNode, category='input', section='gamepad', is_obsolete=True)

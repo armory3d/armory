@@ -5,6 +5,7 @@ class BoneIKNode(ArmLogicTreeNode):
     bl_idname = 'LNBoneIKNode'
     bl_label = 'Bone IK'
     arm_version = 1
+    arm_section = 'armature'
 
     def init(self, context):
         super(BoneIKNode, self).init(context)
@@ -13,5 +14,3 @@ class BoneIKNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Bone')
         self.add_input('NodeSocketVector', 'Goal')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(BoneIKNode, category=PKG_AS_CATEGORY, section='armature')

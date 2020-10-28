@@ -11,5 +11,3 @@ class BloomGetNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Threshold')
         self.add_output('NodeSocketFloat', 'Strength')
         self.add_output('NodeSocketFloat', 'Radius')
-
-add_node(BloomGetNode, category=PKG_AS_CATEGORY)

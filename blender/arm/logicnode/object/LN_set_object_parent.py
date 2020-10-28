@@ -6,6 +6,7 @@ class SetParentNode(ArmLogicTreeNode):
     @seeNode Get Object Parent"""
     bl_idname = 'LNSetParentNode'
     bl_label = 'Set Object Parent'
+    arm_section = 'relations'
     arm_version = 1
 
     def init(self, context):
@@ -14,5 +15,3 @@ class SetParentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketObject', 'Parent', default_value='Parent')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetParentNode, category=PKG_AS_CATEGORY, section='relations')

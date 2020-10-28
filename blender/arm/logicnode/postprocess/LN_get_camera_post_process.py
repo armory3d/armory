@@ -18,5 +18,3 @@ class CameraGetNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'DOF Length')
         self.add_output('NodeSocketFloat', 'DOF F-Stop')
         self.add_output('NodeSocketFloat', 'Film Grain')
-
-add_node(CameraGetNode, category=PKG_AS_CATEGORY)

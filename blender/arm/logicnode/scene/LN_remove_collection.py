@@ -4,6 +4,7 @@ class RemoveGroupNode(ArmLogicTreeNode):
     """Removes the given collection from the scene."""
     bl_idname = 'LNRemoveGroupNode'
     bl_label = 'Remove Collection'
+    arm_section = 'collection'
     arm_version = 1
 
     def init(self, context):
@@ -11,5 +12,3 @@ class RemoveGroupNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Collection')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(RemoveGroupNode, category=PKG_AS_CATEGORY, section='collection')

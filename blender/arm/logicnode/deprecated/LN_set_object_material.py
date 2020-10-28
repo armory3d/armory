@@ -6,6 +6,7 @@ class SetMaterialNode(ArmLogicTreeNode):
     bl_label = 'Set Object Material'
     bl_description = "Please use the \"Set Object Material Slot\" node instead"
     bl_icon = 'ERROR'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -14,5 +15,3 @@ class SetMaterialNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketShader', 'Material')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(SetMaterialNode, category=PKG_AS_CATEGORY, is_obsolete=True)

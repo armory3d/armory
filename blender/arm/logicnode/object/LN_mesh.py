@@ -17,5 +17,3 @@ class MeshNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_get', bpy.data, 'meshes', icon='NONE', text='')
-
-add_node(MeshNode, category=PKG_AS_CATEGORY)

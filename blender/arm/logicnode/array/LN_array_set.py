@@ -13,5 +13,3 @@ class ArraySetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketInt', 'Index')
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ArraySetNode, category=PKG_AS_CATEGORY)

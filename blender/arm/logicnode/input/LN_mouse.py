@@ -4,7 +4,9 @@ class MouseNode(ArmLogicTreeNode):
     """Activates the output when the given mouse action is done."""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
+    arm_section = 'mouse'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -25,5 +27,3 @@ class MouseNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
-
-add_node(MouseNode, category=PKG_AS_CATEGORY, section='mouse')

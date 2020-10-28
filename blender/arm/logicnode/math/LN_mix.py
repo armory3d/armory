@@ -41,5 +41,3 @@ class MixNode(ArmLogicTreeNode):
         layout.prop(self, 'property2_')
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
-
-add_node(MixNode, category=PKG_AS_CATEGORY)

@@ -4,6 +4,7 @@ class ApplyTorqueNode(ArmLogicTreeNode):
     """Applies torque to the given rigid body."""
     bl_idname = 'LNApplyTorqueNode'
     bl_label = 'Apply Torque'
+    arm_section = 'force'
     arm_version = 1
 
     def init(self, context):
@@ -12,5 +13,3 @@ class ApplyTorqueNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketVector', 'Torque')
         self.add_output('ArmNodeSocketAction', 'Out')
-
-add_node(ApplyTorqueNode, category=PKG_AS_CATEGORY, section='force')

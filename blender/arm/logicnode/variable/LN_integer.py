@@ -10,5 +10,3 @@ class IntegerNode(ArmLogicTreeNode):
         super(IntegerNode, self).init(context)
         self.add_input('NodeSocketInt', 'Int In')
         self.add_output('NodeSocketInt', 'Int Out', is_var=True)
-
-add_node(IntegerNode, category=PKG_AS_CATEGORY)

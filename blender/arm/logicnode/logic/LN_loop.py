@@ -17,6 +17,7 @@ class LoopNode(ArmLogicTreeNode):
     bl_idname = 'LNLoopNode'
     bl_label = 'Loop'
     bl_description = 'Resembles a for-loop that is executed at once when this node is activated'
+    arm_section = 'flow'
     arm_version = 1
 
     def init(self, context):
@@ -27,5 +28,3 @@ class LoopNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Loop')
         self.add_output('NodeSocketInt', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')
-
-add_node(LoopNode, category=PKG_AS_CATEGORY, section='flow')

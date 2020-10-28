@@ -11,5 +11,3 @@ class ToBoolNode(ArmLogicTreeNode):
         super(ToBoolNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('NodeSocketBool', 'Bool')
-
-add_node(ToBoolNode, category=PKG_AS_CATEGORY)

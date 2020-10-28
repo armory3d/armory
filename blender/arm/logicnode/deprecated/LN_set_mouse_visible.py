@@ -6,6 +6,9 @@ class ShowMouseNode(ArmLogicTreeNode):
     bl_label = "Set Mouse Visible (Deprecated)"
     bl_description = "Please use the \"Set Cursor State\" node instead"
     bl_icon = 'ERROR'
+    arm_category = 'input'
+    arm_section = 'mouse'
+    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):
@@ -39,5 +42,3 @@ class ShowMouseNode(ArmLogicTreeNode):
             node_tree.links.new(new_main.outputs[0], link.to_socket)  # Action out
 
         return [new_main, new_secondary]
-
-add_node(ShowMouseNode, category='input', section='mouse', is_obsolete=True)

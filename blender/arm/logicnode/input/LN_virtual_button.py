@@ -4,7 +4,9 @@ class VirtualButtonNode(ArmLogicTreeNode):
     """Activates the output when the given action over the virtual button is done."""
     bl_idname = 'LNMergedVirtualButtonNode'
     bl_label = 'Virtual Button'
+    arm_section = 'virtual'
     arm_version = 1
+
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
@@ -20,5 +22,3 @@ class VirtualButtonNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
-
-add_node(VirtualButtonNode, category=PKG_AS_CATEGORY, section='virtual')

@@ -4,6 +4,7 @@ class GetRigidBodyDataNode(ArmLogicTreeNode):
     """Returns the data of the given rigid body."""
     bl_idname = 'LNGetRigidBodyDataNode'
     bl_label = 'Get RB Data'
+    arm_section = 'props'
     arm_version = 1
 
     def init(self, context):
@@ -22,5 +23,3 @@ class GetRigidBodyDataNode(ArmLogicTreeNode):
         #self.outputs.new('NodeSocketBool', 'Is Gravity Enabled')
         #self.outputs.new(NodeSocketVector', Angular Factor')
         #self.outputs.new('NodeSocketVector', Linear Factor')
-
-add_node(GetRigidBodyDataNode, category=PKG_AS_CATEGORY, section='props')
