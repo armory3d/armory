@@ -7,6 +7,8 @@ import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
 
+import arm.node_utils
+
 # When passed as a category to add_node(), this will use the capitalized
 # name of the package of the node as the category to make renaming
 # categories easier.
@@ -376,19 +378,17 @@ class ArmNodeCategory:
         self.icon = icon
         self.description = description
         self.node_sections: ODict[str, List[NodeItem]] = OrderedDict()
+        self.deprecated_nodes: List[NodeItem] = []
 
     def register_node(self, node_type: Type[bpy.types.Node], node_section: str) -> None:
         """Registers a node to this category so that it will be
         displayed int the `Add node` menu."""
         self.add_node_section(node_section)
+        self.node_sections[node_section].append(arm.node_utils.nodetype_to_nodeitem(node_type))
 
-        # Internal node types seem to have no bl_idname attribute
-        if issubclass(node_type, bpy.types.NodeInternal):
-            item = NodeItem(node_type.__name__)
-        else:
-            item = NodeItem(node_type.bl_idname)
-
-        self.node_sections[node_section].append(item)
+    def register_deprecated_node(self, node_type: Type[bpy.types.Node]) -> None:
+        if hasattr(node_type, 'arm_is_obsolete') and node_type.arm_is_obsolete:
+            self.deprecated_nodes.append(arm.node_utils.nodetype_to_nodeitem(node_type))
 
     def get_all_nodes(self) -> Generator[NodeItem, None, None]:
         """Returns all nodes that are registered into this category."""
@@ -479,16 +479,43 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     nodes.append(node_type)
     node_category = get_category(category)
 
-    if is_obsolete:
-        # We need the obsolete nodes to be registered in order to have them replaced,
-        # but do not add them to the menu.
-        return
-
     if node_category is None:
         node_category = add_category(category)
 
+    if is_obsolete:
+        # We need the obsolete nodes to be registered in order to have them replaced,
+        # but do not add them to the menu.
+        if node_category is not None:
+            # Make the deprecated nodes available for documentation purposes
+            node_category.register_deprecated_node(node_type)
+        return
+
     node_category.register_node(node_type, section)
     node_type.bl_icon = node_category.icon
+
+
+def deprecated(*alternatives: str, message=""):
+    """Class decorator to deprecate logic node classes. You can pass multiple string
+    arguments with the names of the available alternatives as well as a message
+    (keyword-param only) with further information about the deprecation."""
+
+    def wrapper(cls: ArmLogicTreeNode) -> ArmLogicTreeNode:
+        cls.bl_label += ' (Deprecated)'
+        cls.bl_description = f'Deprecated. {cls.bl_description}'
+        cls.bl_icon = 'ERROR'
+        cls.arm_is_obsolete = True
+
+        if cls.__doc__ is None:
+            cls.__doc__ = ''
+
+        if len(alternatives) > 0:
+            cls.__doc__ += '\n' + f'@deprecated {",".join(alternatives)}: {message}'
+        else:
+            cls.__doc__ += '\n' + f'@deprecated : {message}'
+
+        return cls
+
+    return wrapper
 
 
 def reset_globals():

@@ -69,8 +69,7 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
     def description(cls, context, properties):
         """Show the node's bl_description attribute as a tooltip or, if
         it doesn't exist, its docstring."""
-        # Type name to type
-        nodetype = bpy.types.bpy_struct.bl_rna_get_subclass_py(properties.type)
+        nodetype = arm.utils.type_name_to_type(properties.type)
 
         if hasattr(nodetype, 'bl_description'):
             return nodetype.bl_description.split('.')[0]

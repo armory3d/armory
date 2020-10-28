@@ -1,14 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Keyboard')
 class OnKeyboardNode(ArmLogicTreeNode):
     """Deprecated. It is recommended to use the 'Keyboard' node instead."""
     bl_idname = 'LNOnKeyboardNode'
-    bl_label = "On Keyboard (Deprecated)"
-    bl_descrition = "Please use the \"Keyboard\" node instead"
-    bl_icon = 'ERROR'
-    arm_category = 'input'
+    bl_label = "On Keyboard"
+    bl_description = "Please use the \"Keyboard\" node instead"
+    arm_category = 'Input'
     arm_section = 'keyboard'
-    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(

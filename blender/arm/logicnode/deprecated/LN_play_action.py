@@ -1,12 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Play Action From')
 class PlayActionNode(ArmLogicTreeNode):
     """Plays the given action."""
     bl_idname = 'LNPlayActionNode'
     bl_label = 'Play Action'
     bl_description = "Please use the \"Play Action From\" node instead"
-    bl_icon = 'ERROR'
-    arm_is_obsolete = True
+    arm_category = 'Animation'
     arm_version = 2
 
     def init(self, context):

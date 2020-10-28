@@ -1,15 +1,16 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Surface')
 class OnSurfaceNode(ArmLogicTreeNode):
-    """Deprecated. Is recommended to use Surface node instead."""
+    """Deprecated. Is recommended to use the 'Surface' node instead."""
     bl_idname = 'LNOnSurfaceNode'
     bl_label = 'On Surface'
     bl_description = "Please use the \"Surface\" node instead"
-    bl_icon = 'ERROR'
-    arm_category = 'input'
+    arm_category = 'Input'
     arm_section = 'surface'
-    arm_is_obsolete = True
     arm_version = 2
+
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),

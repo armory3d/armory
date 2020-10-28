@@ -1,12 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Set Trait Paused')
 class PauseTraitNode(ArmLogicTreeNode):
     """Pauses the given trait."""
     bl_idname = 'LNPauseTraitNode'
     bl_label = 'Pause Trait'
     bl_description = "Please use the \"Set Trait Paused\" node instead"
-    bl_icon = 'ERROR'
-    arm_is_obsolete = True
+    arm_category = 'Trait'
     arm_version = 2
 
     def init(self, context):

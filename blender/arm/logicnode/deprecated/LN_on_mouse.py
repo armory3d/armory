@@ -1,14 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Mouse')
 class OnMouseNode(ArmLogicTreeNode):
     """Deprecated. It is recommended to use the 'Mouse' node instead."""
     bl_idname = 'LNOnMouseNode'
-    bl_label = "On Mouse (Deprecated)"
+    bl_label = "On Mouse"
     bl_description = "Please use the \"Mouse\" node instead"
-    bl_icon = 'ERROR'
-    arm_category = 'input'
+    arm_category = 'Input'
     arm_section = 'mouse'
-    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(
