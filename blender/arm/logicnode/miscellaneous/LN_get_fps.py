@@ -9,5 +9,3 @@ class GetFPSNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetFPSNode, self).init(context)
         self.add_output('NodeSocketInt', 'Count')
-
-add_node(GetFPSNode, category=PKG_AS_CATEGORY)
