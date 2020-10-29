@@ -123,6 +123,9 @@ def on_load_post(context):
 
     # Load libraries
     if os.path.exists(arm.utils.get_fp() + '/Libraries'):
+        # Don't register nodes twice when calling register_nodes()
+        arm.logicnode.arm_nodes.reset_globals()
+
         libs = os.listdir(arm.utils.get_fp() + '/Libraries')
         for lib in libs:
             if os.path.isdir(arm.utils.get_fp() + '/Libraries/' + lib):
@@ -136,7 +139,6 @@ def on_load_post(context):
                     sys.path.remove(fp)
 
         # Register newly added nodes and node categories
-        arm.logicnode.arm_nodes.reset_globals()
         arm.nodes_logic.register_nodes()
 
     # Show trait users as collections
