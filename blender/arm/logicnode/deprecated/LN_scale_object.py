@@ -1,13 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Set Object Scale')
 class ScaleObjectNode(ArmLogicTreeNode):
     """Deprecated. 'Use Set Object Scale' instead."""
     bl_idname = 'LNScaleObjectNode'
     bl_label = 'Scale Object'
     bl_description = "Please use the \"Set Object Scale\" node instead"
-    bl_icon = 'ERROR'
+    arm_category = 'Transform'
     arm_section = 'scale'
-    arm_is_obsolete = True
     arm_version = 2
 
     def init(self, context):

@@ -1,14 +1,16 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Virtual Button')
 class OnVirtualButtonNode(ArmLogicTreeNode):
     """Deprecated. Is recommended to use 'Virtual Button' node instead."""
     bl_idname = 'LNOnVirtualButtonNode'
     bl_label = 'On Virtual Button'
     bl_description = "Please use the \"Virtual Button\" node instead"
-    bl_icon = 'ERROR'
+    arm_category = 'Input'
     arm_section = 'virtual'
-    arm_is_obsolete = True
     arm_version = 2
+
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),

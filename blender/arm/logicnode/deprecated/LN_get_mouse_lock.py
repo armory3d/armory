@@ -3,16 +3,16 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Get Cursor State')
 class GetMouseLockNode(ArmLogicTreeNode):
     """Deprecated. It is recommended to use the 'Get Cursor State' node instead."""
     bl_idname = 'LNGetMouseLockNode'
-    bl_label = 'Get Mouse Lock (Deprecated)'
+    bl_label = 'Get Mouse Lock'
     bl_description = "Please use the \"Get Cursor State\" node instead"
-    bl_icon = 'ERROR'
     arm_version = 2
-    arm_category = 'input'
+    arm_category = 'Input'
     arm_section = 'mouse'
-    arm_is_obsolete = True
 
     def init(self, context):
         super(GetMouseLockNode, self).init(context)
@@ -24,5 +24,5 @@ class GetMouseLockNode(ArmLogicTreeNode):
 
         return NodeReplacement(
             'LNGetMouseLockNode', self.arm_version, 'LNGetCursorStateNode', 1,
-            in_socket_mapping = {}, out_socket_mapping={0:2}
+            in_socket_mapping={}, out_socket_mapping={0: 2}
         )

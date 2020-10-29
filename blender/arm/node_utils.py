@@ -1,3 +1,8 @@
+from typing import Type
+
+import bpy
+from nodeitems_utils import NodeItem
+
 
 def find_node_by_link(node_group, to_node, inp):
     for link in node_group.links:
@@ -5,7 +10,7 @@ def find_node_by_link(node_group, to_node, inp):
             if link.from_node.bl_idname == 'NodeReroute': # Step through reroutes
                 return find_node_by_link(node_group, link.from_node, link.from_node.inputs[0])
             return link.from_node
-    
+
 def find_node_by_link_from(node_group, from_node, outp):
     for link in node_group.links:
         if link.from_node == from_node and link.from_socket == outp:
@@ -39,3 +44,12 @@ def get_output_node(node_group, from_node, output_index):
             if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
                 return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
             return link.to_node
+
+
+def nodetype_to_nodeitem(node_type: Type[bpy.types.Node]) -> NodeItem:
+    """Create a NodeItem from a given node class."""
+    # Internal node types seem to have no bl_idname attribute
+    if issubclass(node_type, bpy.types.NodeInternal):
+        return NodeItem(node_type.__name__)
+
+    return NodeItem(node_type.bl_idname)

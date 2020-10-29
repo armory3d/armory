@@ -1,14 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Gamepad')
 class OnGamepadNode(ArmLogicTreeNode):
     """Deprecated. It is recommended to use the 'Gamepad' node instead."""
     bl_idname = 'LNOnGamepadNode'
-    bl_label = "On Gamepad (Deprecated)"
+    bl_label = "On Gamepad"
     bl_description = "Please use the \"Gamepad\" node instead"
-    bl_icon = 'ERROR'
-    arm_category = 'input'
+    arm_category = 'Input'
     arm_section = 'gamepad'
-    arm_is_obsolete = True
     arm_version = 2
 
     property0: EnumProperty(

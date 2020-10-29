@@ -926,6 +926,10 @@ def get_android_open_build_apk_directory():
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'android_open_build_apk_directory') else addon_prefs.android_open_build_apk_directory
 
+def type_name_to_type(name: str) -> bpy.types.bpy_struct:
+    """Return the Blender type given by its name, if registered."""
+    return bpy.types.bpy_struct.bl_rna_get_subclass_py(name)
+
 def register(local_sdk=False):
     global use_local_sdk
     use_local_sdk = local_sdk

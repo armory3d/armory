@@ -1,12 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Set Tilesheet Paused')
 class ResumeTilesheetNode(ArmLogicTreeNode):
     """Resumes the given tilesheet action."""
     bl_idname = 'LNResumeTilesheetNode'
     bl_label = 'Resume Tilesheet'
     bl_description = "Please use the \"Set Tilesheet Paused\" node instead"
-    bl_icon = 'ERROR'
-    arm_is_obsolete = True
+    arm_category = 'Animation'
     arm_version = 2
 
     def init(self, context):

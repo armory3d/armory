@@ -1,12 +1,13 @@
 from arm.logicnode.arm_nodes import *
 
+
+@deprecated('Get Touch Movement', 'Get Touch Location')
 class SurfaceCoordsNode(ArmLogicTreeNode):
     """Deprecated. Is recommended to use 'Get Touch Location' and 'Get Touch Movement' node instead."""
     bl_idname = 'LNSurfaceCoordsNode'
     bl_label = 'Surface Coords'
     bl_description = "Please use the \"Get Touch Movement\" and \"Get Touch Location\" nodes instead"
-    bl_icon = 'ERROR'
-    arm_category = 'input'
+    arm_category = 'Input'
     arm_section = 'surface'
     arm_is_obsolete = 'is_obsolete'
     arm_version = 2
