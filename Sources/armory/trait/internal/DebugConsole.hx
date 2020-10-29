@@ -263,10 +263,19 @@ class DebugConsole extends Trait {
 					ui.indent();
 
 					if (selectedObject != null) {
+						if (Std.is(selectedObject, iron.object.CameraObject)) {
+							ui.row([1/2, 1/2]);
+						}
 
 						var h = Id.handle();
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
+
+						if (Std.is(selectedObject, iron.object.CameraObject)) {
+							if (ui.button("Set Active Camera")) {
+								iron.Scene.active.camera = cast(selectedObject, iron.object.CameraObject);
+							}
+						}
 
 						var localPos = selectedObject.transform.loc;
 						var worldPos = selectedObject.transform.getWorldPosition();
