@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ReplaceNoneNode extends LogicNode {
+class DefaultIfNullNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
