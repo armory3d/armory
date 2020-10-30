@@ -19,7 +19,7 @@ class DebugConsole extends Trait {
 #if (!arm_debug)
 	public function new() { super(); }
 #else
-	
+
 	public static var visible = true;
 	static var ui: Zui;
 	var scaleFactor = 1.0;
@@ -63,7 +63,7 @@ class DebugConsole extends Trait {
 
 	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
 	keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket, keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
-		super();		
+		super();
 		this.scaleFactor = scaleFactor;
 
 		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
@@ -75,7 +75,7 @@ class DebugConsole extends Trait {
 				case 0: setPosition(PositionStateEnum.LEFT);
 				case 1: setPosition(PositionStateEnum.CENTER);
 				case 2: setPosition(PositionStateEnum.RIGHT);
-			}			
+			}
 			shortcut_visible = keyCodeVisible;
 			shortcut_scale_in = keyCodeScaleIn;
 			shortcut_scale_out = keyCodeScaleOut;
@@ -85,16 +85,16 @@ class DebugConsole extends Trait {
 			if (haxeTrace == null) {
 				haxeTrace = haxe.Log.trace;
 				haxe.Log.trace = consoleTrace;
-			}			
+			}
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, function(key: kha.input.KeyCode) {
 				// DebugFloat
 				if (key == kha.input.KeyCode.OpenBracket) {
-					debugFloat -= 0.1; 
+					debugFloat -= 0.1;
 					trace("debugFloat = "+ debugFloat);
 				}
 				else if (key == kha.input.KeyCode.CloseBracket){
-					debugFloat += 0.1; 
+					debugFloat += 0.1;
 					trace("debugFloat = "+ debugFloat);
 				}
 				// Shortcut - Visible
@@ -104,15 +104,15 @@ class DebugConsole extends Trait {
 					var debugScale = getScale() - 0.1;
 					if (debugScale > 0.3) {
 						setScale(debugScale);
-					} 
+					}
 				}
 				// Scale Out
-				else if (key == shortcut_scale_out) { 
+				else if (key == shortcut_scale_out) {
 					var debugScale = getScale() + 0.1;
 					if (debugScale < 10.0) {
 						setScale(debugScale);
-					} 
-				}				
+					}
+				}
 			}, null);
 		});
 	}
@@ -263,10 +263,19 @@ class DebugConsole extends Trait {
 					ui.indent();
 
 					if (selectedObject != null) {
+						if (Std.is(selectedObject, iron.object.CameraObject)) {
+							ui.row([1/2, 1/2]);
+						}
 
 						var h = Id.handle();
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
+
+						if (Std.is(selectedObject, iron.object.CameraObject)) {
+							if (ui.button("Set Active Camera")) {
+								iron.Scene.active.camera = cast(selectedObject, iron.object.CameraObject);
+							}
+						}
 
 						var localPos = selectedObject.transform.loc;
 						var worldPos = selectedObject.transform.getWorldPosition();
@@ -723,7 +732,7 @@ class DebugConsole extends Trait {
 
 	public static function getPosition(): PositionStateEnum {
 		return position_console;
-	}	
+	}
 #end
 }
 
