@@ -26,13 +26,14 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
     Overrides the `Add node` menu. If called from the logic node
     editor, the custom menu is drawn, otherwise the default one is drawn.
 
-    Todo: Find a better solution to custom menus, this will conflict
-    with other add-ons overriding this menu.
+    TODO: Find a better solution to custom menus, this will conflict
+     with other add-ons overriding this menu.
     """
     bl_idname = "NODE_MT_add"
     bl_label = "Add"
     bl_translation_context = bpy.app.translations.contexts.operator_default
 
+    overridden_menu: bpy.types.Menu = None
     overridden_draw: Callable = None
 
     def draw(self, context):
@@ -517,6 +518,7 @@ def register():
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
     bpy.utils.register_class(ARMAddSetVarNode)
+    ARM_MT_NodeAddOverride.overridden_menu = bpy.types.NODE_MT_add
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
@@ -529,6 +531,9 @@ def register():
 def unregister():
     unregister_nodes()
 
+    # Ensure that globals are reset if the addon is enabled again in the same Blender session
+    arm_nodes.reset_globals()
+
     bpy.utils.unregister_class(ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
@@ -540,6 +545,7 @@ def unregister():
     bpy.utils.unregister_class(ARMAddSetVarNode)
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+    bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
 
     bpy.types.NODE_MT_context_menu.remove(draw_custom_logicnode_menu)
 
