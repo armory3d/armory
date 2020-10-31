@@ -296,17 +296,22 @@ def compile(assets_only=False):
     else:
         cmd.append(arm.utils.build_dir())
 
-    if assets_only or compilation_server:
-        cmd.append('--nohaxe')
-        cmd.append('--noproject')
-
     if not wrd.arm_verbose_output:
         cmd.append("--quiet")
     else:
         print("Using project from " + arm.utils.get_fp())
         print("Running: ", cmd)
 
-    state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+    #Project needs to be compiled at least once 
+    #before compilation server can work
+    if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+       state.proc_build = run_proc(cmd, build_done)
+    else: 
+        if assets_only or compilation_server:
+            cmd.append('--nohaxe')
+            cmd.append('--noproject')
+        state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+    
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
@@ -403,10 +408,6 @@ def compilation_server_done():
         return
     result = state.proc_build.poll()
     if result == 0:
-        if os.path.exists('krom/krom.js'):
-            os.chmod('krom/krom.js', stat.S_IWRITE)
-            os.remove('krom/krom.js')
-        os.rename('krom/krom.js.temp', 'krom/krom.js')
         build_done()
     else:
         state.proc_build = None
