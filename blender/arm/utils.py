@@ -230,7 +230,7 @@ def get_relative_paths():
 def get_pref_or_default(prop_name: str, default: Any) -> Any:
     """Return the preference setting for prop_name, or the value given as default if the property does not exist."""
     addon_prefs = get_arm_preferences()
-    return default if not hasattr(addon_prefs, prop_name) else getattr(addon_prefs, prop_name)
+    return getattr(addon_prefs, prop_name, default)
 
 def get_node_path():
     if get_os() == 'win':
