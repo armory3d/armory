@@ -272,7 +272,7 @@ class ArmEditScriptButton(bpy.types.Operator):
 
         arm.utils.check_default_props()
 
-        if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+        if not os.path.exists(os.path.join(arm.utils.get_fp(), "khafile.js")):
             print('Generating Krom project for IDE build configuration')
             make.build('krom')
 
@@ -284,7 +284,7 @@ class ArmEditScriptButton(bpy.types.Operator):
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         # Replace the haxe package syntax with the os-dependent path syntax for opening
-        hx_path = arm.utils.get_fp() + '/Sources/' + pkg + '/' + item.class_name_prop.replace('.', os.sep) + '.hx'
+        hx_path = os.path.join(arm.utils.get_fp(), 'Sources', pkg, item.class_name_prop.replace('.', os.sep) + '.hx')
         arm.utils.open_editor(hx_path)
         return{'FINISHED'}
 
@@ -308,8 +308,8 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
         project_path = arm.utils.get_fp()
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         item = obj.arm_traitlist[obj.arm_traitlist_index]
-        source_hx_path = sdk_path + '/armory/Sources/armory/trait/' + item.class_name_prop + '.hx'
-        target_hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
+        source_hx_path = os.path.join(sdk_path , 'armory', 'Sources', 'armory', 'trait', item.class_name_prop + '.hx')
+        target_hx_path = os.path.join(project_path, 'Sources', pkg, item.class_name_prop + '.hx')
 
         if not os.path.isfile(target_hx_path):
             # Rewrite package and copy
@@ -325,7 +325,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
         # From bundled to script
         item.type_prop = 'Haxe Script'
 
-        # Edit in Kode Studio
+        # Open the trait in the code editor
         bpy.ops.arm.edit_script('EXEC_DEFAULT', is_object=self.is_object)
 
         return{'FINISHED'}
