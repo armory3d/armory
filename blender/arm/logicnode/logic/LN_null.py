@@ -3,9 +3,9 @@ from arm.logicnode.arm_nodes import *
 class NoneNode(ArmLogicTreeNode):
     """A `null` value that can be used in comparisons and conditions."""
     bl_idname = 'LNNoneNode'
-    bl_label = 'None'
+    bl_label = 'Null'
     arm_version = 1
 
     def init(self, context):
         super(NoneNode, self).init(context)
-        self.add_output('NodeSocketShader', 'None')
+        self.add_output('NodeSocketShader', 'Null')

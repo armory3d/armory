@@ -6,7 +6,7 @@ class IsNotNoneNode(ArmLogicTreeNode):
 
     @seeNode Is None"""
     bl_idname = 'LNIsNotNoneNode'
-    bl_label = 'Is Not None'
+    bl_label = 'Is Not Null'
     arm_version = 1
 
     def init(self, context):
