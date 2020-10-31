@@ -30,6 +30,7 @@ import arm.material.cycles as cycles
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.utils
+import arm.profiler
 
 
 @unique
@@ -127,7 +128,6 @@ class ArmoryExporter:
         self.world_array = []
         self.particle_system_array = {}
 
-
         # `True` if there is at least one spawned camera in the scene
         self.camera_spawned = False
 
@@ -150,7 +150,8 @@ class ArmoryExporter:
         """Exports the given scene to the given file path. This is the
         function that is called in make.py and the entry point of the
         exporter."""
-        cls(context, filepath, scene, depsgraph).execute()
+        with arm.profiler.Profile('profile_exporter.prof', arm.utils.get_pref_or_default('profile_exporter', False)):
+            cls(context, filepath, scene, depsgraph).execute()
 
     @classmethod
     def preprocess(cls):
