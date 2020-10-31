@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import subprocess
+from typing import Any
 import webbrowser
 import shlex
 
@@ -225,6 +226,11 @@ def get_relative_paths():
     """Whether to convert absolute paths to relative"""
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'relative_paths') else addon_prefs.relative_paths
+
+def get_pref_or_default(prop_name: str, default: Any) -> Any:
+    """Return the preference setting for prop_name, or the value given as default if the property does not exist."""
+    addon_prefs = get_arm_preferences()
+    return default if not hasattr(addon_prefs, prop_name) else getattr(addon_prefs, prop_name)
 
 def get_node_path():
     if get_os() == 'win':
