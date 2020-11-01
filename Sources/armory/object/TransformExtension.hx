@@ -37,4 +37,12 @@ class TransformExtension {
 	public static inline function getLocalVecFromWorld(t: Transform, worldVec: Vec4): Vec4 {
 		return worldVec.clone().applymat4(Mat4.identity().getInverse(t.worldUnpack));
 	}
+	/**
+	* Returns the given world vector in transform orientation
+	* @param worldVec
+	* @return Vec4
+	**/
+	public static inline function worldVecToOrientation(t: Transform, worldVec: Vec4): Vec4 {
+		return t.world.right().mult(worldVec.x).add(t.world.look().mult(worldVec.y)).add(t.world.up().mult(worldVec.z));
+	}
 }
