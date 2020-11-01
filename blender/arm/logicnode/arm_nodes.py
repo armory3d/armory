@@ -521,10 +521,8 @@ def deprecated(*alternatives: str, message=""):
 def reset_globals():
     global nodes
     global category_items
-    global array_nodes
     nodes = []
     category_items = OrderedDict()
-    array_nodes = dict()
 
 
 bpy.utils.register_class(ArmNodeSearch)
