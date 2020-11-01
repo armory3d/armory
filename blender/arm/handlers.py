@@ -6,7 +6,7 @@ import bpy
 from bpy.app.handlers import persistent
 
 import arm.api
-import arm.logicnode.arm_nodes
+import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
@@ -124,7 +124,10 @@ def on_load_post(context):
     # Load libraries
     if os.path.exists(arm.utils.get_fp() + '/Libraries'):
         # Don't register nodes twice when calling register_nodes()
-        arm.logicnode.arm_nodes.reset_globals()
+        arm_nodes.reset_globals()
+
+        # Make sure that Armory's categories are registered first (on top of the menu)
+        arm.logicnode.init_categories()
 
         libs = os.listdir(arm.utils.get_fp() + '/Libraries')
         for lib in libs:
