@@ -139,15 +139,33 @@ class NodeReplacement:
     @classmethod
     def Identity(cls, node: ArmLogicTreeNode):
         """returns a NodeReplacement that does nothing, while operating on a given node.
-        WARNING: it assumes that all node properties are called "property0", "property1", etc...
+        WARNING: it assumes that all node properties have names that start with "property"
         """
         in_socks = {i:i for i in range(len(node.inputs))}
         out_socks = {i:i for i in range(len(node.outputs))}
         props = {}
         i=0
-        while hasattr(node, f'property{i:d}'):
-            props[f'property{i:d}'] = f'property{i:d}'
-            i +=1
+
+        # finding all the properties fo a node is not possible in a clean way for now.
+        # so, I'll assume their names start with "property", and list all the node's attributes that fulfill that condition.
+        # next, to check that those are indeed properties (in the blender sense), we need to check the class's type annotations.
+        # those annotations are not even instances of bpy.types.Property, but tuples, with the first element being a function accessible at bpy.props.XXXProperty
+        property_types = []
+        for possible_prop_type in dir(bpy.props):
+            if possible_prop_type.endswith('Property'):
+                property_types.append( getattr(bpy.props, possible_prop_type) )
+        possible_properties = []
+        for attrname in dir(node):
+            if attrname.startswith('property'):
+                possible_properties.append(attrname)
+        for attrname in possible_properties:
+            if attrname not in node.__annotations__:
+                continue
+            if not isinstance(node.__annotations__[attrname], tuple):
+                continue
+            if node.__annotations__[attrname][0] in property_types:
+                props[attrname] = attrname
+
         return NodeReplacement(
             node.bl_idname, node.arm_version, node.bl_idname, type(node).arm_version,
             in_socket_mapping=in_socks, out_socket_mapping=out_socks,
