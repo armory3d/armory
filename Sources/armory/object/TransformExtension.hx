@@ -43,6 +43,6 @@ class TransformExtension {
 	* @return Vec4
 	**/
 	public static inline function worldVecToOrientation(t: Transform, worldVec: Vec4): Vec4 {
-		return t.world.right().mult(worldVec.x).add(t.world.look().mult(worldVec.y)).add(t.world.up().mult(worldVec.z));
+		return t.right().mult(worldVec.x).add(t.look().mult(worldVec.y)).add(t.up().mult(worldVec.z));
 	}
 }
