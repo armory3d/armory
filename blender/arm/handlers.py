@@ -122,18 +122,19 @@ def on_load_post(context):
     arm.api.drivers = dict()
 
     # Load libraries
-    if os.path.exists(arm.utils.get_fp() + '/Libraries'):
+    lib_path = os.path.join(arm.utils.get_fp(), 'Libraries')
+    if os.path.exists(lib_path):
         # Don't register nodes twice when calling register_nodes()
         arm_nodes.reset_globals()
 
         # Make sure that Armory's categories are registered first (on top of the menu)
         arm.logicnode.init_categories()
 
-        libs = os.listdir(arm.utils.get_fp() + '/Libraries')
+        libs = os.listdir(lib_path)
         for lib in libs:
-            if os.path.isdir(arm.utils.get_fp() + '/Libraries/' + lib):
-                fp = arm.utils.get_fp() + '/Libraries/' + lib
-                if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
+            fp = os.path.join(lib_path, lib)
+            if os.path.isdir(fp):
+                if fp not in appended_py_paths and os.path.exists(os.path.join(fp, 'blender.py')):
                     appended_py_paths.append(fp)
                     sys.path.append(fp)
                     import blender
