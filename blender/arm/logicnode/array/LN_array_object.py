@@ -8,6 +8,7 @@ class ObjectArrayNode(ArmLogicTreeNode):
     arm_section = 'variable'
 
     def __init__(self):
+        super(ObjectArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):
