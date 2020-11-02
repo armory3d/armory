@@ -15,9 +15,9 @@ class ApplyImpulseAtLocationNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var impulse: Vec4 = inputs[2].get();
-		var localImpulse: Bool = inputs.length > 2 ? inputs[3].get() : false;
+		var localImpulse: Bool = inputs.length > 3 ? inputs[3].get() : false;
         	var location: Vec4 = inputs[4].get();
-		var localLoc: Bool = inputs.length > 4 ? inputs[5].get() : false;
+		var localLoc: Bool = inputs.length > 5 ? inputs[5].get() : false;
 
 		if (object == null || impulse == null || location == null) return;
 

@@ -13,8 +13,8 @@ class GetVelocityNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
-		var localLinear: Bool = inputs.length > 0 ? inputs[1].get() : false;
-		var localAngular: Bool = inputs.length > 1 ? inputs[2].get() : false;
+		var localLinear: Bool = inputs.length > 1 ? inputs[1].get() : false;
+		var localAngular: Bool = inputs.length > 2 ? inputs[2].get() : false;
 
 		if (object == null) return null;
 

@@ -15,7 +15,7 @@ class TranslateObjectNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var vec: Vec4 = inputs[2].get();
-		var local: Bool = inputs.length > 2 ? inputs[3].get() : false;
+		var local: Bool = inputs.length > 3 ? inputs[3].get() : false;
 
 		if (object == null || vec == null) return;
 
