@@ -525,6 +525,7 @@ def register():
 
     bpy.types.NODE_MT_context_menu.append(draw_custom_logicnode_menu)
 
+    arm.logicnode.init_categories()
     register_nodes()
 
 

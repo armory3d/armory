@@ -474,7 +474,7 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     global nodes
 
     if category == PKG_AS_CATEGORY:
-        category = node_type.__module__.rsplit('.', 2)[1].capitalize()
+        category = node_type.__module__.rsplit('.', 2)[-2].capitalize()
 
     nodes.append(node_type)
     node_category = get_category(category)
@@ -521,10 +521,8 @@ def deprecated(*alternatives: str, message=""):
 def reset_globals():
     global nodes
     global category_items
-    global array_nodes
     nodes = []
     category_items = OrderedDict()
-    array_nodes = dict()
 
 
 bpy.utils.register_class(ArmNodeSearch)

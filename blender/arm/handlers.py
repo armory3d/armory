@@ -6,7 +6,7 @@ import bpy
 from bpy.app.handlers import persistent
 
 import arm.api
-import arm.logicnode.arm_nodes
+import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
@@ -121,16 +121,27 @@ def on_load_post(context):
     wrd.arm_recompile = True
     arm.api.drivers = dict()
 
-    # Load libraries
-    if os.path.exists(arm.utils.get_fp() + '/Libraries'):
-        # Don't register nodes twice when calling register_nodes()
-        arm.logicnode.arm_nodes.reset_globals()
+    load_libraries()
 
-        libs = os.listdir(arm.utils.get_fp() + '/Libraries')
+    # Show trait users as collections
+    arm.utils.update_trait_collections()
+    props.update_armory_world()
+
+
+def load_libraries():
+    lib_path = os.path.join(arm.utils.get_fp(), 'Libraries')
+    if os.path.exists(lib_path):
+        # Don't register nodes twice when calling register_nodes()
+        arm_nodes.reset_globals()
+
+        # Make sure that Armory's categories are registered first (on top of the menu)
+        arm.logicnode.init_categories()
+
+        libs = os.listdir(lib_path)
         for lib in libs:
-            if os.path.isdir(arm.utils.get_fp() + '/Libraries/' + lib):
-                fp = arm.utils.get_fp() + '/Libraries/' + lib
-                if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
+            fp = os.path.join(lib_path, lib)
+            if os.path.isdir(fp):
+                if fp not in appended_py_paths and os.path.exists(os.path.join(fp, 'blender.py')):
                     appended_py_paths.append(fp)
                     sys.path.append(fp)
                     import blender
@@ -141,14 +152,12 @@ def on_load_post(context):
         # Register newly added nodes and node categories
         arm.nodes_logic.register_nodes()
 
-    # Show trait users as collections
-    arm.utils.update_trait_collections()
-    props.update_armory_world()
 
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')
     if armory_pbr == None:
         load_library('Armory PBR')
+
 
 def load_library(asset_name):
     if bpy.data.filepath.endswith('arm_data.blend'): # Prevent load in library itself
@@ -165,16 +174,28 @@ def load_library(asset_name):
     for ref in data_refs:
         ref.use_fake_user = True
 
+
 def register():
+    global appended_py_paths
+
     bpy.app.handlers.load_post.append(on_load_post)
     bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.append(on_undo_post)
     bpy.app.timers.register(always, persistent=True)
 
-    # TODO: On windows, on_load_post is not called when opening .blend file from explorer
-    if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
-        on_load_post(None)
+    if arm.utils.get_fp() != '':
+        appended_py_paths = []
+
+        # TODO: On windows, on_load_post is not called when opening .blend file from explorer
+        if arm.utils.get_os() == 'win':
+            on_load_post(None)
+        else:
+            # load_libraries() is called by on_load_post(). This call makes sure that libraries are also loaded
+            # when a file is already opened during add-on registration
+            load_libraries()
+
     reload_blend_data()
+
 
 def unregister():
     bpy.app.handlers.load_post.remove(on_load_post)
