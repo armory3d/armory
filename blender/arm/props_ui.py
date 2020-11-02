@@ -714,6 +714,10 @@ class ArmoryPlayButton(bpy.types.Operator):
         if state.proc_build != None:
             return {"CANCELLED"}
 
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
@@ -749,6 +753,10 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
     bl_label = 'Build'
 
     def execute(self, context):
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
@@ -785,6 +793,10 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
     bl_label = 'Publish'
 
     def execute(self, context):
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
