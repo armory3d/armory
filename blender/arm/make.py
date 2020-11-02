@@ -408,6 +408,10 @@ def compilation_server_done():
         return
     result = state.proc_build.poll()
     if result == 0:
+        if os.path.exists('krom/krom.js.temp'):
+            os.chmod('krom/krom.js', stat.S_IWRITE)
+            os.remove('krom/krom.js')
+            os.rename('krom/krom.js.temp', 'krom/krom.js')
         build_done()
     else:
         state.proc_build = None
