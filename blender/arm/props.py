@@ -8,7 +8,7 @@ import arm.proxy
 import arm.utils
 
 # Armory version
-arm_version = '2020.10'
+arm_version = '2020.11'
 arm_commit = '$Id$'
 
 def init_properties():
@@ -322,7 +322,7 @@ def init_properties_on_load():
     # New project?
     if bpy.data.filepath == '':
         wrd = bpy.data.worlds['Arm']
-        wrd.arm_debug_console = arm.utils.get_debug_console_auto()          
+        wrd.arm_debug_console = arm.utils.get_debug_console_auto()
     arm.utils.fetch_script_names()
 
 def update_armory_world():
