@@ -296,8 +296,8 @@ project.addSources('Sources');
             khafile.write("project.targetOptions.android_native.minSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_min))
             khafile.write("project.targetOptions.android_native.targetSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_target))
             # Permissions
-            if len(wrd.arm_exporter_android_permission_list) > 0: 
-                perms = '' 
+            if len(wrd.arm_exporter_android_permission_list) > 0:
+                perms = ''
                 for item in wrd.arm_exporter_android_permission_list:
                     perm = "'android.permission."+ item.arm_android_permissions +"'"
                     # Checking In
@@ -309,8 +309,8 @@ project.addSources('Sources');
                 if len(perms) > 0:
                     khafile.write("project.targetOptions.android_native.permissions = [{0}];\n".format(perms))
             # Android ABI Filters
-            if len(wrd.arm_exporter_android_abi_list) > 0: 
-                abis = '' 
+            if len(wrd.arm_exporter_android_abi_list) > 0:
+                abis = ''
                 for item in wrd.arm_exporter_android_abi_list:
                     abi = "'"+ item.arm_android_abi +"'"
                     # Checking In
@@ -403,13 +403,14 @@ class Main {
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
-        if rpdat.rp_shadowmap_cascades != '1':
-            f.write("""
-        iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-        iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
-        if rpdat.arm_shadowmap_bounds != 1.0:
-            f.write("""
-        iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        if rpdat.rp_shadows:
+            if rpdat.rp_shadowmap_cascades != '1':
+                f.write("""
+            iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
+            iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
+            if rpdat.arm_shadowmap_bounds != 1.0:
+                f.write("""
+            iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
