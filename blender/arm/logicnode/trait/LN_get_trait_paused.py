@@ -9,4 +9,4 @@ class GetTraitPausedNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetTraitPausedNode, self).init(context)
         self.add_input('NodeSocketShader', 'Trait')
-        self.add_output('NodeSocketBool', 'Paused')
+        self.add_output('NodeSocketBool', 'Is Paused')
