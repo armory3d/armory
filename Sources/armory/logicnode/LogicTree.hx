@@ -10,7 +10,7 @@ class LogicTree extends iron.Trait {
 
 	public function add() {}
 
-	var paused = false;
+	public var paused = false;
 
 	public function pause() {
 		if (paused) return;

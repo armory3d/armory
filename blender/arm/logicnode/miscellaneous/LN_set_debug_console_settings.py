@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetDebugConsoleSettings(ArmLogicTreeNode):
-    """Set Debug Console Settings"""
+    """Sets the debug console settings."""
     bl_idname = 'LNSetDebugConsoleSettings'
     bl_label = 'Set Debug Console Settings'
     arm_version = 1
