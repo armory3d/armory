@@ -239,12 +239,7 @@ def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.ty
     # detail = c.parse_value_input(node.inputs[2])
     # distortion = c.parse_value_input(node.inputs[3])
 
-    # Color
-    if out_socket == node.outputs[0]:
-        res = f'vec3(tex_musgrave_f({co} * {scale} * 0.5))'
-    # Fac
-    else:
-        res = 'tex_musgrave_f({0} * {1} * 0.5)'.format(co, scale)
+    res = f'tex_musgrave_f({co} * {scale} * 0.5)'
 
     if state.sample_bump:
         c.write_bump(node, out_socket, res)
