@@ -300,18 +300,18 @@ def compile(assets_only=False):
         cmd.append("--quiet")
     else:
         print("Using project from " + arm.utils.get_fp())
-        print("Running: ", cmd)
+        print("Running: ", *cmd)
 
-    #Project needs to be compiled at least once 
+    #Project needs to be compiled at least once
     #before compilation server can work
     if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
        state.proc_build = run_proc(cmd, build_done)
-    else: 
+    else:
         if assets_only or compilation_server:
             cmd.append('--nohaxe')
             cmd.append('--noproject')
         state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
-    
+
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
@@ -542,6 +542,8 @@ def build_success():
                 cmd.append(str(os.getpid()))
             if wrd.arm_audio == 'Disabled':
                 cmd.append('--nosound')
+            if wrd.arm_verbose_output:
+                print("Running: ", *cmd)
             state.proc_play = run_proc(cmd, play_done)
 
     elif state.is_publish:
@@ -613,7 +615,7 @@ def build_success():
 
         if arm.utils.get_arm_preferences().open_build_directory:
             arm.utils.open_folder(project_path)
-        
+
         # Android build APK
         if (arm.utils.get_project_android_build_apk()) and (len(arm.utils.get_android_sdk_root_path()) > 0):
             print("\nBuilding APK")
@@ -622,7 +624,7 @@ def build_success():
             if len(path_sdk) > 0:
                 # Check Environment Variables - ANDROID_SDK_ROOT
                 if os.getenv('ANDROID_SDK_ROOT') == None:
-                    # Set value from settings  
+                    # Set value from settings
                     os.environ['ANDROID_SDK_ROOT'] = path_sdk
             else:
                 project_path = ''
@@ -640,7 +642,7 @@ def build_success():
 
 def done_gradlew_build():
     if state.proc_publish_build == None:
-        return 
+        return
     result = state.proc_publish_build.poll()
     if result == 0:
         state.proc_publish_build = None
@@ -648,7 +650,7 @@ def done_gradlew_build():
         wrd = bpy.data.worlds['Arm']
         path_apk = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
         path_apk = os.path.join(path_apk + '-build', arm.utils.safestr(wrd.arm_project_name), "app", "build", "outputs", "apk", "debug")
-        
+
         print("\nBuild APK to " + path_apk)
         # Open directory with APK
         if arm.utils.get_android_open_build_apk_directory():
@@ -663,12 +665,12 @@ def done_gradlew_build():
         os.environ['ANDROID_SDK_ROOT'] = ''
         log.error('Building the APK failed, check console')
 
-def run_android_emulators(avd_name): 
+def run_android_emulators(avd_name):
     if len(avd_name.strip()) == 0:
         return
     print('\nRunning Emulator "'+ avd_name +'"')
     path_file = arm.utils.get_android_emulator_file()
-    if len(path_file) > 0:    
+    if len(path_file) > 0:
         if arm.utils.get_os_is_windows():
             run_proc(path_file + " -avd "+ avd_name, None)
         else:
