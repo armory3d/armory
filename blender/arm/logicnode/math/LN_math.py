@@ -5,6 +5,65 @@ class MathNode(ArmLogicTreeNode):
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
     arm_version = 1
+    
+    @staticmethod
+    def get_enum_id_value(obj, prop_name, value):
+        return obj.bl_rna.properties[prop_name].enum_items[value].identifier
+
+    @staticmethod
+    def get_count_in(operation_name):
+        return {
+            'Add': 0, 
+            'Subtract': 0, 
+            'Multiply': 0, 
+            'Divide': 0,
+            'Sine': 1, 
+            'Cosine': 1, 
+            'Abs': 1, 
+            'Tangent': 1, 
+            'Arcsine': 1, 
+            'Arccosine': 1, 
+            'Arctangent': 1, 
+            'Logarithm': 1, 
+            'Round': 1, 
+            'Floor': 1, 
+            'Ceil': 1, 
+            'Square Root': 1, 
+            'Fract': 1, 
+            'Exponent': 1,
+            'Max': 2, 
+            'Min': 2, 
+            'Power': 2, 
+            'Arctan2': 2, 
+            'Modulo': 2, 
+            'Less Than': 2, 
+            'Greater Than': 2
+        }.get(operation_name, 0)
+
+    def get_enum(self):   
+        return self.get('property0', 0)
+
+    def set_enum(self, value):
+        # Checking the selection of another operation
+        select_current = self.get_enum_id_value(self, 'property0', value)
+        select_prev = self.property0
+        if select_prev != select_current:
+            # Many arguments: Add, Subtract, Multiply, Divide
+            if (self.get_count_in(select_current) == 0):
+                while (len(self.inputs) < 2):
+                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+            # 2 arguments: Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than
+            if (self.get_count_in(select_current) == 2):
+                while (len(self.inputs) > 2):
+                    self.inputs.remove(self.inputs.values()[-1])
+                while (len(self.inputs) < 2):
+                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+            # 1 argument: Sine, Cosine, Abs, Tangent, Arcsine, Arccosine, Arctangent, Logarithm, Round, Floor, Ceil, Square Root, Fract, Exponent
+            if (self.get_count_in(select_current) == 1):
+                while (len(self.inputs) > 1):
+                    self.inputs.remove(self.inputs.values()[-1])
+        self['property0'] = value
+
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
@@ -30,9 +89,8 @@ class MathNode(ArmLogicTreeNode):
                  ('Ceil', 'Ceil', 'Ceil'),
                  ('Fract', 'Fract', 'Fract'),
                  ('Square Root', 'Square Root', 'Square Root'),
-                 ('Exp', 'Exponent', 'Exponent'),
-                 ],
-        name='', default='Add')
+                 ('Exponent', 'Exponent', 'Exponent')],
+        name='', default='Add', set=set_enum, get=get_enum)
 
     @property
     def property1(self):
@@ -52,10 +110,8 @@ class MathNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1_')
         layout.prop(self, 'property0')
-        # Add, Subtract, Multiply, Divide
-        if (self.property0 == "Add") or (self.property0 == "Subtract") or (self.property0 == "Multiply") or (self.property0 == "Divide"):
-            while (len(self.inputs) < 2):
-                self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+        # Many arguments: Add, Subtract, Multiply, Divide
+        if (self.get_count_in(self.property0) == 0):
             row = layout.row(align=True)
             column = row.column(align=True)
             op = column.operator('arm.node_add_input', text='Add Value', icon='PLUS', emboss=True)
@@ -67,13 +123,3 @@ class MathNode(ArmLogicTreeNode):
             op.node_index = str(id(self))
             if len(self.inputs) == 2:
                 column.enabled = False
-        # Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than
-        if (self.property0 == "Max") or (self.property0 == "Min") or (self.property0 == "Power") or (self.property0 == "Arctan2") or (self.property0 == "Modulo") or (self.property0 == "Less Than") or (self.property0 == "Greater Than"):
-            while (len(self.inputs) > 2):
-                self.inputs.remove(self.inputs.values()[-1])
-            while (len(self.inputs) < 2):
-                self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
-        # Sine, Cosine, Abs, Tangent, Arcsine, Arccosine, Arctangent, Logarithm, Round, Floor, Ceil, Square Root, Fract, Exponent
-        if (self.property0 == "Sine") or (self.property0 == "Cosine") or (self.property0 == "Abs") or (self.property0 == "Tangent") or (self.property0 == "Arcsine") or (self.property0 == "Arccosine") or (self.property0 == "Arctangent") or (self.property0 == "Logarithm") or (self.property0 == "Round") or (self.property0 == "Floor") or (self.property0 == "Ceil") or (self.property0 == "Square Root") or (self.property0 == "Fract") or (self.property0 == "Exp"):
-            while (len(self.inputs) > 1):
-                self.inputs.remove(self.inputs.values()[-1])
