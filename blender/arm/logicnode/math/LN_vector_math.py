@@ -10,7 +10,7 @@ class VectorMathNode(ArmLogicTreeNode):
     max_outputs = 5
 
     def get_bool(self):
-        return self['property1']
+        return self.get('property1', False)
 
     def set_bool(self, value):
         self['property1'] = value
@@ -26,7 +26,6 @@ class VectorMathNode(ArmLogicTreeNode):
                 self.add_output('NodeSocketFloat', 'Distance') # Distance
             if (self.property0 == 'Dot Product'):
                 self.add_output('NodeSocketFloat', 'Scalar') # Scalar
-
         else:
             if (self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product'):
                 self.outputs.remove(self.outputs.values()[-1]) # Distance/Length/Scalar
@@ -62,8 +61,8 @@ class VectorMathNode(ArmLogicTreeNode):
             'Length': 1
         }.get(operation_name, 0)
 
-    def get_enum(self):   
-        return self['property0']
+    def get_enum(self):
+        return self.get('property0', 0)
 
     def set_enum(self, value):
         # Checking the selection of another operation
@@ -122,8 +121,6 @@ class VectorMathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VectorMathNode, self).init(context)
-        self['property0'] = 0
-        self['property1'] = False
         self.add_input('NodeSocketVector', 'Value 0', default_value=[0.0, 0.0, 0.0])
         self.add_input('NodeSocketVector', 'Value 1', default_value=[0.0, 0.0, 0.0])
         self.add_output('NodeSocketVector', 'Result')
