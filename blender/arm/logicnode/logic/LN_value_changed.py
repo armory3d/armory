@@ -12,5 +12,3 @@ class ValueChangedNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Value')
         self.add_output('ArmNodeSocketAction', 'Changed')
         self.add_output('ArmNodeSocketAction', 'Unchanged')
-
-add_node(ValueChangedNode, category=PKG_AS_CATEGORY)
