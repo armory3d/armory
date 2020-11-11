@@ -274,6 +274,9 @@ def compile(assets_only=False):
         cmd.append('--vr')
         cmd.append('webvr')
 
+    if arm.utils.get_pref_or_default('khamake_debug', False):
+        cmd.append('--debug')
+
     if arm.utils.get_rp().rp_renderer == 'Raytracer':
         cmd.append('--raytrace')
         cmd.append('dxr')
