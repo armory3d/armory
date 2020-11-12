@@ -306,7 +306,7 @@ class Shader:
         self.header += s + '\n'
 
     def write_attrib(self, s):
-        self.main_attribs += s + '\n'
+        self.main_attribs += '\t' + s + '\n'
 
     def is_equal(self, sh):
         self.vstruct_to_vsin()
