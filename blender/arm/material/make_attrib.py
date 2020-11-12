@@ -1,9 +1,11 @@
+import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_skin as make_skin
 import arm.material.make_particle as make_particle
 import arm.material.make_inst as make_inst
+import arm.material.shader as shader
 import arm.utils
-import arm.material.cycles as cycles
+
 
 def write_vertpos(vert):
     billboard = mat_state.material.arm_billboard
@@ -30,7 +32,8 @@ def write_vertpos(vert):
             vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
         vert.write('gl_Position = WVP * spos;')
 
-def write_norpos(con_mesh, vert, declare=False, write_nor=True):
+
+def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=False, write_nor=True):
     prep = ''
     if declare:
         prep = 'vec3 '
@@ -42,7 +45,7 @@ def write_norpos(con_mesh, vert, declare=False, write_nor=True):
         if is_bone:
             make_skin.skin_nor(vert, prep)
         else:
-            vert.write(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
+            vert.write_attrib(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
     if con_mesh.is_elem('ipos'):
         make_inst.inst_pos(con_mesh, vert)
     vert.write_pre = False

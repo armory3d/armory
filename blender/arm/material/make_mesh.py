@@ -140,7 +140,7 @@ def make_base(con_mesh, parse_opacity):
         else:
             vert.write_attrib('texCoord = tex * texUnpack;')
 
-        if tese != None:
+        if tese is not None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
             tese.write_pre = False
@@ -149,7 +149,7 @@ def make_base(con_mesh, parse_opacity):
         vert.add_out('vec2 texCoord1')
         vert.add_uniform('float texUnpack', link='_texUnpack')
         vert.write_attrib('texCoord1 = tex1 * texUnpack;')
-        if tese != None:
+        if tese is not None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
             tese.write_pre = False
@@ -157,28 +157,25 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
         vert.write_attrib('vcolor = col.rgb;')
-        if tese != None:
+        if tese is not None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
 
+    vert.add_out('vec3 wnormal')
+    make_attrib.write_norpos(con_mesh, vert)
+    frag.write_attrib('vec3 n = normalize(wnormal);')
+
     if con_mesh.is_elem('tang'):
-        if tese != None:
-            vert.add_out('vec3 wnormal')
-            make_attrib.write_norpos(con_mesh, vert)
+        if tese is not None:
             tese.add_out('mat3 TBN')
-            tese.write('vec3 wbitangent = normalize(cross(wnormal, wtangent));')
-            tese.write('TBN = mat3(wtangent, wbitangent, wnormal);')
+            tese.write_attrib('vec3 wbitangent = normalize(cross(wnormal, wtangent));')
+            tese.write_attrib('TBN = mat3(wtangent, wbitangent, wnormal);')
         else:
             vert.add_out('mat3 TBN')
-            make_attrib.write_norpos(con_mesh, vert, declare=True)
-            vert.write('vec3 tangent = normalize(N * tang.xyz);')
-            vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
-            vert.write('TBN = mat3(tangent, bitangent, wnormal);')
-    else:
-        vert.add_out('vec3 wnormal')
-        make_attrib.write_norpos(con_mesh, vert)
-        frag.write_attrib('vec3 n = normalize(wnormal);')
+            vert.write_attrib('vec3 tangent = normalize(N * tang.xyz);')
+            vert.write_attrib('vec3 bitangent = normalize(cross(wnormal, tangent));')
+            vert.write_attrib('TBN = mat3(tangent, bitangent, wnormal);')
 
     if is_displacement:
         if rpdat.arm_rp_displacement == 'Vertex':

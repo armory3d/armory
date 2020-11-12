@@ -365,7 +365,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
         frag.write('n = TBN * normalize(texn);')
     else:
-        frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+        frag.write('n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         if strength_input is not None:
             strength = parse_value_input(strength_input)
             if strength != '1.0':

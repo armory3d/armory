@@ -89,7 +89,7 @@ def make(context_id, rpasses, shadowmap=False):
             vert.add_out('vec3 wnormal')
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
-            
+
             make_tess.tesc_levels(tesc, rpdat.arm_tess_shadows_inner, rpdat.arm_tess_shadows_outer)
             make_tess.interpolate(tese, 'wposition', 3)
             make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
