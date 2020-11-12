@@ -235,7 +235,7 @@ def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.ty
     else:
         co = 'bposition'
 
-    scale = c.parse_value_input(node.inputs[1])
+    scale = c.parse_value_input(node.inputs['Scale'])
     # detail = c.parse_value_input(node.inputs[2])
     # distortion = c.parse_value_input(node.inputs[3])
 
