@@ -892,6 +892,14 @@ def get_android_sdk_root_path():
     else:
         return os.getenv('ANDROID_SDK_ROOT')
 
+def get_android_apk_copy_path():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'android_apk_copy_path') else addon_prefs.android_apk_copy_path
+
+def get_android_apk_copy_open_directory():
+    addon_prefs = get_arm_preferences()
+    return False if not hasattr(addon_prefs, 'android_apk_copy_open_directory') else addon_prefs.android_apk_copy_open_directory
+
 def get_android_emulators_list():
     err = ''
     items = []
