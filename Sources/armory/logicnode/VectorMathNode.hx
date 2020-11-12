@@ -104,7 +104,6 @@ class VectorMathNode extends LogicNode {
 				var i = 1;
 				while (i < inputs.length) {
 					p2_f = inputs[i].get();
-					if (p2_f == null) return null;
 					res_v.mult(p2_f);
 					i++;
 				}
