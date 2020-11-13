@@ -11,6 +11,20 @@ import arm.utils
 arm_version = '2020.11'
 arm_commit = '$Id$'
 
+def get_project_html5_copy(self):
+    return self.get('arm_project_html5_copy', False)
+
+def set_project_html5_copy(self, value):
+    self['arm_project_html5_copy'] = value
+    if not value:
+        self['arm_project_html5_start_browser'] = False
+
+def get_project_html5_start_browser(self):
+    return self.get('arm_project_html5_start_browser', False)
+
+def set_project_html5_start_browser(self, value):
+    self['arm_project_html5_start_browser'] = value
+
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
@@ -30,6 +44,8 @@ def init_properties():
     bpy.types.World.arm_project_android_list_avd = EnumProperty(
         items=[(' ', ' ', ' ')],
         name="Emulator", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_html5_copy = BoolProperty(name="Copy Files To Specified Folder", description="Copy files to the folder specified in the settings after publish", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_copy, get=get_project_html5_copy)
+    bpy.types.World.arm_project_html5_start_browser = BoolProperty(name="Run Browser After Copy", description="Run browser after copy", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_start_browser, get=get_project_html5_start_browser)
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
