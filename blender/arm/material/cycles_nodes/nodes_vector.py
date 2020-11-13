@@ -31,9 +31,9 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
     nor = c.parse_vector_input(node.inputs[3])
     if state.sample_bump_res != '':
         if node.invert:
-            ext = ['1', '2', '3', '4']
+            ext = ('1', '2', '3', '4')
         else:
-            ext = ['2', '1', '4', '3']
+            ext = ('2', '1', '4', '3')
         state.curshader.write('float {0}_fh1 = {0}_{1} - {0}_{2}; float {0}_fh2 = {0}_{3} - {0}_{4};'.format(state.sample_bump_res, ext[0], ext[1], ext[2], ext[3]))
         state.curshader.write('{0}_fh1 *= ({1}) * 3.0; {0}_fh2 *= ({1}) * 3.0;'.format(state.sample_bump_res, strength))
         state.curshader.write('vec3 {0}_a = normalize(vec3(2.0, 0.0, {0}_fh1));'.format(state.sample_bump_res))
