@@ -604,8 +604,7 @@ def build_success():
             project_path = files_path + '-build'
             print('Exported Visual Studio 2017 project to ' + project_path)
         elif target_name.startswith('android'):
-            project_name = arm.utils.safestr(wrd.arm_project_name)
-            project_name = project_name.replace('.', '-').replace('_', '-').replace(' ', '-')
+            project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
             project_path = os.path.join(files_path + '-build', project_name)
             print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
@@ -651,12 +650,8 @@ def done_gradlew_build():
         state.proc_publish_build = None
 
         wrd = bpy.data.worlds['Arm']
-        project_name = arm.utils.safestr(arm.utils.blend_name()).replace('.', '-').replace('_', '-').replace(' ', '-')
-        if project_name[0].isdigit():
-            project_name = '_' + s
         path_apk = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
-        project_name = arm.utils.safestr(wrd.arm_project_name)
-        project_name = project_name.replace('.', '-').replace('_', '-').replace(' ', '-')
+        project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
         path_apk = os.path.join(path_apk + '-build', project_name, 'app', 'build', 'outputs', 'apk', 'debug')
 
         print("\nBuild APK to " + path_apk)
@@ -664,7 +659,7 @@ def done_gradlew_build():
         apk_name = 'app-debug.apk'
         file_name = os.path.join(path_apk, apk_name)
         if wrd.arm_project_android_rename_apk:
-            apk_name = project_name + '-' + arm.utils.safestr(wrd.arm_project_version.replace(' ', '_')) + '.apk'
+            apk_name = project_name + '-' + wrd.arm_project_version + '.apk'
             os.rename(file_name, os.path.join(path_apk, apk_name))
             file_name = os.path.join(path_apk, apk_name)
             print("\nRename APK to " + apk_name)
