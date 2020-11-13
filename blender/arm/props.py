@@ -24,6 +24,8 @@ def init_properties():
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=14, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_build_apk = BoolProperty(name="Building APK After Publishing", description="Starting APK build after publishing", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_rename_apk = BoolProperty(name="Rename APK To Project Name", description="Rename APK file to project name + version after build", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_copy_apk = BoolProperty(name="Copy APK To Specified Folder", description="Copy the APK file to the folder specified in the settings after build", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_run_avd = BoolProperty(name="Run Emulator After Building APK", description="Starting android emulator after APK build", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_list_avd = EnumProperty(
         items=[(' ', ' ', ' ')],

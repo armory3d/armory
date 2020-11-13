@@ -604,7 +604,8 @@ def build_success():
             project_path = files_path + '-build'
             print('Exported Visual Studio 2017 project to ' + project_path)
         elif target_name.startswith('android'):
-            project_path = os.path.join(files_path + '-build', arm.utils.safestr(wrd.arm_project_name))
+            project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
+            project_path = os.path.join(files_path + '-build', project_name)
             print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
             project_path = files_path
@@ -617,28 +618,29 @@ def build_success():
             arm.utils.open_folder(project_path)
 
         # Android build APK
-        if (arm.utils.get_project_android_build_apk()) and (len(arm.utils.get_android_sdk_root_path()) > 0):
-            print("\nBuilding APK")
-            # Check settings
-            path_sdk = arm.utils.get_android_sdk_root_path()
-            if len(path_sdk) > 0:
-                # Check Environment Variables - ANDROID_SDK_ROOT
-                if os.getenv('ANDROID_SDK_ROOT') == None:
-                    # Set value from settings
-                    os.environ['ANDROID_SDK_ROOT'] = path_sdk
-            else:
-                project_path = ''
-
-            # Build start
-            if len(project_path) > 0:
-                os.chdir(project_path) # set work folder
-                if arm.utils.get_os_is_windows():
-                    state.proc_publish_build = run_proc(os.path.join(project_path, "gradlew.bat assembleDebug"), done_gradlew_build)
+        if (target_name.startswith('android')):
+            if (arm.utils.get_project_android_build_apk()) and (len(arm.utils.get_android_sdk_root_path()) > 0):
+                print("\nBuilding APK")
+                # Check settings
+                path_sdk = arm.utils.get_android_sdk_root_path()
+                if len(path_sdk) > 0:
+                    # Check Environment Variables - ANDROID_SDK_ROOT
+                    if os.getenv('ANDROID_SDK_ROOT') == None:
+                        # Set value from settings
+                        os.environ['ANDROID_SDK_ROOT'] = path_sdk
                 else:
-                    cmd = shlex.split(os.path.join(project_path, "gradlew assembleDebug"))
-                    state.proc_publish_build = run_proc(cmd, done_gradlew_build)
-            else:
-                print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
+                    project_path = ''
+
+                # Build start
+                if len(project_path) > 0:
+                    os.chdir(project_path) # set work folder
+                    if arm.utils.get_os_is_windows():
+                        state.proc_publish_build = run_proc(os.path.join(project_path, "gradlew.bat assembleDebug"), done_gradlew_build)
+                    else:
+                        cmd = shlex.split(os.path.join(project_path, "gradlew assembleDebug"))
+                        state.proc_publish_build = run_proc(cmd, done_gradlew_build)
+                else:
+                    print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
 
 def done_gradlew_build():
     if state.proc_publish_build == None:
@@ -649,12 +651,28 @@ def done_gradlew_build():
 
         wrd = bpy.data.worlds['Arm']
         path_apk = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
-        path_apk = os.path.join(path_apk + '-build', arm.utils.safestr(wrd.arm_project_name), "app", "build", "outputs", "apk", "debug")
+        project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
+        path_apk = os.path.join(path_apk + '-build', project_name, 'app', 'build', 'outputs', 'apk', 'debug')
 
         print("\nBuild APK to " + path_apk)
+        # Rename APK
+        apk_name = 'app-debug.apk'
+        file_name = os.path.join(path_apk, apk_name)
+        if wrd.arm_project_android_rename_apk:
+            apk_name = project_name + '-' + wrd.arm_project_version + '.apk'
+            os.rename(file_name, os.path.join(path_apk, apk_name))
+            file_name = os.path.join(path_apk, apk_name)
+            print("\nRename APK to " + apk_name)
+        # Copy APK
+        if wrd.arm_project_android_copy_apk:
+            shutil.copyfile(file_name, os.path.join(arm.utils.get_android_apk_copy_path(), apk_name))
+            print("Copy APK to " + arm.utils.get_android_apk_copy_path())
         # Open directory with APK
         if arm.utils.get_android_open_build_apk_directory():
             arm.utils.open_folder(path_apk)
+        # Open directory after copy APK
+        if arm.utils.get_android_apk_copy_open_directory():
+            arm.utils.open_folder(arm.utils.get_android_apk_copy_path())
         # Running emulator
         if wrd.arm_project_android_run_avd:
             run_android_emulators(arm.utils.get_android_emulator_name())

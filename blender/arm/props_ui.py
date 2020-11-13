@@ -430,12 +430,8 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
-        is_check = False
-        for item in wrd.arm_exporterlist:
-            is_check = item.arm_project_target == 'android-hl'
-            if is_check:
-                break
-        return is_check
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        return item.arm_project_target == 'android-hl'
 
     def draw(self, context):
         layout = self.layout
@@ -449,7 +445,7 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(wrd, 'arm_winorient')
             row = layout.row()
-            row.prop(wrd, 'arm_project_android_sdk_compile')          
+            row.prop(wrd, 'arm_project_android_sdk_compile')
             row = layout.row()
             row.prop(wrd, 'arm_project_android_sdk_min')
             row = layout.row()
@@ -462,16 +458,6 @@ class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_context = "render"
     bl_options = { 'DEFAULT_CLOSED' }
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
-
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        is_check = False
-        for item in wrd.arm_exporterlist:
-            is_check = item.arm_project_target == 'android-hl'
-            if is_check:
-                break
-        return is_check
 
     def draw(self, context):
         layout = self.layout
@@ -505,16 +491,6 @@ class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
     bl_options = { 'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        is_check = False
-        for item in wrd.arm_exporterlist:
-            is_check = item.arm_project_target == 'android-hl'
-            if is_check:
-                break
-        return is_check
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -524,7 +500,7 @@ class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             layout.enabled = item.arm_project_target == 'android-hl'
             # ABIs
-            row = layout.row()            
+            row = layout.row()
             rows = 2
             if len(wrd.arm_exporter_android_abi_list) > 1:
                 rows = 4
@@ -547,16 +523,6 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
     bl_options = { 'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        is_check = False
-        for item in wrd.arm_exporterlist:
-            is_check = item.arm_project_target == 'android-hl'
-            if is_check:
-                break
-        return is_check
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -569,6 +535,12 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
             row.prop(wrd, 'arm_project_android_build_apk')
             path = arm.utils.get_android_sdk_root_path()
             row.enabled = len(path) > 0
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_rename_apk')
+            row.enabled = wrd.arm_project_android_build_apk
+            row = layout.row()
+            row.prop(wrd, 'arm_project_android_copy_apk')
+            row.enabled = (wrd.arm_project_android_build_apk) and (len(arm.utils.get_android_apk_copy_path()) > 0)
             row = layout.row()
             row.prop(wrd, 'arm_project_android_list_avd')
             col = row.column(align=True)
