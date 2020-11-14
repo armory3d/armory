@@ -27,7 +27,7 @@ class VectorMathNode(ArmLogicTreeNode):
             if (self.property0 == 'Dot Product'):
                 self.add_output('NodeSocketFloat', 'Scalar') # Scalar
         else:
-            if (self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product'):
+            if ((self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Distance/Length/Scalar
             # Remove X, Y, Z
             for i in range(3):
