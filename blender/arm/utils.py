@@ -955,6 +955,17 @@ def type_name_to_type(name: str) -> bpy.types.bpy_struct:
     """Return the Blender type given by its name, if registered."""
     return bpy.types.bpy_struct.bl_rna_get_subclass_py(name)
 
+def change_version_project(version: str) -> str:
+    ver = version.strip().replace(' ', '').split('.')
+    v_i = int(ver[len(ver) - 1]) + 1
+    ver[len(ver) - 1] = str(v_i)
+    version = ''
+    for i in ver:
+        if len(version) > 0:
+            version += '.'
+        version += i
+    return version
+
 def register(local_sdk=False):
     global use_local_sdk
     use_local_sdk = local_sdk

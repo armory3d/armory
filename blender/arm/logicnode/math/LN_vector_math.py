@@ -27,11 +27,14 @@ class VectorMathNode(ArmLogicTreeNode):
             if (self.property0 == 'Dot Product'):
                 self.add_output('NodeSocketFloat', 'Scalar') # Scalar
         else:
-            if (self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product'):
+            if ((self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Distance/Length/Scalar
-            self.outputs.remove(self.outputs.values()[-1]) # Result X
-            self.outputs.remove(self.outputs.values()[-1]) # Result Y
-            self.outputs.remove(self.outputs.values()[-1]) # Result Z
+            # Remove X, Y, Z
+            for i in range(3):
+                if len(self.outputs) > 1:
+                    self.outputs.remove(self.outputs.values()[-1])
+                else:
+                    break
             if (self.property0 == 'Length'):
                 self.add_output('NodeSocketFloat', 'Length') # Length
             if (self.property0 == 'Distance'):

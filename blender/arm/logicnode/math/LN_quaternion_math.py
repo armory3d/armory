@@ -13,7 +13,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
     def set_bool(self, value):
         self['property1'] = value
         if value:
-            if (self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle'):
+            if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
             self.add_output('NodeSocketFloat', 'X') # Result X
             self.add_output('NodeSocketFloat', 'Y') # Result Y
@@ -26,12 +26,14 @@ class QuaternionMathNode(ArmLogicTreeNode):
             if (self.property0 == 'ToAxisAngle'):
                 self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
         else:
-            if (self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle'):
+            if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
-            self.outputs.remove(self.outputs.values()[-1]) # Result X
-            self.outputs.remove(self.outputs.values()[-1]) # Result Y
-            self.outputs.remove(self.outputs.values()[-1]) # Result Z
-            self.outputs.remove(self.outputs.values()[-1]) # Result W
+            # Remove X, Y, Z, W
+            for i in range(4):
+                if len(self.outputs) > 1:
+                    self.outputs.remove(self.outputs.values()[-1])
+                else:
+                    break
             if (self.property0 == 'Module'):
                 self.add_output('NodeSocketFloat', 'Module') # Module
             if (self.property0 == 'DotProduct'):

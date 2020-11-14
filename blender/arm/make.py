@@ -217,6 +217,10 @@ def export_data(fp, sdk_path):
     import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
     write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
 
+    # Change project version (Build, Publish)
+    if (not state.is_play) and (wrd.arm_project_version_autoinc):
+        wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
+
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
     write_data.write_mainhx(scene_name, resx, resy, state.is_play, state.is_publish)
@@ -274,6 +278,9 @@ def compile(assets_only=False):
     if '_VR' in wrd.world_defs:
         cmd.append('--vr')
         cmd.append('webvr')
+
+    if arm.utils.get_pref_or_default('khamake_debug', False):
+        cmd.append('--debug')
 
     if arm.utils.get_rp().rp_renderer == 'Raytracer':
         cmd.append('--raytrace')

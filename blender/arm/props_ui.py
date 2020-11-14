@@ -411,6 +411,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_project_package')
         col.prop(wrd, 'arm_project_bundle')
         col.prop(wrd, 'arm_project_version')
+        col.prop(wrd, 'arm_project_version_autoinc')
         col.prop(wrd, 'arm_project_icon')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
@@ -430,8 +431,11 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        return item.arm_project_target == 'android-hl'
+        if len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target == 'android-hl'
+        else:
+            return False
 
     def draw(self, context):
         layout = self.layout
