@@ -28,10 +28,12 @@ class QuaternionMathNode(ArmLogicTreeNode):
         else:
             if (self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle'):
                 self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
-            self.outputs.remove(self.outputs.values()[-1]) # Result X
-            self.outputs.remove(self.outputs.values()[-1]) # Result Y
-            self.outputs.remove(self.outputs.values()[-1]) # Result Z
-            self.outputs.remove(self.outputs.values()[-1]) # Result W
+            # Remove X, Y, Z, W
+            for i in range(4):
+                if len(self.outputs) > 1:
+                    self.outputs.remove(self.outputs.values()[-1])
+                else:
+                    break
             if (self.property0 == 'Module'):
                 self.add_output('NodeSocketFloat', 'Module') # Module
             if (self.property0 == 'DotProduct'):
