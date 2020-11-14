@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import *
+import re
 
 import arm.assets as assets
 import arm.make
@@ -11,15 +12,66 @@ import arm.utils
 arm_version = '2020.11'
 arm_commit = '$Id$'
 
+def set_project_name(self, value):
+    value = arm.utils.safestr(value)
+    if len(value) > 0:
+        self['arm_project_name'] = value
+    else:
+        self['arm_project_name'] = arm.utils.blend_name()
+
+def get_project_name(self):
+    return self.get('arm_project_name', arm.utils.blend_name())
+
+def set_project_package(self, value):
+    value = arm.utils.safestr(value).replace('.', '_')
+    if (len(value) > 0) and (not value.isdigit()) and (not value[0].isdigit()):
+        self['arm_project_package'] = value
+
+def get_project_package(self):
+    return self.get('arm_project_package', 'arm')
+
+def set_version(self, value):
+    value = value.strip().replace(' ', '')
+    if re.match(r'^\d+(\.\d+){1,3}$', value) is not None:
+        check = True
+        v_i = value.split('.')
+        for item in v_i:
+            try:
+                i = int(item)
+            except ValueError:
+                check = False
+                break
+        if check:
+            self['arm_project_version'] = value
+
+def get_version(self):
+    return self.get('arm_project_version', '1.0.0')
+
+def set_project_bundle(self, value):
+    value = arm.utils.safestr(value)
+    v_a = value.strip().split('.')
+    if (len(value) > 0) and (not value.isdigit()) and (not value[0].isdigit()) and (len(v_a) > 1):
+        check = True
+        for item in v_a:
+            if (item.isdigit()) or (item[0].isdigit()):
+                check = False
+                break
+        if check:
+            self['arm_project_bundle'] = value
+
+def get_project_bundle(self):
+    return self.get('arm_project_bundle', 'org.armory3d')
+
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_commit = StringProperty(name="Version Commit", description="Armory SDK version", default="")
-    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=assets.invalidate_compiler_cache, set=set_project_name, get=get_project_name)
+    bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=assets.invalidate_compiler_cache, set=set_project_package, get=get_project_package)
+    bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0.0", update=assets.invalidate_compiler_cache, set=set_version, get=get_version)
+    bpy.types.World.arm_project_version_autoinc = BoolProperty(name="Auto-increment Build Number", description="Auto-increment build number", default=True, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="org.armory3d", update=assets.invalidate_compiler_cache, set=set_project_bundle, get=get_project_bundle)
     bpy.types.World.arm_project_android_sdk_compile = IntProperty(name="Compile Version SDK", description="Compile Android SDK Version", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=14, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
