@@ -1597,7 +1597,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
-            row = layout.row(align=True)         
+            row = layout.row(align=True)
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -2194,7 +2194,7 @@ class ArmoryUpdateListAndroidEmulatorButton(bpy.types.Operator):
 
         if len(arm.utils.get_android_sdk_root_path()) == 0:
             return {"CANCELLED"}
-        
+
         os.environ['ANDROID_SDK_ROOT'] = arm.utils.get_android_sdk_root_path()
         items, err = arm.utils.get_android_emulators_list()
         if len(err) > 0:
@@ -2220,7 +2220,7 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
 
         if len(arm.utils.get_android_sdk_root_path()) == 0:
             return {"CANCELLED"}
-        
+
         make.run_android_emulators(arm.utils.get_android_emulator_name())
         return{'FINISHED'}
 
@@ -2318,7 +2318,7 @@ def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
-    
+
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
