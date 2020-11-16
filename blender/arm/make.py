@@ -8,6 +8,7 @@ import subprocess
 import threading
 import webbrowser
 import shlex
+import errno
 
 import bpy
 
@@ -647,6 +648,25 @@ def build_success():
                         state.proc_publish_build = run_proc(cmd, done_gradlew_build)
                 else:
                     print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
+        
+        # HTML5 After Publish
+        if (target_name == 'html5'):
+            if len(arm.utils.get_html5_copy_path()) > 0 and (wrd.arm_project_html5_copy):
+                project_name = arm.utils.safestr(wrd.arm_project_name.replace(' ', '-')) + '-' + wrd.arm_project_version
+                dst = os.path.join(arm.utils.get_html5_copy_path(), project_name) 
+                print("\nCopy files to " + dst)
+                if os.path.exists(dst):
+                    shutil.rmtree(dst)
+                try:
+                    shutil.copytree(project_path, dst)
+                except OSError as exc:
+                    if exc.errno == errno.ENOTDIR:
+                        shutil.copy(project_path, dst)
+                    else: raise
+                if len(arm.utils.get_link_web_server()) and (wrd.arm_project_html5_start_browser):
+                    link_html5_app = arm.utils.get_link_web_server() +'/'+ project_name
+                    print("Running a browser with a link " + link_html5_app)
+                    webbrowser.open(link_html5_app)
 
 def done_gradlew_build():
     if state.proc_publish_build == None:

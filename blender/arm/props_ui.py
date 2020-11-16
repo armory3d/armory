@@ -557,6 +557,39 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
             row.prop(wrd, 'arm_project_android_run_avd')
             row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
 
+class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
+    bl_label = "HTML5 Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED' }
+    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target == 'html5'
+        else:
+            return False
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.enabled = item.arm_project_target == 'html5'
+            # Options
+            row = layout.row()
+            row.prop(wrd, 'arm_project_html5_copy')
+            row.enabled = len(arm.utils.get_html5_copy_path()) > 0
+            row = layout.row()
+            row.prop(wrd, 'arm_project_html5_start_browser')
+            row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
+
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
     bl_space_type = "PROPERTIES"
@@ -2209,6 +2242,7 @@ def register():
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
@@ -2277,6 +2311,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)

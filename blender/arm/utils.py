@@ -940,6 +940,14 @@ def get_android_open_build_apk_directory():
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'android_open_build_apk_directory') else addon_prefs.android_open_build_apk_directory
 
+def get_html5_copy_path():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'html5_copy_path') else addon_prefs.html5_copy_path
+
+def get_link_web_server():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
+
 def compare_version_blender_arm():
     return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 83)
 
