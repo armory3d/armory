@@ -14,9 +14,9 @@ class MouseNode(ArmLogicTreeNode):
                  ('moved', 'Moved', 'Moved')],
         name='', default='down')
     property1: EnumProperty(
-        items = [('left', 'Left', 'Left'),
-                 ('middle', 'Middle', 'Middle'),
-                 ('right', 'Right', 'Right')],
+        items = [('left', 'Left', 'Left mouse button'),
+                 ('middle', 'Middle', 'Middle mouse button'),
+                 ('right', 'Right', 'Right mouse button')],
         name='', default='left')
 
     def init(self, context):
