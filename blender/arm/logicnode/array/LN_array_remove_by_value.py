@@ -3,9 +3,9 @@ from arm.logicnode.arm_nodes import *
 class ArrayRemoveValueNode(ArmLogicTreeNode):
     """Removes the element from the given array by its value.
 
-    @seeNode Array Remove By Index"""
+    @seeNode Array Remove by Index"""
     bl_idname = 'LNArrayRemoveValueNode'
-    bl_label = 'Array Remove By Value'
+    bl_label = 'Array Remove by Value'
     arm_version = 1
 
     # def __init__(self):
