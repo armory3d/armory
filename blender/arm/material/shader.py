@@ -20,7 +20,7 @@ class ShaderData:
         self.sd['name'] = self.matname + '_data'
         self.sd['contexts'] = []
 
-    def add_context(self, props):
+    def add_context(self, props) -> 'ShaderContext':
         con = ShaderContext(self.material, self.sd, props)
         if con not in self.sd['contexts']:
             for elem in self.global_elems:
