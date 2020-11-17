@@ -12,13 +12,14 @@ class GetCursorStateNode extends LogicNode {
 		var mouse = iron.system.Input.getMouse();
 
 		return switch (from) {
-			case 0: 
+			case 0:
 				mouse.hidden ? return false : mouse.locked ? return false : return true;
-			case 1: 
+			case 1:
 				mouse.hidden;
-			case 2: 
+			case 2:
 				mouse.locked;
-    			default: null;
+    			default: 
+				null;
 		}
 	}
 }
