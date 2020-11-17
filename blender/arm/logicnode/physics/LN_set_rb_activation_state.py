@@ -8,9 +8,9 @@ class SetActivationStateNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Inactive', 'Inactive', 'The rigid body simulation is desactivated'),
+        items = [('Inactive', 'Inactive', 'The rigid body simulation is deactivated'),
                  ('Active', 'Active', 'The rigid body simulation is activated'),
-                 ('Always Active', 'Always Active', 'The rigid body simulation is never desactivated'),
+                 ('Always Active', 'Always Active', 'The rigid body simulation is never deactivated'),
                  ('Always Inactive', 'Always Inactive', 'The rigid body simulation is never activated'),
                  ],
         name='', default='Inactive')
