@@ -8,9 +8,9 @@ class MouseNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'Started'),
-                 ('Down', 'Down', 'Down'),
-                 ('Released', 'Released', 'Released'),
+        items = [('Started', 'Started', 'The mouse button startes to be pressed'),
+                 ('Down', 'Down', 'The mouse button is pressed'),
+                 ('Released', 'Released', 'The mouse button stops being pressed'),
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Down')
     property1: EnumProperty(

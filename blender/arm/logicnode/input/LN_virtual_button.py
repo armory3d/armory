@@ -8,9 +8,9 @@ class VirtualButtonNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'Started'),
-                 ('Down', 'Down', 'Down'),
-                 ('Released', 'Released', 'Released')],
+        items = [('Started', 'Started', 'The virtual button starts to be pressed'),
+                 ('Down', 'Down', 'The virtual button is pressed'),
+                 ('Released', 'Released', 'The virtual button stops being pressed')],
         name='', default='Down')
     property1: StringProperty(name='', default='button')
 

@@ -1,16 +1,17 @@
 from arm.logicnode.arm_nodes import *
 
 class SetActivationStateNode(ArmLogicTreeNode):
-    """Sets the activation state of the given rigid body."""
+    """Sets the rigid body simulation state of the given object."""
     bl_idname = 'LNSetActivationStateNode'
     bl_label = 'Set RB Activation State'
     bl_icon = 'NONE'
     arm_version = 1
+
     property0: EnumProperty(
-        items = [('Inactive', 'Inactive', 'Inactive'),
-                 ('Active', 'Active', 'Active'),
-                 ('Always Active', 'Always Active', 'Always Active'),
-                 ('Always Inactive', 'Always Inactive', 'Always Inactive'),
+        items = [('Inactive', 'Inactive', 'The rigid body simulation is desactivated'),
+                 ('Active', 'Active', 'The rigid body simulation is activated'),
+                 ('Always Active', 'Always Active', 'The rigid body simulation is never desactivated'),
+                 ('Always Inactive', 'Always Inactive', 'The rigid body simulation is never activated'),
                  ],
         name='', default='Inactive')
 

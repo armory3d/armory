@@ -8,9 +8,9 @@ class OnContactArrayNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Begin', 'Begin', 'Begin'),
-                 ('End', 'End', 'End'),
-                 ('Overlap', 'Overlap', 'Overlap')],
+        items = [('Begin', 'Begin', 'The contact between the rigid bodies starts'),
+                 ('Overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
+                 ('End', 'End', 'The contact between the rigid bodies ends')],
         name='', default='Begin')
 
     def init(self, context):

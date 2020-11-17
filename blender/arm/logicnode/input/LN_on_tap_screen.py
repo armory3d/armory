@@ -6,7 +6,7 @@ class OnTapScreen(ArmLogicTreeNode):
 
     @input Duration: touching time
     @input Interval: interval between taps
-    @input Repeat: repetitions required
+    @input Repeat: repetitions amount to validate
 
     @output Done: the sequence success
     @output Fail: the the sequence failure

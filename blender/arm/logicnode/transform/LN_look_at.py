@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LookAtNode(ArmLogicTreeNode):
-    """TO DO."""
+    """Converts the two given coordinates to a quaternion rotation."""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
     arm_section = 'rotation'

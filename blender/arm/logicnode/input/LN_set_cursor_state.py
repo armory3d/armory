@@ -6,17 +6,18 @@ class SetCursorStateNode(ArmLogicTreeNode):
     @seeNode Get Cursor State
 
     @option Hide Locked: hide and lock or unhide and unlock the mouse cursor.
-    @output Hide: hide/unhide the mouse cursor.
-    @output Lock: lock/unlock the mouse cursor."""
+    @option Hide: hide/unhide the mouse cursor.
+    @option Lock: lock/unlock the mouse cursor.
+    """
     bl_idname = 'LNSetCursorStateNode'
     bl_label = 'Set Cursor State'
     arm_section = 'mouse'
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Hide Locked', 'Hide Locked', 'Hide Locked'),
-                 ('Hide', 'Hide', 'Hide'),
-                 ('Lock', 'Lock', 'Lock'),
+        items = [('Hide Locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
+                 ('Hide', 'Hide', 'The mouse cursor is hidden'),
+                 ('Lock', 'Lock', 'The mouse cursor is locked'),
                  ],
         name='', default='Hide Locked')
 

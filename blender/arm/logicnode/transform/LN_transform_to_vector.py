@@ -32,9 +32,9 @@ class VectorFromTransformNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
 
     property0: EnumProperty(
-        items = [('Up', 'Up', 'Up'),
-                 ('Right', 'Right', 'Right'),
-                 ('Look', 'Look', 'Look'),
+        items = [('Right', 'Right', 'The transform right (X) direction'),
+                 ('Look', 'Look', 'The transform look (Y) direction'),
+                 ('Up', 'Up', 'The transform up (Z) direction'),
                  ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Look',
         update=on_property_update)
