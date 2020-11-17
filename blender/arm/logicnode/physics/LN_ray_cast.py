@@ -9,10 +9,10 @@ class RayCastNode(ArmLogicTreeNode):
     @input From: the location from where to start the ray, in world
         coordinates
     @input To: the target location of the ray, in world coordinates
-    @input Mask: A bit mask value to specify which
+    @input Mask: a bit mask value to specify which
         objects are considered
 
-    @output Rigid Body: the object that was hit
+    @output RB: the object that was hit
     @output Hit: the hit position in world coordinates
     @output Normal: the surface normal of the hit position relative to
         the world

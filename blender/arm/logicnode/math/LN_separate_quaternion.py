@@ -1,8 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-
 class SeparateQuaternionNode(ArmLogicTreeNode):
-    """Splits the given quaternio into X, Y, Z and W."""
+    """Splits the given quaternion into X, Y, Z and W."""
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"
     arm_section = 'quaternions'

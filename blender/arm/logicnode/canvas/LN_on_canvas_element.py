@@ -17,7 +17,7 @@ class OnCanvasElementNode(ArmLogicTreeNode):
         name='Status', default='down')
     property2: EnumProperty(
         items=[('left', 'Left', 'Left Button'),
-               ('middle', 'Middle', 'Midde Button'),
+               ('middle', 'Middle', 'Middle Button'),
                ('right', 'Right', 'Right Button')],
         name='Mouse Button', default='left')
 
