@@ -42,11 +42,11 @@ class OnContactNode extends LogicNode {
 
 		var b = false;
 		switch (property0) {
-		case "Begin":
+		case "begin":
 			b = contact && !lastContact;
-		case "End":
+		case "end":
 			b = !contact && lastContact;
-		case "Overlap":
+		case "overlap":
 			b = contact;
 		}
 

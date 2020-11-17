@@ -13,10 +13,10 @@ class VolumeTriggerNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Begin', 'Begin', 'The contact between the rigid bodies starts'),
-                 ('Overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
-                 ('End', 'End', 'The contact between the rigid bodies ends')],
-        name='', default='Begin')
+        items = [('begin', 'Begin', 'The contact between the rigid bodies starts'),
+                 ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
+                 ('end', 'End', 'The contact between the rigid bodies ends')],
+        name='', default='begin')
 
     def init(self, context):
         super(VolumeTriggerNode, self).init(context)

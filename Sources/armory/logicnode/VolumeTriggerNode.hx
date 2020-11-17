@@ -25,11 +25,11 @@ class VolumeTriggerNode extends LogicNode {
 
 		var b = false;
 		switch (property0) {
-		case "Enter":
+		case "enter":
 			b = overlap && !lastOverlap;
-		case "Leave":
+		case "leave":
 			b = !overlap && lastOverlap;
-		case "Overlap":
+		case "overlap":
 			b = overlap;
 		}
 
