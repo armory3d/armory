@@ -12,4 +12,5 @@ class SetCameraNode(ArmLogicTreeNode):
         super(SetCameraNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Camera')
+
         self.add_output('ArmNodeSocketAction', 'Out')

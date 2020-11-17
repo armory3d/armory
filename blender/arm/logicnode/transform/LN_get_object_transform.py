@@ -11,4 +11,5 @@ class GetTransformNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetTransformNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
+
         self.add_output('NodeSocketShader', 'Transform')

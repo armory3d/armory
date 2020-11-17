@@ -11,5 +11,6 @@ class GetVelocityNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketBool', 'Linear On Local Axis')
         self.add_input('NodeSocketBool', 'Angular On Local Axis')
+
         self.add_output('NodeSocketVector', 'Linear')
         self.add_output('NodeSocketVector', 'Angular')

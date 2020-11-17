@@ -18,6 +18,7 @@ class CallFunctionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait/Any')
         self.add_input('NodeSocketString', 'Function')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')
 

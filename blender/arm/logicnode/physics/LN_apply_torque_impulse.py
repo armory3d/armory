@@ -13,4 +13,5 @@ class ApplyTorqueImpulseNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketVector', 'Torque')
         self.add_input('NodeSocketBool', 'On Local Axis')
+
         self.add_output('ArmNodeSocketAction', 'Out')

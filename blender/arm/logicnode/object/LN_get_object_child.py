@@ -19,6 +19,7 @@ class GetChildNode(ArmLogicTreeNode):
         super(GetChildNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Parent')
         self.add_input('NodeSocketString', 'Child Name')
+
         self.add_output('ArmNodeSocketObject', 'Child')
 
     def draw_buttons(self, context, layout):

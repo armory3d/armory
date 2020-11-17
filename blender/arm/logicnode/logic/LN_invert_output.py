@@ -11,4 +11,5 @@ class InverseNode(ArmLogicTreeNode):
     def init(self, context):
         super(InverseNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
+
         self.add_output('ArmNodeSocketAction', 'Out')

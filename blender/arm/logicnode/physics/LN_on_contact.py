@@ -26,6 +26,7 @@ class OnContactNode(ArmLogicTreeNode):
         super(OnContactNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB 1')
         self.add_input('ArmNodeSocketObject', 'RB 2')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

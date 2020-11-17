@@ -1,23 +1,23 @@
 from arm.logicnode.arm_nodes import *
 
 class MouseNode(ArmLogicTreeNode):
-    """Activates the output when the given mouse action is done."""
+    """Activates the output on the given mouse event."""
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
     arm_section = 'mouse'
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Down', 'Down', 'Down'),
-                 ('Started', 'Started', 'Started'),
+        items = [('Started', 'Started', 'Started'),
+                 ('Down', 'Down', 'Down'),
                  ('Released', 'Released', 'Released'),
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Down')
     property1: EnumProperty(
-        items = [('left', 'left', 'left'),
-                 ('right', 'right', 'right'),
-                 ('middle', 'middle', 'middle')],
-        name='', default='left')
+        items = [('Left', 'Left', 'Left'),
+                 ('Middle', 'Middle', 'Middle'),
+                 ('Right', 'Right', 'Right')],
+        name='', default='Left')
 
     def init(self, context):
         super(MouseNode, self).init(context)

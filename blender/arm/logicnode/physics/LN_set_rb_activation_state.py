@@ -21,6 +21,7 @@ class SetActivationStateNode(ArmLogicTreeNode):
         super(SetActivationStateNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
+
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

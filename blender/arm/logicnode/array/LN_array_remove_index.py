@@ -13,5 +13,6 @@ class ArrayRemoveIndexNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketInt', 'Index')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Value')

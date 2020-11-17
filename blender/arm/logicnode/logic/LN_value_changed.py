@@ -10,5 +10,6 @@ class ValueChangedNode(ArmLogicTreeNode):
         super(ValueChangedNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('ArmNodeSocketAction', 'Changed')
         self.add_output('ArmNodeSocketAction', 'Unchanged')

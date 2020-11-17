@@ -8,4 +8,4 @@ class DynamicNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(DynamicNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Dynamic', is_var=True)
+        self.add_output('NodeSocketShader', 'Dynamic', is_var=1)

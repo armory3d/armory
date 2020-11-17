@@ -11,4 +11,5 @@ class GetTraitNode(ArmLogicTreeNode):
         super(GetTraitNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Name')
+
         self.add_output('NodeSocketShader', 'Trait')

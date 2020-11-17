@@ -17,10 +17,10 @@ class MergedGamepadNode extends LogicNode {
 		if (gamepad == null) return;
 		var b = false;
 		switch (property0) {
-		case "Down":
-			b = gamepad.down(property1) > 0.0;
 		case "Started":
 			b = gamepad.started(property1);
+		case "Down":
+			b = gamepad.down(property1) > 0.0;
 		case "Released":
 			b = gamepad.released(property1);
 		// case "Moved Left":
@@ -35,10 +35,10 @@ class MergedGamepadNode extends LogicNode {
 		var num: Int = inputs[0].get();
 		var gamepad = iron.system.Input.getGamepad(num);
 		switch (property0) {
-		case "Down":
-			return gamepad.down(property1) > 0.0;
 		case "Started":
 			return gamepad.started(property1);
+		case "Down":
+			return gamepad.down(property1) > 0.0;
 		case "Released":
 			return gamepad.released(property1);
 		// case "Moved Left":

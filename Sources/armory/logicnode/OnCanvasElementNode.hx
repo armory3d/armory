@@ -50,10 +50,10 @@ class OnCanvasElementNode extends LogicNode {
 
 		if (property0 == "click") {
 			switch (property1) {
-			case "down":
-				isEvent = mouse.down(property2);
 			case "started":
 				isEvent = mouse.started(property2);
+			case "down":
+				isEvent = mouse.down(property2);
 			case "released":
 				isEvent = mouse.released(property2);
 			}

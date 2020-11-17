@@ -9,4 +9,5 @@ class ObjectNode(ArmLogicTreeNode):
     def init(self, context):
         super(ObjectNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object In')
+
         self.add_output('ArmNodeSocketObject', 'Object Out', is_var=True)

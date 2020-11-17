@@ -18,6 +18,7 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Visible')  
         self.add_input('NodeSocketFloat', 'Scale')  
         self.inputs[-1].default_value = 1.0
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

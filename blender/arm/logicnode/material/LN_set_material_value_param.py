@@ -13,4 +13,5 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Material')
         self.add_input('NodeSocketString', 'Node')
         self.add_input('NodeSocketFloat', 'Float')
+
         self.add_output('ArmNodeSocketAction', 'Out')

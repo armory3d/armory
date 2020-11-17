@@ -14,4 +14,5 @@ class CanvasSetTextColorNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'G')
         self.add_input('NodeSocketFloat', 'B')
         self.add_input('NodeSocketFloat', 'A')
+
         self.add_output('ArmNodeSocketAction', 'Out')

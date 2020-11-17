@@ -13,4 +13,5 @@ class BlendActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAnimAction', 'Action 1')
         self.add_input('ArmNodeSocketAnimAction', 'Action 2')
         self.add_input('NodeSocketFloat', 'Factor', default_value = 0.5)
+
         self.add_output('ArmNodeSocketAction', 'Out')

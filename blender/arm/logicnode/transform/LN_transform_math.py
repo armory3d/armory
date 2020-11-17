@@ -10,4 +10,5 @@ class TransformMathNode(ArmLogicTreeNode):
         super(TransformMathNode, self).init(context)
         self.add_input('NodeSocketShader', 'Transform 1')
         self.add_input('NodeSocketShader', 'Transform 2')
+
         self.add_output('NodeSocketShader', 'Result')

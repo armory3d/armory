@@ -22,4 +22,5 @@ class ApplyForceNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('NodeSocketVector', 'Force')
         self.add_input('NodeSocketBool', 'On Local Axis')
+
         self.add_output('ArmNodeSocketAction', 'Out')

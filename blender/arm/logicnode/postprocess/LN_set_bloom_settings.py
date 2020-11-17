@@ -12,4 +12,5 @@ class BloomSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Threshold', default_value=1.00)
         self.add_input('NodeSocketFloat', 'Strength', default_value=3.50)
         self.add_input('NodeSocketFloat', 'Radius', default_value=3.0)
+
         self.add_output('ArmNodeSocketAction', 'Out')

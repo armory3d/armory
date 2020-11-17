@@ -10,5 +10,6 @@ class CanvasGetRotationNode(ArmLogicTreeNode):
         super(CanvasGetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Element')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketFloat', 'Rad')

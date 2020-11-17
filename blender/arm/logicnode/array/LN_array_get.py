@@ -10,4 +10,5 @@ class ArrayGetNode(ArmLogicTreeNode):
         super(ArrayGetNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketInt', 'Index')
+
         self.add_output('NodeSocketShader', 'Value')

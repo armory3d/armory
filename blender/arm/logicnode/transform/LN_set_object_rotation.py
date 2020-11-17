@@ -13,6 +13,7 @@ class SetRotationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Euler Angles / Vector XYZ')
         self.add_input('NodeSocketFloat', 'Angle / W')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def on_property_update(self, context):

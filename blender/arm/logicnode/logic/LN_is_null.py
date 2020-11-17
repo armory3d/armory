@@ -14,4 +14,5 @@ class IsNoneNode(ArmLogicTreeNode):
         super(IsNoneNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('ArmNodeSocketAction', 'Out')

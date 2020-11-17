@@ -10,4 +10,5 @@ class ArrayContainsNode(ArmLogicTreeNode):
         super(ArrayContainsNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('NodeSocketBool', 'Contains')

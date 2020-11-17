@@ -15,4 +15,5 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Speed')
         self.add_input('NodeSocketInt', 'Forward/Up/Right')
         self.add_input('NodeSocketBool', 'Inverse')
+
         self.add_output('ArmNodeSocketAction', 'Out')

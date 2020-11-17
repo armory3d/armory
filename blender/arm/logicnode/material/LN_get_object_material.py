@@ -10,4 +10,5 @@ class GetMaterialNode(ArmLogicTreeNode):
         super(GetMaterialNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketInt', 'Slot')
+
         self.add_output('NodeSocketShader', 'Material')

@@ -13,4 +13,5 @@ class RemovePhysicsNode (ArmLogicTreeNode):
         super(RemovePhysicsNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
+
         self.outputs.new('ArmNodeSocketAction', 'Out')

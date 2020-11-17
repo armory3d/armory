@@ -105,6 +105,7 @@ class MathNode(ArmLogicTreeNode):
         super(MathNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Value 0', default_value=0.0)
         self.add_input('NodeSocketFloat', 'Value 1', default_value=0.0)
+
         self.add_output('NodeSocketFloat', 'Result')
 
     def draw_buttons(self, context, layout):

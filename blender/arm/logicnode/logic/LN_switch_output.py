@@ -19,6 +19,7 @@ class SwitchNode(ArmLogicTreeNode):
         super(SwitchNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('ArmNodeSocketAction', 'Default')
 
     def draw_buttons(self, context, layout):

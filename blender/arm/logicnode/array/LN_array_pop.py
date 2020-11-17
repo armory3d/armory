@@ -11,4 +11,5 @@ class ArrayPopNode(ArmLogicTreeNode):
     def init(self, context):
         super(ArrayPopNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
+
         self.add_output('NodeSocketShader', 'Value')

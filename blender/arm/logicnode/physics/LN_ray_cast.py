@@ -9,7 +9,7 @@ class RayCastNode(ArmLogicTreeNode):
     @input From: the location from where to start the ray, in world
         coordinates
     @input To: the target location of the ray, in world coordinates
-    @input Collision Group Mask: A bit mask value to specify which
+    @input Mask: A bit mask value to specify which
         objects are considered
 
     @output Rigid Body: the object that was hit
@@ -26,7 +26,8 @@ class RayCastNode(ArmLogicTreeNode):
         super(RayCastNode, self).init(context)
         self.add_input('NodeSocketVector', 'From')
         self.add_input('NodeSocketVector', 'To')
-        self.add_input('NodeSocketInt', 'Collision Group Mask', default_value=1)
+        self.add_input('NodeSocketInt', 'Mask', default_value=1)
+
         self.add_output('ArmNodeSocketObject', 'RB')
         self.add_output('NodeSocketVector', 'Hit')
         self.add_output('NodeSocketVector', 'Normal')

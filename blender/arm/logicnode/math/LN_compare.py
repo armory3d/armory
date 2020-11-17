@@ -32,6 +32,7 @@ class CompareNode(ArmLogicTreeNode):
         super(CompareNode, self).init(context)
         self.add_input('NodeSocketShader', 'Value')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('NodeSocketBool', 'Bool')
 
     def draw_buttons(self, context, layout):

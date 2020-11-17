@@ -10,4 +10,5 @@ class RemoveTraitNode(ArmLogicTreeNode):
         super(RemoveTraitNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Trait')
+
         self.add_output('ArmNodeSocketAction', 'Out')

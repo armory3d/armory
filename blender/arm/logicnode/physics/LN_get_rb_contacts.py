@@ -14,4 +14,5 @@ class GetContactsNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetContactsNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB')
+
         self.add_output('ArmNodeSocketArray', 'Contacts')

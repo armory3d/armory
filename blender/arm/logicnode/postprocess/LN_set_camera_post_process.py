@@ -20,4 +20,5 @@ class CameraSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'DoF F-Stop', default_value=128.0)
         self.add_input('NodeSocketInt', 'Tonemapper', default_value=0.0)
         self.add_input('NodeSocketFloat', 'Film Grain', default_value=2.0)
+
         self.add_output('ArmNodeSocketAction', 'Out')

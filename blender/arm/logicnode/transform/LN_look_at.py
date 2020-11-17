@@ -20,6 +20,7 @@ class LookAtNode(ArmLogicTreeNode):
         super(LookAtNode, self).init(context)
         self.add_input('NodeSocketVector', 'From Location')
         self.add_input('NodeSocketVector', 'To Location')
+
         self.add_output('NodeSocketVector', 'Rotation')
 
     def draw_buttons(self, context, layout):

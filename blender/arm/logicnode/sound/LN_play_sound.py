@@ -54,6 +54,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Is Running')
         self.add_output('ArmNodeSocketAction', 'Done')

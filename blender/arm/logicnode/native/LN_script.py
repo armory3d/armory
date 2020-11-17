@@ -21,6 +21,7 @@ class ScriptNode(ArmLogicTreeNode):
         super(ScriptNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')
 

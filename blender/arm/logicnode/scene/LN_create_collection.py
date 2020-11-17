@@ -11,4 +11,5 @@ class CreateCollectionNode(ArmLogicTreeNode):
         super(CreateCollectionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Collection')
+
         self.add_output('ArmNodeSocketAction', 'Out')

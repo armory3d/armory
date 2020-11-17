@@ -15,4 +15,5 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Dynamic')
         self.add_input('NodeSocketString', 'Property')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('ArmNodeSocketAction', 'Out')

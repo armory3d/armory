@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SeparateQuaternionNode(ArmLogicTreeNode):
-    """TO DO."""
+    """Splits the given quaternio into X, Y, Z and W."""
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion"
     arm_section = 'quaternions'
@@ -11,6 +11,7 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
     def init(self, context):
         super(SeparateQuaternionNode, self).init(context)
         self.add_input('NodeSocketVector', 'Quaternion')
+
         self.add_output('NodeSocketFloat', 'X')
         self.add_output('NodeSocketFloat', 'Y')
         self.add_output('NodeSocketFloat', 'Z')

@@ -6,12 +6,12 @@ class MapRangeNode extends LogicNode {
 		super(tree);
 	}
 
-	override function get(from: Int): Dynamic {
-		var value: kha.FastFloat = inputs[0].get();
-		var fromMin: kha.FastFloat = inputs[1].get();
-		var fromMax: kha.FastFloat = inputs[2].get();
-		var toMin: kha.FastFloat = inputs[3].get();
-		var toMax: kha.FastFloat = inputs[4].get();
+	override function get(from: Int): kha.FastFloat {
+		var value = inputs[0].get();
+		var fromMin = inputs[1].get();
+		var fromMax = inputs[2].get();
+		var toMin = inputs[3].get();
+		var toMax = inputs[4].get();
 
 		if (value == null || fromMin == null || fromMax == null || toMin == null || toMax == null) return null;
 

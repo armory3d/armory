@@ -11,4 +11,5 @@ class SetLightColorNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Light')
         self.add_input('NodeSocketColor', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
+
         self.add_output('ArmNodeSocketAction', 'Out')

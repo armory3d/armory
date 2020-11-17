@@ -16,6 +16,7 @@ class RpSuperSampleNode(ArmLogicTreeNode):
     def init(self, context):
         super(RpSuperSampleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

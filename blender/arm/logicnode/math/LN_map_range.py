@@ -1,7 +1,10 @@
 from arm.logicnode.arm_nodes import *
 
 class MapRangeNode(ArmLogicTreeNode):
-    """Converts the value between the given range to another range."""
+    """Converts the given value from a range to another range.
+
+    @seeNode Clamp
+    """
     bl_idname = 'LNMapRangeNode'
     bl_label = 'Map Range'
     arm_version = 1
@@ -13,4 +16,5 @@ class MapRangeNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'From Max', default_value=1.0)
         self.add_input('NodeSocketFloat', 'To Min')
         self.add_input('NodeSocketFloat', 'To Max', default_value=1.0)
+
         self.add_output('NodeSocketFloat', 'Result')

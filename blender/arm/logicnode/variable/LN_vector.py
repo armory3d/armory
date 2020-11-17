@@ -12,4 +12,4 @@ class VectorNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Y')
         self.add_input('NodeSocketFloat', 'Z')
 
-        self.add_output('NodeSocketVector', 'Vector', is_var=True)
+        self.add_output('NodeSocketVector', 'Vector', is_var=1)

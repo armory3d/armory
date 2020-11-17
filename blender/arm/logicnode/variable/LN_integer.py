@@ -9,4 +9,4 @@ class IntegerNode(ArmLogicTreeNode):
     def init(self, context):
         super(IntegerNode, self).init(context)
         self.add_input('NodeSocketInt', 'Int In')
-        self.add_output('NodeSocketInt', 'Int Out', is_var=True)
+        self.add_output('NodeSocketInt', 'Int Out', is_var=1)

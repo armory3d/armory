@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SendGlobalEventNode(ArmLogicTreeNode):
     """Sends the given event to all objects in the scene.
 
-    @seeNode Send Event To Object
+    @seeNode Send Event to Object
     @seeNode On Event
 
     @input Event: the identifier of the event"""
@@ -16,4 +16,5 @@ class SendGlobalEventNode(ArmLogicTreeNode):
         super(SendGlobalEventNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Event')
+
         self.add_output('ArmNodeSocketAction', 'Out')

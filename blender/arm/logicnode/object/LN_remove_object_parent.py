@@ -11,5 +11,6 @@ class ClearParentNode(ArmLogicTreeNode):
         super(ClearParentNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Keep Transform', default_value=True)
+        self.add_input('NodeSocketBool', 'Keep Transform', default_value=1)
+
         self.add_output('ArmNodeSocketAction', 'Out')

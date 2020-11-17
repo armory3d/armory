@@ -1,18 +1,18 @@
 from arm.logicnode.arm_nodes import *
 
 class SurfaceNode(ArmLogicTreeNode):
-    """Activates the output when the given action over the screen is done."""
+    """Activates the output on the given touch event."""
     bl_idname = 'LNMergedSurfaceNode'
-    bl_label = 'Surface'
+    bl_label = 'Touch'
     arm_section = 'surface'
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Touched', 'Touched', 'Touched'),
-                 ('Started', 'Started', 'Started'),
+        items = [('Started', 'Started', 'Started'),
+                 ('Down', 'Down', 'Down'),
                  ('Released', 'Released', 'Released'),
                  ('Moved', 'Moved', 'Moved')],
-        name='', default='Touched')
+        name='', default='Down')
 
     def init(self, context):
         super(SurfaceNode, self).init(context)
