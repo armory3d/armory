@@ -19,11 +19,11 @@ class SetDebugConsoleSettings extends LogicNode {
 			armory.trait.internal.DebugConsole.setScale(scale);
 
         switch (property0) {
-		case "Left":
+		case "anchor left":
 			return armory.trait.internal.DebugConsole.setPosition(PositionStateEnum.LEFT);
-		case "Center":
+		case "anchor center":
 			return armory.trait.internal.DebugConsole.setPosition(PositionStateEnum.CENTER);
-		case "Right":
+		case "anchor right":
 			return armory.trait.internal.DebugConsole.setPosition(PositionStateEnum.RIGHT);
 		}
 		#end

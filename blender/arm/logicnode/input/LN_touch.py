@@ -8,11 +8,11 @@ class SurfaceNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'The screen surface starts to be touched'),
-                 ('Down', 'Down', 'The screen surface is touched'),
-                 ('Released', 'Released', 'The screen surface stops being touched'),
-                 ('Moved', 'Moved', 'Moved')],
-        name='', default='Down')
+        items = [('started', 'Started', 'The screen surface starts to be touched'),
+                 ('down', 'Down', 'The screen surface is touched'),
+                 ('released', 'Released', 'The screen surface stops being touched'),
+                 ('moved', 'Moved', 'Moved')],
+        name='', default='down')
 
     def init(self, context):
         super(SurfaceNode, self).init(context)

@@ -13,14 +13,14 @@ class SetCursorStateNode extends LogicNode {
 		var mouse = iron.system.Input.getMouse();
 
 		switch (property0) {
-		case "Hide Locked":
+		case "hide locked":
 			state ? mouse.hide() : mouse.show();
  			mouse.hidden ? mouse.lock() : mouse.unlock();
 
- 		case "Hide":
+ 		case "hide":
  			state ? mouse.hide() : mouse.show();
  
- 		case "Lock":
+ 		case "lock":
  			state ? mouse.lock() : mouse.unlock();
 		}
 

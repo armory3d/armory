@@ -15,11 +15,11 @@ class SetCursorStateNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Hide Locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
-                 ('Hide', 'Hide', 'The mouse cursor is hidden'),
-                 ('Lock', 'Lock', 'The mouse cursor is locked'),
+        items = [('hide locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
+                 ('hide', 'Hide', 'The mouse cursor is hidden'),
+                 ('lock', 'Lock', 'The mouse cursor is locked'),
                  ],
-        name='', default='Hide Locked')
+        name='', default='hide locked')
 
     def init(self, context):
         super(SetCursorStateNode, self).init(context)

@@ -8,10 +8,10 @@ class KeyboardNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'The keyboard button starts to be pressed'),
-                 ('Down', 'Down', 'The keyboard button is pressed'),
-                 ('Released', 'Released', 'The keyboard button stops being pressed')],
-        name='', default='Down')
+        items = [('started', 'Started', 'The keyboard button starts to be pressed'),
+                 ('down', 'Down', 'The keyboard button is pressed'),
+                 ('released', 'Released', 'The keyboard button stops being pressed')],
+        name='', default='down')
 
     property1: EnumProperty(
         items = [('a', 'a', 'a'),

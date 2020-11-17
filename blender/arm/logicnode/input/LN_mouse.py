@@ -8,16 +8,16 @@ class MouseNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'The mouse button startes to be pressed'),
-                 ('Down', 'Down', 'The mouse button is pressed'),
-                 ('Released', 'Released', 'The mouse button stops being pressed'),
-                 ('Moved', 'Moved', 'Moved')],
-        name='', default='Down')
+        items = [('started', 'Started', 'The mouse button startes to be pressed'),
+                 ('down', 'Down', 'The mouse button is pressed'),
+                 ('released', 'Released', 'The mouse button stops being pressed'),
+                 ('moved', 'Moved', 'Moved')],
+        name='', default='down')
     property1: EnumProperty(
-        items = [('Left', 'Left', 'Left'),
-                 ('Middle', 'Middle', 'Middle'),
-                 ('Right', 'Right', 'Right')],
-        name='', default='Left')
+        items = [('left', 'Left', 'Left'),
+                 ('middle', 'Middle', 'Middle'),
+                 ('right', 'Right', 'Right')],
+        name='', default='left')
 
     def init(self, context):
         super(MouseNode, self).init(context)

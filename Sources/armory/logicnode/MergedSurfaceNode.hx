@@ -14,13 +14,13 @@ class MergedSurfaceNode extends LogicNode {
 		var surface = iron.system.Input.getSurface();
 		var b = false;
 		switch (property0) {
-		case "Started":
+		case "started":
 			b = surface.started();
-		case "Down":
+		case "down":
 			b = surface.down();
-		case "Released":
+		case "released":
 			b = surface.released();
-		case "Moved":
+		case "moved":
 			b = surface.moved;
 		}
 		if (b) runOutput(0);
@@ -29,13 +29,13 @@ class MergedSurfaceNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var surface = iron.system.Input.getSurface();
 		switch (property0) {
-		case "Started":
+		case "started":
 			return surface.started();
-		case "Down":
+		case "down":
 			return surface.down();
-		case "Released":
+		case "released":
 			return surface.released();
-		case "Moved":
+		case "moved":
 			return surface.moved;
 		}
 		return false;

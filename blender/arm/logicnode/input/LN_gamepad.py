@@ -16,12 +16,12 @@ class GamepadNode(ArmLogicTreeNode):
     arm_section = 'gamepad'
 
     property0: EnumProperty(
-        items = [('Started', 'Started', 'Started'),
-                 ('Down', 'Down', 'Down'),
-                 ('Released', 'Released', 'Released')],
+        items = [('started', 'Started', 'The gamepad button starts to be pressed'),
+                 ('down', 'Down', 'The gamepad button is pressed'),
+                 ('released', 'Released', 'The gamepad button stops being pressed')],
                  # ('Moved Left', 'Moved Left', 'Moved Left'),
                  # ('Moved Right', 'Moved Right', 'Moved Right'),],
-        name='', default='Down')
+        name='', default='down')
 
     property1: EnumProperty(
         items = [('cross', 'cross / a', 'cross / a'),

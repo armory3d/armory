@@ -20,19 +20,19 @@ class SetVisibleNode extends LogicNode {
 		var objectChildren: Array<Object> = object.children;
 
 		switch (property0) {
-		case "Object":
+		case "object":
 			object.visible = visible;
 			if (children == true) for (child in objectChildren) {
         	child.visible = visible;
         	}
 
-		case "Mesh":
+		case "mesh":
 			object.visibleMesh = visible;
 			if (children == true) for (child in objectChildren) {
 			child.visibleMesh = visible;
 			}
 
-		case "Shadow":
+		case "shadow":
 			object.visibleShadow = visible;
 			if (children == true) for (child in objectChildren) {
 			child.visibleShadow = visible;

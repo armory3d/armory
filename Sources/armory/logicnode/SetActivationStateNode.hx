@@ -25,13 +25,13 @@ class SetActivationStateNode extends LogicNode {
 		var rigidBody = object.getTrait(RigidBody);
 
 		switch (property0) {
-		case "Inactive":
+		case "inactive":
 			state = 0; // Inactive Tag
-		case "Active":
+		case "active":
 			state = 1; // Active Tag
-		case "Always Active":
+		case "always active":
 			state = 4 ; // Disable Deactivation
-		case "Always Inactive":
+		case "always inactive":
 			state = 5; // Disable Simulation
 		}
 		rigidBody.setActivationState(state);

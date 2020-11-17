@@ -16,11 +16,11 @@ class MergedVirtualButtonNode extends LogicNode {
 		if (vb == null) return;
 		var b = false;
 		switch (property0) {
-		case "Started":
+		case "started":
 			b = vb.started;
-		case "Down":
+		case "down":
 			b = vb.down;
-		case "Released":
+		case "released":
 			b = vb.released;
 		}
 		if (b) runOutput(0);
@@ -30,11 +30,11 @@ class MergedVirtualButtonNode extends LogicNode {
 		var vb = iron.system.Input.getVirtualButton(property1);
 		if (vb == null) return false;
 		switch (property0) {
-		case "Started":
+		case "started":
 			return vb.started;
-		case "Down":
+		case "down":
 			return vb.down;
-		case "Released":
+		case "released":
 			return vb.released;
 		}
 		return false;

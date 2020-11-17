@@ -15,13 +15,13 @@ class MergedMouseNode extends LogicNode {
 		var mouse = iron.system.Input.getMouse();
 		var b = false;
 		switch (property0) {
-		case "Started":
+		case "started":
 			b = mouse.started(property1);
-		case "Down":
+		case "down":
 			b = mouse.down(property1);
-		case "Released":
+		case "released":
 			b = mouse.released(property1);
-		case "Moved":
+		case "moved":
 			b = mouse.moved;
 		}
 		if (b) runOutput(0);
@@ -30,13 +30,13 @@ class MergedMouseNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var mouse = iron.system.Input.getMouse();
 		switch (property0) {
-		case "Started":
+		case "started":
 			return mouse.started(property1);
-		case "Down":
+		case "down":
 			return mouse.down(property1);
-		case "Released":
+		case "released":
 			return mouse.released(property1);
-		case "Moved":
+		case "moved":
 			return mouse.moved;
 		}
 		return false;
