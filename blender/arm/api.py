@@ -9,14 +9,14 @@ drivers: Dict[str, Dict] = dict()
 
 def add_driver(driver_name: str,
                make_rpass: Callable[[str], Optional[ShaderContext]], make_rpath: Callable[[], None],
-               draw_props: Callable[[UILayout], None], draw_mat_props: Callable[[UILayout, Material], None]) -> None:
+               draw_props: Optional[Callable[[UILayout], None]], draw_mat_props: Optional[Callable[[UILayout, Material], None]]) -> None:
     """Register a new driver. If there already exists a driver with the given name, nothing happens.
 
     @param driver_name Unique name for the new driver that will be displayed in the UI.
     @param make_rpass Function to create render passes. Takes the rpass name as a parameter and may return `None`.
     @param make_rpath Function to setup the render path.
-    @param draw_props Function to draw global driver properties inside the render path panel
-    @param draw_mat_props Function to draw per-material driver properties in the material tab.
+    @param draw_props Function to draw global driver properties inside the render path panel, may be `None`.
+    @param draw_mat_props Function to draw per-material driver properties in the material tab, may be `None`.
     """
     global drivers
 
