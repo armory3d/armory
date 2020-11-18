@@ -46,5 +46,6 @@ class GetRigidBodyDataNode extends LogicNode {
 		}
 #end
 
+		return null;
 	}
 }
