@@ -21,7 +21,7 @@ class SetActivationStateNode extends LogicNode {
 		var object: Object = inputs[1].get();
 		if (object == null) return;
 
-		#if arm_physics
+#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
 
 		switch (property0) {
@@ -36,7 +36,7 @@ class SetActivationStateNode extends LogicNode {
 		}
 		rigidBody.setActivationState(state);
 
-		#end
+#end
 
 		runOutput(0);
 	}

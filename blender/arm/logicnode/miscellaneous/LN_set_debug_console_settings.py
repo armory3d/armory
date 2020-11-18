@@ -7,10 +7,10 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('anchor left', 'Anchor Left', 'Anchor debug console in the top left'),
-                 ('anchor center', 'Anchor Center', 'Anchor debug console in the top center'),
-                 ('anchor right', 'Anchor Right', 'Anchor the debug console in the top right')],
-        name='', default='anchor right')
+        items = [('left', 'Anchor Left', 'Anchor debug console in the top left'),
+                 ('center', 'Anchor Center', 'Anchor debug console in the top center'),
+                 ('right', 'Anchor Right', 'Anchor the debug console in the top right')],
+        name='', default='right')
 
     def init(self, context):  
         super(SetDebugConsoleSettings, self).init(context) 

@@ -17,7 +17,7 @@ class OnContactNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('begin', 'Begin', 'The contact between the rigid bodies starts'),
+        items = [('begin', 'Begin', 'The contact between the rigid bodies begins'),
                  ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
                  ('end', 'End', 'The contact between the rigid bodies ends')],
         name='', default='begin')
