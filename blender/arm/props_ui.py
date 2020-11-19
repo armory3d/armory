@@ -425,13 +425,13 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED' }
+    bl_options = { 'HIDE_HEADER' }
     bl_parent_id = "ARM_PT_ArmoryExporterPanel"
 
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_exporterlist) > 0:
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             return item.arm_project_target == 'android-hl'
         else:
@@ -442,18 +442,16 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            layout.enabled = item.arm_project_target == 'android-hl'
-            # Options
-            row = layout.row()
-            row.prop(wrd, 'arm_winorient')
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_sdk_compile')
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_sdk_min')
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_sdk_target')
+        # Options
+        layout.label(text='Android Settings', icon='SETTINGS')
+        row = layout.row()
+        row.prop(wrd, 'arm_winorient')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_sdk_compile')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_sdk_min')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_sdk_target')
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_label = "Permissions"
@@ -468,24 +466,21 @@ class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            layout.enabled = item.arm_project_target == 'android-hl'
-            # Permission
-            row = layout.row()
-            rows = 2
-            if len(wrd.arm_exporter_android_permission_list) > 1:
-                rows = 4
-            row.template_list("ARM_UL_Exporter_AndroidPermissionList", "The_List", wrd, "arm_exporter_android_permission_list", wrd, "arm_exporter_android_permission_list_index", rows=rows)
-            col = row.column(align=True)
-            col.operator("arm_exporter_android_permission_list.new_item", icon='ADD', text="")
-            col.operator("arm_exporter_android_permission_list.delete_item", icon='REMOVE', text="")
-            row = layout.row()
+        # Permission
+        row = layout.row()
+        rows = 2
+        if len(wrd.arm_exporter_android_permission_list) > 1:
+            rows = 4
+        row.template_list("ARM_UL_Exporter_AndroidPermissionList", "The_List", wrd, "arm_exporter_android_permission_list", wrd, "arm_exporter_android_permission_list_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_exporter_android_permission_list.new_item", icon='ADD', text="")
+        col.operator("arm_exporter_android_permission_list.delete_item", icon='REMOVE', text="")
+        row = layout.row()
 
-            if wrd.arm_exporter_android_permission_list_index >= 0 and len(wrd.arm_exporter_android_permission_list) > 0:
-                item = wrd.arm_exporter_android_permission_list[wrd.arm_exporter_android_permission_list_index]
-                row = layout.row()
-                row.prop(item, 'arm_android_permissions')
+        if wrd.arm_exporter_android_permission_list_index >= 0 and len(wrd.arm_exporter_android_permission_list) > 0:
+            item = wrd.arm_exporter_android_permission_list[wrd.arm_exporter_android_permission_list_index]
+            row = layout.row()
+            row.prop(item, 'arm_android_permissions')
 
 class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
     bl_label = "Android ABI Filters"
@@ -500,24 +495,21 @@ class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            layout.enabled = item.arm_project_target == 'android-hl'
-            # ABIs
-            row = layout.row()
-            rows = 2
-            if len(wrd.arm_exporter_android_abi_list) > 1:
-                rows = 4
-            row.template_list("ARM_UL_Exporter_AndroidAbiList", "The_List", wrd, "arm_exporter_android_abi_list", wrd, "arm_exporter_android_abi_list_index", rows=rows)
-            col = row.column(align=True)
-            col.operator("arm_exporter_android_abi_list.new_item", icon='ADD', text="")
-            col.operator("arm_exporter_android_abi_list.delete_item", icon='REMOVE', text="")
-            row = layout.row()
+        # ABIs
+        row = layout.row()
+        rows = 2
+        if len(wrd.arm_exporter_android_abi_list) > 1:
+            rows = 4
+        row.template_list("ARM_UL_Exporter_AndroidAbiList", "The_List", wrd, "arm_exporter_android_abi_list", wrd, "arm_exporter_android_abi_list_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_exporter_android_abi_list.new_item", icon='ADD', text="")
+        col.operator("arm_exporter_android_abi_list.delete_item", icon='REMOVE', text="")
+        row = layout.row()
 
-            if wrd.arm_exporter_android_abi_list_index >= 0 and len(wrd.arm_exporter_android_abi_list) > 0:
-                item = wrd.arm_exporter_android_abi_list[wrd.arm_exporter_android_abi_list_index]
-                row = layout.row()
-                row.prop(item, 'arm_android_abi')
+        if wrd.arm_exporter_android_abi_list_index >= 0 and len(wrd.arm_exporter_android_abi_list) > 0:
+            item = wrd.arm_exporter_android_abi_list[wrd.arm_exporter_android_abi_list_index]
+            row = layout.row()
+            row.prop(item, 'arm_android_abi')
 
 class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
     bl_label = "Building APK"
@@ -532,43 +524,40 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            layout.enabled = item.arm_project_target == 'android-hl'
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_build_apk')
-            path = arm.utils.get_android_sdk_root_path()
-            row.enabled = len(path) > 0
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_rename_apk')
-            row.enabled = wrd.arm_project_android_build_apk
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_copy_apk')
-            row.enabled = (wrd.arm_project_android_build_apk) and (len(arm.utils.get_android_apk_copy_path()) > 0)
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_list_avd')
-            col = row.column(align=True)
-            col.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
-            col.enabled = len(path) > 0
-            col = row.column(align=True)
-            col.operator('arm.run_android_emulator', text='', icon='PLAY')
-            col.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
-            row = layout.row()
-            row.prop(wrd, 'arm_project_android_run_avd')
-            row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_build_apk')
+        path = arm.utils.get_android_sdk_root_path()
+        row.enabled = len(path) > 0
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_rename_apk')
+        row.enabled = wrd.arm_project_android_build_apk
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_copy_apk')
+        row.enabled = (wrd.arm_project_android_build_apk) and (len(arm.utils.get_android_apk_copy_path()) > 0)
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_list_avd')
+        col = row.column(align=True)
+        col.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
+        col.enabled = len(path) > 0
+        col = row.column(align=True)
+        col.operator('arm.run_android_emulator', text='', icon='PLAY')
+        col.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
+        row = layout.row()
+        row.prop(wrd, 'arm_project_android_run_avd')
+        row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
 
 class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
     bl_label = "HTML5 Settings"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED' }
+    bl_options = { 'HIDE_HEADER' }
     bl_parent_id = "ARM_PT_ArmoryExporterPanel"
 
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_exporterlist) > 0:
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             return item.arm_project_target == 'html5'
         else:
@@ -579,16 +568,14 @@ class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            layout.enabled = item.arm_project_target == 'html5'
-            # Options
-            row = layout.row()
-            row.prop(wrd, 'arm_project_html5_copy')
-            row.enabled = len(arm.utils.get_html5_copy_path()) > 0
-            row = layout.row()
-            row.prop(wrd, 'arm_project_html5_start_browser')
-            row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
+        # Options
+        layout.label(text='HTML5 Settings', icon='SETTINGS')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_html5_copy')
+        row.enabled = len(arm.utils.get_html5_copy_path()) > 0
+        row = layout.row()
+        row.prop(wrd, 'arm_project_html5_start_browser')
+        row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -2200,10 +2187,11 @@ class ArmoryUpdateListAndroidEmulatorButton(bpy.types.Operator):
         if len(err) > 0:
             print('Update List Emulators Warning: File "'+ arm.utils.get_android_emulator_file() +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
             return{'FINISHED'}
-        items_enum = []
-        for i in items:
-            items_enum.append((i, i, i))
-        bpy.types.World.arm_project_android_list_avd = EnumProperty(items=items_enum, name="Emulator", update=assets.invalidate_compiler_cache)
+        if len(items) > 0:
+            items_enum = []
+            for i in items:
+                items_enum.append((i, i, i))
+            bpy.types.World.arm_project_android_list_avd = EnumProperty(items=items_enum, name="Emulator", update=assets.invalidate_compiler_cache)
         return{'FINISHED'}
 
 class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):

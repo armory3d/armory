@@ -76,6 +76,21 @@ def set_project_bundle(self, value):
 def get_project_bundle(self):
     return self.get('arm_project_bundle', 'org.armory3d')
 
+def get_android_build_apk(self):
+    if len(arm.utils.get_android_sdk_root_path()) > 0:
+        return self.get('arm_project_android_build_apk', False)
+    else:
+        set_android_build_apk(self, False)
+        return False
+
+def set_android_build_apk(self, value):
+    self['arm_project_android_build_apk'] = value
+    if not value:
+        wrd = bpy.data.worlds['Arm']
+        wrd.arm_project_android_rename_apk = False
+        wrd.arm_project_android_copy_apk = False
+        wrd.arm_project_android_run_avd = False
+
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
@@ -89,7 +104,7 @@ def init_properties():
     bpy.types.World.arm_project_android_sdk_compile = IntProperty(name="Compile Version SDK", description="Compile Android SDK Version", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=14, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_project_android_build_apk = BoolProperty(name="Building APK After Publishing", description="Starting APK build after publishing", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_android_build_apk = BoolProperty(name="Building APK After Publishing", description="Starting APK build after publishing", default=False, update=assets.invalidate_compiler_cache, get=get_android_build_apk, set=set_android_build_apk)
     bpy.types.World.arm_project_android_rename_apk = BoolProperty(name="Rename APK To Project Name", description="Rename APK file to project name + version after build", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_copy_apk = BoolProperty(name="Copy APK To Specified Folder", description="Copy the APK file to the folder specified in the settings after build", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_run_avd = BoolProperty(name="Run Emulator After Building APK", description="Starting android emulator after APK build", default=False, update=assets.invalidate_compiler_cache)
