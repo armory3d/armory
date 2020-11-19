@@ -8,7 +8,7 @@ class VectorFromBooleanNode extends LogicNode {
 		super(tree);
 	}
 
-	override function get(from: Int): Bool {
+	override function get(from: Int): Dynamic {
 
 		var boolX = inputs[0].get();
 		var boolNegX = inputs[1].get();
