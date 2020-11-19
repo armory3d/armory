@@ -4,7 +4,7 @@ class IsNotNoneNode(ArmLogicTreeNode):
     """Passes through its activation only if the plugged-in value is
     not `null`.
 
-    @seeNode Is None"""
+    @seeNode Is Null"""
     bl_idname = 'LNIsNotNoneNode'
     bl_label = 'Is Not Null'
     arm_version = 1
