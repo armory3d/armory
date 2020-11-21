@@ -267,7 +267,7 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         mat = bpy.context.material
-        if mat == None:
+        if mat is None:
             return
 
         layout.prop(mat, 'arm_cast_shadow')
@@ -293,6 +293,40 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_billboard')
 
         layout.operator("arm.invalidate_material_cache")
+
+
+class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
+    """Per-material properties for custom render path drivers"""
+    bl_label = "Armory Driver Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_rplist_index < 0 or len(wrd.arm_rplist) == 0:
+            return False
+
+        if len(arm.api.drivers) == 0:
+            return False
+
+        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+        return rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_mat_props'] is not None
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        wrd = bpy.data.worlds['Arm']
+        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+        arm.api.drivers[rpdat.rp_driver]['draw_mat_props'](layout, context.material)
+
 
 class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_label = "Blending"
@@ -2224,6 +2258,7 @@ def register():
     bpy.utils.register_class(InvalidateMaterialCacheButton)
     bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
@@ -2296,8 +2331,9 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
-    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
