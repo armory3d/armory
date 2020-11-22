@@ -1618,7 +1618,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
-            row = layout.row(align=True)         
+            row = layout.row(align=True)
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -2215,7 +2215,7 @@ class ArmoryUpdateListAndroidEmulatorButton(bpy.types.Operator):
 
         if len(arm.utils.get_android_sdk_root_path()) == 0:
             return {"CANCELLED"}
-        
+
         os.environ['ANDROID_SDK_ROOT'] = arm.utils.get_android_sdk_root_path()
         items, err = arm.utils.get_android_emulators_list()
         if len(err) > 0:
@@ -2242,9 +2242,33 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
 
         if len(arm.utils.get_android_sdk_root_path()) == 0:
             return {"CANCELLED"}
-        
+
         make.run_android_emulators(arm.utils.get_android_emulator_name())
         return{'FINISHED'}
+
+
+def draw_custom_node_menu(self, context):
+    """Extension of the node context menu.
+
+    https://blender.stackexchange.com/questions/150101/python-how-to-add-items-in-context-menu-in-2-8
+    """
+    if context.selected_nodes is None or len(context.selected_nodes) != 1:
+        return
+
+    if context.space_data.tree_type == 'ArmLogicTreeType':
+        if context.selected_nodes[0].bl_idname.startswith('LN'):
+            layout = self.layout
+            layout.separator()
+            layout.operator("arm.open_node_documentation", text="Show documentation for this node")
+            layout.operator("arm.open_node_source", text="Open .hx source in the browser")
+            layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
+
+    elif context.space_data.tree_type == 'ShaderNodeTree':
+        if context.active_node.bl_idname in ('ShaderNodeRGB', 'ShaderNodeValue', 'ShaderNodeTexImage'):
+            layout = self.layout
+            layout.separator()
+            layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
+
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
@@ -2310,12 +2334,14 @@ def register():
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
+    bpy.types.NODE_MT_context_menu.append(draw_custom_node_menu)
 
 
 def unregister():
+    bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
-    
+
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)

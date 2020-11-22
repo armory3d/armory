@@ -493,19 +493,6 @@ class ReplaceNodesOperator(bpy.types.Operator):
         return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
 
-
-# https://blender.stackexchange.com/questions/150101/python-how-to-add-items-in-context-menu-in-2-8
-def draw_custom_logicnode_menu(self, context):
-    if context.space_data.tree_type == 'ArmLogicTreeType' \
-        and context.selected_nodes is not None:
-        if len(context.selected_nodes) == 1:
-            if context.selected_nodes[0].bl_idname.startswith('LN'):
-                layout = self.layout
-                layout.separator()
-                layout.operator("arm.open_node_documentation", text="Show documentation for this node")
-                layout.operator("arm.open_node_source", text="Open .hx source in the browser")
-                layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
-
 def register():
     arm.logicnode.arm_sockets.register()
 
@@ -522,8 +509,6 @@ def register():
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
-
-    bpy.types.NODE_MT_context_menu.append(draw_custom_logicnode_menu)
 
     arm.logicnode.init_categories()
     register_nodes()
@@ -547,7 +532,5 @@ def unregister():
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
-
-    bpy.types.NODE_MT_context_menu.remove(draw_custom_logicnode_menu)
 
     arm.logicnode.arm_sockets.unregister()
