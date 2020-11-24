@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import *
 import re
+import multiprocessing
 
 import arm.assets as assets
 import arm.make
@@ -91,6 +92,33 @@ def set_android_build_apk(self, value):
         wrd.arm_project_android_copy_apk = False
         wrd.arm_project_android_run_avd = False
 
+def get_win_build_arch(self):
+    if self.get('arm_project_win_build_arch', -1) == -1:
+        if arm.utils.get_os_is_windows_64():
+            return 0
+        else:
+            return 1
+    else:
+        return self.get('arm_project_win_build_arch', 'x64') 
+
+def set_win_build_arch(self, value):
+    self['arm_project_win_build_arch'] = value
+
+def set_win_build(self, value):
+    if arm.utils.get_os_is_windows():
+        self['arm_project_win_build'] = value
+    else:
+        self['arm_project_win_build'] = 0
+    if (self['arm_project_win_build'] == 0) or (self['arm_project_win_build'] == 1):
+        wrd = bpy.data.worlds['Arm']
+        wrd.arm_project_win_build_open = False
+
+def get_win_build(self):
+    if arm.utils.get_os_is_windows():
+        return self.get('arm_project_win_build', 0)
+    else:
+        return 0
+
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
@@ -101,6 +129,7 @@ def init_properties():
     bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0.0", update=assets.invalidate_compiler_cache, set=set_version, get=get_version)
     bpy.types.World.arm_project_version_autoinc = BoolProperty(name="Auto-increment Build Number", description="Auto-increment build number", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="org.armory3d", update=assets.invalidate_compiler_cache, set=set_project_bundle, get=get_project_bundle)
+    # Android Settings
     bpy.types.World.arm_project_android_sdk_compile = IntProperty(name="Compile Version SDK", description="Compile Android SDK Version", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=14, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=29, min=26, max=30, update=assets.invalidate_compiler_cache)
@@ -111,8 +140,45 @@ def init_properties():
     bpy.types.World.arm_project_android_list_avd = EnumProperty(
         items=[(' ', ' ', ' ')],
         name="Emulator", update=assets.invalidate_compiler_cache)
+    # HTML5 Settings
     bpy.types.World.arm_project_html5_copy = BoolProperty(name="Copy Files To Specified Folder", description="Copy files to the folder specified in the settings after publish", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_copy, get=get_project_html5_copy)
     bpy.types.World.arm_project_html5_start_browser = BoolProperty(name="Run Browser After Copy", description="Run browser after copy", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_start_browser, get=get_project_html5_start_browser)
+    # Windows Settings
+    bpy.types.World.arm_project_win_list_vs = EnumProperty(
+        items=[('10', '2010', 'Visual Studio 2010 (version 10)'),
+               ('11', '2012', 'Visual Studio 2012 (version 11)'),
+               ('12', '2013', 'Visual Studio 2013 (version 12)'),
+               ('14', '2015', 'Visual Studio 2015 (version 14)'),
+               ('15', '2017', 'Visual Studio 2017 (version 15)'),
+               ('16', '2019', 'Visual Studio 2019 (version 16)')],
+        name="Visual Studio Version", default='16', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_win_build = EnumProperty(
+        items=[('0', 'Nothing', 'Nothing'),
+               ('1', 'Open in Visual Studio', 'Open in Visual Studio'),
+               ('2', 'Compile', 'Compile application'),
+               ('3', 'Compile and Run', 'Compile and run application')],
+        name="Action After Publishing", update=assets.invalidate_compiler_cache,
+        set=set_win_build, get=get_win_build)
+    bpy.types.World.arm_project_win_build_mode = EnumProperty(
+        items=[('Debug', 'Debug', 'Debug'),
+               ('Release', 'Release', 'Release')],
+        name="Mode", default='Debug', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_win_build_arch = EnumProperty(
+        items=[('x64', 'x64', 'x64'),
+               ('x86', 'x86', 'x86')],
+        name="Architecture", update=assets.invalidate_compiler_cache,
+        set=set_win_build_arch, get=get_win_build_arch)
+    bpy.types.World.arm_project_win_build_log = EnumProperty(
+        items=[('Summary', 'Summary', 'Show the error and warning summary at the end'),
+               ('NoSummary', 'No Summary', 'Don\'t show the error and warning summary at the end'),
+               ('WarningsAndErrorsOnly', 'Warnings and Errors Only', 'Show only warnings and errors'),
+               ('WarningsOnly', 'Warnings Only', 'Show only warnings'),
+               ('ErrorsOnly', 'Errors Only', 'Show only errors')],
+        name="Compile Log Parameter", update=assets.invalidate_compiler_cache,
+        default="Summary")    
+    bpy.types.World.arm_project_win_build_cpu = IntProperty(name="Count CPU", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
+    bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
+
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(

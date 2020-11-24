@@ -611,6 +611,55 @@ class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
         row.prop(wrd, 'arm_project_html5_start_browser')
         row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
 
+class ARM_PT_ArmoryExporterWindowsSettingsPanel(bpy.types.Panel):
+    bl_label = "Windows Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'HIDE_HEADER' }
+    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target == 'windows-hl'
+        else:
+            return False
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        # Options
+        layout.label(text='Windows Settings', icon='SETTINGS')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_list_vs')
+        col = row.column(align=True)
+        col.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+        col.enabled = arm.utils.get_os_is_windows()
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build')
+        row.enabled = arm.utils.get_os_is_windows()
+        is_enable = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_mode')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_arch')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_log')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_cpu')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_open')
+        row.enabled = is_enable
+
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
     bl_space_type = "PROPERTIES"
@@ -2246,6 +2295,44 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
         make.run_android_emulators(arm.utils.get_android_emulator_name())
         return{'FINISHED'}
 
+class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
+    '''Updating the list installed Visual Studio for the Windows platform'''
+    bl_idname = 'arm.update_list_installed_vs'
+    bl_label = 'Update List Installed Visual Studio'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+        if not arm.utils.get_os_is_windows():
+            return {"CANCELLED"}
+         
+        wrd = bpy.data.worlds['Arm']
+        items, err = arm.utils.get_list_installed_vs_version()
+        if len(err) > 0:
+            print('Warning for operation Update List Installed Visual Studio: '+ err +'. Check if ArmorySDK is installed correctly.')
+            return{'FINISHED'}
+        if len(items) > 0:
+            items_enum = [('10', '2010', 'Visual Studio 2010 (version 10)'),
+                          ('11', '2012', 'Visual Studio 2012 (version 11)'),
+                          ('12', '2013', 'Visual Studio 2013 (version 12)'),
+                          ('14', '2015', 'Visual Studio 2015 (version 14)'),
+                          ('15', '2017', 'Visual Studio 2017 (version 15)'),
+                          ('16', '2019', 'Visual Studio 2019 (version 16)')]
+            prev_select = wrd.arm_project_win_list_vs
+            res_items_enum = []
+            for vs in items_enum:
+                l_vs = list(vs)    
+                for ver in items:
+                    if l_vs[0] == ver[0]:
+                        l_vs[1] = l_vs[1] + ' (installed)'
+                        l_vs[2] = l_vs[2] + ' (installed)'
+                        break
+                res_items_enum.append((l_vs[0], l_vs[1], l_vs[2]))
+            bpy.types.World.arm_project_win_list_vs = EnumProperty(items=res_items_enum, name="Visual Studio Version", default=prev_select, update=assets.invalidate_compiler_cache)
+        return{'FINISHED'}
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
@@ -2290,6 +2377,7 @@ def register():
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
@@ -2331,6 +2419,7 @@ def register():
     bpy.utils.register_class(ARM_OT_DiscardPopup)
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
+    bpy.utils.register_class(ArmoryUpdateListInstalledVSButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
@@ -2342,6 +2431,7 @@ def unregister():
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
 
+    bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
@@ -2361,6 +2451,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
