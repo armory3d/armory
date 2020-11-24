@@ -17,15 +17,16 @@ class OnContactNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Begin', 'Begin', 'Begin'),
-                 ('End', 'End', 'End'),
-                 ('Overlap', 'Overlap', 'Overlap')],
-        name='', default='Begin')
+        items = [('begin', 'Begin', 'The contact between the rigid bodies begins'),
+                 ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
+                 ('end', 'End', 'The contact between the rigid bodies ends')],
+        name='', default='begin')
 
     def init(self, context):
         super(OnContactNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB 1')
         self.add_input('ArmNodeSocketObject', 'RB 2')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

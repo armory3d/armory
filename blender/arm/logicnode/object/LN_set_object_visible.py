@@ -10,18 +10,19 @@ class SetVisibleNode(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Object', 'Object', 'Object'),
-                 ('Mesh', 'Mesh', 'Mesh'),
-                 ('Shadow', 'Shadow', 'Shadow'),
+        items = [('object', 'Object', 'All object componenets visibility'),
+                 ('mesh', 'Mesh', 'Mesh visibility only'),
+                 ('shadow', 'Shadow', 'Shadow visibility only'),
                  ],
-        name='', default='Object')
+        name='', default='object')
 
     def init(self, context):
         super(SetVisibleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketBool', 'Visible')
-        self.add_input('NodeSocketBool', 'Children')
+        self.add_input('NodeSocketBool', 'Children', default_value=True)
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

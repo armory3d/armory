@@ -11,4 +11,5 @@ class ArrayShiftNode(ArmLogicTreeNode):
     def init(self, context):
         super(ArrayShiftNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
+
         self.add_output('NodeSocketShader', 'Value')

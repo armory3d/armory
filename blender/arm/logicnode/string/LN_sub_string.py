@@ -11,4 +11,5 @@ class SubStringNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'String In')
         self.add_input('NodeSocketInt', 'Start')
         self.add_input('NodeSocketInt', 'End')
+
         self.add_output('NodeSocketString', 'String Out')

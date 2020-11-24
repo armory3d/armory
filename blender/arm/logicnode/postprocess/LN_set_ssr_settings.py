@@ -14,4 +14,5 @@ class SSRSetNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'SSR Search', default_value=5.0)
         self.add_input('NodeSocketFloat', 'SSR Falloff', default_value=5.0)
         self.add_input('NodeSocketFloat', 'SSR Jitter', default_value=0.6)
+
         self.add_output('ArmNodeSocketAction', 'Out')

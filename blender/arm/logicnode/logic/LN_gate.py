@@ -42,6 +42,7 @@ class GateNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Input 1')
         self.add_input('NodeSocketShader', 'Input 2')
+
         self.add_output('ArmNodeSocketAction', 'True')
         self.add_output('ArmNodeSocketAction', 'False')
 

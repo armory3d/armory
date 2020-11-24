@@ -11,4 +11,5 @@ class CanvasSetSliderNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketFloat', 'Float')
+
         self.add_output('ArmNodeSocketAction', 'Out')

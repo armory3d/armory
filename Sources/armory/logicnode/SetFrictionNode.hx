@@ -11,14 +11,16 @@ class SetFrictionNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
+
 		if (object == null) return;
 
-		var friction: Float = inputs[2].get();
+		var friction = inputs[2].get();
 
-		#if arm_physics
+#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
+
 		rigidBody.setFriction(friction);
-		#end
+#end
 
 		runOutput(0);
 	}

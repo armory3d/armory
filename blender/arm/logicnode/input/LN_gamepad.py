@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class GamepadNode(ArmLogicTreeNode):
-    """Activates the output when there is a gamepad event.
+    """Activates the output on the given gamepad event.
 
     @seeNode Gamepad Coords
 
@@ -16,12 +16,12 @@ class GamepadNode(ArmLogicTreeNode):
     arm_section = 'gamepad'
 
     property0: EnumProperty(
-        items = [('Down', 'Down', 'Down'),
-                 ('Started', 'Started', 'Started'),
-                 ('Released', 'Released', 'Released')],
+        items = [('started', 'Started', 'The gamepad button starts to be pressed'),
+                 ('down', 'Down', 'The gamepad button is pressed'),
+                 ('released', 'Released', 'The gamepad button stops being pressed')],
                  # ('Moved Left', 'Moved Left', 'Moved Left'),
                  # ('Moved Right', 'Moved Right', 'Moved Right'),],
-        name='', default='Started')
+        name='', default='down')
 
     property1: EnumProperty(
         items = [('cross', 'cross / a', 'cross / a'),
@@ -48,6 +48,7 @@ class GamepadNode(ArmLogicTreeNode):
         super(GamepadNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketBool', 'State')
+
         self.add_input('NodeSocketInt', 'Gamepad')
 
     def draw_buttons(self, context, layout):

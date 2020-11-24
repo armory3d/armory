@@ -7,10 +7,10 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Left', 'Left', 'Left'),
-                 ('Center', 'Center', 'Center'),
-                 ('Right', 'Right', 'Right')],
-        name='', default='Right')
+        items = [('left', 'Anchor Left', 'Anchor debug console in the top left'),
+                 ('center', 'Anchor Center', 'Anchor debug console in the top center'),
+                 ('right', 'Anchor Right', 'Anchor the debug console in the top right')],
+        name='', default='right')
 
     def init(self, context):  
         super(SetDebugConsoleSettings, self).init(context) 
@@ -18,6 +18,7 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Visible')  
         self.add_input('NodeSocketFloat', 'Scale')  
         self.inputs[-1].default_value = 1.0
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

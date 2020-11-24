@@ -22,6 +22,7 @@ class ArrayAddNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Modify Original', default_value=True)
         self.add_input('NodeSocketBool', 'Unique Values')
         self.add_input('NodeSocketShader', 'Value')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketArray', 'Array')
 

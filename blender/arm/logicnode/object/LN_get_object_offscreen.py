@@ -10,6 +10,7 @@ class GetObjectOffscreenNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetObjectOffscreenNode, self).init(context)
         self.inputs.new('ArmNodeSocketObject', 'Object')
+
         self.outputs.new('NodeSocketBool', 'Is Object Offscreen')
         self.outputs.new('NodeSocketBool', 'Is Mesh Offscreen')
         self.outputs.new('NodeSocketBool', 'Is Shadow Offscreen')

@@ -13,5 +13,6 @@ class GetPropertyNode(ArmLogicTreeNode):
         super(GetPropertyNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketString', 'Property')
+
         self.add_output('NodeSocketShader', 'Value')
         self.add_output('NodeSocketString', 'Property')

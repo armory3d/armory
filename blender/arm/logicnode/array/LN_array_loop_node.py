@@ -11,6 +11,7 @@ class ArrayLoopNode(ArmLogicTreeNode):
         super(ArrayLoopNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
+
         self.add_output('ArmNodeSocketAction', 'Loop')
         self.add_output('NodeSocketShader', 'Value')
         self.add_output('NodeSocketInt', 'Index')

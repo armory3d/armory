@@ -10,4 +10,5 @@ class RadToDegNode(ArmLogicTreeNode):
     def init(self, context):
         super(RadToDegNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Radians')
+
         self.add_output('NodeSocketFloat', 'Degrees')

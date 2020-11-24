@@ -9,4 +9,5 @@ class ShutdownNode(ArmLogicTreeNode):
     def init(self, context):
         super(ShutdownNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
+
         self.add_output('ArmNodeSocketAction', 'Out')

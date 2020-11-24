@@ -13,4 +13,5 @@ class SetGravityNode(ArmLogicTreeNode):
         super(SetGravityNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketVector', 'Gravity')
+
         self.add_output('ArmNodeSocketAction', 'Out')

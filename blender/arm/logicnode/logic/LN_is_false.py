@@ -14,4 +14,5 @@ class IsFalseNode(ArmLogicTreeNode):
         super(IsFalseNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'Bool')
+
         self.add_output('ArmNodeSocketAction', 'Out')

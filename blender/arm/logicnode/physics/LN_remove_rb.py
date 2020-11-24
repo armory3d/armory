@@ -1,6 +1,3 @@
-import bpy
-from bpy.props import *
-from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class RemovePhysicsNode (ArmLogicTreeNode):
@@ -13,4 +10,5 @@ class RemovePhysicsNode (ArmLogicTreeNode):
         super(RemovePhysicsNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
+
         self.outputs.new('ArmNodeSocketAction', 'Out')

@@ -19,25 +19,33 @@ class GetRigidBodyDataNode extends LogicNode {
 
 		return switch (from) {
 			case 0:
-			if (rb == null) return false;
-			return true;
-
-			case 1: rb.group;
-			case 2: rb.mask;
-			case 3: rb.animated;
-			case 4: rb.staticObj;
-			case 5: rb.angularDamping;
-			case 6: rb.linearDamping;
-			case 7: rb.friction;
-			case 8: rb.mass;
+				rb == null ? return false : return true;
+			case 1:
+				rb.group;
+			case 2:
+				rb.mask;
+			case 3:
+				rb.animated;
+			case 4:
+				rb.staticObj;
+			case 5:
+				rb.angularDamping;
+			case 6:
+				rb.linearDamping;
+			case 7:
+				rb.friction;
+			case 8:
+				rb.mass;
 			//case 9: ; // collision shape
 			//case 10: ; // activation state
 			//case 11: ; // is gravity enabled
 			//case 12: ; // angular factor
 			//case 13: ; // linear factor
-			default: null;
+			default: 
+				null;
 		}
-		#end
+#end
 
+		return null;
 	}
 }

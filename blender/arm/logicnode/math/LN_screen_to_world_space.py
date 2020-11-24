@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     """Transforms the given screen coordinates into world coordinates."""
     bl_idname = 'LNScreenToWorldSpaceNode'
-    bl_label = 'Screen To World Space'
+    bl_label = 'Screen to World Space'
     node_index: StringProperty(name='Node Index', default='')
     arm_section = 'matrix'
     arm_version = 1
@@ -21,6 +21,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
         super(ScreenToWorldSpaceNode, self).init(context)
         self.add_input('NodeSocketInt', 'Screen X')
         self.add_input('NodeSocketInt', 'Screen Y')
+
         self.add_output('NodeSocketVector', 'World')
         self.add_output('NodeSocketVector', 'Direction')
 

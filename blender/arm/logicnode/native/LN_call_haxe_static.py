@@ -14,5 +14,6 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         super(CallHaxeStaticNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketString', 'Function')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('NodeSocketShader', 'Result')

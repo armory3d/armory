@@ -9,4 +9,5 @@ class AnimActionNode(ArmLogicTreeNode):
     def init(self, context):
         super(AnimActionNode, self).init(context)
         self.add_input('ArmNodeSocketAnimAction', 'Action')
+
         self.add_output('ArmNodeSocketAnimAction', 'Action', is_var=True)

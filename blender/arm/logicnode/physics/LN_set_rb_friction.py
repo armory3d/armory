@@ -1,6 +1,3 @@
-import bpy
-from bpy.props import *
-from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 class SetFrictionNode (ArmLogicTreeNode):
@@ -15,4 +12,5 @@ class SetFrictionNode (ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
         self.inputs.new('NodeSocketFloat', 'Friction')
+
         self.outputs.new('ArmNodeSocketAction', 'Out')

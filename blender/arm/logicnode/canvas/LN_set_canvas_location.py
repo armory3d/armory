@@ -12,4 +12,5 @@ class CanvasSetLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketString', 'Element')
         self.add_input('NodeSocketFloat', 'X')
         self.add_input('NodeSocketFloat', 'Y')
+
         self.add_output('ArmNodeSocketAction', 'Out')

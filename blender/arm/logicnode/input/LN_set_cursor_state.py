@@ -6,24 +6,26 @@ class SetCursorStateNode(ArmLogicTreeNode):
     @seeNode Get Cursor State
 
     @option Hide Locked: hide and lock or unhide and unlock the mouse cursor.
-    @output Hide: hide/unhide the mouse cursor.
-    @output Lock: lock/unlock the mouse cursor."""
+    @option Hide: hide/unhide the mouse cursor.
+    @option Lock: lock/unlock the mouse cursor.
+    """
     bl_idname = 'LNSetCursorStateNode'
     bl_label = 'Set Cursor State'
     arm_section = 'mouse'
     arm_version = 1
 
     property0: EnumProperty(
-        items = [('Hide Locked', 'Hide Locked', 'Hide Locked'),
-                 ('Hide', 'Hide', 'Hide'),
-                 ('Lock', 'Lock', 'Lock'),
+        items = [('hide locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
+                 ('hide', 'Hide', 'The mouse cursor is hidden'),
+                 ('lock', 'Lock', 'The mouse cursor is locked'),
                  ],
-        name='', default='Hide Locked')
+        name='', default='hide locked')
 
     def init(self, context):
         super(SetCursorStateNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'State')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

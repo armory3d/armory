@@ -13,4 +13,5 @@ class GetDistanceNode(ArmLogicTreeNode):
         super(GetDistanceNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketObject', 'Object')
+
         self.add_output('NodeSocketFloat', 'Distance')

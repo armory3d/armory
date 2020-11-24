@@ -11,19 +11,20 @@ class OnCanvasElementNode(ArmLogicTreeNode):
                ('hover', 'Hover', 'Listen to mouse hover')],
         name='Listen to', default='click')
     property1: EnumProperty(
-        items=[('down', 'Down', 'Down'),
-               ('started', 'Started', 'Started'),
+        items=[('started', 'Started', 'Started'),
+               ('down', 'Down', 'Down'),
                ('released', 'Released', 'Released')],
-        name='Status', default='down')
+        name='Status', default='started')
     property2: EnumProperty(
-        items=[('left', 'Left', 'Left Button'),
-               ('right', 'Right', 'Right Button'),
-               ('middle', 'Middle', 'Middle Button')],
+        items=[('left', 'Left', 'Left mouse button'),
+               ('middle', 'Middle', 'Middle mouse button'),
+               ('right', 'Right', 'Right mouse button')],
         name='Mouse Button', default='left')
 
     def init(self, context):
         super(OnCanvasElementNode, self).init(context)
         self.add_input('NodeSocketString', 'Element')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

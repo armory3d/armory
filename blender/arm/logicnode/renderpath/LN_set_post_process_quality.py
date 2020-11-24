@@ -18,6 +18,7 @@ class RpConfigNode(ArmLogicTreeNode):
         super(RpConfigNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketBool', 'Enable')
+
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

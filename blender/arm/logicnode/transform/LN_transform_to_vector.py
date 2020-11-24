@@ -3,12 +3,13 @@ from arm.logicnode.arm_nodes import *
 class VectorFromTransformNode(ArmLogicTreeNode):
     """Returns vector from the given transform."""
     bl_idname = 'LNVectorFromTransformNode'
-    bl_label = 'Vector From Transform'
+    bl_label = 'Transform to Vector'
     arm_version = 1
 
     def init(self, context):
         super(VectorFromTransformNode, self).init(context)
         self.add_input('NodeSocketShader', 'Transform')
+
         self.add_output('NodeSocketVector', 'Vector')
         self.add_output('NodeSocketVector', 'Quaternion XYZ')
         self.add_output('NodeSocketFloat', 'Quaternion W')
@@ -31,9 +32,9 @@ class VectorFromTransformNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
 
     property0: EnumProperty(
-        items = [('Up', 'Up', 'Up'),
-                 ('Right', 'Right', 'Right'),
-                 ('Look', 'Look', 'Look'),
+        items = [('Right', 'Right', 'The transform right (X) direction'),
+                 ('Look', 'Look', 'The transform look (Y) direction'),
+                 ('Up', 'Up', 'The transform up (Z) direction'),
                  ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Look',
         update=on_property_update)

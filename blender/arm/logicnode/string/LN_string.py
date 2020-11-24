@@ -9,4 +9,5 @@ class StringNode(ArmLogicTreeNode):
     def init(self, context):
         super(StringNode, self).init(context)
         self.add_input('NodeSocketString', 'String In')
+
         self.add_output('NodeSocketString', 'String Out', is_var=True)

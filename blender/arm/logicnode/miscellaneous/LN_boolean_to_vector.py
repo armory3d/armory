@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class VectorFromBooleanNode(ArmLogicTreeNode):
     """Returns a vector depending on the respective boolean state."""
     bl_idname = 'LNVectorFromBooleanNode'
-    bl_label = 'Vector From Boolean'
+    bl_label = 'Boolean to Vector'
     arm_version = 1
 
     def init(self, context):

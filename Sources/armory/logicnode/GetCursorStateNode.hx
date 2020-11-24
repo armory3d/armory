@@ -13,12 +13,13 @@ class GetCursorStateNode extends LogicNode {
 
 		return switch (from) {
 			case 0:
-			if (mouse.hidden == true && mouse.locked == true) return true;
-			return false;
-
-			case 1: mouse.hidden;
-			case 2: mouse.locked;
-    			default: null;
+				mouse.hidden && mouse.locked ? return true : return false;
+			case 1:
+				mouse.hidden;
+			case 2:
+				mouse.locked;
+    			default: 
+				null;
 		}
 	}
 }

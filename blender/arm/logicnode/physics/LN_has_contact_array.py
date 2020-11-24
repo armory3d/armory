@@ -11,4 +11,5 @@ class HasContactArrayNode(ArmLogicTreeNode):
         super(HasContactArrayNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmNodeSocketArray', 'RBs')
+
         self.add_output('NodeSocketBool', 'Has Contact')

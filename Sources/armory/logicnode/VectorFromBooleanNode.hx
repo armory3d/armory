@@ -10,12 +10,12 @@ class VectorFromBooleanNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 
-		var boolX: Bool = inputs[0].get();
-		var boolNegX: Bool = inputs[1].get();
-		var boolY: Bool = inputs[2].get();
-		var boolNegY: Bool = inputs[3].get();
-		var boolZ: Bool = inputs[4].get();
-		var boolNegZ: Bool = inputs[5].get();
+		var boolX = inputs[0].get();
+		var boolNegX = inputs[1].get();
+		var boolY = inputs[2].get();
+		var boolNegY = inputs[3].get();
+		var boolZ = inputs[4].get();
+		var boolNegZ = inputs[5].get();
 
 		var vector = new Vec4();
 

@@ -9,4 +9,5 @@ class GetObjectTraitsNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetObjectTraitsNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
+
         self.add_output('ArmNodeSocketArray', 'Traits')

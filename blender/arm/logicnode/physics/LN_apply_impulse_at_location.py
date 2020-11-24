@@ -27,4 +27,5 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Impulse On Local Axis')
         self.add_input('NodeSocketVector', 'Location')
         self.add_input('NodeSocketBool', 'Location On Local Axis')
+
         self.add_output('ArmNodeSocketAction', 'Out')

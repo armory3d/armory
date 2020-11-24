@@ -10,6 +10,7 @@ class GetRotationNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
+
         self.add_output('NodeSocketVector', 'Euler Angles')
         self.add_output('NodeSocketVector', 'Vector')
         self.add_output('NodeSocketFloat', 'Angle (Radians)')

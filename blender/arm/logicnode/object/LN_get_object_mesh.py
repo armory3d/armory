@@ -10,4 +10,5 @@ class GetMeshNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetMeshNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
+
         self.add_output('NodeSocketShader', 'Mesh')

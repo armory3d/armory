@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SequenceNode(ArmLogicTreeNode):
     """Activates the outputs one by one sequentially and repeatedly."""
     bl_idname = 'LNSequenceNode'
-    bl_label = 'Sequence'
+    bl_label = 'Output Sequence'
     arm_section = 'flow'
     arm_version = 1
 

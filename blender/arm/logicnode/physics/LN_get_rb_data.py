@@ -9,6 +9,7 @@ class GetRigidBodyDataNode(ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
+
         self.outputs.new('NodeSocketBool', 'Is RB')
         self.outputs.new('NodeSocketInt', 'Collision Group')
         self.outputs.new('NodeSocketInt', 'Collision Mask')

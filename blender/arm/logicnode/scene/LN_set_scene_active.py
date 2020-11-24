@@ -10,5 +10,6 @@ class SetSceneNode(ArmLogicTreeNode):
         super(SetSceneNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('NodeSocketShader', 'Scene')
+
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Root')

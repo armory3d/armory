@@ -13,4 +13,5 @@ class OnTimerNode(ArmLogicTreeNode):
         super(OnTimerNode, self).init(context)
         self.add_input('NodeSocketFloat', 'Duration')
         self.add_input('NodeSocketBool', 'Repeat')
+
         self.add_output('ArmNodeSocketAction', 'Out')
