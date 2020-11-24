@@ -1,7 +1,8 @@
-import bpy
-import numpy as np
 from mathutils import *
+import numpy as np
+
 import arm.utils
+import arm.log as log
 
 # Exports smaller geometry but is slower
 # To be replaced with https://github.com/zeux/meshoptimizer
