@@ -211,15 +211,15 @@ def export_data(fp, sdk_path):
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     if wrd.arm_write_config:
         write_data.write_config(resx, resy)
+    
+    # Change project version (Build, Publish)
+    if (not state.is_play) and (wrd.arm_project_version_autoinc):
+        wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
     import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
     write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
-
-    # Change project version (Build, Publish)
-    if (not state.is_play) and (wrd.arm_project_version_autoinc):
-        wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -261,6 +261,11 @@ def compile(assets_only=False):
     state.export_gapi = arm.utils.get_gapi()
     cmd.append('-g')
     cmd.append(state.export_gapi)
+    # Windows - Set Visual Studio Version
+    if state.target.startswith('windows'):
+        cmd.append('-visualstudio')
+        vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
+        cmd.append(vs_id)
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         if 'html5' in state.target or 'ios' in state.target:
@@ -609,9 +614,10 @@ def build_success():
             print('Exported XCode project to ' + project_path)
         elif target_name.startswith('windows'):
             project_path = files_path + '-build'
-            print('Exported Visual Studio 2017 project to ' + project_path)
+            vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
+            print('Exported '+ vs_name +' project to ' + project_path)
         elif target_name.startswith('android'):
-            project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
+            project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
             project_path = os.path.join(files_path + '-build', project_name)
             print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
@@ -625,7 +631,7 @@ def build_success():
             arm.utils.open_folder(project_path)
 
         # Android build APK
-        if (target_name.startswith('android')):
+        if target_name.startswith('android'):
             if (arm.utils.get_project_android_build_apk()) and (len(arm.utils.get_android_sdk_root_path()) > 0):
                 print("\nBuilding APK")
                 # Check settings
@@ -650,15 +656,15 @@ def build_success():
                     print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
         
         # HTML5 After Publish
-        if (target_name == 'html5'):
+        if target_name.startswith('html5'):
             if len(arm.utils.get_html5_copy_path()) > 0 and (wrd.arm_project_html5_copy):
-                project_name = arm.utils.safestr(wrd.arm_project_name.replace(' ', '-')) + '-' + wrd.arm_project_version
+                project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
                 dst = os.path.join(arm.utils.get_html5_copy_path(), project_name) 
-                print("\nCopy files to " + dst)
                 if os.path.exists(dst):
                     shutil.rmtree(dst)
                 try:
                     shutil.copytree(project_path, dst)
+                    print("Copied files to " + dst)
                 except OSError as exc:
                     if exc.errno == errno.ENOTDIR:
                         shutil.copy(project_path, dst)
@@ -667,6 +673,60 @@ def build_success():
                     link_html5_app = arm.utils.get_link_web_server() +'/'+ project_name
                     print("Running a browser with a link " + link_html5_app)
                     webbrowser.open(link_html5_app)
+        
+        # Windows After Publish
+        if target_name.startswith('windows'):
+            list_vs = [] 
+            err = ''
+            # Print message
+            project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
+            if int(wrd.arm_project_win_build) == 1:
+                print('\nOpen in Visual Studio ' + os.path.join(project_path, project_name + '.sln"'))
+            if int(wrd.arm_project_win_build) == 2:
+                print('\nCompile project ' + os.path.join(project_path, project_name + '.vcxproj'))
+            if int(wrd.arm_project_win_build) == 3:
+                print('\nCompile and run project ' + os.path.join(project_path, project_name + '.vcxproj'))
+            if int(wrd.arm_project_win_build) > 0:
+                # Check Visual Studio
+                list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
+                if len(err) > 0:
+                    print(err)
+                    return
+                if len(list_vs) == 0:
+                    print('No Visual Studio found')
+                    return
+                is_check = False
+                for vs in list_vs:
+                    if vs[0] == wrd.arm_project_win_list_vs:
+                        is_check = True
+                        break
+                if not is_check:
+                    vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
+                    print(vs_name + ' not found.')
+                    print('The following are installed on the PC:')
+                    for vs in list_vs:
+                        print('- ' + vs[1] + ' (version ' + vs[3] +')')
+                    return
+                # Current VS 
+                vs_path = ''
+                for vs in list_vs:
+                    if vs[0] == wrd.arm_project_win_list_vs:
+                        vs_path = vs[2]
+                        break
+                # Open in Visual Studio                
+                if int(wrd.arm_project_win_build) == 1:
+                    cmd = os.path.join('start "' + vs_path, 'Common7', 'IDE', 'devenv.exe" "' + os.path.join(project_path, project_name + '.sln"'))
+                    subprocess.Popen(cmd, shell=True)
+                # Compile
+                if int(wrd.arm_project_win_build) > 1:                    
+                    bits = '64' if wrd.arm_project_win_build_arch == 'x64' else '32'
+                    # vcvars
+                    cmd = os.path.join(vs_path, 'VC', 'Auxiliary', 'Build', 'vcvars' + bits + '.bat')
+                    if not os.path.isfile(cmd):
+                        print('File "'+ cmd +'" not found. Verify ' + vs_name + ' was installed correctly')
+                        log.error('Compile failed, check console')
+                        return
+                    state.proc_publish_build = run_proc(cmd, done_vs_vars)
 
 def done_gradlew_build():
     if state.proc_publish_build == None:
@@ -677,7 +737,7 @@ def done_gradlew_build():
 
         wrd = bpy.data.worlds['Arm']
         path_apk = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
-        project_name = arm.utils.safestr(wrd.arm_project_name).replace(' ', '-')
+        project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
         path_apk = os.path.join(path_apk + '-build', project_name, 'app', 'build', 'outputs', 'apk', 'debug')
 
         print("\nBuild APK to " + path_apk)
@@ -685,7 +745,7 @@ def done_gradlew_build():
         apk_name = 'app-debug.apk'
         file_name = os.path.join(path_apk, apk_name)
         if wrd.arm_project_android_rename_apk:
-            apk_name = project_name + '-' + wrd.arm_project_version + '.apk'
+            apk_name = project_name + '.apk'
             os.rename(file_name, os.path.join(path_apk, apk_name))
             file_name = os.path.join(path_apk, apk_name)
             print("\nRename APK to " + apk_name)
@@ -722,6 +782,82 @@ def run_android_emulators(avd_name):
             run_proc(cmd, None)
     else:
         print('Update List Emulators Warning: File "'+ path_file +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
+
+def done_vs_vars():
+    if state.proc_publish_build == None:
+        return
+    result = state.proc_publish_build.poll()
+    if result == 0:
+        state.proc_publish_build = None
+        # MSBuild
+        wrd = bpy.data.worlds['Arm']
+        list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
+        # Current VS 
+        vs_path = ''
+        vs_name = ''
+        for vs in list_vs:
+            if vs[0] == wrd.arm_project_win_list_vs:
+                vs_name = vs[1]
+                vs_path = vs[2]
+                break
+        msbuild = os.path.join(vs_path, 'MSBuild', 'Current', 'Bin', 'MSBuild.exe')
+        if not os.path.isfile(msbuild):
+            print('File "'+ msbuild +'" not found. Verify ' + vs_name + ' was installed correctly')
+            log.error('Compile failed, check console')
+            state.redraw_ui = True
+            return
+        project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
+        project_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target)) + '-build'
+        cmd = '"' + msbuild + '" "' + os.path.join(project_path, project_name + '.vcxproj"')
+        # Arguments
+        platform = 'x64' if wrd.arm_project_win_build_arch == 'x64' else 'win32'
+        log_param = wrd.arm_project_win_build_log
+        if log_param == 'WarningsAndErrorsOnly':
+            log_param = 'WarningsOnly;ErrorsOnly'
+        cmd = cmd + ' -m:' + str(wrd.arm_project_win_build_cpu) + ' -clp:'+ log_param +' /p:Configuration='+ wrd.arm_project_win_build_mode +' /p:Platform=' + platform
+        print('\nCompiling the project ' + os.path.join(project_path, project_name + '.vcxproj"'))
+        state.proc_publish_build = run_proc(cmd, done_vs_build)
+        state.redraw_ui = True
+    else:
+        state.proc_publish_build = None
+        state.redraw_ui = True
+        log.error('\nCompile failed, check console')
+
+def done_vs_build():
+    if state.proc_publish_build == None:
+        return
+    result = state.proc_publish_build.poll()
+    if result == 0:
+        state.proc_publish_build = None
+
+        wrd = bpy.data.worlds['Arm']
+        project_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target)) + '-build'
+        if wrd.arm_project_win_build_arch == 'x64':
+            path = os.path.join(project_path, 'x64', wrd.arm_project_win_build_mode)
+        else:
+            path = os.path.join(project_path, wrd.arm_project_win_build_mode)
+        print('\nCompilation completed in ' + path)
+        # Run
+        if int(wrd.arm_project_win_build) == 3:
+            # Copying the executable file
+            res_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
+            file_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version) + '.exe'
+            print('\nCopy the executable file from ' + path + ' to ' + res_path)
+            shutil.copyfile(os.path.join(path, file_name), os.path.join(res_path, file_name))
+            path = res_path
+            # Run project
+            cmd = os.path.join('"' + res_path, file_name + '"')
+            print('Run the executable file to ' + cmd)
+            os.chdir(res_path) # set work folder
+            subprocess.Popen(cmd, shell=True)
+        # Open Build Directory
+        if wrd.arm_project_win_build_open:               
+            arm.utils.open_folder(path)
+        state.redraw_ui = True
+    else:
+        state.proc_publish_build = None
+        state.redraw_ui = True
+        log.error('Compile failed, check console')
 
 def clean():
     os.chdir(arm.utils.get_fp())

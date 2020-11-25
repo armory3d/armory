@@ -46,7 +46,7 @@ def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_pu
     with open('khafile.js', 'w', encoding="utf-8") as khafile:
         khafile.write(
 """// Auto-generated
-let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """');
+let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version) + """');
 
 project.addSources('Sources');
 """)
