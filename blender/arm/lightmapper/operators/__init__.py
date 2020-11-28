@@ -1,6 +1,6 @@
 import bpy
 from bpy.utils import register_class, unregister_class
-from . import tlm, installopencv
+from . import tlm, installopencv, imagetools
 
 classes = [
     tlm.TLM_BuildLightmaps,
@@ -9,7 +9,20 @@ classes = [
     tlm.TLM_EnableSelection,
     tlm.TLM_DisableSelection,
     tlm.TLM_RemoveLightmapUV,
-    installopencv.TLM_Install_OpenCV
+    tlm.TLM_SelectLightmapped,
+    installopencv.TLM_Install_OpenCV,
+    tlm.TLM_AtlasListNewItem,
+    tlm.TLM_AtlastListDeleteItem,
+    tlm.TLM_AtlasListMoveItem,
+    tlm.TLM_PostAtlasListNewItem,
+    tlm.TLM_PostAtlastListDeleteItem,
+    tlm.TLM_PostAtlasListMoveItem,
+    tlm.TLM_StartServer,
+    tlm.TLM_BuildEnvironmentProbes,
+    tlm.TLM_CleanBuildEnvironmentProbes,
+    imagetools.TLM_ImageUpscale,
+    imagetools.TLM_ImageDownscale
+
 ]
 
 def register():

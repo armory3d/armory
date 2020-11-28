@@ -1,4 +1,5 @@
-import bpy
+import bpy, os
+from ...utility import utility
 from bpy.props import *
 
 class TLM_OIDNEngineProperties(bpy.types.PropertyGroup):

@@ -19,6 +19,8 @@ class TLM_Install_OpenCV(bpy.types.Operator):
         scene = context.scene
         cycles = bpy.data.scenes[scene.name].cycles
 
+        print("Module OpenCV")
+
         pythonbinpath = bpy.app.binary_path_python
 
         if platform.system() == "Windows":
@@ -29,10 +31,12 @@ class TLM_Install_OpenCV(bpy.types.Operator):
         ensurepippath = os.path.join(pythonlibpath, "ensurepip")
 
         cmda = [pythonbinpath, ensurepippath, "--upgrade", "--user"]
-        pip = subprocess.run(cmda, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pip = subprocess.run(cmda)
+        cmdc = [pythonbinpath, "-m", "pip", "install", "--upgrade", "pip"]
+        pipc = subprocess.run(cmdc)
 
         if pip.returncode == 0:
-            print("Successfully installed pip!\n")
+            print("Sucessfully installed pip!\n")
         else:
 
             try:
@@ -44,18 +48,27 @@ class TLM_Install_OpenCV(bpy.types.Operator):
 
             if not module_pip:
                 print("Failed to install pip!\n")
-                ShowMessageBox("Failed to install pip - Please start Blender as administrator", "Restart", 'PREFERENCES')
+                if platform.system() == "Windows":
+                    ShowMessageBox("Failed to install pip - Please start Blender as administrator", "Restart", 'PREFERENCES')
+                else:
+                    ShowMessageBox("Failed to install pip - Try starting Blender with SUDO", "Restart", 'PREFERENCES')
                 return{'FINISHED'}
 
         cmdb = [pythonbinpath, "-m", "pip", "install", "opencv-python"]
         
-        opencv = subprocess.run(cmdb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #opencv = subprocess.run(cmdb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        opencv = subprocess.run(cmdb)
 
         if opencv.returncode == 0:
-            print("Sucessfully installed OpenCV!\n")
+            print("Successfully installed OpenCV!\n")
         else:
             print("Failed to install OpenCV!\n")
-            ShowMessageBox("Failed to install opencv - Please start Blender as administrator", "Restart", 'PREFERENCES')
+
+            if platform.system() == "Windows":
+                ShowMessageBox("Failed to install opencv - Please start Blender as administrator", "Restart", 'PREFERENCES')
+            else:
+                ShowMessageBox("Failed to install opencv - Try starting Blender with SUDO", "Restart", 'PREFERENCES')
+
             return{'FINISHED'}
 
         module_opencv = True

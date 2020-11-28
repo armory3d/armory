@@ -36,7 +36,8 @@ class TLM_Integrated_Denoise:
 
         for image in self.image_array:
 
-            print("Image...: " + image)
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Image...: " + image)
 
             img = bpy.data.images.load(self.image_output_destination + "/" + image)
 

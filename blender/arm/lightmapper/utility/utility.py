@@ -97,7 +97,8 @@ def get_file_size(filepath):
         size = os.path.getsize(path)
         size /= 1024
     except:
-        print("error getting file path for " + filepath)
+        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+            print("error getting file path for " + filepath)
         
     return (size)
 
@@ -144,7 +145,8 @@ def clean_empty_materials(self):
         for slot in obj.material_slots:
             mat = slot.material
             if mat is None:
-                print("Removed Empty Materials from " + obj.name)
+                if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print("Removed Empty Materials from " + obj.name)
                 bpy.ops.object.select_all(action='DESELECT')
                 obj.select_set(True)
                 bpy.ops.object.material_slot_remove()
