@@ -287,6 +287,13 @@ class RenderPathForward {
 			#end
 		}
 		#end
+
+		#if rp_chromatic_aberration
+		{
+			path.loadShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
 	}
 
 	public static function commands() {
@@ -488,6 +495,18 @@ class RenderPathForward {
 
 				path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
 				path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
+			}
+			#end
+
+			#if rp_chromatic_aberration
+			{
+				path.setTarget("bufa");
+				path.bindTarget("lbuffer0", "tex");
+				path.drawShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+
+				path.setTarget("lbuffer0");
+				path.bindTarget("bufa", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
 			#end
 
