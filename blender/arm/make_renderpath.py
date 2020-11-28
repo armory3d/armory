@@ -107,6 +107,8 @@ def build():
     assets_path = arm.utils.get_sdk_path() + '/armory/Assets/'
     wrd = bpy.data.worlds['Arm']
 
+    wrd.compo_defs = ''
+
     add_world_defs()
 
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
