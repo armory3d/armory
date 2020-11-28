@@ -2,7 +2,6 @@ import bpy, os, subprocess, sys, platform, aud, json, datetime, socket
 import threading
 from . import encoding, pack
 from . cycles import lightmap, prepare, nodes, cache
-from . luxcore import setup
 from . denoiser import integrated, oidn, optix
 from . filtering import opencv
 from .. network import client

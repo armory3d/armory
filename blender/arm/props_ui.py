@@ -1688,58 +1688,58 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             row = layout.row(align=True)
             row.label(text="Selection Operators")
-                row = layout.row(align=True)
+            row = layout.row(align=True)
+
+            row = layout.row(align=True)
+            row.operator("tlm.enable_selection")
+            row = layout.row(align=True)
+            row.operator("tlm.disable_selection")
+            row = layout.row(align=True)
+            row.prop(sceneProperties, "tlm_override_object_settings")
+
+            if sceneProperties.tlm_override_object_settings:
 
                 row = layout.row(align=True)
-                row.operator("tlm.enable_selection")
-                row = layout.row(align=True)
-                row.operator("tlm.disable_selection")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_override_object_settings")
-
-                if sceneProperties.tlm_override_object_settings:
-
-                    row = layout.row(align=True)
-                    row = layout.row()
-                    row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
-                    row = layout.row()
+                row = layout.row()
+                row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
+                row = layout.row()
 
                 if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
 
                     if scene.TLM_AtlasListItem >= 0 and len(scene.TLM_AtlasList) > 0:
                         row = layout.row()
                         item = scene.TLM_AtlasList[scene.TLM_AtlasListItem]
-                            row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
-                        else:
-                            row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+
+                else:
+                    row = layout.row()
+                    row.prop(sceneProperties, "tlm_postpack_object")
+                    row = layout.row()
+
+                if sceneProperties.tlm_postpack_object and sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
+                    if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
+                        row.prop_search(sceneProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
+                        row = layout.row()
 
                     else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
                         row = layout.row()
-                        row.prop(sceneProperties, "tlm_postpack_object")
-                        row = layout.row()
 
-                    if sceneProperties.tlm_postpack_object and sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
-                        if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
-                            row = layout.row()
-                            item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
-                            row.prop_search(sceneProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
-                            row = layout.row()
+                if sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
+                    row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
+                    row = layout.row()
+                    row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
 
-                        else:
-                            row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
-                            row = layout.row()
-
-                    if sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
-                        row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
-                        row = layout.row()
-                        row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
-
-                row = layout.row(align=True)
-                row.operator("tlm.remove_uv_selection")
-                row = layout.row(align=True)
-                row.operator("tlm.select_lightmapped_objects")
-                row = layout.row(align=True)
-
+            row = layout.row(align=True)
+            row.operator("tlm.remove_uv_selection")
+            row = layout.row(align=True)
+            row.operator("tlm.select_lightmapped_objects")
+            row = layout.row(align=True)
+            
             ##################
             #Additional settings
             row = layout.row(align=True)
