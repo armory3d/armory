@@ -325,6 +325,16 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
+	public function disableCollision() {
+		var bodyColl: bullet.Bt.CollisionObject = body;
+		bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
+	}
+
+	public function enableCollision() {
+		var bodyColl: bullet.Bt.CollisionObject = body;
+		bodyColl.setCollisionFlags(~bodyColl.getCollisionFlags() & CF_NO_CONTACT_RESPONSE);
+	}
+
 	public function removeFromWorld() {
 		if (physics != null) physics.removeRigidBody(this);
 	}
