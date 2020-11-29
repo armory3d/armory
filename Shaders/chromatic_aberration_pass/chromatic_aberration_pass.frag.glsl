@@ -45,9 +45,9 @@ void main() {
 		int num_iter = compoChromaticSamples;
 	#endif
 
-    // Spectral
+	// Spectral
 	if (compoChromaticType == 1) {
-        float reci_num_iter_f = 1.0 / float(num_iter);
+		float reci_num_iter_f = 1.0 / float(num_iter);
 
 		vec2 resolution = vec2(1,1);
 		vec2 uv = (texCoord.xy/resolution.xy);
@@ -64,8 +64,8 @@ void main() {
 		fragColor = sumcol / sumw;
 	}
 
-    // Simple
-    else {
+	// Simple
+	else {
 		vec3 col = vec3(0.0);
 		col.x = texture(tex, texCoord + ((vec2(0.0, 1.0) * max_distort) / vec2(1000.0))).x;
 		col.y = texture(tex, texCoord + ((vec2(-0.85, -0.5) * max_distort) / vec2(1000.0))).y;
