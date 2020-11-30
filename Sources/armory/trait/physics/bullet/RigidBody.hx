@@ -30,6 +30,7 @@ class RigidBody extends iron.Trait {
 	public var destroyed = false;
 	var linearFactors: Array<Float>;
 	var angularFactors: Array<Float>;
+	var useDeactivation: Bool;
 	var deactivationParams: Array<Float>;
 	var ccd = false; // Continuous collision detection
 	public var group = 1;
@@ -96,7 +97,29 @@ class RigidBody extends iron.Trait {
 		this.mask = mask;
 
 		if (params == null) params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-		if (flags == null) flags = [false, false, false, false];
+		/**
+		 * params:[ linear damping
+		 * 		    angular damping
+		 * 			linear factor X
+		 * 			linear factor Y
+		 * 			linear factor Z
+		 * 			angular factor X
+		 * 			angular factor Y
+		 * 			angular factor Z
+		 * 			collision margin
+		 * 			linear deactivation threshold
+		 * 			angular deactivation thrshold
+		 * 			deactivation time(Not used)]
+		 */
+
+		if (flags == null) flags = [false, false, false, false, true];
+		/**	
+		 * flags:[ is animated
+		 * 		   is trigger
+		 * 		   continuous collision detection
+		 * 		   is static
+		 * 		   use deactivation]
+		 */
 
 		this.linearDamping = params[0];
 		this.angularDamping = params[1];
@@ -108,6 +131,7 @@ class RigidBody extends iron.Trait {
 		this.trigger = flags[1];
 		this.ccd = flags[2];
 		this.staticObj = flags[3];
+		this.useDeactivation = flags[4];
 
 		notifyOnAdd(init);
 	}
@@ -241,7 +265,7 @@ class RigidBody extends iron.Trait {
 		}
 		bodyColl.setRestitution(restitution);
 
-		if (deactivationParams != null) {
+		if ( useDeactivation) {
 			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
 		}
 		else {
@@ -358,6 +382,14 @@ class RigidBody extends iron.Trait {
 		// body.setDeactivationTime(time); // not available in ammo
 	}
 
+	public function setDeactivation(useDeactivation: Bool) {
+		this.useDeactivation = useDeactivation;
+	}
+
+	public function isTriggerObject(isTrigger: Bool) {
+		this.trigger = isTrigger;
+	}
+	
 	public function applyForce(force: Vec4, loc: Vec4 = null) {
 		activate();
 		vec1.setValue(force.x, force.y, force.z);
