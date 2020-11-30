@@ -107,6 +107,8 @@ def build():
     assets_path = arm.utils.get_sdk_path() + '/armory/Assets/'
     wrd = bpy.data.worlds['Arm']
 
+    wrd.compo_defs = ''
+
     add_world_defs()
 
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
@@ -142,7 +144,7 @@ def build():
             assets.add(assets_path + 'clouds_map.png')
             assets.add_embedded_data('clouds_map.png')
 
-    if rpdat.rp_renderer == 'Deferred' and not rpdat.rp_compositornodes:
+    if rpdat.rp_renderer == 'Deferred':
         assets.add_shader_pass('copy_pass')
 
     if rpdat.rp_render_to_texture:

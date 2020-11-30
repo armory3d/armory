@@ -608,18 +608,14 @@ const float compoBrightnessExponent = """ + str(round(rpdat.arm_lens_texture_mas
 
         if rpdat.rp_chromatic_aberration:
             f.write(
-"""const float compoChromaticStrength = """ + str(round(rpdat.arm_chromatic_aberration_strength * 100) / 100) + """;
-const int compoChromaticSamples = """ + str(rpdat.arm_chromatic_aberration_samples) + """;
+f"""const float compoChromaticStrength = {round(rpdat.arm_chromatic_aberration_strength * 100) / 100};
+const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 """)
 
-        if rpdat.arm_chromatic_aberration_type == "Spectral":
-            f.write(
-"""const int compoChromaticType = """ + str(1) + """;
-""")
-        else:
-            f.write(
-"""const int compoChromaticType = """ + str(0) + """;
-""")
+            if rpdat.arm_chromatic_aberration_type == "Spectral":
+                f.write("const int compoChromaticType = 1;")
+            else:
+                f.write("const int compoChromaticType = 0;")
 
         focus_distance = 0.0
         fstop = 0.0
