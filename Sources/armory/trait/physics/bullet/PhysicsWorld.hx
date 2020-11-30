@@ -51,6 +51,7 @@ class PhysicsWorld extends Trait {
 	var contacts: Array<ContactPair>;
 	var preUpdates: Array<Void->Void> = null;
 	public var rbMap: Map<Int, RigidBody>;
+	public var conMap: Map<Int, PhysicsConstraint>;
 	public var timeScale = 1.0;
 	var timeStep = 1 / 60;
 	var maxSteps = 1;
@@ -97,6 +98,7 @@ class PhysicsWorld extends Trait {
 
 		contacts = [];
 		rbMap = new Map();
+		conMap = new Map();
 		active = this;
 
 		// Ensure physics are updated first in the lateUpdate list
@@ -164,12 +166,23 @@ class PhysicsWorld extends Trait {
 		rbMap.set(body.id, body);
 	}
 
+	public function addPhysicsConstraint(constraint: PhysicsConstraint) {
+		world.addConstraint(constraint.con, constraint.disableCollisions);
+		conMap.set(constraint.id, constraint);
+	}
+
 	public function removeRigidBody(body: RigidBody) {
 		if (body.destroyed) return;
 		body.destroyed = true;
 		if (world != null) world.removeRigidBody(body.body);
 		rbMap.remove(body.id);
 		body.delete();
+	}
+
+	public function removePhysicsConstraint(constraint: PhysicsConstraint) {
+		if(world != null) world.removeConstraint(constraint.con);
+		conMap.remove(constraint.id);
+		constraint.delete();
 	}
 
 	// public function addKinematicCharacterController(controller:KinematicCharacterController) {
