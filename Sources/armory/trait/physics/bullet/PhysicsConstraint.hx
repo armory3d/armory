@@ -1,19 +1,27 @@
 package armory.trait.physics.bullet;
 
+import iron.Scene;
+import iron.object.Object;
 #if arm_bullet
 import Math;
 import iron.math.Quat;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
+
+
 class PhysicsConstraint extends iron.Trait {
 
-	var body1: String;
-	var body2: String;
-	var type: String;
-	var disableCollisions: Bool;
+	static var nextId:Int = 0;
+	public var id:Int = 0;
+
+	var physics: PhysicsWorld;
+	var body1: Object;
+	var body2: Object;
+	var type: ConstraintType;
+	public var disableCollisions: Bool;
 	var breakingThreshold: Float;
 	var limits: Array<Float>;
-	var con: bullet.Bt.TypedConstraint = null;
+	public var con: bullet.Bt.TypedConstraint = null;
 
 	static var nullvec = true;
 	static var vec1: bullet.Bt.Vector3;
@@ -23,7 +31,7 @@ class PhysicsConstraint extends iron.Trait {
 	static var trans2: bullet.Bt.Transform;
 	static var transt: bullet.Bt.Transform;
 
-	public function new(body1: String, body2: String, type: String, disableCollisions: Bool, breakingThreshold: Float, limits: Array<Float> = null) {
+	public function new(body1: Object, body2: Object, type: ConstraintType, disableCollisions: Bool, breakingThreshold: Float, limits: Array<Float> = null) {
 		super();
 
 		if (nullvec) {
@@ -41,45 +49,49 @@ class PhysicsConstraint extends iron.Trait {
 		this.disableCollisions = disableCollisions;
 		this.breakingThreshold = breakingThreshold;
 		this.limits = limits;
+
 		notifyOnInit(init);
 	}
 
 	function init() {
-		var physics = PhysicsWorld.active;
-		var target1 = iron.Scene.active.getChild(body1);
-		var target2 = iron.Scene.active.getChild(body2);
-		if (target1 == null || target2 == null) return;
+
+		physics = PhysicsWorld.active;
+		var target1 = body1;
+		var target2 = body2;
+
+		if (target1 == null || target2 == null) return;//no objects selected
 
 		var rb1: RigidBody = target1.getTrait(RigidBody);
 		var rb2: RigidBody = target2.getTrait(RigidBody);
 
-		if (rb1 != null && rb1.ready && rb2 != null && rb2.ready) {
+		if (rb1 != null && rb1.ready && rb2 != null && rb2.ready) {//Check if rigid bodies are ready
 
 			var t = object.transform;
 			var t1 = target1.transform;
 			var t2 = target2.transform;
+
 			trans1.setIdentity();
 			vec1.setX(t.worldx() - t1.worldx());
 			vec1.setY(t.worldy() - t1.worldy());
 			vec1.setZ(t.worldz() - t1.worldz());
 			trans1.setOrigin(vec1);
-			//trans1.setRotation(new bullet.Bt.Quaternion(t1.rot.x, t1.rot.y, t1.rot.z, t1.rot.w));
+
 			trans2.setIdentity();
 			vec2.setX(t.worldx() - t2.worldx());
 			vec2.setY(t.worldy() - t2.worldy());
 			vec2.setZ(t.worldz() - t2.worldz());
 			trans2.setOrigin(vec2);
-			//trans2.setRotation(new bullet.Bt.Quaternion(t2.rot.x, t2.rot.y, t2.rot.z, t2.rot.w));
+
 			trans1.setRotation(new bullet.Bt.Quaternion(t.rot.x, t.rot.y, t.rot.z, t.rot.w));
 			trans2.setRotation(new bullet.Bt.Quaternion(t.rot.x, t.rot.y, t.rot.z, t.rot.w));
 
-			if (type == "GENERIC" || type == "FIXED") {
+			if (type == Generic || type == Fixed) {
 				#if hl
 				var c = new bullet.Bt.Generic6DofConstraint(rb1.body, rb2.body, trans1, trans2, false);
 				#else
 				var c = bullet.Bt.Generic6DofConstraint.new2(rb1.body, rb2.body, trans1, trans2, false);
 				#end
-				if (type == "FIXED") {
+				if (type == Fixed) {
 					vec1.setX(0);
 					vec1.setY(0);
 					vec1.setZ(0);
@@ -88,8 +100,7 @@ class PhysicsConstraint extends iron.Trait {
 					c.setAngularLowerLimit(vec1);
 					c.setAngularUpperLimit(vec1);
 				}
-
-				else if (type == "GENERIC") {
+				else if (type == ConstraintType.Generic) {
 					if (limits[0] == 0) {
 						limits[1] = 1.0;
 						limits[2] = -1.0;
@@ -133,8 +144,7 @@ class PhysicsConstraint extends iron.Trait {
 				}
 				con = cast c;
 			}
-
-			else if (type == "GENERIC_SPRING"){
+			else if (type == ConstraintType.GenericSpring){
 				var c = new bullet.Bt.Generic6DofSpringConstraint(rb1.body, rb2.body, trans1, trans2, false);
 
 				if (limits[0] == 0) {
@@ -228,12 +238,11 @@ class PhysicsConstraint extends iron.Trait {
 				con = cast c;
 
 			}
-			else if (type == "POINT"){
+			else if (type == ConstraintType.Point){
 				var c = new bullet.Bt.Point2PointConstraint(rb1.body, rb2.body, vec1, vec2);
 				con = cast c;
 			}
-
-			else if (type == "HINGE") {
+			else if (type == ConstraintType.Hinge) {
 				var axis = vec3;
 				var _softness: Float = 0.9;
 				var _biasFactor: Float = 0.3;
@@ -243,7 +252,7 @@ class PhysicsConstraint extends iron.Trait {
 				axis.setY(t.up().y);
 				axis.setZ(t.up().z);
 
-				var c = new bullet.Bt.HingeConstraint(rb1.body, rb2.body, vec1, vec2, axis, axis);
+				var c = new bullet.Bt.HingeConstraint(rb1.body, rb2.body, vec1, vec2, axis, axis, false);
 
 				if (limits[0] != 0) {
 					c.setLimit(limits[1], limits[2], _softness, _biasFactor, _relaxationFactor);
@@ -251,7 +260,7 @@ class PhysicsConstraint extends iron.Trait {
 
 				con = cast c;
 			}
-			else if (type == "SLIDER") {
+			else if (type == ConstraintType.Slider) {
 				var c = new bullet.Bt.SliderConstraint(rb1.body, rb2.body, trans1, trans2, true);
 
 				if (limits[0] != 0) {
@@ -261,7 +270,7 @@ class PhysicsConstraint extends iron.Trait {
 
 				con = cast c;
 			}
-			else if (type == "PISTON") {
+			else if (type == ConstraintType.Piston) {
 				var c = new bullet.Bt.SliderConstraint(rb1.body, rb2.body, trans1, trans2, true);
 
 				if (limits[0] != 0) {
@@ -282,16 +291,41 @@ class PhysicsConstraint extends iron.Trait {
 
 			if (breakingThreshold > 0) con.setBreakingImpulseThreshold(breakingThreshold);
 
-			physics.world.addConstraint(con, disableCollisions);
+			physics.addPhysicsConstraint(this);
+			
+			id = nextId;
+			nextId++;
+
+
+			notifyOnRemove(removeFromWorld);
 		}
-		else notifyOnInit(init); // Rigid body not initialized yet
+		else this.remove(); // Rigid body not initialized yet. Remove trait without adding constraint
 	}
 
 	public function removeFromWorld() {
+		physics.removePhysicsConstraint(this);
+	}
+
+	public function delete() {
 		#if js
 		bullet.Bt.Ammo.destroy(con);
+		#else
+		con.delete();
 		#end
 	}
+
+	
+}
+
+@:enum abstract ConstraintType(Int) from Int to Int {
+	var Fixed = 0;
+	var Point = 1;
+	var Hinge = 2;
+	var Slider = 3;
+	var Piston = 4;
+	var Generic = 5;
+	var GenericSpring = 6;
+	var Motor = 7;
 }
 
 #end
