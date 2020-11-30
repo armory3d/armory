@@ -2710,6 +2710,8 @@ class ArmoryExporter:
         rb2 = rbc.object2
         if rb1 is None or rb2 is None:
             return
+        if rbc.type == "MOTOR":
+            return
 
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
@@ -2717,16 +2719,18 @@ class ArmoryExporter:
 
         trait = {
             'type': 'Script',
-            'class_name': 'armory.trait.physics.' + phys_pkg + '.PhysicsConstraint',
+            'class_name': 'armory.trait.physics.' + phys_pkg + '.PhysicsConstraintExportHelper',
             'parameters': [
                 "'" + rb1.name + "'",
                 "'" + rb2.name + "'",
-                "'" + rbc.type + "'",
                 str(rbc.disable_collisions).lower(),
                 str(breaking_threshold)
             ]
         }
-
+        if rbc.type == "FIXED":
+            trait['parameters'].insert(2,str(0))
+        if rbc.type == "POINT":
+            trait['parameters'].insert(2,str(1))
         if rbc.type == "GENERIC":
             limits = [
                 1 if rbc.use_limit_lin_x else 0,
@@ -2748,6 +2752,7 @@ class ArmoryExporter:
                 rbc.limit_ang_z_lower,
                 rbc.limit_ang_z_upper
             ]
+            trait['parameters'].insert(2,str(5))
             trait['parameters'].append(str(limits))
         if rbc.type == "GENERIC_SPRING":
             limits = [
@@ -2788,6 +2793,7 @@ class ArmoryExporter:
                 rbc.spring_stiffness_ang_z,
                 rbc.spring_damping_ang_z
             ]
+            trait['parameters'].insert(2,str(6))
             trait['parameters'].append(str(limits))
         if rbc.type == "HINGE":
             limits = [
@@ -2795,6 +2801,7 @@ class ArmoryExporter:
                 rbc.limit_ang_z_lower,
                 rbc.limit_ang_z_upper
             ]
+            trait['parameters'].insert(2,str(2))
             trait['parameters'].append(str(limits))
         if rbc.type == "SLIDER":
             limits = [
@@ -2802,6 +2809,7 @@ class ArmoryExporter:
                 rbc.limit_lin_x_lower,
                 rbc.limit_lin_x_upper
             ]
+            trait['parameters'].insert(2,str(3))
             trait['parameters'].append(str(limits))
         if rbc.type == "PISTON":
             limits = [
@@ -2812,6 +2820,7 @@ class ArmoryExporter:
                 rbc.limit_ang_x_lower,
                 rbc.limit_ang_x_upper
             ]
+            trait['parameters'].insert(2,str(4))
             trait['parameters'].append(str(limits))
         o['traits'].append(trait)
 
