@@ -5,8 +5,18 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     engines = [('Cycles', 'Cycles', 'Use Cycles for lightmapping')]
 
-    #engines.append(('LuxCoreRender', 'LuxCoreRender', 'Use LuxCoreRender for lightmapping'))
+    engines.append(('LuxCoreRender', 'LuxCoreRender', 'Use LuxCoreRender for lightmapping'))
     #engines.append(('OctaneRender', 'Octane Render', 'Use Octane Render for lightmapping'))
+
+    tlm_atlas_pointer : StringProperty(
+            name = "Atlas Group",
+            description = "Atlas Lightmap Group",
+            default = "")
+
+    tlm_postatlas_pointer : StringProperty(
+            name = "Atlas Group",
+            description = "Atlas Lightmap Group",
+            default = "")
 
     tlm_lightmap_engine : EnumProperty(
         items = engines,
@@ -102,8 +112,8 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     #FILTERING SETTINGS GROUP
     tlm_filtering_use : BoolProperty(
-        name="Enable filtering", 
-        description="Enable filtering for lightmaps", 
+        name="Enable Filtering", 
+        description="Enable denoising for lightmaps", 
         default=False)
 
     tlm_filtering_engine : EnumProperty(
@@ -178,10 +188,30 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Enable encoding for lightmaps", 
         default=False)
 
-    tlm_encoding_mode : EnumProperty(
-        items = [('RGBM', 'RGBM', '8-bit HDR encoding. Good for compatibility, good for memory but has banding issues.'),
+    tlm_encoding_device : EnumProperty(
+        items = [('CPU', 'CPU', 'Todo'),
+                ('GPU', 'GPU', 'Todo.')],
+                name = "Encoding Device", 
+                description="TODO", 
+                default='CPU')
+
+    encoding_modes_1 = [('RGBM', 'RGBM', '8-bit HDR encoding. Good for compatibility, good for memory but has banding issues.'),
+                    ('RGBD', 'RGBD', '8-bit HDR encoding. Similar to RGBM.'),
+                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.')]
+
+    encoding_modes_2 = [('RGBM', 'RGBM', '8-bit HDR encoding. Good for compatibility, good for memory but has banding issues.'),
+                ('RGBD', 'RGBD', '8-bit HDR encoding. Similar to RGBM.'),
                     ('LogLuv', 'LogLuv', '8-bit HDR encoding. Different.'),
-                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.')],
+                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.')]
+    
+    tlm_encoding_mode_a : EnumProperty(
+        items = encoding_modes_1,
+                name = "Encoding Mode", 
+                description="TODO", 
+                default='HDR')
+
+    tlm_encoding_mode_b : EnumProperty(
+        items = encoding_modes_2,
                 name = "Encoding Mode", 
                 description="TODO", 
                 default='HDR')
@@ -191,10 +221,10 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Higher gives a larger HDR range, but also gives more banding.", 
         default=6, 
         min=1, 
-        max=10)
+        max=255)
 
-    tlm_encoding_armory_setup : BoolProperty(
-        name="Use Armory decoder", 
+    tlm_decoder_setup : BoolProperty(
+        name="Use decoder", 
         description="TODO", 
         default=False)
 
@@ -246,10 +276,16 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         items = [('Lightmap', 'Lightmap', 'TODO'),
                  ('SmartProject', 'Smart Project', 'TODO'),
                  ('CopyExisting', 'Copy Existing', 'TODO'),
-                 ('AtlasGroup', 'Atlas Group', 'TODO')],
+                 ('AtlasGroupA', 'Atlas Group (Prepack)', 'TODO'),
+                 ('Xatlas', 'Xatlas', 'TODO')],
                 name = "Unwrap Mode", 
                 description="TODO", 
                 default='SmartProject')
+
+    tlm_postpack_object : BoolProperty( #CHECK INSTEAD OF ATLASGROUPB
+        name="Postpack object", 
+        description="Postpack object into an AtlasGroup", 
+        default=False)
 
     tlm_mesh_unwrap_margin : FloatProperty(
         name="Unwrap Margin", 
@@ -263,6 +299,13 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Headless; Do not apply baked materials on finish.", 
         default=False)
 
+    tlm_atlas_mode : EnumProperty(
+        items = [('Prepack', 'Pre-packing', 'Todo.'),
+                 ('Postpack', 'Post-packing', 'Todo.')],
+                name = "Atlas mode", 
+                description="TODO", 
+                default='Prepack')
+
     tlm_alert_sound : EnumProperty(
         items = [('dash', 'Dash', 'Dash alert'),
                 ('noot', 'Noot', 'Noot alert'),
@@ -271,3 +314,99 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                 name = "Alert sound", 
                 description="Alert sound when lightmap building finished.", 
                 default="gentle")
+
+    tlm_metallic_clamp : EnumProperty(
+        items = [('ignore', 'Ignore', 'Ignore clamping'),
+                ('zero', 'Zero', 'Set zero'),
+                ('limit', 'Limit', 'Clamp to 0.9')],
+                name = "Metallic clamping", 
+                description="TODO.", 
+                default="ignore")
+
+    tlm_verbose : BoolProperty(
+        name="Verbose", 
+        description="Verbose console output", 
+        default=False)
+
+    tlm_compile_statistics : BoolProperty(
+        name="Compile statistics", 
+        description="Compile lightbuild statistics", 
+        default=False)
+
+    tlm_override_bg_color : BoolProperty(
+        name="Override background", 
+        description="Override background color, black by default.", 
+        default=False)
+
+    tlm_override_color : FloatVectorProperty(name="Color",
+        description="Background color for baked maps", 
+        subtype='COLOR', 
+        default=[0.5,0.5,0.5])
+
+    tlm_reset_uv : BoolProperty(
+        name="Remove Lightmap UV", 
+        description="Remove existing UV maps for lightmaps.", 
+        default=False)
+
+    tlm_network_render : BoolProperty(
+        name="Enable network rendering", 
+        description="Enable network rendering (Unstable).", 
+        default=False)
+
+    tlm_network_paths : PointerProperty(
+        name="Network file", 
+        description="Network instruction file", 
+        type=bpy.types.Text)
+
+    tlm_network_dir : StringProperty(
+        name="Network directory", 
+        description="Use a path that is accessible to all your network render devices.", 
+        default="", 
+        subtype="FILE_PATH")
+
+    tlm_cmft_path : StringProperty(
+        name="CMFT Path", 
+        description="The path to the CMFT binaries", 
+        default="", 
+        subtype="FILE_PATH")
+    
+    tlm_create_spherical : BoolProperty(
+        name="Create spherical texture", 
+        description="Merge cubemap to a 360 spherical texture.", 
+        default=False)
+
+    tlm_write_sh : BoolProperty(
+        name="Calculate SH coefficients", 
+        description="Calculates spherical harmonics coefficients to a file.", 
+        default=False)
+
+    tlm_write_radiance : BoolProperty(
+        name="Write radiance images", 
+        description="Writes out the radiance images.", 
+        default=False)
+
+    tlm_invert_direction : BoolProperty(
+        name="Invert direction", 
+        description="Inverts the direction.", 
+        default=False)
+
+    tlm_environment_probe_resolution : EnumProperty(
+        items = [('32', '32', 'TODO'),
+                 ('64', '64', 'TODO'),
+                 ('128', '128', 'TODO'),
+                 ('256', '256', 'TODO'),
+                 ('512', '512', 'TODO'),
+                 ('1024', '1024', 'TODO'),
+                 ('2048', '2048', 'TODO'),
+                 ('4096', '4096', 'TODO'),
+                 ('8192', '8192', 'TODO')],
+                name = "Probe Resolution", 
+                description="TODO", 
+                default='256')
+
+    tlm_environment_probe_engine : EnumProperty(
+        items = [('BLENDER_EEVEE', 'Eevee', 'TODO'),
+                 ('CYCLES', 'Cycles', 'TODO')],
+                name = "Probe Render Engine", 
+                description="TODO", 
+                default='BLENDER_EEVEE')

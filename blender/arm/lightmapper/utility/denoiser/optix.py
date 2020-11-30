@@ -40,12 +40,13 @@ class TLM_Optix_Denoise:
                 self.optixProperties.tlm_optix_path = os.path.join(self.optixProperties.tlm_optix_path,"Denoiser.exe")
 
         else:
-
-            print("Please provide Optix path")
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Please provide Optix path")
 
     def denoise(self):
 
-        print("Optix: Denoising")
+        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+            print("Optix: Denoising")
         for image in self.image_array:
 
             if image not in self.denoised_array:
@@ -58,9 +59,11 @@ class TLM_Optix_Denoise:
                     optixPath = bpy.path.abspath(self.optixProperties.tlm_optix_path)
                     pipePath = [optixPath, '-i', image_path, '-o', denoise_output_destination]
                 elif platform.system() == 'Darwin':
-                    print("Mac for Optix is still unsupported")    
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print("Mac for Optix is still unsupported")    
                 else:
-                    print("Linux for Optix is still unsupported")
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print("Linux for Optix is still unsupported")
 
                 if self.optixProperties.tlm_optix_verbose:
                     denoisePipe = subprocess.Popen(pipePath, shell=True)

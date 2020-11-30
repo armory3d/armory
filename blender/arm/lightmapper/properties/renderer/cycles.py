@@ -85,3 +85,11 @@ class TLM_CyclesSceneProperties(bpy.types.PropertyGroup):
                 name = "Metallic handling", 
                 description="Set metallic handling mode to prevent black-baking.", 
                 default="ignore")
+
+    tlm_lighting_mode : EnumProperty(
+        items = [('combined', 'Combined', 'Bake combined lighting'),
+                ('indirect', 'Indirect', 'Bake indirect lighting'),
+                ('ao', 'AO', 'Bake only Ambient Occlusion')],
+                name = "Lighting mode", 
+                description="TODO.", 
+                default="combined")

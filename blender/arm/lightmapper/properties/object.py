@@ -10,9 +10,29 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
             description = "Atlas Lightmap Group",
             default = "")
 
+    tlm_postatlas_pointer : StringProperty(
+            name = "Atlas Group",
+            description = "Atlas Lightmap Group",
+            default = "")
+
+    tlm_uvchannel_pointer : StringProperty(
+            name = "UV Channel",
+            description = "Select UV Channel to bake to",
+            default = "")
+
+    tlm_uvchannel_pointer : BoolProperty(
+        name="Enable Lightmapping", 
+        description="TODO", 
+        default=False)
+
     tlm_mesh_lightmap_use : BoolProperty(
         name="Enable Lightmapping", 
         description="TODO", 
+        default=False)
+
+    tlm_material_ignore : BoolProperty(
+        name="Skip material", 
+        description="Ignore material for lightmapped object", 
         default=False)
 
     tlm_mesh_lightmap_resolution : EnumProperty(
@@ -29,7 +49,15 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
                 description="TODO", 
                 default='256')
 
-    unwrap_modes = [('Lightmap', 'Lightmap', 'TODO'),('SmartProject', 'Smart Project', 'TODO'),('CopyExisting', 'Copy Existing', 'TODO'),('AtlasGroup', 'Atlas Group', 'TODO')]
+    unwrap_modes = [('Lightmap', 'Lightmap', 'TODO'),
+                ('SmartProject', 'Smart Project', 'TODO'),
+                ('CopyExisting', 'Copy Existing', 'TODO'),
+                ('AtlasGroupA', 'Atlas Group (Prepack)', 'TODO')]
+
+    tlm_postpack_object : BoolProperty( #CHECK INSTEAD OF ATLASGROUPB
+        name="Postpack object", 
+        description="Postpack object into an AtlasGroup", 
+        default=False)
 
     if "blender_xatlas" in addon_keys:
         unwrap_modes.append(('Xatlas', 'Xatlas', 'TODO'))
@@ -118,4 +146,3 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
         default=3, 
         min=1, 
         max=5)
-    

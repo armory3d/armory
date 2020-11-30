@@ -49,6 +49,21 @@ def apply_materials():
                         old = slot.material
                         slot.material = bpy.data.materials[old.name.split('_' + obj.name)[0]]
 
+                if(scene.TLM_SceneProperties.tlm_decoder_setup):
+
+                    tlm_rgbm = bpy.data.node_groups.get('RGBM Decode')
+                    tlm_rgbd = bpy.data.node_groups.get('RGBD Decode')
+                    tlm_logluv = bpy.data.node_groups.get('LogLuv Decode')
+
+                    if tlm_rgbm == None:
+                        load_library('RGBM Decode')
+
+                    if tlm_rgbd == None:
+                        load_library('RGBD Decode')
+
+                    if tlm_logluv == None:
+                        load_library('LogLuv Decode')
+
                 if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
                     tlm_exposure = bpy.data.node_groups.get("Exposure")
 
@@ -56,88 +71,174 @@ def apply_materials():
                         load_library("Exposure")
 
                 #Apply materials
-                print(obj.name)
+                if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print(obj.name)
                 for slot in obj.material_slots:
-                    mat = slot.material
-                    print(slot.material)
-
-                    node_tree = mat.node_tree
-                    nodes = mat.node_tree.nodes
-
-                    foundBakedNode = False
-
-                    #Find nodes
-                    for node in nodes:
-                        if node.name == "Baked Image":
-                            lightmapNode = node
-                            lightmapNode.location = -800, 300
-                            lightmapNode.name = "TLM_Lightmap"
-                            foundBakedNode = True
                     
-                    img_name = obj.name + '_baked'
+                    mat = slot.material
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print(slot.material)
 
-                    if not foundBakedNode:
-                        lightmapNode = node_tree.nodes.new(type="ShaderNodeTexImage")
-                        lightmapNode.location = -300, 300
-                        lightmapNode.image = bpy.data.images[img_name]
-                        lightmapNode.name = "TLM_Lightmap"
-                        lightmapNode.interpolation = "Smart"
+                    if not mat.TLM_ignore:
 
-                    #Find output node
-                    outputNode = nodes[0]
-                    if(outputNode.type != "OUTPUT_MATERIAL"):
-                        for node in node_tree.nodes:
-                            if node.type == "OUTPUT_MATERIAL":
-                                outputNode = node
-                                break
+                        node_tree = mat.node_tree
+                        nodes = mat.node_tree.nodes
 
-                    #Find mainnode
-                    mainNode = outputNode.inputs[0].links[0].from_node
+                        foundBakedNode = False
 
-                    #Add all nodes first
-                    #Add lightmap multipliction texture
-                    mixNode = node_tree.nodes.new(type="ShaderNodeMixRGB")
-                    mixNode.name = "Lightmap_Multiplication"
-                    mixNode.location = -300, 300
-                    mixNode.blend_type = 'MULTIPLY'
-                    mixNode.inputs[0].default_value = 1.0
+                        #Find nodes
+                        for node in nodes:
+                            if node.name == "Baked Image":
+                                lightmapNode = node
+                                lightmapNode.location = -800, 300
+                                lightmapNode.name = "TLM_Lightmap"
+                                foundBakedNode = True
+                        
+                        img_name = obj.name + '_baked'
 
-                    UVLightmap = node_tree.nodes.new(type="ShaderNodeUVMap")
-                    UVLightmap.uv_map = "UVMap_Lightmap"
-                    UVLightmap.name = "Lightmap_UV"
-                    UVLightmap.location = -1000, 300
+                        if not foundBakedNode:
+                            lightmapNode = node_tree.nodes.new(type="ShaderNodeTexImage")
+                            lightmapNode.location = -300, 300
+                            lightmapNode.name = "TLM_Lightmap"
+                            lightmapNode.interpolation = "Smart"
 
-                    if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
-                        ExposureNode = node_tree.nodes.new(type="ShaderNodeGroup")
-                        ExposureNode.node_tree = bpy.data.node_groups["Exposure"]
-                        ExposureNode.inputs[1].default_value = scene.TLM_EngineProperties.tlm_exposure_multiplier
-                        ExposureNode.location = -500, 300
-                        ExposureNode.name = "Lightmap_Exposure"
+                            if (obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA" and obj.TLM_ObjectProperties.tlm_atlas_pointer != ""):
+                                lightmapNode.image = bpy.data.images[obj.TLM_ObjectProperties.tlm_atlas_pointer + "_baked"]
+                            else:
+                                lightmapNode.image = bpy.data.images[img_name]
 
-                    #Add Basecolor node
-                    if len(mainNode.inputs[0].links) == 0:
-                        baseColorValue = mainNode.inputs[0].default_value
-                        baseColorNode = node_tree.nodes.new(type="ShaderNodeRGB")
-                        baseColorNode.outputs[0].default_value = baseColorValue
-                        baseColorNode.location = ((mainNode.location[0] - 500, mainNode.location[1] - 300))
-                        baseColorNode.name = "Lightmap_BasecolorNode_A"
-                    else:
-                        baseColorNode = mainNode.inputs[0].links[0].from_node
-                        baseColorNode.name = "LM_P"
+                        #Find output node
+                        outputNode = nodes[0]
+                        if(outputNode.type != "OUTPUT_MATERIAL"):
+                            for node in node_tree.nodes:
+                                if node.type == "OUTPUT_MATERIAL":
+                                    outputNode = node
+                                    break
 
-                    #Linking
-                    if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
-                        mat.node_tree.links.new(lightmapNode.outputs[0], ExposureNode.inputs[0]) #Connect lightmap node to mixnode
-                        mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
-                    else:
-                        mat.node_tree.links.new(lightmapNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
-                    mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[2]) #Connect basecolor to pbr node
-                    mat.node_tree.links.new(mixNode.outputs[0], mainNode.inputs[0]) #Connect mixnode to pbr node
-                    mat.node_tree.links.new(UVLightmap.outputs[0], lightmapNode.inputs[0]) #Connect uvnode to lightmapnode
+                        #Find mainnode
+                        mainNode = outputNode.inputs[0].links[0].from_node
+
+                        #Clamp metallic
+
+                        # if scene.TLM_SceneProperties.tlm_metallic_clamp != "ignore":
+                        #     if mainNode.type == "BSDF_PRINCIPLED":
+                                
+                        #         if len(mainNode.inputs[4].links) == 0:
+
+                        #             if scene.TLM_SceneProperties.tlm_metallic_clamp == "zero":
+                        #                 mainNode.inputs[4].default_value = 0.0
+                        #             else:
+                        #                 mainNode.inputs[4].default_value = 0.99
+
+                        #         else:
+
+                        #             pass
+
+                        #Add all nodes first
+                        #Add lightmap multipliction texture
+                        mixNode = node_tree.nodes.new(type="ShaderNodeMixRGB")
+                        mixNode.name = "Lightmap_Multiplication"
+                        mixNode.location = -300, 300
+                        if scene.TLM_EngineProperties.tlm_lighting_mode == "indirect" or scene.TLM_EngineProperties.tlm_lighting_mode == "indirectAO":
+                            mixNode.blend_type = 'ADD'
+                        else:
+                            mixNode.blend_type = 'MULTIPLY'
+                        mixNode.inputs[0].default_value = 1.0
+
+                        UVLightmap = node_tree.nodes.new(type="ShaderNodeUVMap")
+                        UVLightmap.uv_map = "UVMap_Lightmap"
+                        UVLightmap.name = "Lightmap_UV"
+                        UVLightmap.location = -1000, 300
+
+                        if(scene.TLM_SceneProperties.tlm_decoder_setup):
+                            if scene.TLM_SceneProperties.tlm_encoding_device == "CPU":
+                                if scene.TLM_SceneProperties.tlm_encoding_mode_a == 'RGBM':
+                                    DecodeNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                                    DecodeNode.node_tree = bpy.data.node_groups["RGBM Decode"]
+                                    DecodeNode.location = -400, 300
+                                    DecodeNode.name = "Lightmap_RGBM_Decode"
+                                    decoding = True
+                                if scene.TLM_SceneProperties.tlm_encoding_mode_b == "RGBD":
+                                    DecodeNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                                    DecodeNode.node_tree = bpy.data.node_groups["RGBD Decode"]
+                                    DecodeNode.location = -400, 300
+                                    DecodeNode.name = "Lightmap_RGBD_Decode"
+                                    decoding = True
+                            else:
+                                if scene.TLM_SceneProperties.tlm_encoding_mode_b == 'RGBM':
+                                    DecodeNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                                    DecodeNode.node_tree = bpy.data.node_groups["RGBM Decode"]
+                                    DecodeNode.location = -400, 300
+                                    DecodeNode.name = "Lightmap_RGBM_Decode"
+                                    decoding = True
+                                if scene.TLM_SceneProperties.tlm_encoding_mode_b == "RGBD":
+                                    DecodeNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                                    DecodeNode.node_tree = bpy.data.node_groups["RGBD Decode"]
+                                    DecodeNode.location = -400, 300
+                                    DecodeNode.name = "Lightmap_RGBD_Decode"
+                                    decoding = True
+                                if scene.TLM_SceneProperties.tlm_encoding_mode_b == "LogLuv":
+                                    DecodeNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                                    DecodeNode.node_tree = bpy.data.node_groups["LogLuv Decode"]
+                                    DecodeNode.location = -400, 300
+                                    DecodeNode.name = "Lightmap_LogLuv_Decode"
+                                    decoding = True
+
+                        if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
+                            ExposureNode = node_tree.nodes.new(type="ShaderNodeGroup")
+                            ExposureNode.node_tree = bpy.data.node_groups["Exposure"]
+                            ExposureNode.inputs[1].default_value = scene.TLM_EngineProperties.tlm_exposure_multiplier
+                            ExposureNode.location = -500, 300
+                            ExposureNode.name = "Lightmap_Exposure"
+
+                        #Add Basecolor node
+                        if len(mainNode.inputs[0].links) == 0:
+                            baseColorValue = mainNode.inputs[0].default_value
+                            baseColorNode = node_tree.nodes.new(type="ShaderNodeRGB")
+                            baseColorNode.outputs[0].default_value = baseColorValue
+                            baseColorNode.location = ((mainNode.location[0] - 500, mainNode.location[1] - 300))
+                            baseColorNode.name = "Lightmap_BasecolorNode_A"
+                        else:
+                            baseColorNode = mainNode.inputs[0].links[0].from_node
+                            baseColorNode.name = "LM_P"
+
+                        #Linking
+
+                        if decoding and scene.TLM_SceneProperties.tlm_encoding_use:
+
+                            if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
+                                
+                                mat.node_tree.links.new(lightmapNode.outputs[0], DecodeNode.inputs[0]) #Connect lightmap node to mixnode
+                                mat.node_tree.links.new(lightmapNode.outputs[1], DecodeNode.inputs[1]) #Connect lightmap node to mixnode
+
+                                mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                                mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                            
+                            else:
+                                mat.node_tree.links.new(lightmapNode.outputs[0], DecodeNode.inputs[0]) #Connect lightmap node to mixnode
+                                mat.node_tree.links.new(lightmapNode.outputs[1], DecodeNode.inputs[1]) #Connect lightmap node to mixnode
+
+                                mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                            
+                            mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[2]) #Connect basecolor to pbr node
+                            mat.node_tree.links.new(mixNode.outputs[0], mainNode.inputs[0]) #Connect mixnode to pbr node
+                            mat.node_tree.links.new(UVLightmap.outputs[0], lightmapNode.inputs[0]) #Connect uvnode to lightmapnode
+
+                        else:
+
+                            if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
+                                mat.node_tree.links.new(lightmapNode.outputs[0], ExposureNode.inputs[0]) #Connect lightmap node to mixnode
+                                mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                            else:
+                                mat.node_tree.links.new(lightmapNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                            mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[2]) #Connect basecolor to pbr node
+                            mat.node_tree.links.new(mixNode.outputs[0], mainNode.inputs[0]) #Connect mixnode to pbr node
+                            mat.node_tree.links.new(UVLightmap.outputs[0], lightmapNode.inputs[0]) #Connect uvnode to lightmapnode
 
 def exchangeLightmapsToPostfix(ext_postfix, new_postfix, formatHDR=".hdr"):
 
-    print(ext_postfix, new_postfix, formatHDR)
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print(ext_postfix, new_postfix, formatHDR)
 
     for obj in bpy.data.objects:
         if obj.type == "MESH":
@@ -151,7 +252,8 @@ def exchangeLightmapsToPostfix(ext_postfix, new_postfix, formatHDR=".hdr"):
                         if node.name == "Baked Image" or node.name == "TLM_Lightmap":
                             img_name = node.image.filepath_raw
                             cutLen = len(ext_postfix + formatHDR)
-                            print("Len:" + str(len(ext_postfix + formatHDR)) + "|" + ext_postfix + ".." + formatHDR)
+                            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                                print("Len:" + str(len(ext_postfix + formatHDR)) + "|" + ext_postfix + ".." + formatHDR)
 
                             #Simple way to sort out objects with multiple materials
                             if formatHDR == ".hdr" or formatHDR == ".exr":
@@ -172,7 +274,7 @@ def load_library(asset_name):
     if bpy.data.filepath.endswith('tlm_data.blend'): # Prevent load in library itself
         return
 
-    data_path = os.path.abspath(os.path.join(scriptDir, '..', '..', 'Assets/tlm_data.blend'))
+    data_path = os.path.abspath(os.path.join(scriptDir, '..', '..', 'assets/tlm_data.blend'))
     data_names = [asset_name]
 
     # Import
