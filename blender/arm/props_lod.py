@@ -8,7 +8,7 @@ def update_size_prop(self, context):
     mdata = context.object.data
     i = mdata.arm_lodlist_index
     ar = mdata.arm_lodlist
-    sz =
+    sz = mdata.arm_lod_screen_size
     # Clamp screen size to not exceed previous entry
     if i > 0 and ar[i - 1].screen_size_prop * sz < self.screen_size_prop * sz:
         self.screen_size_prop = ar[i - 1].screen_size_prop
