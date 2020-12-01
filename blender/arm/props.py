@@ -10,7 +10,7 @@ import arm.proxy
 import arm.utils
 
 # Armory version
-arm_version = '2020.11'
+arm_version = '2020.12'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -99,7 +99,7 @@ def get_win_build_arch(self):
         else:
             return 1
     else:
-        return self.get('arm_project_win_build_arch', 'x64') 
+        return self.get('arm_project_win_build_arch', 'x64')
 
 def set_win_build_arch(self, value):
     self['arm_project_win_build_arch'] = value
@@ -175,7 +175,7 @@ def init_properties():
                ('WarningsOnly', 'Warnings Only', 'Show only warnings'),
                ('ErrorsOnly', 'Errors Only', 'Show only errors')],
         name="Compile Log Parameter", update=assets.invalidate_compiler_cache,
-        default="Summary")    
+        default="Summary")
     bpy.types.World.arm_project_win_build_cpu = IntProperty(name="Count CPU", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
