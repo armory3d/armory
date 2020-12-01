@@ -8,8 +8,9 @@ def update_size_prop(self, context):
     mdata = context.object.data
     i = mdata.arm_lodlist_index
     ar = mdata.arm_lodlist
+    sz = mdata.arm_lod_screen_size
     # Clamp screen size to not exceed previous entry
-    if i > 0 and ar[i - 1].screen_size_prop < self.screen_size_prop:
+    if i > 0 and ar[i - 1].screen_size_prop * sz < self.screen_size_prop * sz:
         self.screen_size_prop = ar[i - 1].screen_size_prop
 
 class ArmLodListItem(bpy.types.PropertyGroup):
@@ -47,7 +48,7 @@ class ARM_UL_LodList(bpy.types.UIList):
             row.label(text=name, icon=custom_icon)
             col = row.column()
             col.alignment = 'RIGHT'
-            col.label(text="{:.2f}".format(item.screen_size_prop))
+            col.label(text="{:.2f}".format(item.screen_size_prop * data.arm_lod_screen_size))
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
@@ -144,6 +145,7 @@ def register():
 
     bpy.types.Mesh.arm_lodlist = CollectionProperty(type=ArmLodListItem)
     bpy.types.Mesh.arm_lodlist_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.Mesh.arm_lod_screen_size = FloatProperty(name="Object Screen Size", default=1.0)
     bpy.types.Mesh.arm_lod_material = BoolProperty(name="Material Lod", description="Use materials of lod objects", default=False)
 
 def unregister():

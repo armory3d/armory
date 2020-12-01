@@ -730,6 +730,7 @@ class ArmoryExporter:
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
                 out_object['lods'] = []
+                out_object['lod_screen_size'] = objref.arm_lod_screen_size
                 for lodlist_item in objref.arm_lodlist:
                     if not lodlist_item.enabled_prop:
                         continue
@@ -2360,7 +2361,7 @@ class ArmoryExporter:
             if bobject.lock_rotation[2]:
                 az = 0
             col_margin = str(rb.collision_margin) if rb.use_margin else '0.0'
-            if rb.use_deactivation:
+            if rb.use_deactivation or bobject.arm_rb_force_deactivation:
                 deact_lv = str(rb.deactivate_linear_velocity)
                 deact_av = str(rb.deactivate_angular_velocity)
                 deact_time = str(bobject.arm_rb_deactivation_time)
@@ -2376,12 +2377,11 @@ class ArmoryExporter:
                 col_margin,
                 deact_lv, deact_av, deact_time
             )
-            body_flags = '[{0}, {1}, {2}, {3}, {4}]'.format(
+            body_flags = '[{0}, {1}, {2}, {3}]'.format(
                 str(rb.kinematic).lower(),
                 str(bobject.arm_rb_trigger).lower(),
                 str(bobject.arm_rb_ccd).lower(),
-                str(is_static).lower(),
-                str(rb.use_deactivation).lower()
+                str(is_static).lower()
             )
             x['parameters'].append(body_params)
             x['parameters'].append(body_flags)
@@ -2613,18 +2613,18 @@ class ArmoryExporter:
                 debug_console_pos_type = 0
             elif (wrd.arm_debug_console_position == 'Center'):
                 debug_console_pos_type = 1
-            else:                
+            else:
                 debug_console_pos_type = 2
             # Parameters
             out_trait = {
                 'type': 'Script',
                 'class_name': 'armory.trait.internal.DebugConsole',
-                'parameters': [str(arm.utils.get_ui_scale()), 
-                str(wrd.arm_debug_console_scale), 
-                str(debug_console_pos_type), 
-                str(int(wrd.arm_debug_console_visible)), 
-                str(int(arm.utils.get_debug_console_visible_sc())), 
-                str(int(arm.utils.get_debug_console_scale_in_sc())), 
+                'parameters': [str(arm.utils.get_ui_scale()),
+                str(wrd.arm_debug_console_scale),
+                str(debug_console_pos_type),
+                str(int(wrd.arm_debug_console_visible)),
+                str(int(arm.utils.get_debug_console_visible_sc())),
+                str(int(arm.utils.get_debug_console_scale_in_sc())),
                 str(int(arm.utils.get_debug_console_scale_out_sc()))]
             }
             self.output['traits'].append(out_trait)
