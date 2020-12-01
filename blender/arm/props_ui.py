@@ -60,6 +60,9 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         # Lightmapping props
         if obj.type == "MESH":
             row = layout.row(align=True)
+            scene = bpy.context.scene
+            if scene == None:
+                return
             row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_use")
 
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
@@ -69,8 +72,34 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
                 row = layout.row()
                 row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_unwrap_mode")
                 row = layout.row()
-                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroup":
-                    pass
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+
+                    if scene.TLM_AtlasListItem >= 0 and len(scene.TLM_AtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_AtlasList[scene.TLM_AtlasListItem]
+                        row.prop_search(obj.TLM_ObjectProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
+                        row = layout.row()
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row = layout.row()
+
+                else:
+                    row = layout.row()
+                    row.prop(obj.TLM_ObjectProperties, "tlm_postpack_object")
+                    row = layout.row()
+
+
+                if obj.TLM_ObjectProperties.tlm_postpack_object and obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
+                    if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
+                        row.prop_search(obj.TLM_ObjectProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
+                        row = layout.row()
+
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row = layout.row()
+
                 row.prop(obj.TLM_ObjectProperties, "tlm_mesh_unwrap_margin")
                 row = layout.row()
                 row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filter_override")
@@ -152,7 +181,6 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_trigger')
-            layout.prop(obj, 'arm_rb_force_deactivation')
             layout.prop(obj, 'arm_rb_ccd')
 
         if obj.soft_body != None:
@@ -610,6 +638,55 @@ class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'arm_project_html5_start_browser')
         row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
+
+class ARM_PT_ArmoryExporterWindowsSettingsPanel(bpy.types.Panel):
+    bl_label = "Windows Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'HIDE_HEADER' }
+    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target == 'windows-hl'
+        else:
+            return False
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        # Options
+        layout.label(text='Windows Settings', icon='SETTINGS')
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_list_vs')
+        col = row.column(align=True)
+        col.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+        col.enabled = arm.utils.get_os_is_windows()
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build')
+        row.enabled = arm.utils.get_os_is_windows()
+        is_enable = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_mode')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_arch')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_log')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_cpu')
+        row.enabled = is_enable
+        row = layout.row()
+        row.prop(wrd, 'arm_project_win_build_open')
+        row.enabled = is_enable
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -1380,6 +1457,29 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 row = layout.row(align=True)
                 row.prop(sceneProperties, "tlm_alert_on_finish")
 
+                if sceneProperties.tlm_alert_on_finish:
+                    row = layout.row(align=True)
+                    row.prop(sceneProperties, "tlm_alert_sound")
+
+                row = layout.row(align=True)
+                row.prop(sceneProperties, "tlm_verbose")
+                #row = layout.row(align=True)
+                #row.prop(sceneProperties, "tlm_compile_statistics")
+                row = layout.row(align=True)
+                row.prop(sceneProperties, "tlm_override_bg_color")
+                if sceneProperties.tlm_override_bg_color:
+                    row = layout.row(align=True)
+                    row.prop(sceneProperties, "tlm_override_color")
+                row = layout.row(align=True)
+                row.prop(sceneProperties, "tlm_reset_uv")
+
+                row = layout.row(align=True)
+                try:
+                    if bpy.context.scene["TLM_Buildstat"] is not None:
+                        row.label(text="Last build completed in: " + str(bpy.context.scene["TLM_Buildstat"][0]))
+                except:
+                    pass
+
                 row = layout.row(align=True)
                 row.label(text="Cycles Settings")
 
@@ -1391,10 +1491,20 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 row.prop(engineProperties, "tlm_resolution_scale")
                 row = layout.row(align=True)
                 row.prop(engineProperties, "tlm_bake_mode")
+                row = layout.row(align=True)
+                row.prop(engineProperties, "tlm_lighting_mode")
 
                 if scene.TLM_EngineProperties.tlm_bake_mode == "Background":
                     row = layout.row(align=True)
                     row.label(text="Warning! Background mode is currently unstable", icon_value=2)
+                    row = layout.row(align=True)
+                    row.prop(sceneProperties, "tlm_network_render")
+                    if sceneProperties.tlm_network_render:
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_network_paths")
+                        #row = layout.row(align=True)
+                        #row.prop(sceneProperties, "tlm_network_dir")
+                row = layout.row(align=True)
                 row = layout.row(align=True)
                 row.prop(engineProperties, "tlm_caching_mode")
                 row = layout.row(align=True)
@@ -1407,6 +1517,8 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 row.prop(engineProperties, "tlm_exposure_multiplier")
                 row = layout.row(align=True)
                 row.prop(engineProperties, "tlm_setting_supersample")
+                row = layout.row(align=True)
+                row.prop(sceneProperties, "tlm_metallic_clamp")
 
             elif sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
 
@@ -1468,8 +1580,6 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                     row.prop(denoiseProperties, "tlm_optix_verbose")
                     row = layout.row(align=True)
                     row.prop(denoiseProperties, "tlm_optix_maxmem")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_denoise_ao")
 
 
             ##################
@@ -1533,52 +1643,44 @@ class ARM_PT_BakePanel(bpy.types.Panel):
 
             if sceneProperties.tlm_encoding_use:
 
-                row.prop(sceneProperties, "tlm_encoding_mode", expand=True)
-                if sceneProperties.tlm_encoding_mode == "RGBM" or sceneProperties.tlm_encoding_mode == "RGBD":
+
+                if scene.TLM_EngineProperties.tlm_bake_mode == "Background":
+                    row.label(text="Encoding options disabled in background mode")
                     row = layout.row(align=True)
-                    row.prop(sceneProperties, "tlm_encoding_range")
-                if sceneProperties.tlm_encoding_mode == "LogLuv":
-                    pass
-                if sceneProperties.tlm_encoding_mode == "HDR":
-                    row = layout.row(align=True)
-                    row.prop(sceneProperties, "tlm_format")
 
-                row = layout.row(align=True)
-                row.label(text="Encoding Settings")
+                row.prop(sceneProperties, "tlm_encoding_device", expand=True)
                 row = layout.row(align=True)
 
-                row = layout.row(align=True)
-                row.operator("tlm.enable_selection")
-                row = layout.row(align=True)
-                row.operator("tlm.disable_selection")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_override_object_settings")
+                if sceneProperties.tlm_encoding_device == "CPU":
+                    row.prop(sceneProperties, "tlm_encoding_mode_a", expand=True)
+                else:
+                    row.prop(sceneProperties, "tlm_encoding_mode_b", expand=True)
 
-                if sceneProperties.tlm_override_object_settings:
+                if sceneProperties.tlm_encoding_device == "CPU":
+                    if sceneProperties.tlm_encoding_mode_a == "RGBM":
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_encoding_range")
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_decoder_setup")
+                    if sceneProperties.tlm_encoding_mode_a == "RGBD":
+                        pass
+                    if sceneProperties.tlm_encoding_mode_a == "HDR":
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_format")
+                else:
 
-                    row = layout.row(align=True)
-                    row = layout.row()
-                    row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
-                    row = layout.row()
+                    if sceneProperties.tlm_encoding_mode_b == "RGBM":
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_encoding_range")
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_decoder_setup")
 
-                    if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroup":
-
-                        if scene.TLM_AtlasList_index >= 0 and len(scene.TLM_AtlasList) > 0:
-                            row = layout.row()
-                            item = scene.TLM_AtlasList[scene.TLM_AtlasList_index]
-                            row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
-                        else:
-                            row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
-
-                    else:
-
-                        row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
-                        row = layout.row()
-                        row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
-
-                row = layout.row(align=True)
-                row.operator("tlm.remove_uv_selection")
-                row = layout.row(align=True)
+                    if sceneProperties.tlm_encoding_mode_b == "LogLuv" and sceneProperties.tlm_encoding_device == "GPU":
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_decoder_setup")
+                    if sceneProperties.tlm_encoding_mode_b == "HDR":
+                        row = layout.row(align=True)
+                        row.prop(sceneProperties, "tlm_format")
 
             ##################
             #SELECTION OPERATORS!
@@ -1601,17 +1703,32 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
                 row = layout.row()
 
-                if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroup":
+                if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
 
-                    if scene.TLM_AtlasList_index >= 0 and len(scene.TLM_AtlasList) > 0:
+                    if scene.TLM_AtlasListItem >= 0 and len(scene.TLM_AtlasList) > 0:
                         row = layout.row()
-                        item = scene.TLM_AtlasList[scene.TLM_AtlasList_index]
+                        item = scene.TLM_AtlasList[scene.TLM_AtlasListItem]
                         row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
                     else:
                         row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
 
                 else:
+                    row = layout.row()
+                    row.prop(sceneProperties, "tlm_postpack_object")
+                    row = layout.row()
 
+                if sceneProperties.tlm_postpack_object and sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
+                    if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
+                        row.prop_search(sceneProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
+                        row = layout.row()
+
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row = layout.row()
+
+                if sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
                     row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
                     row = layout.row()
                     row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
@@ -1619,6 +1736,112 @@ class ARM_PT_BakePanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.operator("tlm.remove_uv_selection")
             row = layout.row(align=True)
+            row.operator("tlm.select_lightmapped_objects")
+            row = layout.row(align=True)
+
+            ##################
+            #Additional settings
+            row = layout.row(align=True)
+            row.label(text="Additional options")
+            sceneProperties = scene.TLM_SceneProperties
+            atlasListItem = scene.TLM_AtlasListItem
+            atlasList = scene.TLM_AtlasList
+            postatlasListItem = scene.TLM_PostAtlasListItem
+            postatlasList = scene.TLM_PostAtlasList
+
+            layout.label(text="Atlas Groups")
+            row = layout.row()
+            row.prop(sceneProperties, "tlm_atlas_mode", expand=True)
+
+            if sceneProperties.tlm_atlas_mode == "Prepack":
+
+                rows = 2
+                if len(atlasList) > 1:
+                    rows = 4
+                row = layout.row()
+                row.template_list("TLM_UL_AtlasList", "Atlas List", scene, "TLM_AtlasList", scene, "TLM_AtlasListItem", rows=rows)
+                col = row.column(align=True)
+                col.operator("tlm_atlaslist.new_item", icon='ADD', text="")
+                col.operator("tlm_atlaslist.delete_item", icon='REMOVE', text="")
+                #col.menu("ARM_MT_BakeListSpecials", icon='DOWNARROW_HLT', text="")
+
+                # if len(scene.TLM_AtlasList) > 1:
+                #     col.separator()
+                #     op = col.operator("arm_bakelist.move_item", icon='TRIA_UP', text="")
+                #     op.direction = 'UP'
+                #     op = col.operator("arm_bakelist.move_item", icon='TRIA_DOWN', text="")
+                #     op.direction = 'DOWN'
+
+                if atlasListItem >= 0 and len(atlasList) > 0:
+                    item = atlasList[atlasListItem]
+                    #layout.prop_search(item, "obj", bpy.data, "objects", text="Object")
+                    #layout.prop(item, "res_x")
+                    layout.prop(item, "tlm_atlas_lightmap_unwrap_mode")
+                    layout.prop(item, "tlm_atlas_lightmap_resolution")
+                    layout.prop(item, "tlm_atlas_unwrap_margin")
+
+                    amount = 0
+
+                    for obj in bpy.data.objects:
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+                            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                                if obj.TLM_ObjectProperties.tlm_atlas_pointer == item.name:
+                                    amount = amount + 1
+
+                    layout.label(text="Objects: " + str(amount))
+
+                # layout.use_property_split = True
+                # layout.use_property_decorate = False
+                # layout.label(text="Enable for selection")
+                # layout.label(text="Disable for selection")
+                # layout.label(text="Something...")
+
+            else:
+
+                layout.label(text="Postpacking is unstable.")
+                rows = 2
+                if len(atlasList) > 1:
+                    rows = 4
+                row = layout.row()
+                row.template_list("TLM_UL_PostAtlasList", "PostList", scene, "TLM_PostAtlasList", scene, "TLM_PostAtlasListItem", rows=rows)
+                col = row.column(align=True)
+                col.operator("tlm_postatlaslist.new_item", icon='ADD', text="")
+                col.operator("tlm_postatlaslist.delete_item", icon='REMOVE', text="")
+
+                if postatlasListItem >= 0 and len(postatlasList) > 0:
+                    item = postatlasList[postatlasListItem]
+                    layout.prop(item, "tlm_atlas_lightmap_resolution")
+
+                    #Below list object counter
+                    amount = 0
+                    utilized = 0
+                    atlasUsedArea = 0
+                    atlasSize = item.tlm_atlas_lightmap_resolution
+
+                    for obj in bpy.data.objects:
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+                            if obj.TLM_ObjectProperties.tlm_postpack_object:
+                                if obj.TLM_ObjectProperties.tlm_postatlas_pointer == item.name:
+                                    amount = amount + 1
+
+                                    atlasUsedArea += int(obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution) ** 2
+
+                    row = layout.row()
+                    row.prop(item, "tlm_atlas_repack_on_cleanup")
+
+                    #TODO SET A CHECK FOR THIS! ADD A CV2 CHECK TO UTILITY!
+                    cv2 = True
+
+                    if cv2:
+                        row = layout.row()
+                        row.prop(item, "tlm_atlas_dilation")
+                    layout.label(text="Objects: " + str(amount))
+
+                    utilized = atlasUsedArea / (int(atlasSize) ** 2)
+                    layout.label(text="Utilized: " + str(utilized * 100) + "%")
+
+                    if (utilized * 100) > 100:
+                        layout.label(text="Warning! Overflow not yet supported")
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -2247,6 +2470,44 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
         make.run_android_emulators(arm.utils.get_android_emulator_name())
         return{'FINISHED'}
 
+class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
+    '''Updating the list installed Visual Studio for the Windows platform'''
+    bl_idname = 'arm.update_list_installed_vs'
+    bl_label = 'Update List Installed Visual Studio'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+        if not arm.utils.get_os_is_windows():
+            return {"CANCELLED"}
+
+        wrd = bpy.data.worlds['Arm']
+        items, err = arm.utils.get_list_installed_vs_version()
+        if len(err) > 0:
+            print('Warning for operation Update List Installed Visual Studio: '+ err +'. Check if ArmorySDK is installed correctly.')
+            return{'FINISHED'}
+        if len(items) > 0:
+            items_enum = [('10', '2010', 'Visual Studio 2010 (version 10)'),
+                          ('11', '2012', 'Visual Studio 2012 (version 11)'),
+                          ('12', '2013', 'Visual Studio 2013 (version 12)'),
+                          ('14', '2015', 'Visual Studio 2015 (version 14)'),
+                          ('15', '2017', 'Visual Studio 2017 (version 15)'),
+                          ('16', '2019', 'Visual Studio 2019 (version 16)')]
+            prev_select = wrd.arm_project_win_list_vs
+            res_items_enum = []
+            for vs in items_enum:
+                l_vs = list(vs)
+                for ver in items:
+                    if l_vs[0] == ver[0]:
+                        l_vs[1] = l_vs[1] + ' (installed)'
+                        l_vs[2] = l_vs[2] + ' (installed)'
+                        break
+                res_items_enum.append((l_vs[0], l_vs[1], l_vs[2]))
+            bpy.types.World.arm_project_win_list_vs = EnumProperty(items=res_items_enum, name="Visual Studio Version", default=prev_select, update=assets.invalidate_compiler_cache)
+        return{'FINISHED'}
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
@@ -2291,6 +2552,7 @@ def register():
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
@@ -2332,6 +2594,7 @@ def register():
     bpy.utils.register_class(ARM_OT_DiscardPopup)
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
+    bpy.utils.register_class(ArmoryUpdateListInstalledVSButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
@@ -2343,6 +2606,7 @@ def unregister():
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
 
+    bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
@@ -2362,6 +2626,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)

@@ -2361,7 +2361,7 @@ class ArmoryExporter:
             if bobject.lock_rotation[2]:
                 az = 0
             col_margin = str(rb.collision_margin) if rb.use_margin else '0.0'
-            if rb.use_deactivation or bobject.arm_rb_force_deactivation:
+            if rb.use_deactivation:
                 deact_lv = str(rb.deactivate_linear_velocity)
                 deact_av = str(rb.deactivate_angular_velocity)
                 deact_time = str(bobject.arm_rb_deactivation_time)
@@ -2377,11 +2377,12 @@ class ArmoryExporter:
                 col_margin,
                 deact_lv, deact_av, deact_time
             )
-            body_flags = '[{0}, {1}, {2}, {3}]'.format(
+            body_flags = '[{0}, {1}, {2}, {3}, {4}]'.format(
                 str(rb.kinematic).lower(),
                 str(bobject.arm_rb_trigger).lower(),
                 str(bobject.arm_rb_ccd).lower(),
-                str(is_static).lower()
+                str(is_static).lower(),
+                str(rb.use_deactivation).lower()
             )
             x['parameters'].append(body_params)
             x['parameters'].append(body_flags)
