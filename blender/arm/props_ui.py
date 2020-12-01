@@ -1479,7 +1479,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                         row.label(text="Last build completed in: " + str(bpy.context.scene["TLM_Buildstat"][0]))
                 except:
                     pass
-                
+
                 row = layout.row(align=True)
                 row.label(text="Cycles Settings")
 
@@ -1738,7 +1738,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.operator("tlm.select_lightmapped_objects")
             row = layout.row(align=True)
-            
+
             ##################
             #Additional settings
             row = layout.row(align=True)
@@ -1823,7 +1823,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                             if obj.TLM_ObjectProperties.tlm_postpack_object:
                                 if obj.TLM_ObjectProperties.tlm_postatlas_pointer == item.name:
                                     amount = amount + 1
-                                    
+
                                     atlasUsedArea += int(obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution) ** 2
 
                     row = layout.row()
@@ -1929,6 +1929,7 @@ class ARM_PT_LodPanel(bpy.types.Panel):
             item = mdata.arm_lodlist[mdata.arm_lodlist_index]
             layout.prop_search(item, "name", bpy.data, "objects", text="Object")
             layout.prop(item, "screen_size_prop")
+        layout.prop(mdata, "arm_lod_screen_size")
         layout.prop(mdata, "arm_lod_material")
 
         # Auto lod for meshes
@@ -2482,7 +2483,7 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
             return {"CANCELLED"}
         if not arm.utils.get_os_is_windows():
             return {"CANCELLED"}
-         
+
         wrd = bpy.data.worlds['Arm']
         items, err = arm.utils.get_list_installed_vs_version()
         if len(err) > 0:
@@ -2498,7 +2499,7 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
             prev_select = wrd.arm_project_win_list_vs
             res_items_enum = []
             for vs in items_enum:
-                l_vs = list(vs)    
+                l_vs = list(vs)
                 for ver in items:
                     if l_vs[0] == ver[0]:
                         l_vs[1] = l_vs[1] + ' (installed)'
