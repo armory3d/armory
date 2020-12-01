@@ -79,20 +79,14 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 self.add_input('NodeSocketBool', 'Y linear')
                 #Z lin limits
                 self.add_input('NodeSocketBool', 'Z linear')
-                #lower limits
-                self.add_input('NodeSocketVector', 'lin lower')
-                #upper limits
-                self.add_input('NodeSocketVector', 'lin upper')
                 #X ang limits
                 self.add_input('NodeSocketBool', 'X angle')
                 #Y ang limits
                 self.add_input('NodeSocketBool', 'Y angle')
                 #Z ang limits
                 self.add_input('NodeSocketBool', 'Z angle')
-                #lower limits
-                self.add_input('NodeSocketVector', 'ang lower', [-45.0, -45.0, -45.0])
-                #upper limits
-                self.add_input('NodeSocketVector', 'ang upper', [45.0, 45.0, 45.0])
+                #limits
+                self.add_input('ArmNodeSocketArray', 'Limits')
             #Arguements for type GenericSpring
             if (self.get_count_in(select_current) == 6):
                 while (len(self.inputs) > 7):
@@ -103,40 +97,26 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 self.add_input('NodeSocketBool', 'Y linear')
                 #Z lin limits
                 self.add_input('NodeSocketBool', 'Z linear')
-                #lower limits
-                self.add_input('NodeSocketVector', 'lin lower')
-                #upper limits
-                self.add_input('NodeSocketVector', 'lin upper')
                 #X ang limits
                 self.add_input('NodeSocketBool', 'X angle')
                 #Y ang limits
                 self.add_input('NodeSocketBool', 'Y angle')
                 #Z ang limits
                 self.add_input('NodeSocketBool', 'Z angle')
-                #lower limits
-                self.add_input('NodeSocketVector', 'ang lower', [-45.0, -45.0, -45.0])
-                #upper limits
-                self.add_input('NodeSocketVector', 'ang upper', [45.0, 45.0, 45.0])
                 #X lin spring
                 self.add_input('NodeSocketBool', 'X linear')
                 #Y lin spring
                 self.add_input('NodeSocketBool', 'Y linear')
                 #Z lin spring
                 self.add_input('NodeSocketBool', 'Z linear')
-                #linear stiffness
-                self.add_input('NodeSocketVector', 'lin stiffness', [10.0, 10.0, 10.0])
-                #linear damping
-                self.add_input('NodeSocketVector', 'lin damping', [0.5, 0.5, 0.5])
                 #X ang spring
                 self.add_input('NodeSocketBool', 'X angle')
                 #Y ang spring
                 self.add_input('NodeSocketBool', 'Y angle')
                 #Z ang spring
                 self.add_input('NodeSocketBool', 'Z angle')
-                #angular stiffness
-                self.add_input('NodeSocketVector', 'ang stiffness', [10.0, 10.0, 10.0])
-                #angular damping
-                self.add_input('NodeSocketVector', 'ang damping', [0.5, 0.5, 0.5])
+                #limits
+                self.add_input('ArmNodeSocketArray', 'Limits')
         self['property0'] = value
 
     property0: EnumProperty(
@@ -165,3 +145,79 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+
+        if (self.get_count_in(self.property0) == 5):
+            grid0 = layout.grid_flow(row_major=True, columns=1, align=True)
+            grid0.label(text="Limits:")
+            grid0.label(text="Linear lower [X, Y, Z]")
+            grid0.label(text="Linear upper [X, Y, Z]")
+            grid0.label(text="Angular lower [X, Y, Z]")
+            grid0.label(text="Angular upper [X, Y, Z]")
+            row00 = layout.row()
+            row10 = row00.column()
+            row00.alignment = 'CENTER'
+            row00.label(text = "")
+            row01 = row00.split()
+            row01.alignment = 'CENTER'
+            row01.label(text = "Limits")
+            row02 = row01.split()
+            row02.alignment = 'CENTER'
+            row02.label(text = "Springs")
+            #row1
+            row10.alignment = 'CENTER'
+            row10.label(text = 'X')
+
+            #row11 = row01.column()
+            #row11.alignment = 'CENTER'
+            #row11.label(text = "Linear X")
+            #row12 = row11.split()
+            #row12.alignment = 'CENTER'
+            #row12.label(text = "Angular X")
+
+            #row13 = row02.column()
+            #row13.alignment = 'CENTER'
+            #row13.label(text = "Linear X")
+            #row14 = row13.split()
+            #row14.alignment = 'CENTER'
+            #row14.label(text = "Angular X")
+
+
+            grid1 = layout.grid_flow(row_major=True, columns=5, align=True)
+            ##row 1
+            grid1.label(text="")
+            grid1.label(text="Linear")
+            grid1.label(text="Angular")
+            grid1.label(text="Linear")
+            grid1.label(text="Angular")
+            ##row 2
+            grid1.label(text="X")
+            grid1.label(text="Linear X")
+            grid1.label(text="Angular X")
+            grid1.label(text="Linear X")
+            grid1.label(text="Angular X")
+            ##row 2
+            grid1.label(text="Y")
+            grid1.label(text="Linear Y")
+            grid1.label(text="Angular Y")
+            grid1.label(text="Linear Y")
+            grid1.label(text="Angular Y")
+            ##row 3
+            grid1.label(text="Z")
+            grid1.label(text="Linear Z")
+            grid1.label(text="Angular Z")
+            grid1.label(text="Linear Z")
+            grid1.label(text="Angular Z")
+
+        
+        if (self.get_count_in(self.property0) == 6):
+            grid0 = layout.grid_flow(row_major=True, columns=1, align=True)
+            grid0.label(text="Limits:")
+            grid0.label(text="Linear lower [X, Y, Z]")
+            grid0.label(text="Linear upper [X, Y, Z]")
+            grid0.label(text="Angular lower [X, Y, Z]")
+            grid0.label(text="Angular upper [X, Y, Z]")
+            grid0.label(text="Linear Stiffness [X, Y, Z]")
+            grid0.label(text="Linear Damping [X, Y, Z]")
+            grid0.label(text="Angular Stiffness [X, Y, Z]")
+            grid0.label(text="Angular Damping [X, Y, Z]")
+
