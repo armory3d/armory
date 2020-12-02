@@ -120,8 +120,8 @@ class OnSwipeNode extends LogicNode {
 		switch (from) {
 			// UP
 			case 1: {
-				// 68 - 121
-				if ((angle >= 68) && (angle < 121)) return true;
+				// 68 - 112
+				if ((angle >= 68) && (angle < 112)) return true;
 				return false;
 			}
 			// DOWN
@@ -144,8 +144,8 @@ class OnSwipeNode extends LogicNode {
 			}
 			// UP-LEFT
 			case 5: {
-				// 121 - 158				
-				if ((angle >= 121) && (angle < 158)) return true;
+				// 112 - 158				
+				if ((angle >= 112) && (angle < 158)) return true;
 				return false;
 			}
 			// UP-RIGHT
