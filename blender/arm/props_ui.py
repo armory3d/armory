@@ -633,6 +633,8 @@ class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
         # Options
         layout.label(text='HTML5 Settings', icon='SETTINGS')
         row = layout.row()
+        row.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
+        row = layout.row()
         row.prop(wrd, 'arm_project_html5_copy')
         row.enabled = len(arm.utils.get_html5_copy_path()) > 0
         row = layout.row()
