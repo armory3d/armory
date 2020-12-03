@@ -143,6 +143,7 @@ def init_properties():
     # HTML5 Settings
     bpy.types.World.arm_project_html5_copy = BoolProperty(name="Copy Files To Specified Folder", description="Copy files to the folder specified in the settings after publish", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_copy, get=get_project_html5_copy)
     bpy.types.World.arm_project_html5_start_browser = BoolProperty(name="Run Browser After Copy", description="Run browser after copy", default=False, update=assets.invalidate_compiler_cache, set=set_project_html5_start_browser, get=get_project_html5_start_browser)
+    bpy.types.World.arm_project_html5_popupmenu_in_browser = BoolProperty(name="Disable Browser Context Menu", description="Disable the browser context menu for the canvas element on the page", default=False, update=assets.invalidate_compiler_cache)
     # Windows Settings
     bpy.types.World.arm_project_win_list_vs = EnumProperty(
         items=[('10', '2010', 'Visual Studio 2010 (version 10)'),

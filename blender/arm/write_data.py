@@ -442,6 +442,9 @@ def write_indexhtml(w, h, is_publish):
     dest = '/html5' if is_publish else '/debug/html5'
     if not os.path.exists(arm.utils.build_dir() + dest):
         os.makedirs(arm.utils.build_dir() + dest)
+    popupmenu_in_browser = ''
+    if wrd.arm_project_html5_popupmenu_in_browser:
+        popupmenu_in_browser = ' oncontextmenu="return false"'
     with open(arm.utils.build_dir() + dest + '/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>
@@ -464,11 +467,11 @@ def write_indexhtml(w, h, is_publish):
 """)
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'></canvas>
+    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
 """)
         else:
             f.write("""
-    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'></canvas></p>
+    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>
 """)
         f.write("""
     <script src='kha.js'></script>
