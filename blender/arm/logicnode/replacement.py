@@ -7,6 +7,7 @@ should look like.
 """
 import os.path
 import time
+import traceback
 from typing import Dict, List, Optional, Tuple
 
 import bpy.props
@@ -16,8 +17,8 @@ import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.arm_sockets
 
 # List of errors that occurred during the replacement
-# Format: (error identifier, node.bl_idname, tree name)
-replacement_errors: List[Tuple[str, Optional[str], str]] = []
+# Format: (error identifier, node.bl_idname (or None), tree name, exception traceback (optional))
+replacement_errors: List[Tuple[str, Optional[str], str, Optional[str]]] = []
 
 
 class NodeReplacement:
@@ -217,24 +218,24 @@ def replace_all():
 
                 # Node type deleted. That's unusual. Or it has been replaced for a looong time
                 elif not node.is_registered_node_type():
-                    replacement_errors.append(('unregistered', None, tree.name))
+                    replacement_errors.append(('unregistered', None, tree.name, None))
 
                 # Invalid version number
                 elif not isinstance(type(node).arm_version, int):
-                    replacement_errors.append(('bad version', node.bl_idname, tree.name))
+                    replacement_errors.append(('bad version', node.bl_idname, tree.name, None))
 
                 # Actual replacement
                 elif node.arm_version < type(node).arm_version:
                     try:
                         replace(tree, node)
                     except LookupError as err:
-                        replacement_errors.append(('update failed', node.bl_idname, tree.name))
+                        replacement_errors.append(('update failed', node.bl_idname, tree.name, traceback.format_exc()))
                     except Exception as err:
-                        replacement_errors.append(('misc.', node.bl_idname, tree.name))
+                        replacement_errors.append(('misc.', node.bl_idname, tree.name, traceback.format_exc()))
 
                 # Node version is newer than supported by the class
                 elif node.arm_version > type(node).arm_version:
-                    replacement_errors.append(('future version', node.bl_idname, tree.name))
+                    replacement_errors.append(('future version', node.bl_idname, tree.name, None))
 
     # If possible, make a popup about the errors and write an error report into the .blend file's folder
     if len(replacement_errors) > 0:
@@ -248,7 +249,7 @@ def replace_all():
         log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
 
         with open(reportfile, 'w') as reportf:
-            for error_type, node_class, tree_name in replacement_errors:
+            for error_type, node_class, tree_name, tb in replacement_errors:
                 if error_type == 'unregistered':
                     print(f"A node whose class doesn't exist was found in node tree \"{tree_name}\"", file=reportf)
                 elif error_type == 'update failed':
@@ -263,7 +264,8 @@ def replace_all():
                           f"If this nodes comes from an add-on, please check that it is compatible with this version of armory.", file=reportf)
                 elif error_type == 'misc.':
                     print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
-                          f"because the node's update procedure itself failed.", file=reportf)
+                          f"because the node's update procedure itself failed. Original exception:"
+                          "\n" + tb + "\n", file=reportf)
                 else:
                     print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
                           f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
