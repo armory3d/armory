@@ -16,7 +16,7 @@ import arm.logicnode.arm_sockets
 
 # List of errors that occurred during the replacement
 # Format: (error identifier, node.bl_idname, tree name)
-replacement_errors: List[Tuple[str, Optional[str], str]]
+replacement_errors: List[Tuple[str, Optional[str], str]] = []
 
 
 class NodeReplacement:
@@ -199,7 +199,7 @@ def replace_all():
     """Iterate through all logic node trees in the file and check for node updates/replacements to execute."""
     global replacement_errors
 
-    list_of_errors: List[Tuple[str, Optional[str], str]] = list()
+    replacement_errors.clear()
 
     for tree in bpy.data.node_groups:
         if tree.bl_idname == "ArmLogicTreeType":
@@ -216,27 +216,27 @@ def replace_all():
 
                 # Node type deleted. That's unusual. Or it has been replaced for a looong time
                 elif not node.is_registered_node_type():
-                    list_of_errors.append(('unregistered', None, tree.name))
+                    replacement_errors.append(('unregistered', None, tree.name))
 
                 # Invalid version number
                 elif not isinstance(type(node).arm_version, int):
-                    list_of_errors.append(('bad version', node.bl_idname, tree.name))
+                    replacement_errors.append(('bad version', node.bl_idname, tree.name))
 
                 # Actual replacement
                 elif node.arm_version < type(node).arm_version:
                     try:
                         replace(tree, node)
                     except LookupError as err:
-                        list_of_errors.append(('update failed', node.bl_idname, tree.name))
+                        replacement_errors.append(('update failed', node.bl_idname, tree.name))
                     except Exception as err:
-                        list_of_errors.append(('misc.', node.bl_idname, tree.name))
+                        replacement_errors.append(('misc.', node.bl_idname, tree.name))
 
                 # Node version is newer than supported by the class
                 elif node.arm_version > type(node).arm_version:
-                    list_of_errors.append(('future version', node.bl_idname, tree.name))
+                    replacement_errors.append(('future version', node.bl_idname, tree.name))
 
     # If possible, make a popup about the errors and write an error report into the .blend file's folder
-    if len(list_of_errors) > 0:
+    if len(replacement_errors) > 0:
         print('There were errors in node replacement')
         basedir = os.path.dirname(bpy.data.filepath)
         reportfile = os.path.join(
@@ -246,7 +246,7 @@ def replace_all():
         )
 
         with open(reportfile, 'w') as reportf:
-            for error_type, node_class, tree_name in list_of_errors:
+            for error_type, node_class, tree_name in replacement_errors:
                 if error_type == 'unregistered':
                     print(f"A node whose class doesn't exist was found in node tree \"{tree_name}\"", file=reportf)
                 elif error_type == 'update failed':
@@ -266,6 +266,4 @@ def replace_all():
                     print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
                           f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
 
-        replacement_errors = list_of_errors
         bpy.ops.arm.show_node_update_errors()
-        replacement_errors = None
