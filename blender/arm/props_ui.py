@@ -2386,6 +2386,7 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
         row = layout.row(align=True)
         row.active_default = False
         row.operator('arm.discard_popup', text='Ok')
+        row.operator('arm.open_project_folder', text='Open Project Folder', icon="FILE_FOLDER")
 
     def execute(self, context):
         ARM_OT_ShowNodeUpdateErrors.wrd = bpy.data.worlds['Arm']
