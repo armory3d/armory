@@ -4,7 +4,11 @@ import iron.Scene;
 import iron.object.Object;
 #if arm_bullet
 
-
+/**
+ * A helper trait to add physics constraints when exporting via Blender. 
+ * This trait will be automatically removed once the constraint is added. Note that this trait
+ * uses object names instead of object reference.
+ **/
 class PhysicsConstraintExportHelper extends iron.Trait {
 
 	var body1: String;
