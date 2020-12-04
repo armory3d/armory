@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 
 import bpy.props
 
+import arm.log as log
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.arm_sockets
 
@@ -237,13 +238,14 @@ def replace_all():
 
     # If possible, make a popup about the errors and write an error report into the .blend file's folder
     if len(replacement_errors) > 0:
-        print('There were errors in node replacement')
         basedir = os.path.dirname(bpy.data.filepath)
         reportfile = os.path.join(
             basedir, 'node_update_failure.{:s}.txt'.format(
                 time.strftime("%Y-%m-%dT%H-%M-%S%z")
             )
         )
+
+        log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
 
         with open(reportfile, 'w') as reportf:
             for error_type, node_class, tree_name in replacement_errors:
