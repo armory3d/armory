@@ -1,12 +1,11 @@
-import os.path
-import time
-from typing import Callable, Set, Tuple, Optional
+from typing import Callable
 import webbrowser
 
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
 import arm.logicnode.arm_nodes as arm_nodes
+import arm.logicnode.replacement
 import arm.logicnode
 import arm.utils
 
@@ -339,163 +338,6 @@ class ARMAddSetVarNode(bpy.types.Operator):
         return({'FINISHED'})
 
 
-def replace(tree: bpy.types.NodeTree, node: arm_nodes.ArmLogicTreeNode):
-    """Replaces the given node with its replacement."""
-
-    # the node can either return a NodeReplacement object (for simple replacements)
-    # or a brand new node, for more complex stuff.
-    response = node.get_replacement_node(tree)
-
-    if isinstance(response, arm_nodes.ArmLogicTreeNode):
-        newnode = response
-        # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
-
-    elif isinstance(response, list):  # a list of nodes:
-        for newnode in response:
-            newnode.parent = node.parent
-            newnode.location = node.location
-            newnode.select = node.select
-
-    elif isinstance(response, arm_nodes.NodeReplacement):
-        replacement = response
-        # if the returned object is a NodeReplacement, check that it corresponds to the node (also, create the new node)
-        if node.bl_idname != replacement.from_node or node.arm_version != replacement.from_node_version:
-            raise LookupError("The provided NodeReplacement doesn't seem to correspond to the node needing replacement")
-
-        # Create the replacement node
-        newnode = tree.nodes.new(response.to_node)
-        if newnode.arm_version != replacement.to_node_version:
-            tree.nodes.remove(newnode)
-            raise LookupError("The provided NodeReplacement doesn't seem to correspond to the node needing replacement")
-
-        # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
-
-        # now, use the `replacement` to hook up the new node correctly
-        # start by applying defaults
-        for prop_name, prop_value in replacement.property_defaults.items():
-            setattr(newnode, prop_name, prop_value)
-        for input_id, input_value in replacement.input_defaults.items():
-            input_socket = newnode.inputs[input_id]
-            if isinstance(input_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
-                if input_socket.arm_socket_type != 'NONE':
-                    input_socket.default_value_raw = input_value
-            elif input_socket.type != 'SHADER':
-                # note: shader-type sockets don't have a default value...
-                input_socket.default_value = input_value
-
-        # map properties
-        for src_prop_name, dest_prop_name in replacement.property_mapping.items():
-            setattr(newnode, dest_prop_name, getattr(node, src_prop_name))
-
-        # map inputs
-        for src_socket_id, dest_socket_id in replacement.in_socket_mapping.items():
-            src_socket = node.inputs[src_socket_id]
-            dest_socket = newnode.inputs[dest_socket_id]
-            if src_socket.is_linked:
-                # an input socket only has one link
-                datasource_socket = src_socket.links[0].from_socket
-                tree.links.new(datasource_socket, dest_socket)
-            else:
-                if isinstance(dest_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
-                    if dest_socket.arm_socket_type != 'NONE':
-                        dest_socket.default_value_raw = src_socket.default_value_raw
-                elif dest_socket.type != 'SHADER':
-                    # note: shader-type sockets don't have a default value...
-                    dest_socket.default_value = src_socket.default_value
-
-        # map outputs
-        for src_socket_id, dest_socket_id in replacement.out_socket_mapping.items():
-            dest_socket = newnode.outputs[dest_socket_id]
-            for link in node.outputs[src_socket_id].links:
-                tree.links.new(dest_socket, link.to_socket)
-    else:
-        print(response)
-    tree.nodes.remove(node)
-
-
-def replace_all():
-    """Iterate through all logic node trees and check for node updates/replacements to execute."""
-    global replacement_errors
-
-    # Errors: (error identifier, node.bl_idname, tree name)
-    list_of_errors: Set[Tuple[str, Optional[str], str]] = set()
-
-    for tree in bpy.data.node_groups:
-        if tree.bl_idname == "ArmLogicTreeType":
-            # Use list() to make a "static" copy. It's possible to iterate over it because nodes which get removed
-            # from the tree leave python objects in the list
-            for node in list(tree.nodes):
-                # Blender nodes (layout)
-                if not isinstance(node, arm_nodes.ArmLogicTreeNode):
-                    continue
-
-                # That node has been removed from the tree without replace() being called on it somehow
-                elif node.type == '':
-                    continue
-
-                # Node type deleted. That's unusual. Or it has been replaced for a looong time
-                elif not node.is_registered_node_type():
-                    list_of_errors.add(('unregistered', None, tree.name))
-
-                # Invalid version number
-                elif not isinstance(type(node).arm_version, int):
-                    list_of_errors.add(('bad version', node.bl_idname, tree.name))
-
-                # Actual replacement
-                elif node.arm_version < type(node).arm_version:
-                    try:
-                        replace(tree, node)
-                    except LookupError as err:
-                        list_of_errors.add(('update failed', node.bl_idname, tree.name))
-                    except Exception as err:
-                        list_of_errors.add(('misc.', node.bl_idname, tree.name))
-
-                # Node version is newer than supported by the class
-                elif node.arm_version > type(node).arm_version:
-                    list_of_errors.add(('future version', node.bl_idname, tree.name))
-
-    # If possible, make a popup about the errors and write an error report into the .blend file's folder
-    if len(list_of_errors) > 0:
-        print('There were errors in node replacement')
-        basedir = os.path.dirname(bpy.data.filepath)
-        reportfile = os.path.join(
-            basedir, 'node_update_failure.{:s}.txt'.format(
-                time.strftime("%Y-%m-%dT%H-%M-%S%z")
-            )
-        )
-
-        with open(reportfile, 'w') as reportf:
-            for error_type, node_class, tree_name in list_of_errors:
-                if error_type == 'unregistered':
-                    print(f"A node whose class doesn't exist was found in node tree \"{tree_name}\"", file=reportf)
-                elif error_type == 'update failed':
-                    print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
-                          f"because there is no (longer?) an update routine for this version of the node.", file=reportf)
-                elif error_type == 'future version':
-                    print(f"A node of type {node_class} in tree \"{tree_name}\" seemingly comes from a future version of armory. "
-                          f"Please check whether your version of armory is up to date", file=reportf)
-                elif error_type == 'bad version':
-                    print(f"A node of type {node_class} in tree \"{tree_name}\" doesn't have version information attached to it. "
-                          f"If so, please check that the nodes in the file are compatible with the in-code node classes. "
-                          f"If this nodes comes from an add-on, please check that it is compatible with this version of armory.", file=reportf)
-                elif error_type == 'misc.':
-                    print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
-                          f"because the node's update procedure itself failed.", file=reportf)
-                else:
-                    print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
-                          f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
-
-        replacement_errors = list_of_errors
-        bpy.ops.arm.show_node_update_errors()
-        replacement_errors = None
-
-
 class ReplaceNodesOperator(bpy.types.Operator):
     """Automatically replaces deprecated nodes."""
     bl_idname = "node.replace"
@@ -503,7 +345,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
     bl_description = "Replace deprecated nodes"
 
     def execute(self, context):
-        replace_all()
+        arm.logicnode.replacement.replace_all()
         return {'FINISHED'}
 
     @classmethod

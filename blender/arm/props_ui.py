@@ -7,6 +7,7 @@ from bpy.props import *
 import arm.api
 import arm.assets as assets
 import arm.log as log
+import arm.logicnode.replacement
 import arm.make as make
 import arm.make_state as state
 import arm.props as props
@@ -2313,7 +2314,7 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
     wrd = None  # a helper internal variable
 
     def draw_message_box(self, context):
-        list_of_errors = arm.nodes_logic.replacement_errors.copy()
+        list_of_errors = arm.logicnode.replacement.replacement_errors.copy()
         # note: list_of_errors is a set of tuples: `(error_type, node_class, tree_name)`
         # where `error_type` can be "unregistered", "update failed", "future version", "bad version", or "misc."
 
@@ -2322,8 +2323,8 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
 
         # this will help order versions better, somewhat.
         # note: this is NOT complete
-        current_version_2 = tuple( current_version.split('.') )
-        file_version_2 = tuple( file_version.split('.') )
+        current_version_2 = tuple(current_version.split('.'))
+        file_version_2 = tuple(file_version.split('.'))
         is_armory_upgrade = (current_version_2 > file_version_2)
 
         error_types = set()
@@ -2338,8 +2339,8 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
         layout = layout.column(align=True)
         layout.alignment = 'EXPAND'
 
-        layout.label(text="Some nodes failed to be updated to the current armory version", icon="ERROR")
-        if current_version==file_version:
+        layout.label(text="Some nodes failed to be updated to the current Armory version", icon="ERROR")
+        if current_version == file_version:
             layout.label(text="(This might be because you are using a development snapshot, or a homemade version ;) )", icon='BLANK1')
         elif not is_armory_upgrade:
             layout.label(text="(Please note that it is not possible do downgrade nodes to a previous version either.", icon='BLANK1')
@@ -2351,7 +2352,7 @@ class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
 
         if 'update failed' in error_types:
             layout.label(text="Some nodes do not have an update procedure to deal with the version saved in this file.", icon='BLANK1')
-            if current_version==file_version:
+            if current_version == file_version:
                 layout.label(text="(if you are a developer, this might be because you didn't implement it yet.)", icon='BLANK1')
         if 'bad version' in error_types:
             layout.label(text="Some nodes do not have version information attached to them.", icon='BLANK1')
@@ -2406,7 +2407,7 @@ class ARM_OT_UpdateFileSDK(bpy.types.Operator):
                 rp.rp_voxelao = True
 
         # Replace deprecated nodes
-        arm.nodes_logic.replace_all()
+        arm.logicnode.replacement.replace_all()
 
         wrd.arm_version = props.arm_version
         wrd.arm_commit = props.arm_commit

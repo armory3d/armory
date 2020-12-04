@@ -7,6 +7,8 @@ import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
 
+# Pass NodeReplacment forward to individual node modules that import arm_nodes
+from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
 
 # When passed as a category to add_node(), this will use the capitalized
@@ -65,10 +67,11 @@ class ArmLogicTreeNode(bpy.types.Node):
         note that the lowest 'defined' version should be 1. if the node's version is 0, it means that it has been saved before versioning was a thing.
         NODES OF VERSION 1 AND VERSION 0 SHOULD HAVE THE SAME CONTENTS
         """
-        if self.arm_version==0 and type(self).arm_version == 1:
-            return NodeReplacement.Identity(self)  # in case someone doesn't implement this function, but the node has version 0.
+        if self.arm_version == 0 and type(self).arm_version == 1:
+            # In case someone doesn't implement this function, but the node has version 0
+            return NodeReplacement.Identity(self)
         else:
-            raise LookupError(f"the current node class, {repr(type(self)):s}, does not implement the getReplacementNode method, even though it has updated")
+            raise LookupError(f"the current node class {repr(type(self)):s} does not implement get_replacement_node() even though it has updated")
 
     def add_input(self, socket_type: str, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
         """Adds a new input socket to the node.
@@ -104,100 +107,6 @@ class ArmLogicTreeNode(bpy.types.Node):
 
         return socket
 
-
-class NodeReplacement:
-    """
-    Represents a simple replacement rule, this can replace nodes of one type to nodes of a second type.
-    However, it is fairly limited. For instance, it assumes there are no changes in the type of the inputs or outputs
-    Second, it also assumes that node properties (especially EnumProperties) keep the same possible values.
-
-    - from_node, from_node_version: the type of node to be removed, and its version number
-    - to_node, to_node_version: the type of node which takes from_node's place, and its version number
-    - *_socket_mapping: a map which defines how the sockets of the old node shall be connected to the new node
-      {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
-    - property_mapping: the mapping used to transfer the values of the old node's properties to the new node's properties.
-      {"property0": "property1"} mean that the value of the new node's property1 should be the old node's property0's value.
-    - input_defaults: a mapping used to give default values to the inputs which aren't overridden otherwise.
-    - property_defaults: a mapping used to define the value of the new node's properties, when they aren't overridden otherwise.
-    """
-
-    def __init__(self, from_node: str, from_node_version: int, to_node: str, to_node_version: int,
-                 in_socket_mapping: Dict[int, int], out_socket_mapping: Dict[int, int], property_mapping: Optional[Dict[str, str]] = None,
-                 input_defaults: Optional[Dict[int, any]] = None, property_defaults: Optional[Dict[str, any]] = None):
-        self.from_node = from_node
-        self.to_node = to_node
-        self.from_node_version = from_node_version
-        self.to_node_version = to_node_version
-
-        self.in_socket_mapping = in_socket_mapping
-        self.out_socket_mapping = out_socket_mapping
-        self.property_mapping = {} if property_mapping is None else property_mapping
-
-        self.input_defaults = {} if input_defaults is None else input_defaults
-        self.property_defaults = {} if property_defaults is None else property_defaults
-
-    @classmethod
-    def Identity(cls, node: ArmLogicTreeNode):
-        """returns a NodeReplacement that does nothing, while operating on a given node.
-        WARNING: it assumes that all node properties have names that start with "property"
-        """
-        in_socks = {i:i for i in range(len(node.inputs))}
-        out_socks = {i:i for i in range(len(node.outputs))}
-        props = {}
-        i=0
-
-        # finding all the properties fo a node is not possible in a clean way for now.
-        # so, I'll assume their names start with "property", and list all the node's attributes that fulfill that condition.
-        # next, to check that those are indeed properties (in the blender sense), we need to check the class's type annotations.
-        # those annotations are not even instances of bpy.types.Property, but tuples, with the first element being a function accessible at bpy.props.XXXProperty
-        property_types = []
-        for possible_prop_type in dir(bpy.props):
-            if possible_prop_type.endswith('Property'):
-                property_types.append( getattr(bpy.props, possible_prop_type) )
-        possible_properties = []
-        for attrname in dir(node):
-            if attrname.startswith('property'):
-                possible_properties.append(attrname)
-        for attrname in possible_properties:
-            if attrname not in node.__annotations__:
-                continue
-            if not isinstance(node.__annotations__[attrname], tuple):
-                continue
-            if node.__annotations__[attrname][0] in property_types:
-                props[attrname] = attrname
-
-        return NodeReplacement(
-            node.bl_idname, node.arm_version, node.bl_idname, type(node).arm_version,
-            in_socket_mapping=in_socks, out_socket_mapping=out_socks,
-            property_mapping=props
-        )
-
-    def chain_with(self, other):
-        """modify the current NodeReplacement by "adding" a second replacement after it"""
-        if self.to_node != other.from_node or self.to_node_version != other.from_node_version:
-            raise TypeError('the given NodeReplacement-s could not be chained')
-        self.to_node = other.to_node
-        self.to_node_version = other.to_node_version
-
-        for i1, i2 in self.in_socket_mapping.items():
-            i3 = other.in_socket_mapping[i2]
-            self.in_socket_mapping[i1] = i3
-        for i1, i2 in self.out_socket_mapping.items():
-            i3 = other.out_socket_mapping[i2]
-            self.out_socket_mapping[i1] = i3
-        for p1, p2 in self.property_mapping.items():
-            p3 = other.property_mapping[p2]
-            self.property_mapping[p1] = p3
-
-        old_input_defaults = self.input_defaults
-        self.input_defaults = other.input_defaults.copy()
-        for i, x in old_input_defaults.items():
-            self.input_defaults[ other.in_socket_mapping[i] ] = x
-
-        old_property_defaults = self.property_defaults
-        self.property_defaults = other.property_defaults.copy()
-        for p, x in old_property_defaults.items():
-            self.property_defaults[ other.property_mapping[p] ] = x
 
 class ArmNodeAddInputButton(bpy.types.Operator):
     """Add a new input socket to the node set by node_index."""

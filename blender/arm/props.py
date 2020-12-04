@@ -4,6 +4,7 @@ import re
 import multiprocessing
 
 import arm.assets as assets
+import arm.logicnode.replacement
 import arm.make
 import arm.nodes_logic
 import arm.proxy
@@ -488,7 +489,7 @@ def update_armory_world():
                 rp.rp_voxelao = True
 
         # Replace deprecated nodes
-        arm.nodes_logic.replace_all()
+        arm.logicnode.replacement.replace_all()
 
         print('Project updated to sdk v' + arm_version + ' (' + arm_commit + ')')
         wrd.arm_version = arm_version
