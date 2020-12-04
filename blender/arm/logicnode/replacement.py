@@ -1,6 +1,6 @@
 """
 This module contains the functionality to replace nodes by other nodes
-in order to keep files from older Armory versions backward compatible.
+in order to keep files from older Armory versions compatible with newer versions.
 
 Nodes can define custom update procedures which describe how the replacement
 should look like.
