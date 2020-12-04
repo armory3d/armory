@@ -368,6 +368,7 @@ def replace(tree: bpy.types.NodeTree, node: arm_nodes.ArmLogicTreeNode):
         # Create the replacement node
         newnode = tree.nodes.new(response.to_node)
         if newnode.arm_version != replacement.to_node_version:
+            tree.nodes.remove(newnode)
             raise LookupError("The provided NodeReplacement doesn't seem to correspond to the node needing replacement")
 
         # some misc. properties
