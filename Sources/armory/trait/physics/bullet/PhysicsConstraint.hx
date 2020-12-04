@@ -8,7 +8,9 @@ import iron.math.Quat;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
 
-
+/**
+ * A trait to add Bullet physics constraints
+ **/
 class PhysicsConstraint extends iron.Trait {
 
 	static var nextId:Int = 0;
@@ -31,6 +33,26 @@ class PhysicsConstraint extends iron.Trait {
 	static var trans2: bullet.Bt.Transform;
 	static var transt: bullet.Bt.Transform;
 
+	/**
+	 * Function to initialize physics constraint trait.
+	  * 
+	  * @param object Pivot object to which this constraint trait will be added. The constraint limits are applied along the local axes of this object. This object need not 
+	  * be a Rigid Body. Typically an `Empty` object may be used. Moving/rotating/parenting this pivot object has no effect once the constraint trait is added. Removing
+	  * the pivot object removes the constraint.
+	  * 
+	  * @param body1 First rigid body to be constrained. This rigid body may be constrained by other constraints.
+	  * 
+	  * @param body2 Second rigid body to be constrained. This rigid body may be constrained by other constraints.
+	  * 
+	  * @param type Type of the constraint.
+	  * 
+	  * @param disableCollisions Disable collisions between constrained objects.
+	  * 
+	  * @param breakingThreshold Break the constraint if stress on this constraint exceeds this value. Set to 0 to make un-breakable.
+	  * 
+	  * @param limits Constraint limits. This may be set before adding the trait to pivot object using the set limits functions.
+	  * 
+ 	**/
 	public function new(body1: Object, body2: Object, type: ConstraintType, disableCollisions: Bool, breakingThreshold: Float, limits: Array<Float> = null) {
 		super();
 
@@ -48,9 +70,10 @@ class PhysicsConstraint extends iron.Trait {
 		this.type = type;
 		this.disableCollisions = disableCollisions;
 		this.breakingThreshold = breakingThreshold;
+		if(limits == null) limits = [for(i in 0...36) 0];
 		this.limits = limits;
 
-		notifyOnInit(init);
+		notifyOnAdd(init);
 	}
 
 	function init() {
@@ -306,6 +329,102 @@ class PhysicsConstraint extends iron.Trait {
 		physics.removePhysicsConstraint(this);
 	}
 
+	/**
+ 	 * Function to set constraint limits when using Hinge constraint. May be used after initalizing this trait but before adding it
+     * to the pivot object 
+ 	**/
+	public function setHingeConstraintLimits(angLimit: Bool, lowerAngLimit: Float, upperAngLimit: Float) {
+		
+		angLimit? limits[0] = 1 : limits[0] = 0;
+
+		limits[1] = lowerAngLimit * (Math.PI/ 180);
+		limits[2] = upperAngLimit * (Math.PI/ 180);
+	}
+
+	/**
+ 	 * Function to set constraint limits when using Slider constraint. May be used after initalizing this trait but before adding it
+     * to the pivot object 
+ 	**/
+	public function setSliderConstraintLimits(linLimit: Bool, lowerLinLimit: Float, upperLinLimit: Float) {
+		
+		linLimit? limits[0] = 1 : limits[0] = 0;
+
+		limits[1] = lowerLinLimit;
+		limits[2] = upperLinLimit;
+	}
+
+	/**
+ 	 * Function to set constraint limits when using Piston constraint. May be used after initalizing this trait but before adding it
+     * to the pivot object 
+ 	**/
+	public function setPistonConstraintLimits(linLimit: Bool, lowerLinLimit: Float, upperLinLimit: Float, angLimit: Bool, lowerAngLimit: Float, upperAngLimit: Float) {
+		
+		linLimit? limits[0] = 1 : limits[0] = 0;
+
+		limits[1] = lowerLinLimit;
+		limits[2] = upperLinLimit;
+
+		angLimit? limits[3] = 1 : limits[3] = 0;
+
+		limits[4] = lowerAngLimit * (Math.PI/ 180);
+		limits[5] = upperAngLimit * (Math.PI/ 180);
+	}
+
+	/**
+ 	 * Function to set customized constraint limits when using Generic/ Generic Spring constraint. May be used after initalizing this trait but before adding it
+     * to the pivot object. Multiple constarints may be set by calling this function with different parameters.
+ 	**/
+	public function setGenericConstraintLimits(setLimit: Bool = false, lowerLimit: Float = 1.0, upperLimit: Float = -1.0, axis: ConstraintAxis = X, isAngular: Bool = false) {
+
+		var i = 0;
+		var j = 0;
+		var radian = (Math.PI/ 180);
+
+		switch (axis){
+			case X: 
+				i = 0;
+			case Y:
+				i = 3;
+			case Z:
+				i = 6;
+		}
+
+		isAngular? j = 9 : j = 0;
+
+		isAngular? radian = (Math.PI/ 180) : radian = 1;
+
+		setLimit? limits[i + j] = 1 : 0;
+		limits[i + j + 1] = lowerLimit * radian;
+		limits[i + j + 2] = upperLimit * radian;
+
+	}
+
+	/**
+ 	 * Function to set customized spring parameters when using Generic/ Generic Spring constraint. May be used after initalizing this trait but before adding it
+     * to the pivot object. Multiple parameters to different axes may be set by calling this function with different parameters.
+ 	**/
+	public function setSpringParams(setSpring: Bool = false, stiffness: Float = 10.0, damping: Float = 0.5, axis: ConstraintAxis = X, isAngular: Bool = false) {
+
+		var i = 0;
+		var j = 0;
+
+		switch (axis){
+			case X: 
+				i = 18;
+			case Y:
+				i = 21;
+			case Z:
+				i = 24;
+		}
+
+		isAngular? j =  9 : j = 0;
+
+		setSpring? limits[i + j] = 1 : 0;
+		limits[i + j + 1] = stiffness;
+		limits[i + j + 2] = damping;
+
+	}
+
 	public function delete() {
 		#if js
 		bullet.Bt.Ammo.destroy(con);
@@ -326,6 +445,12 @@ class PhysicsConstraint extends iron.Trait {
 	var Generic = 5;
 	var GenericSpring = 6;
 	var Motor = 7;
+}
+
+@:enum abstract ConstraintAxis(Int) from Int to Int {
+	var X = 0;
+	var Y = 1;
+	var Z = 2;
 }
 
 #end
