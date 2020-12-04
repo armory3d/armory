@@ -1,7 +1,50 @@
 from arm.logicnode.arm_nodes import *
 
 class AddPhysicsConstraintNode(ArmLogicTreeNode):
-    """Add a physics constraint to an object"""
+    """
+    Add a physics constraint to constrain two rigid bodies if not already present.
+    
+    @option Fixed: No fredom of movement. Relative positions and rotations of rigid bodies are fixed
+
+    @option Point: Both rigid bodies are constrained at the pivot object.
+    
+    @option Hinge: Constrained objects can move only along angular Z axis of the pivot object.
+
+    @option Slider: Constrained objects can move only along linear X axis of the pivot object.
+
+    @option Piston: Constrained objects can move only and rotate along X axis of the pivot object.
+
+    @option GenericSpring: Fully custimizable generic 6 degree of freedom constraint with optional springs. All liner and angular axes can be constrained
+    along with spring options. Use `Physics Constraint Node` to set a combination of constraints and springs.
+
+    @seeNode Physics Constraint
+
+    @input Pivot object: The object to which the physics constraint traint is applied. This object will not be affected by the constraint
+    but is necessary to specify the constraint axes and location. Hence, the pivot object need not be a rigid body. Typically an `Empty`
+    object may be used. Each pivot object can have only one constraint trait applied. Moving/rotating/parenting the pivot object after the constraint
+    is applied has no effect. However, removig the pivot object removes the constraint and `RB 1` and `RB 2` are no longer constrained.
+
+    @input RB 1: The first rigid body to be constrained. Must be a rigid body. This object can be constrained by more than one constraint.
+
+    @input RB 2: The second rigid body to be constrained. Must be a rigid body. This object can be constrained by more than one constraint.
+
+    @input Disable Collisions: Disable collisions between `RB 1` and `RB 2`
+
+    @input Breakable: Constraint can break if stress on the constraint is more than the set threshold. Disable this option to disable breaking.
+
+    @input Breaking threshold: Stress on the constraint above which the constraint breaks. Depends on the mass, velocity of rigid bodies and type of constraint.
+
+    @input Limit Lower: Lower limit of the consraint in that particular axis
+
+    @input Limit Upper: Upper limit of the constraint in that particular axis. (`lower limit` = `upper limit`) --> Fully constrained. (`lower limit` < `upper limit`) --> Partially constrained
+    (`lower limit` > `upper limit`) --> Full freedom.
+
+    @input Angular limits: Limits to constarin rotation. Specified in degrees. Range (-360 to +360)
+
+    @input Add Constarint: Option to add custom constraint to `Generic Spring` type.
+    """
+
+
     bl_idname = 'LNAddPhysicsConstraintNode'
     bl_label = 'Add Physics Constraint'
     arm_sction = 'add'
@@ -19,8 +62,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
             'Hinge': 2, 
             'Slider': 3,
             'Piston': 4, 
-            'Generic': 5, 
-            'Spring': 6, 
+            'Generic Spring': 5
         }.get(type_name, 0)
 
     def get_enum(self):   
@@ -30,6 +72,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
         # Checking the selection of another type
         select_current = self.get_enum_id_value(self, 'property0', value)
         select_prev = self.property0
+
         #Check if a different type is selected
         if select_prev != select_current:
             print('New value selected')
@@ -37,10 +80,12 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
             if (self.get_count_in(select_current) == 0):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
+
             # Arguements for type Point
             if (self.get_count_in(select_current) == 1):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
+
             #Arguements for type Hinge
             if (self.get_count_in(select_current) == 2):
                 while (len(self.inputs) > 7):
@@ -49,6 +94,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 self.add_input('NodeSocketBool', 'Z angle')
                 self.add_input('NodeSocketFloat', 'Z ang lower', -45.0)
                 self.add_input('NodeSocketFloat', 'Z ang upper', 45.0)
+
             #Arguements for type Slider
             if (self.get_count_in(select_current) == 3):
                 while (len(self.inputs) > 7):
@@ -57,6 +103,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 self.add_input('NodeSocketBool', 'X linear')
                 self.add_input('NodeSocketFloat', 'X lin lower')
                 self.add_input('NodeSocketFloat', 'X lin upper')
+
             #Arguements for type Piston
             if (self.get_count_in(select_current) == 4):
                 while (len(self.inputs) > 7):
@@ -69,54 +116,12 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 self.add_input('NodeSocketBool', 'X angle')
                 self.add_input('NodeSocketFloat', 'X ang lower', -45.0)
                 self.add_input('NodeSocketFloat', 'X ang upper', 45.0)
-            #Arguements for type Generic
+
+            #Arguements for type GenericSpring
             if (self.get_count_in(select_current) == 5):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
-                #X lin limits
-                self.add_input('NodeSocketBool', 'X linear')
-                #Y lin limits
-                self.add_input('NodeSocketBool', 'Y linear')
-                #Z lin limits
-                self.add_input('NodeSocketBool', 'Z linear')
-                #X ang limits
-                self.add_input('NodeSocketBool', 'X angle')
-                #Y ang limits
-                self.add_input('NodeSocketBool', 'Y angle')
-                #Z ang limits
-                self.add_input('NodeSocketBool', 'Z angle')
-                #limits
-                self.add_input('ArmNodeSocketArray', 'Limits')
-            #Arguements for type GenericSpring
-            if (self.get_count_in(select_current) == 6):
-                while (len(self.inputs) > 7):
-                    self.inputs.remove(self.inputs.values()[-1])
-                #X lin limits
-                self.add_input('NodeSocketBool', 'X linear')
-                #Y lin limits
-                self.add_input('NodeSocketBool', 'Y linear')
-                #Z lin limits
-                self.add_input('NodeSocketBool', 'Z linear')
-                #X ang limits
-                self.add_input('NodeSocketBool', 'X angle')
-                #Y ang limits
-                self.add_input('NodeSocketBool', 'Y angle')
-                #Z ang limits
-                self.add_input('NodeSocketBool', 'Z angle')
-                #X lin spring
-                self.add_input('NodeSocketBool', 'X linear')
-                #Y lin spring
-                self.add_input('NodeSocketBool', 'Y linear')
-                #Z lin spring
-                self.add_input('NodeSocketBool', 'Z linear')
-                #X ang spring
-                self.add_input('NodeSocketBool', 'X angle')
-                #Y ang spring
-                self.add_input('NodeSocketBool', 'Y angle')
-                #Z ang spring
-                self.add_input('NodeSocketBool', 'Z angle')
-                #limits
-                self.add_input('ArmNodeSocketArray', 'Limits')
+
         self['property0'] = value
 
     property0: EnumProperty(
@@ -125,8 +130,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                  ('Hinge', 'Hinge', 'Hinge'),
                  ('Slider', 'Slider', 'Slider'),
                  ('Piston', 'Piston', 'Piston'),
-                 ('Generic', 'Generic', 'Generic'),
-                 ('Spring', 'Spring', 'Spring')],
+                 ('Generic Spring', 'Generic Spring', 'Generic Spring')],
         name='Type', default='Fixed', set=set_enum, get=get_enum)
     
     def __init__(self):
@@ -145,79 +149,28 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-
+        
+        #GenericSpring:
         if (self.get_count_in(self.property0) == 5):
             grid0 = layout.grid_flow(row_major=True, columns=1, align=True)
-            grid0.label(text="Limits:")
-            grid0.label(text="Linear lower [X, Y, Z]")
-            grid0.label(text="Linear upper [X, Y, Z]")
-            grid0.label(text="Angular lower [X, Y, Z]")
-            grid0.label(text="Angular upper [X, Y, Z]")
-            row00 = layout.row()
-            row10 = row00.column()
-            row00.alignment = 'CENTER'
-            row00.label(text = "")
-            row01 = row00.split()
-            row01.alignment = 'CENTER'
-            row01.label(text = "Limits")
-            row02 = row01.split()
-            row02.alignment = 'CENTER'
-            row02.label(text = "Springs")
-            #row1
-            row10.alignment = 'CENTER'
-            row10.label(text = 'X')
-
-            #row11 = row01.column()
-            #row11.alignment = 'CENTER'
-            #row11.label(text = "Linear X")
-            #row12 = row11.split()
-            #row12.alignment = 'CENTER'
-            #row12.label(text = "Angular X")
-
-            #row13 = row02.column()
-            #row13.alignment = 'CENTER'
-            #row13.label(text = "Linear X")
-            #row14 = row13.split()
-            #row14.alignment = 'CENTER'
-            #row14.label(text = "Angular X")
-
-
-            grid1 = layout.grid_flow(row_major=True, columns=5, align=True)
-            ##row 1
-            grid1.label(text="")
-            grid1.label(text="Linear")
-            grid1.label(text="Angular")
-            grid1.label(text="Linear")
-            grid1.label(text="Angular")
-            ##row 2
-            grid1.label(text="X")
-            grid1.label(text="Linear X")
-            grid1.label(text="Angular X")
-            grid1.label(text="Linear X")
-            grid1.label(text="Angular X")
-            ##row 2
-            grid1.label(text="Y")
-            grid1.label(text="Linear Y")
-            grid1.label(text="Angular Y")
-            grid1.label(text="Linear Y")
-            grid1.label(text="Angular Y")
-            ##row 3
-            grid1.label(text="Z")
-            grid1.label(text="Linear Z")
-            grid1.label(text="Angular Z")
-            grid1.label(text="Linear Z")
-            grid1.label(text="Angular Z")
-
-        
-        if (self.get_count_in(self.property0) == 6):
-            grid0 = layout.grid_flow(row_major=True, columns=1, align=True)
-            grid0.label(text="Limits:")
-            grid0.label(text="Linear lower [X, Y, Z]")
-            grid0.label(text="Linear upper [X, Y, Z]")
-            grid0.label(text="Angular lower [X, Y, Z]")
-            grid0.label(text="Angular upper [X, Y, Z]")
-            grid0.label(text="Linear Stiffness [X, Y, Z]")
-            grid0.label(text="Linear Damping [X, Y, Z]")
-            grid0.label(text="Angular Stiffness [X, Y, Z]")
-            grid0.label(text="Angular Damping [X, Y, Z]")
+            grid0.label(text="Possible Constraints:")
+            grid0.label(text="Linear [X, Y, Z]")
+            grid0.label(text="Angular [X, Y, Z]")
+            grid0.label(text="Spring Linear [X, Y, Z]")
+            grid0.label(text="Spring Angular [X, Y, Z]")
+            row = layout.row(align=True)
+            column = row.column(align=True)
+            op = column.operator('arm.node_add_input', text='Add Constraint', icon='PLUS', emboss=True)
+            op.node_index = str(id(self))
+            op.socket_type = 'NodeSocketShader'
+            op.name_format = 'Constraint {0}'.format(len(self.inputs) - 6)
+            column1 = row.column(align=True)
+            op = column1.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+            op.node_index = str(id(self))
+            #Static inputs
+            if len(self.inputs) < 8:
+                column1.enabled = False
+            #Max Possible inputs
+            if len(self.inputs) > 18:
+                column.enabled = False
 
