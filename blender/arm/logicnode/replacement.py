@@ -248,8 +248,6 @@ def replace_all():
             )
         )
 
-        log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
-
         with open(reportfile, 'w') as reportf:
             for error_type, node_class, tree_name, tb in replacement_errors:
                 if error_type == 'unregistered':
@@ -271,5 +269,7 @@ def replace_all():
                 else:
                     print(f"Whoops, we don't know what this error type (\"{error_type}\") means. You might want to report a bug here. "
                           f"All we know is that it comes form a node of class {node_class} in the node tree called \"{tree_name}\".", file=reportf)
+
+        log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
 
         bpy.ops.arm.show_node_update_errors()
