@@ -4,6 +4,8 @@ in order to keep files from older Armory versions compatible with newer versions
 
 Nodes can define custom update procedures which describe how the replacement
 should look like.
+
+Original author: @niacdoial
 """
 import os.path
 import time
