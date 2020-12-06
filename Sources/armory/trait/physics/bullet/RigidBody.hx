@@ -392,8 +392,11 @@ class RigidBody extends iron.Trait {
 		// body.setDeactivationTime(time); // not available in ammo
 	}
 
-	public function setDeactivation(useDeactivation: Bool) {
+	public function setUpDeactivation(useDeactivation: Bool, linearThreshold: Float, angularThreshold: Float, time: Float) {
 		this.useDeactivation = useDeactivation;
+		this.deactivationParams[0] = linearThreshold;
+		this.deactivationParams[1] = angularThreshold;
+		this.deactivationParams[2] = time;
 	}
 
 	public function isTriggerObject(isTrigger: Bool) {

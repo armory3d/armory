@@ -90,8 +90,7 @@ class AddRigidBodyNode extends LogicNode {
 				rb.angularDamping = angDamp;
 				if(margin) rb.collisionMargin = marginLen;
 				if(useDeactiv) {
-					rb.setDeactivation(true);
-					rb.setDeactivationParams(linearVelThreshold, angVelThreshold, 0.0);
+					rb.setUpDeactivation(true, linearVelThreshold, angVelThreshold, 0.0);
 				}
 
 			}
