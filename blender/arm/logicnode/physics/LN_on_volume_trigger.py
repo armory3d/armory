@@ -18,8 +18,8 @@ class OnVolumeTriggerNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(OnVolumeTriggerNode, self).init(context)
-        self.add_input('ArmNodeSocketObject', 'RB')
-        self.add_input('ArmNodeSocketObject', 'Trigger')
+        self.add_input('ArmNodeSocketObject', 'Object 1')
+        self.add_input('ArmNodeSocketObject', 'Object 2')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
