@@ -160,7 +160,7 @@ class CustomParticleNode(Node):
                 vertshdr.write(f'                         sin({rot}.z) * sin({rot}.x) + cos({rot}.z) * sin({rot}.y) * cos({rot}.x), -cos({rot}.z) * sin({rot}.x) + sin({rot}.z) * sin({rot}.y) * cos({rot}.x), cos({rot}.y) * cos({rot}.x));')
 
             vertshdr.write('spos.xyz = part_rot_mat * spos.xyz;')
-            if (part_con.data['name'] == 'mesh' or 'translucent') and vertshdr.contains('wnormal'):
+            if ((part_con.data['name'] == 'mesh' or part_con.data['name'] == 'translucent')):
                 vertshdr.write('wnormal = transpose(inverse(part_rot_mat)) * wnormal;')
 
         if self.posX or self.posY or self.posZ:
@@ -174,9 +174,8 @@ class CustomParticleNode(Node):
 
             if self.posZ:
                 vertshdr.write(f'spos.z += {pos}.z;')
-
-        if vertshdr.contains('vec3 disp'):
-            vertshdr.write('wposition = vec4(W * spos).xyz;')
+                
+        vertshdr.write('wposition = vec4(W * spos).xyz;')
 
 
 add_node(CustomParticleNode, category='Armory')
