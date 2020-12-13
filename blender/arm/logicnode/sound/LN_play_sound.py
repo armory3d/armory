@@ -28,6 +28,7 @@ class PlaySoundNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
+    bl_width_default = 200
     arm_version = 1
 
     property0: PointerProperty(name='', type=bpy.types.Sound)
@@ -48,6 +49,11 @@ class PlaySoundNode(ArmLogicTreeNode):
         description='Set the sample rate used to play this sound',
         default=44100,
         min=0)
+    property5: BoolProperty(
+        name='Stream',
+        description='Stream the sound from disk',
+        default=False
+    )
 
     def init(self, context):
         super(PlaySoundNode, self).init(context)
@@ -63,6 +69,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         layout.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
 
         col = layout.column(align=True)
+        col.prop(self, 'property5')
         col.prop(self, 'property1')
         col.prop(self, 'property2')
 
