@@ -22,3 +22,6 @@ class VirtualButtonNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
+
+    def draw_label(self) -> str:
+        return f'{self.bl_label}: {self.property1}'

@@ -21,3 +21,6 @@ class SurfaceNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+
+    def draw_label(self) -> str:
+        return f'{self.bl_label}: {self.property0}'

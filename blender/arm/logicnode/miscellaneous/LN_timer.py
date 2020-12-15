@@ -21,3 +21,11 @@ class TimerNode(ArmLogicTreeNode):
         self.add_output('NodeSocketInt', 'Time Left')
         self.add_output('NodeSocketFloat', 'Progress')
         self.add_output('NodeSocketFloat', 'Repetitions')
+
+    def draw_label(self) -> str:
+        inp_duration = self.inputs['Duration']
+        inp_repeat = self.inputs['Repeat']
+        if inp_duration.is_linked or inp_repeat.is_linked:
+            return self.bl_label
+
+        return f'{self.bl_label}: {round(inp_duration.default_value, 3)}s ({inp_repeat.default_value} R.)'

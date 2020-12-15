@@ -11,3 +11,14 @@ class ObjectNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object In')
 
         self.add_output('ArmNodeSocketObject', 'Object Out', is_var=True)
+
+    def draw_label(self) -> str:
+        inp_object = self.inputs['Object In']
+        if inp_object.is_linked:
+            return self.bl_label
+
+        obj_name = inp_object.get_default_value()
+        if obj_name == '':
+            obj_name = '_self'
+
+        return f'{self.bl_label}: {obj_name}'

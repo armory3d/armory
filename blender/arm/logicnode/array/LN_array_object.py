@@ -24,3 +24,9 @@ class ObjectArrayNode(ArmLogicTreeNode):
         op.socket_type = 'ArmNodeSocketObject'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
+
+    def draw_label(self) -> str:
+        if len(self.inputs) == 0:
+            return self.bl_label
+
+        return f'{self.bl_label}: [{len(self.inputs)}]'
