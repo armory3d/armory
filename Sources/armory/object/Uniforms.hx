@@ -11,8 +11,11 @@ class Uniforms {
 
 	public static function register() {
 		iron.object.Uniforms.externalTextureLinks = [textureLink];
+		iron.object.Uniforms.externalVec2Links = [];
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
+		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
+		iron.object.Uniforms.externalIntLinks = [];
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
