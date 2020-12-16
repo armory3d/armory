@@ -9,7 +9,7 @@ class WorldVectorToLocalSpaceNode(ArmLogicTreeNode):
     @seeNode Vector From Transform
     """
     bl_idname = 'LNWorldVectorToLocalSpaceNode'
-    bl_label = 'World Vector To Local Space'
+    bl_label = 'World Vector to Local Space'
     arm_section = 'location'
     arm_version = 1
 
