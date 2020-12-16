@@ -144,7 +144,7 @@ def build_node(node: bpy.types.Node, f):
         f.write('\t\t' + name + '.watch(true);\n')
 
     # Properties
-    for i in range(0, 5):
+    for i in range(0, 10):
         prop_name = 'property' + str(i) + '_get'
         prop_found = hasattr(node, prop_name)
         if not prop_found:

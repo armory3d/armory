@@ -12,6 +12,8 @@ class PlaySoundRawNode extends LogicNode {
 	public var property3: Bool;
 	/** Playback sample rate */
 	public var property4: Int;
+	/** Whether to stream the sound from disk **/
+	public var property5: Bool;
 
 	var sound: kha.Sound = null;
 	var channel: kha.audio1.AudioChannel = null;
@@ -37,7 +39,7 @@ class PlaySoundRawNode extends LogicNode {
 				// Start
 				else if (sound != null) {
 					if (property3) sound.sampleRate = property4;
-					channel = iron.system.Audio.play(sound, property1);
+					channel = iron.system.Audio.play(sound, property1, property5);
 				}
 
 				tree.notifyOnUpdate(this.onUpdate);
