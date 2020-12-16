@@ -5,7 +5,7 @@ class MathNode(ArmLogicTreeNode):
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
     arm_version = 1
-    
+
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
         return obj.bl_rna.properties[prop_name].enum_items[value].identifier
@@ -13,34 +13,34 @@ class MathNode(ArmLogicTreeNode):
     @staticmethod
     def get_count_in(operation_name):
         return {
-            'Add': 0, 
-            'Subtract': 0, 
-            'Multiply': 0, 
+            'Add': 0,
+            'Subtract': 0,
+            'Multiply': 0,
             'Divide': 0,
-            'Sine': 1, 
-            'Cosine': 1, 
-            'Abs': 1, 
-            'Tangent': 1, 
-            'Arcsine': 1, 
-            'Arccosine': 1, 
-            'Arctangent': 1, 
-            'Logarithm': 1, 
-            'Round': 1, 
-            'Floor': 1, 
-            'Ceil': 1, 
-            'Square Root': 1, 
-            'Fract': 1, 
+            'Sine': 1,
+            'Cosine': 1,
+            'Abs': 1,
+            'Tangent': 1,
+            'Arcsine': 1,
+            'Arccosine': 1,
+            'Arctangent': 1,
+            'Logarithm': 1,
+            'Round': 1,
+            'Floor': 1,
+            'Ceil': 1,
+            'Square Root': 1,
+            'Fract': 1,
             'Exponent': 1,
-            'Max': 2, 
-            'Min': 2, 
-            'Power': 2, 
-            'Arctan2': 2, 
-            'Modulo': 2, 
-            'Less Than': 2, 
+            'Max': 2,
+            'Min': 2,
+            'Power': 2,
+            'Arctan2': 2,
+            'Modulo': 2,
+            'Less Than': 2,
             'Greater Than': 2
         }.get(operation_name, 0)
 
-    def get_enum(self):   
+    def get_enum(self):
         return self.get('property0', 0)
 
     def set_enum(self, value):
@@ -124,3 +124,6 @@ class MathNode(ArmLogicTreeNode):
             op.node_index = str(id(self))
             if len(self.inputs) == 2:
                 column.enabled = False
+
+    def draw_label(self) -> str:
+        return f'{self.bl_label}: {self.property0}'

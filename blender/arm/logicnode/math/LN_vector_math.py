@@ -148,3 +148,6 @@ class VectorMathNode(ArmLogicTreeNode):
             op.node_index = str(id(self))
             if len(self.inputs) == 2:
                 column.enabled = False
+
+    def draw_label(self) -> str:
+        return f'{self.bl_label}: {self.property0}'

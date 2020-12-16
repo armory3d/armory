@@ -54,3 +54,10 @@ class GamepadNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
+
+    def draw_label(self) -> str:
+        inp_gamepad = self.inputs['Gamepad']
+        if inp_gamepad.is_linked:
+            return f'{self.bl_label}: {self.property1}'
+
+        return f'{self.bl_label} {inp_gamepad.default_value}: {self.property1}'

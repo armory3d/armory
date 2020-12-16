@@ -29,3 +29,14 @@ class LoopNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Loop')
         self.add_output('NodeSocketInt', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')
+
+    def draw_label(self) -> str:
+        inp_from = self.inputs['From']
+        inp_to = self.inputs['To']
+        if inp_from.is_linked and inp_to.is_linked:
+            return self.bl_label
+
+        val_from = 'x' if inp_from.is_linked else inp_from.default_value
+        val_to = 'y' if inp_to.is_linked else inp_to.default_value
+
+        return f'{self.bl_label}: {val_from}...{val_to}'
