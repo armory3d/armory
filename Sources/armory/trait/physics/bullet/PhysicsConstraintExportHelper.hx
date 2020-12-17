@@ -29,6 +29,7 @@ class PhysicsConstraintExportHelper extends iron.Trait {
 		this.breakingThreshold = breakingThreshold;
 		this.limits = limits;
 		notifyOnInit(init);
+		notifyOnUpdate(update);
 	}
 
 	function init() {
