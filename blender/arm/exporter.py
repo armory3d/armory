@@ -926,6 +926,9 @@ class ArmoryExporter:
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
                     if not bdata.arm_cached or not os.path.exists(fp):
+                        # Store action to use it after autobake was handled
+                        original_action = action
+
                         # Handle autobake
                         if bdata.arm_autobake:
                             sel = bpy.context.selected_objects[:]
@@ -951,7 +954,7 @@ class ArmoryExporter:
                                 bones.append(boneo)
                         self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
-                            self.export_pose_markers(bones[0]['anim'], action)
+                            self.export_pose_markers(bones[0]['anim'], original_action)
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
