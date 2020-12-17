@@ -1,15 +1,15 @@
-import bpy
-import os
-import shutil
 import glob
 import json
+import os
+import shutil
 import stat
-
 from typing import List
 
-import arm.utils
+import bpy
+
 import arm.assets as assets
 import arm.make_state as state
+import arm.utils
 
 
 def on_same_drive(path1: str, path2: str) -> bool:
