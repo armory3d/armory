@@ -73,7 +73,7 @@ class PhysicsConstraint extends iron.Trait {
 		if(limits == null) limits = [for(i in 0...36) 0];
 		this.limits = limits;
 
-		notifyOnAdd(init);
+		notifyOnInit(init);
 	}
 
 	function init() {

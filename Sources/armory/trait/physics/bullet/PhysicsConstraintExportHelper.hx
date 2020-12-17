@@ -17,6 +17,7 @@ class PhysicsConstraintExportHelper extends iron.Trait {
 	var disableCollisions: Bool;
 	var breakingThreshold: Float;
 	var limits: Array<Float>;
+	var constraintAdded: Bool = false;
 
 	public function new(body1: String, body2: String, type: Int, disableCollisions: Bool, breakingThreshold: Float, limits: Array<Float> = null) {
 		super();
@@ -34,7 +35,11 @@ class PhysicsConstraintExportHelper extends iron.Trait {
 		var target1 = Scene.active.getChild(body1);
 		var target2 = Scene.active.getChild(body2);
 		object.addTrait(new PhysicsConstraint(target1, target2, type, disableCollisions, breakingThreshold, limits));
-		this.remove();
+		constraintAdded = true;
+	}
+
+	function update() {
+		if(constraintAdded) this.remove();
 	}
 }
 
