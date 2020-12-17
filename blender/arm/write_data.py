@@ -8,17 +8,28 @@ import arm.utils
 import arm.assets as assets
 import arm.make_state as state
 
-def add_armory_library(sdk_path, name, rel_path=False):
-    if rel_path:
-        sdk_path = '../' + os.path.relpath(sdk_path, arm.utils.get_fp()).replace('\\', '/')
+
+def on_same_drive(path1: str, path2: str) -> bool:
+    drive_path1, _ = os.path.splitdrive(path1)
+    drive_path2, _ = os.path.splitdrive(path2)
+    return drive_path1 == drive_path2
+
+
+def add_armory_library(sdk_path: str, name: str, rel_path=False) -> str:
+    project_path = arm.utils.get_fp()
+    if rel_path and on_same_drive(sdk_path, project_path):
+        sdk_path = '../' + os.path.relpath(sdk_path, project_path).replace('\\', '/')
+
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/').replace('//', '/')
 
-def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
+
+def add_assets(path: str, quality=1.0, use_data_dir=False, rel_path=False) -> str:
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
 
-    if rel_path:
-        path = os.path.relpath(path, arm.utils.get_fp()).replace('\\', '/')
+    project_path = arm.utils.get_fp()
+    if rel_path and on_same_drive(path, project_path):
+        path = os.path.relpath(path, project_path).replace('\\', '/')
 
     notinlist = not path.endswith('.ttf') # TODO
     s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' '
@@ -29,10 +40,13 @@ def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
     s += '});\n'
     return s
 
-def add_shaders(path, rel_path=False):
-    if rel_path:
-        path = os.path.relpath(path, arm.utils.get_fp())
+
+def add_shaders(path: str, rel_path=False) -> str:
+    project_path = arm.utils.get_fp()
+    if rel_path and on_same_drive(path, project_path):
+        path = os.path.relpath(path, project_path)
     return 'project.addShaders("' + path.replace('\\', '/').replace('//', '/') + '");\n'
+
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
