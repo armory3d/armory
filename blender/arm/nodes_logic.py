@@ -155,7 +155,7 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_idname = 'ARM_PT_LogicNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
 
     @classmethod
     def poll(cls, context):
@@ -235,7 +235,7 @@ class ARM_PT_Variables(bpy.types.Panel):
     bl_idname = 'ARM_PT_Variables'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
 
     @classmethod
     def poll(cls, context):
