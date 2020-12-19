@@ -12,6 +12,7 @@ import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.props_properties
+import arm.props_traits
 import arm.nodes_logic
 import arm.proxy
 import arm.utils
@@ -2525,8 +2526,8 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.operator("arm.open_node_documentation", text="Show documentation for this node")
-            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser")
-            layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
+            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
+            layout.operator("arm.open_node_python_source", text="Open .py source in the browser", icon='FILE_SCRIPT')
 
     elif context.space_data.tree_type == 'ShaderNodeTree':
         if context.active_node.bl_idname in ('ShaderNodeRGB', 'ShaderNodeValue', 'ShaderNodeTexImage'):
