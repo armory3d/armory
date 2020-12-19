@@ -2525,7 +2525,7 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.operator("arm.open_node_documentation", text="Show documentation for this node")
-            layout.operator("arm.open_node_source", text="Open .hx source in the browser")
+            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser")
             layout.operator("arm.open_node_python_source", text="Open .py source in the browser")
 
     elif context.space_data.tree_type == 'ShaderNodeTree':

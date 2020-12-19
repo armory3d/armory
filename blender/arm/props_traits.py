@@ -13,6 +13,8 @@ import arm.proxy as proxy
 import arm.utils
 import arm.write_data as write_data
 
+icons_dict: bpy.utils.previews.ImagePreviewCollection
+
 
 def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
