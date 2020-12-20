@@ -926,6 +926,9 @@ class ArmoryExporter:
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
                     if not bdata.arm_cached or not os.path.exists(fp):
+                        # Store action to use it after autobake was handled
+                        original_action = action
+
                         # Handle autobake
                         if bdata.arm_autobake:
                             sel = bpy.context.selected_objects[:]
@@ -951,7 +954,7 @@ class ArmoryExporter:
                                 bones.append(boneo)
                         self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
-                            self.export_pose_markers(bones[0]['anim'], action)
+                            self.export_pose_markers(bones[0]['anim'], original_action)
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
@@ -2613,18 +2616,18 @@ class ArmoryExporter:
                 debug_console_pos_type = 0
             elif (wrd.arm_debug_console_position == 'Center'):
                 debug_console_pos_type = 1
-            else:                
+            else:
                 debug_console_pos_type = 2
             # Parameters
             out_trait = {
                 'type': 'Script',
                 'class_name': 'armory.trait.internal.DebugConsole',
-                'parameters': [str(arm.utils.get_ui_scale()), 
-                str(wrd.arm_debug_console_scale), 
-                str(debug_console_pos_type), 
-                str(int(wrd.arm_debug_console_visible)), 
-                str(int(arm.utils.get_debug_console_visible_sc())), 
-                str(int(arm.utils.get_debug_console_scale_in_sc())), 
+                'parameters': [str(arm.utils.get_ui_scale()),
+                str(wrd.arm_debug_console_scale),
+                str(debug_console_pos_type),
+                str(int(wrd.arm_debug_console_visible)),
+                str(int(arm.utils.get_debug_console_visible_sc())),
+                str(int(arm.utils.get_debug_console_scale_in_sc())),
                 str(int(arm.utils.get_debug_console_scale_out_sc()))]
             }
             self.output['traits'].append(out_trait)
