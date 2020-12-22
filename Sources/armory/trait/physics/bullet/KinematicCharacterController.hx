@@ -72,7 +72,7 @@ class KinematicCharacterController extends Trait {
 	}
 
 	inline function withMargin(f: Float): Float {
-		return f - f * collisionMargin;
+		return f + f * collisionMargin;
 	}
 
 	public function notifyOnReady(f: Void->Void) {
