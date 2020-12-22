@@ -2525,7 +2525,7 @@ def draw_custom_node_menu(self, context):
         if context.selected_nodes[0].bl_idname.startswith('LN'):
             layout = self.layout
             layout.separator()
-            layout.operator("arm.open_node_documentation", text="Show documentation for this node")
+            layout.operator("arm.open_node_documentation", text="Show documentation for this node", icon='HELP')
             layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
             layout.operator("arm.open_node_python_source", text="Open .py source in the browser", icon='FILE_SCRIPT')
 

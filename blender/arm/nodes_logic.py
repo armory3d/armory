@@ -170,7 +170,7 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
             layout.prop(context.active_node, 'arm_watch')
 
             layout.separator()
-            layout.operator('arm.open_node_documentation')
+            layout.operator('arm.open_node_documentation', icon='HELP')
             column = layout.column(align=True)
             column.operator('arm.open_node_python_source', icon='FILE_SCRIPT')
             column.operator('arm.open_node_haxe_source', icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
@@ -210,7 +210,7 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmOpenNodeWikiEntry(bpy.types.Operator):
-    """Expose Python source"""
+    """Open the node's documentation in the wiki"""
     bl_idname = 'arm.open_node_documentation'
     bl_label = 'Open Node Documentation'
 
