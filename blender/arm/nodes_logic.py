@@ -7,6 +7,7 @@ from bpy.props import BoolProperty, StringProperty
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
 import arm.logicnode
+import arm.props_traits
 import arm.utils
 
 registered_nodes = []
@@ -154,7 +155,7 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_idname = 'ARM_PT_LogicNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
 
     @classmethod
     def poll(cls, context):
@@ -164,15 +165,21 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
+        if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
             layout.prop(context.active_node, 'arm_logic_id')
             layout.prop(context.active_node, 'arm_watch')
-            layout.operator('arm.open_node_source')
 
-class ArmOpenNodeSource(bpy.types.Operator):
+            layout.separator()
+            layout.operator('arm.open_node_documentation', icon='HELP')
+            column = layout.column(align=True)
+            column.operator('arm.open_node_python_source', icon='FILE_SCRIPT')
+            column.operator('arm.open_node_haxe_source', icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
+
+
+class ArmOpenNodeHaxeSource(bpy.types.Operator):
     """Expose Haxe source"""
-    bl_idname = 'arm.open_node_source'
-    bl_label = 'Open Node Source'
+    bl_idname = 'arm.open_node_haxe_source'
+    bl_label = 'Open Node Haxe Source'
 
     def execute(self, context):
         if context.selected_nodes is not None:
@@ -203,7 +210,7 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmOpenNodeWikiEntry(bpy.types.Operator):
-    """Expose Python source"""
+    """Open the node's documentation in the wiki"""
     bl_idname = 'arm.open_node_documentation'
     bl_label = 'Open Node Documentation'
 
@@ -228,7 +235,7 @@ class ARM_PT_Variables(bpy.types.Panel):
     bl_idname = 'ARM_PT_Variables'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
 
     @classmethod
     def poll(cls, context):
@@ -358,7 +365,7 @@ def register():
 
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
-    bpy.utils.register_class(ArmOpenNodeSource)
+    bpy.utils.register_class(ArmOpenNodeHaxeSource)
     bpy.utils.register_class(ArmOpenNodePythonSource)
     bpy.utils.register_class(ArmOpenNodeWikiEntry)
     bpy.utils.register_class(ReplaceNodesOperator)
@@ -383,7 +390,7 @@ def unregister():
     bpy.utils.unregister_class(ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
-    bpy.utils.unregister_class(ArmOpenNodeSource)
+    bpy.utils.unregister_class(ArmOpenNodeHaxeSource)
     bpy.utils.unregister_class(ArmOpenNodePythonSource)
     bpy.utils.unregister_class(ArmOpenNodeWikiEntry)
     bpy.utils.unregister_class(ARM_PT_Variables)
