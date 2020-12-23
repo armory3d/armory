@@ -1,5 +1,6 @@
 package armory.trait.physics.bullet;
 
+import iron.math.Vec4;
 import iron.Scene;
 import iron.object.Object;
 #if arm_bullet
@@ -93,20 +94,39 @@ class PhysicsConstraint extends iron.Trait {
 			var t1 = target1.transform;
 			var t2 = target2.transform;
 
+			var frameT = t.world.clone();//Transform of pivot in world space
+
+			var frameInA = t1.world.clone();//Transform of rb1 in world space
+			frameInA.getInverse(frameInA);//Inverse Transform of rb1 in world space
+			frameT.multmat(frameInA);//Transform of pivot object in rb1 space
+			frameInA = frameT.clone();//Frame In A
+
+			frameT = t.world.clone();//Transform of pivot in world space
+
+			var frameInB = t2.world.clone();//Transform of rb2 in world space
+			frameInB.getInverse(frameInB);//Inverse Transform of rb2 in world space
+			frameT.multmat(frameInB);//Transform of pivot object in rb2 space
+			frameInB = frameT.clone();//Frame In B
+
+			var loc = new Vec4();
+			var rot = new Quat();
+			var scl = new Vec4();
+
+			frameInA.decompose(loc,rot,scl);
 			trans1.setIdentity();
-			vec1.setX(t.worldx() - t1.worldx());
-			vec1.setY(t.worldy() - t1.worldy());
-			vec1.setZ(t.worldz() - t1.worldz());
+			vec1.setX(loc.x);
+			vec1.setY(loc.y);
+			vec1.setZ(loc.z);
 			trans1.setOrigin(vec1);
+			trans1.setRotation(new bullet.Bt.Quaternion(rot.x, rot.y, rot.z, rot.w));
 
+			frameInB.decompose(loc,rot,scl);
 			trans2.setIdentity();
-			vec2.setX(t.worldx() - t2.worldx());
-			vec2.setY(t.worldy() - t2.worldy());
-			vec2.setZ(t.worldz() - t2.worldz());
+			vec2.setX(loc.x);
+			vec2.setY(loc.y);
+			vec2.setZ(loc.z);
 			trans2.setOrigin(vec2);
-
-			trans1.setRotation(new bullet.Bt.Quaternion(t.rot.x, t.rot.y, t.rot.z, t.rot.w));
-			trans2.setRotation(new bullet.Bt.Quaternion(t.rot.x, t.rot.y, t.rot.z, t.rot.w));
+			trans2.setRotation(new bullet.Bt.Quaternion(rot.x, rot.y, rot.z, rot.w));
 
 			if (type == Generic || type == Fixed) {
 				#if hl
