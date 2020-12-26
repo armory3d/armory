@@ -14,6 +14,8 @@ class PlayActionFromNode extends LogicNode {
 		var action: String = inputs[2].get();
 		var startFrame:Int = inputs[3].get();
 		var blendTime: Float = inputs[4].get();
+		var speed: Float = inputs[5].get();
+		var loop: Bool = inputs[6].get();
 		
 
 		if (object == null) return;
@@ -22,7 +24,7 @@ class PlayActionFromNode extends LogicNode {
 
 		animation.play(action, function() {
 			runOutput(1);
-		},blendTime);
+		},blendTime, speed,loop);
 		animation.update(startFrame*Scene.active.raw.frame_time);
 
 		runOutput(0);
