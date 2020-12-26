@@ -24,7 +24,7 @@ class PlayActionFromNode extends LogicNode {
 
 		animation.play(action, function() {
 			runOutput(1);
-		},blendTime, speed,loop);
+		}, blendTime, speed, loop);
 		animation.update(startFrame*Scene.active.raw.frame_time);
 
 		runOutput(0);
