@@ -221,7 +221,7 @@ void main() {
 				, li, lightsArray[li * 2].w, true // bias
 			#endif
 			#ifdef _Spot
-			, li > numPoints - 1
+			, lightsArray[li * 2 + 1].w != 0.0
 			, lightsArray[li * 2 + 1].w // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
 			, lightsArraySpot[li].xyz // spotDir
