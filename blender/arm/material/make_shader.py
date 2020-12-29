@@ -1,6 +1,8 @@
 import os
 import bpy
 import subprocess
+from typing import Dict
+import arm.log as log
 import arm.utils
 import arm.assets as assets
 import arm.material.mat_utils as mat_utils
@@ -18,14 +20,14 @@ import arm.exporter
 
 rpass_hook = None
 
-def build(material, mat_users, mat_armusers):
+def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.types.Object], mat_armusers):
     mat_state.mat_users = mat_users
     mat_state.mat_armusers = mat_armusers
     mat_state.material = material
     mat_state.nodes = material.node_tree.nodes
     mat_state.data = ShaderData(material)
     mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
-    if mat_state.output_node == None:
+    if mat_state.output_node is None:
         # Place empty material output to keep compiler happy..
         mat_state.output_node = mat_state.nodes.new('ShaderNodeOutputMaterial')
 
@@ -41,22 +43,7 @@ def build(material, mat_users, mat_armusers):
     if not os.path.exists(full_path):
         os.makedirs(full_path)
 
-    global_elems = []
-    if mat_users != None and material in mat_users:
-        for bo in mat_users[material]:
-            # GPU Skinning
-            if arm.utils.export_bone_data(bo):
-                global_elems.append({'name': 'bone', 'data': 'short4norm'})
-                global_elems.append({'name': 'weight', 'data': 'short4norm'})
-            # Instancing
-            if bo.arm_instanced != 'Off' or material.arm_particle_flag:
-                global_elems.append({'name': 'ipos', 'data': 'float3'})
-                if bo.arm_instanced == 'Loc + Rot' or bo.arm_instanced == 'Loc + Rot + Scale':
-                    global_elems.append({'name': 'irot', 'data': 'float3'})
-                if bo.arm_instanced == 'Loc + Scale' or bo.arm_instanced == 'Loc + Rot + Scale':
-                    global_elems.append({'name': 'iscl', 'data': 'float3'})
-
-    mat_state.data.global_elems = global_elems
+    make_instancing_and_skinning(material, mat_users)
 
     bind_constants = dict()
     bind_textures = dict()
@@ -161,3 +148,43 @@ def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
                 args.append('pos')
             proc = subprocess.call(args)
             os.chdir(cwd)
+
+
+def make_instancing_and_skinning(mat: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.types.Object]) -> None:
+    """Build material with instancing or skinning if enabled.
+    If the material is a custom material, only validation checks for instancing are performed."""
+    global_elems = []
+    if mat_users is not None and mat in mat_users:
+        # Whether there are both an instanced object and a not instanced object with this material
+        instancing_usage = [False, False]
+
+        for bo in mat_users[mat]:
+            if mat.arm_custom_material == '':
+                # GPU Skinning
+                if arm.utils.export_bone_data(bo):
+                    global_elems.append({'name': 'bone', 'data': 'short4norm'})
+                    global_elems.append({'name': 'weight', 'data': 'short4norm'})
+
+            # Instancing
+            inst = bo.arm_instanced
+            if inst != 'Off' or mat.arm_particle_flag:
+                instancing_usage[0] = True
+
+                if mat.arm_custom_material == '':
+                    global_elems.append({'name': 'ipos', 'data': 'float3'})
+                    if 'Rot' in inst:
+                        global_elems.append({'name': 'irot', 'data': 'float3'})
+                    if 'Scale' in inst:
+                        global_elems.append({'name': 'iscl', 'data': 'float3'})
+
+            elif inst == 'Off':
+                # Ignore children of instanced objects, they are instanced even when set to 'Off'
+                instancing_usage[1] = bo.parent is None or bo.parent.arm_instanced == 'Off'
+
+        if instancing_usage[0] and instancing_usage[1]:
+            # Display a warning for invalid instancing configurations
+            # See https://github.com/armory3d/armory/issues/2072
+            log.warn(f'Material "{mat.name}" has both instanced and not instanced objects, objects might flicker!')
+
+    if mat.arm_custom_material == '':
+        mat_state.data.global_elems = global_elems

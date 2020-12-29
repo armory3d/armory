@@ -1,6 +1,7 @@
 import bpy
 import arm.utils
 import arm.node_utils
+from typing import Dict
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
 import arm.material.mat_state as mat_state
@@ -21,7 +22,8 @@ def glsl_value(val):
     else:
         return val
 
-def parse(material, mat_data, mat_users, mat_armusers):
+
+def parse(material: bpy.types.Material, mat_data, mat_users: Dict[bpy.types.Material, bpy.types.Object], mat_armusers):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
@@ -54,6 +56,7 @@ def parse(material, mat_data, mat_users, mat_armusers):
         bind_constants['mesh'] = []
         bind_textures = {}
         bind_textures['mesh'] = []
+        make_shader.make_instancing_and_skinning(material, mat_users)
     elif not wrd.arm_batch_materials or material.name.startswith('armdefault'):
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers)
         sd = shader_data.sd
