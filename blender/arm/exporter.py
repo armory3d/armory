@@ -1950,8 +1950,9 @@ class ArmoryExporter:
             self.output['tilesheet_datas'].append(o)
 
     def export_world(self):
-        """Exports the world of the scene."""
+        """Exports the world of the current scene."""
         world = self.scene.world
+
         if world is not None:
             world_name = arm.utils.safestr(world.name)
 
@@ -1961,6 +1962,9 @@ class ArmoryExporter:
 
                 self.post_export_world(world, out_world)
                 self.output['world_datas'].append(out_world)
+
+        elif arm.utils.get_rp().rp_background == 'World':
+            log.warn(f'Scene "{self.scene.name}" is missing a world, some render targets will not be cleared!')
 
     def export_objects(self, scene):
         """Exports all supported blender objects.
