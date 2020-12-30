@@ -1850,7 +1850,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                         layout.label(text="Warning! Overflow not yet supported")
 
 class ArmGenLodButton(bpy.types.Operator):
-    '''Automatically generate LoD levels'''
+    """Automatically generate LoD levels."""
     bl_idname = 'arm.generate_lod'
     bl_label = 'Auto Generate'
 
