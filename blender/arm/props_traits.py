@@ -119,13 +119,14 @@ class ArmTraitListNewItem(bpy.types.Operator):
 
     is_object: BoolProperty(name="Object Trait", description="Whether this is an object or scene trait", default=False)
     type_prop: EnumProperty(
-        items = [('Haxe Script', 'Haxe', 'Haxe Script'),
-                 ('WebAssembly', 'Wasm', 'WebAssembly'),
-                 ('UI Canvas', 'UI', 'UI Canvas'),
-                 ('Bundled Script', 'Bundled', 'Bundled Script'),
-                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
-                 ],
-        name = "Type")
+        name="Type",
+        items=[
+            ('Haxe Script', 'Haxe', 'Haxe Script'),
+            ('Logic Nodes', 'Nodes', 'Logic Nodes'),
+            ('UI Canvas', 'UI', 'UI Canvas'),
+            ('Bundled Script', 'Bundled', 'Bundled Script'),
+            ('WebAssembly', 'Wasm', 'WebAssembly')
+        ])
 
     def invoke(self, context, event):
         wm = context.window_manager
