@@ -2114,20 +2114,27 @@ class ARM_PT_ProxyPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         layout.operator("arm.make_proxy")
+
         obj = bpy.context.object
-        if obj != None and obj.proxy != None:
-            layout.label(text="Sync")
-            layout.prop(obj, "arm_proxy_sync_loc")
-            layout.prop(obj, "arm_proxy_sync_rot")
-            layout.prop(obj, "arm_proxy_sync_scale")
-            layout.prop(obj, "arm_proxy_sync_materials")
-            layout.prop(obj, "arm_proxy_sync_modifiers")
-            layout.prop(obj, "arm_proxy_sync_traits")
-            row = layout.row()
+        if obj is not None and obj.proxy is not None:
+            col = layout.column(heading="Sync")
+            col.prop(obj, "arm_proxy_sync_loc")
+            col.prop(obj, "arm_proxy_sync_rot")
+            col.prop(obj, "arm_proxy_sync_scale")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_materials")
+            col.prop(obj, "arm_proxy_sync_modifiers")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_traits")
+            row = col.row()
             row.enabled = obj.arm_proxy_sync_traits
             row.prop(obj, "arm_proxy_sync_trait_props")
-            layout.operator("arm.proxy_toggle_all")
-            layout.operator("arm.proxy_apply_all")
+
+            row = layout.row(align=True)
+            row.operator("arm.proxy_toggle_all")
+            row.operator("arm.proxy_apply_all")
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
