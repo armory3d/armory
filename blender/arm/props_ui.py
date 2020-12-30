@@ -21,8 +21,9 @@ from arm.lightmapper.utility import icon
 from arm.lightmapper.properties.denoiser import oidn, optix
 import importlib
 
-# Menu in object region
+
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
+    """Menu in object region."""
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -37,12 +38,13 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'arm_export')
+        col = layout.column()
+        col.prop(obj, 'arm_export')
         if not obj.arm_export:
             return
-        layout.prop(obj, 'arm_spawn')
-        layout.prop(obj, 'arm_mobile')
-        layout.prop(obj, 'arm_animation_enabled')
+        col.prop(obj, 'arm_spawn')
+        col.prop(obj, 'arm_mobile')
+        col.prop(obj, 'arm_animation_enabled')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
