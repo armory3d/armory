@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+from typing import Union
 import webbrowser
 
 from bpy.types import NodeTree
@@ -82,7 +83,10 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     arm_traitpropswarnings: CollectionProperty(type=ArmTraitPropWarning)
 
 class ARM_UL_TraitList(bpy.types.UIList):
+    """List of traits."""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.use_property_split = False
+
         custom_icon = "NONE"
         custom_icon_value = 0
         if item.type_prop == "Haxe Script":
@@ -96,7 +100,6 @@ class ARM_UL_TraitList(bpy.types.UIList):
         elif item.type_prop == "Logic Nodes":
             custom_icon = 'NODETREE'
 
-        # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
             # Display " " for props without a name to right-align the
@@ -635,7 +638,7 @@ class ARM_PT_TraitPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         obj = bpy.context.object
-        draw_traits(layout, obj, is_object=True)
+        draw_traits_panel(layout, obj, is_object=True)
 
 class ARM_PT_SceneTraitPanel(bpy.types.Panel):
     bl_label = "Armory Scene Traits"
@@ -648,7 +651,7 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         obj = bpy.context.scene
-        draw_traits(layout, obj, is_object=False)
+        draw_traits_panel(layout, obj, is_object=False)
 
 class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
     bl_label = 'Copy Traits from Active Object'
@@ -724,21 +727,24 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
 
         return {'INTERFACE'}
 
-def draw_traits(layout, obj, is_object):
-    rows = 2
+
+def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene],
+                      is_object: bool) -> None:
+    # Make the list bigger when there are a few traits
+    num_rows = 2
     if len(obj.arm_traitlist) > 1:
-        rows = 4
+        num_rows = 4
 
     row = layout.row()
-    row.template_list("ARM_UL_TraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
+    row.template_list("ARM_UL_TraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=num_rows)
 
     col = row.column(align=True)
     op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
     op.is_object = is_object
     if is_object:
-        op = col.operator("arm_traitlist.delete_item", icon='REMOVE', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item", icon='REMOVE', text="")
     else:
-        op = col.operator("arm_traitlist.delete_item_scene", icon='REMOVE', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item_scene", icon='REMOVE', text="")
     op.is_object = is_object
 
     if len(obj.arm_traitlist) > 1:
@@ -750,35 +756,30 @@ def draw_traits(layout, obj, is_object):
         op.direction = 'DOWN'
         op.is_object = is_object
 
+    # Draw trait specific content
     if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
         item = obj.arm_traitlist[obj.arm_traitlist_index]
 
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+
             if item.type_prop == 'Haxe Script':
-                row = layout.row(align=True)
-                row.alignment = 'EXPAND'
                 column = row.column(align=True)
                 column.alignment = 'EXPAND'
                 if item.class_name_prop == '':
                     column.enabled = False
-                op = column.operator("arm.edit_script", icon="FILE_SCRIPT")
-                op.is_object = is_object
-                op = row.operator("arm.new_script")
-                op.is_object = is_object
-                op = row.operator("arm.refresh_scripts", text="Refresh")
-            else: # Bundled
+                column.operator("arm.edit_script", icon="FILE_SCRIPT").is_object = is_object
+                row.operator("arm.new_script").is_object = is_object
+                row.operator("arm.refresh_scripts", text="Refresh")
+
+            # Bundled scripts
+            else:
                 if item.class_name_prop == 'NavMesh':
-                    row = layout.row(align=True)
-                    row.alignment = 'EXPAND'
-                    op = layout.operator("arm.generate_navmesh")
-                row = layout.row(align=True)
-                row.alignment = 'EXPAND'
-                column = row.column(align=True)
-                column.alignment = 'EXPAND'
-                if not item.class_name_prop == 'NavMesh':
-                    op = column.operator("arm.edit_bundled_script", icon="FILE_SCRIPT")
-                    op.is_object = is_object
-                op = row.operator("arm.refresh_scripts", text="Refresh")
+                    row.operator("arm.generate_navmesh")
+                else:
+                    row.operator("arm.edit_bundled_script", icon="FILE_SCRIPT").is_object = is_object
+                row.operator("arm.refresh_scripts", text="Refresh")
 
             # Default props
             item.name = item.class_name_prop
