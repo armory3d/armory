@@ -834,7 +834,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
             # New
             column = row.column(align=True)
             column.alignment = 'EXPAND'
-            op = column.operator("arm.new_treenode", text="New Node Tree", icon="ADD")
+            op = column.operator("arm.new_treenode", text="New Tree", icon="ADD")
             op.is_object = is_object
             # At least one check is active Logic Node Editor
             is_check_logic_node_editor = False
@@ -857,7 +857,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 column.enabled = False
             else:
                 column.enabled = is_check_logic_node_editor
-            op = column.operator("arm.edit_treenode", text="Edit Node Tree", icon="NODETREE")
+            op = column.operator("arm.edit_treenode", text="Edit Tree", icon="NODETREE")
             op.is_object = is_object
             # Get from Node Tree Editor
             column = row.column(align=True)
@@ -866,7 +866,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 column.enabled = False
             else:
                 column.enabled = is_check_logic_node_editor
-            op = column.operator("arm.get_treenode", text="From Node Editor", icon="IMPORT")
+            op = column.operator("arm.get_treenode", text="From Editor", icon="IMPORT")
             op.is_object = is_object
 
             # Row for search
