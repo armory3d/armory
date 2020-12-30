@@ -1,26 +1,31 @@
 import os
-import bpy
 import subprocess
-from typing import Dict
-import arm.log as log
-import arm.utils
-import arm.assets as assets
-import arm.material.mat_utils as mat_utils
-import arm.material.mat_state as mat_state
-from arm.material.shader import ShaderData
-import arm.material.cycles as cycles
-import arm.material.make_mesh as make_mesh
-import arm.material.make_transluc as make_transluc
-import arm.material.make_overlay as make_overlay
-import arm.material.make_depth as make_depth
-import arm.material.make_decal as make_decal
-import arm.material.make_voxel as make_voxel
+from typing import Dict, List, Tuple
+
+import bpy
+from bpy.types import Material
+from bpy.types import Object
+
 import arm.api
+import arm.assets as assets
 import arm.exporter
+import arm.log as log
+import arm.material.cycles as cycles
+import arm.material.make_decal as make_decal
+import arm.material.make_depth as make_depth
+import arm.material.make_mesh as make_mesh
+import arm.material.make_overlay as make_overlay
+import arm.material.make_transluc as make_transluc
+import arm.material.make_voxel as make_voxel
+import arm.material.mat_state as mat_state
+import arm.material.mat_utils as mat_utils
+from arm.material.shader import Shader, ShaderContext, ShaderData
+import arm.utils
 
 rpass_hook = None
 
-def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.types.Object], mat_armusers):
+
+def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armusers) -> Tuple:
     mat_state.mat_users = mat_users
     mat_state.mat_armusers = mat_armusers
     mat_state.material = material
@@ -59,10 +64,10 @@ def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.
 
         con = None
 
-        if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpass'] != None:
+        if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpass'] is not None:
             con = arm.api.drivers[rpdat.rp_driver]['make_rpass'](rp)
 
-        if con != None:
+        if con is not None:
             pass
 
         elif rp == 'mesh':
@@ -86,7 +91,7 @@ def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.
         elif rp == 'voxel':
             con = make_voxel.make(rp)
 
-        elif rpass_hook != None:
+        elif rpass_hook is not None:
             con = rpass_hook(rp)
 
         write_shaders(rel_path, con, rp, matname)
@@ -94,7 +99,7 @@ def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.
     shader_data_name = matname + '_data'
 
     if wrd.arm_single_data_file:
-        if not 'shader_datas' in arm.exporter.current_output:
+        if 'shader_datas' not in arm.exporter.current_output:
             arm.exporter.current_output['shader_datas'] = []
         arm.exporter.current_output['shader_datas'].append(mat_state.data.get()['shader_datas'][0])
     else:
@@ -104,7 +109,8 @@ def build(material: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.
 
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
 
-def write_shaders(rel_path, con, rpass, matname):
+
+def write_shaders(rel_path: str, con: ShaderContext, rpass: str, matname: str) -> None:
     keep_cache = mat_state.material.arm_cached
     write_shader(rel_path, con.vert, 'vert', rpass, matname, keep_cache=keep_cache)
     write_shader(rel_path, con.frag, 'frag', rpass, matname, keep_cache=keep_cache)
@@ -112,8 +118,9 @@ def write_shaders(rel_path, con, rpass, matname):
     write_shader(rel_path, con.tesc, 'tesc', rpass, matname, keep_cache=keep_cache)
     write_shader(rel_path, con.tese, 'tese', rpass, matname, keep_cache=keep_cache)
 
-def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
-    if shader == None or shader.is_linked:
+
+def write_shader(rel_path: str, shader: Shader, ext: str, rpass: str, matname: str, keep_cache=True) -> None:
+    if shader is None or shader.is_linked:
         return
 
     # TODO: blend context
@@ -150,7 +157,7 @@ def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
             os.chdir(cwd)
 
 
-def make_instancing_and_skinning(mat: bpy.types.Material, mat_users: Dict[bpy.types.Material, bpy.types.Object]) -> None:
+def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[Object]]) -> None:
     """Build material with instancing or skinning if enabled.
     If the material is a custom material, only validation checks for instancing are performed."""
     global_elems = []
