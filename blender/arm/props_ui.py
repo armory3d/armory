@@ -21,8 +21,9 @@ from arm.lightmapper.utility import icon
 from arm.lightmapper.properties.denoiser import oidn, optix
 import importlib
 
-# Menu in object region
+
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
+    """Menu in object region."""
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -37,12 +38,13 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'arm_export')
+        col = layout.column()
+        col.prop(obj, 'arm_export')
         if not obj.arm_export:
             return
-        layout.prop(obj, 'arm_spawn')
-        layout.prop(obj, 'arm_mobile')
-        layout.prop(obj, 'arm_animation_enabled')
+        col.prop(obj, 'arm_spawn')
+        col.prop(obj, 'arm_mobile')
+        col.prop(obj, 'arm_animation_enabled')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -1848,7 +1850,7 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                         layout.label(text="Warning! Overflow not yet supported")
 
 class ArmGenLodButton(bpy.types.Operator):
-    '''Automatically generate LoD levels'''
+    """Automatically generate LoD levels."""
     bl_idname = 'arm.generate_lod'
     bl_label = 'Auto Generate'
 
@@ -2112,20 +2114,27 @@ class ARM_PT_ProxyPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         layout.operator("arm.make_proxy")
+
         obj = bpy.context.object
-        if obj != None and obj.proxy != None:
-            layout.label(text="Sync")
-            layout.prop(obj, "arm_proxy_sync_loc")
-            layout.prop(obj, "arm_proxy_sync_rot")
-            layout.prop(obj, "arm_proxy_sync_scale")
-            layout.prop(obj, "arm_proxy_sync_materials")
-            layout.prop(obj, "arm_proxy_sync_modifiers")
-            layout.prop(obj, "arm_proxy_sync_traits")
-            row = layout.row()
+        if obj is not None and obj.proxy is not None:
+            col = layout.column(heading="Sync")
+            col.prop(obj, "arm_proxy_sync_loc")
+            col.prop(obj, "arm_proxy_sync_rot")
+            col.prop(obj, "arm_proxy_sync_scale")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_materials")
+            col.prop(obj, "arm_proxy_sync_modifiers")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_traits")
+            row = col.row()
             row.enabled = obj.arm_proxy_sync_traits
             row.prop(obj, "arm_proxy_sync_trait_props")
-            layout.operator("arm.proxy_toggle_all")
-            layout.operator("arm.proxy_apply_all")
+
+            row = layout.row(align=True)
+            row.operator("arm.proxy_toggle_all")
+            row.operator("arm.proxy_apply_all")
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
