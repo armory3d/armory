@@ -504,8 +504,8 @@ class MouseAxisComponent extends InputAxisComponent {
 			case "movement x": if (movX < -parent.deadzone) return movX + parent.deadzone;
 			case "moved y": if (movY < -parent.deadzone) scale--;
 			case "movement y": if (movY < -parent.deadzone) return movY + parent.deadzone;
-			case "wheel moved": if (wheelMov > parent.deadzone) scale --;
-			case "wheel movement": if (wheelMov > parent.deadzone) return wheelMov + parent.deadzone;
+			case "wheel moved": if (wheelMov < -parent.deadzone) scale --;
+			case "wheel movement": if (wheelMov < -parent.deadzone) return wheelMov + parent.deadzone;
 			default: if (mouse.down(negativeKey)) scale--;
 		}
 		return scale;
