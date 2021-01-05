@@ -41,7 +41,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
 
 def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
-        c.write_normal(node.inputs[19])
+        c.write_normal(node.inputs[20])
         state.out_basecol = c.parse_vector_input(node.inputs[0])
         # subsurface = c.parse_vector_input(node.inputs[1])
         # subsurface_radius = c.parse_vector_input(node.inputs[2])
@@ -62,11 +62,12 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         if node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0:
             state.out_emission = '({0}.x)'.format(c.parse_vector_input(node.inputs[17]))
             state.emission_found = True
-        # clearcoar_normal = c.parse_vector_input(node.inputs[20])
-        # tangent = c.parse_vector_input(node.inputs[21])
+        # clearcoar_normal = c.parse_vector_input(node.inputs[21])
+        # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
-        if len(node.inputs) > 20:
-            state.out_opacity = c.parse_value_input(node.inputs[18])
+        if len(node.inputs) > 21:
+            state.out_opacity = c.parse_value_input(node.inputs[19])
+
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
