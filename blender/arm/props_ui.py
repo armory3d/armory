@@ -270,7 +270,7 @@ class ARM_PT_ScenePropsPanel(bpy.types.Panel):
         row.prop(scene, 'arm_export')
 
 class InvalidateCacheButton(bpy.types.Operator):
-    '''Delete cached mesh data'''
+    """Delete cached mesh data"""
     bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
 
@@ -279,7 +279,7 @@ class InvalidateCacheButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class InvalidateMaterialCacheButton(bpy.types.Operator):
-    '''Delete cached material data'''
+    """Delete cached material data"""
     bl_idname = "arm.invalidate_material_cache"
     bl_label = "Invalidate Cache"
 
@@ -2246,7 +2246,7 @@ class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
     bl_idname = 'arm.show_old_file_version_info'
     bl_description = ('Displays an info panel that warns about opening a file'
                        'which was created in a previous version of Armory')
-    # bl_options = {'INTERNAL'}
+    bl_options = {'INTERNAL'}
 
     wrd = None
 

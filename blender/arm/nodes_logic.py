@@ -58,13 +58,14 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
     bl_idname = "arm.add_node_override"
     bl_label = "Add Node"
     bl_property = "type"
+    bl_options = {'INTERNAL'}
 
     type: StringProperty(name="NodeItem type")
     use_transform: BoolProperty(name="Use Transform")
 
     def invoke(self, context, event):
         bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
-        return {"FINISHED"}
+        return {'FINISHED'}
 
     @classmethod
     def description(cls, context, properties):
@@ -261,7 +262,7 @@ class ARM_PT_Variables(bpy.types.Panel):
             setN.ntype = ID
 
 class ARMAddVarNode(bpy.types.Operator):
-    '''Add a linked node of that Variable'''
+    """Add a linked node of that Variable"""
     bl_idname = 'arm.add_var_node'
     bl_label = 'Add Get'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
@@ -296,7 +297,7 @@ class ARMAddVarNode(bpy.types.Operator):
         return({'FINISHED'})
 
 class ARMAddSetVarNode(bpy.types.Operator):
-    '''Add a node to set this Variable'''
+    """Add a node to set this Variable"""
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Set'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}

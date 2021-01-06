@@ -5,6 +5,7 @@ class NodeAddOutputButton(bpy.types.Operator):
     """Add 4 States"""
     bl_idname = 'arm.add_output_4_parameters'
     bl_label = 'Add 4 States'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
     name_format: StringProperty(name='Name Format', default='Output {0}')
@@ -31,6 +32,7 @@ class NodeRemoveOutputButton(bpy.types.Operator):
     """Remove 4 last states"""
     bl_idname = 'arm.remove_output_4_parameters'
     bl_label = 'Remove 4 States'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
