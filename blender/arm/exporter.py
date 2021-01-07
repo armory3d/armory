@@ -2596,7 +2596,7 @@ class ArmoryExporter:
 
             rbw = self.scene.rigidbody_world
             if rbw is not None and rbw.enabled:
-                out_trait['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
+                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
 
             self.output['traits'].append(out_trait)
 
