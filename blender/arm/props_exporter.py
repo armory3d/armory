@@ -358,7 +358,7 @@ class ArmExporterSpecialsMenu(bpy.types.Menu):
         layout.operator("arm.exporter_gpuprofile")
 
 class ArmoryExporterOpenFolderButton(bpy.types.Operator):
-    '''Open published folder'''
+    """Open published folder"""
     bl_idname = 'arm.exporter_open_folder'
     bl_label = 'Open Folder'
 
