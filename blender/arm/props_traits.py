@@ -308,20 +308,24 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
             obj = bpy.context.scene
         sdk_path = arm.utils.get_sdk_path()
         project_path = arm.utils.get_fp()
-        pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         item = obj.arm_traitlist[obj.arm_traitlist_index]
-        source_hx_path = os.path.join(sdk_path , 'armory', 'Sources', 'armory', 'trait', item.class_name_prop + '.hx')
-        target_hx_path = os.path.join(project_path, 'Sources', pkg, item.class_name_prop + '.hx')
+
+        pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
+        source_hx_path = os.path.join(sdk_path, 'armory', 'Sources', 'armory', 'trait', item.class_name_prop + '.hx')
+        target_dir = os.path.join(project_path, 'Sources', pkg)
+        target_hx_path = os.path.join(target_dir, item.class_name_prop + '.hx')
 
         if not os.path.isfile(target_hx_path):
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+
             # Rewrite package and copy
-            sf = open(source_hx_path, encoding="utf-8")
-            sf.readline()
-            tf = open(target_hx_path, 'w', encoding="utf-8")
-            tf.write('package ' + pkg + ';\n')
-            shutil.copyfileobj(sf, tf)
-            sf.close()
-            tf.close()
+            with open(source_hx_path, encoding="utf-8") as sf:
+                sf.readline()
+                with open(target_hx_path, 'w', encoding="utf-8") as tf:
+                    tf.write('package ' + pkg + ';\n')
+                    shutil.copyfileobj(sf, tf)
+
             arm.utils.fetch_script_names()
 
         # From bundled to script
