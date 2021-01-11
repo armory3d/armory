@@ -273,7 +273,7 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
 class ArmNodeSearch(bpy.types.Operator):
     bl_idname = "arm.node_search"
     bl_label = "Search..."
-    bl_options = {"REGISTER"}
+    bl_options = {"REGISTER", "INTERNAL"}
     bl_property = "item"
 
     def get_search_items(self, context):
