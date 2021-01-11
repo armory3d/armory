@@ -60,6 +60,8 @@ class ArmTilesheetActionListDeleteItem(bpy.types.Operator):
     def poll(self, context):
         """ Enable if there's something in the list """
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_tilesheetlist) == 0:
+            return False
         trait = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
         return len(trait.arm_tilesheetactionlist) > 0
 
@@ -81,6 +83,8 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_tilesheetactionlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL'}
+
     direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
@@ -90,6 +94,8 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
     def poll(self, context):
         """ Enable if there's something in the list. """
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_tilesheetlist) == 0:
+            return False
         trait = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
         return len(trait.arm_tilesheetactionlist) > 0
 
@@ -203,6 +209,8 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_tilesheetlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL'}
+
     direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
