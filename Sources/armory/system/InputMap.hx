@@ -7,34 +7,31 @@ import iron.system.Input;
 class InputMap {
 	static var axes = new Map<String, InputAxis>();
 	static var actions = new Map<String, InputAction>();
+	var config = "";
 
-	public var index: Int;
-	public var currentTag: String;
-
-	public function new(index: Int): Void {
-		this.index = index;
-	}
+	public function new() {}
 
 	/**
-	* Set the tag that this input map will look for
-	* @param tag The tag name
+	* Set the config that the input map will look for commands
+	* @param config The config name
 	* @return Void
 	**/
-	public function setCurrentTag(tag: String): Void {
-		currentTag = tag;
+	public function setConfig(config: String) {
+		this.config = config;
 	}
 
 	/**
-	* Create input axis in the input map
+	* Add input axis in the input map
 	* @param name The name of the input axis
 	* @param pressure The pressure required to activate pressure sensitivity buttons
-	* @param deadzone The displacement required to activate gamepad sticks and catch mouse movement
-	* @return Void
+	* @param deadzone The displacement required to activate gamepad sticks or catch mouse movement
+	* @param index The index used to indentify gamepads
+	* @return InputAxis
 	**/
-	public function createAxis(name: String, ?pressure: FastFloat, ?deadzone: FastFloat): Void {
-		var p = pressure == null ? 0.0 : pressure;
-		var d = deadzone == null ? 0.0 : deadzone;
-		axes[name] = new InputAxis(this, index, p, d);
+	public function addAxis(name: String, ?pressure = 0.0, ?deadzone = 0.0, ?index = 0) {
+		var axis = new InputAxis(pressure, deadzone, index);
+		axes[name] = axis;
+		return axis;
 	}
 
 	/**
@@ -42,12 +39,13 @@ class InputMap {
 	* @param name The name of the input action
 	* @param pressure The pressure required to activate pressure sensitivity buttons
 	* @param deadzone The displacement required to activate gamepad sticks and catch mouse movement
-	* @return Void
+	* @param index The index used to indentify gamepads
+	* @return InputAction
 	**/
-	public function createAction(name: String, ?pressure: FastFloat, ?deadzone: FastFloat): Void {
-		var p = pressure == null ? 0.0 : pressure;
-		var d = deadzone == null ? 0.0 : deadzone;
-		actions[name] = new InputAction(this, index, p, d);
+	public function addAction(name: String, ?pressure = 0.0, ?index = 0) {
+		var action = new InputAction(pressure, index);
+		actions[name] = action;
+		return action;
 	}
 
 	/**
@@ -55,7 +53,7 @@ class InputMap {
 	* @param name The name of the input axis
 	* @return InputAxis
 	**/
-	public inline function getAxis(name: String): InputAxis {
+	public inline function getAxis(name: String) {
 		return axes[name];
 	}
 
@@ -64,7 +62,7 @@ class InputMap {
 	* @param name The name of the input action
 	* @return InputAction
 	**/
-	public inline function getAction(name: String): InputAction {
+	public inline function getAction(name: String) {
 		return actions[name];
 	}
 
@@ -73,8 +71,8 @@ class InputMap {
 	* @param name The name of the input axis
 	* @return Vec4
 	**/
-	public inline function getVec(name: String): Vec4 {
-		return axes[name].get();
+	public inline function getVec(name: String) {
+		return axes[name].getVec(config);
 	}
 
 	/**
@@ -82,8 +80,8 @@ class InputMap {
 	* @param name The name of the input action
 	* @return Bool
 	**/
-	public inline function isActionPressed(name: String): Bool {
-		return actions[name].pressed();
+	public inline function started(name: String) {
+		return actions[name].started(config);
 	}
 
 	/**
@@ -91,132 +89,139 @@ class InputMap {
 	* @param name The name of the target input action
 	* @return Bool
 	**/
-	public inline function isActionReleased(name: String): Bool {
-		return actions[name].released();
+	public inline function released(name: String) {
+		return actions[name].released(config);
 	}
 }
 
 class InputAction {
-	static var components = new Map<InputActionComponent, String>();
-
-	final parent: InputMap;
-	public final index: Int;
-	public final deadzone: FastFloat;
 	public final pressure: FastFloat;
+	public final index: Int;
 
-	public function new(parent: InputMap, index: Int, pressure: FastFloat, deadzone: FastFloat) {
-		this.parent = parent;
+	static var commands = new Map<String, Array<InputActionCommand>>();
+	var display = new Map<InputActionCommand, String>();
+
+	public function new(pressure: FastFloat, index: Int) {
 		this.index = index;
 		this.pressure = pressure;
-		this.deadzone = deadzone;
 	}
 
 	/**
-	* Add a keyboard input component
-	* @param tag The input component tag
+	 * Get the display form of all commands that activates this action according to the active config
+	 * @param config 
+	 */
+	public function getDisplay(config: String) {
+		var s = "";
+		for (c in commands[config]) {
+			s += display[c] + " OR ";
+		}
+		return s;
+	}
+
+	/**
+	* Add a keyboard input command
 	* @param key The key that should be started or released
 	* @param modifiers The keys that should be down before activate the main key
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputActionCommand
 	**/
-	public function addKeyboardComponent(tag: String, key: String, ?modifiers): Void {
+	public function addKeyboard(key: String, ?modifiers: Array<String>, ?config = "", ?display = "") {
 		var mod = modifiers == null ? new Array<String>() : modifiers;
-		addCustomComponent(tag, new KeyboardActionComponent(this, key, mod));
+		var command = new KeyboardActionCommand(this, key, mod);
+		addCommand(command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a mouse input component
-	* @param tag The input component tag
+	* Add a mouse input command
 	* @param button The button that should be started or released
 	* @param modifiers The buttons that should be down before activate the main key
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputActionCommand
 	**/
-	public function addMouseComponent(tag: String, button: String, ?modifiers): Void {
+	public function addMouse(button: String, ?modifiers: Array<String>, ?config = "", ?display = "") {
 		var mod = modifiers == null ? new Array<String>() : modifiers;
-		addCustomComponent(tag, new MouseActionComponent(this, button, mod));
+		var command = new MouseActionCommand(this, button, mod);
+		addCommand(command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a gamepad input component
-	* @param tag The input component tag
+	* Add a gamepad input command
 	* @param button The button that should be started or released
 	* @param modifiers The buttons that should be down before activate the main key
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputActionCommand
 	**/
-	public function addGamepadComponent(tag: String, button: String, ?modifiers): Void {
+	public function addGamepad(button: String, ?modifiers: Array<String>, ?config = "", ?display = "") {
 		var mod = modifiers == null ? new Array<String>() : modifiers;
-		addCustomComponent(tag, new GamepadActionComponent(this, button, mod));
+		var command = new GamepadActionCommand(this, button, mod);
+		addCommand(command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a custom input component
-	* @param tag The input component tag
-	* @param component The constructed input component
-	* @return Void
+	* Add a custom input command
+	* @param command The constructed input command
+	* @param config The input command config
+	* @return InputActionCommand
 	**/
-	public function addCustomComponent(tag: String, component: InputActionComponent): Void {
-		components[component] = tag;
+	public function addCommand(command: InputActionCommand, config: String, display: String) {
+		if (commands[config] == null) commands[config] = new Array<InputActionCommand>();
+		commands[config].push(command);
+		this.display[command] = display;
+		return command;
 	}
 
-	/**
-	* Remove an input component
-	* @param component The component to be removed
-	* @return Void
-	**/
-	public function removeComponent(component: InputActionComponent): Void {
-		components.remove(component);
-	}
-
-	public function pressed(): Bool {
-		for (component => tag in components) {
-			if (tag == parent.currentTag) {
-				if (component.started()) return true;
-			}
+	public function started(config: String) {
+		for (c in commands[config]) {
+			if (c.started()) return true;
 		}
 		return false;
 	}
 
-	public function released(): Bool {
-		for (component => tag in components) {
-			if (tag == parent.currentTag) {
-				if (component.released()) return true;
-			}
+	public function released(config: String) {
+		for (c in commands[config]) {
+			if (c.released()) return true;
 		}
 		return false;
 	}
 }
 
-class InputActionComponent {
-	var parent: InputAction;
-	var key: String;
-	var modifiers: Array<String>;
+class InputActionCommand {
+	final key: String;
+	final modifiers: Array<String>;
+	final pressure: FastFloat;
+	final index: Int;
 
-	public function new(parent: InputAction, key: String, modifiers: Array<String>): Void {
+	public function new(parent: InputAction, key: String, modifiers: Array<String>) {
 		this.key = key;
 		this.modifiers = modifiers;
-		this.parent = parent;
+
+		pressure = parent.pressure;
+		index = parent.index;
 	}
 
-	public function started(): Bool {
+	public function started() {
 		return false;
 	}
 
-	public function released(): Bool {
+	public function released() {
 		return false;
 	}
 }
 
-class KeyboardActionComponent extends InputActionComponent {
-
+class KeyboardActionCommand extends InputActionCommand {
 	final keyboard = Input.getKeyboard();
 
-	public function new(parent: InputAction, key: String, modifiers: Array<String>): Void {
+	public function new(parent: InputAction, key: String, modifiers: Array<String>) {
 		super(parent, key, modifiers);
-		this.parent = parent;
-		this.key = key;
-		this.modifiers = modifiers;
 	}
 
-	public inline override function started(): Bool {
+	public inline override function started() {
 		if (keyboard.started(key)) {
 			for (m in modifiers) {
 				if (!keyboard.down(m)) return false;
@@ -226,7 +231,7 @@ class KeyboardActionComponent extends InputActionComponent {
 		return false;
 	}
 
-	public inline override function released(): Bool {
+	public inline override function released() {
 		if (keyboard.released(key)) {
 			for (m in modifiers) {
 				if (!keyboard.down(m)) return false;
@@ -237,18 +242,14 @@ class KeyboardActionComponent extends InputActionComponent {
 	}
 }
 
-class MouseActionComponent extends InputActionComponent {
-
+class MouseActionCommand extends InputActionCommand {
 	final mouse = Input.getMouse();
 
-	public function new(parent: InputAction, key: String, modifiers: Array<String>): Void {
+	public function new(parent: InputAction, key: String, modifiers: Array<String>) {
 		super(parent, key, modifiers);
-		this.parent = parent;
-		this.key = key;
-		this.modifiers = modifiers;
 	}
 
-	public override function started(): Bool {
+	public override function started() {
 		if (mouse.started(key)) {
 			for (m in modifiers) {
 				if (!mouse.down(m)) return false;
@@ -258,7 +259,7 @@ class MouseActionComponent extends InputActionComponent {
 		return false;
 	}
 
-	public override function released(): Bool {
+	public override function released() {
 		if (mouse.released(key)) {
 			for (m in modifiers) {
 				if (!mouse.down(m)) return false;
@@ -269,32 +270,28 @@ class MouseActionComponent extends InputActionComponent {
 	}
 }
 
-class GamepadActionComponent extends InputActionComponent {
-
+class GamepadActionCommand extends InputActionCommand {
 	final gamepad: Gamepad;
 
 	public function new(parent: InputAction, key: String, modifiers: Array<String>) {
 		super(parent, key, modifiers);
-		this.parent = parent;
-		this.key = key;
-		this.modifiers = modifiers;
-		gamepad = Input.getGamepad(parent.index);
+		gamepad = Input.getGamepad(index);
 	}
 
-	public inline override function started(): Bool {
+	public inline override function started() {
 		if (gamepad.started(key)) {
 			for (m in modifiers) {
-				if (gamepad.down(m) <= parent.pressure) return false;
+				if (gamepad.down(m) <= pressure) return false;
 			}
 			return true;
 		}
 		return false;
 	}
 
-	public inline override function released(): Bool {
+	public inline override function released() {
 		if (gamepad.released(key)) {
 			for (m in modifiers) {
-				if (gamepad.down(m) <= parent.pressure) return false;
+				if (gamepad.down(m) <= pressure) return false;
 			}
 			return true;
 		}
@@ -303,98 +300,114 @@ class GamepadActionComponent extends InputActionComponent {
 }
 
 class InputAxis {
-	static var componentsX = new Map<InputAxisComponent, String>();
+	public final pressure: FastFloat;
+	public final deadzone: FastFloat;
+	public final index: Int;
+	static var commandsX = new Map<String, Array<InputAxisCommand>>();
 	static var scaleX = 1.0;
-
-	static var componentsY = new Map<InputAxisComponent, String>();
+	static var commandsY = new Map<String, Array<InputAxisCommand>>();
 	static var scaleY = 1.0;
-
 	static var normalize = false;
 	static var vec = new Vec4();
+	var display = new Map<InputAxisCommand, String>();
 
-	final parent: InputMap;
-	public final index: Int;
-	public final deadzone: FastFloat;
-	public final pressure: FastFloat;
-
-	public function new(parent: InputMap, index: Int, pressure: FastFloat, deadzone: FastFloat) {
-		this.parent = parent;
+	public function new(pressure: FastFloat, deadzone: FastFloat, index: Int) {
 		this.index = index;
 		this.pressure = pressure;
 		this.deadzone = deadzone;
 	}
 
 	/**
-	* Add a keyboard input component
-	* @param position The position that the added input component will be in the returned vector ("x" or "y")
-	* @param tag The input component tag
+	 * Get the display form of all commands that activates this axis according to the active config
+	 * @param config 
+	 */
+	public function getDisplay(config: String) {
+		var s = "";
+		for (c in commandsX[config]) {
+			s += display[c] + " OR ";
+		}
+
+		for (c in commandsY[config]) {
+			s += display[c] + " OR ";
+		}
+
+		return s;
+	}
+
+	/**
+	* Add a keyboard input command
+	* @param position The position that the added input command will be in the returned vector ("x" or "y")
 	* @param positiveKey The key that when pressed will sum +1
 	* @param negativeKey The key that when pressed will sum -1
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputAxisCommand
 	**/
-	public function addKeyboardComponent(position: String, tag: String, positiveKey: String, ?negativeKey: String): Void {
-		var n = negativeKey == null ? "" : negativeKey;
-		addCustomComponent(position, tag, new KeyboardAxisComponent(this, positiveKey, negativeKey));
+	public function addKeyboard(position: String, positiveKey: String, ?negativeKey = "", ?config = "", ?display = "") {
+		var command = new KeyboardAxisCommand(this, positiveKey, negativeKey);
+		addCommand(position, command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a mouse input component
-	* @param position The position that the added input component will be in the returned vector ("x" or "y")
-	* @param tag The input component tag
+	* Add a mouse input command
+	* @param position The position that the added input command will be in the returned vector ("x" or "y")
 	* @param positiveButton The key that when pressed will sum +1
 	* @param negativeButton The key that when pressed will sum -1
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputAxisCommand
 	**/
-	public function addMouseComponent(position: String, tag: String, positiveButton: String, ?negativeButton: String): Void {
-		var n = negativeButton == null ? "" : negativeButton;
-		addCustomComponent(position, tag, new MouseAxisComponent(this, positiveButton, negativeButton));
+	public function addMouse(position: String, positiveButton: String, ?negativeButton = "", ?config = "", ?display = "") {
+		var command = new MouseAxisCommand(this, positiveButton, negativeButton);
+		addCommand(position, command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a gamepad input component
-	* @param position The position that the added input component will be in the returned vector ("x" or "y")
-	* @param tag The input component tag
+	* Add a gamepad input command
+	* @param position The position that the added input command will be in the returned vector ("x" or "y")
 	* @param positiveButton The key that when pressed will sum +1
 	* @param negativeButton The key that when pressed will sum -1
-	* @return Void
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputAxisCommand
 	**/
-	public function addGamepadComponent(position: String, tag: String, positiveButton: String, ?negativeButton: String): Void {
-		var n = negativeButton == null ? "" : negativeButton;
-		addCustomComponent(position, tag, new GamepadAxisComponent(this, positiveButton, negativeButton));
+	public function addGamepad(position: String, positiveButton: String, ?negativeButton = "", ?config = "", ?display = "") {
+		var command = new GamepadAxisCommand(this, positiveButton, negativeButton);
+		addCommand(position, command, config, display);
+		return command;
 	}
 
 	/**
-	* Add a custom input component
-	* @param tag The input component tag
-	* @param component The constructed input component
-	* @return Void
+	* Add a custom input command
+	* @param command The constructed input command
+	* @param config The input command config
+	* @param display The form this command will be displayed
+	* @return InputAxisCommand
 	**/
-	public function addCustomComponent(position: String, tag: String, component: InputAxisComponent): Void {
+	public function addCommand(position: String, command: InputAxisCommand, config: String, display: String) {
 		switch (position) {
-			case "x": componentsX[component] = tag;
-			case "y": componentsY[component] = tag;
+			case "x": {
+				if (commandsX[config] == null) commandsX[config] = new Array<InputAxisCommand>();
+				commandsX[config].push(command);
+			}
+			case "y": {
+				if (commandsY[config] == null) commandsY[config] = new Array<InputAxisCommand>();
+				commandsY[config].push(command);
+			}
 		}
-	}
-
-	/**
-	* Remove an input component
-	* @param component The component to be removed
-	* @return Void
-	**/
-	public function removeComponent(position: String, component: InputAxisComponent): Void {
-		switch (position) {
-			case "x": componentsX.remove(component);
-			case "y": componentsY.remove(component);
-		}
+		this.display[command] = display;
+		return command;
 	}
 
 	/**
 	* Set the scale of the returned vector
-	* @param x The scale of the components in the position x
-	* @param y The scale of the components in the positon y
+	* @param x The scale of the commands in the position x
+	* @param y The scale of the commands in the positon y
 	* @return Void
 	**/
-	public function setScale(x: FastFloat, y: FastFloat): Void {
+	public function setScale(x: FastFloat, y: FastFloat) {
 		scaleX = x;
 		scaleY = y;
 	}
@@ -403,7 +416,7 @@ class InputAxis {
 	* Enable the returned vector normalization
 	* @return Void
 	**/
-	public function enableNormalize(): Void {
+	public function enableNormalize() {
 		normalize = true;
 	}
 
@@ -411,7 +424,7 @@ class InputAxis {
 	* Disable the returned vector normalization
 	* @return Void
 	**/
-	public function disableNormalize(): Void {
+	public function disableNormalize() {
 		normalize = false;
 	}
 
@@ -419,15 +432,15 @@ class InputAxis {
 	* Get the input axis vector
 	* @return Void
 	**/
-	public inline function get(): Vec4 {
+	public inline function getVec(config: String) {
 		vec.set(0, 0, 0);
 
-		for (component => tag in componentsX) {
-			if (tag == parent.currentTag) if (component.get() != 0.0) vec.x += component.get();
+		for (c in commandsX[config]) {
+			if (c.getScale() != 0.0) vec.x += c.getScale();
 		}
 
-		for (component => tag in componentsY) {
-			if (tag == parent.currentTag) if (component.get() != 0.0) vec.y += component.get();
+		for (c in commandsY[config]) {
+			if (c.getScale() != 0.0) vec.y += c.getScale();
 		}
 
 		if (normalize) vec.normalize();
@@ -439,127 +452,123 @@ class InputAxis {
 	}
 }
 
-class InputAxisComponent {
-	var parent: InputAxis;
-	var positiveKey: String;
-	var negativeKey: String;
+class InputAxisCommand {
+	final positiveKey: String;
+	final negativeKey: String;
+	final pressure: FastFloat;
+	final minusPressure: FastFloat;
+	final deadzone: FastFloat;
+	final minusDeadzone: FastFloat;
 	var scale: FastFloat;
 
-	public function new(parent: InputAxis, positiveKey: String, negativeKey: String): Void {
-		this.parent = parent;
+	public function new(parent: InputAxis, positiveKey: String, negativeKey: String) {
 		this.positiveKey = positiveKey;
 		this.negativeKey = negativeKey;
+
+		pressure = parent.pressure;
+		minusPressure = -pressure;
+		deadzone = parent.deadzone;
+		minusDeadzone = -deadzone;
 	}
 
-	public function get(): FastFloat {
-		return 0.0;
+	public function getScale() {
+		return scale;
 	}
 }
 
-class KeyboardAxisComponent extends InputAxisComponent {
+class KeyboardAxisCommand extends InputAxisCommand {
 	final keyboard = Input.getKeyboard();
 
-	public function new(parent: InputAxis, positiveKey: String, negativeKey: String): Void {
+	public function new(parent: InputAxis, positiveKey: String, negativeKey: String) {
 		super(parent, positiveKey, negativeKey);
-		this.parent = parent;
-		this.positiveKey = positiveKey;
-		this.negativeKey = negativeKey;
 	}
 
-	public inline override function get(): FastFloat {
-		scale = 0.0;
+	public inline override function getScale() {
+		var scale = 0.0;
 		if (keyboard.down(positiveKey)) scale++;
 		if (keyboard.down(negativeKey)) scale--;
 		return scale;
 	}
 }
 
-class MouseAxisComponent extends InputAxisComponent {
+class MouseAxisCommand extends InputAxisCommand {
 	final mouse = Input.getMouse();
 
-	public function new(parent: InputAxis, positiveKey: String, negativeKey: String): Void {
+	public function new(parent: InputAxis, positiveKey: String, negativeKey: String) {
 		super(parent, positiveKey, negativeKey);
-		this.parent = parent;
-		this.positiveKey = positiveKey;
-		this.negativeKey = negativeKey;
 	}
 
-	public inline override function get(): FastFloat {
+	public inline override function getScale() {
 		scale = 0.0;
-		var movX = mouse.movementX;
-		var movY = mouse.movementY;
-		var wheelMov = mouse.wheelDelta;
+		var movementX = mouse.movementX;
+		var movementY = mouse.movementY;
+		var wheelDelta = mouse.wheelDelta;
 
 		switch (positiveKey) {
-			case "moved x": if (movX > parent.deadzone) scale++;
-			case "movement x": if (movX > parent.deadzone) return movX - parent.deadzone;
-			case "moved y":	if (movY > parent.deadzone) scale++;
-			case "movement y": if (movY > parent.deadzone) return movY - parent.deadzone;
-			case "wheel moved": if (wheelMov > parent.deadzone) scale ++;
-			case "wheel movement": if (wheelMov > parent.deadzone) return wheelMov - parent.deadzone;
+			case "moved x": if (movementX > deadzone) scale++;
+			case "movement x": if (movementX > deadzone) return movementX - deadzone;
+			case "moved y":	if (movementY > deadzone) scale++;
+			case "movement y": if (movementY > deadzone) return movementY - deadzone;
+			case "wheel moved": if (wheelDelta > deadzone) scale++;
+			case "wheel movement": if (wheelDelta > deadzone) return wheelDelta - deadzone;
 			default: if (mouse.down(positiveKey)) scale++;
 		}
 		switch (negativeKey) {
-			case "moved x": if (movX < -parent.deadzone) scale--;
-			case "movement x": if (movX < -parent.deadzone) return movX + parent.deadzone;
-			case "moved y": if (movY < -parent.deadzone) scale--;
-			case "movement y": if (movY < -parent.deadzone) return movY + parent.deadzone;
-			case "wheel moved": if (wheelMov < -parent.deadzone) scale --;
-			case "wheel movement": if (wheelMov < -parent.deadzone) return wheelMov + parent.deadzone;
+			case "moved x": if (movementX < minusDeadzone) scale--;
+			case "movement x": if (movementX < minusDeadzone) return movementX + deadzone;
+			case "moved y": if (movementY < minusDeadzone) scale--;
+			case "movement y": if (movementY < minusDeadzone) return movementY + deadzone;
+			case "wheel moved": if (wheelDelta < minusDeadzone) scale--;
+			case "wheel movement": if (wheelDelta < minusDeadzone) return wheelDelta + deadzone;
 			default: if (mouse.down(negativeKey)) scale--;
 		}
 		return scale;
 	}
 }
 
-class GamepadAxisComponent extends InputAxisComponent {
+class GamepadAxisCommand extends InputAxisCommand {
 	final gamepad: Gamepad;
 
-	public function new(parent: InputAxis, positiveKey: String, negativeKey: String): Void {
+	public function new(parent: InputAxis, positiveKey: String, negativeKey: String) {
 		super(parent, positiveKey, negativeKey);
-		this.parent = parent;
-		this.positiveKey = positiveKey;
-		this.negativeKey = negativeKey;
 		gamepad = Input.getGamepad(parent.index);
 	}
 
-	public inline override function get(): FastFloat {
+	public inline override function getScale() {
 		scale = 0.0;
-		var rightMovX = gamepad.rightStick.movementX;
-		var rightMovY = gamepad.rightStick.movementY;
-		var leftMovX = gamepad.leftStick.movementX;
-		var leftMovY = gamepad.leftStick.movementY;
-
-		// Avoid division by zero
-		var rightTrigger = gamepad.down("r2") > 0.0 ? (gamepad.down("r2") - parent.pressure) / (1 - parent.pressure) : 0.0;
-		var leftTrigger = gamepad.down("l2") > 0.0 ? (gamepad.down("r2") - parent.pressure) / (1 - parent.pressure) : 0.0;
+		var rx = gamepad.rightStick.movementX;
+		var ry = gamepad.rightStick.movementY;
+		var lx = gamepad.leftStick.movementX;
+		var ly = gamepad.leftStick.movementY;
+		var rt = gamepad.down("r2") > 0.0 ? (gamepad.down("r2") - pressure) / (1 - pressure) : 0.0;
+		var lt = gamepad.down("l2") > 0.0 ? (gamepad.down("r2") - pressure) / (1 - pressure) : 0.0;
 
 		switch (positiveKey) {
-			case "right stick moved x": if (rightMovX > parent.deadzone) scale++;
-			case "right stick movement x": if (rightMovX > parent.deadzone) return rightMovX - parent.deadzone;
-			case "right stick moved y": if (rightMovY > parent.deadzone) scale++;
-			case "right stick movement y": if (rightMovY > parent.deadzone) return rightMovY - parent.deadzone;
-			case "left stick moved x": if (leftMovX > parent.deadzone) scale++;
-			case "left stick movement x": if (leftMovX > parent.deadzone) return leftMovX - parent.deadzone;
-			case "left stick moved y": if (leftMovY > parent.deadzone) scale++;
-			case "left stick movement y": if (leftMovY > parent.deadzone) return leftMovY - parent.deadzone;
-			case "right trigger": scale += rightTrigger;
-			case "left trigger": scale += leftTrigger;
-			default: if (gamepad.down(positiveKey) > parent.pressure) scale++;
+			case "right stick moved x": if (rx > deadzone) scale++;
+			case "right stick movement x": if (rx > deadzone) return rx - deadzone;
+			case "right stick moved y": if (ry > deadzone) scale++;
+			case "right stick movement y": if (ry > deadzone) return ry - deadzone;
+			case "left stick moved x": if (lx > deadzone) scale++;
+			case "left stick movement x": if (lx > deadzone) return lx - deadzone;
+			case "left stick moved y": if (ly > deadzone) scale++;
+			case "left stick movement y": if (ly > deadzone) return ly - deadzone;
+			case "right trigger": scale += rt;
+			case "left trigger": scale += lt;
+			default: if (gamepad.down(positiveKey) > pressure) scale++;
 		}
 
 		switch (negativeKey) {
-			case "right stick moved x": if (rightMovX < -parent.deadzone) scale--;
-			case "right stick movement x": if (rightMovX < -parent.deadzone) return rightMovX + parent.deadzone;
-			case "right stick moved y": if (rightMovY < -parent.deadzone) scale--;
-			case "right stick movement y": if (rightMovY < -parent.deadzone) return rightMovY + parent.deadzone;
-			case "left stick moved x": if (leftMovX < -parent.deadzone) scale--;
-			case "left stick movement x": if (leftMovX < -parent.deadzone) return leftMovX + parent.deadzone;
-			case "left stick moved y": if (leftMovY < -parent.deadzone) scale--;
-			case "left stick movement y": if (leftMovY < -parent.deadzone) return leftMovY + parent.deadzone;
-			case "right trigger": scale -= rightTrigger;
-			case "left trigger": scale -= leftTrigger;
-			default: if (gamepad.down(negativeKey) < -parent.pressure) scale--;
+			case "right stick moved x": if (rx < minusDeadzone) scale--;
+			case "right stick movement x": if (rx < minusDeadzone) return rx + deadzone;
+			case "right stick moved y": if (ry < minusDeadzone) scale--;
+			case "right stick movement y": if (ry < minusDeadzone) return ry + deadzone;
+			case "left stick moved x": if (lx < minusDeadzone) scale--;
+			case "left stick movement x": if (lx < minusDeadzone) return lx + deadzone;
+			case "left stick moved y": if (ly < minusDeadzone) scale--;
+			case "left stick movement y": if (ly < minusDeadzone) return ly + deadzone;
+			case "right trigger": scale -= rt;
+			case "left trigger": scale -= lt;
+			default: if (gamepad.down(negativeKey) < minusPressure) scale--;
 		}
 
 		return scale;
