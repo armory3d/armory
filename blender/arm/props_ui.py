@@ -775,11 +775,15 @@ class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_winmode')
-        layout.prop(wrd, 'arm_winresize')
-        col = layout.column()
-        col.enabled = wrd.arm_winresize
-        col.prop(wrd, 'arm_winmaximize')
-        layout.prop(wrd, 'arm_winminimize')
+
+        col = layout.column(align=True)
+        col.prop(wrd, 'arm_winresize')
+        sub = col.column()
+        sub.enabled = wrd.arm_winresize
+        sub.prop(wrd, 'arm_winmaximize')
+        col.enabled = True
+        col.prop(wrd, 'arm_winminimize')
+
         layout.prop(wrd, 'arm_vsync')
 
 class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
