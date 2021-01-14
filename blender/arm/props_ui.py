@@ -1374,45 +1374,49 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
 
         layout.enabled = rpdat.rp_compositornodes
         layout.prop(rpdat, 'arm_tonemap')
-        layout.prop(rpdat, 'arm_letterbox')
+
         col = layout.column()
-        col.enabled = rpdat.arm_letterbox
-        col.prop(rpdat, 'arm_letterbox_size')
-        layout.prop(rpdat, 'arm_sharpen')
+        draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
+        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
+        draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
+        draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
+        layout.separator()
+
         col = layout.column()
-        col.enabled = rpdat.arm_sharpen
-        col.prop(rpdat, 'arm_sharpen_strength')
-        layout.prop(rpdat, 'arm_fisheye')
-        layout.prop(rpdat, 'arm_vignette')
-        col = layout.column()
-        col.enabled = rpdat.arm_vignette
-        col.prop(rpdat, 'arm_vignette_strength')
-        layout.prop(rpdat, 'arm_lensflare')
-        layout.prop(rpdat, 'arm_grain')
-        col = layout.column()
-        col.enabled = rpdat.arm_grain
-        col.prop(rpdat, 'arm_grain_strength')
-        layout.prop(rpdat, 'arm_fog')
-        col = layout.column(align=True)
+        col.prop(rpdat, 'arm_fog')
+        col = col.column(align=True)
         col.enabled = rpdat.arm_fog
         col.prop(rpdat, 'arm_fog_color')
         col.prop(rpdat, 'arm_fog_amounta')
         col.prop(rpdat, 'arm_fog_amountb')
         layout.separator()
-        layout.prop(rpdat, "rp_autoexposure")
+
         col = layout.column()
-        col.enabled = rpdat.rp_autoexposure
-        col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
-        col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
-        layout.prop(rpdat, 'arm_lens_texture')
+        col.prop(rpdat, "rp_autoexposure")
+        sub = col.column(align=True)
+        sub.enabled = rpdat.rp_autoexposure
+        sub.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
+        sub.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lensflare')
+        col.prop(rpdat, 'arm_fisheye')
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lens_texture')
         if rpdat.arm_lens_texture != "":
-            layout.prop(rpdat, 'arm_lens_texture_masking')
+            col.prop(rpdat, 'arm_lens_texture_masking')
             if rpdat.arm_lens_texture_masking:
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
-                layout.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
+                col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                layout.separator()
+
         layout.prop(rpdat, 'arm_lut_texture')
 
 class ARM_PT_BakePanel(bpy.types.Panel):
@@ -2578,6 +2582,18 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
+
+
+def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.types.AnyType, prop_condition: str, prop_value: str) -> None:
+    """Draws a property row with a checkbox that enables a value field.
+    The function fails when prop_condition is not a boolean property.
+    """
+    col = layout.column(heading=heading)
+    row = col.row()
+    row.prop(data, prop_condition, text='')
+    sub = row.row()
+    sub.enabled = getattr(data, prop_condition)
+    sub.prop(data, prop_value, expand=True)
 
 
 def register():
