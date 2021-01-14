@@ -1106,17 +1106,23 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_tess_shadows_outer')
 
         layout.prop(rpdat, 'arm_particles')
-        layout.prop(rpdat, 'arm_skin')
-        row = layout.row()
-        row.enabled = rpdat.arm_skin == 'On'
-        row.prop(rpdat, 'arm_skin_max_bones_auto')
-        row = layout.row()
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_skin')
+        col = col.column()
+        col.enabled = rpdat.arm_skin == 'On'
+        col.prop(rpdat, 'arm_skin_max_bones_auto')
+        row = col.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto
         row.prop(rpdat, 'arm_skin_max_bones')
-        layout.prop(rpdat, "rp_hdr")
-        layout.prop(rpdat, "rp_stereo")
-        layout.prop(rpdat, 'arm_culling')
-        layout.prop(rpdat, 'rp_pp')
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, "rp_hdr")
+        col.prop(rpdat, "rp_stereo")
+        col.prop(rpdat, 'arm_culling')
+        col.prop(rpdat, 'rp_pp')
 
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
