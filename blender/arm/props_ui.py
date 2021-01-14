@@ -1218,16 +1218,22 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.prop(rpdat, "rp_background")
-        layout.prop(rpdat, 'arm_irradiance')
+
         col = layout.column()
-        col.enabled = rpdat.arm_irradiance
-        col.prop(rpdat, 'arm_radiance')
+        col.prop(rpdat, 'arm_irradiance')
         colb = col.column()
-        colb.enabled = rpdat.arm_radiance
-        colb.prop(rpdat, 'arm_radiance_size')
+        colb.enabled = rpdat.arm_irradiance
+        colb.prop(rpdat, 'arm_radiance')
+        sub = colb.row()
+        sub.enabled = rpdat.arm_radiance
+        sub.prop(rpdat, 'arm_radiance_size')
+        layout.separator()
+
         layout.prop(rpdat, 'arm_clouds')
-        layout.prop(rpdat, "rp_water")
+
         col = layout.column(align=True)
+        col.prop(rpdat, "rp_water")
+        col = col.column(align=True)
         col.enabled = rpdat.rp_water
         col.prop(rpdat, 'arm_water_level')
         col.prop(rpdat, 'arm_water_density')
