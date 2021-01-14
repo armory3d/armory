@@ -765,26 +765,25 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
     if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
         item = obj.arm_traitlist[obj.arm_traitlist_index]
 
-        if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
+        row = layout.row(align=True)
+        row.alignment = 'EXPAND'
+        row.scale_y = 1.2
 
+        if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
             if item.type_prop == 'Haxe Script':
+                row.operator("arm.new_script", icon="FILE_NEW").is_object = is_object
                 column = row.column(align=True)
-                column.alignment = 'EXPAND'
-                if item.class_name_prop == '':
-                    column.enabled = False
+                column.enabled = item.class_name_prop != ''
                 column.operator("arm.edit_script", icon="FILE_SCRIPT").is_object = is_object
-                row.operator("arm.new_script").is_object = is_object
-                row.operator("arm.refresh_scripts", text="Refresh")
 
             # Bundled scripts
             else:
                 if item.class_name_prop == 'NavMesh':
-                    row.operator("arm.generate_navmesh")
+                    row.operator("arm.generate_navmesh", icon="UV_VERTEXSEL")
                 else:
                     row.operator("arm.edit_bundled_script", icon="FILE_SCRIPT").is_object = is_object
-                row.operator("arm.refresh_scripts", text="Refresh")
+
+            row.operator("arm.refresh_scripts", text="Refresh", icon="FILE_REFRESH")
 
             # Default props
             item.name = item.class_name_prop
@@ -799,86 +798,56 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
         elif item.type_prop == 'WebAssembly':
             item.name = item.webassembly_prop
+
+            row.operator("arm.new_wasm", icon="FILE_NEW")
+            row.operator("arm.refresh_scripts", text="Refresh", icon="FILE_REFRESH")
+
             row = layout.row()
             row.prop_search(item, "webassembly_prop", bpy.data.worlds['Arm'], "arm_wasm_list", text="Module")
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
-            column = row.column(align=True)
-            column.alignment = 'EXPAND'
-            if item.class_name_prop == '':
-                column.enabled = False
-            # op = column.operator("arm.edit_script", icon="FILE_SCRIPT")
-            # op.is_object = is_object
-            op = row.operator("arm.new_wasm")
-            # op.is_object = is_object
-            op = row.operator("arm.refresh_scripts", text="Refresh")
 
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
 
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
+            row.operator("arm.new_canvas", icon="FILE_NEW").is_object = is_object
             column = row.column(align=True)
-            column.alignment = 'EXPAND'
-            if item.canvas_name_prop == '':
-                column.enabled = False
-            op = column.operator("arm.edit_canvas", icon="FILE_SCRIPT")
-            op.is_object = is_object
-            op = row.operator("arm.new_canvas")
-            op.is_object = is_object
-            op = row.operator("arm.refresh_canvas_list", text="Refresh")
+            column.enabled = item.canvas_name_prop != ''
+            column.operator("arm.edit_canvas", icon="NODE_COMPOSITING").is_object = is_object
+            row.operator("arm.refresh_canvas_list", text="Refresh", icon="FILE_REFRESH")
 
             row = layout.row()
             row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
 
         elif item.type_prop == 'Logic Nodes':
-            # Row for buttons
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
-            # New
-            column = row.column(align=True)
-            column.alignment = 'EXPAND'
-            op = column.operator("arm.new_treenode", text="New Tree", icon="ADD")
-            op.is_object = is_object
-            # At least one check is active Logic Node Editor
-            is_check_logic_node_editor = False
-            context_screen = bpy.context.screen
-            # Loop for all spaces
-            if context_screen is not None:
-                areas = context_screen.areas
+            # Check if there is at least one active Logic Node Editor
+            is_editor_active = False
+            if bpy.context.screen is not None:
+                areas = bpy.context.screen.areas
                 for area in areas:
                     for space in area.spaces:
                         if space.type == 'NODE_EDITOR':
                             if space.tree_type == 'ArmLogicTreeType' and space.node_tree is not None:
-                                is_check_logic_node_editor = True
+                                is_editor_active = True
                                 break
-                        if is_check_logic_node_editor:
+                        if is_editor_active:
                             break
-            # Edit
-            column = row.column(align=True)
-            column.alignment = 'EXPAND'
-            if item.node_tree_prop is None:
-                column.enabled = False
-            else:
-                column.enabled = is_check_logic_node_editor
-            op = column.operator("arm.edit_treenode", text="Edit Tree", icon="NODETREE")
-            op.is_object = is_object
-            # Get from Node Tree Editor
-            column = row.column(align=True)
-            column.alignment = 'EXPAND'
-            if item is None:
-                column.enabled = False
-            else:
-                column.enabled = is_check_logic_node_editor
-            op = column.operator("arm.get_treenode", text="From Editor", icon="IMPORT")
-            op.is_object = is_object
 
-            # Row for search
+            row.operator("arm.new_treenode", text="New Tree", icon="ADD").is_object = is_object
+
+            column = row.column(align=True)
+            column.enabled = is_editor_active and item.node_tree_prop is not None
+            column.operator("arm.edit_treenode", text="Edit Tree", icon="NODETREE").is_object = is_object
+
+            column = row.column(align=True)
+            column.enabled = is_editor_active and item is not None
+            column.operator("arm.get_treenode", text="From Editor", icon="IMPORT").is_object = is_object
+
             row = layout.row()
             row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
 
+        # =====================
+        # Draw trait properties
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
-            # Props
+
             if item.arm_traitpropslist:
                 layout.label(text="Trait Properties:")
                 if item.arm_traitpropswarnings:
@@ -888,7 +857,6 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                     for warning in item.arm_traitpropswarnings:
                         box.label(text=warning.warning)
 
-                propsrow = layout.row()
                 propsrows = max(len(item.arm_traitpropslist), 6)
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
