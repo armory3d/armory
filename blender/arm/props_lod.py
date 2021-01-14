@@ -37,11 +37,12 @@ class ARM_UL_LodList(bpy.types.UIList):
         layout.use_property_split = False
 
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.prop(item, "enabled_prop")
+            row = layout.row()
+            row.separator(factor=0.1)
+            row.prop(item, "enabled_prop")
             name = item.name
             if name == '':
                 name = 'None'
-            row = layout.row()
             row.label(text=name, icon='OBJECT_DATAMODE')
             col = row.column()
             col.alignment = 'RIGHT'
