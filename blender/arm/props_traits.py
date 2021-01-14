@@ -639,11 +639,8 @@ class ARM_PT_TraitPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
         obj = bpy.context.object
-        draw_traits_panel(layout, obj, is_object=True)
+        draw_traits_panel(self.layout, obj, is_object=True)
 
 class ARM_PT_SceneTraitPanel(bpy.types.Panel):
     bl_label = "Armory Scene Traits"
@@ -652,11 +649,8 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
     bl_context = "scene"
 
     def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
         obj = bpy.context.scene
-        draw_traits_panel(layout, obj, is_object=False)
+        draw_traits_panel(self.layout, obj, is_object=False)
 
 class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
     bl_label = 'Copy Traits from Active Object'
@@ -735,6 +729,9 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
 
 def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene],
                       is_object: bool) -> None:
+    layout.use_property_split = True
+    layout.use_property_decorate = False
+
     # Make the list bigger when there are a few traits
     num_rows = 2
     if len(obj.arm_traitlist) > 1:
