@@ -62,6 +62,10 @@ def update_trait_group(self, context):
                     pass
 
 class ArmTraitListItem(bpy.types.PropertyGroup):
+    def poll_node_trees(self, tree: NodeTree):
+        """Ensure that only logic node trees show up as node traits"""
+        return tree.bl_idname == 'ArmLogicTreeType'
+
     name: StringProperty(name="Name", description="A name for this item", default="")
     enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     is_object: BoolProperty(name="", default=True)
@@ -77,7 +81,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
     canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
     webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
-    node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group)
+    node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group, poll=poll_node_trees)
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
     arm_traitpropswarnings: CollectionProperty(type=ArmTraitPropWarning)
