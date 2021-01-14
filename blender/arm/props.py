@@ -391,7 +391,7 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Source', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Source (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_blending_destination_alpha = EnumProperty(
         items=[('blend_one', 'One', 'One'),
                ('blend_zero', 'Zero', 'Zero'),
@@ -403,14 +403,14 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Destination', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Destination (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_blending_operation_alpha = EnumProperty(
         items=[('add', 'Add', 'Add'),
                ('subtract', 'Subtract', 'Subtract'),
                ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
                ('min', 'Min', 'Min'),
                ('max', 'Max', 'Max')],
-        name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
+        name='Operation (Alpha)', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="//Bundled/", subtype="DIR_PATH")

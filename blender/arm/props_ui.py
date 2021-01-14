@@ -369,7 +369,7 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_parent_id = "ARM_PT_MaterialPropsPanel"
 
     def draw_header(self, context):
-        if context.material == None:
+        if context.material is None:
             return
         self.layout.prop(context.material, 'arm_blending', text="")
 
@@ -378,16 +378,18 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         mat = bpy.context.material
-        if mat == None:
+        if mat is None:
             return
 
         flow = layout.grid_flow()
         flow.enabled = mat.arm_blending
-        col = flow.column()
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source')
         col.prop(mat, 'arm_blending_destination')
         col.prop(mat, 'arm_blending_operation')
-        col = flow.column()
+        flow.separator()
+
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source_alpha')
         col.prop(mat, 'arm_blending_destination_alpha')
         col.prop(mat, 'arm_blending_operation_alpha')
