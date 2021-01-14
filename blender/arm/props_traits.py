@@ -94,7 +94,7 @@ class ARM_UL_TraitList(bpy.types.UIList):
         elif item.type_prop == "WebAssembly":
             custom_icon_value = icons_dict["wasm"].icon_id
         elif item.type_prop == "UI Canvas":
-            custom_icon = "OBJECT_DATAMODE"
+            custom_icon = "NODE_COMPOSITING"
         elif item.type_prop == "Bundled Script":
             custom_icon_value = icons_dict["bundle"].icon_id
         elif item.type_prop == "Logic Nodes":
