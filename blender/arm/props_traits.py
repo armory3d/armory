@@ -101,16 +101,20 @@ class ARM_UL_TraitList(bpy.types.UIList):
             custom_icon = 'NODETREE'
 
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.prop(item, "enabled_prop")
+            row = layout.row()
+            row.separator(factor=0.1)
+            row.prop(item, "enabled_prop")
             # Display " " for props without a name to right-align the
             # fake_user button
-            layout.label(text=item.name if item.name != "" else " ", icon=custom_icon, icon_value=custom_icon_value)
+            row.label(text=item.name if item.name != "" else " ", icon=custom_icon, icon_value=custom_icon_value)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon=custom_icon, icon_value=custom_icon_value)
 
-        layout.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
+        row = layout.row(align=True)
+        row.scale_x = 1.2
+        row.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
 
 class ArmTraitListNewItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.new_item"
