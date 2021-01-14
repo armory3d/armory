@@ -1269,27 +1269,35 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_render_to_texture
-        row = layout.row()
-        row.prop(rpdat, "rp_antialiasing")
-        layout.prop(rpdat, "rp_supersampling")
-        layout.prop(rpdat, 'arm_rp_resolution')
+        col = layout.column()
+        col.prop(rpdat, "rp_antialiasing")
+        col.prop(rpdat, "rp_supersampling")
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_rp_resolution')
         if rpdat.arm_rp_resolution == 'Custom':
-            layout.prop(rpdat, 'arm_rp_resolution_size')
-            layout.prop(rpdat, 'arm_rp_resolution_filter')
-        layout.prop(rpdat, 'rp_dynres')
+            col.prop(rpdat, 'arm_rp_resolution_size')
+            col.prop(rpdat, 'arm_rp_resolution_filter')
+        col.prop(rpdat, 'rp_dynres')
         layout.separator()
-        row = layout.row()
-        row.prop(rpdat, "rp_ssgi")
+
         col = layout.column()
-        col.enabled = rpdat.rp_ssgi != 'Off'
-        col.prop(rpdat, 'arm_ssgi_half_res')
-        col.prop(rpdat, 'arm_ssgi_rays')
-        col.prop(rpdat, 'arm_ssgi_radius')
-        col.prop(rpdat, 'arm_ssgi_strength')
-        col.prop(rpdat, 'arm_ssgi_max_steps')
+        col.prop(rpdat, "rp_ssgi")
+        sub = col.column()
+        sub.enabled = rpdat.rp_ssgi != 'Off'
+        sub.prop(rpdat, 'arm_ssgi_half_res')
+        sub.prop(rpdat, 'arm_ssgi_rays')
+        sub.prop(rpdat, 'arm_ssgi_radius')
+        sub.prop(rpdat, 'arm_ssgi_strength')
+        sub.prop(rpdat, 'arm_ssgi_max_steps')
+        layout.separator(factor=0.5)
+
+        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_ssr")
+
         col = layout.column()
+        col.prop(rpdat, "rp_ssr")
+        col = col.column()
         col.enabled = rpdat.rp_ssr
         col.prop(rpdat, 'arm_ssr_half_res')
         col.prop(rpdat, 'arm_ssr_ray_step')
@@ -1298,33 +1306,42 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
         layout.separator()
-        layout.prop(rpdat, 'arm_ssrs')
+
         col = layout.column()
+        col.prop(rpdat, 'arm_ssrs')
+        col = col.column()
         col.enabled = rpdat.arm_ssrs
         col.prop(rpdat, 'arm_ssrs_ray_step')
-        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_bloom")
+
         col = layout.column()
+        col.prop(rpdat, "rp_bloom")
+        col = col.column()
         col.enabled = rpdat.rp_bloom
         col.prop(rpdat, 'arm_bloom_threshold')
         col.prop(rpdat, 'arm_bloom_strength')
         col.prop(rpdat, 'arm_bloom_radius')
         layout.separator()
-        layout.prop(rpdat, "rp_motionblur")
+
         col = layout.column()
+        col.prop(rpdat, "rp_motionblur")
+        col = col.column()
         col.enabled = rpdat.rp_motionblur != 'Off'
         col.prop(rpdat, 'arm_motion_blur_intensity')
         layout.separator()
-        layout.prop(rpdat, "rp_volumetriclight")
+
         col = layout.column()
+        col.prop(rpdat, "rp_volumetriclight")
+        col = col.column()
         col.enabled = rpdat.rp_volumetriclight
         col.prop(rpdat, 'arm_volumetric_light_air_color')
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
         layout.separator()
-        layout.prop(rpdat, "rp_chromatic_aberration")
+
         col = layout.column()
+        col.prop(rpdat, "rp_chromatic_aberration")
+        col = col.column()
         col.enabled = rpdat.rp_chromatic_aberration
         col.prop(rpdat, 'arm_chromatic_aberration_type')
         col.prop(rpdat, 'arm_chromatic_aberration_strength')
