@@ -15,6 +15,7 @@ import arm.props_properties
 import arm.props_traits
 import arm.nodes_logic
 import arm.proxy
+import arm.ui_icons as ui_icons
 import arm.utils
 
 from arm.lightmapper.utility import icon
@@ -2574,7 +2575,7 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.operator("arm.open_node_documentation", text="Show documentation for this node", icon='HELP')
-            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
+            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=ui_icons.get_id("haxe"))
             layout.operator("arm.open_node_python_source", text="Open .py source in the browser", icon='FILE_SCRIPT')
 
     elif context.space_data.tree_type == 'ShaderNodeTree':

@@ -11,6 +11,7 @@ import bpy.utils.previews
 import arm.make as make
 from arm.props_traits_props import *
 import arm.proxy as proxy
+import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
 
@@ -94,13 +95,13 @@ class ARM_UL_TraitList(bpy.types.UIList):
         custom_icon = "NONE"
         custom_icon_value = 0
         if item.type_prop == "Haxe Script":
-            custom_icon_value = icons_dict["haxe"].icon_id
+            custom_icon_value = ui_icons.get_id("haxe")
         elif item.type_prop == "WebAssembly":
-            custom_icon_value = icons_dict["wasm"].icon_id
+            custom_icon_value = ui_icons.get_id("wasm")
         elif item.type_prop == "UI Canvas":
             custom_icon = "NODE_COMPOSITING"
         elif item.type_prop == "Bundled Script":
-            custom_icon_value = icons_dict["bundle"].icon_id
+            custom_icon_value = ui_icons.get_id("bundle")
         elif item.type_prop == "Logic Nodes":
             custom_icon = 'NODETREE'
 
@@ -862,8 +863,8 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
+
 def register():
-    global icons_dict
     bpy.utils.register_class(ArmTraitListItem)
     bpy.utils.register_class(ARM_UL_TraitList)
     bpy.utils.register_class(ArmTraitListNewItem)
@@ -891,14 +892,8 @@ def register():
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
     bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
 
-    icons_dict = bpy.utils.previews.new()
-    icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
-    icons_dict.load("haxe", os.path.join(icons_dir, "haxe.png"), 'IMAGE')
-    icons_dict.load("wasm", os.path.join(icons_dir, "wasm.png"), 'IMAGE')
-    icons_dict.load("bundle", os.path.join(icons_dir, "bundle.png"), 'IMAGE')
 
 def unregister():
-    global icons_dict
     bpy.utils.unregister_class(ARM_OT_CopyTraitsFromActive)
     bpy.utils.unregister_class(ArmTraitListItem)
     bpy.utils.unregister_class(ARM_UL_TraitList)
@@ -920,4 +915,3 @@ def unregister():
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ARM_PT_TraitPanel)
     bpy.utils.unregister_class(ARM_PT_SceneTraitPanel)
-    bpy.utils.previews.remove(icons_dict)
