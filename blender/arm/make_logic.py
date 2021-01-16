@@ -2,9 +2,10 @@ import os
 from typing import Optional, TextIO
 
 import bpy
-import arm.utils
-import arm.log
+
 from arm.exporter import ArmoryExporter
+import arm.log
+import arm.utils
 
 parsed_nodes = []
 parsed_ids = dict() # Sharing node data
@@ -102,7 +103,9 @@ def build_node_tree(node_group):
         f.write('}')
     node_group.arm_cached = True
 
-def build_node(node: bpy.types.Node, f):
+
+def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
+    """Builds the given node and returns its name. f is an opened file object."""
     global parsed_nodes
     global parsed_ids
 
@@ -128,7 +131,7 @@ def build_node(node: bpy.types.Node, f):
     parsed_nodes.append(name)
 
     # Create node
-    node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
+    node_type = node.bl_idname[2:]  # Discard 'LN' prefix
     f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
     # Handle Function Nodes
