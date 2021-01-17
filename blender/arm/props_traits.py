@@ -133,14 +133,19 @@ class ArmTraitListNewItem(bpy.types.Operator):
     is_object: BoolProperty(name="Is Object Trait", description="Whether this trait belongs to an object or a scene", default=False)
     type_prop: EnumProperty(name="Type", items=PROP_TYPES_ENUM)
 
+    # Show more options when invoked from the operator search menu
+    invoked_by_search: BoolProperty(name="", default=True)
+
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self, width=400)
 
     def draw(self, context):
         layout = self.layout
-        # Todo: show is_object property when called from operator search menu
-        # layout.prop(self, "is_object")
+
+        if self.invoked_by_search:
+            row = layout.row()
+            row.prop(self, "is_object")
 
         row = layout.row()
         row.scale_y = 1.3
@@ -590,8 +595,6 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = self.canvas_name.replace(' ', '')
         write_data.write_canvasjson(self.canvas_name)
         arm.utils.fetch_script_names()
-        # Todo: create new trait item when called from operator search
-        # menu, then remove 'INTERNAL' from bl_options
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         item.canvas_name_prop = self.canvas_name
         return {'FINISHED'}
@@ -746,6 +749,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
     col = row.column(align=True)
     op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
+    op.invoked_by_search = False
     op.is_object = is_object
     if is_object:
         op = col.operator("arm_traitlist.delete_item", icon='REMOVE', text="")
