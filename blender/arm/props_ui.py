@@ -406,20 +406,25 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
+        row.scale_y = 1.3
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
-        row.operator("arm.clean_menu")
-        layout.prop(wrd, 'arm_runtime')
-        layout.prop(wrd, 'arm_play_camera')
-        layout.prop(wrd, 'arm_play_scene')
+        row.operator("arm.clean_menu", icon="BRUSH_DATA")
+
+        box = layout.box()
+        box.prop(wrd, 'arm_runtime')
+        box.prop(wrd, 'arm_play_camera')
+        box.prop(wrd, 'arm_play_scene')
 
         if log.num_warnings > 0:
             box = layout.box()
-            # Less spacing between lines
+            box.alert = True
+
             col = box.column(align=True)
             col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
             # Blank icon to achieve the same indentation as the line before
