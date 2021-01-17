@@ -15,7 +15,19 @@ import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
 
-icons_dict: bpy.utils.previews.ImagePreviewCollection
+ICON_HAXE = ui_icons.get_id('haxe')
+ICON_NODES = 'NODETREE'
+ICON_CANVAS = 'NODE_COMPOSITING'
+ICON_BUNDLED = ui_icons.get_id('bundle')
+ICON_WASM = ui_icons.get_id('wasm')
+
+PROP_TYPES_ENUM = [
+    ('Haxe Script', 'Haxe', 'Haxe script', ICON_HAXE, 0),
+    ('Logic Nodes', 'Nodes', 'Logic nodes (visual scripting)', ICON_NODES, 1),
+    ('UI Canvas', 'UI', 'User interface', ICON_CANVAS, 2),
+    ('Bundled Script', 'Bundled', 'Premade script with common functionality', ICON_BUNDLED, 3),
+    ('WebAssembly', 'Wasm', 'WebAssembly', ICON_WASM, 4)
+]
 
 
 def trigger_recompile(self, context):
@@ -71,14 +83,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     is_object: BoolProperty(name="", default=True)
     fake_user: BoolProperty(name="Fake User", description="Export this trait even if it is deactivated", default=False)
-    type_prop: EnumProperty(
-        items = [('Haxe Script', 'Haxe', 'Haxe Script'),
-                 ('WebAssembly', 'Wasm', 'WebAssembly'),
-                 ('UI Canvas', 'UI', 'UI Canvas'),
-                 ('Bundled Script', 'Bundled', 'Bundled Script'),
-                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
-                 ],
-        name = "Type")
+    type_prop: EnumProperty(name="Type", items=PROP_TYPES_ENUM)
     class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
     canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
     webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
@@ -118,34 +123,28 @@ class ARM_UL_TraitList(bpy.types.UIList):
             layout.label(text="", icon=custom_icon, icon_value=custom_icon_value)
 
         row = layout.row(align=True)
-        row.scale_x = 1.2
         row.prop(item, "fake_user", text="", icon="FAKE_USER_ON" if item.fake_user else "FAKE_USER_OFF")
 
 class ArmTraitListNewItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.new_item"
-    bl_label = "New Trait Item"
+    bl_label = "Add Trait"
     bl_description = "Add a new trait item to the list"
 
-    is_object: BoolProperty(name="Object Trait", description="Whether this is an object or scene trait", default=False)
-    type_prop: EnumProperty(
-        name="Type",
-        items=[
-            ('Haxe Script', 'Haxe', 'Haxe Script'),
-            ('Logic Nodes', 'Nodes', 'Logic Nodes'),
-            ('UI Canvas', 'UI', 'UI Canvas'),
-            ('Bundled Script', 'Bundled', 'Bundled Script'),
-            ('WebAssembly', 'Wasm', 'WebAssembly')
-        ])
+    is_object: BoolProperty(name="Is Object Trait", description="Whether this trait belongs to an object or a scene", default=False)
+    type_prop: EnumProperty(name="Type", items=PROP_TYPES_ENUM)
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self)
+        return wm.invoke_props_dialog(self, width=400)
 
     def draw(self, context):
         layout = self.layout
         # Todo: show is_object property when called from operator search menu
         # layout.prop(self, "is_object")
-        layout.prop(self, "type_prop", expand=True)
+
+        row = layout.row()
+        row.scale_y = 1.3
+        row.prop(self, "type_prop", expand=True)
 
     def execute(self, context):
         if self.is_object:
@@ -162,7 +161,7 @@ class ArmTraitListNewItem(bpy.types.Operator):
 class ArmTraitListDeleteItem(bpy.types.Operator):
     """Delete the selected item from the list"""
     bl_idname = "arm_traitlist.delete_item"
-    bl_label = "Deletes an item"
+    bl_label = "Remove Trait"
     bl_options = {'INTERNAL'}
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
