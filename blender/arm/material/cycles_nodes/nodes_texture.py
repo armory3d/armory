@@ -373,7 +373,10 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     curshader.add_include('std/sky.glsl')
     curshader.add_uniform('vec3 sunDir', link='_sunDirection')
 
-    return 'nishita_atmosphere(n, vec3(0,0,6372e3), sunDir, 22.0, 6371e3, 6471e3, vec3(5.5e-6,13.0e-6,22.4e-6), 21e-6, 8e3, 1.2e3, 0.758)'
+    planet_radius = 6360e3  # Earth radius used in Blender
+    ray_origin_z = planet_radius + node.altitude * 1000
+
+    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius})'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
