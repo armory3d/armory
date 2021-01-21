@@ -376,7 +376,13 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     planet_radius = 6360e3  # Earth radius used in Blender
     ray_origin_z = planet_radius + node.altitude * 1000
 
-    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius})'
+    d_air = node.air_density
+    d_dust = node.dust_density
+    # Todo: Implement ozone density (ignored for now)
+    # d_ozone = node.ozone_density
+    density = c.to_vec2((d_air, d_dust))
+
+    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}, {density})'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:

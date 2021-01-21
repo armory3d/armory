@@ -1,9 +1,12 @@
 /* Various sky functions
+ * =====================
  *
- * Nishita model is based on https://github.com/wwwtyro/glsl-atmosphere (Unlicense License)
- * Changes to the original implementation:
- *  - r and pSun parameters of nishita_atmosphere() are already normalized
- *  - Some original parameters of nishita_atmosphere() are replaced with pre-defined values
+ * Nishita model is based on https://github.com/wwwtyro/glsl-atmosphere(Unlicense License)
+ *
+ *   Changes to the original implementation:
+ *     - r and pSun parameters of nishita_atmosphere() are already normalized
+ *     - Some original parameters of nishita_atmosphere() are replaced with pre-defined values
+ *     - Implemented air and dust density node parameters (see Blender source)
  */
 
 #ifndef _SKY_GLSL_
@@ -47,8 +50,9 @@ vec2 nishita_rsi(const vec3 r0, const vec3 rd, const float sr) {
  * r0: ray origin
  * pSun: normalized sun direction
  * rPlanet: planet radius
+ * density: (air density, dust density)
  */
-vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet) {
+vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet, const vec2 density) {
 	// Calculate the step size of the primary ray.
 	vec2 p = nishita_rsi(r0, r, nishita_atmo_radius);
 	if (p.x > p.y) return vec3(0,0,0);
@@ -82,8 +86,8 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		float iHeight = length(iPos) - rPlanet;
 
 		// Calculate the optical depth of the Rayleigh and Mie scattering for this step.
-		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * iStepSize;
-		float odStepMie = exp(-iHeight / nishita_mie_scale) * iStepSize;
+		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * density.x * iStepSize;
+		float odStepMie = exp(-iHeight / nishita_mie_scale) * density.y * iStepSize;
 
 		// Accumulate optical depth.
 		iOdRlh += odStepRlh;
@@ -109,8 +113,8 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 			float jHeight = length(jPos) - rPlanet;
 
 			// Accumulate the optical depth.
-			jOdRlh += exp(-jHeight / nishita_rayleigh_scale) * jStepSize;
-			jOdMie += exp(-jHeight / nishita_mie_scale) * jStepSize;
+			jOdRlh += exp(-jHeight / nishita_rayleigh_scale) * density.x * jStepSize;
+			jOdMie += exp(-jHeight / nishita_mie_scale) * density.y * jStepSize;
 
 			// Increment the secondary ray time.
 			jTime += jStepSize;

@@ -640,8 +640,12 @@ def to_vec1(v):
     return str(v)
 
 
+def to_vec2(v):
+    return f'vec2({v[0]}, {v[1]})'
+
+
 def to_vec3(v):
-    return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
+    return f'vec3({v[0]}, {v[1]}, {v[2]})'
 
 
 def rgb_to_bw(res_var: vec3str) -> floatstr:
