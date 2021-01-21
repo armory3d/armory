@@ -293,6 +293,21 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
         # Pass through
         return c.to_vec3([0.0, 0.0, 0.0])
 
+    if node.sky_type == 'PREETHAM' or node.sky_type == 'HOSEK_WILKIE':
+        if node.sky_type == 'PREETHAM':
+            log.warn('Preetham sky model is not supported, using Hosek Wilkie sky model instead')
+
+        return parse_sky_hosekwilkie(node, state)
+
+    elif node.sky_type == 'NISHITA':
+        return parse_sky_nishita(node, state)
+
+    else:
+        log.error(f'Unsupported sky model: {node.sky_type}!')
+        return c.to_vec3([0.0, 0.0, 0.0])
+
+
+def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> vec3str:
     world = state.world
     curshader = state.curshader
 
@@ -312,10 +327,10 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
     curshader.add_uniform('vec3 I', link="_hosekI")
     curshader.add_uniform('vec3 Z', link="_hosekZ")
     curshader.add_uniform('vec3 hosekSunDirection', link="_hosekSunDirection")
-    curshader.add_function('''vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
+    curshader.add_function("""vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
 \tvec3 chi = (1 + cos_gamma * cos_gamma) / pow(1 + H * H - 2 * cos_gamma * H, vec3(1.5));
 \treturn (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
-}''')
+}""")
 
     world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
     world.arm_envtex_turbidity = node.turbidity
@@ -351,6 +366,14 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
     curshader.write('float gamma_val = acos(cos_gamma);')
 
     return 'Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;'
+
+
+def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> vec3str:
+    curshader = state.curshader
+    curshader.add_include('std/sky.glsl')
+    curshader.add_uniform('vec3 sunDir', link='_sunDirection')
+
+    return 'nishita_atmosphere(n, vec3(0,0,6372e3), sunDir, 22.0, 6371e3, 6471e3, vec3(5.5e-6,13.0e-6,22.4e-6), 21e-6, 8e3, 1.2e3, 0.758)'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
