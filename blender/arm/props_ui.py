@@ -494,45 +494,55 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
 
-class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
-    bl_label = "Android Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+class ExporterTargetSettingsMixin:
+    """Mixin for common exporter setting subpanel functionality.
+
+    Panels that inherit from this mixin need to have a arm_target
+    variable for polling."""
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'render'
+    bl_parent_id = 'ARM_PT_ArmoryExporterPanel'
+
+    # Override this in sub classes
+    arm_panel = ''
 
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
         if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'android-hl'
-        else:
-            return False
+            return item.arm_project_target == cls.arm_target
+        return False
+
+    def draw_header(self, context):
+        self.layout.label(text='', icon='SETTINGS')
+
+
+class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
+    bl_label = "Android Settings"
+    arm_target = 'android-hl'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='Android Settings', icon='SETTINGS')
-        row = layout.row()
-        row.prop(wrd, 'arm_winorient')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_compile')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_min')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_target')
+
+        col = layout.column()
+        col.prop(wrd, 'arm_winorient')
+        col.prop(wrd, 'arm_project_android_sdk_compile')
+        col.prop(wrd, 'arm_project_android_sdk_min')
+        col.prop(wrd, 'arm_project_android_sdk_target')
+
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_label = "Permissions"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED' }
+    bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
     def draw(self, context):
@@ -590,7 +600,7 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
     def draw(self, context):
@@ -598,109 +608,84 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_build_apk')
         path = arm.utils.get_android_sdk_root_path()
+
+        col = layout.column()
+
+        row = col.row()
         row.enabled = len(path) > 0
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_rename_apk')
+        row.prop(wrd, 'arm_project_android_build_apk')
+
+        row = col.row()
         row.enabled = wrd.arm_project_android_build_apk
-        row = layout.row()
+        row.prop(wrd, 'arm_project_android_rename_apk')
+        row = col.row()
+        row.enabled = wrd.arm_project_android_build_apk and len(arm.utils.get_android_apk_copy_path()) > 0
         row.prop(wrd, 'arm_project_android_copy_apk')
-        row.enabled = (wrd.arm_project_android_build_apk) and (len(arm.utils.get_android_apk_copy_path()) > 0)
-        row = layout.row()
+
+        row = col.row(align=True)
         row.prop(wrd, 'arm_project_android_list_avd')
-        col = row.column(align=True)
-        col.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
-        col.enabled = len(path) > 0
-        col = row.column(align=True)
-        col.operator('arm.run_android_emulator', text='', icon='PLAY')
-        col.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_run_avd')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0
+        sub.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
+        sub.operator('arm.run_android_emulator', text='', icon='PLAY')
+
+        row = col.row()
         row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
+        row.prop(wrd, 'arm_project_android_run_avd')
 
-class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
+
+class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "HTML5 Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
-
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'html5'
-        else:
-            return False
+    arm_target = 'html5'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='HTML5 Settings', icon='SETTINGS')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_html5_copy')
+
+        col = layout.column()
+        col.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
+        row = col.row()
         row.enabled = len(arm.utils.get_html5_copy_path()) > 0
-        row = layout.row()
+        row.prop(wrd, 'arm_project_html5_copy')
+        row = col.row()
+        row.enabled = len(arm.utils.get_html5_copy_path()) > 0 and wrd.arm_project_html5_copy and len(arm.utils.get_link_web_server()) > 0
         row.prop(wrd, 'arm_project_html5_start_browser')
-        row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
 
-class ARM_PT_ArmoryExporterWindowsSettingsPanel(bpy.types.Panel):
+
+class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "Windows Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
-
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'windows-hl'
-        else:
-            return False
+    arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='Windows Settings', icon='SETTINGS')
-        row = layout.row()
+
+        col = layout.column()
+        row = col.row(align=True)
         row.prop(wrd, 'arm_project_win_list_vs')
-        col = row.column(align=True)
-        col.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
-        col.enabled = arm.utils.get_os_is_windows()
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build')
+        sub = row.column(align=True)
+        sub.enabled = arm.utils.get_os_is_windows()
+        sub.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+
+        row = col.row()
         row.enabled = arm.utils.get_os_is_windows()
-        is_enable = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_mode')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_arch')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_log')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_cpu')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_open')
-        row.enabled = is_enable
+        row.prop(wrd, 'arm_project_win_build', text='After Publish')
+        layout.separator()
+
+        col = layout.column()
+        col.enabled = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        col.prop(wrd, 'arm_project_win_build_mode')
+        col.prop(wrd, 'arm_project_win_build_arch')
+        col.prop(wrd, 'arm_project_win_build_log')
+        col.prop(wrd, 'arm_project_win_build_cpu')
+        col.prop(wrd, 'arm_project_win_build_open')
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"

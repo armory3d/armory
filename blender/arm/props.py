@@ -178,7 +178,7 @@ def init_properties():
                ('ErrorsOnly', 'Errors Only', 'Show only errors')],
         name="Compile Log Parameter", update=assets.invalidate_compiler_cache,
         default="Summary")
-    bpy.types.World.arm_project_win_build_cpu = IntProperty(name="Count CPU", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
+    bpy.types.World.arm_project_win_build_cpu = IntProperty(name="CPU Count", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
