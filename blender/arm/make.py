@@ -9,6 +9,7 @@ import threading
 import webbrowser
 import shlex
 import errno
+import math
 
 import bpy
 
@@ -431,7 +432,7 @@ def compilation_server_done():
         log.error('Build failed, check console')
 
 def build_done():
-    print('Finished in ' + str(time.time() - profile_time))
+    print('Finished in ' + str( math.ceil((time.time() - profile_time) * 100) / 100) + 's')
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
     if state.proc_build is None:
