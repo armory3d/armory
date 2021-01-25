@@ -500,6 +500,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_minify_js')
 
         col = layout.column(heading='Data')
+        col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
@@ -724,19 +725,26 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        layout.prop(wrd, 'arm_verbose_output')
-        layout.prop(wrd, 'arm_cache_build')
-        layout.prop(wrd, 'arm_live_patch')
-        layout.prop(wrd, 'arm_stream_scene')
-        layout.prop(wrd, 'arm_batch_meshes')
-        layout.prop(wrd, 'arm_batch_materials')
-        layout.prop(wrd, 'arm_write_config')
-        layout.prop(wrd, 'arm_minimize')
-        layout.prop(wrd, 'arm_deinterleaved_buffers')
-        layout.prop(wrd, 'arm_export_tangents')
-        layout.prop(wrd, 'arm_loadscreen')
-        layout.prop(wrd, 'arm_texture_quality')
-        layout.prop(wrd, 'arm_sound_quality')
+
+        col = layout.column(heading='Debug')
+        col.prop(wrd, 'arm_verbose_output')
+        col.prop(wrd, 'arm_cache_build')
+
+        col = layout.column(heading='Runtime')
+        col.prop(wrd, 'arm_live_patch')
+        col.prop(wrd, 'arm_stream_scene')
+        col.prop(wrd, 'arm_loadscreen')
+        col.prop(wrd, 'arm_write_config')
+
+        col = layout.column(heading='Renderer')
+        col.prop(wrd, 'arm_batch_meshes')
+        col.prop(wrd, 'arm_batch_materials')
+        col.prop(wrd, 'arm_deinterleaved_buffers')
+        col.prop(wrd, 'arm_export_tangents')
+
+        col = layout.column(heading='Quality')
+        col.prop(wrd, 'arm_texture_quality')
+        col.prop(wrd, 'arm_sound_quality')
 
 class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
     bl_label = "Debug Console"
