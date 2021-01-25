@@ -211,7 +211,7 @@ def export_data(fp, sdk_path):
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     if wrd.arm_write_config:
         write_data.write_config(resx, resy)
-    
+
     # Change project version (Build, Publish)
     if (not state.is_play) and (wrd.arm_project_version_autoinc):
         wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
@@ -433,7 +433,7 @@ def compilation_server_done():
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
     if log.num_warnings > 0:
-        log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
+        log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:
         return
     result = state.proc_build.poll()
@@ -654,12 +654,12 @@ def build_success():
                         state.proc_publish_build = run_proc(cmd, done_gradlew_build)
                 else:
                     print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
-        
+
         # HTML5 After Publish
         if target_name.startswith('html5'):
             if len(arm.utils.get_html5_copy_path()) > 0 and (wrd.arm_project_html5_copy):
                 project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
-                dst = os.path.join(arm.utils.get_html5_copy_path(), project_name) 
+                dst = os.path.join(arm.utils.get_html5_copy_path(), project_name)
                 if os.path.exists(dst):
                     shutil.rmtree(dst)
                 try:
@@ -673,10 +673,10 @@ def build_success():
                     link_html5_app = arm.utils.get_link_web_server() +'/'+ project_name
                     print("Running a browser with a link " + link_html5_app)
                     webbrowser.open(link_html5_app)
-        
+
         # Windows After Publish
         if target_name.startswith('windows'):
-            list_vs = [] 
+            list_vs = []
             err = ''
             # Print message
             project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
@@ -707,18 +707,18 @@ def build_success():
                     for vs in list_vs:
                         print('- ' + vs[1] + ' (version ' + vs[3] +')')
                     return
-                # Current VS 
+                # Current VS
                 vs_path = ''
                 for vs in list_vs:
                     if vs[0] == wrd.arm_project_win_list_vs:
                         vs_path = vs[2]
                         break
-                # Open in Visual Studio                
+                # Open in Visual Studio
                 if int(wrd.arm_project_win_build) == 1:
                     cmd = os.path.join('start "' + vs_path, 'Common7', 'IDE', 'devenv.exe" "' + os.path.join(project_path, project_name + '.sln"'))
                     subprocess.Popen(cmd, shell=True)
                 # Compile
-                if int(wrd.arm_project_win_build) > 1:                    
+                if int(wrd.arm_project_win_build) > 1:
                     bits = '64' if wrd.arm_project_win_build_arch == 'x64' else '32'
                     # vcvars
                     cmd = os.path.join(vs_path, 'VC', 'Auxiliary', 'Build', 'vcvars' + bits + '.bat')
@@ -792,7 +792,7 @@ def done_vs_vars():
         # MSBuild
         wrd = bpy.data.worlds['Arm']
         list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
-        # Current VS 
+        # Current VS
         vs_path = ''
         vs_name = ''
         for vs in list_vs:
@@ -851,7 +851,7 @@ def done_vs_build():
             os.chdir(res_path) # set work folder
             subprocess.Popen(cmd, shell=True)
         # Open Build Directory
-        if wrd.arm_project_win_build_open:               
+        if wrd.arm_project_win_build_open:
             arm.utils.open_folder(path)
         state.redraw_ui = True
     else:
