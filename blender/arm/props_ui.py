@@ -1383,6 +1383,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
 
         layout.enabled = rpdat.rp_compositornodes
         layout.prop(rpdat, 'arm_tonemap')
+        layout.separator()
 
         col = layout.column()
         draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
@@ -1411,6 +1412,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         col.prop(rpdat, 'arm_lensflare')
         col.prop(rpdat, 'arm_fisheye')
+        layout.separator()
 
         col = layout.column()
         col.prop(rpdat, 'arm_lens_texture')
