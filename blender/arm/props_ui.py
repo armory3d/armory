@@ -426,7 +426,7 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
             box.alert = True
 
             col = box.column(align=True)
-            col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
+            col.label(text=f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation!', icon='ERROR')
             # Blank icon to achieve the same indentation as the line before
             col.label(text='Please open the console to get more information.', icon='BLANK1')
 
