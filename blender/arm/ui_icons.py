@@ -21,7 +21,6 @@ def _load_icons() -> None:
         bpy.utils.previews.remove(_icons_dict)
 
     _icons_dict = bpy.utils.previews.new()
-    _icons_dict.load("armory", os.path.join(_icons_dir, "armory.png"), 'IMAGE')
     _icons_dict.load("bundle", os.path.join(_icons_dir, "bundle.png"), 'IMAGE')
     _icons_dict.load("haxe", os.path.join(_icons_dir, "haxe.png"), 'IMAGE')
     _icons_dict.load("wasm", os.path.join(_icons_dir, "wasm.png"), 'IMAGE')
