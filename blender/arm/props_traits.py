@@ -21,12 +21,15 @@ ICON_CANVAS = 'NODE_COMPOSITING'
 ICON_BUNDLED = ui_icons.get_id('bundle')
 ICON_WASM = ui_icons.get_id('wasm')
 
+# Pay attention to the ID number parameter for backward compatibility!
+# This is important if the enum is reordered or the string identifier
+# is changed as the number is what's stored in the blend file
 PROP_TYPES_ENUM = [
     ('Haxe Script', 'Haxe', 'Haxe script', ICON_HAXE, 0),
-    ('Logic Nodes', 'Nodes', 'Logic nodes (visual scripting)', ICON_NODES, 1),
+    ('Logic Nodes', 'Nodes', 'Logic nodes (visual scripting)', ICON_NODES, 4),
     ('UI Canvas', 'UI', 'User interface', ICON_CANVAS, 2),
     ('Bundled Script', 'Bundled', 'Premade script with common functionality', ICON_BUNDLED, 3),
-    ('WebAssembly', 'Wasm', 'WebAssembly', ICON_WASM, 4)
+    ('WebAssembly', 'Wasm', 'WebAssembly', ICON_WASM, 1)
 ]
 
 
