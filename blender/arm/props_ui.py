@@ -442,12 +442,14 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        row.operator("arm.build_project")
+        row.scale_y = 1.3
+        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
+        row.operator("arm.build_project", icon="MOD_BUILD")
         # row.operator("arm.patch_project")
         row.operator("arm.publish_project", icon="EXPORT")
-        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
         rows = 2
         if len(wrd.arm_exporterlist) > 1:
@@ -480,16 +482,24 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
             layout.separator()
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(wrd, 'arm_project_name')
         col.prop(wrd, 'arm_project_package')
         col.prop(wrd, 'arm_project_bundle')
+
+        col = layout.column(align=True)
         col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_version_autoinc')
+
+        col = layout.column()
         col.prop(wrd, 'arm_project_icon')
+
+        col = layout.column(heading='Code Output')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_minify_js')
+
+        col = layout.column(heading='Data')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
