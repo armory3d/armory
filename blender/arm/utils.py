@@ -156,11 +156,11 @@ def get_sdk_path():
     addon_prefs = get_arm_preferences()
     p = bundled_sdk_path()
     if use_local_sdk:
-        return get_fp() + '/armsdk/'
+        return os.path.normpath(get_fp() + '/armsdk/')
     elif os.path.exists(p) and addon_prefs.sdk_bundled:
-        return p
+        return os.path.normpath(p)
     else:
-        return addon_prefs.sdk_path
+        return os.path.normpath(addon_prefs.sdk_path)
 
 def get_last_commit():
     p = get_sdk_path() + 'armory/.git/refs/heads/master'
