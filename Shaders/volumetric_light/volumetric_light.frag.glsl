@@ -24,7 +24,7 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot0;
+	uniform mat4 LWVPSpot[1];
 	#else
 	uniform samplerCubeShadow shadowMapPoint[1];
 	uniform vec2 lightProj;
@@ -35,10 +35,7 @@ uniform vec2 cameraPlane;
 	uniform vec2 lightProj;
 	#ifdef _Spot
 	uniform sampler2DShadow shadowMapSpot[4];
-	uniform mat4 LWVPSpot0;
-	uniform mat4 LWVPSpot1;
-	uniform mat4 LWVPSpot2;
-	uniform mat4 LWVPSpot3;
+	uniform mat4 LWVPSpot[maxLightsCluster];
 	#endif
 #endif
 #endif
@@ -103,7 +100,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 
 #ifdef _SinglePoint
 	#ifdef _Spot
-	vec4 lPos = LWVPSpot0 * vec4(curPos, 1.0);
+	vec4 lPos = LWVPSpot[0] * vec4(curPos, 1.0);
 	visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
 	float spotEffect = dot(spotDir, normalize(pointPos - curPos)); // lightDir
 	if (spotEffect < spotData.x) { // x - cutoff, y - cutoff - exponent

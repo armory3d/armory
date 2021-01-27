@@ -1,7 +1,4 @@
 
-const int maxLights = 16;
-const int maxLightsCluster = 4; // Ensure fast loop unroll before going higher
-const float clusterNear = 3.0;
 const vec3 clusterSlices = vec3(16, 16, 16);
 
 int getClusterI(vec2 tc, float viewz, vec2 cameraPlane) {

@@ -517,6 +517,7 @@ def write_indexhtml(w, h, is_publish):
 add_compiledglsl = ''
 def write_compiledglsl(defs, make_variants):
     rpdat = arm.utils.get_rp()
+    wrd = bpy.data.worlds['Arm']
     shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
@@ -689,6 +690,22 @@ const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) 
         if rpdat.arm_skin == 'On':
             f.write(
 """const int skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
+""")
+
+        if '_Clusters' in wrd.world_defs:
+            max_lights = "4"
+            max_lights_clusters = "4"
+            if rpdat.rp_shadowmap_atlas:
+                max_lights = str(rpdat.rp_max_lights)
+                max_lights_clusters = str(rpdat.rp_max_lights_cluster)
+                # prevent max lights cluster being higher than max lights
+                if (int(max_lights_clusters) > int(max_lights)):
+                    max_lights_clusters = max_lights
+
+            f.write(
+"""const int maxLights = """ + max_lights + """;
+const int maxLightsCluster = """ + max_lights_clusters + """;
+const float clusterNear = 4.0;
 """)
 
         f.write(add_compiledglsl + '\n') # External defined constants
