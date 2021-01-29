@@ -10,42 +10,52 @@ import arm.utils
 
 
 def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    # Color
-    if out_socket == node.outputs[0]:
-        # Vertex colors only for now
-        state.con.add_elem('col', 'short4norm')
-        return 'vcolor'
+    out_type = 'float' if out_socket.type == 'VALUE' else 'vec3'
 
-    # Vector
-    elif out_socket == node.outputs[1]:
-        # UV maps only for now
-        state.con.add_elem('tex', 'short2norm')
+    if node.attribute_name == 'time':
+        state.curshader.add_uniform('float time', link='_time')
+
+        if out_socket == node.outputs[3]:
+            return '1.0'
+        return c.cast_value('time', from_type='float', to_type=out_type)
+
+    # UV maps (higher priority) and vertex colors
+    if node.attribute_type == 'GEOMETRY':
+
+        # Alpha output. Armory doesn't support vertex colors with alpha
+        # values yet and UV maps don't have an alpha channel
+        if out_socket == node.outputs[3]:
+            return '1.0'
+
+        # UV maps
         mat = c.mat_get_material()
         mat_users = c.mat_get_material_users()
 
         if mat_users is not None and mat in mat_users:
             mat_user = mat_users[mat][0]
 
-            # No UV layers for Curve
+            # Curves don't have uv layers, so check that first
             if hasattr(mat_user.data, 'uv_layers'):
                 lays = mat_user.data.uv_layers
 
+                # First UV map referenced
+                if node.attribute_name == lays[0].name:
+                    state.con.add_elem('tex', 'short2norm')
+                    return c.cast_value('vec3(texCoord.x, 1.0 - texCoord.y, 0.0)', from_type='vec3', to_type=out_type)
+
                 # Second UV map referenced
-                if len(lays) > 1 and node.attribute_name == lays[1].name:
+                elif len(lays) > 1 and node.attribute_name == lays[1].name:
                     state.con.add_elem('tex1', 'short2norm')
-                    return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
+                    return c.cast_value('vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)', from_type='vec3', to_type=out_type)
 
-        return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
+        # Vertex colors
+        # TODO: support multiple vertex color sets
+        state.con.add_elem('col', 'short4norm')
+        return c.cast_value('vcolor', from_type='vec3', to_type=out_type)
 
-    # Fac
-    else:
-        if node.attribute_name == 'time':
-            state.curshader.add_uniform('float time', link='_time')
-            return 'time'
-
-            # Return 0.0 till drivers are implemented
-        else:
-            return '0.0'
+    if out_socket == node.outputs[3]:
+        return '1.0'
+    return c.cast_value('0.0', from_type='float', to_type=out_type)
 
 
 def parse_rgb(node: bpy.types.ShaderNodeRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:

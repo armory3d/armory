@@ -644,6 +644,41 @@ def to_vec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
 
 
+def cast_value(val: str, from_type: str, to_type: str) -> str:
+    """Casts a value that is already parsed in a glsl string to another
+    value in a string.
+
+    vec2 types are not supported (not used in the node editor) and there
+    is no cast towards int types. If casting from vec3 to vec4, the w
+    coordinate/alpha channel is filled with a 1.
+
+    If this function is called with invalid parameters, a TypeError is
+    raised.
+    """
+    if from_type == to_type:
+        return val
+
+    if from_type in ('int', 'float'):
+        if to_type in ('int', 'float'):
+            return val
+        elif to_type in ('vec2', 'vec3', 'vec4'):
+            return f'{to_type}({val})'
+
+    elif from_type == 'vec3':
+        if to_type == 'float':
+            return rgb_to_bw(val)
+        elif to_type == 'vec4':
+            return f'vec4({val}, 1.0)'
+
+    elif from_type == 'vec4':
+        if to_type == 'float':
+            return rgb_to_bw(val)
+        elif to_type == 'vec3':
+            return f'{val}.xyz'
+
+    raise TypeError("Invalid type cast in shader!")
+
+
 def rgb_to_bw(res_var: vec3str) -> floatstr:
     return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
 
