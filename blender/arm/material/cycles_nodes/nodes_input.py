@@ -1,5 +1,7 @@
-import bpy
 from typing import Union
+
+import bpy
+import mathutils
 
 import arm.log as log
 import arm.material.cycles as c
@@ -53,6 +55,35 @@ def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.N
         state.con.add_elem('col', 'short4norm')
         return c.cast_value('vcolor', from_type='vec3', to_type=out_type)
 
+    # Check object properties
+    # see https://developer.blender.org/rB6fdcca8de6 for reference
+    mat = c.mat_get_material()
+    mat_users = c.mat_get_material_users()
+    if mat_users is not None and mat in mat_users:
+        # Use first material user for now...
+        mat_user = mat_users[mat][0]
+
+        val = None
+        # Custom properties first
+        if node.attribute_name in mat_user:
+            val = mat_user[node.attribute_name]
+        # Blender properties
+        elif hasattr(mat_user, node.attribute_name):
+            val = getattr(mat_user, node.attribute_name)
+
+        if val is not None:
+            if isinstance(val, float):
+                return c.cast_value(str(val), from_type='float', to_type=out_type)
+            elif isinstance(val, int):
+                return c.cast_value(str(val), from_type='int', to_type=out_type)
+            elif isinstance(val, mathutils.Vector) and len(val) <= 4:
+                out = val.to_4d()
+
+                if out_socket == node.outputs[3]:
+                    return c.to_vec1(out[3])
+                return c.cast_value(c.to_vec3(out), from_type='vec3', to_type=out_type)
+
+    # Default values, attribute name did not match
     if out_socket == node.outputs[3]:
         return '1.0'
     return c.cast_value('0.0', from_type='float', to_type=out_type)
