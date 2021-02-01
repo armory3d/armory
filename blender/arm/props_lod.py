@@ -56,6 +56,7 @@ class ArmLodListNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "arm_lodlist.new_item"
     bl_label = "Add a new item"
+    bl_options = {'UNDO'}
 
     def execute(self, context):
         mdata = bpy.context.object.data
@@ -68,10 +69,13 @@ class ArmLodListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
     bl_idname = "arm_lodlist.delete_item"
     bl_label = "Deletes an item"
+    bl_options = {'INTERNAL', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         """ Enable if there's something in the list """
+        if bpy.context.object is None:
+            return False
         mdata = bpy.context.object.data
         return len(mdata.arm_lodlist) > 0
 
@@ -97,6 +101,7 @@ class ArmLodListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_lodlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL', 'UNDO'}
     direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
