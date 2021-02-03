@@ -17,4 +17,4 @@ def skin_pos(vert):
 
 def skin_nor(vert, prep):
     rpdat = arm.utils.get_rp()
-    vert.write(prep + 'wnormal = normalize(N * (vec3(nor.xy, pos.w) + 2.0 * cross(skinA.xyz, cross(skinA.xyz, vec3(nor.xy, pos.w)) + skinA.w * vec3(nor.xy, pos.w))));')
+    vert.write_attrib(prep + 'wnormal = normalize(N * (vec3(nor.xy, pos.w) + 2.0 * cross(skinA.xyz, cross(skinA.xyz, vec3(nor.xy, pos.w)) + skinA.w * vec3(nor.xy, pos.w))));')
