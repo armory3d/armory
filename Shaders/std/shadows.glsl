@@ -188,40 +188,77 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	const vec2 uv = sampleCube(ml, faceIndex);
 
 	vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
-	float result = texture(shadowMap, vec3(pointLightTile.z * uv + pointLightTile.xy, compare));
+	vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+
+	float result = texture(shadowMap, vec3(uvtiled, compare));
 	// soft shadowing
 	int newFaceIndex = 0;
-	vec2 uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
 	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 0.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	return result / 9.0;
 }

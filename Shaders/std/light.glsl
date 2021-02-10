@@ -185,13 +185,17 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
 					#ifdef _ShadowMapAtlas
+						vec3 uv = lPos.xyz / lPos.w;
+						#ifdef _InvY
+						uv.y = 1.0 - uv.y; // invert Y coordinates for direct3d coordinate system
+						#endif
 						direct *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
 							#else
 							shadowMapAtlas
 							#endif
-							, lPos.xyz / lPos.w, bias
+							, uv, bias
 						);
 					#else
 							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
