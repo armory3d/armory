@@ -1,5 +1,6 @@
+import json
 import os
-import time
+import shutil
 
 import bpy
 from bpy.props import *
@@ -286,6 +287,146 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
         context.material.signature = ''
         return{'FINISHED'}
 
+
+class ARM_OT_NewCustomMaterial(bpy.types.Operator):
+    bl_idname = "arm.new_custom_material"
+    bl_label = "New Custom Material"
+    bl_description = "Add a new custom material. This will create all the necessary files and folders"
+
+    def poll_mat_name(self, context):
+        project_dir = arm.utils.get_fp()
+        shader_dir_dst = os.path.join(project_dir, 'Shaders')
+        mat_name = arm.utils.safestr(self.mat_name)
+
+        self.mat_exists = os.path.isdir(os.path.join(project_dir, 'Bundled', mat_name))
+
+        vert_exists = os.path.isfile(os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+        frag_exists = os.path.isfile(os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+        self.shader_exists = vert_exists or frag_exists
+
+    mat_name: StringProperty(
+        name='Material Name', description='The name of the new material',
+        default='MyCustomMaterial',
+        update=poll_mat_name)
+    mode: EnumProperty(
+        name='Target RP', description='Choose for which render path mode the new material is created',
+        default='deferred',
+        items=[('deferred', 'Deferred', 'Create the material for a deferred render path'),
+               ('forward', 'Forward', 'Create the material for a forward render path')])
+    mat_exists: BoolProperty(
+        name='Material Already Exists',
+        default=False,
+        options={'HIDDEN', 'SKIP_SAVE'})
+    shader_exists: BoolProperty(
+        name='Shaders Already Exist',
+        default=False,
+        options={'HIDDEN', 'SKIP_SAVE'})
+
+    def invoke(self, context, event):
+        if not bpy.data.is_saved:
+            self.report({'INFO'}, "Please save your file first")
+            return {"CANCELLED"}
+
+        # Try to set deferred/forward based on the selected render path
+        try:
+            self.mode = 'forward' if arm.utils.get_rp().rp_renderer == 'Forward' else 'deferred'
+        except IndexError:
+            # No render path, use default (deferred)
+            pass
+
+        self.poll_mat_name(context)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.prop(self, 'mat_name')
+        layout.prop(self, 'mode', expand=True)
+
+        if self.mat_exists:
+            box = layout.box()
+            box.alert = True
+            col = box.column(align=True)
+            col.label(text='A custom material with that name already exists,', icon='ERROR')
+            col.label(text='clicking on \'OK\' will override the material!', icon='BLANK1')
+
+        if self.shader_exists:
+            box = layout.box()
+            box.alert = True
+            col = box.column(align=True)
+            col.label(text='Shader file(s) with that name already exists,', icon='ERROR')
+            col.label(text='clicking on \'OK\' will override the shader(s)!', icon='BLANK1')
+
+    def execute(self, context):
+        if self.mat_name == '':
+            return {'CANCELLED'}
+
+        project_dir = arm.utils.get_fp()
+        shader_dir_src = os.path.join(arm.utils.get_sdk_path(), 'armory', 'Shaders', 'custom_mat_presets')
+        shader_dir_dst = os.path.join(project_dir, 'Shaders')
+        mat_name = arm.utils.safestr(self.mat_name)
+        mat_dir = os.path.join(project_dir, 'Bundled', mat_name)
+
+        os.makedirs(mat_dir, exist_ok=True)
+        os.makedirs(shader_dir_dst, exist_ok=True)
+
+        # Shader data
+        if self.mode == 'forward':
+            col_attachments = ['RGBA64']
+            constants = [{'link': '_worldViewProjectionMatrix', 'name': 'WVP', 'type': 'mat4'}]
+            vertex_elems = [{'name': 'pos', 'data': 'short4norm'}]
+        else:
+            col_attachments = ['RGBA64', 'RGBA64']
+            constants = [
+                {'link': '_worldViewProjectionMatrix', 'name': 'WVP', 'type': 'mat4'},
+                {'link': '_normalMatrix', 'name': 'N', 'type': 'mat3'}
+            ]
+            vertex_elems = [
+                {'name': 'pos', 'data': 'short4norm'},
+                {'name': 'nor', 'data': 'short2norm'}
+            ]
+
+        con = {
+            'color_attachments':  col_attachments,
+            'compare_mode': 'less',
+            'constants': constants,
+            'cull_mode': 'clockwise',
+            'depth_write': True,
+            'fragment_shader': f'{mat_name}.frag',
+            'name': 'mesh',
+            'texture_units': [],
+            'vertex_shader': f'{mat_name}.vert',
+            'vertex_elements': vertex_elems
+        }
+        data = {
+            'shader_datas': [{
+                'contexts': [con],
+                'name': f'{mat_name}'
+            }]
+        }
+
+        # Save shader data file
+        with open(os.path.join(mat_dir, f'{mat_name}.json'), 'w') as datafile:
+            json.dump(data, datafile, indent=4, sort_keys=True)
+
+        # Copy preset shaders to project
+        if self.mode == 'forward':
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_forward.frag.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_forward.vert.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+        else:
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_deferred.frag.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_deferred.vert.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+
+        # True if called from the material properties tab, else it was called from the search menu
+        if hasattr(context, 'material') and context.material is not None:
+            context.material.arm_custom_material = mat_name
+
+        return{'FINISHED'}
+
+
 class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
@@ -317,7 +458,9 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb.enabled = mat.arm_discard
         columnb.prop(mat, 'arm_discard_opacity')
         columnb.prop(mat, 'arm_discard_opacity_shadows')
-        layout.prop(mat, 'arm_custom_material')
+        row = layout.row(align=True)
+        row.prop(mat, 'arm_custom_material')
+        row.operator('arm.new_custom_material', text='', icon='ADD')
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_particle_fade')
         layout.prop(mat, 'arm_billboard')
@@ -2546,6 +2689,7 @@ def register():
     bpy.utils.register_class(ARM_PT_WorldPropsPanel)
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
+    bpy.utils.register_class(ARM_OT_NewCustomMaterial)
     bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
@@ -2626,6 +2770,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
+    bpy.utils.unregister_class(ARM_OT_NewCustomMaterial)
     bpy.utils.unregister_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
