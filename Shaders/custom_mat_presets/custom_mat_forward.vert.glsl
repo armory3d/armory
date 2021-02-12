@@ -3,7 +3,7 @@
 // World to view projection matrix to correctly position the vertex on screen
 uniform mat4 WVP;
 
-// Position and normal vector in local space for the current vertex
+// Position vector of the current vertex in local space
 in vec3 pos;
 
 void main() {

@@ -5,7 +5,7 @@ uniform mat4 WVP;
 // Matrix to transform normals from local into world space
 uniform mat3 N;
 
-// Position and normal vector in local space for the current vertex
+// Position and normal vectors of the current vertex in local space
 // Armory packs the vertex data to preserve memory, so nor.z values are
 // saved in pos.w
 in vec4 pos; // pos.xyz, nor.w
