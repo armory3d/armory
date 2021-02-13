@@ -112,7 +112,8 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
     if wrd.arm_single_data_file:
         mat_data['shader'] = shader_data_name
     else:
-        ext = '' if wrd.arm_minimize else '.json'
+        # Make sure that custom materials are not expected to be in .arm format
+        ext = '' if wrd.arm_minimize and material.arm_custom_material == "" else '.json'
         mat_data['shader'] = shader_data_name + ext + '/' + shader_data_name
 
     return sd, rpasses
