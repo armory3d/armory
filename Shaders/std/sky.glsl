@@ -29,6 +29,8 @@
 #define nishita_mie_dir 0.76 // Aerosols anisotropy ("direction")
 #define nishita_mie_dir_sq 0.5776 // Squared aerosols anisotropy
 
+#define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
+
 /* ray-sphere intersection that assumes
  * the sphere is centered at the origin.
  * No intersection when result.x > result.y */
@@ -133,6 +135,21 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 
 	// Calculate and return the final color.
 	return nishita_sun_intensity * (pRlh * nishita_rayleigh_coeff * totalRlh + pMie * nishita_mie_coeff * totalMie);
+}
+
+vec3 sun_disk(const vec3 n, const vec3 light_dir, const float disk_size, const float intensity) {
+	// Normalized SDF
+	float dist = distance(n, light_dir) / disk_size;
+
+	// Darken the edges of the sun
+	// Reference: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+	// (Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite by Sebastien Hillaire)
+	// Page 28, Page 60 (Code from [Nec96])
+	float invDist = 1.0 - dist;
+	float mu = sqrt(invDist * invDist);
+	vec3 limb_darkening = 1.0 - (1.0 - pow(vec3(mu), sun_limb_darkening_col));
+
+	return 1 + (1.0 - step(1.0, dist)) * nishita_sun_intensity * intensity * limb_darkening;
 }
 
 #endif

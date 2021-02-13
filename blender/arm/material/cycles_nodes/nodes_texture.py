@@ -1,3 +1,4 @@
+import math
 import os
 from typing import Union
 
@@ -382,7 +383,25 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     # d_ozone = node.ozone_density
     density = c.to_vec2((d_air, d_dust))
 
-    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}, {density})'
+    sun = ''
+    if node.sun_disc:
+        # The sun size is calculated relative in terms of the distance
+        # between the sun position and the sky dome normal at every
+        # pixel (see sun_disk() in sky.glsl).
+        #
+        # An isosceles triangle is created with the camera at the
+        # opposite side of the base with node.sun_size being the vertex
+        # angle from which the base angle theta is calculated. Iron's
+        # skydome geometry roughly resembles a unit sphere, so the leg
+        # size is set to 1. The base size is the doubled normal-relative
+        # target size.
+
+        # sun_size is already in radians despite being degrees in the UI
+        theta = 0.5 * (math.pi - node.sun_size)
+        size = math.cos(theta)
+        sun = f'* sun_disk(n, sunDir, {size}, {node.sun_intensity})'
+
+    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}, {density}){sun}'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
