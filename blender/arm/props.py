@@ -435,6 +435,10 @@ def init_properties():
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
 
     bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_darken_clouds = BoolProperty(
+        name="Darken Clouds at Night",
+        description="Darkens the clouds when the sun is low. This setting is for artistic purposes and is not physically correct",
+        default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)

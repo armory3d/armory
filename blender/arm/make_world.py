@@ -293,7 +293,7 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
 }'''
     frag.add_function(func_cloud_radiance)
 
-    frag.add_function('''vec3 traceClouds(vec3 sky, vec3 dir) {
+    func_trace_clouds = '''vec3 traceClouds(vec3 sky, vec3 dir) {
 \tconst float step_size = 0.5 / float(cloudsSteps);
 \tfloat T = 1.0;
 \tfloat C = 0.0;
@@ -312,6 +312,16 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
 \t\t}
 \t\tuv += (dir.xy / dir.z) * step_size * cloudsUpper;
 \t}
+'''
+    if world.arm_darken_clouds:
+        func_trace_clouds += '\t// Darken clouds when the sun is low\n'
 
-\treturn vec3(C) + sky * T;
-}''')
+        # Nishita sky
+        if 'vec3 sunDir' in frag.uniforms:
+            func_trace_clouds += '\tC *= smoothstep(-0.02, 0.25, sunDir.z);\n'
+        # Hosek
+        else:
+            func_trace_clouds += '\tC *= smoothstep(0.04, 0.32, hosekSunDirection.z);\n'
+
+    func_trace_clouds += '\treturn vec3(C) + sky * T;\n}'
+    frag.add_function(func_trace_clouds)
