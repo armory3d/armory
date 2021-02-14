@@ -43,6 +43,22 @@ def add_world_defs():
         if rpdat.rp_shadowmap_cascades != '1':
             wrd.world_defs += '_CSM'
             assets.add_khafile_def('arm_csm')
+        if rpdat.rp_shadowmap_atlas:
+            assets.add_khafile_def('arm_shadowmap_atlas')
+            wrd.world_defs += '_ShadowMapAtlas'
+            if rpdat.rp_shadowmap_atlas_single_map:
+                assets.add_khafile_def('arm_shadowmap_atlas_single_map')
+                wrd.world_defs += '_SingleAtlas'
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_point={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_point)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_spot={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_spot)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_sun={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_sun)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size)))
+
+            assets.add_khafile_def('rp_max_lights_cluster={0}'.format(int(rpdat.rp_max_lights_cluster)))
+            assets.add_khafile_def('rp_max_lights={0}'.format(int(rpdat.rp_max_lights)))
+            if rpdat.rp_shadowmap_atlas_lod:
+                assets.add_khafile_def('arm_shadowmap_atlas_lod')
+                assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
     # SS
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
@@ -89,9 +105,14 @@ def add_world_defs():
                     wrd.world_defs += '_Spot'
                     assets.add_khafile_def('arm_spot')
 
-    if point_lights == 1:
-        wrd.world_defs += '_SinglePoint'
-    elif point_lights > 1:
+    if not rpdat.rp_shadowmap_atlas:
+        if point_lights == 1:
+            wrd.world_defs += '_SinglePoint'
+        elif point_lights > 1:
+            wrd.world_defs += '_Clusters'
+            assets.add_khafile_def('arm_clusters')
+    else:
+        wrd.world_defs += '_SMSizeUniform'
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 

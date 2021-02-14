@@ -2,7 +2,6 @@
 
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
-#include "std/light.glsl"
 #ifdef _Clusters
 #include "std/clusters.glsl"
 #endif
@@ -80,14 +79,11 @@ uniform mat4 invVP;
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
-	//!uniform mat4 LWVPSpot0;
+	//!uniform mat4 LWVPSpot[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
-	//!uniform mat4 LWVPSpot0;
-	//!uniform mat4 LWVPSpot1;
-	//!uniform mat4 LWVPSpot2;
-	//!uniform mat4 LWVPSpot3;
+	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
 #endif
@@ -109,21 +105,36 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[1];
-	//!uniform mat4 LWVPSpot0;
+	//!uniform mat4 LWVPSpot[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
 	//!uniform vec2 lightProj;
 	#endif
 #endif
 #ifdef _Clusters
-	//!uniform samplerCubeShadow shadowMapPoint[4];
+	#ifdef _ShadowMapAtlas
+		#ifdef _SingleAtlas
+		uniform sampler2DShadow shadowMapAtlas;
+		#endif
+	#endif
+	#ifdef _ShadowMapAtlas
+		#ifndef _SingleAtlas
+		//!uniform sampler2DShadow shadowMapAtlasPoint;
+		#endif
+		//!uniform vec4 pointLightDataArray[4];
+	#else
+		//!uniform samplerCubeShadow shadowMapPoint[4];
+	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
-	//!uniform sampler2DShadow shadowMapSpot[4];
-	//!uniform mat4 LWVPSpot0;
-	//!uniform mat4 LWVPSpot1;
-	//!uniform mat4 LWVPSpot2;
-	//!uniform mat4 LWVPSpot3;
+		#ifdef _ShadowMapAtlas
+		#ifndef _SingleAtlas
+		//!uniform sampler2DShadow shadowMapAtlasSpot;
+		#endif
+		#else
+		//!uniform sampler2DShadow shadowMapSpot[4];
+		#endif
+	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
 #endif
@@ -132,7 +143,13 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
+	#ifdef _ShadowMapAtlas
+	#ifndef _SingleAtlas
+	uniform sampler2DShadow shadowMapAtlasSun;
+	#endif
+	#else
 	uniform sampler2DShadow shadowMap;
+	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
 	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
@@ -158,6 +175,8 @@ uniform vec3 pointCol;
 uniform sampler2D texClouds;
 uniform float time;
 #endif
+
+#include "std/light.glsl"
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -289,10 +308,32 @@ void main() {
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
-		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias);
+			svisibility = shadowTestCascade(
+				#ifdef _ShadowMapAtlas
+					#ifndef _SingleAtlas
+					shadowMapAtlasSun
+					#else
+					shadowMapAtlas
+					#endif
+				#else
+				shadowMap
+				#endif
+				, eye, p + n * shadowsBias * 10, shadowsBias
+			);
 		#else
-		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias);
+			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
+			if (lPos.w > 0.0) svisibility = shadowTest(
+				#ifdef _ShadowMapAtlas
+					#ifndef _SingleAtlas
+					shadowMapAtlasSun
+					#else
+					shadowMapAtlas
+					#endif
+				#else
+				shadowMap
+				#endif
+				, lPos.xyz / lPos.w, shadowsBias
+			);
 		#endif
 	#endif
 
@@ -335,7 +376,18 @@ void main() {
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
 		#endif
-		fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, sunDir, lightPlane.y, shadowMap);
+		fragColor.rgb += fragColor.rgb * SSSSTransmittance(
+			LWVP, p, n, sunDir, lightPlane.y,
+			#ifdef _ShadowMapAtlas
+				#ifndef _SingleAtlas
+				shadowMapAtlasSun
+				#else
+				shadowMapAtlas
+				#endif
+			#else
+			shadowMap
+			#endif
+		);
 	}
 	#endif
 

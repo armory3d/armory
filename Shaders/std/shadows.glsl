@@ -11,6 +11,41 @@ uniform vec4 casData[shadowmapCascades * 4 + 4];
 uniform vec2 smSizeUniform;
 #endif
 
+#ifdef _ShadowMap
+	#ifdef _Clusters
+		#ifdef _ShadowMapAtlas
+			uniform vec4 pointLightDataArray[maxLightsCluster * 6];
+		#endif
+	#endif
+#endif
+
+#ifdef _ShadowMapAtlas
+// https://www.khronos.org/registry/OpenGL/specs/gl/glspec20.pdf // p:168
+// https://www.gamedev.net/forums/topic/687535-implementing-a-cube-map-lookup-function/5337472/
+vec2 sampleCube(vec3 dir, out int faceIndex) {
+	vec3 dirAbs = abs(dir);
+	float ma;
+	vec2 uv;
+	if(dirAbs.z >= dirAbs.x && dirAbs.z >= dirAbs.y) {
+		faceIndex = dir.z < 0.0 ? 5 : 4;
+		ma = 0.5 / dirAbs.z;
+		uv = vec2(dir.z < 0.0 ? -dir.x : dir.x, -dir.y);
+	}
+	else if(dirAbs.y >= dirAbs.x) {
+		faceIndex = dir.y < 0.0 ? 3 : 2;
+		ma = 0.5 / dirAbs.y;
+		uv = vec2(dir.x, dir.y < 0.0 ? -dir.z : dir.z);
+	}
+	else {
+		faceIndex = dir.x < 0.0 ? 1 : 0;
+		ma = 0.5 / dirAbs.x;
+		uv = vec2(dir.x < 0.0 ? dir.z : -dir.z, -dir.y);
+	}
+	// downscale uv a little to hide seams
+	return uv * 0.9976 * ma + 0.5;
+}
+#endif
+
 float PCF(sampler2DShadow shadowMap, const vec2 uv, const float compare, const vec2 smSize) {
 	float result = texture(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare));
 	result += texture(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare));
@@ -49,6 +84,185 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 	result += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
 	return result / 9.0;
 }
+
+#ifdef _ShadowMapAtlas
+// transform "out-of-bounds" coordinates to the correct face/coordinate system
+vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
+	if (uv.x < 0.0) {
+		if (faceIndex == 0) { // X+
+			newFaceIndex = 4; // Z+
+		}
+		else if (faceIndex == 1) { // X-
+			newFaceIndex = 5; // Z-
+		}
+		else if (faceIndex == 2) { // Y+
+			newFaceIndex = 1; // X-
+		}
+		else if (faceIndex == 3) { // Y-
+			newFaceIndex = 1; // X-
+		}
+		else if (faceIndex == 4) { // Z+
+			newFaceIndex = 1; // X-
+		}
+		else { // Z-
+			newFaceIndex = 0; // X+
+		}
+		uv = vec2(1.0 + uv.x, uv.y);
+	}
+	else if (uv.x > 1.0)  {
+		if (faceIndex == 0) { // X+
+			newFaceIndex = 5; // Z-
+		}
+		else if (faceIndex == 1) { // X-
+			newFaceIndex = 4; // Z+
+		}
+		else if (faceIndex == 2) { // Y+
+			newFaceIndex = 0; // X+
+		}
+		else if (faceIndex == 3) { // Y-
+			newFaceIndex = 0; // X+
+		}
+		else if (faceIndex == 4) { // Z+
+			newFaceIndex = 0; // X+
+		}
+		else { // Z-
+			newFaceIndex = 1; // X-
+		}
+		uv = vec2(1.0 - uv.x, uv.y);
+	}
+	else if (uv.y < 0.0) {
+		if (faceIndex == 0) { // X+
+			newFaceIndex = 2; // Y+
+		}
+		else if (faceIndex == 1) { // X-
+			newFaceIndex = 2; // Y+
+		}
+		else if (faceIndex == 2) { // Y+
+			newFaceIndex = 5; // Z-
+		}
+		else if (faceIndex == 3) { // Y-
+			newFaceIndex = 4; // Z+
+		}
+		else if (faceIndex == 4) { // Z+
+			newFaceIndex = 2; // Y+
+		}
+		else { // Z-
+			newFaceIndex = 2; // Y+
+		}
+		uv = vec2(uv.x, 1.0 + uv.y);
+	}
+	else if (uv.y > 1.0) {
+		if (faceIndex == 0) { // X+
+			newFaceIndex = 3; // Y-
+		}
+		else if (faceIndex == 1) { // X-
+			newFaceIndex = 3; // Y-
+		}
+		else if (faceIndex == 2) { // Y+
+			newFaceIndex = 4; // Z+
+		}
+		else if (faceIndex == 3) { // Y-
+			newFaceIndex = 5; // Z-
+		}
+		else if (faceIndex == 4) { // Z+
+			newFaceIndex = 3; // Y-
+		}
+		else { // Z-
+			newFaceIndex = 3; // Y-
+		}
+		uv = vec2(uv.x, 1.0 - uv.y);
+	} else {
+		newFaceIndex = faceIndex;
+	}
+	// cover corner cases too
+	return uv;
+}
+
+float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index) {
+	const vec2 smSize = smSizeUniform; // TODO: incorrect...
+	const float compare = lpToDepth(lp, lightProj) - bias * 1.5;
+	ml = ml + n * bias * 20;
+
+	int faceIndex = 0;
+	const int lightIndex = index * 6;
+	const vec2 uv = sampleCube(ml, faceIndex);
+
+	vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
+	vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+
+	float result = texture(shadowMap, vec3(uvtiled, compare));
+	// soft shadowing
+	int newFaceIndex = 0;
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, -1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, -1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, 1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, -1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 0.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 1.0) / smSize)));
+	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	#ifdef _InvY
+	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#endif
+	result += texture(shadowMap, vec3(uvtiled, compare));
+
+	return result / 9.0;
+}
+#endif
 
 float shadowTest(sampler2DShadow shadowMap, const vec3 lPos, const float shadowsBias) {
 	#ifdef _SMSizeUniform
@@ -95,7 +309,7 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 
 float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p, const float shadowsBias) {
 	#ifdef _SMSizeUniform
-	vec2 smSize = smSizeUniform * vec2(shadowmapCascades, 1.0);
+	vec2 smSize = smSizeUniform;
 	#else
 	const vec2 smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);
 	#endif

@@ -179,6 +179,7 @@ class Shader:
         self.includes = []
         self.ins = []
         self.outs = []
+        self.uniforms_top = []
         self.uniforms = []
         self.constants = []
         self.functions = {}
@@ -205,6 +206,10 @@ class Shader:
         if not self.has_include(s):
             self.includes.append(s)
 
+    def add_include_front(self, s):
+        if not self.has_include(s):
+            self.includes.insert(0, s)
+
     def add_in(self, s):
         if s not in self.ins:
             self.ins.append(s)
@@ -213,7 +218,7 @@ class Shader:
         if s not in self.outs:
             self.outs.append(s)
 
-    def add_uniform(self, s, link=None, included=False):
+    def add_uniform(self, s, link=None, included=False, top=False):
         ar = s.split(' ')
         # layout(RGBA8) image3D voxels
         utype = ar[-2]
@@ -236,8 +241,12 @@ class Shader:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link)
-        if not included and s not in self.uniforms:
-            self.uniforms.append(s)
+        if top:
+            if not included and s not in self.uniforms_top:
+                self.uniforms_top.append(s)
+        else:
+            if not included and s not in self.uniforms:
+                self.uniforms.append(s)
 
     def add_const(self, type_str: str, name: str, value_str: str, array_size: int = 0):
         """
@@ -375,6 +384,8 @@ class Shader:
                 s += 'layout(triangle_strip) out;\n'
                 s += 'layout(max_vertices=3) out;\n'
 
+        for a in self.uniforms_top:
+            s += 'uniform ' + a + ';\n'
         for a in self.includes:
             s += '#include "' + a + '"\n'
         if self.geom_passthrough:

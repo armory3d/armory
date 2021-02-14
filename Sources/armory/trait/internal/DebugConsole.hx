@@ -421,6 +421,9 @@ class DebugConsole extends Trait {
 							var lightHandle = Id.handle();
 							lightHandle.value = light.data.raw.strength / 10;
 							light.data.raw.strength = ui.slider(lightHandle, "Strength", 0.0, 5.0, true) * 10;
+							#if arm_shadowmap_atlas
+							ui.text("status: " + (light.culledLight ? "culled" : "rendered"));
+							#end
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";
