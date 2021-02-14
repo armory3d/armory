@@ -1,49 +1,25 @@
 package armory.system;
 
-class FSM {
-	var state: Null<State>;
-	var nextState: Null<State>;
-	var transitions = new Array<Transition>();
-	var tempTransitions = new Array<Transition>();
+class FSM<T> {
+	final transitions = new Array<Transition<T>>();
+	final tempTransitions = new Array<Transition<T>>();
+	var state: Null<State<T>>;
 	var entered = false;
 
 	public function new() {}
 
-	/**
-	* Set the initial / current state of the FSM and return it
-	* @param state The state to be set
-	* @return State
-	**/
-	public function setState(state: State) {
+	public function bindTransition(canEnter: Void -> Bool, fromState: State<T>, toState: State<T>) {
+		final transition = new Transition<T>(canEnter, fromState, toState);
+		transitions.push(transition);
+		syncTransitions();
+	}
+
+	public function setInitState(state: State<T>) {
 		this.state = state;
 		syncTransitions();
-		return state;
 	}
 
-	/**
-	* Bind multiple transitions to the specified state
-	* @param canEnter The function that returns true or false to enter the transition
-	* @param toState The next state the transiiton will return
-	* @param fromStates The states that are allowed to be changed by the next state
-	* @return Void
-	**/
-	public function bindTransitions(canEnter: Void -> Bool, toState: State, fromStates: Array<State>) {
-		for (s in fromStates) {
-			transitions.push(new Transition(canEnter, s, toState));
-		}
-
-		syncTransitions();
-	}
-
-	function syncTransitions() {
-		tempTransitions = [];
-
-		for (t in transitions) {
-			if (t.isConnected(state)) tempTransitions.push(t);
-		}
-	}
-
-	public function run() {
+	public function update() {
 		if (!entered) {
 			state.onEnter();
 			entered = true;
@@ -51,45 +27,48 @@ class FSM {
 
 		state.onUpdate();
 
-		for (t in tempTransitions) {
-			if (t.canEnter()) {
-				nextState = t.getNextState();
+		for (transition in tempTransitions) {
+			if (transition.canEnter()) {
 				state.onExit();
-				state = nextState;
+				state = transition.toState;
 				entered = false;
 				syncTransitions();
 				break;
 			}
 		}
 	}
-}
 
-class Transition {
-	final func: Void -> Bool;
-	final from: State;
-	final to: State;
+	public function syncTransitions() {
+		tempTransitions.resize(0);
 
-	public function new(func: Void -> Bool, from: State, to: State) {
-		this.func = func;
-		this.from = from;
-		this.to = to;
-	}
-
-	public function canEnter() {
-		return func();
-	}
-
-	public function isConnected(state: State) {
-		return from == state;
-	}
-
-	public function getNextState() {
-		return to;
+		for (transition in transitions) {
+			if (transition.fromState == state) tempTransitions.push(transition);
+		}
 	}
 }
 
-interface State {
-	function onEnter(): Void;
-	function onUpdate(): Void;
-	function onExit(): Void;
+class Transition<T> {
+	public final canEnter: Void -> Bool;
+	public final fromState: State<T>;
+	public final toState: State<T>;
+
+	public function new(canEnter: Void -> Bool, fromState: State<T>, toState: State<T>) {
+		this.canEnter = canEnter;
+		this.fromState = fromState;
+		this.toState = toState;
+	}
+}
+
+class State<T> {
+	final owner: T;
+
+	public function new(owner: T) {
+		this.owner = owner;
+	}
+
+	public function onEnter() {}
+
+	public function onUpdate() {}
+
+	public function onExit() {}
 }
