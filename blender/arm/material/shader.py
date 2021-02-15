@@ -208,7 +208,11 @@ class Shader:
 
     def add_include_front(self, s):
         if not self.has_include(s):
-            self.includes.insert(0, s)
+            pos = 0
+            # make sure compiled.inc is always on top
+            if len(self.includes) > 0 and self.includes[0] == 'compiled.inc':
+                pos = 1
+            self.includes.insert(pos, s)
 
     def add_in(self, s):
         if s not in self.ins:
