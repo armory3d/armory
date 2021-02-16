@@ -4,8 +4,6 @@ import armory.system.Event;
 
 class SendGlobalEventNode extends LogicNode {
 
-	var entries: Array<TEvent> = null;
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -13,7 +11,7 @@ class SendGlobalEventNode extends LogicNode {
 	override function run(from: Int) {
 		var name: String = inputs[1].get();
 
-		entries = Event.get(name);
+		var entries = Event.get(name);
 		if (entries == null) return; // Event does not exist
 		for (e in entries) e.onEvent();
 
