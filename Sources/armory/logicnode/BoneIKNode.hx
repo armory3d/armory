@@ -7,6 +7,13 @@ import iron.math.Vec4;
 class BoneIKNode extends LogicNode {
 
 	var goal: Vec4;
+	var pole: Vec4;
+	var poleEnabled: Bool;
+	var chainLength: Int;
+	var maxIterartions: Int;
+	var precision: Float;
+	var rollAngle: Float;
+
 	var notified = false;
 
 	public function new(tree: LogicTree) {
@@ -19,6 +26,12 @@ class BoneIKNode extends LogicNode {
 		var object: Object = inputs[1].get();
 		var boneName: String = inputs[2].get();
 		goal = inputs[3].get();
+		poleEnabled = inputs[4].get();
+		pole = inputs[5].get();
+		chainLength = inputs[6].get();
+		maxIterartions = inputs[7].get();
+		precision = inputs[8].get();
+		rollAngle = inputs[9].get();
 
 		if (object == null || goal == null) return;
 		var anim = object.animation != null ? cast(object.animation, BoneAnimation) : null;
@@ -26,11 +39,13 @@ class BoneIKNode extends LogicNode {
 
 		var bone = anim.getBone(boneName);
 
-		function solveBone() {
-			anim.solveIK(bone, goal);
+		if(! poleEnabled) pole = null;
 
-			// anim.removeUpdate(solveBone);
-			// notified = false;
+		function solveBone() {
+			anim.solveIK(bone, goal, precision, maxIterartions, chainLength, pole, rollAngle);
+
+			anim.removeUpdate(solveBone);
+			notified = false;
 		}
 
 		if (!notified) {

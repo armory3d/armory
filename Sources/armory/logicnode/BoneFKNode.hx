@@ -28,17 +28,20 @@ class BoneFKNode extends LogicNode {
 
 		// Manipulating bone in world space
 		var bone = anim.getBone(boneName);
-		m = anim.getBoneMat(bone);
-		w = anim.getAbsMat(bone);
+		/* m = anim.getBoneMat(bone);
+		w = anim.getAbsMat(bone); */
 
 		function moveBone() {
-			m.setFrom(w);
+			/* m.setFrom(w);
 			m.multmat(transform);
 			iw.getInverse(w);
-			m.multmat(iw);
+			m.multmat(iw); */
+			//trace("Perform FK");
+			anim.setBoneMatFromWorldMat(transform.clone(), bone);
 
-			// anim.removeUpdate(moveBone);
-			// notified = false;
+			anim.removeUpdate(moveBone);
+			//trace("FK removed");
+			notified = false;
 		}
 
 		if (!notified) {
