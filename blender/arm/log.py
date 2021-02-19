@@ -2,8 +2,8 @@ import platform
 
 DEBUG = 36
 INFO = 37
-WARN = 93
-ERROR = 91
+WARN = 35
+ERROR = 31
 
 if platform.system() == "Windows":
     HAS_COLOR_SUPPORT = platform.release() == "10"
