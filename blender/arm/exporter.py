@@ -2186,7 +2186,7 @@ class ArmoryExporter:
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in ' + str(time.time() - profile_time))
+        print('Scene exported in {:0.3f}'.format(time.time() - profile_time) + 's')
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
