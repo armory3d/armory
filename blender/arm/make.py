@@ -158,8 +158,8 @@ def export_data(fp, sdk_path):
 
     if wrd.arm_verbose_output:
         print('Exported modules:', ', '.join(modules))
-        print('Shader flags:' ', '.join(defs))
-        print('Compositor flags:' ', '.join(cdefs))
+        print('Shader flags:', ' '.join(defs))
+        print('Compositor flags:', ' '.join(cdefs))
         print('Khafile flags:', ' '.join(assets.khafile_defs))
 
     # Render path is configurable at runtime
