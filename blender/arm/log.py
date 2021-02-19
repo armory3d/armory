@@ -2,8 +2,8 @@ import platform
 
 DEBUG = 36
 INFO = 37
-WARN = 35
-ERROR = 31
+WARN = 93
+ERROR = 91
 
 if platform.system() == "Windows":
     HAS_COLOR_SUPPORT = platform.release() == "10"
@@ -54,7 +54,7 @@ def info(text):
     info_text = format_text(text)
 
 def print_warn(text):
-    log('Warning: ' + text, WARN)
+    log('WARNING: ' + text, WARN)
 
 def warn(text):
     global num_warnings
