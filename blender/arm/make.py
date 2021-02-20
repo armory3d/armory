@@ -64,7 +64,7 @@ def export_data(fp, sdk_path):
 
     print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
-        print('Blender: ' + bpy.app.version_string + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
+        print(f'Blender: {bpy.app.version_string}, Target: {state.target}, GAPI: {arm.utils.get_gapi()}')
 
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
@@ -431,7 +431,7 @@ def compilation_server_done():
         log.error('Build failed, check console')
 
 def build_done():
-    print('Finished in {:0.3f}'.format(time.time() - profile_time) + 's')
+    print('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
     if state.proc_build is None:

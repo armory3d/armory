@@ -2152,7 +2152,7 @@ class ArmoryExporter:
 
         # No camera found
         if not self.camera_spawned:
-            log.warn('Scene "'+self.scene.name+'" is missing a camera')
+            log.warn( f'Scene "{self.scene.name}" is missing a camera')
 
         # No camera found, create a default one
         if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
@@ -2186,7 +2186,7 @@ class ArmoryExporter:
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in {:0.3f}'.format(time.time() - profile_time) + 's')
+        print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
