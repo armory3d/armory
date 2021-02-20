@@ -446,6 +446,7 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         columnb.enabled = len(wrd.arm_rplist) > 0 and arm.utils.get_rp().rp_renderer == 'Forward'
         columnb.prop(mat, 'arm_receive_shadow')
+        layout.prop(mat, 'arm_ignore_irradiance')
         layout.prop(mat, 'arm_two_sided')
         columnb = layout.column()
         columnb.enabled = not mat.arm_two_sided

@@ -268,6 +268,9 @@ def make_deferred(con_mesh, rpasses):
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[2].rg = vec2(posa - posb);')
 
+        if mat_state.material.arm_ignore_irradiance:
+            frag.write('fragColor[2].b = 1.0;')
+
     return con_mesh
 
 def make_raytracer(con_mesh):

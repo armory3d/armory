@@ -367,7 +367,18 @@ def build():
         assets.add_khafile_def('rp_chromatic_aberration')
         assets.add_shader_pass('chromatic_aberration_pass')
 
-    gbuffer2 = '_Veloc' in wrd.world_defs
+    ignoreIrr = False
+
+    for obj in bpy.data.objects:
+        if obj.type == "MESH":
+            for slot in obj.material_slots:
+                mat = slot.material
+                if mat.arm_ignore_irradiance:
+                    ignoreIrr = True
+
+    if ignoreIrr:
+        wrd.world_defs += '_IgnoreIrr'
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'
