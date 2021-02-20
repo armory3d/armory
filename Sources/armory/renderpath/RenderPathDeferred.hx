@@ -665,6 +665,7 @@ class RenderPathDeferred {
 
 		#if rp_blending
 		{
+			path.setTarget("tex");
 			path.drawMeshes("blend");
 		}
 		#end
