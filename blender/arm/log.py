@@ -54,7 +54,7 @@ def info(text):
     info_text = format_text(text)
 
 def print_warn(text):
-    log('Warning: ' + text, WARN)
+    log('WARNING: ' + text, WARN)
 
 def warn(text):
     global num_warnings

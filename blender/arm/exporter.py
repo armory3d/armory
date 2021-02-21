@@ -1964,7 +1964,7 @@ class ArmoryExporter:
                 self.output['world_datas'].append(out_world)
 
         elif arm.utils.get_rp().rp_background == 'World':
-            log.warn(f'Scene "{self.scene.name}" is missing a world, some render targets will not be cleared!')
+            log.warn(f'Scene "{self.scene.name}" is missing a world, some render targets will not be cleared')
 
     def export_objects(self, scene):
         """Exports all supported blender objects.
@@ -2109,7 +2109,7 @@ class ArmoryExporter:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
-                    log.warn('No camera found in active scene')
+                    log.warn(f'Scene "{self.scene.name}" is missing a camera')
 
             self.output['material_datas'] = []
 
@@ -2152,7 +2152,7 @@ class ArmoryExporter:
 
         # No camera found
         if not self.camera_spawned:
-            log.warn('No camera found in active scene layers')
+            log.warn( f'Scene "{self.scene.name}" is missing a camera')
 
         # No camera found, create a default one
         if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
@@ -2186,7 +2186,7 @@ class ArmoryExporter:
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in ' + str(time.time() - profile_time))
+        print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
