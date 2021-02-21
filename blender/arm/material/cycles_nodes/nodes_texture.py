@@ -375,7 +375,7 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     curshader.add_uniform('vec3 sunDir', link='_sunDirection')
 
     planet_radius = 6360e3  # Earth radius used in Blender
-    ray_origin_z = planet_radius + node.altitude * 1000
+    ray_origin_z = planet_radius + node.altitude
 
     d_air = node.air_density
     d_dust = node.dust_density
