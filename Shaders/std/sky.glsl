@@ -6,7 +6,14 @@
  *   Changes to the original implementation:
  *     - r and pSun parameters of nishita_atmosphere() are already normalized
  *     - Some original parameters of nishita_atmosphere() are replaced with pre-defined values
- *     - Implemented air and dust density node parameters (see Blender source)
+ *     - Implemented air, dust and ozone density node parameters (see Blender source)
+ *
+ * Reference for the sun's limb darkening and ozone calculations:
+ * [Hill] Sebastien Hillaire. Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite
+ * (https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf)
+ *
+ * Cycles code used for reference: blender/intern/sky/source/sky_nishita.cpp
+ * (https://github.com/blender/blender/blob/4429b4b77ef6754739a3c2b4fabd0537999e9bdc/intern/sky/source/sky_nishita.cpp)
  */
 
 #ifndef _SKY_GLSL_
@@ -29,7 +36,20 @@
 #define nishita_mie_dir 0.76 // Aerosols anisotropy ("direction")
 #define nishita_mie_dir_sq 0.5776 // Squared aerosols anisotropy
 
+// The ozone absorption coefficients are taken from Cycles code.
+// Because Cycles calculates 21 wavelengths, we use the coefficients
+// which are closest to the RGB wavelengths (645nm, 510nm, 440nm).
+// Precalculating values by simulating Blender's spec_to_xyz() function
+// to include all 21 wavelengths gave unrealistic results
+#define nishita_ozone_coeff vec3(1.59051840791988e-6, 0.00000096707041180970, 0.00000007309568762914)
+
+// Values from [Hill: 60]
 #define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
+
+/* Approximates the density of ozone for a given sample height. Values taken from Cycles code. */
+float nishita_density_ozone(const float height) {
+	return (height < 10000.0 || height >= 40000.0) ? 0.0 : (height < 25000.0 ? (height - 10000.0) / 15000.0 : -((height - 40000.0) / 15000.0));
+}
 
 /* ray-sphere intersection that assumes
  * the sphere is centered at the origin.
@@ -52,9 +72,9 @@ vec2 nishita_rsi(const vec3 r0, const vec3 rd, const float sr) {
  * r0: ray origin
  * pSun: normalized sun direction
  * rPlanet: planet radius
- * density: (air density, dust density)
+ * density: (air density, dust density, ozone density)
  */
-vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet, const vec2 density) {
+vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet, const vec3 density) {
 	// Calculate the step size of the primary ray.
 	vec2 p = nishita_rsi(r0, r, nishita_atmo_radius);
 	if (p.x > p.y) return vec3(0,0,0);
@@ -102,8 +122,7 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		float jTime = 0.0;
 
 		// Initialize optical depth accumulators for the secondary ray.
-		float jOdRlh = 0.0;
-		float jOdMie = 0.0;
+		vec3 jODepth = vec3(0.0); // (Rayleigh, Mie, ozone)
 
 		// Sample the secondary ray.
 		for (int j = 0; j < nishita_jSteps; j++) {
@@ -115,15 +134,22 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 			float jHeight = length(jPos) - rPlanet;
 
 			// Accumulate the optical depth.
-			jOdRlh += exp(-jHeight / nishita_rayleigh_scale) * density.x * jStepSize;
-			jOdMie += exp(-jHeight / nishita_mie_scale) * density.y * jStepSize;
+			jODepth += vec3(
+				exp(-jHeight / nishita_rayleigh_scale) * density.x * jStepSize,
+				exp(-jHeight / nishita_mie_scale) * density.y * jStepSize,
+				nishita_density_ozone(jHeight) * density.z * jStepSize
+			);
 
 			// Increment the secondary ray time.
 			jTime += jStepSize;
 		}
 
 		// Calculate attenuation.
-		vec3 attn = exp(-(nishita_mie_coeff * (iOdMie + jOdMie) + nishita_rayleigh_coeff * (iOdRlh + jOdRlh)));
+		vec3 attn = exp(-(
+			nishita_mie_coeff * (iOdMie + jODepth.y)
+			+ (nishita_rayleigh_coeff) * (iOdRlh + jODepth.x)
+			+ nishita_ozone_coeff * jODepth.z
+		));
 
 		// Accumulate scattering.
 		totalRlh += odStepRlh * attn;
@@ -142,9 +168,7 @@ vec3 sun_disk(const vec3 n, const vec3 light_dir, const float disk_size, const f
 	float dist = distance(n, light_dir) / disk_size;
 
 	// Darken the edges of the sun
-	// Reference: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-	// (Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite by Sebastien Hillaire)
-	// Page 28, Page 60 (Code from [Nec96])
+	// [Hill: 28, 60] (code from [Nec96])
 	float invDist = 1.0 - dist;
 	float mu = sqrt(invDist * invDist);
 	vec3 limb_darkening = 1.0 - (1.0 - pow(vec3(mu), sun_limb_darkening_col));

@@ -377,11 +377,7 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     planet_radius = 6360e3  # Earth radius used in Blender
     ray_origin_z = planet_radius + node.altitude
 
-    d_air = node.air_density
-    d_dust = node.dust_density
-    # Todo: Implement ozone density (ignored for now)
-    # d_ozone = node.ozone_density
-    density = c.to_vec2((d_air, d_dust))
+    density = c.to_vec3((node.air_density, node.dust_density, node.ozone_density))
 
     sun = ''
     if node.sun_disc:
