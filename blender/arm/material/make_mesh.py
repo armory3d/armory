@@ -268,6 +268,9 @@ def make_deferred(con_mesh, rpasses):
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[2].rg = vec2(posa - posb);')
 
+        if mat_state.material.arm_ignore_irradiance:
+            frag.write('fragColor[2].b = 1.0;')
+
     return con_mesh
 
 def make_raytracer(con_mesh):
@@ -572,13 +575,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     arm_discard = mat_state.material.arm_discard
     make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
+    
+    blend = mat_state.material.arm_blending
 
     vert = con_mesh.vert
     frag = con_mesh.frag
     tese = con_mesh.tese
 
     if parse_opacity or arm_discard:
-        if arm_discard:
+        if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
@@ -587,7 +592,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    blend = mat_state.material.arm_blending
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
