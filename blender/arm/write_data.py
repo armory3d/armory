@@ -253,6 +253,9 @@ project.addSources('Sources');
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
             khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
+    
+        if not is_publish and state.target == 'html5':
+            khafile.write("project.addParameter('--debug');\n")
 
         if wrd.arm_verbose_output:
             khafile.write("project.addParameter('--times');\n")
