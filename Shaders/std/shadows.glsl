@@ -44,9 +44,13 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 	// downscale uv a little to hide seams
 	// transform coordinates from clip space to texture space
 	#ifndef _FlipY
-	return uv * 0.9976 * ma + 0.5;
+		return uv * 0.9976 * ma + 0.5;
 	#else
-	return vec2(uv.x * ma, uv.y * -ma) * 0.9976 + 0.5;
+		#ifdef HLSL
+			return uv * 0.9976 * ma + 0.5;
+		#else
+			return vec2(uv.x * ma, uv.y * -ma) * 0.9976 + 0.5;
+		#endif
 	#endif
 }
 #endif

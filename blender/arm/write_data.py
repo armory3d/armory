@@ -537,7 +537,7 @@ def write_compiledglsl(defs, make_variants):
 #endif
 """)
 
-        if state.target == 'html5':
+        if state.target == 'html5' or arm.utils.get_gapi() == 'direct3d11':
             f.write("#define _FlipY\n")
 
         f.write("""const float PI = 3.1415926535;
