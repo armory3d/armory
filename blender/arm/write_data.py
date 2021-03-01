@@ -537,6 +537,9 @@ def write_compiledglsl(defs, make_variants):
 #endif
 """)
 
+        if state.target == 'html5':
+            f.write("#define _FlipY\n")
+
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);

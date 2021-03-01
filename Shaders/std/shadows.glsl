@@ -42,7 +42,12 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 		uv = vec2(dir.x < 0.0 ? dir.z : -dir.z, -dir.y);
 	}
 	// downscale uv a little to hide seams
+	// transform coordinates from clip space to texture space
+	#ifndef _FlipY
 	return uv * 0.9976 * ma + 0.5;
+	#else
+	return vec2(uv.x * ma, uv.y * -ma) * 0.9976 + 0.5;
+	#endif
 }
 #endif
 
@@ -189,7 +194,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 
 	vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
 	vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 
@@ -199,7 +204,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
@@ -207,7 +212,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -215,7 +220,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -223,7 +228,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -231,7 +236,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -239,7 +244,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, -1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -247,7 +252,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 0.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
@@ -255,7 +260,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
 	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _InvY
+	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 	result += texture(shadowMap, vec3(uvtiled, compare));
