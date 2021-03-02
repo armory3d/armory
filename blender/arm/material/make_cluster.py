@@ -4,7 +4,7 @@ def write(vert, frag):
     wrd = bpy.data.worlds['Arm']
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
+    is_single_atlas = '_SingleAtlas' in wrd.world_defs
 
     frag.add_include_front('std/clusters.glsl')
     frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
@@ -17,6 +17,8 @@ def write(vert, frag):
         if is_shadows_atlas:
             if not is_single_atlas:
                 frag.add_uniform('sampler2DShadow shadowMapAtlasPoint', included=True)
+            else:
+                frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
@@ -36,9 +38,12 @@ def write(vert, frag):
         frag.write('int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);')
         frag.write('int numPoints = numLights - numSpots;')
         if is_shadows:
-            if is_shadows_atlas and not is_single_atlas:
-                frag.add_uniform(f'sampler2DShadow shadowMapAtlasSpot', included=True)
-            elif not is_shadows_atlas:
+            if is_shadows_atlas:
+                if not is_single_atlas:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlasSpot', included=True)
+                else:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
+            else:
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
             # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
             frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
