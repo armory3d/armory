@@ -358,9 +358,9 @@ def make_forward_mobile(con_mesh):
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
     if is_shadows_atlas:
+        is_single_atlas = '_SingleAtlas' in wrd.world_defs
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
     frag.write('vec3 direct = vec3(0.0);')
@@ -575,7 +575,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     arm_discard = mat_state.material.arm_discard
     make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
-    
+
     blend = mat_state.material.arm_blending
 
     vert = con_mesh.vert

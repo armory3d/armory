@@ -223,6 +223,9 @@ class Shader:
             self.outs.append(s)
 
     def add_uniform(self, s, link=None, included=False, top=False):
+        # prevent duplicates
+        if s in self.uniforms or s in self.uniforms_top:
+            return
         ar = s.split(' ')
         # layout(RGBA8) image3D voxels
         utype = ar[-2]
