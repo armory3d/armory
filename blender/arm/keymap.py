@@ -17,6 +17,8 @@ def register():
 
     km = addon_keyconfig.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
     km.keymap_items.new(props_ui.ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
+    km.keymap_items.new("tlm.build_lightmaps", type='F6', value='PRESS')
+    km.keymap_items.new("tlm.clean_lightmaps", type='F7', value='PRESS')
     arm_keymaps.append(km)
 
 def unregister():
