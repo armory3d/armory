@@ -373,8 +373,11 @@ def build():
         if obj.type == "MESH":
             for slot in obj.material_slots:
                 mat = slot.material
-                if mat.arm_ignore_irradiance:
-                    ignoreIrr = True
+
+                if mat: #Check if not NoneType
+
+                    if mat.arm_ignore_irradiance:
+                        ignoreIrr = True
 
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
