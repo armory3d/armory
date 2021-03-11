@@ -19,6 +19,9 @@
 #ifndef _SKY_GLSL_
 #define _SKY_GLSL_
 
+// OpenGl ES doesn't support 1D textures so we use a 1 px height sampler2D here...
+uniform sampler2D nishitaLUT;
+
 #define PI 3.141592
 
 #define nishita_iSteps 16
@@ -45,6 +48,8 @@
 
 // Values from [Hill: 60]
 #define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
+
+#define heightToLUT(h) (textureLod(nishitaLUT, vec2(clamp(h * (1 / 60000.0), 0.0, 1.0), 0.0), 0.0).xyz * 10.0)
 
 /* Approximates the density of ozone for a given sample height. Values taken from Cycles code. */
 float nishita_density_ozone(const float height) {
@@ -108,8 +113,9 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		float iHeight = length(iPos) - rPlanet;
 
 		// Calculate the optical depth of the Rayleigh and Mie scattering for this step.
-		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * density.x * iStepSize;
-		float odStepMie = exp(-iHeight / nishita_mie_scale) * density.y * iStepSize;
+		vec3 iLookup = heightToLUT(iHeight);
+		float odStepRlh = iLookup.x * iStepSize;
+		float odStepMie = iLookup.y * iStepSize;
 
 		// Accumulate optical depth.
 		iOdRlh += odStepRlh;
@@ -134,11 +140,8 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 			float jHeight = length(jPos) - rPlanet;
 
 			// Accumulate the optical depth.
-			jODepth += vec3(
-				exp(-jHeight / nishita_rayleigh_scale) * density.x * jStepSize,
-				exp(-jHeight / nishita_mie_scale) * density.y * jStepSize,
-				nishita_density_ozone(jHeight) * density.z * jStepSize
-			);
+			vec3 jLookup = heightToLUT(jHeight);
+			jODepth += jLookup * jStepSize;
 
 			// Increment the secondary ray time.
 			jTime += jStepSize;

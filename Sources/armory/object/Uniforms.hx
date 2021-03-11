@@ -19,8 +19,12 @@ class Uniforms {
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
+		if (link == "_nishitaLUT") {
+			if (armory.renderpath.Nishita.data == null) armory.renderpath.Nishita.recompute(Scene.active.world);
+			return armory.renderpath.Nishita.data.optDepthLUT;
+		}
 		#if arm_ltc
-		if (link == "_ltcMat") {
+		else if (link == "_ltcMat") {
 			if (armory.data.ConstData.ltcMatTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMatTex;
 		}
