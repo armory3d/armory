@@ -336,12 +336,12 @@ def fetch_script_props(filename: str):
 
         if p_modifiers is not None:
             if 'static' in p_modifiers:
-                script_warnings[name].append((p_identifier, 'static properties may result in unwanted behaviour!'))
+                script_warnings[name].append((p_identifier, '`static` modifier might cause unwanted behaviour!'))
             if 'inline' in p_modifiers:
-                script_warnings[name].append((p_identifier, 'inline properties are not supported!'))
+                script_warnings[name].append((p_identifier, '`inline` modifier is not supported!'))
                 continue
             if 'final' in p_modifiers:
-                script_warnings[name].append((p_identifier, 'final properties are not supported!'))
+                script_warnings[name].append((p_identifier, '`final` modifier is not supported!'))
                 continue
 
         # Property type is annotated
@@ -353,7 +353,7 @@ def fetch_script_props(filename: str):
 
             type_default_val = get_type_default_value(p_type)
             if type_default_val is None:
-                script_warnings[name].append((p_identifier, f'unsupported type "{p_type}"!'))
+                script_warnings[name].append((p_identifier, f'unsupported type `{p_type}`!'))
                 continue
 
             # Default value exists
