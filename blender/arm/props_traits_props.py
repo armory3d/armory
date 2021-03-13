@@ -32,6 +32,7 @@ def filter_objects(item, b_object):
 
 
 class ArmTraitPropWarning(bpy.types.PropertyGroup):
+    propName: StringProperty(name="Property Name")
     warning: StringProperty(name="Warning")
 
 
