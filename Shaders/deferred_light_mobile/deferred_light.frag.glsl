@@ -34,7 +34,7 @@ uniform vec3 eye;
 uniform vec3 eyeLook;
 
 #ifdef _Clusters
-uniform vec4 lightsArray[maxLights * 2];
+uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
 	uniform vec4 lightsArraySpot[maxLights];
 	#endif
@@ -255,18 +255,19 @@ void main() {
 			n,
 			v,
 			dotNV,
-			lightsArray[li * 2].xyz, // lp
-			lightsArray[li * 2 + 1].xyz, // lightCol
+			lightsArray[li * 3].xyz, // lp
+			lightsArray[li * 3 + 1].xyz, // lightCol
 			albedo,
 			roughness,
 			occspec.y,
 			f0
 			#ifdef _ShadowMap
-				, li, lightsArray[li * 2].w, true // bias
+				// light index, shadow bias, cast_shadows
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
 			#endif
 			#ifdef _Spot
-			, lightsArray[li * 2 + 1].w != 0.0
-			, lightsArray[li * 2 + 1].w // cutoff
+			, lightsArray[li * 3 + 2].y != 0.0
+			, lightsArray[li * 3 + 2].y // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
 			, lightsArraySpot[li].xyz // spotDir
 			#endif

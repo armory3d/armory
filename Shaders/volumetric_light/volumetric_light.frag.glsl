@@ -12,7 +12,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D snoise;
 
 #ifdef _Clusters
-uniform vec4 lightsArray[maxLights * 2];
+uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
 	uniform vec4 lightsArraySpot[maxLights];
 	#endif
