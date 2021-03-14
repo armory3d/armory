@@ -297,13 +297,13 @@ script_props = {}
 script_props_defaults = {}
 script_warnings: Dict[str, List[Tuple[str, str]]] = {}  # Script name -> List of (identifier, warning message)
 
-# See https://regex101.com/r/bbrCzN/7
+# See https://regex101.com/r/bbrCzN/8
 RX_MODIFIERS = r'(?P<modifiers>(?:public\s+|private\s+|static\s+|inline\s+|final\s+)*)?'  # Optional modifiers
 RX_IDENTIFIER = r'(?P<identifier>[_$a-z]+[_a-z0-9]*)'  # Variable name, follow Haxe rules
 RX_TYPE = r'(?::\s+(?P<type>[_a-z]+[\._a-z0-9]*))?'  # Optional type annotation
 RX_VALUE = r'(?:\s*=\s*(?P<value>(?:\".*\")|(?:[^;]+)|))?'  # Optional default value
 
-PROP_REGEX_RAW = fr'@prop\s+{RX_MODIFIERS}var\s+{RX_IDENTIFIER}{RX_TYPE}{RX_VALUE};'
+PROP_REGEX_RAW = fr'@prop\s+{RX_MODIFIERS}(?P<attr_type>var|final)\s+{RX_IDENTIFIER}{RX_TYPE}{RX_VALUE};'
 PROP_REGEX = re.compile(PROP_REGEX_RAW, re.IGNORECASE)
 def fetch_script_props(filename: str):
     """Parses @prop declarations from the given Haxe script."""
@@ -340,8 +340,8 @@ def fetch_script_props(filename: str):
             if 'inline' in p_modifiers:
                 script_warnings[name].append((p_identifier, '`inline` modifier is not supported!'))
                 continue
-            if 'final' in p_modifiers:
-                script_warnings[name].append((p_identifier, '`final` modifier is not supported!'))
+            if 'final' in p_modifiers or match.group('attr_type') == 'final':
+                script_warnings[name].append((p_identifier, '`final` properties are not supported!'))
                 continue
 
         # Property type is annotated
