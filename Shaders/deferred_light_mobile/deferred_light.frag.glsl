@@ -29,6 +29,9 @@ uniform int envmapNumMipmaps;
 uniform vec3 backgroundCol;
 #endif
 
+#ifdef _SMSizeUniform
+//!uniform vec2 smSizeUniform;
+#endif
 uniform vec2 cameraProj;
 uniform vec3 eye;
 uniform vec3 eyeLook;

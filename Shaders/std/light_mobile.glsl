@@ -8,38 +8,38 @@
 #endif
 
 #ifdef _ShadowMap
-#ifdef _SinglePoint
-	#ifdef _Spot
-	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot[1];
-	#else
-	uniform samplerCubeShadow shadowMapPoint[1];
-	uniform vec2 lightProj;
+	#ifdef _SinglePoint
+		#ifdef _Spot
+		uniform sampler2DShadow shadowMapSpot[1];
+		uniform mat4 LWVPSpot[1];
+		#else
+		uniform samplerCubeShadow shadowMapPoint[1];
+		uniform vec2 lightProj;
+		#endif
 	#endif
-#endif
-#ifdef _Clusters
-	#ifdef _SingleAtlas
-	//!uniform sampler2DShadow shadowMapAtlas;
-	#endif
-	uniform vec2 lightProj;
-	#ifdef _ShadowMapAtlas
-	#ifndef _SingleAtlas
-	uniform sampler2DShadow shadowMapAtlasPoint;
-	#endif
-	#else
-	uniform samplerCubeShadow shadowMapPoint[4];
-	#endif
-	#ifdef _Spot
+	#ifdef _Clusters
+		#ifdef _SingleAtlas
+		//!uniform sampler2DShadow shadowMapAtlas;
+		#endif
+		uniform vec2 lightProj;
 		#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
-		uniform sampler2DShadow shadowMapAtlasSpot;
+		uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
 		#else
-		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+		uniform samplerCubeShadow shadowMapPoint[4];
 		#endif
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#ifdef _Spot
+			#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			uniform sampler2DShadow shadowMapAtlasSpot;
+			#endif
+			#else
+			uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+			#endif
+			uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#endif
 	#endif
-#endif
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
@@ -102,10 +102,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _ShadowMap
-	#ifndef _Spot
+
 		if (receiveShadow) {
 			#ifdef _SinglePoint
+			#ifndef _Spot
 			direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+			#endif
 			#endif
 			#ifdef _Clusters
 				#ifdef _ShadowMapAtlas
@@ -125,7 +127,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#endif
 			#endif
 		}
-	#endif
 	#endif
 
 	return direct;

@@ -108,6 +108,11 @@
 					"ifdef": ["_SSRS"]
 				},
 				{
+					"name": "smSizeUniform",
+					"link": "_shadowMapSize",
+					"ifdef": ["_SMSizeUniform"]
+				},
+				{
 					"name": "lightProj",
 					"link": "_lightPlaneProj",
 					"ifdef": ["_ShadowMap"]
