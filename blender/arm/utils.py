@@ -4,7 +4,7 @@ import os
 import platform
 import re
 import subprocess
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 import webbrowser
 import shlex
 import locale
@@ -292,116 +292,97 @@ def fetch_bundled_script_names():
         for file in glob.glob('*.hx'):
             wrd.arm_bundled_scripts_list.add().name = file.rsplit('.', 1)[0]
 
+
 script_props = {}
 script_props_defaults = {}
-script_warnings = {}
-def fetch_script_props(file):
-    with open(file, encoding="utf-8") as f:
-        name = file.rsplit('.', 1)[0]
-        if 'Sources' in name:
-            name = name[name.index('Sources') + 8:]
-        if '/' in name:
-            name = name.replace('/', '.')
-        if '\\' in file:
-            name = name.replace('\\', '.')
+script_warnings: Dict[str, List[Tuple[str, str]]] = {}  # Script name -> List of (identifier, warning message)
 
-        script_props[name] = []
-        script_props_defaults[name] = []
-        script_warnings[name] = []
+# See https://regex101.com/r/bbrCzN/8
+RX_MODIFIERS = r'(?P<modifiers>(?:public\s+|private\s+|static\s+|inline\s+|final\s+)*)?'  # Optional modifiers
+RX_IDENTIFIER = r'(?P<identifier>[_$a-z]+[_a-z0-9]*)'  # Variable name, follow Haxe rules
+RX_TYPE = r'(?::\s+(?P<type>[_a-z]+[\._a-z0-9]*))?'  # Optional type annotation
+RX_VALUE = r'(?:\s*=\s*(?P<value>(?:\".*\")|(?:[^;]+)|))?'  # Optional default value
 
-        lines = f.read().splitlines()
+PROP_REGEX_RAW = fr'@prop\s+{RX_MODIFIERS}(?P<attr_type>var|final)\s+{RX_IDENTIFIER}{RX_TYPE}{RX_VALUE};'
+PROP_REGEX = re.compile(PROP_REGEX_RAW, re.IGNORECASE)
+def fetch_script_props(filename: str):
+    """Parses @prop declarations from the given Haxe script."""
+    with open(filename, 'r', encoding='utf-8') as sourcefile:
+        source = sourcefile.read()
 
-        # Read next line
-        read_prop = False
-        for lineno, line in enumerate(lines):
-            # enumerate() starts with 0
-            lineno += 1
+    if source == '':
+        return
 
-            if not read_prop:
-                read_prop = line.lstrip().startswith('@prop')
+    name = filename.rsplit('.', 1)[0]
+
+    # Convert the name into a package path relative to the "Sources" dir
+    if 'Sources' in name:
+        name = name[name.index('Sources') + 8:]
+    if '/' in name:
+        name = name.replace('/', '.')
+    if '\\' in filename:
+        name = name.replace('\\', '.')
+
+    script_props[name] = []
+    script_props_defaults[name] = []
+    script_warnings[name] = []
+
+    for match in re.finditer(PROP_REGEX, source):
+
+        p_modifiers: Optional[str] = match.group('modifiers')
+        p_identifier: str = match.group('identifier')
+        p_type: Optional[str] = match.group('type')
+        p_default_val: Optional[str] = match.group('value')
+
+        if p_modifiers is not None:
+            if 'static' in p_modifiers:
+                script_warnings[name].append((p_identifier, '`static` modifier might cause unwanted behaviour!'))
+            if 'inline' in p_modifiers:
+                script_warnings[name].append((p_identifier, '`inline` modifier is not supported!'))
+                continue
+            if 'final' in p_modifiers or match.group('attr_type') == 'final':
+                script_warnings[name].append((p_identifier, '`final` properties are not supported!'))
                 continue
 
-            if read_prop:
-                if 'var ' in line:
-                    # Line of code
-                    code_ref = line.split('var ')[1].split(';')[0]
-                else:
-                    script_warnings[name].append(f"Line {lineno - 1}: Unused @prop")
-                    read_prop = line.lstrip().startswith('@prop')
-                    continue
+        # Property type is annotated
+        if p_type is not None:
+            if p_type.startswith("iron.object."):
+                p_type = p_type[12:]
+            elif p_type.startswith("iron.math."):
+                p_type = p_type[10:]
 
-                valid_prop = False
+            type_default_val = get_type_default_value(p_type)
+            if type_default_val is None:
+                script_warnings[name].append((p_identifier, f'unsupported type `{p_type}`!'))
+                continue
 
-                # Declaration = Assignment;
-                var_sides = code_ref.split('=')
-                # DeclarationName: DeclarationType
-                decl_sides = var_sides[0].split(':')
+            # Default value exists
+            if p_default_val is not None:
+                # Remove string quotes
+                p_default_val = p_default_val.replace('\'', '').replace('"', '')
+            else:
+                p_default_val = type_default_val
 
-                prop_name = decl_sides[0].strip()
+        # Default value is given instead, try to infer the properties type from it
+        elif p_default_val is not None:
+            p_type = get_prop_type_from_value(p_default_val)
 
-                if 'static ' in line:
-                    # Static properties can be overwritten multiple times
-                    # from multiple property lists
-                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Static properties may result in undefined behaviours!")
+            # Type is not recognized
+            if p_type is None:
+                script_warnings[name].append((p_identifier, 'could not infer property type from given value!'))
+                continue
+            if p_type == "String":
+                p_default_val = p_default_val.replace('\'', '').replace('"', '')
 
-                # If the prop type is annotated in the code
-                # (= declaration has two parts)
-                if len(decl_sides) > 1:
-                    prop_type = decl_sides[1].strip()
-                    if prop_type.startswith("iron.object."):
-                        prop_type = prop_type[12:]
-                    elif prop_type.startswith("iron.math."):
-                        prop_type = prop_type[10:]
+        else:
+            script_warnings[name].append((p_identifier, 'missing type or default value!'))
+            continue
 
-                    # Default value exists
-                    if len(var_sides) > 1 and var_sides[1].strip() != "":
-                        # Type is not supported
-                        if get_type_default_value(prop_type) is None:
-                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
-                            read_prop = False
-                            continue
+        # Register prop
+        prop = (p_identifier, p_type)
+        script_props[name].append(prop)
+        script_props_defaults[name].append(p_default_val)
 
-                        prop_value = var_sides[1].replace('\'', '').replace('"', '').strip()
-
-                    else:
-                        prop_value = get_type_default_value(prop_type)
-
-                        # Type is not supported
-                        if prop_value is None:
-                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
-                            read_prop = False
-                            continue
-
-                    valid_prop = True
-
-                # Default value exists
-                elif len(var_sides) > 1 and var_sides[1].strip() != "":
-                    prop_value = var_sides[1].strip()
-                    prop_type = get_prop_type_from_value(prop_value)
-
-                    # Type is not recognized
-                    if prop_type is None:
-                        script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Property type not recognized!")
-                        read_prop = False
-                        continue
-                    if prop_type == "String":
-                        prop_value = prop_value.replace('\'', '').replace('"', '')
-
-                    valid_prop = True
-
-                else:
-                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Not a valid property!")
-                    read_prop = False
-                    continue
-
-                prop = (prop_name, prop_type)
-
-                # Register prop
-                if valid_prop:
-                    script_props[name].append(prop)
-                    script_props_defaults[name].append(prop_value)
-
-                read_prop = False
 
 def get_prop_type_from_value(value: str):
     """
@@ -555,7 +536,8 @@ def fetch_prop(o):
             item.arm_traitpropswarnings.clear()
             for warning in warnings:
                 entry = item.arm_traitpropswarnings.add()
-                entry.warning = warning
+                entry.propName = warning[0]
+                entry.warning = warning[1]
 
 def fetch_bundled_trait_props():
     # Bundled script props

@@ -882,9 +882,10 @@ def draw_traits(layout, obj, is_object):
                 if item.arm_traitpropswarnings:
                     box = layout.box()
                     box.label(text=f"Warnings ({len(item.arm_traitpropswarnings)}):", icon="ERROR")
+                    col = box.column(align=True)
 
                     for warning in item.arm_traitpropswarnings:
-                        box.label(text=warning.warning)
+                        col.label(text=f'"{warning.propName}": {warning.warning}')
 
                 propsrow = layout.row()
                 propsrows = max(len(item.arm_traitpropslist), 6)
