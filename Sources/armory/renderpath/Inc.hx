@@ -57,7 +57,11 @@ class Inc {
 					break;
 				if (LightObject.discardLightCulled(light)) continue;
 				if (light.data.raw.type == "point") {
-					for(k in 0...light.tileOffsetX.length) {
+					if (!light.data.raw.cast_shadow) {
+						j += 4 * 6;
+						continue;
+					}
+					for(k in 0...6) {
 						LightObject.pointLightsData[j	 ] = light.tileOffsetX[k]; // posx
 						LightObject.pointLightsData[j + 1] = light.tileOffsetY[k]; // posy
 						LightObject.pointLightsData[j + 2] = light.tileScale[k]; // tile scale factor relative to atlas
