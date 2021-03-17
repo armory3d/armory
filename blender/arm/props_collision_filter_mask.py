@@ -3,29 +3,28 @@ from bpy.props import *
 from bpy.types import Panel
 
 class ARM_PT_RbCollisionFilterMaskPanel(bpy.types.Panel):
-    bl_label = "Armory Collision Filter Mask"
+    bl_label = "Collections Filter Mask"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "physics"
-    
+    bl_parent_id = "ARM_PT_PhysicsPropsPanel"
+
+    @classmethod
+    def poll(self, context):
+        obj = context.object
+        if obj is None:
+            return False
+        return obj.rigid_body is not None
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        obj = bpy.context.object
-        if obj == None:
-            return
-        if obj.rigid_body != None:
-            layout.prop(obj, 'arm_rb_collision_filter_mask')
+        obj = context.object
+        layout.prop(obj, 'arm_rb_collision_filter_mask', text="", expand=True)
 
 def register():
     bpy.utils.register_class(ARM_PT_RbCollisionFilterMaskPanel)
-    bpy.types.Object.arm_rb_collision_filter_mask = bpy.props.BoolVectorProperty(
-        name="Collision Filter Mask",
-        default=(True, False, False,False,False,False, False, False,False,False,False, False, False,False,False,False, False, False,False,False),
-        size=20,
-        subtype='LAYER')
 
 def unregister():
     bpy.utils.unregister_class(ARM_PT_RbCollisionFilterMaskPanel)

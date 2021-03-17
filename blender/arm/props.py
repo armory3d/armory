@@ -280,6 +280,12 @@ def init_properties():
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
+    bpy.types.Object.arm_rb_collision_filter_mask = bpy.props.BoolVectorProperty(
+            name="Collision Collections Filter Mask",
+            description="Collision collections rigid body interacts with",
+            default=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False),
+            size=20,
+            subtype='LAYER')
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')
