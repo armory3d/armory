@@ -1,11 +1,19 @@
-import bpy
+import bpy, os
 from bpy.props import *
+from .. utility import utility
+
+def transfer_load():
+    load_folder = bpy.context.scene.TLM_SceneProperties.tlm_load_folder
+    lightmap_folder = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+    print(load_folder)
+    print(lightmap_folder)
+    #transfer_assets(True, load_folder, lightmap_folder)
 
 class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     engines = [('Cycles', 'Cycles', 'Use Cycles for lightmapping')]
 
-    engines.append(('LuxCoreRender', 'LuxCoreRender', 'Use LuxCoreRender for lightmapping'))
+    #engines.append(('LuxCoreRender', 'LuxCoreRender', 'Use LuxCoreRender for lightmapping'))
     #engines.append(('OctaneRender', 'Octane Render', 'Use Octane Render for lightmapping'))
 
     tlm_atlas_pointer : StringProperty(
@@ -112,7 +120,7 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     #FILTERING SETTINGS GROUP
     tlm_filtering_use : BoolProperty(
-        name="Enable Filtering", 
+        name="Enable denoising", 
         description="Enable denoising for lightmaps", 
         default=False)
 
@@ -182,6 +190,17 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         min=1, 
         max=5)
 
+    tlm_clamp_hdr : BoolProperty(
+        name="Enable HDR Clamp", 
+        description="Clamp HDR Value", 
+        default=False)
+
+    tlm_clamp_hdr_value : IntProperty(
+        name="HDR Clamp value", 
+        default=10, 
+        min=0, 
+        max=20)
+
     #Encoding properties
     tlm_encoding_use : BoolProperty(
         name="Enable encoding", 
@@ -197,12 +216,13 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     encoding_modes_1 = [('RGBM', 'RGBM', '8-bit HDR encoding. Good for compatibility, good for memory but has banding issues.'),
                     ('RGBD', 'RGBD', '8-bit HDR encoding. Similar to RGBM.'),
-                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.')]
+                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.'),
+                    ('SDR', 'SDR', '8-bit flat encoding.')]
 
-    encoding_modes_2 = [('RGBM', 'RGBM', '8-bit HDR encoding. Good for compatibility, good for memory but has banding issues.'),
-                ('RGBD', 'RGBD', '8-bit HDR encoding. Similar to RGBM.'),
+    encoding_modes_2 = [('RGBD', 'RGBD', '8-bit HDR encoding. Similar to RGBM.'),
                     ('LogLuv', 'LogLuv', '8-bit HDR encoding. Different.'),
-                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.')]
+                    ('HDR', 'HDR', '32-bit HDR encoding. Best quality, but high memory usage and not compatible with all devices.'),
+                    ('SDR', 'SDR', '8-bit flat encoding.')]
     
     tlm_encoding_mode_a : EnumProperty(
         items = encoding_modes_1,
@@ -275,8 +295,7 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
     tlm_mesh_lightmap_unwrap_mode : EnumProperty(
         items = [('Lightmap', 'Lightmap', 'TODO'),
                  ('SmartProject', 'Smart Project', 'TODO'),
-                 ('CopyExisting', 'Copy Existing', 'TODO'),
-                 ('AtlasGroupA', 'Atlas Group (Prepack)', 'TODO'),
+                 ('AtlasGroupA', 'Atlas Group (Prepack)', 'Attaches the object to a prepack Atlas group. Will overwrite UV map on build.'),
                  ('Xatlas', 'Xatlas', 'TODO')],
                 name = "Unwrap Mode", 
                 description="TODO", 
@@ -317,11 +336,29 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     tlm_metallic_clamp : EnumProperty(
         items = [('ignore', 'Ignore', 'Ignore clamping'),
+                ('skip', 'Skip', 'Skip baking metallic materials'),
                 ('zero', 'Zero', 'Set zero'),
                 ('limit', 'Limit', 'Clamp to 0.9')],
                 name = "Metallic clamping", 
                 description="TODO.", 
                 default="ignore")
+
+    tlm_texture_interpolation : EnumProperty(
+        items = [('Smart', 'Smart', 'Bicubic when magnifying.'),
+                ('Cubic', 'Cubic', 'Cubic interpolation'),
+                ('Closest', 'Closest', 'No interpolation'),
+                ('Linear', 'Linear', 'Linear')],
+                name = "Texture interpolation", 
+                description="Texture interpolation.", 
+                default="Linear")
+
+    tlm_texture_extrapolation : EnumProperty(
+        items = [('REPEAT', 'Repeat', 'Repeat in both direction.'),
+                ('EXTEND', 'Extend', 'Extend by repeating edge pixels.'),
+                ('CLIP', 'Clip', 'Clip to image size')],
+                name = "Texture extrapolation", 
+                description="Texture extrapolation.", 
+                default="EXTEND")
 
     tlm_verbose : BoolProperty(
         name="Verbose", 
@@ -410,3 +447,51 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                 name = "Probe Render Engine", 
                 description="TODO", 
                 default='BLENDER_EEVEE')
+
+    tlm_load_folder : StringProperty(
+        name="Load Folder",
+        description="Load existing lightmaps from folder",
+        subtype="DIR_PATH")
+
+    tlm_utility_set : EnumProperty(
+        items = [('Scene', 'Scene', 'Set for all objects in the scene.'),
+                 ('Selection', 'Selection', 'Set for selected objects.'),
+                 ('Enabled', 'Enabled', 'Set for objects that has been enabled for lightmapping.')],
+                name = "Set", 
+                description="Utility selection set", 
+                default='Scene')
+
+    tlm_resolution_weight : EnumProperty(
+        items = [('Single', 'Single', 'Set a single resolution for all objects.'),
+                 ('Dimension', 'Dimension', 'Distribute resolutions based on object dimensions.'),
+                 ('Surface', 'Surface', 'Distribute resolutions based on mesh surface area.'),
+                 ('Volume', 'Volume', 'Distribute resolutions based on mesh volume.')],
+                name = "Resolution weight", 
+                description="Method for setting resolution value", 
+                default='Single')
+        #Todo add vertex color option
+
+    tlm_resolution_min : EnumProperty(
+        items = [('32', '32', 'TODO'),
+                 ('64', '64', 'TODO'),
+                 ('128', '128', 'TODO'),
+                 ('256', '256', 'TODO'),
+                 ('512', '512', 'TODO'),
+                 ('1024', '1024', 'TODO'),
+                 ('2048', '2048', 'TODO'),
+                 ('4096', '4096', 'TODO')],
+                name = "Minimum resolution", 
+                description="Minimum distributed resolution", 
+                default='32')
+
+    tlm_resolution_max : EnumProperty(
+        items = [('64', '64', 'TODO'),
+                 ('128', '128', 'TODO'),
+                 ('256', '256', 'TODO'),
+                 ('512', '512', 'TODO'),
+                 ('1024', '1024', 'TODO'),
+                 ('2048', '2048', 'TODO'),
+                 ('4096', '4096', 'TODO')],
+                name = "Maximum resolution", 
+                description="Maximum distributed resolution", 
+                default='256')

@@ -1,17 +1,20 @@
 import bpy, os, subprocess, sys, platform, aud, json, datetime, socket
-import threading
+
 from . import encoding, pack
 from . cycles import lightmap, prepare, nodes, cache
+from . luxcore import setup
+from . octane import configure, lightmap2
 from . denoiser import integrated, oidn, optix
 from . filtering import opencv
+from . gui import Viewport
 from .. network import client
+
 from os import listdir
 from os.path import isfile, join
 from time import time, sleep
 from importlib import util
 
 previous_settings = {}
-
 postprocess_shutdown = False
 
 def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
@@ -21,15 +24,31 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
 
     print("Building lightmaps")
 
+    if bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode == "combinedao":
+
+        scene = bpy.context.scene
+
+        if not "tlm_plus_mode" in bpy.app.driver_namespace or bpy.app.driver_namespace["tlm_plus_mode"] == 0:
+            filepath = bpy.data.filepath
+            dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
+            if os.path.isdir(dirpath):
+                for file in os.listdir(dirpath):
+                    os.remove(os.path.join(dirpath + "/" + file))
+            bpy.app.driver_namespace["tlm_plus_mode"] = 1
+            print("Plus Mode")
+
     if bpy.context.scene.TLM_EngineProperties.tlm_bake_mode == "Foreground" or background_mode==True:
 
         global start_time
         start_time = time()
+        bpy.app.driver_namespace["tlm_start_time"] = time()
 
         scene = bpy.context.scene
         sceneProperties = scene.TLM_SceneProperties
 
-        #Timer start here bound to global
+        if not background_mode and bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode != "combinedao":
+            #pass
+            setGui(1)
 
         if check_save():
             print("Please save your file first")
@@ -52,12 +71,6 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
                 self.report({'INFO'}, "Error:Filtering - OpenCV not installed")
                 return{'FINISHED'}
 
-        #TODO DO some resolution change
-        #if checkAtlasSize():
-        #    print("Error: AtlasGroup overflow")
-        #    self.report({'INFO'}, "Error: AtlasGroup overflow - Too many objects")
-        #    return{'FINISHED'}
-
         setMode()
 
         dirpath = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
@@ -66,19 +79,6 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
 
         #Naming check
         naming_check()
-
-        # if sceneProperties.tlm_reset_uv or sceneProperties.tlm_atlas_mode == "Postpack":
-        #     for obj in bpy.data.objects:
-        #         if obj.type == "MESH":
-        #             uv_layers = obj.data.uv_layers
-
-
-
-                    #for uvlayer in uv_layers:
-                    #    if uvlayer.name == "UVMap_Lightmap":
-                    #        uv_layers.remove(uvlayer)
-
-        ## RENDER DEPENDENCY FROM HERE
 
         if sceneProperties.tlm_lightmap_engine == "Cycles":
 
@@ -90,17 +90,13 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
 
         if sceneProperties.tlm_lightmap_engine == "OctaneRender":
 
-            pass
-
-        #Renderer - Store settings
-
-        #Renderer - Set settings
-
-        #Renderer - Config objects, lights, world
+            configure.init(self, previous_settings)
 
         begin_build()
 
     else:
+
+        print("Baking in background")
 
         filepath = bpy.data.filepath
 
@@ -111,22 +107,7 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
         scene = bpy.context.scene
         sceneProperties = scene.TLM_SceneProperties
 
-        #We dynamically load the renderer and denoiser, instead of loading something we don't use
-
-        if sceneProperties.tlm_lightmap_engine == "Cycles":
-
-            pass
-
-        if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
-
-            pass
-
-        if sceneProperties.tlm_lightmap_engine == "OctaneRender":
-
-            pass
-
         #Timer start here bound to global
-
         if check_save():
             print("Please save your file first")
             self.report({'INFO'}, "Please save your file first")
@@ -168,22 +149,11 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
 
             client.connect_client(HOST, PORT, bpy.data.filepath, 0)
 
-            # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            #     s.connect((HOST, PORT))
-            #     message = {
-            #                         "call" : 1,
-            #                         "command" : 1,
-            #                         "enquiry" : 0,
-            #                         "args" : bpy.data.filepath
-            #             }
-
-            #     s.sendall(json.dumps(message).encode())
-            #     data = s.recv(1024)
-            #     print(data.decode())
-
             finish_assemble()
 
         else:
+
+            print("Background driver process")
 
             bpy.app.driver_namespace["alpha"] = 0
 
@@ -195,6 +165,8 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
             bpy.app.timers.register(distribute_building)
 
 def distribute_building():
+
+    print("Distributing lightmap building")
 
     #CHECK IF THERE'S AN EXISTING SUBPROCESS 
 
@@ -215,8 +187,16 @@ def distribute_building():
         with open(os.path.join(write_directory, "process.tlm"), 'w') as file:
             json.dump(process_status, file, indent=2)
 
-        bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([sys.executable,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-
+        if (2, 91, 0) > bpy.app.version:
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([sys.executable,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stdout=subprocess.PIPE)
+            else:
+                bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([sys.executable,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        else:
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([bpy.app.binary_path,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stdout=subprocess.PIPE)
+            else:
+                bpy.app.driver_namespace["tlm_process"] = subprocess.Popen([bpy.app.binary_path,"-b", blendPath,"--python-expr",'import bpy; import thelightmapper; thelightmapper.addon.utility.build.prepare_build(0, True);'], shell=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
             print("Started process: " + str(bpy.app.driver_namespace["tlm_process"]) + " at " + str(datetime.datetime.now()))
 
@@ -269,6 +249,10 @@ def finish_assemble(self=0):
     if sceneProperties.tlm_lightmap_engine == "OctaneRender":
         pass
 
+    if not 'start_time' in globals():
+        global start_time
+        start_time = time()
+
     manage_build(True)
 
 def begin_build():
@@ -288,7 +272,8 @@ def begin_build():
         pass
 
     if sceneProperties.tlm_lightmap_engine == "OctaneRender":
-        pass
+
+        lightmap2.bake()
 
     #Denoiser
     if sceneProperties.tlm_denoise_use:
@@ -429,7 +414,7 @@ def begin_build():
                             print("Encoding:" + str(file))
                         encoding.encodeImageRGBMCPU(img, sceneProperties.tlm_encoding_range, dirpath, 0)
 
-            if sceneProperties.tlm_encoding_mode_b == "RGBD":
+            if sceneProperties.tlm_encoding_mode_a == "RGBD":
 
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                     print("ENCODING RGBD")
@@ -454,6 +439,36 @@ def begin_build():
                         if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                             print("Encoding:" + str(file))
                         encoding.encodeImageRGBDCPU(img, sceneProperties.tlm_encoding_range, dirpath, 0)
+
+            if sceneProperties.tlm_encoding_mode_a == "SDR":
+
+                if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print("EXR Format")
+
+                ren = bpy.context.scene.render
+                ren.image_settings.file_format = "PNG"
+                #ren.image_settings.exr_codec = "scene.TLM_SceneProperties.tlm_exr_codec"
+
+                end = "_baked"
+
+                baked_image_array = []
+
+                if sceneProperties.tlm_denoise_use:
+
+                    end = "_denoised"
+
+                if sceneProperties.tlm_filtering_use:
+
+                    end = "_filtered"
+                
+                #For each image in folder ending in denoised/filtered
+                dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+
+                for file in dirfiles:
+                    if file.endswith(end + ".hdr"):
+
+                        img = bpy.data.images.load(os.path.join(dirpath,file))
+                        img.save_render(img.filepath_raw[:-4] + ".png")
 
         else:
 
@@ -562,6 +577,33 @@ def begin_build():
                             print("Encoding:" + str(file))
                         encoding.encodeImageRGBDGPU(img, sceneProperties.tlm_encoding_range, dirpath, 0)
 
+            if sceneProperties.tlm_encoding_mode_b == "PNG":
+
+                ren = bpy.context.scene.render
+                ren.image_settings.file_format = "PNG"
+                #ren.image_settings.exr_codec = "scene.TLM_SceneProperties.tlm_exr_codec"
+
+                end = "_baked"
+
+                baked_image_array = []
+
+                if sceneProperties.tlm_denoise_use:
+
+                    end = "_denoised"
+
+                if sceneProperties.tlm_filtering_use:
+
+                    end = "_filtered"
+                
+                #For each image in folder ending in denoised/filtered
+                dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+
+                for file in dirfiles:
+                    if file.endswith(end + ".hdr"):
+
+                        img = bpy.data.images.load(os.path.join(dirpath,file))
+                        img.save_render(img.filepath_raw[:-4] + ".png")
+
     manage_build()
 
 def manage_build(background_pass=False):
@@ -610,6 +652,10 @@ def manage_build(background_pass=False):
 
                     formatEnc = "_encoded.png"
 
+                if sceneProperties.tlm_encoding_mode_a == "SDR":
+
+                    formatEnc = ".png"
+
             else:
 
                 print("GPU Encoding")
@@ -632,6 +678,10 @@ def manage_build(background_pass=False):
 
                     formatEnc = "_encoded.png"
 
+                if sceneProperties.tlm_encoding_mode_b == "SDR":
+
+                    formatEnc = ".png"
+
         if not background_pass:
             nodes.exchangeLightmapsToPostfix("_baked", end, formatEnc)
 
@@ -653,13 +703,13 @@ def manage_build(background_pass=False):
             filepath = bpy.data.filepath
             dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
 
-            for obj in bpy.data.objects:
-                if obj.type == "MESH":
+            for obj in bpy.context.scene.objects:
+                if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                     if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                         cache.backup_material_restore(obj)
 
-            for obj in bpy.data.objects:
-                if obj.type == "MESH":
+            for obj in bpy.context.scene.objects:
+                if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                     if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                         cache.backup_material_rename(obj)
 
@@ -672,77 +722,181 @@ def manage_build(background_pass=False):
                     if "_Original" in mat.name:
                         bpy.data.materials.remove(mat)
 
-            for obj in bpy.data.objects:
-
-                if obj.type == "MESH":
+            for obj in bpy.context.scene.objects:
+                if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                     if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
-                        img_name = obj.name + '_baked'
-                        Lightmapimage = bpy.data.images[img_name]
-                        obj["Lightmap"] = Lightmapimage.filepath_raw
+
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                            atlasName = obj.TLM_ObjectProperties.tlm_atlas_pointer
+                            img_name = atlasName + '_baked'
+                            Lightmapimage = bpy.data.images[img_name]
+                            obj["Lightmap"] = Lightmapimage.filepath_raw
+                        elif obj.TLM_ObjectProperties.tlm_postpack_object:
+                            atlasName = obj.TLM_ObjectProperties.tlm_postatlas_pointer
+                            img_name = atlasName + '_baked' + ".hdr"
+                            Lightmapimage = bpy.data.images[img_name]
+                            obj["Lightmap"] = Lightmapimage.filepath_raw
+                        else:
+                            img_name = obj.name + '_baked'
+                            Lightmapimage = bpy.data.images[img_name]
+                            obj["Lightmap"] = Lightmapimage.filepath_raw
 
             for image in bpy.data.images:
                 if image.name.endswith("_baked"):
                     bpy.data.images.remove(image, do_unlink=True)
 
-        total_time = sec_to_hours((time() - start_time))
-        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-            print(total_time)
+        if "tlm_plus_mode" in bpy.app.driver_namespace: #First DIR pass
 
-        bpy.context.scene["TLM_Buildstat"] = total_time
+            if bpy.app.driver_namespace["tlm_plus_mode"] == 1: #First DIR pass
 
-        reset_settings(previous_settings["settings"])
+                filepath = bpy.data.filepath
+                dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
 
-    if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
+                for obj in bpy.context.scene.objects:
+                    if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+                            cache.backup_material_restore(obj)
 
-        pass
+                for obj in bpy.context.scene.objects:
+                    if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+                            cache.backup_material_rename(obj)
 
-    if sceneProperties.tlm_lightmap_engine == "OctaneRender":
+                for mat in bpy.data.materials:
+                    if mat.users < 1:
+                        bpy.data.materials.remove(mat)
 
-        pass
+                for mat in bpy.data.materials:
+                    if mat.name.startswith("."):
+                        if "_Original" in mat.name:
+                            bpy.data.materials.remove(mat)
 
-    if bpy.context.scene.TLM_EngineProperties.tlm_bake_mode == "Background":
-        pass
+                for image in bpy.data.images:
+                    if image.name.endswith("_baked"):
+                        bpy.data.images.remove(image, do_unlink=True)
 
-    if scene.TLM_SceneProperties.tlm_alert_on_finish:
+                dirpath = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
 
-        alertSelect = scene.TLM_SceneProperties.tlm_alert_sound
+                files = os.listdir(dirpath)
 
-        if alertSelect == "dash":
-            soundfile = "dash.ogg"
-        elif alertSelect == "pingping":
-            soundfile = "pingping.ogg"  
-        elif alertSelect == "gentle":
-            soundfile = "gentle.ogg"
+                for index, file in enumerate(files):
+
+                    filename = extension = os.path.splitext(file)[0]
+                    extension = os.path.splitext(file)[1]
+
+                    os.rename(os.path.join(dirpath, file), os.path.join(dirpath, filename + "_dir" + extension))
+                
+                print("First DIR pass complete")
+
+                bpy.app.driver_namespace["tlm_plus_mode"] = 2
+
+                prepare_build(self=0, background_mode=False, shutdown_after_build=False)
+
+                if not background_pass and bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode != "combinedao":
+                    #pass
+                    setGui(0)
+
+            elif bpy.app.driver_namespace["tlm_plus_mode"] == 2:
+
+                filepath = bpy.data.filepath
+
+                dirpath = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+
+                files = os.listdir(dirpath)
+
+                for index, file in enumerate(files):
+
+                    filename = os.path.splitext(file)[0]
+                    extension = os.path.splitext(file)[1]
+
+                    if not filename.endswith("_dir"):
+                        os.rename(os.path.join(dirpath, file), os.path.join(dirpath, filename + "_ao" + extension))
+                
+                print("Second AO pass complete")
+
+                total_time = sec_to_hours((time() - start_time))
+                if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                    print(total_time)
+
+                bpy.context.scene["TLM_Buildstat"] = total_time
+
+                reset_settings(previous_settings["settings"])
+
+                bpy.app.driver_namespace["tlm_plus_mode"] = 0
+
+                if not background_pass:
+
+                    #TODO CHANGE!
+
+                    nodes.exchangeLightmapsToPostfix(end, end + "_dir", formatEnc)
+
+                    nodes.applyAOPass()
+
         else:
-            soundfile = "noot.ogg"
 
-        scriptDir = os.path.dirname(os.path.realpath(__file__))
-        sound_path = os.path.abspath(os.path.join(scriptDir, '..', 'assets/'+soundfile))
+            total_time = sec_to_hours((time() - start_time))
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print(total_time)
 
-        device = aud.Device()
-        sound = aud.Sound.file(sound_path)
-        device.play(sound)
+            bpy.context.scene["TLM_Buildstat"] = total_time
 
-    print("Lightmap building finished")
+            reset_settings(previous_settings["settings"])
 
-    if bpy.app.background:
+            print("Lightmap building finished")
 
-        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-            print("Writing background process report")
-        
-        write_directory = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+            if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
 
-        if os.path.exists(os.path.join(write_directory, "process.tlm")):
+                pass
 
-            process_status = json.loads(open(os.path.join(write_directory, "process.tlm")).read())
+            if sceneProperties.tlm_lightmap_engine == "OctaneRender":
 
-            process_status[1]["completed"] = True
+                pass
 
-            with open(os.path.join(write_directory, "process.tlm"), 'w') as file:
-                json.dump(process_status, file, indent=2)
+            if bpy.context.scene.TLM_EngineProperties.tlm_bake_mode == "Background":
+                pass
 
-        if postprocess_shutdown:
-            sys.exit()
+            if not background_pass and bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode != "combinedao":
+                #pass
+                setGui(0)
+
+        if scene.TLM_SceneProperties.tlm_alert_on_finish:
+
+            alertSelect = scene.TLM_SceneProperties.tlm_alert_sound
+
+            if alertSelect == "dash":
+                soundfile = "dash.ogg"
+            elif alertSelect == "pingping":
+                soundfile = "pingping.ogg"  
+            elif alertSelect == "gentle":
+                soundfile = "gentle.ogg"
+            else:
+                soundfile = "noot.ogg"
+
+            scriptDir = os.path.dirname(os.path.realpath(__file__))
+            sound_path = os.path.abspath(os.path.join(scriptDir, '..', 'assets/'+soundfile))
+
+            device = aud.Device()
+            sound = aud.Sound.file(sound_path)
+            device.play(sound)
+
+        if bpy.app.background:
+
+            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                print("Writing background process report")
+            
+            write_directory = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+
+            if os.path.exists(os.path.join(write_directory, "process.tlm")):
+
+                process_status = json.loads(open(os.path.join(write_directory, "process.tlm")).read())
+
+                process_status[1]["completed"] = True
+
+                with open(os.path.join(write_directory, "process.tlm"), 'w') as file:
+                    json.dump(process_status, file, indent=2)
+
+            if postprocess_shutdown:
+                sys.exit()
 
 #TODO - SET BELOW TO UTILITY
 
@@ -770,9 +924,8 @@ def reset_settings(prev_settings):
 
 def naming_check():
 
-    for obj in bpy.data.objects:
-
-        if obj.type == "MESH":
+    for obj in bpy.context.scene.objects:
+        if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
 
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
 
@@ -829,6 +982,9 @@ def check_save():
 
 def check_denoiser():
 
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print("Checking denoiser path")
+
     scene = bpy.context.scene
 
     if scene.TLM_SceneProperties.tlm_denoise_use:
@@ -847,8 +1003,8 @@ def check_denoiser():
                 return 0
 
 def check_materials():
-    for obj in bpy.data.objects:
-        if obj.type == "MESH":
+    for obj in bpy.context.scene.objects:
+        if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                 for slot in obj.material_slots:
                     mat = slot.material
@@ -868,14 +1024,38 @@ def check_materials():
 def sec_to_hours(seconds):
     a=str(seconds//3600)
     b=str((seconds%3600)//60)
-    c=str((seconds%3600)%60)
+    c=str(round((seconds%3600)%60,1))
     d=["{} hours {} mins {} seconds".format(a, b, c)]
     return d
 
 def setMode():
+
+    obj = bpy.context.scene.objects[0]
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+
     bpy.ops.object.mode_set(mode='OBJECT')
 
     #TODO Make some checks that returns to previous selection
+
+def setGui(mode):
+
+    if mode == 0:
+
+        context = bpy.context
+        driver = bpy.app.driver_namespace
+
+        if "TLM_UI" in driver:
+            driver["TLM_UI"].remove_handle()
+
+    if mode == 1:
+
+        #bpy.context.area.tag_redraw()
+        context = bpy.context
+        driver = bpy.app.driver_namespace
+        driver["TLM_UI"] = Viewport.ViewportDraw(context, "Building Lightmaps")
+
+        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 
 def checkAtlasSize():
 
@@ -897,7 +1077,7 @@ def checkAtlasSize():
         utilized = 0
         atlasUsedArea = 0
 
-        for obj in bpy.data.objects:
+        for obj in bpy.context.scene.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                 if obj.TLM_ObjectProperties.tlm_postpack_object:
                     if obj.TLM_ObjectProperties.tlm_postatlas_pointer == atlas.name:
@@ -913,3 +1093,4 @@ def checkAtlasSize():
         return True
     else:
         return False
+

@@ -1,8 +1,35 @@
-import bpy, os, time, blf, webbrowser, platform
+import bpy, os, time, blf, webbrowser, platform, numpy, bmesh
 import math, subprocess, multiprocessing
+from .. utility import utility
 from .. utility import build
 from .. utility.cycles import cache
 from .. network import server
+
+def setObjectLightmapByWeight(minimumRes, maximumRes, objWeight):
+        
+        availableResolutions = [32,64,128,256,512,1024,2048,4096,8192]
+        
+        minRes = minimumRes
+        minResIdx = availableResolutions.index(minRes)
+        maxRes = maximumRes
+        maxResIdx = availableResolutions.index(maxRes)
+        
+        exampleWeight = objWeight
+        
+        if minResIdx == maxResIdx:
+            pass
+        else:
+        
+            increment = 1.0/(maxResIdx-minResIdx)
+            
+            assortedRange = []
+            
+            for a in numpy.arange(0.0, 1.0, increment):
+                assortedRange.append(round(a, 2))
+                
+            assortedRange.append(1.0)
+            nearestWeight = min(assortedRange, key=lambda x:abs(x - exampleWeight))
+            return (availableResolutions[assortedRange.index(nearestWeight) + minResIdx])
 
 class TLM_BuildLightmaps(bpy.types.Operator):
     bl_idname = "tlm.build_lightmaps"
@@ -52,13 +79,13 @@ class TLM_CleanLightmaps(bpy.types.Operator):
             for file in os.listdir(dirpath):
                 os.remove(os.path.join(dirpath + "/" + file))
 
-        for obj in bpy.data.objects:
-            if obj.type == "MESH":
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                     cache.backup_material_restore(obj)
 
-        for obj in bpy.data.objects:
-            if obj.type == "MESH":
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                     cache.backup_material_rename(obj)
 
@@ -75,8 +102,8 @@ class TLM_CleanLightmaps(bpy.types.Operator):
             if image.name.endswith("_baked"):
                 bpy.data.images.remove(image, do_unlink=True)
 
-        for obj in bpy.data.objects:
-            if obj.type == "MESH":
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                     if obj.TLM_ObjectProperties.tlm_postpack_object:
 
@@ -92,14 +119,17 @@ class TLM_CleanLightmaps(bpy.types.Operator):
                             bpy.ops.object.select_all(action='DESELECT')
                             obj.select_set(True)
                             bpy.context.view_layer.objects.active = obj
-                            #print(x)
 
                             uv_layers = obj.data.uv_layers
+
+                            if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+                                uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
+                            else:
+                                uv_channel = "UVMap_Lightmap"
+                            
                             for i in range(0, len(uv_layers)):
-                                if uv_layers[i].name == 'UVMap_Lightmap':
+                                if uv_layers[i].name == uv_channel:
                                     uv_layers.active_index = i
-                                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                                        print("Lightmap shift A")
                                     break
 
                             bpy.ops.object.mode_set(mode='EDIT')
@@ -111,8 +141,10 @@ class TLM_CleanLightmaps(bpy.types.Operator):
                             bpy.ops.object.mode_set(mode='OBJECT')
 
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                                #print(obj.name + ": Active UV: " + obj.data.uv_layers[obj.data.uv_layers.active_index].name)
                                 print("Resized for obj: " + obj.name)
+
+                    if "Lightmap" in obj:
+                        del obj["Lightmap"]
 
         return {'FINISHED'}
 
@@ -153,63 +185,285 @@ class TLM_ExploreLightmaps(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class TLM_EnableSelection(bpy.types.Operator):
-    """Enable for selection"""
-    bl_idname = "tlm.enable_selection"
-    bl_label = "Enable for selection"
-    bl_description = "Enable for selection"
+class TLM_EnableSet(bpy.types.Operator):
+    """Enable for set"""
+    bl_idname = "tlm.enable_set"
+    bl_label = "Enable for set"
+    bl_description = "Enable for set"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
 
         scene = context.scene
 
-        for obj in bpy.context.selected_objects:
-            obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = True
+        weightList = {} #ObjName : [Dimension,Weight]
+        max = 0
 
-            if scene.TLM_SceneProperties.tlm_override_object_settings:
-                obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = scene.TLM_SceneProperties.tlm_mesh_lightmap_resolution
-                obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode = scene.TLM_SceneProperties.tlm_mesh_lightmap_unwrap_mode
-                obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin = scene.TLM_SceneProperties.tlm_mesh_unwrap_margin
-                obj.TLM_ObjectProperties.tlm_postpack_object = scene.TLM_SceneProperties.tlm_postpack_object
+        if bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Scene":
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
 
-                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
-                    obj.TLM_ObjectProperties.tlm_atlas_pointer = scene.TLM_SceneProperties.tlm_atlas_pointer
+                    print("Enabling for scene: " + obj.name)
+                    
+                    bpy.context.view_layer.objects.active = obj
+                    obj.select_set(True)
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+                    
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = True
+                    
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode = bpy.context.scene.TLM_SceneProperties.tlm_mesh_lightmap_unwrap_mode
+                    obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin = bpy.context.scene.TLM_SceneProperties.tlm_mesh_unwrap_margin
+                    obj.TLM_ObjectProperties.tlm_postpack_object = bpy.context.scene.TLM_SceneProperties.tlm_postpack_object
 
-                obj.TLM_ObjectProperties.tlm_postatlas_pointer = scene.TLM_SceneProperties.tlm_postatlas_pointer
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                        obj.TLM_ObjectProperties.tlm_atlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_atlas_pointer
 
+                    obj.TLM_ObjectProperties.tlm_postatlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_postatlas_pointer
+                    
+                    if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Single":
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = scene.TLM_SceneProperties.tlm_mesh_lightmap_resolution
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Dimension":
+                        obj_dimensions = obj.dimensions.x * obj.dimensions.y * obj.dimensions.z
+                        weightList[obj.name] = [obj_dimensions, 0]
+                        if obj_dimensions > max:
+                            max = obj_dimensions
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Surface":
+                        bm = bmesh.new()
+                        bm.from_mesh(obj.data)
+                        area = sum(f.calc_area() for f in bm.faces)
+                        weightList[obj.name] = [area, 0]
+                        if area > max:
+                            max = area
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Volume":
+                        bm = bmesh.new()
+                        bm.from_mesh(obj.data)
+                        volume = float( bm.calc_volume())
+                        weightList[obj.name] = [volume, 0]
+                        if volume > max:
+                            max = volume
+        
+        elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
+            for obj in bpy.context.selected_objects:
+                if obj.type == "MESH":
+                    
+                    print("Enabling for selection: " + obj.name)
+                    
+                    bpy.context.view_layer.objects.active = obj
+                    obj.select_set(True)
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+                    
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = True
+                    
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode = bpy.context.scene.TLM_SceneProperties.tlm_mesh_lightmap_unwrap_mode
+                    obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin = bpy.context.scene.TLM_SceneProperties.tlm_mesh_unwrap_margin
+                    obj.TLM_ObjectProperties.tlm_postpack_object = bpy.context.scene.TLM_SceneProperties.tlm_postpack_object
+
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                        obj.TLM_ObjectProperties.tlm_atlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_atlas_pointer
+
+                    obj.TLM_ObjectProperties.tlm_postatlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_postatlas_pointer
+                    
+                    if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Single":
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = scene.TLM_SceneProperties.tlm_mesh_lightmap_resolution
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Dimension":
+                        obj_dimensions = obj.dimensions.x * obj.dimensions.y * obj.dimensions.z
+                        weightList[obj.name] = [obj_dimensions, 0]
+                        if obj_dimensions > max:
+                            max = obj_dimensions
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Surface":
+                        bm = bmesh.new()
+                        bm.from_mesh(obj.data)
+                        area = sum(f.calc_area() for f in bm.faces)
+                        weightList[obj.name] = [area, 0]
+                        if area > max:
+                            max = area
+                    elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Volume":
+                        bm = bmesh.new()
+                        bm.from_mesh(obj.data)
+                        volume = float( bm.calc_volume())
+                        weightList[obj.name] = [volume, 0]
+                        if volume > max:
+                            max = volume
+        
+        else: #Enabled
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                        print("Enabling for designated: " + obj.name)
+                        
+                        bpy.context.view_layer.objects.active = obj
+                        obj.select_set(True)
+                        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+                        
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = True
+                        
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode = bpy.context.scene.TLM_SceneProperties.tlm_mesh_lightmap_unwrap_mode
+                        obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin = bpy.context.scene.TLM_SceneProperties.tlm_mesh_unwrap_margin
+                        obj.TLM_ObjectProperties.tlm_postpack_object = bpy.context.scene.TLM_SceneProperties.tlm_postpack_object
+
+                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                            obj.TLM_ObjectProperties.tlm_atlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_atlas_pointer
+
+                        obj.TLM_ObjectProperties.tlm_postatlas_pointer = bpy.context.scene.TLM_SceneProperties.tlm_postatlas_pointer
+                        
+                        if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Single":
+                            obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = scene.TLM_SceneProperties.tlm_mesh_lightmap_resolution
+                        elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Dimension":
+                            obj_dimensions = obj.dimensions.x * obj.dimensions.y * obj.dimensions.z
+                            weightList[obj.name] = [obj_dimensions, 0]
+                            if obj_dimensions > max:
+                                max = obj_dimensions
+                        elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Surface":
+                            bm = bmesh.new()
+                            bm.from_mesh(obj.data)
+                            area = sum(f.calc_area() for f in bm.faces)
+                            weightList[obj.name] = [area, 0]
+                            if area > max:
+                                max = area
+                        elif bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight == "Volume":
+                            bm = bmesh.new()
+                            bm.from_mesh(obj.data)
+                            volume = float( bm.calc_volume())
+                            weightList[obj.name] = [volume, 0]
+                            if volume > max:
+                                max = volume
+
+        if bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Scene":
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+        
+                    if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight != "Single":
+                        for key in weightList:
+                            weightList[obj.name][1] = weightList[obj.name][0] / max
+                        a = setObjectLightmapByWeight(int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_min), int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_max), weightList[obj.name][1])
+                        print(str(a) + "/" + str(weightList[obj.name][1]))
+                        print("Scale: " + str(weightList[obj.name][0]))
+                        print("Obj: " + obj.name)
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = str(a)
+
+        elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
+            for obj in bpy.context.selected_objects:
+                if obj.type == "MESH":
+
+                    if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight != "Single":
+                        for key in weightList:
+                            weightList[obj.name][1] = weightList[obj.name][0] / max
+                        a = setObjectLightmapByWeight(int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_min), int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_max), weightList[obj.name][1])
+                        print(str(a) + "/" + str(weightList[obj.name][1]))
+                        print("Scale: " + str(weightList[obj.name][0]))
+                        print("Obj: " + obj.name)
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = str(a)
+
+
+        else: #Enabled
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                        if bpy.context.scene.TLM_SceneProperties.tlm_resolution_weight != "Single":
+                            for key in weightList:
+                                weightList[obj.name][1] = weightList[obj.name][0] / max
+                            a = setObjectLightmapByWeight(int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_min), int(bpy.context.scene.TLM_SceneProperties.tlm_resolution_max), weightList[obj.name][1])
+                            print(str(a) + "/" + str(weightList[obj.name][1]))
+                            print("Scale: " + str(weightList[obj.name][0]))
+                            print("Obj: " + obj.name)
+                            print("")
+                            obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution = str(a)
+        
         return{'FINISHED'}
 
 class TLM_DisableSelection(bpy.types.Operator):
-    """Disable for selection"""
+    """Disable for set"""
     bl_idname = "tlm.disable_selection"
-    bl_label = "Disable for selection"
+    bl_label = "Disable for set"
     bl_description = "Disable for selection"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
 
-        for obj in bpy.context.selected_objects:
-            obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = False
+        scene = context.scene
+
+        weightList = {} #ObjName : [Dimension,Weight]
+        max = 0
+
+        if bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Scene":
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = False
+
+        elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
+            for obj in bpy.context.selected_objects:
+                if obj.type == "MESH":
+
+                    obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = False
+
+
+        else: #Enabled
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                        obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = False
+
 
         return{'FINISHED'}
 
 class TLM_RemoveLightmapUV(bpy.types.Operator):
-    """Remove Lightmap UV for selection"""
+    """Remove Lightmap UV for set"""
     bl_idname = "tlm.remove_uv_selection"
     bl_label = "Remove Lightmap UV"
-    bl_description = "Remove Lightmap UV for selection"
+    bl_description = "Remove Lightmap UV for set"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
 
-        for obj in bpy.context.selected_objects:
-            if obj.type == "MESH":
-                uv_layers = obj.data.uv_layers
+        if bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Scene":
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
 
-                for uvlayer in uv_layers:
-                    if uvlayer.name == "UVMap_Lightmap":
-                        uv_layers.remove(uvlayer)
+                    uv_layers = obj.data.uv_layers
+
+                    if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+                        uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
+                    else:
+                        uv_channel = "UVMap_Lightmap"
+
+                    for uvlayer in uv_layers:
+                        if uvlayer.name == uv_channel:
+                            uv_layers.remove(uvlayer)
+
+        elif bpy.context.scene.TLM_SceneProperties.tlm_utility_set == "Selection":
+            for obj in bpy.context.selected_objects:
+                if obj.type == "MESH":
+
+                    uv_layers = obj.data.uv_layers
+
+                    if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+                        uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
+                    else:
+                        uv_channel = "UVMap_Lightmap"
+
+                    for uvlayer in uv_layers:
+                        if uvlayer.name == uv_channel:
+                            uv_layers.remove(uvlayer)
+
+        else: #Enabled
+            for obj in bpy.context.scene.objects:
+                if obj.type == "MESH":
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                        uv_layers = obj.data.uv_layers
+
+                        if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+                            uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
+                        else:
+                            uv_channel = "UVMap_Lightmap"
+
+                        for uvlayer in uv_layers:
+                            if uvlayer.name == uv_channel:
+                                uv_layers.remove(uvlayer)
 
         return{'FINISHED'}
 
@@ -222,8 +476,8 @@ class TLM_SelectLightmapped(bpy.types.Operator):
 
     def execute(self, context):
 
-        for obj in bpy.data.objects:
-            if obj.type == "MESH":
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
 
                     obj.select_set(True)
@@ -278,7 +532,7 @@ class TLM_AtlastListDeleteItem(bpy.types.Operator):
         list = scene.TLM_AtlasList
         index = scene.TLM_AtlasListItem
 
-        for obj in bpy.data.objects:
+        for obj in bpy.context.scene.objects:
 
             atlasName = scene.TLM_AtlasList[index].name
 
@@ -310,7 +564,7 @@ class TLM_PostAtlastListDeleteItem(bpy.types.Operator):
         list = scene.TLM_PostAtlasList
         index = scene.TLM_PostAtlasListItem
 
-        for obj in bpy.data.objects:
+        for obj in bpy.context.scene.objects:
 
             atlasName = scene.TLM_PostAtlasList[index].name
 
@@ -437,7 +691,7 @@ class TLM_BuildEnvironmentProbes(bpy.types.Operator):
 
     def invoke(self, context, event):
 
-        for obj in bpy.data.objects:
+        for obj in bpy.context.scene.objects:
 
             if obj.type == "LIGHT_PROBE":
                 if obj.data.type == "CUBEMAP":
@@ -500,7 +754,7 @@ class TLM_BuildEnvironmentProbes(bpy.types.Operator):
                         cam.rotation_euler = positions[val]
                         
                         filename = os.path.join(directory, val) + "_" + camobj_name + ".hdr"
-                        bpy.data.scenes['Scene'].render.filepath = filename
+                        bpy.context.scene.render.filepath = filename
                         print("Writing out: " + val)
                         bpy.ops.render.render(write_still=True)
 
@@ -642,7 +896,7 @@ class TLM_BuildEnvironmentProbes(bpy.types.Operator):
 
                             subprocess.call([envpipe3], shell=True)
 
-                    for obj in bpy.data.objects:
+                    for obj in bpy.context.scene.objects:
                         obj.select_set(False)
 
                     cam_obj.select_set(True)
@@ -686,7 +940,92 @@ class TLM_MergeAdjacentActors(bpy.types.Operator):
 
         scene = context.scene
 
-        
+        return {'FINISHED'}
+
+class TLM_PrepareUVMaps(bpy.types.Operator): 
+    bl_idname = "tlm.prepare_uvmaps"
+    bl_label = "Prepare UV maps"
+    bl_description = "Prepare UV lightmaps for selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        scene = context.scene
+
+
+
+        return {'FINISHED'}
+
+class TLM_LoadLightmaps(bpy.types.Operator): 
+    bl_idname = "tlm.load_lightmaps"
+    bl_label = "Load Lightmaps"
+    bl_description = "Load lightmaps from selected folder"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        scene = context.scene
+
+        utility.transfer_load()
+
+        build.finish_assemble()
+
+        return {'FINISHED'}
+
+class TLM_ToggleTexelDensity(bpy.types.Operator): 
+    bl_idname = "tlm.toggle_texel_density"
+    bl_label = "Toggle Texel Density"
+    bl_description = "Toggle visualize lightmap texel density for selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        scene = context.scene
+
+        for obj in bpy.context.selected_objects:
+            if obj.type == "MESH":
+                uv_layers = obj.data.uv_layers
+
+                #if the object has a td_vis in the uv maps, toggle off
+                #else toggle on
+
+                if obj.TLM_ObjectProperties.tlm_use_default_channel:
+
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].name == 'UVMap_Lightmap':
+                            uv_layers.active_index = i
+                            break
+                else:
+
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].name == obj.TLM_ObjectProperties.tlm_uv_channel:
+                            uv_layers.active_index = i
+                            break
+
+                #filepath = r"C:\path\to\image.png"
+
+                #img = bpy.data.images.load(filepath)
+
+                for area in bpy.context.screen.areas:
+                    if area.type == 'VIEW_3D':
+                        space_data = area.spaces.active
+                        bpy.ops.screen.area_dupli('INVOKE_DEFAULT')
+                        new_window = context.window_manager.windows[-1]
+
+                        area = new_window.screen.areas[-1]
+                        area.type = 'VIEW_3D'
+                        #bg = space_data.background_images.new()
+                        print(bpy.context.object)
+                        bpy.ops.object.bake_td_uv_to_vc()
+
+                        #bg.image = img
+                        break
+
+                
+                #set active uv_layer to 
+                
+
+        print("TLM_Viz_Toggle")
 
         return {'FINISHED'}
 
@@ -698,7 +1037,4 @@ def TLM_HalfResolution():
     pass
 
 def TLM_DivideLMGroups():
-    pass
-
-def TLM_LoadFromFolder():
     pass

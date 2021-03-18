@@ -62,7 +62,7 @@ class TLM_CV_Filtering:
 
                 #SEAM TESTING# #####################
 
-                if obj_name in bpy.data.objects:
+                if obj_name in bpy.context.scene.objects:
                     override = bpy.data.objects[obj_name].TLM_ObjectProperties.tlm_mesh_filter_override
                 elif obj_name in scene.TLM_AtlasList:
                     override = False

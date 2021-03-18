@@ -6,10 +6,11 @@ classes = [
     tlm.TLM_BuildLightmaps,
     tlm.TLM_CleanLightmaps,
     tlm.TLM_ExploreLightmaps,
-    tlm.TLM_EnableSelection,
+    tlm.TLM_EnableSet,
     tlm.TLM_DisableSelection,
     tlm.TLM_RemoveLightmapUV,
     tlm.TLM_SelectLightmapped,
+    tlm.TLM_ToggleTexelDensity,
     installopencv.TLM_Install_OpenCV,
     tlm.TLM_AtlasListNewItem,
     tlm.TLM_AtlastListDeleteItem,
@@ -20,6 +21,8 @@ classes = [
     tlm.TLM_StartServer,
     tlm.TLM_BuildEnvironmentProbes,
     tlm.TLM_CleanBuildEnvironmentProbes,
+    tlm.TLM_PrepareUVMaps,
+    tlm.TLM_LoadLightmaps,
     imagetools.TLM_ImageUpscale,
     imagetools.TLM_ImageDownscale
 
