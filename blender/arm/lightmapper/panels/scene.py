@@ -259,7 +259,9 @@ class TLM_PT_Filtering(bpy.types.Panel):
 
             if cv2 is None:
                 row = layout.row(align=True)
-                row.label(text="OpenCV is not installed. Install it through preferences.")
+                row.label(text="OpenCV is not installed. Please install it as an administrator.")
+                row = layout.row(align=True)
+                row.operator("tlm.install_opencv_lightmaps")
             else:
                 row = layout.row(align=True)
                 row.prop(scene.TLM_SceneProperties, "tlm_filtering_mode")
