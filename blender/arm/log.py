@@ -29,6 +29,7 @@ else:
 
 info_text = ''
 num_warnings = 0
+num_errors = 0
 
 def clear(clear_warnings=False):
     global info_text, num_warnings
@@ -62,4 +63,6 @@ def warn(text):
     print_warn(text)
 
 def error(text):
+    global num_errors
+    num_errors += 1
     log('ERROR: ' + text, ERROR)
