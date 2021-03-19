@@ -22,6 +22,8 @@ from arm.lightmapper.utility import icon
 from arm.lightmapper.properties.denoiser import oidn, optix
 import importlib
 
+from arm.exporter import ArmoryExporter
+
 # Menu in object region
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -180,7 +182,19 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        if obj.rigid_body != None:
+        rb = obj.rigid_body
+        if rb is not None:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+
+            rb_type = 'Dynamic'
+            if ArmoryExporter.rigid_body_static(rb):
+                rb_type = 'Static'
+            if rb.kinematic:
+                rb_type = 'Kinematic'
+            row.label(text=(f'Rigid Body Export Type: {rb_type}'), icon='AUTO')
+
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_trigger')
