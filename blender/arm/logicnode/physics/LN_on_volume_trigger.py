@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class OnVolumeTriggerNode(ArmLogicTreeNode):
-    """Activates the output when the given rigid body enter, overlap or leave the given trigger.
+    """Activates the output when the given object enters, overlaps or leaves the bounding box of the given trigger object. (Note: Works even if objects are not Rigid Bodies).
 
     @input RB: this object is taken as the entering object
     @input Trigger: this object is used as the volume trigger
