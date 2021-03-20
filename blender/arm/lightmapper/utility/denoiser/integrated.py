@@ -22,7 +22,7 @@ class TLM_Integrated_Denoise:
             bpy.ops.object.camera_add()
 
             #Just select the first camera we find, needed for the compositor
-            for obj in bpy.data.objects:
+            for obj in bpy.context.scene.objects:
                 if obj.type == "CAMERA":
                     bpy.context.scene.camera = obj
                     return

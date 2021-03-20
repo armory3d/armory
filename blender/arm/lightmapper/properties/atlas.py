@@ -34,12 +34,16 @@ class TLM_PostAtlasListItem(bpy.types.PropertyGroup):
         max=1.0, 
         subtype='FACTOR')
 
-    tlm_atlas_lightmap_unwrap_mode : EnumProperty(
-        items = [('Lightmap', 'Lightmap', 'TODO'),
-                 ('SmartProject', 'Smart Project', 'TODO'),
-                 ('Xatlas', 'Xatlas', 'TODO')],
+    unwrap_modes = [('Lightmap', 'Lightmap', 'Use Blender Lightmap Pack algorithm'),
+                 ('SmartProject', 'Smart Project', 'Use Blender Smart Project algorithm')]
+
+    if "blender_xatlas" in bpy.context.preferences.addons.keys():
+        unwrap_modes.append(('Xatlas', 'Xatlas', 'Use Xatlas addon packing algorithm'))
+
+    tlm_postatlas_lightmap_unwrap_mode : EnumProperty(
+        items = unwrap_modes,
                 name = "Unwrap Mode", 
-                description="TODO", 
+                description="Atlas unwrapping method", 
                 default='SmartProject')
 
 class TLM_UL_PostAtlasList(bpy.types.UIList):
@@ -51,7 +55,7 @@ class TLM_UL_PostAtlasList(bpy.types.UIList):
             #In list object counter
             amount = 0
 
-            for obj in bpy.data.objects:
+            for obj in bpy.context.scene.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                     if obj.TLM_ObjectProperties.tlm_postpack_object:
                         if obj.TLM_ObjectProperties.tlm_postatlas_pointer == item.name:
@@ -68,9 +72,6 @@ class TLM_UL_PostAtlasList(bpy.types.UIList):
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon = custom_icon)
-
-
-
 
 class TLM_AtlasListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -95,12 +96,17 @@ class TLM_AtlasListItem(bpy.types.PropertyGroup):
         max=1.0, 
         subtype='FACTOR')
 
+    unwrap_modes = [('Lightmap', 'Lightmap', 'Use Blender Lightmap Pack algorithm'),
+                 ('SmartProject', 'Smart Project', 'Use Blender Smart Project algorithm'),
+                 ('Copy', 'Copy existing', 'Use the existing UV channel')]
+
+    if "blender_xatlas" in bpy.context.preferences.addons.keys():
+        unwrap_modes.append(('Xatlas', 'Xatlas', 'Use Xatlas addon packing algorithm'))
+
     tlm_atlas_lightmap_unwrap_mode : EnumProperty(
-        items = [('Lightmap', 'Lightmap', 'TODO'),
-                 ('SmartProject', 'Smart Project', 'TODO'),
-                 ('Xatlas', 'Xatlas', 'TODO')],
+        items = unwrap_modes,
                 name = "Unwrap Mode", 
-                description="TODO", 
+                description="Atlas unwrapping method", 
                 default='SmartProject')
 
 class TLM_UL_AtlasList(bpy.types.UIList):
@@ -111,7 +117,7 @@ class TLM_UL_AtlasList(bpy.types.UIList):
 
             amount = 0
 
-            for obj in bpy.data.objects:
+            for obj in bpy.context.scene.objects:
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                     if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
                         if obj.TLM_ObjectProperties.tlm_atlas_pointer == item.name:

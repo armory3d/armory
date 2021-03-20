@@ -332,6 +332,205 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
     #Todo - Find a way to save
     #bpy.ops.image.save_all_modified()
 
+#TODO - FINISH THIS
+def encodeImageRGBMGPU(image, maxRange, outDir, quality):
+    input_image = bpy.data.images[image.name]
+    image_name = input_image.name
+
+    offscreen = gpu.types.GPUOffScreen(input_image.size[0], input_image.size[1])
+
+    image = input_image
+
+    vertex_shader = '''
+
+        uniform mat4 ModelViewProjectionMatrix;
+
+        in vec2 texCoord;
+        in vec2 pos;
+        out vec2 texCoord_interp;
+
+        void main()
+        {
+        //gl_Position = ModelViewProjectionMatrix * vec4(pos.xy, 0.0f, 1.0f);
+        //gl_Position.z = 1.0;
+        gl_Position = vec4(pos.xy, 100, 100);
+        texCoord_interp = texCoord;
+        }
+
+    '''
+    fragment_shader = '''
+        in vec2 texCoord_interp;
+        out vec4 fragColor;
+
+        uniform sampler2D image;
+
+        //Code from here: https://github.com/BabylonJS/Babylon.js/blob/master/src/Shaders/ShadersInclude/helperFunctions.fx
+
+        const float PI = 3.1415926535897932384626433832795;
+        const float HALF_MIN = 5.96046448e-08; // Smallest positive half.
+
+        const float LinearEncodePowerApprox = 2.2;
+        const float GammaEncodePowerApprox = 1.0 / LinearEncodePowerApprox;
+        const vec3 LuminanceEncodeApprox = vec3(0.2126, 0.7152, 0.0722);
+
+        const float Epsilon = 0.0000001;
+        #define saturate(x)         clamp(x, 0.0, 1.0)
+
+        float maxEps(float x) {
+            return max(x, Epsilon);
+        }
+
+        float toLinearSpace(float color)
+        {
+            return pow(color, LinearEncodePowerApprox);
+        }
+
+        vec3 toLinearSpace(vec3 color)
+        {
+            return pow(color, vec3(LinearEncodePowerApprox));
+        }
+
+        vec4 toLinearSpace(vec4 color)
+        {
+            return vec4(pow(color.rgb, vec3(LinearEncodePowerApprox)), color.a);
+        }
+
+        vec3 toGammaSpace(vec3 color)
+        {
+            return pow(color, vec3(GammaEncodePowerApprox));
+        }
+
+        vec4 toGammaSpace(vec4 color)
+        {
+            return vec4(pow(color.rgb, vec3(GammaEncodePowerApprox)), color.a);
+        }
+
+        float toGammaSpace(float color)
+        {
+            return pow(color, GammaEncodePowerApprox);
+        }
+
+        float square(float value)
+        {
+            return value * value;
+        }
+
+        // Check if configurable value is needed.
+        const float rgbdMaxRange = 255.0;
+
+        vec4 toRGBM(vec3 color) {
+
+            vec4 rgbm;
+            color *= 1.0/6.0;
+            rgbm.a = saturate( max( max( color.r, color.g ), max( color.b, 1e-6 ) ) );
+            rgbm.a = clamp(floor(D) / 255.0, 0., 1.);
+            rgbm.rgb = color / rgbm.a;
+
+            return 
+
+            float maxRGB = maxEps(max(color.r, max(color.g, color.b)));
+            float D      = max(rgbdMaxRange / maxRGB, 1.);
+            D            = clamp(floor(D) / 255.0, 0., 1.);
+            vec3 rgb = color.rgb * D;
+            
+            // Helps with png quantization.
+            rgb = toGammaSpace(rgb);
+
+            return vec4(rgb, D); 
+        }
+
+        vec3 fromRGBD(vec4 rgbd) {
+            // Helps with png quantization.
+            rgbd.rgb = toLinearSpace(rgbd.rgb);
+
+            // return rgbd.rgb * ((rgbdMaxRange / 255.0) / rgbd.a);
+
+            return rgbd.rgb / rgbd.a;
+        }
+
+        void main()
+        {
+
+        fragColor = toRGBM(texture(image, texCoord_interp).rgb);
+
+        }
+
+    '''
+
+    x_screen = 0
+    off_x = -100
+    off_y = -100
+    y_screen_flip = 0
+    sx = 200
+    sy = 200
+
+    vertices = (
+                (x_screen + off_x, y_screen_flip - off_y), 
+                (x_screen + off_x, y_screen_flip - sy - off_y), 
+                (x_screen + off_x + sx, y_screen_flip - sy - off_y),
+                (x_screen + off_x + sx, y_screen_flip - off_x))
+
+    if input_image.colorspace_settings.name != 'Linear':
+        input_image.colorspace_settings.name = 'Linear'
+
+    # Removing .exr or .hdr prefix
+    if image_name[-4:] == '.exr' or image_name[-4:] == '.hdr':
+        image_name = image_name[:-4]
+
+    target_image = bpy.data.images.get(image_name + '_encoded')
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print(image_name + '_encoded')
+    if not target_image:
+        target_image = bpy.data.images.new(
+                name = image_name + '_encoded',
+                width = input_image.size[0],
+                height = input_image.size[1],
+                alpha = True,
+                float_buffer = False
+                )
+
+    shader = gpu.types.GPUShader(vertex_shader, fragment_shader)
+    batch = batch_for_shader(
+        shader, 'TRI_FAN',
+        {
+            "pos": vertices,
+            "texCoord": ((0, 1), (0, 0), (1, 0), (1, 1)),
+        },
+    )
+
+    if image.gl_load():
+        raise Exception()
+    
+    with offscreen.bind():
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
+
+        shader.bind()
+        shader.uniform_int("image", 0)
+        batch.draw(shader)
+        
+        buffer = bgl.Buffer(bgl.GL_BYTE, input_image.size[0] * input_image.size[1] * 4)
+        bgl.glReadBuffer(bgl.GL_BACK)
+        bgl.glReadPixels(0, 0, input_image.size[0], input_image.size[1], bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
+
+    offscreen.free()
+    
+    target_image.pixels = [v / 255 for v in buffer]
+    input_image = target_image
+    
+    #Save LogLuv
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print(input_image.name)
+    input_image.filepath_raw = outDir + "/" + input_image.name + ".png"
+    #input_image.filepath_raw = outDir + "_encoded.png"
+    input_image.file_format = "PNG"
+    bpy.context.scene.render.image_settings.quality = quality
+    #input_image.save_render(filepath = input_image.filepath_raw, scene = bpy.context.scene)
+    input_image.save()
+    
+    #Todo - Find a way to save
+    #bpy.ops.image.save_all_modified()
+
 def encodeImageRGBMCPU(image, maxRange, outDir, quality):
     input_image = bpy.data.images[image.name]
     image_name = input_image.name
@@ -431,21 +630,6 @@ def encodeImageRGBDCPU(image, maxRange, outDir, quality):
         result_pixel[i+1] = math.pow(result_pixel[i+1] * D, 1/2.2)
         result_pixel[i+2] = math.pow(result_pixel[i+2] * D, 1/2.2)
         result_pixel[i+3] = D
-
-
-    # for i in range(0,num_pixels,4):
-
-    #     m = saturate(max(result_pixel[i], result_pixel[i+1], result_pixel[i+2], 1e-6))
-    #     d = max(maxRange / m, 1)
-    #     #d = saturate(math.floor(d) / 255.0)
-    #     d = np.clip((math.floor(d) / 255.0), 0.0, 1.0)
-
-    #     #TODO TO GAMMA SPACE
-
-    #     result_pixel[i] = math.pow(result_pixel[i] * d * 255 / maxRange, 1/2.2)
-    #     result_pixel[i+1] = math.pow(result_pixel[i+1] * d * 255 / maxRange, 1/2.2)
-    #     result_pixel[i+2] = math.pow(result_pixel[i+2] * d * 255 / maxRange, 1/2.2)
-    #     result_pixel[i+3] = d
     
     target_image.pixels = result_pixel
     
@@ -458,24 +642,3 @@ def encodeImageRGBDCPU(image, maxRange, outDir, quality):
     input_image.file_format = "PNG"
     bpy.context.scene.render.image_settings.quality = quality
     input_image.save()
-
-        # const float rgbdMaxRange = 255.0;
-
-        # vec4 toRGBD(vec3 color) {
-        #     float maxRGB = maxEps(max(color.r, max(color.g, color.b)));
-        #     float D      = max(rgbdMaxRange / maxRGB, 1.);
-        #     D            = clamp(floor(D) / 255.0, 0., 1.);
-        #     vec3 rgb = color.rgb * D;
-            
-        #     // Helps with png quantization.
-        #     rgb = toGammaSpace(rgb);
-
-        #     return vec4(rgb, D); 
-        # }
-
-        # const float Epsilon = 0.0000001;
-        # #define saturate(x)         clamp(x, 0.0, 1.0)
-
-        # float maxEps(float x) {
-        #     return max(x, Epsilon);
-        # }
