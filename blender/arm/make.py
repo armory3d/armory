@@ -338,7 +338,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
     if arm.utils.get_save_on_build():
         bpy.ops.wm.save_mainfile()
 
-    log.clear(clear_warnings=True)
+    log.clear(clear_warnings=True, clear_errors=True)
 
     # Set camera in active scene
     active_scene = arm.utils.get_active_scene()
