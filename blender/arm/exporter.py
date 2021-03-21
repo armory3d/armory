@@ -2308,6 +2308,10 @@ class ArmoryExporter:
 
         return instanced_type, instanced_data
 
+    @staticmethod
+    def rigid_body_static(rb):
+        return (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+
     def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
@@ -2334,7 +2338,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = rb.mass
-            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+            is_static = self.rigid_body_static(rb)
             if is_static:
                 body_mass = 0
             x = {}
