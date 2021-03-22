@@ -32,6 +32,7 @@ import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
 
+import arm.log as log
 
 @unique
 class NodeType(Enum):
@@ -1157,7 +1158,16 @@ class ArmoryExporter:
             else:
                 invscale_tex = 1 * 32767
             if has_tang:
-                exportMesh.calc_tangents(uvmap=lay0.name)
+                try:
+                    exportMesh.calc_tangents(uvmap=lay0.name)
+                except Exception as e:
+                    if hasattr(e, 'message'):
+                        log.error(e.message)
+                    else:
+                        # Assume it was caused because of encountering n-gons
+                        log.error(f"""object {bobject.name} contains n-gons in its mesh, so it's impossible to compute tanget space for normal mapping.
+Make sure the mesh only has tris/quads.""")
+
                 tangdata = np.empty(num_verts * 3, dtype='<f4')
         if has_col:
             cdata = np.empty(num_verts * 3, dtype='<f4')

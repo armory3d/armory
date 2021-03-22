@@ -574,7 +574,19 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
             box = layout.box()
             # Less spacing between lines
             col = box.column(align=True)
-            col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
+            warnings = 'warnings' if log.num_warnings > 1 else 'warning'
+            col.label(text=f'{log.num_warnings} {warnings} occurred during compilation!', icon='ERROR')
+            # Blank icon to achieve the same indentation as the line before
+            # prevent showing "open console" twice:
+            if log.num_errors == 0:
+                col.label(text='Please open the console to get more information.', icon='BLANK1')
+
+        if log.num_errors > 0:
+            box = layout.box()
+            # Less spacing between lines
+            col = box.column(align=True)
+            errors = 'errors' if log.num_errors > 1 else 'error'
+            col.label(text=f'{log.num_errors} {errors} occurred during compilation!', icon='CANCEL')
             # Blank icon to achieve the same indentation as the line before
             col.label(text='Please open the console to get more information.', icon='BLANK1')
 
