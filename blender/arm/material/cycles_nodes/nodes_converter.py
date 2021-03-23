@@ -8,6 +8,36 @@ import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
+def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+
+    interp = node.interpolation_type
+
+    value: str = c.parse_value_input(node.inputs[0]) if node.inputs[0].is_linked else c.to_vec1(node.inputs[0].default_value)
+    fromMin = float(c.parse_value_input(node.inputs[1]))
+    fromMax = float(c.parse_value_input(node.inputs[2]))
+    toMin = float(c.parse_value_input(node.inputs[3]))
+    toMax = float(c.parse_value_input(node.inputs[4]))
+
+    if interp == "LINEAR":
+
+        state.curshader.add_function(c_functions.str_map_range_linear)
+        return f'map_range_linear({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+
+    elif interp == "STEPPED":
+
+        steps = float(c.parse_value_input(node.inputs[5]))
+        state.curshader.add_function(c_functions.str_map_range_stepped)
+        return f'map_range_stepped({value}, {fromMin}, {fromMax}, {toMin}, {toMax}, {steps})'
+
+    elif interp == "SMOOTHSTEP":
+
+        state.curshader.add_function(c_functions.str_map_range_smoothstep)
+        return f'map_range_smoothstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+
+    elif interp == "SMOOTHERSTEP":
+
+        state.curshader.add_function(c_functions.str_map_range_smootherstep)
+        return f'map_range_smootherstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
 
 def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     

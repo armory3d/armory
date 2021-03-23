@@ -403,3 +403,66 @@ vec3 blackbody(const float temperature){
 
 }
 """
+
+# Adapted from https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/source/blender/gpu/shaders/material/gpu_shader_material_map_range.glsl
+str_map_range_linear = """
+float map_range_linear(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax) {
+  if (fromMax != fromMin) {
+    return float(toMin + ((value - fromMin) / (fromMax - fromMin)) * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_stepped = """
+float map_range_stepped(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax, const float steps) {
+  if (fromMax != fromMin) {
+    float factor = (value - fromMin) / (fromMax - fromMin);
+    factor = (steps > 0.0) ? floor(factor * (steps + 1.0)) / steps : 0.0;
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_smoothstep = """
+float map_range_smoothstep(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax)
+{
+  if (fromMax != fromMin) {
+    float factor = (fromMin > fromMax) ? 1.0 - smoothstep(fromMax, fromMin, value) :
+                                         smoothstep(fromMin, fromMax, value);
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_smootherstep = """
+float safe_divide(float a, float b)
+{
+  return (b != 0.0) ? a / b : 0.0;
+}
+
+float smootherstep(float edge0, float edge1, float x)
+{
+  x = clamp(safe_divide((x - edge0), (edge1 - edge0)), 0.0, 1.0);
+  return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+}
+
+float map_range_smootherstep(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax) {
+  if (fromMax != fromMin) {
+    float factor = (fromMin > fromMax) ? 1.0 - smootherstep(fromMax, fromMin, value) :
+                                         smootherstep(fromMin, fromMax, value);
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
