@@ -466,3 +466,52 @@ float map_range_smootherstep(const float value, const float fromMin, const float
   }
 }
 """
+
+str_rotate_around_axis = """
+vec3 rotate_around_axis(const vec3 p, const vec3 axis, const float angle)
+{
+  float costheta = cos(angle);
+  float sintheta = sin(angle);
+  vec3 r;
+
+  r.x = ((costheta + (1.0 - costheta) * axis.x * axis.x) * p.x) +
+        (((1.0 - costheta) * axis.x * axis.y - axis.z * sintheta) * p.y) +
+        (((1.0 - costheta) * axis.x * axis.z + axis.y * sintheta) * p.z);
+
+  r.y = (((1.0 - costheta) * axis.x * axis.y + axis.z * sintheta) * p.x) +
+        ((costheta + (1.0 - costheta) * axis.y * axis.y) * p.y) +
+        (((1.0 - costheta) * axis.y * axis.z - axis.x * sintheta) * p.z);
+
+  r.z = (((1.0 - costheta) * axis.x * axis.z - axis.y * sintheta) * p.x) +
+        (((1.0 - costheta) * axis.y * axis.z + axis.x * sintheta) * p.y) +
+        ((costheta + (1.0 - costheta) * axis.z * axis.z) * p.z);
+
+  return r;
+}
+"""
+
+str_euler_to_mat3 = """
+mat3 euler_to_mat3(vec3 euler)
+{
+  float cx = cos(euler.x);
+  float cy = cos(euler.y);
+  float cz = cos(euler.z);
+  float sx = sin(euler.x);
+  float sy = sin(euler.y);
+  float sz = sin(euler.z);
+
+  mat3 mat;
+  mat[0][0] = cy * cz;
+  mat[0][1] = cy * sz;
+  mat[0][2] = -sy;
+
+  mat[1][0] = sy * sx * cz - cx * sz;
+  mat[1][1] = sy * sx * sz + cx * cz;
+  mat[1][2] = cy * sx;
+
+  mat[2][0] = sy * cx * cz + sx * sz;
+  mat[2][1] = sy * cx * sz - sx * cz;
+  mat[2][2] = cy * cx;
+  return mat;
+}
+"""
