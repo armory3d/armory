@@ -331,6 +331,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'COMBXYZ': nodes_converter.parse_combxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
         'DISPLACEMENT': nodes_vector.parse_displacement,
+        'VECTOR_ROTATE': nodes_vector.parse_vectorrotate,
     }
 
     if node.type in node_parser_funcs:
@@ -433,6 +434,7 @@ def parse_value(node, socket):
         'SEPRGB': nodes_converter.parse_seprgb,
         'SEPXYZ': nodes_converter.parse_sepxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
+        'MAP_RANGE': nodes_converter.parse_maprange,
     }
 
     if node.type in node_parser_funcs:
