@@ -332,3 +332,74 @@ vec3 wrap(const vec3 value, const vec3 max, const vec3 min) {
 \t            wrap(value.z, max.z, min.z));
 }
 """
+
+str_blackbody = """
+vec3 blackbody(const float temperature){
+
+  vec3 rgb = vec3(0.0, 0.0, 0.0);
+
+  vec3 r = vec3(0.0, 0.0, 0.0);
+  vec3 g = vec3(0.0, 0.0, 0.0);
+  vec3 b = vec3(0.0, 0.0, 0.0);
+
+  float t_inv = float(1.0 / temperature);
+
+  if (temperature >= 12000.0) {
+
+    rgb = vec3(0.826270103, 0.994478524, 1.56626022);
+
+  } else if(temperature < 965.0) {
+
+    rgb = vec3(4.70366907, 0.0, 0.0);
+
+  } else {
+
+    if (temperature >= 6365.0) {
+      vec3 r = vec3(3.78765709e+03, 9.36026367e-06, 3.98995841e-01);
+      vec3 g = vec3(-5.00279505e+02, -4.59745390e-06, 1.09090465e+00);
+      vec4 b = vec4(6.72595954e-13, -2.73059993e-08, 4.24068546e-04, -7.52204323e-01);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 3315.0) {
+      vec3 r = vec3(4.60124770e+03, 2.89727618e-05, 1.48001316e-01);
+      vec3 g = vec3(-1.18134453e+03, -2.18913373e-05, 1.30656109e+00);
+      vec4 b = vec4(-2.22463426e-13, -1.55078698e-08, 3.81675160e-04, -7.30646033e-01);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1902.0) {
+      vec3 r = vec3(4.66849800e+03, 2.85655028e-05, 1.29075375e-01);
+      vec3 g = vec3(-1.42546105e+03, -4.01730887e-05, 1.44002695e+00);
+      vec4 b = vec4(-2.02524603e-11, 1.79435860e-07, -2.60561875e-04, -1.41761141e-02);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1449.0) {
+      vec3 r = vec3(4.10671449e+03, -8.61949938e-05, 6.41423749e-01);
+      vec3 g = vec3(-1.22075471e+03, 2.56245413e-05, 1.20753416e+00);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1167.0) {
+      vec3 r = vec3(3.37763626e+03, -4.34581697e-04, 1.64843306e+00);
+      vec3 g = vec3(-1.00402363e+03, 1.29189794e-04, 9.08181524e-01);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else {
+      vec3 r = vec3(2.52432244e+03, -1.06185848e-03, 3.11067539e+00);
+      vec3 g = vec3(-7.50343014e+02, 3.15679613e-04, 4.73464526e-01);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    }
+  }
+
+  return rgb;
+
+}
+"""
