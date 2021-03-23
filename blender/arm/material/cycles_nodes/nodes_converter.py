@@ -232,14 +232,21 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = '({0} * {1})'.format(val1, val2)
     elif op == 'DIVIDE':
         out_val = '({0} / {1})'.format(val1, val2)
+    elif op == 'MULTIPLY_ADD':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = '({0} * {1} + {2})'.format(val1, val2, val3)
     elif op == 'POWER':
         out_val = 'pow({0}, {1})'.format(val1, val2)
     elif op == 'LOGARITHM':
         out_val = 'log({0})'.format(val1)
     elif op == 'SQRT':
         out_val = 'sqrt({0})'.format(val1)
+    elif op == 'INVERSE_SQRT':
+        out_val = 'inversesqrt({0})'.format(val1)
     elif op == 'ABSOLUTE':
         out_val = 'abs({0})'.format(val1)
+    elif op == 'EXPONENT':
+        out_val = 'exp({0})'.format(val1)
     elif op == 'MINIMUM':
         out_val = 'min({0}, {1})'.format(val1, val2)
     elif op == 'MAXIMUM':
@@ -248,6 +255,17 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'float({0} < {1})'.format(val1, val2)
     elif op == 'GREATER_THAN':
         out_val = 'float({0} > {1})'.format(val1, val2)
+    elif op == 'SIGN':
+        out_val = 'sign({0})'.format(val1)
+    elif op == 'COMPARE':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float((abs({0} - {1}) <= max({2}, 1e-5)) ? 1.0 : 0.0)'.format(val1, val2, val3)
+    elif op == 'SMOOTH_MIN':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float(float({2} != 0.0 ? min({0},{1}) - (max({2} - abs({0} - {1}), 0.0) / {2}) * (max({2} - abs({0} - {1}), 0.0) / {2}) * (max({2} - abs({0} - {1}), 0.0) / {2}) * {2} * (1.0 / 6.0) : min({0}, {1})))'.format(val1, val2, val3)
+    elif op == 'SMOOTH_MAX':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float(0-(float({2} != 0.0 ? min(-{0},-{1}) - (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * {2} * (1.0 / 6.0) : min(-{0}, (-{1})))))'.format(val1, val2, val3)
     elif op == 'ROUND':
         # out_val = 'round({0})'.format(val1)
         out_val = 'floor({0} + 0.5)'.format(val1)
@@ -255,11 +273,20 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'floor({0})'.format(val1)
     elif op == 'CEIL':
         out_val = 'ceil({0})'.format(val1)
+    elif op == 'TRUNC':
+        out_val = 'trunc({0})'.format(val1)
     elif op == 'FRACT':
         out_val = 'fract({0})'.format(val1)
     elif op == 'MODULO':
         # out_val = 'float({0} % {1})'.format(val1, val2)
         out_val = 'mod({0}, {1})'.format(val1, val2)
+    elif op == 'WRAP':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float((({1}-{2}) != 0.0) ? {0} - (({1}-{2}) * floor(({0} - {2}) / ({1}-{2}))) : {2})'.format(val1, val2, val3)
+    elif op == 'SNAP':
+        out_val = 'floor(({1} != 0.0) ? {0} / {1} : 0.0) * {1}'.format(val1, val2)
+    elif op == 'PINGPONG':
+        out_val = 'float(({1} != 0.0) ? abs(fract(({0} - {1}) / ({1} * 2.0)) * {1} * 2.0 - {1}) : 0.0)'.format(val1, val2)
     elif op == 'SINE':
         out_val = 'sin({0})'.format(val1)
     elif op == 'COSINE':
@@ -274,6 +301,16 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'atan({0})'.format(val1)
     elif op == 'ARCTAN2':
         out_val = 'atan({0}, {1})'.format(val1, val2)
+    elif op == 'SINH':
+        out_val = 'sinh({0})'.format(val1)
+    elif op == 'COSH':
+        out_val = 'cosh({0})'.format(val1)
+    elif op == 'TANH':
+        out_val = 'tanh({0})'.format(val1)
+    elif op == 'RADIANS':
+        out_val = 'radians({0})'.format(val1)
+    elif op == 'DEGREES':
+        out_val = 'degrees({0})'.format(val1)
 
     if node.use_clamp:
         return 'clamp({0}, 0.0, 1.0)'.format(out_val)
