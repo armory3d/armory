@@ -4,6 +4,7 @@ import bpy
 from mathutils import Euler, Vector
 
 import arm.material.cycles as c
+import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
