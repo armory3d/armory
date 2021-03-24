@@ -13,10 +13,10 @@ def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.Nod
     interp = node.interpolation_type
 
     value: str = c.parse_value_input(node.inputs[0]) if node.inputs[0].is_linked else c.to_vec1(node.inputs[0].default_value)
-    fromMin = float(c.parse_value_input(node.inputs[1]))
-    fromMax = float(c.parse_value_input(node.inputs[2]))
-    toMin = float(c.parse_value_input(node.inputs[3]))
-    toMax = float(c.parse_value_input(node.inputs[4]))
+    fromMin = c.parse_value_input(node.inputs[1])
+    fromMax = c.parse_value_input(node.inputs[2])
+    toMin = c.parse_value_input(node.inputs[3])
+    toMax = c.parse_value_input(node.inputs[4])
 
     if interp == "LINEAR":
 
