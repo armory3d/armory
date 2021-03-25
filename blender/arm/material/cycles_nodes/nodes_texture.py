@@ -373,6 +373,8 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     curshader = state.curshader
     curshader.add_include('std/sky.glsl')
     curshader.add_uniform('vec3 sunDir', link='_sunDirection')
+    curshader.add_uniform('sampler2D nishitaLUT', link='_nishitaLUT', included=True,
+                          tex_addr_u='clamp', tex_addr_v='clamp')
 
     planet_radius = 6360e3  # Earth radius used in Blender
     ray_origin_z = planet_radius + node.altitude

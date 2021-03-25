@@ -1,12 +1,13 @@
 /* Various sky functions
  * =====================
  *
- * Nishita model is based on https://github.com/wwwtyro/glsl-atmosphere(Unlicense License)
+ * Nishita model is based on https://github.com/wwwtyro/glsl-atmosphere (Unlicense License)
  *
  *   Changes to the original implementation:
  *     - r and pSun parameters of nishita_atmosphere() are already normalized
  *     - Some original parameters of nishita_atmosphere() are replaced with pre-defined values
  *     - Implemented air, dust and ozone density node parameters (see Blender source)
+ *     - Replaced the inner integral calculation with a LUT lookup
  *
  * Reference for the sun's limb darkening and ozone calculations:
  * [Hill] Sebastien Hillaire. Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite
@@ -19,15 +20,18 @@
 #ifndef _SKY_GLSL_
 #define _SKY_GLSL_
 
-// OpenGl ES doesn't support 1D textures so we use a 1 px height sampler2D here...
 uniform sampler2D nishitaLUT;
 
-#define PI 3.141592
+#ifndef PI
+	#define PI 3.141592
+#endif
+#ifndef HALF_PI
+	#define HALF_PI 1.570796
+#endif
 
 #define nishita_iSteps 16
-#define nishita_jSteps 8
 
-// The values here are taken from Cycles code if they
+// These values are taken from Cycles code if they
 // exist there, otherwise they are taken from the example
 // in the glsl-atmosphere repo
 #define nishita_sun_intensity 22.0
@@ -49,7 +53,17 @@ uniform sampler2D nishitaLUT;
 // Values from [Hill: 60]
 #define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
 
-#define heightToLUT(h) (textureLod(nishitaLUT, vec2(clamp(h * (1 / 60000.0), 0.0, 1.0), 0.0), 0.0).xyz * 10.0)
+float random(vec2 coords) {
+	return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec3 nishita_lookupLUT(const float height, const float sunTheta) {
+	vec2 coords = vec2(
+	sqrt(height * (1 / nishita_atmo_radius)),
+		0.5 + 0.5 * sign(sunTheta - HALF_PI) * sqrt(abs(sunTheta * (1 / HALF_PI) - 1))
+	);
+	return textureLod(nishitaLUT, coords, 0.0).rgb;
+}
 
 /* Approximates the density of ozone for a given sample height. Values taken from Cycles code. */
 float nishita_density_ozone(const float height) {
@@ -112,40 +126,21 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		// Calculate the height of the sample.
 		float iHeight = length(iPos) - rPlanet;
 
-		// Calculate the optical depth of the Rayleigh and Mie scattering for this step.
-		vec3 iLookup = heightToLUT(iHeight);
-		float odStepRlh = iLookup.x * iStepSize;
-		float odStepMie = iLookup.y * iStepSize;
+		// Calculate the optical depth of the Rayleigh and Mie scattering for this step
+		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * density.x * iStepSize;
+		float odStepMie = exp(-iHeight / nishita_mie_scale) * density.y * iStepSize;
 
 		// Accumulate optical depth.
 		iOdRlh += odStepRlh;
 		iOdMie += odStepMie;
 
-		// Calculate the step size of the secondary ray.
-		float jStepSize = nishita_rsi(iPos, pSun, nishita_atmo_radius).y / float(nishita_jSteps);
+		// Idea behind this: "Rotate" everything by iPos (-> iPos is the new zenith) and then all calculations for the
+		// inner integral only depend on the sample height (iHeight) and sunTheta (angle between sun and new zenith).
+		float sunTheta = acos(dot(normalize(iPos), normalize(pSun)));
+		vec3 jODepth = nishita_lookupLUT(iHeight, sunTheta);// * vec3(14000000 / 255, 14000000 / 255, 2000000 / 255);
 
-		// Initialize the secondary ray time.
-		float jTime = 0.0;
-
-		// Initialize optical depth accumulators for the secondary ray.
-		vec3 jODepth = vec3(0.0); // (Rayleigh, Mie, ozone)
-
-		// Sample the secondary ray.
-		for (int j = 0; j < nishita_jSteps; j++) {
-
-			// Calculate the secondary ray sample position.
-			vec3 jPos = iPos + pSun * (jTime + jStepSize * 0.5);
-
-			// Calculate the height of the sample.
-			float jHeight = length(jPos) - rPlanet;
-
-			// Accumulate the optical depth.
-			vec3 jLookup = heightToLUT(jHeight);
-			jODepth += jLookup * jStepSize;
-
-			// Increment the secondary ray time.
-			jTime += jStepSize;
-		}
+		// Apply dithering to reduce visible banding
+		jODepth += mix(-1000, 1000, random(r.xy));
 
 		// Calculate attenuation.
 		vec3 attn = exp(-(
