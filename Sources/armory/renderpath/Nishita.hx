@@ -1,6 +1,7 @@
 package armory.renderpath;
 
 import kha.FastFloat;
+import kha.arrays.Float32Array;
 import kha.graphics4.TextureFormat;
 import kha.graphics4.Usage;
 
@@ -18,15 +19,28 @@ class Nishita {
 	public static var data: NishitaData = null;
 
 	/**
-		Recompute the nishita lookup table. Call this function after updating
-		the sky density settings.
+		Recomputes the nishita lookup table after the density settings changed.
+		Do not call this method on every frame (it's slow)!
 	**/
 	public static function recompute(world: WorldData) {
-		if (world == null || world.raw.sun_direction == null) return;
+		if (world == null || world.raw.nishita_density == null) return;
 		if (data == null) data = new NishitaData();
 
-		// TODO
-		data.computeLUT(new Vec3(1.0, 1.0, 1.0));
+		var density = world.raw.nishita_density;
+		data.computeLUT(new Vec3(density[0], density[1], density[2]));
+	}
+
+	/** Sets the sky's density parameters and calls `recompute()` afterwards. **/
+	public static function setDensity(world: WorldData, densityAir: FastFloat, densityDust: FastFloat, densityOzone: FastFloat) {
+		if (world == null) return;
+
+		if (world.raw.nishita_density == null) world.raw.nishita_density = new Float32Array(3);
+		var density = world.raw.nishita_density;
+		density[0] = Helper.clamp(densityAir, 0, 10);
+		density[1] = Helper.clamp(densityDust, 0, 10);
+		density[2] = Helper.clamp(densityOzone, 0, 10);
+
+		recompute(world);
 	}
 }
 

@@ -2843,6 +2843,7 @@ class ArmoryExporter:
             out_world['sun_direction'] = list(world.arm_envtex_sun_direction)
             out_world['turbidity'] = world.arm_envtex_turbidity
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
+            out_world['nishita_density'] = list(world.arm_nishita_density)
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
 

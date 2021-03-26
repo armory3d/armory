@@ -326,6 +326,7 @@ def init_properties():
     bpy.types.World.arm_envtex_sun_direction = FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
+    bpy.types.World.arm_nishita_density = FloatVectorProperty(name="Nishita Density", size=3, default=[1, 1, 1])
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)

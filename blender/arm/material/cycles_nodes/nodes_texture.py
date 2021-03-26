@@ -375,11 +375,12 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     curshader.add_uniform('vec3 sunDir', link='_sunDirection')
     curshader.add_uniform('sampler2D nishitaLUT', link='_nishitaLUT', included=True,
                           tex_addr_u='clamp', tex_addr_v='clamp')
+    curshader.add_uniform('vec2 nishitaDensity', link='_nishitaDensity', included=True)
 
     planet_radius = 6360e3  # Earth radius used in Blender
     ray_origin_z = planet_radius + node.altitude
 
-    density = c.to_vec3((node.air_density, node.dust_density, node.ozone_density))
+    state.world.arm_nishita_density = [node.air_density, node.dust_density, node.ozone_density]
 
     sun = ''
     if node.sun_disc:
@@ -399,7 +400,7 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
         size = math.cos(theta)
         sun = f'* sun_disk(n, sunDir, {size}, {node.sun_intensity})'
 
-    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}, {density}){sun}'
+    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}){sun}'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:

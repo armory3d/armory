@@ -11,14 +11,14 @@ class Uniforms {
 
 	public static function register() {
 		iron.object.Uniforms.externalTextureLinks = [textureLink];
-		iron.object.Uniforms.externalVec2Links = [];
+		iron.object.Uniforms.externalVec2Links = [vec2Link];
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
 		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
 		iron.object.Uniforms.externalIntLinks = [];
 	}
 
-	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
+	public static function textureLink(object: Object, mat: MaterialData, link: String): Null<kha.Image> {
 		switch (link) {
 			case "_nishitaLUT": {
 				if (armory.renderpath.Nishita.data == null) armory.renderpath.Nishita.recompute(Scene.active.world);
@@ -40,7 +40,7 @@ class Uniforms {
 		return target != null ? target.image : null;
 	}
 
-	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+	public static function vec3Link(object: Object, mat: MaterialData, link: String): Null<iron.math.Vec4> {
 		var v: Vec4 = null;
 		switch (link) {
 			#if arm_hosek
@@ -168,6 +168,23 @@ class Uniforms {
 				v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
 			}
 			#end
+		}
+
+		return v;
+	}
+
+	public static function vec2Link(object: Object, mat: MaterialData, link: String): Null<iron.math.Vec4> {
+		var v: Vec4 = null;
+		switch (link) {
+			case "_nishitaDensity": {
+				v = iron.object.Uniforms.helpVec;
+				var w = Scene.active.world;
+				if (w != null) {
+					// We only need Rayleigh and Mie density in the sky shader -> Vec2
+					v.x = w.raw.nishita_density[0];
+					v.y = w.raw.nishita_density[1];
+				}
+			}
 		}
 
 		return v;

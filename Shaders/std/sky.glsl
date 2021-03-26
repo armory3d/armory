@@ -21,6 +21,7 @@
 #define _SKY_GLSL_
 
 uniform sampler2D nishitaLUT;
+uniform vec2 nishitaDensity;
 
 #ifndef PI
 	#define PI 3.141592
@@ -91,9 +92,8 @@ vec2 nishita_rsi(const vec3 r0, const vec3 rd, const float sr) {
  * r0: ray origin
  * pSun: normalized sun direction
  * rPlanet: planet radius
- * density: (air density, dust density, ozone density)
  */
-vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet, const vec3 density) {
+vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const float rPlanet) {
 	// Calculate the step size of the primary ray.
 	vec2 p = nishita_rsi(r0, r, nishita_atmo_radius);
 	if (p.x > p.y) return vec3(0,0,0);
@@ -127,8 +127,8 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		float iHeight = length(iPos) - rPlanet;
 
 		// Calculate the optical depth of the Rayleigh and Mie scattering for this step
-		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * density.x * iStepSize;
-		float odStepMie = exp(-iHeight / nishita_mie_scale) * density.y * iStepSize;
+		float odStepRlh = exp(-iHeight / nishita_rayleigh_scale) * nishitaDensity.x * iStepSize;
+		float odStepMie = exp(-iHeight / nishita_mie_scale) * nishitaDensity.y * iStepSize;
 
 		// Accumulate optical depth.
 		iOdRlh += odStepRlh;
