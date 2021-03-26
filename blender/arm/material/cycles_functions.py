@@ -332,3 +332,186 @@ vec3 wrap(const vec3 value, const vec3 max, const vec3 min) {
 \t            wrap(value.z, max.z, min.z));
 }
 """
+
+str_blackbody = """
+vec3 blackbody(const float temperature){
+
+  vec3 rgb = vec3(0.0, 0.0, 0.0);
+
+  vec3 r = vec3(0.0, 0.0, 0.0);
+  vec3 g = vec3(0.0, 0.0, 0.0);
+  vec3 b = vec3(0.0, 0.0, 0.0);
+
+  float t_inv = float(1.0 / temperature);
+
+  if (temperature >= 12000.0) {
+
+    rgb = vec3(0.826270103, 0.994478524, 1.56626022);
+
+  } else if(temperature < 965.0) {
+
+    rgb = vec3(4.70366907, 0.0, 0.0);
+
+  } else {
+
+    if (temperature >= 6365.0) {
+      vec3 r = vec3(3.78765709e+03, 9.36026367e-06, 3.98995841e-01);
+      vec3 g = vec3(-5.00279505e+02, -4.59745390e-06, 1.09090465e+00);
+      vec4 b = vec4(6.72595954e-13, -2.73059993e-08, 4.24068546e-04, -7.52204323e-01);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 3315.0) {
+      vec3 r = vec3(4.60124770e+03, 2.89727618e-05, 1.48001316e-01);
+      vec3 g = vec3(-1.18134453e+03, -2.18913373e-05, 1.30656109e+00);
+      vec4 b = vec4(-2.22463426e-13, -1.55078698e-08, 3.81675160e-04, -7.30646033e-01);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1902.0) {
+      vec3 r = vec3(4.66849800e+03, 2.85655028e-05, 1.29075375e-01);
+      vec3 g = vec3(-1.42546105e+03, -4.01730887e-05, 1.44002695e+00);
+      vec4 b = vec4(-2.02524603e-11, 1.79435860e-07, -2.60561875e-04, -1.41761141e-02);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1449.0) {
+      vec3 r = vec3(4.10671449e+03, -8.61949938e-05, 6.41423749e-01);
+      vec3 g = vec3(-1.22075471e+03, 2.56245413e-05, 1.20753416e+00);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else if (temperature >= 1167.0) {
+      vec3 r = vec3(3.37763626e+03, -4.34581697e-04, 1.64843306e+00);
+      vec3 g = vec3(-1.00402363e+03, 1.29189794e-04, 9.08181524e-01);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    } else {
+      vec3 r = vec3(2.52432244e+03, -1.06185848e-03, 3.11067539e+00);
+      vec3 g = vec3(-7.50343014e+02, 3.15679613e-04, 4.73464526e-01);
+      vec4 b = vec4(0.0, 0.0, 0.0, 0.0);
+
+      rgb = vec3(r.r * t_inv + r.g * temperature + r.b, g.r * t_inv + g.g * temperature + g.b, ((b.r * temperature + b.g) * temperature + b.b) * temperature + b.a );
+
+    }
+  }
+
+  return rgb;
+
+}
+"""
+
+# Adapted from https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/source/blender/gpu/shaders/material/gpu_shader_material_map_range.glsl
+str_map_range_linear = """
+float map_range_linear(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax) {
+  if (fromMax != fromMin) {
+    return float(toMin + ((value - fromMin) / (fromMax - fromMin)) * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_stepped = """
+float map_range_stepped(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax, const float steps) {
+  if (fromMax != fromMin) {
+    float factor = (value - fromMin) / (fromMax - fromMin);
+    factor = (steps > 0.0) ? floor(factor * (steps + 1.0)) / steps : 0.0;
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_smoothstep = """
+float map_range_smoothstep(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax)
+{
+  if (fromMax != fromMin) {
+    float factor = (fromMin > fromMax) ? 1.0 - smoothstep(fromMax, fromMin, value) :
+                                         smoothstep(fromMin, fromMax, value);
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_map_range_smootherstep = """
+float safe_divide(float a, float b)
+{
+  return (b != 0.0) ? a / b : 0.0;
+}
+
+float smootherstep(float edge0, float edge1, float x)
+{
+  x = clamp(safe_divide((x - edge0), (edge1 - edge0)), 0.0, 1.0);
+  return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+}
+
+float map_range_smootherstep(const float value, const float fromMin, const float fromMax, const float toMin, const float toMax) {
+  if (fromMax != fromMin) {
+    float factor = (fromMin > fromMax) ? 1.0 - smootherstep(fromMax, fromMin, value) :
+                                         smootherstep(fromMin, fromMax, value);
+    return float(toMin + factor * (toMax - toMin));
+  }
+  else {
+    return float(0.0);
+  }
+}
+"""
+
+str_rotate_around_axis = """
+vec3 rotate_around_axis(const vec3 p, const vec3 axis, const float angle)
+{
+  float costheta = cos(angle);
+  float sintheta = sin(angle);
+  vec3 r;
+
+  r.x = ((costheta + (1.0 - costheta) * axis.x * axis.x) * p.x) +
+        (((1.0 - costheta) * axis.x * axis.y - axis.z * sintheta) * p.y) +
+        (((1.0 - costheta) * axis.x * axis.z + axis.y * sintheta) * p.z);
+
+  r.y = (((1.0 - costheta) * axis.x * axis.y + axis.z * sintheta) * p.x) +
+        ((costheta + (1.0 - costheta) * axis.y * axis.y) * p.y) +
+        (((1.0 - costheta) * axis.y * axis.z - axis.x * sintheta) * p.z);
+
+  r.z = (((1.0 - costheta) * axis.x * axis.z - axis.y * sintheta) * p.x) +
+        (((1.0 - costheta) * axis.y * axis.z + axis.x * sintheta) * p.y) +
+        ((costheta + (1.0 - costheta) * axis.z * axis.z) * p.z);
+
+  return r;
+}
+"""
+
+str_euler_to_mat3 = """
+mat3 euler_to_mat3(vec3 euler)
+{
+  float cx = cos(euler.x);
+  float cy = cos(euler.y);
+  float cz = cos(euler.z);
+  float sx = sin(euler.x);
+  float sy = sin(euler.y);
+  float sz = sin(euler.z);
+
+  mat3 mat;
+  mat[0][0] = cy * cz;
+  mat[0][1] = cy * sz;
+  mat[0][2] = -sy;
+
+  mat[1][0] = sy * sx * cz - cx * sz;
+  mat[1][1] = sy * sx * sz + cx * cz;
+  mat[1][2] = cy * sx;
+
+  mat[2][0] = sy * cx * cz + sx * sz;
+  mat[2][1] = sy * cx * sz - sx * cz;
+  mat[2][2] = cy * cx;
+  return mat;
+}
+"""
