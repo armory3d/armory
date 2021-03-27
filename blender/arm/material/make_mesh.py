@@ -125,6 +125,10 @@ def make_base(con_mesh, parse_opacity):
     if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
 
+    vert.add_out('vec3 wnormal')
+    make_attrib.write_norpos(con_mesh, vert)
+    frag.write_attrib('vec3 n = normalize(wnormal);')
+
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
 
@@ -161,10 +165,6 @@ def make_base(con_mesh, parse_opacity):
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
-
-    vert.add_out('vec3 wnormal')
-    make_attrib.write_norpos(con_mesh, vert)
-    frag.write_attrib('vec3 n = normalize(wnormal);')
 
     if con_mesh.is_elem('tang'):
         if tese is not None:
