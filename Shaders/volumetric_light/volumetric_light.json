@@ -63,7 +63,7 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrixSun",
 					"ifndef": ["_CSM"],
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
