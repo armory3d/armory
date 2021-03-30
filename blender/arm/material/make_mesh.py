@@ -372,7 +372,7 @@ def make_forward_mobile(con_mesh):
         frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
-            vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
+            vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
             vert.write('lightPosition = LWVP * spos;')
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}')
@@ -694,7 +694,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                         vert.write('lightPosition = LVP * vec4(wposition, 1.0);')
                     else:
                         vert.add_out('vec4 lightPosition')
-                        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
+                        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
                         vert.write('lightPosition = LWVP * spos;')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
