@@ -177,9 +177,9 @@ class Uniforms {
 		var v: Vec4 = null;
 		switch (link) {
 			case "_nishitaDensity": {
-				v = iron.object.Uniforms.helpVec;
 				var w = Scene.active.world;
 				if (w != null) {
+					v = iron.object.Uniforms.helpVec;
 					// We only need Rayleigh and Mie density in the sky shader -> Vec2
 					v.x = w.raw.nishita_density[0];
 					v.y = w.raw.nishita_density[1];

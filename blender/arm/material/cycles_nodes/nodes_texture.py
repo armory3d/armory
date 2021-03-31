@@ -296,7 +296,7 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
 
     if node.sky_type == 'PREETHAM' or node.sky_type == 'HOSEK_WILKIE':
         if node.sky_type == 'PREETHAM':
-            log.warn('Preetham sky model is not supported, using Hosek Wilkie sky model instead')
+            log.info('Info: Preetham sky model is not supported, using Hosek Wilkie sky model instead')
 
         return parse_sky_hosekwilkie(node, state)
 
