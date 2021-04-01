@@ -17,17 +17,59 @@ shader_datas = []
 
 
 def build():
+    """Builds world shaders for all exported worlds."""
     global shader_datas
 
-    bpy.data.worlds['Arm'].world_defs = ''
+    wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
+
+    mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+    envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
+
+    wrd.world_defs = ''
     worlds = []
     shader_datas = []
 
-    for scene in bpy.data.scenes:
-        # Only export worlds from enabled scenes
-        if scene.arm_export and scene.world is not None and scene.world not in worlds:
-            worlds.append(scene.world)
-            create_world_shaders(scene.world)
+    with write_probes.setup_envmap_render():
+
+        for scene in bpy.data.scenes:
+            world = scene.world
+
+            # Only export worlds from enabled scenes and only once per world
+            if scene.arm_export and world is not None and world not in worlds:
+                worlds.append(world)
+
+                world.arm_envtex_name = ''
+                create_world_shaders(world)
+
+                if rpdat.arm_irradiance:
+                    # Plain background color
+                    if '_EnvCol' in world.world_defs:
+                        world_name = arm.utils.safestr(world.name)
+                        # Irradiance json file name
+                        world.arm_envtex_name = world_name
+                        world.arm_envtex_irr_name = world_name
+                        write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
+
+                    # Render world to envmap for (ir)radiance, if no
+                    # other probes are exported
+                    elif world.arm_envtex_name == '':
+                        write_probes.render_envmap(envpath, world)
+
+                        filename = f'env_{arm.utils.safesrc(world.name)}'
+                        image_file = f'{filename}.jpg'
+                        image_filepath = os.path.join(envpath, image_file)
+
+                        world.arm_envtex_name = image_file
+                        world.arm_envtex_irr_name = os.path.basename(image_filepath).rsplit('.', 1)[0]
+
+                        write_radiance = rpdat.arm_radiance and not mobile_mat
+                        mip_count = write_probes.write_probes(image_filepath, True, world.arm_envtex_num_mips, write_radiance)
+                        world.arm_envtex_num_mips = mip_count
+
+                        if write_radiance:
+                            # Set world def, everything else is handled by write_probes()
+                            wrd.world_defs += '_Rad'
 
 
 def create_world_shaders(world: bpy.types.World):
@@ -131,14 +173,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         col = world.color
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
-
-    # Irradiance/Radiance: clear to color if no texture or sky is provided
-    if rpdat.arm_irradiance or rpdat.arm_irradiance:
-        if '_EnvSky' not in world.world_defs and '_EnvTex' not in world.world_defs and '_EnvImg' not in world.world_defs:
-            # Irradiance json file name
-            world.arm_envtex_name = world_name
-            world.arm_envtex_irr_name = world_name
-            write_probes.write_color_irradiance(world_name, world.arm_envtex_color)
+        world.world_defs += '_EnvCol'
 
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:

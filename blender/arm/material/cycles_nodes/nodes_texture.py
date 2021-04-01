@@ -294,6 +294,8 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
         # Pass through
         return c.to_vec3([0.0, 0.0, 0.0])
 
+    state.world.world_defs += '_EnvSky'
+
     if node.sky_type == 'PREETHAM' or node.sky_type == 'HOSEK_WILKIE':
         if node.sky_type == 'PREETHAM':
             log.info('Info: Preetham sky model is not supported, using Hosek Wilkie sky model instead')
@@ -315,7 +317,6 @@ def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) 
     # Match to cycles
     world.arm_envtex_strength *= 0.1
 
-    world.world_defs += '_EnvSky'
     assets.add_khafile_def('arm_hosek')
     curshader.add_uniform('vec3 A', link="_hosekA")
     curshader.add_uniform('vec3 B', link="_hosekB")

@@ -1,23 +1,89 @@
-import bpy
+from contextlib import contextmanager
+import math
 import multiprocessing
 import os
-import sys
-import subprocess
-import json
 import re
-import arm.utils
+import subprocess
+
+import bpy
+
 import arm.assets as assets
+import arm.log as log
+import arm.utils
+
 
 def add_irr_assets(output_file_irr):
     assets.add(output_file_irr + '.arm')
+
 
 def add_rad_assets(output_file_rad, rad_format, num_mips):
     assets.add(output_file_rad + '.' + rad_format)
     for i in range(0, num_mips):
         assets.add(output_file_rad + '_' + str(i) + '.' + rad_format)
 
-# Generate probes from environment map
-def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True):
+
+@contextmanager
+def setup_envmap_render():
+    """Creates a background scene for rendering environment textures.
+    Use it as a context manager to automatically clean up on errors.
+    """
+    rpdat = arm.utils.get_rp()
+    radiance_size = int(rpdat.arm_radiance_size)
+
+    # TODO: Add world option to render .hdr in the UI
+
+    # Render worlds in a different scene so that there are no other
+    # objects. The actual scene might be called differently if the name
+    # is already taken
+    scene = bpy.data.scenes.new("_arm_envmap_render")
+    scene.render.engine = "CYCLES"
+    scene.render.image_settings.file_format = "JPEG"
+    scene.render.image_settings.quality = 100
+    scene.render.resolution_x = radiance_size
+    scene.render.resolution_y = radiance_size // 2
+
+    # Set GPU as rendering device if the user enabled it
+    if bpy.context.preferences.addons["cycles"].preferences.compute_device_type == "CUDA":
+        scene.cycles.device = "GPU"
+    else:
+        log.info('Armory: Using CPU for environment render (might be slow). Enable CUDA if possible.')
+
+    # One sample is enough for world background only
+    scene.cycles.samples = 1
+
+    # Setup scene
+    cam = bpy.data.cameras.new("_arm_cam_envmap_render")
+    cam_obj = bpy.data.objects.new("_arm_cam_envmap_render", cam)
+    scene.collection.objects.link(cam_obj)
+    scene.camera = cam_obj
+
+    cam_obj.location = [0.0, 0.0, 0.0]
+    cam.type = "PANO"
+    cam.cycles.panorama_type = "EQUIRECTANGULAR"
+    cam_obj.rotation_euler = [math.radians(90), 0, math.radians(-90)]
+
+    try:
+        yield
+    finally:
+        bpy.data.objects.remove(cam_obj)
+        bpy.data.cameras.remove(cam)
+        bpy.data.scenes.remove(scene)
+
+
+def render_envmap(target_dir: str, world: bpy.types.World):
+    """Renders an environment texture for the given world into the
+    target_dir. Use in combination with setup_envmap_render()."""
+    scene = bpy.data.scenes["_arm_envmap_render"]
+    scene.world = world
+
+    render_path = os.path.join(target_dir, f"env_{arm.utils.safesrc(world.name)}.jpg")
+    scene.render.filepath = render_path
+
+    bpy.ops.render.render(write_still=True, scene=scene.name)
+
+
+def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, arm_radiance=True) -> int:
+    """Generate probes from environment map and returns the mipmap count"""
     envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
 
     if not os.path.exists(envpath):
