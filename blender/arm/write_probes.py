@@ -317,6 +317,8 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
+    for i in range(0, len(irradiance_floats)):
+        irradiance_floats[i] /= 2
 
     sh_json = {'irradiance': irradiance_floats}
     ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else ''
