@@ -30,8 +30,6 @@ def setup_envmap_render():
     rpdat = arm.utils.get_rp()
     radiance_size = int(rpdat.arm_radiance_size)
 
-    # TODO: Add world option to render .hdr in the UI
-
     # Render worlds in a different scene so that there are no other
     # objects. The actual scene might be called differently if the name
     # is already taken
@@ -129,7 +127,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
     scaled_file = output_file_rad + '.' + rad_format
 
     if arm.utils.get_os() == 'win':
-        output = subprocess.check_output([ \
+        subprocess.check_output([
             kraffiti_path,
             'from=' + input_file,
             'to=' + scaled_file,
@@ -137,35 +135,35 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             'width=' + str(target_w),
             'height=' + str(target_h)])
     else:
-        output = subprocess.check_output([ \
-            kraffiti_path + \
-            ' from="' + input_file + '"' + \
-            ' to="' + scaled_file + '"' + \
-            ' format=' + rad_format + \
-            ' width=' + str(target_w) + \
-            ' height=' + str(target_h)], shell=True)
+        subprocess.check_output([
+            kraffiti_path
+            + ' from="' + input_file + '"'
+            + ' to="' + scaled_file + '"'
+            + ' format=' + rad_format
+            + ' width=' + str(target_w)
+            + ' height=' + str(target_h)], shell=True)
 
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':
-        subprocess.call([ \
+        subprocess.call([
             cmft_path,
             '--input', scaled_file,
             '--filter', 'shcoeffs',
             '--outputNum', '1',
             '--output0', output_file_irr])
     else:
-        subprocess.call([ \
-            cmft_path + \
-            ' --input ' + '"' + scaled_file + '"' + \
-            ' --filter shcoeffs' + \
-            ' --outputNum 1' + \
-            ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
+        subprocess.call([
+            cmft_path
+            + ' --input ' + '"' + scaled_file + '"'
+            + ' --filter shcoeffs'
+            + ' --outputNum 1'
+            + ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
 
     sh_to_json(output_file_irr)
     add_irr_assets(output_file_irr)
 
     # Mip-mapped radiance
-    if arm_radiance == False:
+    if not arm_radiance:
         return cached_num_mips
 
     # 4096 = 256 face
@@ -266,37 +264,37 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
     if disable_hdr is True:
         for f in generated_files:
             if arm.utils.get_os() == 'win':
-                subprocess.call([ \
+                subprocess.call([
                     kraffiti_path,
                     'from=' + f + '.hdr',
                     'to=' + f + '.jpg',
                     'format=jpg'])
             else:
-                subprocess.call([ \
-                    kraffiti_path + \
-                    ' from="' + f + '.hdr"' + \
-                    ' to="' + f + '.jpg"' + \
-                    ' format=jpg'], shell=True)
+                subprocess.call([
+                    kraffiti_path
+                    + ' from="' + f + '.hdr"'
+                    + ' to="' + f + '.jpg"'
+                    + ' format=jpg'], shell=True)
             os.remove(f + '.hdr')
 
     # Scale from (4x2 to 1x1>
-    for i in range (0, 2):
+    for i in range(0, 2):
         last = generated_files[-1]
         out = output_file_rad + '_' + str(mip_count + i)
         if arm.utils.get_os() == 'win':
-            subprocess.call([ \
+            subprocess.call([
                 kraffiti_path,
                 'from=' + last + '.' + rad_format,
                 'to=' + out + '.' + rad_format,
                 'scale=0.5',
                 'format=' + rad_format], shell=True)
         else:
-            subprocess.call([ \
-                kraffiti_path + \
-                ' from=' + '"' + last + '.' + rad_format + '"' + \
-                ' to=' + '"' + out + '.' + rad_format + '"' + \
-                ' scale=0.5' + \
-                ' format=' + rad_format], shell=True)
+            subprocess.call([
+                kraffiti_path
+                + ' from=' + '"' + last + '.' + rad_format + '"'
+                + ' to=' + '"' + out + '.' + rad_format + '"'
+                + ' scale=0.5'
+                + ' format=' + rad_format], shell=True)
         generated_files.append(out)
 
     mip_count += 2
@@ -304,6 +302,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
     add_rad_assets(output_file_rad, rad_format, mip_count)
 
     return mip_count
+
 
 def sh_to_json(sh_file):
     """Parse sh coefs produced by cmft into json array"""
@@ -327,15 +326,26 @@ def sh_to_json(sh_file):
     # Clean up .c
     os.remove(sh_file + '.c')
 
+
 def parse_band_floats(irradiance_floats, band_line):
     string_floats = re.findall(r'[-+]?\d*\.\d+|\d+', band_line)
-    string_floats = string_floats[1:] # Remove 'Band 0/1/2' number
+    string_floats = string_floats[1:]  # Remove 'Band 0/1/2' number
     for s in string_floats:
         irradiance_floats.append(float(s))
 
+
 def write_sky_irradiance(base_name):
     # Hosek spherical harmonics
-    irradiance_floats = [1.5519331988822218,2.3352207154503266,2.997277451988076,0.2673894962434794,0.4305630474135794,0.11331825259716752,-0.04453633521758638,-0.038753175134160295,-0.021302768541875794,0.00055858020486499,0.000371654770334503,0.000126606145406403,-0.000135708721978705,-0.000787399554583089,-0.001550090690860059,0.021947399048903773,0.05453650591711572,0.08783641266630278,0.17053593578630663,0.14734127083304463,0.07775404698816404,-2.6924363189795e-05,-7.9350169701934e-05,-7.559914435231e-05,0.27035455385870993,0.23122918445556914,0.12158817295211832]
+    irradiance_floats = [
+        1.5519331988822218, 2.3352207154503266, 2.997277451988076,
+        0.2673894962434794, 0.4305630474135794, 0.11331825259716752,
+        -0.04453633521758638, -0.038753175134160295, -0.021302768541875794,
+        0.00055858020486499, 0.000371654770334503, 0.000126606145406403,
+        -0.000135708721978705, -0.000787399554583089, -0.001550090690860059,
+        0.021947399048903773, 0.05453650591711572, 0.08783641266630278,
+        0.17053593578630663, 0.14734127083304463, 0.07775404698816404,
+        -2.6924363189795e-05, -7.9350169701934e-05, -7.559914435231e-05,
+        0.27035455385870993, 0.23122918445556914, 0.12158817295211832]
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 
@@ -349,6 +359,7 @@ def write_sky_irradiance(base_name):
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
+
 
 def write_color_irradiance(base_name, col):
     """Constant color irradiance"""
