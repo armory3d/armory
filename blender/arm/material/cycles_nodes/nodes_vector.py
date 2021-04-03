@@ -4,6 +4,7 @@ import bpy
 from mathutils import Euler, Vector
 
 import arm.material.cycles as c
+import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
@@ -141,3 +142,33 @@ def parse_displacement(node: bpy.types.ShaderNodeDisplacement, out_socket: bpy.t
     scale = c.parse_value_input(node.inputs[2])
     nor = c.parse_vector_input(node.inputs[3])
     return f'(vec3({height}) * {scale})'
+
+def parse_vectorrotate(node: bpy.types.ShaderNodeVectorRotate, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    
+    type = node.rotation_type
+    input_vector: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[0])
+    input_center: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[1])
+    input_axis: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[2])
+    input_angle: bpy.types.NodeSocket = c.parse_value_input(node.inputs[3])
+    input_rotation: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[4])
+
+    if node.invert:
+        input_invert = "0"
+    else:
+        input_invert = "1"
+
+    state.curshader.add_function(c_functions.str_rotate_around_axis)
+
+    if type == 'AXIS_ANGLE':
+        return f'vec3( (length({input_axis}) != 0.0) ? rotate_around_axis({input_vector} - {input_center}, normalize({input_axis}), {input_angle} * {input_invert}) + {input_center} : {input_vector} )'
+    elif type == 'X_AXIS':
+        return f'vec3( rotate_around_axis({input_vector} - {input_center}, vec3(1.0, 0.0, 0.0), {input_angle} * {input_invert}) + {input_center} )'
+    elif type == 'Y_AXIS':
+        return f'vec3( rotate_around_axis({input_vector} - {input_center}, vec3(0.0, 1.0, 0.0), {input_angle} * {input_invert}) + {input_center} )'
+    elif type == 'Z_AXIS':
+        return f'vec3( rotate_around_axis({input_vector} - {input_center}, vec3(0.0, 0.0, 1.0), {input_angle} * {input_invert}) + {input_center} )'  
+    elif type == 'EULER_XYZ':
+        state.curshader.add_function(c_functions.str_euler_to_mat3)
+        return f'vec3( mat3(({input_invert} < 0.0) ? transpose(euler_to_mat3({input_rotation})) : euler_to_mat3({input_rotation})) * ({input_vector} - {input_center}) + {input_center})'
+    
+    return f'(vec3(1.0, 0.0, 0.0))'

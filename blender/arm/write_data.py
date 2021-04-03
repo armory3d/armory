@@ -254,6 +254,9 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_debug')
             khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
 
+        if not is_publish and state.target == 'html5':
+            khafile.write("project.addParameter('--debug');\n")
+
         if wrd.arm_verbose_output:
             khafile.write("project.addParameter('--times');\n")
 
@@ -517,6 +520,7 @@ def write_indexhtml(w, h, is_publish):
 add_compiledglsl = ''
 def write_compiledglsl(defs, make_variants):
     rpdat = arm.utils.get_rp()
+    wrd = bpy.data.worlds['Arm']
     shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
@@ -532,6 +536,9 @@ def write_compiledglsl(defs, make_variants):
 #define _InvY
 #endif
 """)
+
+        if state.target == 'html5' or arm.utils.get_gapi() == 'direct3d11':
+            f.write("#define _FlipY\n")
 
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
@@ -689,6 +696,22 @@ const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) 
         if rpdat.arm_skin == 'On':
             f.write(
 """const int skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
+""")
+
+        if '_Clusters' in wrd.world_defs:
+            max_lights = "4"
+            max_lights_clusters = "4"
+            if rpdat.rp_shadowmap_atlas:
+                max_lights = str(rpdat.rp_max_lights)
+                max_lights_clusters = str(rpdat.rp_max_lights_cluster)
+                # prevent max lights cluster being higher than max lights
+                if (int(max_lights_clusters) > int(max_lights)):
+                    max_lights_clusters = max_lights
+
+            f.write(
+"""const int maxLights = """ + max_lights + """;
+const int maxLightsCluster = """ + max_lights_clusters + """;
+const float clusterNear = 3.0;
 """)
 
         f.write(add_compiledglsl + '\n') # External defined constants

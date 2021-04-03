@@ -6,7 +6,6 @@ import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
 import iron.math.RayCaster;
-import iron.data.SceneFormat;
 
 class Hit {
 
@@ -285,7 +284,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	function updateContacts() {
-		contacts = [];
+		contacts.resize(0);
 
 		var disp: bullet.Bt.Dispatcher = dispatcher;
 		var numManifolds = disp.getNumManifolds();
@@ -329,12 +328,12 @@ class PhysicsWorld extends Trait {
 		}
 	}
 
-	public function pickClosest(inputX: Float, inputY: Float): RigidBody {
+	public function pickClosest(inputX: Float, inputY: Float, group: Int = 0x00000001, mask = 0xFFFFFFFF): RigidBody {
 		var camera = iron.Scene.active.camera;
 		var start = new Vec4();
 		var end = new Vec4();
 		RayCaster.getDirection(start, end, inputX, inputY, camera);
-		var hit = rayCast(camera.transform.world.getLoc(), end);
+		var hit = rayCast(camera.transform.world.getLoc(), end, group, mask);
 		var rb = (hit != null) ? hit.rb : null;
 		return rb;
 	}

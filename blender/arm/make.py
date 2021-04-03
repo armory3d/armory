@@ -9,6 +9,7 @@ import threading
 import webbrowser
 import shlex
 import errno
+import math
 
 import bpy
 
@@ -61,10 +62,9 @@ def remove_readonly(func, path, excinfo):
 def export_data(fp, sdk_path):
     wrd = bpy.data.worlds['Arm']
 
-    print('\n' + '_' * 10 + '  [Armory] Compiling  ' + '_' * 10)
+    print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
-        print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
-        print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi() + ', Blender: ' + bpy.app.version_string)
+        print(f'Blender: {bpy.app.version_string}, Target: {state.target}, GAPI: {arm.utils.get_gapi()}')
 
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
@@ -157,10 +157,10 @@ def export_data(fp, sdk_path):
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
 
     if wrd.arm_verbose_output:
-        print('Exported modules:', modules)
-        print('Shader flags:', defs)
-        print('Compositor flags:', cdefs)
-        print('Khafile flags:', assets.khafile_defs)
+        print('Exported modules:', ', '.join(modules))
+        print('Shader flags:', ' '.join(defs))
+        print('Compositor flags:', ' '.join(cdefs))
+        print('Khafile flags:', ' '.join(assets.khafile_defs))
 
     # Render path is configurable at runtime
     has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
@@ -338,7 +338,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
     if arm.utils.get_save_on_build():
         bpy.ops.wm.save_mainfile()
 
-    log.clear(clear_warnings=True)
+    log.clear(clear_warnings=True, clear_errors=True)
 
     # Set camera in active scene
     active_scene = arm.utils.get_active_scene()
@@ -431,7 +431,7 @@ def compilation_server_done():
         log.error('Build failed, check console')
 
 def build_done():
-    print('Finished in ' + str(time.time() - profile_time))
+    print('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:

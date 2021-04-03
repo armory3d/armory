@@ -1,8 +1,11 @@
 import os
+from typing import Optional, TextIO
+
 import bpy
-import arm.utils
-import arm.log
+
 from arm.exporter import ArmoryExporter
+import arm.log
+import arm.utils
 
 parsed_nodes = []
 parsed_ids = dict() # Sharing node data
@@ -100,7 +103,9 @@ def build_node_tree(node_group):
         f.write('}')
     node_group.arm_cached = True
 
-def build_node(node: bpy.types.Node, f):
+
+def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
+    """Builds the given node and returns its name. f is an opened file object."""
     global parsed_nodes
     global parsed_ids
 
@@ -126,7 +131,7 @@ def build_node(node: bpy.types.Node, f):
     parsed_nodes.append(name)
 
     # Create node
-    node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
+    node_type = node.bl_idname[2:]  # Discard 'LN' prefix
     f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
     # Handle Function Nodes
@@ -167,26 +172,45 @@ def build_node(node: bpy.types.Node, f):
 
     # Create inputs
     for inp in node.inputs:
-        # Is linked - find node
+        # True if the input is connected to a unlinked reroute
+        # somewhere down the reroute line
+        unconnected = False
+
+        # Is linked -> find the connected node
         if inp.is_linked:
             n = inp.links[0].from_node
             socket = inp.links[0].from_socket
-            if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
-                (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
-                print('Armory Error: Sockets do not match in logic node tree "{0}" - node "{1}" - socket "{2}"'.format(group_name, node.name, inp.name))
-            inp_name = build_node(n, f)
-            for i in range(0, len(n.outputs)):
-                if n.outputs[i] == socket:
-                    inp_from = i
+
+            # Follow reroutes first
+            while n.type == "REROUTE":
+                if len(n.inputs) == 0 or not n.inputs[0].is_linked:
+                    unconnected = True
                     break
-        # Not linked - create node with default values
+
+                socket = n.inputs[0].links[0].from_socket
+                n = n.inputs[0].links[0].from_node
+
+            if not unconnected:
+                if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
+                        (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
+                    arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
+
+                inp_name = build_node(n, f)
+                for i in range(0, len(n.outputs)):
+                    if n.outputs[i] == socket:
+                        inp_from = i
+                        break
+
+        # Not linked -> create node with default values
         else:
             inp_name = build_default_node(inp)
             inp_from = 0
+
         # The input is linked to a reroute, but the reroute is unlinked
-        if inp_name == None:
+        if unconnected:
             inp_name = build_default_node(inp)
             inp_from = 0
+
         # Add input
         f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
 

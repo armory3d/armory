@@ -88,7 +88,7 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrixSun",
 					"ifndef": ["_CSM"],
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
@@ -106,6 +106,11 @@
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "smSizeUniform",
+					"link": "_shadowMapSize",
+					"ifdef": ["_SMSizeUniform"]
 				},
 				{
 					"name": "lightProj",
@@ -138,24 +143,38 @@
 					"ifdef": ["_SinglePoint", "_Spot"]
 				},
 				{
-					"name": "LWVPSpot0",
+					"name": "LWVPSpotArray",
+					"link": "_biasLightWorldViewProjectionMatrixSpotArray",
+					"ifdef": ["_Clusters", "_ShadowMap", "_Spot"]
+				},
+				{
+					"name": "pointLightDataArray",
+					"link": "_pointLightsAtlasArray",
+					"ifdef": ["_Clusters", "_ShadowMap", "_ShadowMapAtlas"]
+				},
+				{
+					"name": "LWVPSpot[0]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot0",
-					"ifdef": ["_Spot", "_ShadowMap"]
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
-					"name": "LWVPSpot1",
+					"name": "LWVPSpot[1]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot1",
-					"ifdef": ["_Spot", "_ShadowMap"]
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
-					"name": "LWVPSpot2",
+					"name": "LWVPSpot[2]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot2",
-					"ifdef": ["_Spot", "_ShadowMap"]
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
-					"name": "LWVPSpot3",
+					"name": "LWVPSpot[3]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
-					"ifdef": ["_Spot", "_ShadowMap"]
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",

@@ -37,7 +37,6 @@ def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=Fa
     prep = ''
     if declare:
         prep = 'vec3 '
-    vert.write_pre = True
     is_bone = con_mesh.is_elem('bone')
     if is_bone:
         make_skin.skin_pos(vert)
@@ -48,4 +47,3 @@ def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=Fa
             vert.write_attrib(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
     if con_mesh.is_elem('ipos'):
         make_inst.inst_pos(con_mesh, vert)
-    vert.write_pre = False

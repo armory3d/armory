@@ -32,6 +32,7 @@ import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
 
+import arm.log as log
 
 @unique
 class NodeType(Enum):
@@ -1157,7 +1158,16 @@ class ArmoryExporter:
             else:
                 invscale_tex = 1 * 32767
             if has_tang:
-                exportMesh.calc_tangents(uvmap=lay0.name)
+                try:
+                    exportMesh.calc_tangents(uvmap=lay0.name)
+                except Exception as e:
+                    if hasattr(e, 'message'):
+                        log.error(e.message)
+                    else:
+                        # Assume it was caused because of encountering n-gons
+                        log.error(f"""object {bobject.name} contains n-gons in its mesh, so it's impossible to compute tanget space for normal mapping.
+Make sure the mesh only has tris/quads.""")
+
                 tangdata = np.empty(num_verts * 3, dtype='<f4')
         if has_col:
             cdata = np.empty(num_verts * 3, dtype='<f4')
@@ -1950,8 +1960,9 @@ class ArmoryExporter:
             self.output['tilesheet_datas'].append(o)
 
     def export_world(self):
-        """Exports the world of the scene."""
+        """Exports the world of the current scene."""
         world = self.scene.world
+
         if world is not None:
             world_name = arm.utils.safestr(world.name)
 
@@ -1961,6 +1972,9 @@ class ArmoryExporter:
 
                 self.post_export_world(world, out_world)
                 self.output['world_datas'].append(out_world)
+
+        elif arm.utils.get_rp().rp_background == 'World':
+            log.warn(f'Scene "{self.scene.name}" is missing a world, some render targets will not be cleared')
 
     def export_objects(self, scene):
         """Exports all supported blender objects.
@@ -2105,7 +2119,7 @@ class ArmoryExporter:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
-                    log.warn('No camera found in active scene')
+                    log.warn(f'Scene "{self.scene.name}" is missing a camera')
 
             self.output['material_datas'] = []
 
@@ -2148,7 +2162,7 @@ class ArmoryExporter:
 
         # No camera found
         if not self.camera_spawned:
-            log.warn('No camera found in active scene layers')
+            log.warn( f'Scene "{self.scene.name}" is missing a camera')
 
         # No camera found, create a default one
         if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
@@ -2182,7 +2196,7 @@ class ArmoryExporter:
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in ' + str(time.time() - profile_time))
+        print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
@@ -2304,6 +2318,10 @@ class ArmoryExporter:
 
         return instanced_type, instanced_data
 
+    @staticmethod
+    def rigid_body_static(rb):
+        return (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+
     def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
@@ -2330,7 +2348,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = rb.mass
-            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+            is_static = self.rigid_body_static(rb)
             if is_static:
                 body_mass = 0
             x = {}

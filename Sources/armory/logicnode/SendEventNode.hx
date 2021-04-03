@@ -5,8 +5,6 @@ import armory.system.Event;
 
 class SendEventNode extends LogicNode {
 
-	var entries: Array<TEvent> = null;
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -17,13 +15,9 @@ class SendEventNode extends LogicNode {
 
 		if (object == null) return;
 
-		var all = Event.get(name);
-		if (all != null) {
-			entries = [];
-			for (e in all) if (e.mask == object.uid) entries.push(e);
-		}
+		var entries = Event.get(name);
 		if (entries == null) return;
-		for (e in entries) e.onEvent();
+		for (e in entries) if (e.mask == object.uid) e.onEvent();
 
 		runOutput(0);
 	}
