@@ -72,4 +72,13 @@ class Helper {
 		if (value <= leftMin) return rightMin;
 		return map(value, leftMin, leftMax, rightMin, rightMax);
 	}
+
+	/**
+		Return the sign of the given value represented as `1.0` (positive value)
+		or `-1.0` (negative value). The sign of `0` is `0`.
+	**/
+	public static inline function sign(value: Float): Float {
+		if (value == 0) return 0;
+		return (value < 0) ? -1.0 : 1.0;
+	}
 }

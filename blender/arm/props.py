@@ -326,6 +326,7 @@ def init_properties():
     bpy.types.World.arm_envtex_sun_direction = FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
+    bpy.types.World.arm_nishita_density = FloatVectorProperty(name="Nishita Density", size=3, default=[1, 1, 1])
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)
@@ -435,6 +436,10 @@ def init_properties():
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
 
     bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_darken_clouds = BoolProperty(
+        name="Darken Clouds at Night",
+        description="Darkens the clouds when the sun is low. This setting is for artistic purposes and is not physically correct",
+        default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)

@@ -2843,6 +2843,7 @@ class ArmoryExporter:
             out_world['sun_direction'] = list(world.arm_envtex_sun_direction)
             out_world['turbidity'] = world.arm_envtex_turbidity
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
+            out_world['nishita_density'] = list(world.arm_nishita_density)
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
 
@@ -2857,16 +2858,9 @@ class ArmoryExporter:
         rpdat = arm.utils.get_rp()
         solid_mat = rpdat.arm_material_model == 'Solid'
         arm_irradiance = rpdat.arm_irradiance and not solid_mat
-        arm_radiance = False
-        radtex = world.arm_envtex_name.rsplit('.', 1)[0]
+        arm_radiance = rpdat.arm_radiance
+        radtex = world.arm_envtex_name.rsplit('.', 1)[0]  # Remove file extension
         irrsharmonics = world.arm_envtex_irr_name
-
-        # Radiance
-        if '_EnvTex' in world.world_defs:
-            arm_radiance = rpdat.arm_radiance
-        elif '_EnvSky' in world.world_defs:
-            arm_radiance = rpdat.arm_radiance
-            radtex = 'hosek'
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
 

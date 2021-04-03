@@ -254,6 +254,7 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         layout.prop(world, 'arm_use_clouds')
         col = layout.column(align=True)
         col.enabled = world.arm_use_clouds
+        col.prop(world, 'arm_darken_clouds')
         col.prop(world, 'arm_clouds_lower')
         col.prop(world, 'arm_clouds_upper')
         col.prop(world, 'arm_clouds_precipitation')
