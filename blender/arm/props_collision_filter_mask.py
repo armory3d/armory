@@ -22,6 +22,13 @@ class ARM_PT_RbCollisionFilterMaskPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         obj = context.object
         layout.prop(obj, 'arm_rb_collision_filter_mask', text="", expand=True)
+        col_mask = ''
+        for b in obj.arm_rb_collision_filter_mask:
+            col_mask = ('1' if b else '0') + col_mask
+        col = layout.column()
+        row = col.row()
+        row.alignment = 'RIGHT'
+        row.label(text=f'Integer Mask Value: {str(int(col_mask, 2))}')
 
 def register():
     bpy.utils.register_class(ARM_PT_RbCollisionFilterMaskPanel)
