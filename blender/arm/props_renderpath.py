@@ -242,6 +242,62 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_autoexposure: BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes: BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadows: BoolProperty(name="Shadows", description="Enable shadow casting", default=True, update=update_renderpath)
+    rp_max_lights: EnumProperty(
+        items=[('4', '4', '4'),
+               ('8', '8', '8'),
+               ('16', '16', '16'),
+               ('24', '24', '24'),
+               ('32', '32', '32'),
+               ('64', '64', '64'),],
+        name="Max Lights", description="Max number of lights that can be visible in the screen", default='16')
+    rp_max_lights_cluster: EnumProperty(
+        items=[('4', '4', '4'),
+               ('8', '8', '8'),
+               ('16', '16', '16'),
+               ('24', '24', '24'),
+               ('32', '32', '32'),
+               ('64', '64', '64'),],
+        name="Max Lights Shadows", description="Max number of rendered shadow maps that can be visible in the screen. Always equal or lower than Max Lights", default='16')
+    rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
+        items=[('2', '2', '2'),
+               ('3', '3', '3'),
+               ('4', '4', '4'),
+               ('5', '5', '5'),
+               ('6', '6', '6'),
+               ('7', '7', '7'),
+               ('8', '8', '8'),],
+        name="LOD Subdivisions", description="Number of subdivisions of the default tile size for LOD", default='2', update=update_renderpath)
+    rp_shadowmap_atlas_max_size_point: EnumProperty(
+        items=[('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384')],
+        name="Max Atlas Texture Size Points", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+    rp_shadowmap_atlas_max_size_spot: EnumProperty(
+        items=[('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384')],
+        name="Max Atlas Texture Size Spots", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+    rp_shadowmap_atlas_max_size_sun: EnumProperty(
+        items=[('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384')],
+        name="Max Atlas Texture Size Sun", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+    rp_shadowmap_atlas_max_size: EnumProperty(
+        items=[('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384')],
+        name="Max Atlas Texture Size", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
     rp_shadowmap_cube: EnumProperty(
         items=[('256', '256', '256'),
                ('512', '512', '512'),

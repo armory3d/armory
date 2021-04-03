@@ -12,12 +12,13 @@ class PickObjectNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var coords: Vec4 = inputs[0].get();
+		var mask: Int = inputs[1].get();
 
 		if (coords == null) return null;
 
 #if arm_physics
 		var physics = armory.trait.physics.PhysicsWorld.active;
-		var rb = physics.pickClosest(coords.x, coords.y);
+		var rb = physics.pickClosest(coords.x, coords.y, mask);
 		if (rb == null) return null;
 
 		if (from == 0) { // Object

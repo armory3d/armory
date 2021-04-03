@@ -21,26 +21,40 @@
 #endif
 
 #ifdef _ShadowMap
-#ifdef _SinglePoint
-	#ifdef _Spot
-	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot0;
-	#else
-	uniform samplerCubeShadow shadowMapPoint[1];
-	uniform vec2 lightProj;
+	#ifdef _SinglePoint
+		#ifdef _Spot
+			#ifndef _LTC
+				uniform sampler2DShadow shadowMapSpot[1];
+				uniform mat4 LWVPSpot[1];
+			#endif
+		#else
+			uniform samplerCubeShadow shadowMapPoint[1];
+			uniform vec2 lightProj;
+		#endif
 	#endif
-#endif
-#ifdef _Clusters
-	uniform samplerCubeShadow shadowMapPoint[4];
-	uniform vec2 lightProj;
-	#ifdef _Spot
-	uniform sampler2DShadow shadowMapSpot[4];
-	uniform mat4 LWVPSpot0;
-	uniform mat4 LWVPSpot1;
-	uniform mat4 LWVPSpot2;
-	uniform mat4 LWVPSpot3;
+	#ifdef _Clusters
+		#ifdef _SingleAtlas
+		//!uniform sampler2DShadow shadowMapAtlas;
+		#endif
+		uniform vec2 lightProj;
+		#ifdef _ShadowMapAtlas
+		#ifndef _SingleAtlas
+		uniform sampler2DShadow shadowMapAtlasPoint;
+		#endif
+		#else
+		uniform samplerCubeShadow shadowMapPoint[4];
+		#endif
+		#ifdef _Spot
+			#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			uniform sampler2DShadow shadowMapAtlasSpot;
+			#endif
+			#else
+			uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+			#endif
+			uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#endif
 	#endif
-#endif
 #endif
 
 #ifdef _LTC
@@ -51,17 +65,14 @@ uniform vec3 lightArea3;
 uniform sampler2D sltcMat;
 uniform sampler2D sltcMag;
 #ifdef _ShadowMap
-	#ifndef _Spot
+#ifndef _Spot
 	#ifdef _SinglePoint
-	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot0;
+		uniform sampler2DShadow shadowMapSpot[1];
+		uniform mat4 LWVPSpot[1];
 	#endif
 	#ifdef _Clusters
-	uniform sampler2DShadow shadowMapSpot[4];
-	uniform mat4 LWVPSpot0;
-	uniform mat4 LWVPSpot1;
-	uniform mat4 LWVPSpot2;
-	uniform mat4 LWVPSpot3;
+		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+		uniform mat4 LWVPSpotArray[maxLightsCluster];
 	#endif
 	#endif
 #endif
@@ -132,24 +143,24 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
-			vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			#endif
 			#ifdef _Clusters
 			if (index == 0) {
-				vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 1) {
-				vec4 lPos = LWVPSpot1 * vec4(p + n * bias * 10, 1.0);
+				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 2) {
-				vec4 lPos = LWVPSpot2 * vec4(p + n * bias * 10, 1.0);
+				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 3) {
-				vec4 lPos = LWVPSpot3 * vec4(p + n * bias * 10, 1.0);
+				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
 			}
 			#endif
@@ -168,26 +179,26 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		#ifdef _ShadowMap
 			if (receiveShadow) {
 				#ifdef _SinglePoint
-				vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 				#endif
 				#ifdef _Clusters
-				if (index == 0) {
-					vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
-					direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-				}
-				else if (index == 1) {
-					vec4 lPos = LWVPSpot1 * vec4(p + n * bias * 10, 1.0);
-					direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-				}
-				else if (index == 2) {
-					vec4 lPos = LWVPSpot2 * vec4(p + n * bias * 10, 1.0);
-					direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-				}
-				else if (index == 3) {
-					vec4 lPos = LWVPSpot3 * vec4(p + n * bias * 10, 1.0);
-					direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
-				}
+					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
+					#ifdef _ShadowMapAtlas
+						direct *= shadowTest(
+							#ifndef _SingleAtlas
+							shadowMapAtlasSpot
+							#else
+							shadowMapAtlas
+							#endif
+							, lPos.xyz / lPos.w, bias
+						);
+					#else
+							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+						else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+						else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+						else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+					#endif
 				#endif
 			}
 		#endif
@@ -207,10 +218,21 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 			#endif
 			#ifdef _Clusters
-			if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
-			else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
-			else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
-			else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+				#ifdef _ShadowMapAtlas
+				direct *= PCFFakeCube(
+					#ifndef _SingleAtlas
+					shadowMapAtlasPoint
+					#else
+					shadowMapAtlas
+					#endif
+					, ld, -l, bias, lightProj, n, index
+				);
+				#else
+					 if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+				else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
+				else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
+				else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+				#endif
 			#endif
 		}
 	#endif

@@ -300,7 +300,11 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.drawShadowMapAtlas();
+			#else
 			Inc.drawShadowMap();
+			#end
 		}
 		#end
 
@@ -352,7 +356,11 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 		}
 		#end
 
@@ -466,7 +474,11 @@ class RenderPathForward {
 			{
 				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
 				Inc.bindShadowMap();
+				#end
 				path.drawShader("shader_datas/volumetric_light/volumetric_light");
 
 				path.setTarget("singleb");

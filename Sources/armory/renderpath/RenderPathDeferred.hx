@@ -502,7 +502,12 @@ class RenderPathDeferred {
 		#end
 
 		#if (rp_shadowmap)
+		// atlasing is exclusive for now
+		#if arm_shadowmap_atlas
+		Inc.drawShadowMapAtlas();
+		#else
 		Inc.drawShadowMap();
+		#end
 		#end
 
 		// Voxels
@@ -544,6 +549,13 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+
+		#if rp_gbuffer2
+		{
+			path.bindTarget("gbuffer2", "gbuffer2");
+		}
+		#end
+
 		#if (rp_ssgi != "Off")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
@@ -572,7 +584,11 @@ class RenderPathDeferred {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 		}
 		#end
 
@@ -624,7 +640,11 @@ class RenderPathDeferred {
 		{
 			path.setTarget("singlea");
 			path.bindTarget("_main", "gbufferD");
+						#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 			path.drawShader("shader_datas/volumetric_light/volumetric_light");
 
 			path.setTarget("singleb");
@@ -652,6 +672,7 @@ class RenderPathDeferred {
 
 		#if rp_blending
 		{
+			path.setTarget("tex");
 			path.drawMeshes("blend");
 		}
 		#end
