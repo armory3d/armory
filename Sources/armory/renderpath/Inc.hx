@@ -583,6 +583,11 @@ class ShadowMapAtlas {
 			return false;
 		// push main tile to active tiles
 		atlas.activeTiles.push(mainTile);
+		// notify the tile on light remove
+		light.tileNotifyOnRemove = mainTile.notifyOnLightRemove;
+		// notify atlas when this tile is freed
+		mainTile.notifyOnFree = atlas.freeActiveTile;
+
 		return true;
 	}
 
@@ -730,6 +735,10 @@ class ShadowMapAtlas {
 
 		}
 		#end
+	}
+
+	function freeActiveTile(tile: ShadowMapTile) {
+		activeTiles.remove(tile);
 	}
 }
 
@@ -950,6 +959,11 @@ class ShadowMapTile {
 		}
 	}
 
+	public function notifyOnLightRemove() {
+		unlockLight = true;
+		freeTile();
+	}
+
 	inline function lockTile(light: LightObject): Void {
 		if (this.light != null)
 			return;
@@ -963,6 +977,7 @@ class ShadowMapTile {
 	}
 
 	public var unlockLight: Bool = false;
+	public var notifyOnFree: ShadowMapTile -> Void;
 
 	public function freeTile(): Void {
 		// prevent duplicates
@@ -987,6 +1002,11 @@ class ShadowMapTile {
 			// unlink linked tiles
 			tempTile.linkedTile = null;
 			tempTile = linkedTile;
+		}
+		// notify atlas that this tile has been freed
+		if (notifyOnFree != null) {
+			notifyOnFree(this);
+			notifyOnFree = null;
 		}
 	}
 
