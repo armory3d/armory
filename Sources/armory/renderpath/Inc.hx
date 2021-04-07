@@ -115,7 +115,7 @@ class Inc {
 		for (light in iron.Scene.active.lights) {
 			if (!light.lightInAtlas && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
-				light.lightInAtlas = ShadowMapAtlas.addLight(light);
+				ShadowMapAtlas.addLight(light);
 			}
 		}
 		// update point light data before rendering
@@ -564,11 +564,7 @@ class ShadowMapAtlas {
 	 * @param light of type LightObject to be added to an yatlas
 	 * @return if the light was added succesfully
 	 */
-	public static function addLight(light: LightObject): Bool {
-		// check if light can be added based on culling
-		if (light.culledLight || light.shadowMapScale == 0.0)
-			return false;
-
+	public static function addLight(light: LightObject) {
 		var atlasName = shadowMapAtlasName(light.data.raw.type);
 		var atlas = shadowMapAtlases.get(atlasName);
 		if (atlas == null) {
@@ -580,10 +576,15 @@ class ShadowMapAtlas {
 		// find a free tile for this light
 		var mainTile = ShadowMapTile.assignTiles(light, atlas, null);
 		if (mainTile == null)
-			return false;
-		// push main tile to active tiles
+			return;
+
 		atlas.activeTiles.push(mainTile);
-		return true;
+		// notify the tile on light remove
+		light.tileNotifyOnRemove = mainTile.notifyOnLightRemove;
+		// notify atlas when this tile is freed
+		mainTile.notifyOnFree = atlas.freeActiveTile;
+		// "lock" light to make sure it's not eligible to be added again
+		light.lightInAtlas = true;
 	}
 
 	static inline function shadowMapAtlasSize(light:LightObject):Int {
@@ -731,6 +732,10 @@ class ShadowMapAtlas {
 		}
 		#end
 	}
+
+	function freeActiveTile(tile: ShadowMapTile) {
+		activeTiles.remove(tile);
+	}
 }
 
 class ShadowMapTile {
@@ -796,7 +801,6 @@ class ShadowMapTile {
 	static inline function findCreateTiles(light: LightObject, oldTile: ShadowMapTile, atlas: ShadowMapAtlas, tilesPerLightType: Int, tileSize: Int): Array<ShadowMapTile> {
 		var tilesFound: Array<ShadowMapTile> = [];
 
-		var updateAtlas = false;
 		while (tilesFound.length < tilesPerLightType) {
 			findTiles(light, oldTile, atlas.tiles, tileSize, tilesPerLightType, tilesFound);
 
@@ -950,6 +954,11 @@ class ShadowMapTile {
 		}
 	}
 
+	public function notifyOnLightRemove() {
+		unlockLight = true;
+		freeTile();
+	}
+
 	inline function lockTile(light: LightObject): Void {
 		if (this.light != null)
 			return;
@@ -963,6 +972,7 @@ class ShadowMapTile {
 	}
 
 	public var unlockLight: Bool = false;
+	public var notifyOnFree: ShadowMapTile -> Void;
 
 	public function freeTile(): Void {
 		// prevent duplicates
@@ -987,6 +997,11 @@ class ShadowMapTile {
 			// unlink linked tiles
 			tempTile.linkedTile = null;
 			tempTile = linkedTile;
+		}
+		// notify atlas that this tile has been freed
+		if (notifyOnFree != null) {
+			notifyOnFree(this);
+			notifyOnFree = null;
 		}
 	}
 
