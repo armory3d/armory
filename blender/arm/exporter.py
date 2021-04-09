@@ -279,6 +279,8 @@ class ArmoryExporter:
         return out_track
 
     def export_object_transform(self, bobject: bpy.types.Object, o):
+        wrd = bpy.data.worlds['Arm']
+
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
 
@@ -292,7 +294,7 @@ class ArmoryExporter:
                 fp = self.get_meshes_file_path('action_' + action_name, compressed=ArmoryExporter.compress_enabled)
                 assets.add(fp)
                 ext = '.lz4' if ArmoryExporter.compress_enabled else ''
-                if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                if ext == '' and not wrd.arm_minimize:
                     ext = '.json'
 
                 if 'object_actions' not in o:
@@ -308,6 +310,7 @@ class ArmoryExporter:
 
                 self.export_pose_markers(out_anim, action)
 
+                unresolved_data_paths = set()
                 for fcurve in action.fcurves:
                     data_path = fcurve.data_path
 
@@ -315,7 +318,11 @@ class ArmoryExporter:
                         out_track = self.export_animation_track(fcurve, frame_range, FCURVE_TARGET_NAMES[data_path][fcurve.array_index])
                     except KeyError:
                         if data_path not in FCURVE_TARGET_NAMES:
-                            log.warn(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            # This can happen if the target is simply not
+                            # supported or the action shares both bone
+                            # and object transform data (FCURVE_TARGET_NAMES
+                            # only contains object transform targets)
+                            unresolved_data_paths.add(data_path)
                             continue
                         # Missing target entry for array_index or something else
                         else:
@@ -323,8 +330,20 @@ class ArmoryExporter:
 
                     out_anim['tracks'].append(out_track)
 
+                if len(unresolved_data_paths) > 0:
+                    warning = (
+                        f'The action "{action_name}" has fcurve channels with data paths that could not be resolved.'
+                        ' This can be caused by the following things:\n'
+                        '  - The data paths are not supported.\n'
+                        '  - The action exists on both armature and non-armature objects or has both bone and object transform data.'
+                    )
+                    if wrd.arm_verbose_output:
+                        warning += f'\n  Unresolved data paths: {unresolved_data_paths}'
+                    else:
+                        warning += '\n  To see the list of unresolved data paths please recompile with Armory Project > Verbose Output enabled.'
+                    log.warn(warning)
+
                 if True:  # not action.arm_cached or not os.path.exists(fp):
-                    wrd = bpy.data.worlds['Arm']
                     if wrd.arm_verbose_output:
                         print('Exporting object action ' + action_name)
 
