@@ -8,6 +8,10 @@ import iron.object.MeshObject;
 import zui.Zui;
 import zui.Id;
 using armory.object.TransformExtension;
+#if arm_shadowmap_atlas
+import armory.renderpath.Inc.ShadowMapTile;
+import armory.renderpath.Inc.ShadowMapAtlas;
+#end
 #end
 
 #if arm_debug
@@ -423,6 +427,7 @@ class DebugConsole extends Trait {
 							light.data.raw.strength = ui.slider(lightHandle, "Strength", 0.0, 5.0, true) * 10;
 							#if arm_shadowmap_atlas
 							ui.text("status: " + (light.culledLight ? "culled" : "rendered"));
+							ui.text("shadow map size: " + light.data.raw.shadowmap_size);
 							#end
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
@@ -519,6 +524,86 @@ class DebugConsole extends Trait {
 
 					ui.unindent();
 				}
+
+				#if arm_shadowmap_atlas
+				if (ui.panel(Id.handle({selected: false}), "Shadow Map Atlases")) {
+					inline function highLightNext(color: kha.Color = null) {
+						ui.g.color = color != null ? color : kha.Color.fromFloats(0.175, 0.175, 0.175);
+						ui.g.fillRect(ui._x, ui._y, ui._windowW, ui.ELEMENT_H());
+						ui.g.color = 0xffffffff;
+					}
+					ui.indent(false);
+					ui.text("Constants:");
+					highLightNext();
+					ui.text('Tiles Used Per Point Light: ${ ShadowMapTile.tilesLightType("point") }');
+					ui.text('Tiles Used Per Spot Light: ${ ShadowMapTile.tilesLightType("spot") }');
+					highLightNext();
+					ui.text('Tiles Used For Sun: ${ ShadowMapTile.tilesLightType("sun") }');
+					ui.unindent(false);
+					ui.indent(false);
+					var i = 0;
+					for (atlas in ShadowMapAtlas.shadowMapAtlases) {
+						if (ui.panel(Id.handle({selected: false}).nest(i), atlas.target )) {
+							ui.indent(false);
+							// general atlas information
+							ui.text('Current Size: ${atlas.sizew}, ${atlas.sizeh} px');
+							highLightNext();
+							ui.text('Max Size: ${atlas.maxAtlasSizeConst}, ${atlas.maxAtlasSizeConst} px');
+							ui.text('Tile Size: ${atlas.baseTileSizeConst}, ${atlas.baseTileSizeConst} px');
+							highLightNext();
+							#if arm_shadowmap_atlas_lod
+							// show detailed information per light
+							if (ui.panel(Id.handle({selected: false}).nest(i).nest(0),  )) {
+								ui.indent(false);
+								var j = 1;
+								for (tile in atlas.activeTiles) {
+									if (ui.panel(Id.handle({selected: false}).nest(i).nest(j), tile.light.name)) {
+										ui.indent(false);
+										ui.text('Shadow Map Size: ${tile.size}, ${tile.size} px');
+										ui.unindent();
+									}
+									j++;
+								}
+								ui.unindent(false);
+							}
+							#else
+							// show total lights occupied
+							ui.text('Current Active Lights: ${atlas.activeTiles.length}');
+							#end
+
+							#if arm_shadowmap_atlas_lod
+							// WIP
+							#else
+							var unusedTiles = atlas.tiles.length;
+							#if arm_shadowmap_atlas_single_map
+							for (tile in atlas.activeTiles)
+								unusedTiles -= ShadowMapTile.tilesLightType(tile.light.data.raw.type);
+							#else
+							unusedTiles -= atlas.activeTiles.length * ShadowMapTile.tilesLightType(atlas.lightType);
+							#end
+							ui.text('Unused tiles: ${unusedTiles}');
+							#end
+
+							var rejectedLightsNames = "";
+							if (atlas.rejectedLights.length > 0) {
+								for (l in atlas.rejectedLights)
+									rejectedLightsNames += l.name + ", ";
+								rejectedLightsNames = rejectedLightsNames.substr(0, rejectedLightsNames.length - 2);
+								highLightNext(kha.Color.fromFloats(0.447, 0.247, 0.188));
+								ui.text('Not enough space in atlas for ${atlas.rejectedLights.length} light${atlas.rejectedLights.length > 1 ? "s" : ""}:');
+								ui.indent();
+								ui.text(${rejectedLightsNames});
+								ui.unindent(false);
+							}
+
+							ui.unindent(false);
+						}
+						i++;
+					}
+					ui.unindent(false);
+					ui.unindent(false);
+				}
+				#end
 
 				if (ui.panel(Id.handle({selected: false}), "Render Targets")) {
 					ui.indent();

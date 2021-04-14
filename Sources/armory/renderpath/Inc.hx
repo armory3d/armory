@@ -112,6 +112,12 @@ class Inc {
 		lastFrame = RenderPath.active.frame;
 		#end
 		// add new lights to the atlases
+		#if arm_debug
+		// reset data on rejected lights
+		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
+			atlas.rejectedLights = [];
+		}
+		#end
 		for (light in iron.Scene.active.lights) {
 			if (!light.lightInAtlas && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
@@ -544,6 +550,11 @@ class ShadowMapAtlas {
 	public var updateRenderTarget = false;
 	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
 
+	#if arm_debug
+	public var lightType: String;
+	public var rejectedLights: Array<LightObject> = [];
+	#end
+
 	function new(light: LightObject) {
 
 		var maxTileSize = shadowMapAtlasSize(light);
@@ -555,6 +566,14 @@ class ShadowMapAtlas {
 		#if arm_shadowmap_atlas_lod
 		if (tileSizes.length == 0)
 			computeTileSizes(maxTileSize, depth);
+		#end
+
+		#if arm_debug
+		#if arm_shadowmap_atlas_single_map
+		this.lightType = "any";
+		#else
+		this.lightType = light.data.raw.type;
+		#end
 		#end
 
 	}
@@ -575,8 +594,13 @@ class ShadowMapAtlas {
 
 		// find a free tile for this light
 		var mainTile = ShadowMapTile.assignTiles(light, atlas, null);
-		if (mainTile == null)
+		if (mainTile == null) {
+			#if arm_debug
+			if (!atlas.rejectedLights.contains(light))
+				atlas.rejectedLights.push(light);
+			#end
 			return;
+		}
 
 		atlas.activeTiles.push(mainTile);
 		// notify the tile on light remove
