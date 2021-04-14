@@ -527,8 +527,8 @@ class DebugConsole extends Trait {
 
 				#if arm_shadowmap_atlas
 				if (ui.panel(Id.handle({selected: false}), "Shadow Map Atlases")) {
-					inline function highLightNext() {
-						ui.g.color = kha.Color.fromFloats(0.175, 0.175, 0.175);
+					inline function highLightNext(color: kha.Color = null) {
+						ui.g.color = color != null ? color : kha.Color.fromFloats(0.175, 0.175, 0.175);
 						ui.g.fillRect(ui._x, ui._y, ui._windowW, ui.ELEMENT_H());
 						ui.g.color = 0xffffffff;
 					}
@@ -589,7 +589,7 @@ class DebugConsole extends Trait {
 								for (l in atlas.rejectedLights)
 									rejectedLightsNames += l.name + ", ";
 								rejectedLightsNames = rejectedLightsNames.substr(0, rejectedLightsNames.length - 2);
-								highLightNext();
+								highLightNext(kha.Color.fromFloats(0.447, 0.247, 0.188));
 								ui.text('Not enough space in atlas for ${atlas.rejectedLights.length} light${atlas.rejectedLights.length > 1 ? "s" : ""}:');
 								ui.indent();
 								ui.text(${rejectedLightsNames});
