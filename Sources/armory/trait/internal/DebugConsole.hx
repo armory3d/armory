@@ -553,7 +553,7 @@ class DebugConsole extends Trait {
 							highLightNext();
 							#if arm_shadowmap_atlas_lod
 							// show detailed information per light
-							if (ui.panel(Id.handle({selected: false}).nest(i).nest(0),  )) {
+							if (ui.panel(Id.handle({selected: false}).nest(i).nest(0), "Lights")) {
 								ui.indent(false);
 								var j = 1;
 								for (tile in atlas.activeTiles) {
