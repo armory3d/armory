@@ -161,8 +161,8 @@ class Inc {
 				// set the tile offset for this tile and every linked tile to this one
 				var j = 0;
 				tile.forEachTileLinked(function (lTile) {
-					tile.light.tileOffsetX[j] = (lTile.coordsX == 0) ? 0.0 : lTile.coordsX / atlas.sizew;
-					tile.light.tileOffsetY[j] = (lTile.coordsY == 0) ? 0.0 : lTile.coordsY / atlas.sizew;
+					tile.light.tileOffsetX[j] = lTile.coordsX / atlas.sizew;
+					tile.light.tileOffsetY[j] = lTile.coordsY / atlas.sizew;
 					tile.light.tileScale[j] = lTile.size / atlas.sizew;
 					j++;
 				});
