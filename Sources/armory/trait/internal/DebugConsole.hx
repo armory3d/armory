@@ -65,6 +65,11 @@ class DebugConsole extends Trait {
 	var shortcut_scale_in = kha.input.KeyCode.OpenBracket;
 	var shortcut_scale_out = kha.input.KeyCode.CloseBracket;
 
+	#if arm_shadowmap_atlas
+	var lightColorMap: Map<String, Int> = new Map();
+	var lightColorMapCount = 0;
+	#end
+
 	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
 	keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket, keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
 		super();
@@ -528,10 +533,78 @@ class DebugConsole extends Trait {
 				#if arm_shadowmap_atlas
 				if (ui.panel(Id.handle({selected: false}), "Shadow Map Atlases")) {
 					inline function highLightNext(color: kha.Color = null) {
-						ui.g.color = color != null ? color : kha.Color.fromFloats(0.175, 0.175, 0.175);
+						ui.g.color = color != null ? color : -13882324;
 						ui.g.fillRect(ui._x, ui._y, ui._windowW, ui.ELEMENT_H());
 						ui.g.color = 0xffffffff;
 					}
+
+					inline function drawScale(text: String, y: Float, fromX: Float, toX: Float, bottom = false) {
+						var _off = bottom ? -4 : 4;
+						ui.g.drawLine(fromX, y, toX, y);
+						ui.g.drawLine(fromX, y, fromX, y + _off);
+						ui.g.drawLine(toX, y, toX, y + _off);
+
+						var _w = ui._w;
+						ui._w = Std.int(Math.abs(toX - fromX));
+						ui.text(text, Align.Center);
+						ui._w = _w;
+					}
+
+					/**
+					 * create a kha Color from HSV (Hue, Saturation, Value)
+					 * @param h expected Hue from [0, 1].
+					 * @param s expected Saturation from [0, 1].
+					 * @param v expected Value from [0, 1].
+					 * @return kha.Color
+					 */
+					function colorFromHSV(h: Float, s: Float, v: Float): kha.Color {
+						// https://stackoverflow.com/a/17243070
+						var r = 0.0; var g = 0.0; var b = 0.0;
+
+						var i = Math.floor(h * 6);
+						var f = h * 6 - i;
+						var p = v * (1 - s);
+						var q = v * (1 - f * s);
+						var t = v * (1 - (1 - f) * s);
+
+						switch (i % 6) {
+							case 0: { r = v; g = t; b = p; }
+							case 1: { r = q; g = v; b = p; }
+							case 2: { r = p; g = v; b = t; }
+							case 3: { r = p; g = q; b = v; }
+							case 4: { r = t; g = p; b = v; }
+							case 5: { r = v; g = p; b = q; }
+						}
+
+						return kha.Color.fromFloats(r, g, b);
+					}
+
+					function drawTiles(tile: ShadowMapTile, atlas: ShadowMapAtlas, atlasVisualSize: Float) {
+						var color = kha.Color.fromFloats(0.1, 0.1, 0.1);
+						var borderColor = color;
+						var tileScale = (tile.size / atlas.sizew) * atlasVisualSize; //* 0.95;
+						var x = (tile.coordsX / atlas.sizew) * atlasVisualSize;
+						var y = (tile.coordsY / atlas.sizew) * atlasVisualSize;
+
+						if (tile.light != null) {
+							color = lightColorMap.get(tile.light.name);
+							if (color == null) {
+								color = colorFromHSV(Math.random(), 0.7, Math.random() * 0.5 + 0.5);
+
+								lightColorMap.set(tile.light.name, color);
+								lightColorMapCount++;
+							}
+							ui.fill(x + tileScale * 0.019, y + tileScale * 0.03, tileScale * 0.96, tileScale * 0.96, color);
+						}
+						ui.rect(x, y, tileScale, tileScale, borderColor);
+
+						#if arm_shadowmap_atlas_lod
+						// draw children tiles
+						for (t in tile.tiles)
+							drawTiles(t, atlas, atlasVisualSize);
+						#end
+					}
+
 					ui.indent(false);
 					ui.text("Constants:");
 					highLightNext();
@@ -540,46 +613,74 @@ class DebugConsole extends Trait {
 					highLightNext();
 					ui.text('Tiles Used For Sun: ${ ShadowMapTile.tilesLightType("sun") }');
 					ui.unindent(false);
+
 					ui.indent(false);
 					var i = 0;
 					for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 						if (ui.panel(Id.handle({selected: false}).nest(i), atlas.target )) {
 							ui.indent(false);
+							// Draw visual representation of the atlas
+							var atlasVisualSize = ui._windowW * 0.92;
+
+							drawScale('${atlas.sizew}px', ui._y + ui.ELEMENT_H() * 0.9, ui._x, ui._x + atlasVisualSize);
+
+							// reset light color map when lights are removed
+							if (lightColorMapCount > iron.Scene.active.lights.length) {
+								lightColorMap = new Map();
+								lightColorMapCount = 0;
+							}
+
+							for (tile in atlas.tiles)
+								drawTiles(tile, atlas, atlasVisualSize);
+							// set vertical space for atlas visual representation
+							ui._y += atlasVisualSize + 3;
+
+							var tilesRow = atlas.currTileOffset == 0 ? 1 : atlas.currTileOffset;
+							var tileScale = atlasVisualSize / tilesRow;
+							drawScale('${atlas.baseTileSizeConst}px', ui._y, ui._x, ui._x + tileScale, true);
+
 							// general atlas information
-							ui.text('Current Size: ${atlas.sizew}, ${atlas.sizeh} px');
 							highLightNext();
-							ui.text('Max Size: ${atlas.maxAtlasSizeConst}, ${atlas.maxAtlasSizeConst} px');
-							ui.text('Tile Size: ${atlas.baseTileSizeConst}, ${atlas.baseTileSizeConst} px');
+							ui.text('Max Atlas Size: ${atlas.maxAtlasSizeConst}, ${atlas.maxAtlasSizeConst} px');
 							highLightNext();
-							#if arm_shadowmap_atlas_lod
+
 							// show detailed information per light
-							if (ui.panel(Id.handle({selected: false}).nest(i).nest(0), "Lights")) {
+							if (ui.panel(Id.handle({selected: false}).nest(i).nest(0), "Lights in Atlas")) {
 								ui.indent(false);
 								var j = 1;
 								for (tile in atlas.activeTiles) {
+									var textCol = ui.t.TEXT_COL;
+									var lightCol = lightColorMap.get(tile.light.name);
+									if (lightCol != null)
+										ui.t.TEXT_COL = lightCol;
+									#if arm_shadowmap_atlas_lod
 									if (ui.panel(Id.handle({selected: false}).nest(i).nest(j), tile.light.name)) {
+										ui.t.TEXT_COL = textCol;
 										ui.indent(false);
 										ui.text('Shadow Map Size: ${tile.size}, ${tile.size} px');
-										ui.unindent();
+										ui.unindent(false);
 									}
+									#else
+									ui.indent(false);
+									ui.text(tile.light.name);
+									ui.unindent(false);
+									#end
+									ui.t.TEXT_COL = textCol;
 									j++;
 								}
 								ui.unindent(false);
 							}
-							#else
-							// show total lights occupied
-							ui.text('Current Active Lights: ${atlas.activeTiles.length}');
-							#end
 
+							// show unused tiles statistics
 							#if arm_shadowmap_atlas_lod
 							// WIP
 							#else
 							var unusedTiles = atlas.tiles.length;
 							#if arm_shadowmap_atlas_single_map
-							for (tile in atlas.activeTiles)
-								unusedTiles -= ShadowMapTile.tilesLightType(tile.light.data.raw.type);
+								for (tile in atlas.activeTiles)
+									unusedTiles -= ShadowMapTile.tilesLightType(tile.light.data.raw.type);
 							#else
-							unusedTiles -= atlas.activeTiles.length * ShadowMapTile.tilesLightType(atlas.lightType);
+								unusedTiles -= atlas.activeTiles.length * ShadowMapTile.tilesLightType(atlas.lightType);
 							#end
 							ui.text('Unused tiles: ${unusedTiles}');
 							#end
