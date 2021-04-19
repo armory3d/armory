@@ -1,7 +1,8 @@
-import arm.material.cycles as cycles
-import arm.material.mat_state as mat_state
+import arm.material.make_finalize as make_finalize
 import arm.material.make_mesh as make_mesh
+import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
+
 
 def make(context_id):
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
@@ -14,14 +15,14 @@ def make(context_id):
         con['alpha_blend_source'] = mat.arm_blending_source_alpha
         con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
         con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
-    
+
     con_overlay = mat_state.data.add_context(con)
 
     arm_discard = mat.arm_discard
     is_transluc = mat_utils.is_transluc(mat)
     parse_opacity = (blend and is_transluc) or arm_discard
     make_mesh.make_base(con_overlay, parse_opacity=parse_opacity)
-    
+
     frag = con_overlay.frag
 
     if arm_discard:
@@ -35,5 +36,7 @@ def make(context_id):
         frag.write('fragColor = vec4(basecol, 1.0);')
 
     frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+
+    make_finalize.make(con_overlay)
 
     return con_overlay
