@@ -41,7 +41,7 @@ def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.N
                 lays = mat_user.data.uv_layers
 
                 # First UV map referenced
-                if node.attribute_name == lays[0].name:
+                if len(lays) > 0 and node.attribute_name == lays[0].name:
                     state.con.add_elem('tex', 'short2norm')
                     return c.cast_value('vec3(texCoord.x, 1.0 - texCoord.y, 0.0)', from_type='vec3', to_type=out_type)
 
