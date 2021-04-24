@@ -68,6 +68,8 @@ class DebugConsole extends Trait {
 	#if arm_shadowmap_atlas
 	var lightColorMap: Map<String, Int> = new Map();
 	var lightColorMapCount = 0;
+	var smaTime = 0.0;
+	var smaTimeAvg = 0.0;
 	#end
 
 	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
@@ -483,6 +485,12 @@ class DebugConsole extends Trait {
 					ui.text("Physics");
 					ui.text(Math.round(physTimeAvg * 10000) / 10 + " ms", Align.Right);
 
+					#if arm_shadowmap_atlas
+					ui.row(lrow);
+					ui.text("Shadow Map Atlas (Script)");
+					ui.text(Math.round(smaTimeAvg * 10000) / 10 + " ms", Align.Right);
+					#end
+
 					ui.unindent();
 				}
 
@@ -868,6 +876,11 @@ class DebugConsole extends Trait {
 			animTimeAvg = animTime / frames;
 			physTimeAvg = physTime / frames;
 
+			#if arm_shadowmap_atlas
+			smaTimeAvg = smaTime / frames;
+			smaTime = 0;
+			#end
+
 			totalTime = 0;
 			renderPathTime = 0;
 			updateTime = 0;
@@ -891,6 +904,9 @@ class DebugConsole extends Trait {
 		animTime += iron.object.Animation.animationTime;
 	#if arm_physics
 		physTime += armory.trait.physics.PhysicsWorld.physTime;
+	#end
+	#if arm_shadowmap_atlas
+		smaTime += armory.renderpath.Inc.shadowMapAtlasTime;
 	#end
 	}
 

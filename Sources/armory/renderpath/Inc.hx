@@ -113,6 +113,7 @@ class Inc {
 		#end
 		// add new lights to the atlases
 		#if arm_debug
+		beginProfile();
 		// reset data on rejected lights
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
@@ -212,6 +213,9 @@ class Inc {
 				tile.freeTile();
 			}
 		}
+		#if arm_debug
+		endProfile();
+		#end
 		#end // rp_shadowmap
 	}
 	#else
@@ -527,6 +531,21 @@ class Inc {
 		return null;
 		#end
 	}
+
+	#if arm_debug
+	public static var shadowMapAtlasTime = 0.0;
+	static var startTime = 0.0;
+	static var callBackSetup = false;
+	static function setupEndFrameCallback() {
+		if (!callBackSetup) {
+			callBackSetup = true;
+			iron.App.endFrameCallbacks.push(endFrame);
+		}
+	}
+	static function beginProfile() { setupEndFrameCallback(); startTime = kha.Scheduler.realTime(); }
+	static function endProfile() { shadowMapAtlasTime += kha.Scheduler.realTime() - startTime; }
+	public static function endFrame() { shadowMapAtlasTime = 0; }
+	#end
 }
 
 #if arm_shadowmap_atlas
