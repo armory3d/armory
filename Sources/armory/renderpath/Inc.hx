@@ -113,7 +113,7 @@ class Inc {
 		#end
 		// add new lights to the atlases
 		#if arm_debug
-		beginProfile();
+		beginShadowsLogicProfile();
 		// reset data on rejected lights
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
@@ -175,6 +175,9 @@ class Inc {
 				var face = 0;
 				var faces = ShadowMapTile.tilesLightType(tile.light.data.raw.type);
 
+				#if arm_debug
+				beginShadowsRenderProfile();
+				#end
 				tile.forEachTileLinked(function (lTile) {
 					if (faces > 1) {
 						#if arm_csm
@@ -191,6 +194,9 @@ class Inc {
 
 					path.drawMeshesStream("shadowmap");
 				});
+				#if arm_debug
+				endShadowsRenderProfile();
+				#end
 
 				path.currentFace = -1;
 			}
@@ -214,7 +220,7 @@ class Inc {
 			}
 		}
 		#if arm_debug
-		endProfile();
+		endShadowsLogicProfile();
 		#end
 		#end // rp_shadowmap
 	}
@@ -533,8 +539,10 @@ class Inc {
 	}
 
 	#if arm_debug
-	public static var shadowMapAtlasTime = 0.0;
-	static var startTime = 0.0;
+	public static var shadowsLogicTime = 0.0;
+	public static var shadowsRenderTime = 0.0;
+	static var startShadowsLogicTime = 0.0;
+	static var startShadowsRenderTime = 0.0;
 	static var callBackSetup = false;
 	static function setupEndFrameCallback() {
 		if (!callBackSetup) {
@@ -542,9 +550,11 @@ class Inc {
 			iron.App.endFrameCallbacks.push(endFrame);
 		}
 	}
-	static function beginProfile() { setupEndFrameCallback(); startTime = kha.Scheduler.realTime(); }
-	static function endProfile() { shadowMapAtlasTime += kha.Scheduler.realTime() - startTime; }
-	public static function endFrame() { shadowMapAtlasTime = 0; }
+	static function beginShadowsLogicProfile() { setupEndFrameCallback(); startShadowsLogicTime = kha.Scheduler.realTime(); }
+	static function beginShadowsRenderProfile() { startShadowsRenderTime = kha.Scheduler.realTime(); }
+	static function endShadowsLogicProfile() { shadowsLogicTime += kha.Scheduler.realTime() - startShadowsLogicTime - shadowsRenderTime; }
+	static function endShadowsRenderProfile() { shadowsRenderTime += kha.Scheduler.realTime() - startShadowsRenderTime; }
+	public static function endFrame() { shadowsLogicTime = 0;  shadowsRenderTime = 0; }
 	#end
 }
 
