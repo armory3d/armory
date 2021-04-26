@@ -96,6 +96,7 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 
 #ifdef _ShadowMapAtlas
 // transform "out-of-bounds" coordinates to the correct face/coordinate system
+// https://www.khronos.org/opengl/wiki/File:CubeMapAxes.png
 vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
 	if (uv.x < 0.0) {
 		if (faceIndex == 0) { // X+
@@ -211,7 +212,7 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
-	result += texture(shadowMap, vec3(pointLightTile.z * uvtiled + pointLightTile.xy, compare));
+	result += texture(shadowMap, vec3(uvtiled, compare));
 
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 1.0) / smSize)));
 	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
