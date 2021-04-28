@@ -573,8 +573,8 @@ class ShadowMapAtlas {
 	public var activeTiles: Array<ShadowMapTile> = [];
 	public var depth = 1;
 	#if arm_shadowmap_atlas_lod
-	static var tileSizes: Array<Int> = [];
-	static var tileSizeFactor: Array<Float> = [];
+	var tileSizes: Array<Int> = [];
+	var tileSizeFactor: Array<Float> = [];
 	#end
 	public var updateRenderTarget = false;
 	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
@@ -593,8 +593,7 @@ class ShadowMapAtlas {
 		this.maxAtlasSizeConst = getMaxAtlasSize(light.data.raw.type);
 
 		#if arm_shadowmap_atlas_lod
-		if (tileSizes.length == 0)
-			computeTileSizes(maxTileSize, depth);
+		computeTileSizes(maxTileSize, depth);
 		#end
 
 		#if arm_debug
@@ -660,17 +659,17 @@ class ShadowMapAtlas {
 	}
 
 	#if arm_shadowmap_atlas_lod
-	static function computeTileSizes(maxTileSize: Int, depth: Int): Void {
+	function computeTileSizes(maxTileSize: Int, depth: Int): Void {
 		// find the highest value based on the calculation done in the cluster code
 		var base = LightObject.zToShadowMapScale(0, 16);
 		var subdiv = base / depth;
 		for(i in 0...depth){
-			tileSizes.push(Std.int(maxTileSize / Math.pow(2, i)));
-			tileSizeFactor.push(base);
+			this.tileSizes.push(Std.int(maxTileSize / Math.pow(2, i)));
+			this.tileSizeFactor.push(base);
 			base -= subdiv;
 		}
-		tileSizes.push(0);
-		tileSizeFactor.push(0.0);
+		this.tileSizes.push(0);
+		this.tileSizeFactor.push(0.0);
 	}
 	#end
 
