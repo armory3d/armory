@@ -946,7 +946,7 @@ def get_link_web_server():
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
 
 def compare_version_blender_arm():
-    return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 83)
+    return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 93)
 
 def type_name_to_type(name: str) -> bpy.types.bpy_struct:
     """Return the Blender type given by its name, if registered."""
