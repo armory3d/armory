@@ -934,23 +934,20 @@ class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ProjectFlagsPanel"
 
+    def draw_header(self, context):
+        wrd = bpy.data.worlds['Arm']
+        self.layout.prop(wrd, 'arm_debug_console', text='')
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.enabled = wrd.arm_ui != 'Disabled'
-        row.prop(wrd, 'arm_debug_console')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_position')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_scale')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_visible')
+        col = layout.column()
+        col.enabled = wrd.arm_debug_console
+        col.prop(wrd, 'arm_debug_console_position')
+        col.prop(wrd, 'arm_debug_console_scale')
+        col.prop(wrd, 'arm_debug_console_visible')
 
 class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"
