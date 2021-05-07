@@ -37,7 +37,7 @@ class CanvasScript extends Trait {
 				}
 
 				if (Canvas.themes.length == 0) {
-					Canvas.themes.push(zui.Themes.light);
+					Canvas.themes.push(armory.ui.Themes.light);
 				}
 
 				iron.data.Data.getFont(font, function(f: kha.Font) {
