@@ -3,7 +3,7 @@ package armory.trait.internal;
 import iron.Trait;
 #if arm_ui
 import zui.Zui;
-import zui.Canvas;
+import armory.ui.Canvas;
 #end
 
 class CanvasScript extends Trait {
@@ -62,7 +62,7 @@ class CanvasScript extends Trait {
 
 		notifyOnRender2D(function(g: kha.graphics2.Graphics) {
 			if (canvas == null) return;
-			
+
 			setCanvasDimensions(kha.System.windowWidth(), kha.System.windowHeight());
 			var events = Canvas.draw(cui, canvas, g);
 
@@ -121,7 +121,7 @@ class CanvasScript extends Trait {
 	public function setCanvasVisibility(visible: Bool){
 		for (e in canvas.elements) e.visible = visible;
 	}
-	
+
 	/**
 	 * Set dimensions of canvas
 	 * @param x Width
@@ -140,7 +140,7 @@ class CanvasScript extends Trait {
 	}
 
 	// Contains data
-	@:access(zui.Canvas)
+	@:access(armory.ui.Canvas)
 	@:access(zui.Handle)
 	public function getHandle(name: String): Handle {
 		// Consider this a temporary solution
