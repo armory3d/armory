@@ -1594,9 +1594,11 @@ Make sure the mesh only has tris/quads.""")
 
                 asset_name = arm.utils.asset_name(bobject)
 
+                # Collection is in the same file
                 if collection.library is None:
-                    # collection is in the same file, but (likely) on another scene
-                    if asset_name not in scene_objects:
+                    # Only export linked objects (from other scenes for example),
+                    # all other objects (in scene_objects) are already exported.
+                    if bobject.name not in scene_objects:
                         self.process_bobject(bobject)
                         self.export_object(bobject, self.scene)
                 else:
