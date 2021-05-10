@@ -1,30 +1,26 @@
-import shutil
 import bpy
-import os
-import json
-from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
     name: StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="Untitled")
+        name="Name",
+        description="A name for this item",
+        default="Untitled")
 
     start_prop: IntProperty(
-           name="Start",
-           description="A name for this item",
-           default=0)
+        name="Start",
+        description="A name for this item",
+        default=0)
 
     end_prop: IntProperty(
-           name="End",
-           description="A name for this item",
-           default=0)
+        name="End",
+        description="A name for this item",
+        default=0)
 
     loop_prop: BoolProperty(
-           name="Loop",
-           description="A name for this item",
-           default=True)
+        name="Loop",
+        description="A name for this item",
+        default=True)
 
 class ARM_UL_TilesheetActionList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -52,14 +48,16 @@ class ArmTilesheetActionListNewItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTilesheetActionListDeleteItem(bpy.types.Operator):
-    # Delete the selected item from the list
+    """Delete the selected item from the list"""
     bl_idname = "arm_tilesheetactionlist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
-        """ Enable if there's something in the list """
+        """Enable if there's something in the list"""
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_tilesheetlist) == 0:
+            return False
         trait = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
         return len(trait.arm_tilesheetactionlist) > 0
 
@@ -78,18 +76,23 @@ class ArmTilesheetActionListDeleteItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTilesheetActionListMoveItem(bpy.types.Operator):
-    # Move an item in the list
+    """Move an item in the list"""
     bl_idname = "arm_tilesheetactionlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL'}
+
     direction: EnumProperty(
-                items=(
-                    ('UP', 'Up', ""),
-                    ('DOWN', 'Down', ""),))
+        items=(
+            ('UP', 'Up', ""),
+            ('DOWN', 'Down', "")
+        ))
 
     @classmethod
     def poll(self, context):
-        """ Enable if there's something in the list. """
+        """Enable if there's something in the list"""
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_tilesheetlist) == 0:
+            return False
         trait = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
         return len(trait.arm_tilesheetactionlist) > 0
 
@@ -129,27 +132,27 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
 
 class ArmTilesheetListItem(bpy.types.PropertyGroup):
     name: StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="Untitled")
+        name="Name",
+        description="A name for this item",
+        default="Untitled")
 
     tilesx_prop: IntProperty(
-           name="Tiles X",
-           description="A name for this item",
-           default=0)
+        name="Tiles X",
+        description="A name for this item",
+        default=0)
 
     tilesy_prop: IntProperty(
-           name="Tiles Y",
-           description="A name for this item",
-           default=0)
+        name="Tiles Y",
+        description="A name for this item",
+        default=0)
 
     framerate_prop: FloatProperty(
-           name="Frame Rate",
-           description="A name for this item",
-           default=4.0)
+        name="Frame Rate",
+        description="A name for this item",
+        default=4.0)
 
     arm_tilesheetactionlist: CollectionProperty(type=ArmTilesheetActionListItem)
-    arm_tilesheetactionlist_index: IntProperty(name="Index for my_list", default=0)
+    arm_tilesheetactionlist_index: IntProperty(name="Index for arm_tilesheetactionlist", default=0)
 
 class ARM_UL_TilesheetList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -162,10 +165,10 @@ class ARM_UL_TilesheetList(bpy.types.UIList):
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label(text="", icon = custom_icon)
+            layout.label(text="", icon=custom_icon)
 
 class ArmTilesheetListNewItem(bpy.types.Operator):
-    # Add a new item to the list
+    """Add a new item to the list"""
     bl_idname = "arm_tilesheetlist.new_item"
     bl_label = "Add a new item"
 
@@ -176,7 +179,7 @@ class ArmTilesheetListNewItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTilesheetListDeleteItem(bpy.types.Operator):
-    # Delete the selected item from the list
+    """Delete the selected item from the list"""
     bl_idname = "arm_tilesheetlist.delete_item"
     bl_label = "Deletes an item"
 
@@ -200,13 +203,16 @@ class ArmTilesheetListDeleteItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTilesheetListMoveItem(bpy.types.Operator):
-    # Move an item in the list
+    """Move an item in the list"""
     bl_idname = "arm_tilesheetlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL'}
+
     direction: EnumProperty(
-                items=(
-                    ('UP', 'Up', ""),
-                    ('DOWN', 'Down', ""),))
+        items=(
+            ('UP', 'Up', ""),
+            ('DOWN', 'Down', "")
+        ))
 
     @classmethod
     def poll(self, context):
@@ -247,7 +253,6 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 def register():
-
     bpy.utils.register_class(ArmTilesheetActionListItem)
     bpy.utils.register_class(ARM_UL_TilesheetActionList)
     bpy.utils.register_class(ArmTilesheetActionListNewItem)
@@ -261,7 +266,7 @@ def register():
     bpy.utils.register_class(ArmTilesheetListMoveItem)
 
     bpy.types.World.arm_tilesheetlist = CollectionProperty(type=ArmTilesheetListItem)
-    bpy.types.World.arm_tilesheetlist_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.World.arm_tilesheetlist_index = IntProperty(name="Index for arm_tilesheetlist", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmTilesheetListItem)

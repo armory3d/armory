@@ -7,7 +7,7 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
 
     tlm_atlas_pointer : StringProperty(
             name = "Atlas Group",
-            description = "Atlas Lightmap Group",
+            description = "",
             default = "")
 
     tlm_postatlas_pointer : StringProperty(
@@ -51,8 +51,7 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
 
     unwrap_modes = [('Lightmap', 'Lightmap', 'TODO'),
                 ('SmartProject', 'Smart Project', 'TODO'),
-                ('CopyExisting', 'Copy Existing', 'TODO'),
-                ('AtlasGroupA', 'Atlas Group (Prepack)', 'TODO')]
+                ('AtlasGroupA', 'Atlas Group (Prepack)', 'Attaches the object to a prepack Atlas group. Will overwrite UV map on build.')]
 
     tlm_postpack_object : BoolProperty( #CHECK INSTEAD OF ATLASGROUPB
         name="Postpack object", 
@@ -146,3 +145,13 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
         default=3, 
         min=1, 
         max=5)
+
+    tlm_use_default_channel : BoolProperty(
+        name="Use default UV channel", 
+        description="Will either use or create the default UV Channel 'UVMap_Lightmap' upon build.", 
+        default=True)
+
+    tlm_uv_channel : StringProperty(
+            name = "UV Channel",
+            description = "Use any custom UV Channel for the lightmap",
+            default = "UVMap")

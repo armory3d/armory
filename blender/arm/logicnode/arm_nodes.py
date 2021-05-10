@@ -112,6 +112,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
     """Add a new input socket to the node set by node_index."""
     bl_idname = 'arm.node_add_input'
     bl_label = 'Add Input'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
     socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
@@ -135,6 +136,7 @@ class ArmNodeAddInputValueButton(bpy.types.Operator):
     """Add new input"""
     bl_idname = 'arm.node_add_input_value'
     bl_label = 'Add Input'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
 
@@ -148,6 +150,7 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
     """Remove last input"""
     bl_idname = 'arm.node_remove_input'
     bl_label = 'Remove Input'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
@@ -163,6 +166,7 @@ class ArmNodeRemoveInputValueButton(bpy.types.Operator):
     """Remove last input"""
     bl_idname = 'arm.node_remove_input_value'
     bl_label = 'Remove Input'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
@@ -178,6 +182,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
     """Add a new output socket to the node set by node_index"""
     bl_idname = 'arm.node_add_output'
     bl_label = 'Add Output'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
     socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
@@ -201,6 +206,7 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
     """Remove last output"""
     bl_idname = 'arm.node_remove_output'
     bl_label = 'Remove Output'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
@@ -216,6 +222,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
     """Add new input and output"""
     bl_idname = 'arm.node_add_input_output'
     bl_label = 'Add Input Output'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
     in_socket_type: StringProperty(name='In Socket Type', default='NodeSocketShader')
@@ -246,6 +253,7 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
     """Remove last input and output"""
     bl_idname = 'arm.node_remove_input_output'
     bl_label = 'Remove Input Output'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
@@ -265,7 +273,7 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
 class ArmNodeSearch(bpy.types.Operator):
     bl_idname = "arm.node_search"
     bl_label = "Search..."
-    bl_options = {"REGISTER"}
+    bl_options = {"REGISTER", "INTERNAL"}
     bl_property = "item"
 
     def get_search_items(self, context):

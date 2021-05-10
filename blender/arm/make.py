@@ -433,7 +433,7 @@ def compilation_server_done():
 def build_done():
     print('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
-        log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
+        log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:
         return
     result = state.proc_build.poll()

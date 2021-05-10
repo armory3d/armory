@@ -21,6 +21,16 @@ class TLM_CyclesSceneProperties(bpy.types.PropertyGroup):
                 description="Select baking quality", 
                 default="0")
 
+    targets = [('texture', 'Image texture', 'Build to image texture')]
+    if (2, 92, 0) >= bpy.app.version:
+        targets.append(('vertex', 'Vertex colors', 'Build to vertex colors'))
+
+    tlm_target : EnumProperty(
+        items = targets,
+                name = "Build Target", 
+                description="Select target to build to", 
+                default="texture")
+
     tlm_resolution_scale : EnumProperty(
         items = [('1', '1/1', '1'),
                     ('2', '1/2', '2'),
@@ -45,10 +55,12 @@ class TLM_CyclesSceneProperties(bpy.types.PropertyGroup):
                 description="Select bake mode", 
                 default="Foreground")
 
+    caching_modes = [('Copy', 'Copy', 'More overhead; allows for network.')]
+    
+    #caching_modes.append(('Cache', 'Cache', 'Cache in separate blend'),('Node', 'Node restore', 'EXPERIMENTAL! Use with care'))
+
     tlm_caching_mode : EnumProperty(
-        items = [('Copy', 'Copy', 'More overhead; allows for network.'),
-                    ('Cache', 'Cache', 'Cache in separate blend'),
-                    ('Node', 'Node restore', 'EXPERIMENTAL! Use with care')],
+        items = caching_modes,
                 name = "Caching mode",
                 description="Select cache mode",
                 default="Copy")
@@ -88,8 +100,16 @@ class TLM_CyclesSceneProperties(bpy.types.PropertyGroup):
 
     tlm_lighting_mode : EnumProperty(
         items = [('combined', 'Combined', 'Bake combined lighting'),
+                ('combinedao', 'Combined+AO', 'Bake combined lighting with Ambient Occlusion'),
                 ('indirect', 'Indirect', 'Bake indirect lighting'),
-                ('ao', 'AO', 'Bake only Ambient Occlusion')],
+#                ('indirectao', 'Indirect+AO', 'Bake indirect lighting with Ambient Occlusion'),
+                ('ao', 'AO', 'Bake only Ambient Occlusion'),
+                ('complete', 'Complete', 'Bake complete map')],
                 name = "Lighting mode", 
                 description="TODO.", 
                 default="combined")
+
+    tlm_premultiply_ao : BoolProperty(
+        name="Premultiply AO", 
+        description="Ambient Occlusion will be premultiplied together with lightmaps, requiring less textures.", 
+        default=True)

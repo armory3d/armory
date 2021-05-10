@@ -1,6 +1,5 @@
 import bpy
-from bpy.props import *
-from bpy.types import Panel
+
 
 class ARM_PT_RbCollisionFilterMaskPanel(bpy.types.Panel):
     bl_label = "Collections Filter Mask"
@@ -18,7 +17,7 @@ class ARM_PT_RbCollisionFilterMaskPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True
+        layout.use_property_split = False
         layout.use_property_decorate = False
         obj = context.object
         layout.prop(obj, 'arm_rb_collision_filter_mask', text="", expand=True)
@@ -30,8 +29,10 @@ class ARM_PT_RbCollisionFilterMaskPanel(bpy.types.Panel):
         row.alignment = 'RIGHT'
         row.label(text=f'Integer Mask Value: {str(int(col_mask, 2))}')
 
+
 def register():
     bpy.utils.register_class(ARM_PT_RbCollisionFilterMaskPanel)
+
 
 def unregister():
     bpy.utils.unregister_class(ARM_PT_RbCollisionFilterMaskPanel)

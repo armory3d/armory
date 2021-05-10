@@ -21,7 +21,10 @@ class TLM_Install_OpenCV(bpy.types.Operator):
 
         print("Module OpenCV")
 
-        pythonbinpath = bpy.app.binary_path_python
+        if (2, 91, 0) > bpy.app.version:
+            pythonbinpath = bpy.app.binary_path_python
+        else:
+            pythonbinpath = sys.executable
 
         if platform.system() == "Windows":
             pythonlibpath = os.path.join(os.path.dirname(os.path.dirname(pythonbinpath)), "lib")

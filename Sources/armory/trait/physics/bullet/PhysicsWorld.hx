@@ -52,7 +52,6 @@ class PhysicsWorld extends Trait {
 	public var rbMap: Map<Int, RigidBody>;
 	public var conMap: Map<Int, PhysicsConstraint>;
 	public var timeScale = 1.0;
-	var timeStep = 1 / 60;
 	var maxSteps = 1;
 	public var solverIterations = 10;
 	public var hitPointWorld = new Vec4();
@@ -67,7 +66,7 @@ class PhysicsWorld extends Trait {
 	public static var physTime = 0.0;
 	#end
 
-	public function new(timeScale = 1.0, timeStep = 1 / 60, solverIterations = 10) {
+	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10) {
 		super();
 
 		if (nullvec) {
@@ -81,8 +80,7 @@ class PhysicsWorld extends Trait {
 		sceneRemoved = false;
 
 		this.timeScale = timeScale;
-		this.timeStep = timeStep;
-		maxSteps = timeStep < 1 / 60 ? 10 : 1;
+		this.maxSteps = maxSteps;
 		this.solverIterations = solverIterations;
 
 		// First scene
@@ -269,7 +267,13 @@ class PhysicsWorld extends Trait {
 
 		if (preUpdates != null) for (f in preUpdates) f();
 
-		world.stepSimulation(timeStep, maxSteps, t);
+		//Bullet physics fixed timescale
+		var fixedTime = 1.0 / 60;
+
+		//This condition must be satisfied to not loose time
+		var currMaxSteps = t < (fixedTime * maxSteps) ? maxSteps : 1;
+
+		world.stepSimulation(t, currMaxSteps, fixedTime);
 		updateContacts();
 
 		for (rb in rbMap) @:privateAccess rb.physicsUpdate();

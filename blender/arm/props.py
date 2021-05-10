@@ -178,7 +178,7 @@ def init_properties():
                ('ErrorsOnly', 'Errors Only', 'Show only errors')],
         name="Compile Log Parameter", update=assets.invalidate_compiler_cache,
         default="Summary")
-    bpy.types.World.arm_project_win_build_cpu = IntProperty(name="Count CPU", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
+    bpy.types.World.arm_project_win_build_cpu = IntProperty(name="CPU Count", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
@@ -212,11 +212,11 @@ def init_properties():
     bpy.types.World.arm_khafile = PointerProperty(name="Khafile", description="Source appended to khafile.js", update=assets.invalidate_compiler_cache, type=bpy.types.Text)
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_minimize = BoolProperty(name="Binary Scene Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data, prolongs build times", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_export_tangents = BoolProperty(name="Export Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_export_tangents = BoolProperty(name="Precompute Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False, update=assets.invalidate_compiler_cache)
@@ -332,6 +332,7 @@ def init_properties():
     bpy.types.World.arm_envtex_sun_direction = FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
+    bpy.types.World.arm_nishita_density = FloatVectorProperty(name="Nishita Density", size=3, default=[1, 1, 1])
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)
@@ -398,7 +399,7 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Source', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Source (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_blending_destination_alpha = EnumProperty(
         items=[('blend_one', 'One', 'One'),
                ('blend_zero', 'Zero', 'Zero'),
@@ -410,14 +411,14 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Destination', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Destination (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_blending_operation_alpha = EnumProperty(
         items=[('add', 'Add', 'Add'),
                ('subtract', 'Subtract', 'Subtract'),
                ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
                ('min', 'Min', 'Min'),
                ('max', 'Max', 'Max')],
-        name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
+        name='Operation (Alpha)', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="//Bundled/", subtype="DIR_PATH")
@@ -442,6 +443,10 @@ def init_properties():
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
 
     bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_darken_clouds = BoolProperty(
+        name="Darken Clouds at Night",
+        description="Darkens the clouds when the sun is low. This setting is for artistic purposes and is not physically correct",
+        default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
