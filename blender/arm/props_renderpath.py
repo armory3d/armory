@@ -4,6 +4,37 @@ from bpy.props import *
 import arm.assets as assets
 import arm.utils
 
+atlas_sizes = [ ('256', '256', '256'),
+                ('512', '512', '512'),
+                ('1024', '1024', '1024'),
+                ('2048', '2048', '2048'),
+                ('4096', '4096', '4096'),
+                ('8192', '8192', '8192'),
+                ('16384', '16384', '16384'),
+                ('32768', '32768', '32768') ]
+
+def atlas_sizes_from_min(min_size: int) -> list:
+    """ Create an enum list of atlas sizes from a minimal size """
+    sizes = []
+    for i in range(len(atlas_sizes)):
+        if int(atlas_sizes[i][0]) > min_size:
+            sizes.append(atlas_sizes[i])
+    return sizes
+
+def update_spot_sun_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.Context) -> list:
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+        return []
+    rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+    return atlas_sizes_from_min(int(rpdat.rp_shadowmap_cascade))
+
+def update_point_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.Context) -> list:
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+        return []
+    rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+    return atlas_sizes_from_min(int(rpdat.rp_shadowmap_cube) * 2)
+
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
     if self.rp_preset == 'Desktop':
@@ -271,33 +302,17 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('8', '8', '8'),],
         name="LOD Subdivisions", description="Number of subdivisions of the default tile size for LOD", default='2', update=update_renderpath)
     rp_shadowmap_atlas_max_size_point: EnumProperty(
-        items=[('1024', '1024', '1024'),
-               ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),
-               ('8192', '8192', '8192'),
-               ('16384', '16384', '16384')],
-        name="Max Atlas Texture Size Points", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+        items=update_point_atlas_size_options,
+        name="Max Atlas Texture Size Points", description="Sets the limit of the size of the texture.", update=update_renderpath)
     rp_shadowmap_atlas_max_size_spot: EnumProperty(
-        items=[('1024', '1024', '1024'),
-               ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),
-               ('8192', '8192', '8192'),
-               ('16384', '16384', '16384')],
-        name="Max Atlas Texture Size Spots", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size Spots", description="Sets the limit of the size of the texture.", update=update_renderpath)
     rp_shadowmap_atlas_max_size_sun: EnumProperty(
-        items=[('1024', '1024', '1024'),
-               ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),
-               ('8192', '8192', '8192'),
-               ('16384', '16384', '16384')],
-        name="Max Atlas Texture Size Sun", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size Sun", description="Sets the limit of the size of the texture.", update=update_renderpath)
     rp_shadowmap_atlas_max_size: EnumProperty(
-        items=[('1024', '1024', '1024'),
-               ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),
-               ('8192', '8192', '8192'),
-               ('16384', '16384', '16384')],
-        name="Max Atlas Texture Size", description="Sets the limit of the size of the texture.", default='8192', update=update_renderpath)
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size", description="Sets the limit of the size of the texture.", update=update_renderpath)
     rp_shadowmap_cube: EnumProperty(
         items=[('256', '256', '256'),
                ('512', '512', '512'),
