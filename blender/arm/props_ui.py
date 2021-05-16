@@ -1332,6 +1332,20 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
             max = max / 2
         return l
 
+    def tiles_per_light_type(self, rpdat: arm.props_renderpath.ArmRPListItem, light_type: str) -> int:
+        if light_type == 'point':
+            return 6
+        elif light_type == 'spot':
+            return 1
+        else:
+            return int(rpdat.rp_shadowmap_cascades)
+
+    def lights_number_atlas(self, rpdat: arm.props_renderpath.ArmRPListItem, atlas_size: int, shadowmap_size: int, light_type: str) -> int:
+        '''Compute number lights that could fit in an atlas'''
+        lights = atlas_size / shadowmap_size
+        lights *= lights / self.tiles_per_light_type(rpdat, light_type)
+        return int(lights)
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1342,7 +1356,9 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_shadows
-        layout.prop(rpdat, 'rp_shadowmap_cube')
+        col = layout.column()
+        col.enabled = not rpdat.rp_shadowmap_atlas_single_map or not rpdat.rp_shadowmap_atlas
+        col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
         col = layout.column()
@@ -1367,39 +1383,88 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         colatlas_lod_info = colatlas_lod.row()
         colatlas_lod_info.alignment = 'RIGHT'
         subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cascade), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
-        subdiv_text = "Subdivisions: " + ', '.join(map(str, subdivs_list))
+        subdiv_text = "Subdivisions for spot lights: " + ', '.join(map(str, subdivs_list))
         colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        if not rpdat.rp_shadowmap_atlas_single_map:
+            colatlas_lod_info = colatlas_lod.row()
+            colatlas_lod_info.alignment = 'RIGHT'
+            subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cube), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
+            subdiv_text = "Subdivisions for point lights: " + ', '.join(map(str, subdivs_list))
+            colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        size_warning = int(rpdat.rp_shadowmap_cascade) > 2048 or int(rpdat.rp_shadowmap_cube) > 2048
 
         colatlas.prop(rpdat, 'rp_shadowmap_atlas_single_map')
         # show size for single texture
         if rpdat.rp_shadowmap_atlas_single_map:
             colatlas_single = colatlas.column()
             colatlas_single.prop(rpdat, 'rp_shadowmap_atlas_max_size')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size):
-                print(rpdat.rp_shadowmap_atlas_max_size)
-                colatlas_warning = colatlas_single.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+            if rpdat.rp_shadowmap_atlas_max_size != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                col = colatlas_single.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for { point_lights } point lights or { spot_lights } spot lights or { dir_lights } directional lights.')
         else:
             # show size for all types
             colatlas_mixed = colatlas.column()
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_spot')
-            if int(rpdat.rp_shadowmap_cascade) > int(rpdat.rp_shadowmap_atlas_max_size_spot):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_spot} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_spot != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_spot)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {spot_lights} spot lights.')
 
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_point')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size_point):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_point} is too small for the shadowmap size: {rpdat.rp_shadowmap_cube}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_point != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_point)
+                shadowmap_size = int(rpdat.rp_shadowmap_cube)
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {point_lights} point lights.')
 
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_sun')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size_sun):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_sun} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_sun != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_sun)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {dir_lights} directional lights.')
+
+        # show warning when user picks a size higher than 2048 (arbitrary number).
+        if size_warning:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+            row.label(text='Warning: Game will crash if texture size is higher than max texture size allowed by target.', icon='ERROR')
 
 class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_label = "Voxel AO"
