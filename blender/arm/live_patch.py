@@ -38,12 +38,13 @@ def patch_export():
         asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
         ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
 
-        if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
-            raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
-            shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
+        dir_std_shaders_dst = os.path.join(arm.utils.build_dir(), 'compiled', 'Shaders', 'std')
+        if not os.path.isdir(dir_std_shaders_dst):
+            dir_std_shaders_src = os.path.join(arm.utils.get_sdk_path(), 'armory', 'Shaders', 'std')
+            shutil.copytree(dir_std_shaders_src, dir_std_shaders_dst)
+
         node_path = arm.utils.get_node_path()
         khamake_path = arm.utils.get_khamake_path()
-
         cmd = [
             node_path, khamake_path, 'krom',
             '--shaderversion', '330',
