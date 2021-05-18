@@ -125,7 +125,7 @@ def on_operator(operator_id: str):
 
     if operator_id == "TRANSFORM_OT_translate":
         send_event("obj_location")
-    elif operator_id == "TRANSFORM_OT_rotate":
+    elif operator_id in ("TRANSFORM_OT_rotate", "TRANSFORM_OT_trackball"):
         send_event("obj_rotation")
     elif operator_id == "TRANSFORM_OT_resize":
         send_event("obj_scale")
