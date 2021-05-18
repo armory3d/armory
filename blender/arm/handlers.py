@@ -6,12 +6,13 @@ import bpy
 from bpy.app.handlers import persistent
 
 import arm.api
+import arm.live_patch as live_patch
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
-import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.utils
+
 
 @persistent
 def on_depsgraph_update_post(self):
@@ -40,12 +41,10 @@ def on_depsgraph_update_post(self):
 
     # Send last operator to Krom
     wrd = bpy.data.worlds['Arm']
-    if state.proc_play != None and \
-       state.target == 'krom' and \
-       wrd.arm_live_patch:
+    if state.proc_play is not None and state.target == 'krom' and wrd.arm_live_patch:
         ops = bpy.context.window_manager.operators
-        if len(ops) > 0 and ops[-1] != None:
-            send_operator(ops[-1])
+        if len(ops) > 0 and ops[-1] is not None:
+            live_patch.on_operator(ops[-1].bl_idname)
 
     # Hacky solution to update armory props after operator executions
     last_operator = bpy.context.active_operator
@@ -71,24 +70,6 @@ def on_operator_post(operator_id: str) -> None:
             target_obj.arm_rb_collision_filter_mask = source_obj.arm_rb_collision_filter_mask
 
 
-def send_operator(op):
-    if hasattr(bpy.context, 'object') and bpy.context.object != None:
-        obj = bpy.context.object.name
-        if op.name == 'Move':
-            vec = bpy.context.object.location
-            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
-            make.write_patch(js)
-        elif op.name == 'Resize':
-            vec = bpy.context.object.scale
-            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
-            make.write_patch(js)
-        elif op.name == 'Rotate':
-            vec = bpy.context.object.rotation_euler.to_quaternion()
-            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
-            make.write_patch(js)
-        else: # Rebuild
-            make.patch()
-
 def always():
     # Force ui redraw
     if state.redraw_ui and context_screen != None:
@@ -102,8 +83,10 @@ def always():
         space.node_tree.arm_cached = False
     return 0.5
 
+
 appended_py_paths = []
 context_screen = None
+
 
 @persistent
 def on_load_post(context):
