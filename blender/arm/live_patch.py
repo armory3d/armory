@@ -25,6 +25,12 @@ def start():
     listen(bpy.types.Object, "rotation_euler", "obj_rotation")
     listen(bpy.types.Object, "scale", "obj_scale")
 
+    # 'energy' is defined in sub classes only, also workaround for
+    # https://developer.blender.org/T88408
+    for light_type in (bpy.types.AreaLight, bpy.types.PointLight, bpy.types.SpotLight, bpy.types.SunLight):
+        listen(light_type, "color", "light_color")
+        listen(light_type, "energy", "light_energy")
+
 
 def patch_export():
     """Re-export the current scene and update the game accordingly."""
@@ -107,6 +113,26 @@ def send_event(event_id: str):
             elif event_id == 'obj_rotation':
                 vec = bpy.context.object.rotation_euler.to_quaternion()
                 js = f'var o = iron.Scene.active.getChild("{obj}"); o.transform.rot.set({vec[1]}, {vec[2]}, {vec[3]}, {vec[0]}); o.transform.dirty = true;'
+                write_patch(js)
+
+            elif event_id == 'light_color':
+                light: bpy.types.Light = bpy.context.object.data
+                vec = light.color
+                js = f'var lRaw = iron.Scene.active.getLight("{light.name}").data.raw; lRaw.color[0]={vec[0]}; lRaw.color[1]={vec[1]}; lRaw.color[2]={vec[2]};'
+                write_patch(js)
+
+            elif event_id == 'light_energy':
+                light: bpy.types.Light = bpy.context.object.data
+
+                # Align strength to Armory, see exporter.export_light()
+                # TODO: Use exporter.export_light() and simply reload all raw light data in Iron?
+                strength_fac = 1.0
+                if light.type == 'SUN':
+                    strength_fac = 0.325
+                elif light.type in ('POINT', 'SPOT', 'AREA'):
+                    strength_fac = 0.01
+
+                js = f'var lRaw = iron.Scene.active.getLight("{light.name}").data.raw; lRaw.strength={light.energy * strength_fac};'
                 write_patch(js)
 
         else:
