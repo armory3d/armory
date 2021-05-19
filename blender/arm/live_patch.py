@@ -38,9 +38,8 @@ def patch_export():
         return
 
     assets.invalidate_enabled = False
-    fp = arm.utils.get_fp()
 
-    with arm.utils.WorkingDir(fp):
+    with arm.utils.WorkingDir(arm.utils.get_fp()):
         asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
         ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
 
@@ -81,7 +80,7 @@ def write_patch(js: str):
         f.write(js)
 
 
-def listen(rna_type: Type[bpy.types.Struct], prop: str, event_id: str):
+def listen(rna_type: Type[bpy.types.bpy_struct], prop: str, event_id: str):
     """Subscribe to '<rna_type>.<prop>'. The event_id can be choosen
     freely but must match with the id used in send_event().
     """
