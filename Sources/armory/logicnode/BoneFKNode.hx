@@ -1,5 +1,7 @@
 package armory.logicnode;
 
+import iron.math.Quat;
+import iron.math.Vec4;
 import iron.object.Object;
 import iron.object.BoneAnimation;
 import iron.math.Mat4;
@@ -26,21 +28,27 @@ class BoneFKNode extends LogicNode {
 		var anim = object.animation != null ? cast(object.animation, BoneAnimation) : null;
 		if (anim == null) anim = object.getParentArmature(object.name);
 
-		// Manipulating bone in world space
+		// Get bone in armature
 		var bone = anim.getBone(boneName);
-		/* m = anim.getBoneMat(bone);
-		w = anim.getAbsMat(bone); */
 
 		function moveBone() {
-			/* m.setFrom(w);
-			m.multmat(transform);
-			iw.getInverse(w);
-			m.multmat(iw); */
-			//trace("Perform FK");
-			anim.setBoneMatFromWorldMat(transform.clone(), bone);
+			
+			var t2 = Mat4.identity();
+			var loc= new Vec4();
+			var rot = new Quat();
+			var scl = new Vec4();
 
+			//Set scale to Armature scale. Bone scaling not yet implemented
+			t2.setFrom(transform);
+			t2.decompose(loc, rot, scl);
+			scl = object.transform.world.getScale();
+			t2.compose(loc, rot, scl);
+
+			//Set the bone local transform from world transform
+			anim.setBoneMatFromWorldMat(t2, bone);
+
+			//Remove this method from animation loop after FK
 			anim.removeUpdate(moveBone);
-			//trace("FK removed");
 			notified = false;
 		}
 
