@@ -42,8 +42,10 @@ class BoneIKNode extends LogicNode {
 		if(! poleEnabled) pole = null;
 
 		function solveBone() {
+			//Solve IK
 			anim.solveIK(bone, goal, precision, maxIterartions, chainLength, pole, rollAngle);
 
+			//Remove this method from animation loop after IK
 			anim.removeUpdate(solveBone);
 			notified = false;
 		}
