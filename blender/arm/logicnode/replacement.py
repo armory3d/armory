@@ -254,7 +254,8 @@ def replace_all():
                     print(f"A node whose class doesn't exist was found in node tree \"{tree_name}\"", file=reportf)
                 elif error_type == 'update failed':
                     print(f"A node of type {node_class} in tree \"{tree_name}\" failed to be updated, "
-                          f"because there is no (longer?) an update routine for this version of the node.", file=reportf)
+                          f"because there is no (longer?) an update routine for this version of the node. Original exception:"
+                          "\n" + tb + "\n", file=reportf)
                 elif error_type == 'future version':
                     print(f"A node of type {node_class} in tree \"{tree_name}\" seemingly comes from a future version of armory. "
                           f"Please check whether your version of armory is up to date", file=reportf)
