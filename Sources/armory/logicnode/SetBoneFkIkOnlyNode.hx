@@ -26,7 +26,7 @@ class SetBoneFkIkOnlyNode extends LogicNode {
 		var bone = anim.getBone(boneName);
 
         //Set bone animated by FK or IK only
-        bone.is_IK_FK_only = fk_ik_only;
+        bone.is_ik_fk_only = fk_ik_only;
 
 		runOutput(0);
 
