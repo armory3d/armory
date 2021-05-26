@@ -296,8 +296,6 @@ def make_forward_mobile(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -343,6 +341,8 @@ def make_forward_mobile(con_mesh):
         vert.add_out('vec3 wnormal')
         make_attrib.write_norpos(con_mesh, vert)
         frag.write_attrib('vec3 n = normalize(wnormal);')
+
+    make_attrib.write_vertpos(vert)
 
     frag.add_include('std/math.glsl')
     frag.add_include('std/brdf.glsl')
@@ -474,8 +474,6 @@ def make_forward_solid(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -512,6 +510,7 @@ def make_forward_solid(con_mesh):
         vert.write('vcolor = col.rgb;')
 
     make_attrib.write_norpos(con_mesh, vert, write_nor=False)
+    make_attrib.write_vertpos(vert)
 
     frag.add_out('vec4 fragColor')
     if blend and parse_opacity:
