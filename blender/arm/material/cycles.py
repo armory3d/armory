@@ -204,6 +204,8 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
         'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
     }
 
+    state.reset_outs()
+
     if node.type in node_parser_funcs:
         node_parser_funcs[node.type](node, socket, state)
 
