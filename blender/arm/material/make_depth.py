@@ -33,8 +33,6 @@ def make(context_id, rpasses, shadowmap=False):
     parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
 
     if parse_opacity:
-        frag.write('vec3 n;') # Discard at compile time
-        frag.write('float dotNV;')
         frag.write('float opacity;')
 
     if con_depth.is_elem('bone'):

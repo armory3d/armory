@@ -13,6 +13,23 @@ def make(con_mesh):
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
         frag.write_init('float dotNV = max(dot(n, vVec), 0.0);')
 
+        # n is not always defined yet (in some shadowmap shaders e.g.)
+        if not frag.contains('vec3 n'):
+            vert.add_out('vec3 wnormal')
+            vert.add_uniform('mat3 N', '_normalMatrix')
+            vert.write_attrib('wnormal = normalize(N * vec3(nor.xy, pos.w));')
+            frag.write_attrib('vec3 n = normalize(wnormal);')
+
+            # If not yet added, add nor vertex data
+            vertex_elems = con_mesh.data['vertex_elements']
+            has_normals = False
+            for elem in vertex_elems:
+                if elem['name'] == 'nor':
+                    has_normals = True
+                    break
+            if not has_normals:
+                vertex_elems.append({'name': 'nor', 'data': 'short2norm'})
+
     write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
         if tese != None:
