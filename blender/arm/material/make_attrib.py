@@ -34,13 +34,11 @@ def write_vertpos(vert):
 
 
 def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=False, write_nor=True):
-    prep = ''
-    if declare:
-        prep = 'vec3 '
     is_bone = con_mesh.is_elem('bone')
     if is_bone:
         make_skin.skin_pos(vert)
     if write_nor:
+        prep = 'vec3 ' if declare else ''
         if is_bone:
             make_skin.skin_nor(vert, prep)
         else:

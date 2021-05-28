@@ -64,6 +64,16 @@ class ParserState:
         self.out_opacity: floatstr = '1.0'
         self.out_emission: floatstr = '0.0'
 
+    def reset_outs(self):
+        """Reset the shader output values to their default values."""
+        self.out_basecol = 'vec3(0.8)'
+        self.out_roughness = '0.0'
+        self.out_metallic = '0.0'
+        self.out_occlusion = '1.0'
+        self.out_specular = '1.0'
+        self.out_opacity = '1.0'
+        self.out_emission = '0.0'
+
     def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr]:
         """Return the shader output values as a tuple."""
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,

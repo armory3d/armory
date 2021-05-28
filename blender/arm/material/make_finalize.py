@@ -1,7 +1,10 @@
 import bpy
-import arm.material.make_tess as make_tess
 
-def make(con_mesh):
+import arm.material.make_tess as make_tess
+from arm.material.shader import ShaderContext
+
+
+def make(con_mesh: ShaderContext):
     vert = con_mesh.vert
     frag = con_mesh.frag
     geom = con_mesh.geom
@@ -13,9 +16,26 @@ def make(con_mesh):
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
         frag.write_init('float dotNV = max(dot(n, vVec), 0.0);')
 
+        # n is not always defined yet (in some shadowmap shaders e.g.)
+        if not frag.contains('vec3 n'):
+            vert.add_out('vec3 wnormal')
+            vert.add_uniform('mat3 N', '_normalMatrix')
+            vert.write_attrib('wnormal = normalize(N * vec3(nor.xy, pos.w));')
+            frag.write_attrib('vec3 n = normalize(wnormal);')
+
+            # If not yet added, add nor vertex data
+            vertex_elems = con_mesh.data['vertex_elements']
+            has_normals = False
+            for elem in vertex_elems:
+                if elem['name'] == 'nor':
+                    has_normals = True
+                    break
+            if not has_normals:
+                vertex_elems.append({'name': 'nor', 'data': 'short2norm'})
+
     write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
-        if tese != None:
+        if tese is not None:
             tese.add_out('vec3 eyeDir')
             tese.add_uniform('vec3 eye', '_cameraPosition')
             tese.write('eyeDir = eye - wposition;')
@@ -31,7 +51,7 @@ def make(con_mesh):
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
         export_wpos = True
-    if tese != None:
+    if tese is not None:
         export_wpos = True
     if vert.contains('wposition'):
         write_wpos = True
@@ -50,7 +70,7 @@ def make(con_mesh):
         vert.add_uniform('float posUnpack', link='_posUnpack')
         vert.write_attrib('mposition = spos.xyz * posUnpack;')
 
-    if tese != None:
+    if tese is not None:
         if frag_mpos:
             make_tess.interpolate(tese, 'mposition', 3, declare_out=True)
         elif tese.contains('mposition') and not tese.contains('vec3 mposition'):
@@ -72,7 +92,7 @@ def make(con_mesh):
         vert.write_attrib('if (dim.y == 0) bposition.y = 0;')
         vert.write_attrib('if (dim.x == 0) bposition.x = 0;')
 
-    if tese != None:
+    if tese is not None:
         if frag_bpos:
             make_tess.interpolate(tese, 'bposition', 3, declare_out=True)
         elif tese.contains('bposition') and not tese.contains('vec3 bposition'):
@@ -93,7 +113,7 @@ def make(con_mesh):
         vert.write('wtangent = normalize(N * tang.xyz);')
         vert.write_pre = False
 
-    if tese != None:
+    if tese is not None:
         if frag_wtan:
             make_tess.interpolate(tese, 'wtangent', 3, declare_out=True)
         elif tese.contains('wtangent') and not tese.contains('vec3 wtangent'):
