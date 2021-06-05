@@ -363,6 +363,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
 
 
 def register():
+    arm.logicnode.arm_nodes.register()
     arm.logicnode.arm_sockets.register()
 
     bpy.utils.register_class(ArmLogicTree)
@@ -403,3 +404,4 @@ def unregister():
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
 
     arm.logicnode.arm_sockets.unregister()
+    arm.logicnode.arm_nodes.unregister()

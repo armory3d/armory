@@ -270,6 +270,30 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
+class ArmNodeCallFuncButton(bpy.types.Operator):
+    """Operator that calls a function on a specified
+    node (used for dynamic callbacks)."""
+    bl_idname = 'arm.node_call_func'
+    bl_label = 'Execute'
+    bl_options = {'UNDO', 'INTERNAL'}
+
+    node_index: StringProperty(name='Node Index', default='')
+    callback_name: StringProperty(name='Callback Name', default='')
+
+    def execute(self, context):
+        node = array_nodes[self.node_index]
+        if hasattr(node, self.callback_name):
+            getattr(node, self.callback_name)()
+        else:
+            return {'CANCELLED'}
+
+        # Reset to default again for subsequent calls of this operator
+        self.node_index = ''
+        self.callback_name = ''
+
+        return {'FINISHED'}
+
+
 class ArmNodeSearch(bpy.types.Operator):
     bl_idname = "arm.node_search"
     bl_label = "Search..."
@@ -460,12 +484,16 @@ def reset_globals():
     category_items = OrderedDict()
 
 
-bpy.utils.register_class(ArmNodeSearch)
-bpy.utils.register_class(ArmNodeAddInputButton)
-bpy.utils.register_class(ArmNodeAddInputValueButton)
-bpy.utils.register_class(ArmNodeRemoveInputButton)
-bpy.utils.register_class(ArmNodeRemoveInputValueButton)
-bpy.utils.register_class(ArmNodeAddOutputButton)
-bpy.utils.register_class(ArmNodeRemoveOutputButton)
-bpy.utils.register_class(ArmNodeAddInputOutputButton)
-bpy.utils.register_class(ArmNodeRemoveInputOutputButton)
+REG_CLASSES = (
+    ArmNodeSearch,
+    ArmNodeAddInputButton,
+    ArmNodeAddInputValueButton,
+    ArmNodeRemoveInputButton,
+    ArmNodeRemoveInputValueButton,
+    ArmNodeAddOutputButton,
+    ArmNodeRemoveOutputButton,
+    ArmNodeAddInputOutputButton,
+    ArmNodeRemoveInputOutputButton,
+    ArmNodeCallFuncButton
+)
+register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
