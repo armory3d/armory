@@ -7,6 +7,12 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
     arm_section = 'params'
     arm_version = 2
 
+    property0: BoolProperty(
+        name="Per Object",
+        description="Set property per object",
+        default=False
+    )
+
     def init(self, context):
         super(SetMaterialValueParamNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
@@ -16,6 +22,9 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
         self.add_input('NodeSocketFloat', 'Float')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
