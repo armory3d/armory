@@ -1,9 +1,12 @@
 package armory.logicnode;
 
+import iron.Scene;
 import iron.data.MaterialData;
 import iron.object.Object;
 
 class SetMaterialValueParamNode extends LogicNode {
+
+	public var property0: Bool; // per object
 
 	static var registered = false;
 	static var map = new Map<Object, Map<MaterialData, Map<String, Null<kha.FastFloat>>>>();
@@ -17,14 +20,20 @@ class SetMaterialValueParamNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var obj = inputs[1].get();
-		var mat = inputs[2].get();
-		if(obj == null) return;
+		var object = inputs[1].get();
+		if(object == null) return;
 
-		var matMap = map.get(obj);
+		var mat = inputs[2].get();
+		if(mat == null) return;
+
+		if(! property0){
+			object = Scene.active.root;
+		}
+
+		var matMap = map.get(object);
 		if (matMap == null) {
 			matMap = new Map();
-			map.set(obj, matMap);
+			map.set(object, matMap);
 		}
 
 		var entry = matMap.get(mat);
@@ -40,6 +49,10 @@ class SetMaterialValueParamNode extends LogicNode {
 	static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 		if(object == null) return null;
 		if (mat == null) return null;
+
+		if(! map.exists(object)){
+			object = Scene.active.root;
+		}
 
 		var material = map.get(object);
 		if (material == null) return null;
