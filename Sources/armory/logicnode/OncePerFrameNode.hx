@@ -10,8 +10,10 @@ class OncePerFrameNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		if(c) runOutput(0);
-		c = false;
+		if(c) {
+			c = false;
+			runOutput(0);
+		}
 	}
 
 	function update() {
