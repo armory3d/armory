@@ -25,7 +25,6 @@ class UniformsManager{
                 if(! floatsRegistered){
                     floatsRegistered = true;
                     Uniforms.externalFloatLinks.push(floatLink);
-                    trace("Reg float");
                 }
             }
 
