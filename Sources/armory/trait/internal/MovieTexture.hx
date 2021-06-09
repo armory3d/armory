@@ -8,8 +8,7 @@ import iron.object.MeshObject;
 class MovieTexture extends Trait {
 
 	var video: Video;
-	public static var image: Image;
-	public static var created = false;
+	var image: Image;
 
 	var videoName: String;
 
@@ -33,10 +32,7 @@ class MovieTexture extends Trait {
 
 		this.videoName = videoName;
 
-		if (!created) {
-			created = true;
-			notifyOnInit(init);
-		}
+		notifyOnInit(init);
 	}
 
 	function init() {
@@ -46,7 +42,7 @@ class MovieTexture extends Trait {
 
 			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
 
-			var o = cast(object, iron.object.MeshObject);
+			var o = cast(object, MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
 			notifyOnRender2D(render);
 		});
