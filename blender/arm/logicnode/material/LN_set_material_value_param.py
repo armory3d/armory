@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetMaterialValueParamNode(ArmLogicTreeNode):
-    """Set a float value material parameter to the specified object"""
+    """Set a float value material parameter to the specified object. If `per object` is disabled, value will be set to all objects with this material"""
     bl_idname = 'LNSetMaterialValueParamNode'
     bl_label = 'Set Material Value Param'
     arm_section = 'params'
