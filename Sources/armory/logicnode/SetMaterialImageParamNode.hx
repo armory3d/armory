@@ -28,7 +28,12 @@ class SetMaterialImageParamNode extends LogicNode {
 			object = Scene.active.root;
 		}
 
-		manager.setTextureValue(mat, object, inputs[3].get(), inputs[4].get());
+		var img = inputs[4].get();
+		if(img == null) return;
+		iron.data.Data.getImage(img, function(image: kha.Image) {
+			manager.setTextureValue(mat, object, inputs[3].get(), image);
+		});
+		
 		runOutput(0);
 	}
 }
