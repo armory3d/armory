@@ -7,6 +7,15 @@ import iron.object.MeshObject;
 
 class MovieTexture extends Trait {
 
+	/**
+		Caches all render targets used by this trait for re-use when having
+		multiple videos of the same size. The lookup only takes place on trait
+		initialization.
+
+		Map layout: `[width => [height => image]]`
+	**/
+	static var imageCache: Map<Int, Map<Int, Image>> = new Map();
+
 	var video: Video;
 	var image: Image;
 
@@ -40,7 +49,19 @@ class MovieTexture extends Trait {
 			video = vid;
 			video.play(true);
 
-			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
+			var w = getPower2(video.width());
+			var h = getPower2(video.height());
+
+			// Lazily fill the outer map
+			var hMap: Map<Int, Image> = imageCache[w];
+			if (hMap == null) {
+				imageCache[w] = new Map<Int, Image>();
+			}
+
+			image = imageCache[w][h];
+			if (image == null) {
+				imageCache[w][h] = image = Image.createRenderTarget(w, h);
+			}
 
 			var o = cast(object, MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
