@@ -2,9 +2,16 @@ package armory.trait.internal;
 
 import kha.Image;
 import kha.Video;
+
 import iron.Trait;
 import iron.object.MeshObject;
 
+/**
+	Replaces the diffuse texture of the first material of the trait's object
+	with a video texture.
+
+	@see https://github.com/armory3d/armory_examples/tree/master/material_movie
+**/
 class MovieTexture extends Trait {
 
 	/**
