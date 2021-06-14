@@ -23,7 +23,7 @@ class GetBoneFkIkOnlyNode extends LogicNode {
 		var bone = anim.getBone(boneName);
 
         //Get bone transform in world coordinates
-        return bone.is_IK_FK_only;
+        return bone.is_ik_fk_only;
 
 
 		#end
