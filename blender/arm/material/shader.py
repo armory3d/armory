@@ -109,19 +109,27 @@ class ShaderContext:
     def get(self):
         return self.data
 
-    def add_constant(self, ctype, name, link=None):
+    def add_constant(self, ctype, name, link=None, default_value=None, is_arm_mat_param=None):
         for c in self.constants:
             if c['name'] == name:
                 return
 
-        c = { 'name': name, 'type': ctype }
-        if link != None:
+        c = { 'name': name, 'type': ctype}
+        if link is not None:
             c['link'] = link
+        if default_value is not None:
+            if ctype == 'float':
+                c['float'] = default_value
+            if ctype == 'vec3':
+                c['vec3'] = default_value
+        if is_arm_mat_param is not None:
+            c['is_arm_parameter'] = 'true'
         self.constants.append(c)
 
     def add_texture_unit(self, name, link=None, is_image=None,
                          addr_u=None, addr_v=None,
-                         filter_min=None, filter_mag=None, mipmap_filter=None):
+                         filter_min=None, filter_mag=None, mipmap_filter=None,
+                         default_value=None, is_arm_mat_param=None):
         for c in self.tunits:
             if c['name'] == name:
                 return
@@ -141,6 +149,10 @@ class ShaderContext:
             c['filter_mag'] = filter_mag
         if mipmap_filter is not None:
             c['mipmap_filter'] = mipmap_filter
+        if default_value is not None:
+            c['default_image_file'] = default_value
+        if is_arm_mat_param is not None:
+            c['is_arm_parameter'] = 'true'
 
         self.tunits.append(c)
 
@@ -238,7 +250,7 @@ class Shader:
     def add_uniform(self, s, link=None, included=False, top=False,
                     tex_addr_u=None, tex_addr_v=None,
                     tex_filter_min=None, tex_filter_mag=None,
-                    tex_mipmap_filter=None):
+                    tex_mipmap_filter=None, default_value=None, is_arm_mat_param=None):
         ar = s.split(' ')
         # layout(RGBA8) image3D voxels
         utype = ar[-2]
@@ -257,7 +269,8 @@ class Shader:
                 self.context.add_texture_unit(
                     uname, link, is_image,
                     tex_addr_u, tex_addr_v,
-                    tex_filter_min, tex_filter_mag, tex_mipmap_filter)
+                    tex_filter_min, tex_filter_mag, tex_mipmap_filter,
+                    default_value=default_value, is_arm_mat_param=is_arm_mat_param)
         else:
             # Prefer vec4[] for d3d to avoid padding
             if ar[0] == 'float' and '[' in ar[1]:
@@ -266,7 +279,7 @@ class Shader:
             elif ar[0] == 'vec4' and '[' in ar[1]:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
-            self.context.add_constant(ar[0], ar[1], link=link)
+            self.context.add_constant(ar[0], ar[1], link=link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
         if top:
             if not included and s not in self.uniforms_top:
                 self.uniforms_top.append(s)
