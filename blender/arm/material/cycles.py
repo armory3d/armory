@@ -560,7 +560,7 @@ def to_uniform(inp: bpy.types.NodeSocket):
 def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
-def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
+def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
     curshader = state.curshader
 
     tex_store = store_var_name(node)
@@ -569,7 +569,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     state.parsed.add(tex_store)
     mat_bind_texture(tex)
     state.con.add_elem('tex', 'short2norm')
-    curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
+    curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
     triplanar = node.projection == 'BOX'
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
