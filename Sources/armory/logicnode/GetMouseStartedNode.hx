@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.system.Input;
 
-class GetKeyboardStartedNode extends LogicNode {
+class GetMouseStartedNode extends LogicNode {
 
 	var m = Input.getMouse();
 	var buttonStarted: Null<String>;
