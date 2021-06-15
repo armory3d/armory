@@ -5,7 +5,7 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
 
     @seeNode Get Scene Root
     
-    @input Object: Object whose material parameter should change. Use `Get Scene Root` node to set paramter globally.
+    @input Object: Object whose material parameter should change. Use `Get Scene Root` node to set parameter globally.
     
     @input Per Object: 
         - `Enabled`: Set material parameter specific to this object. Global parameter will be ignored.
