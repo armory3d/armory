@@ -10,10 +10,12 @@ class GetRotationNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_output('ArmNodeSocketRotation', 'Rotation')
 
-        self.add_output('NodeSocketVector', 'Euler Angles')
-        self.add_output('NodeSocketVector', 'Vector')
-        self.add_output('NodeSocketFloat', 'Angle (Radians)')
-        self.add_output('NodeSocketFloat', 'Angle (Degrees)')
-        self.add_output('NodeSocketVector', 'Quaternion XYZ')
-        self.add_output('NodeSocketFloat', 'Quaternion W')
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
+
+    property0: EnumProperty(
+        items = [('Local', 'Local', 'Local'),
+                 ('Global', 'Global', 'Global')],
+        name='', default='Local')

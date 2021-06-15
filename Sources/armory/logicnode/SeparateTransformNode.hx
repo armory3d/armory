@@ -20,7 +20,7 @@ class SeparateTransformNode extends LogicNode {
 		matrix.decompose(loc, rot, scale);
 
 		if (from == 0) return loc;
-		else if (from == 1) return rot.getEuler();
+		else if (from == 1) return rot;
 		else return scale;
 	}
 }

@@ -37,6 +37,6 @@ class LookAtNode extends LogicNode {
 		v2.setFrom(vto).sub(vfrom).normalize();
 
 		q.fromTo(v1, v2);
-		return q.getEuler();
+		return q;
 	}
 }

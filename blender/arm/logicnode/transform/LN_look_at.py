@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class LookAtNode(ArmLogicTreeNode):
-    """Converts the two given coordinates to a quaternion rotation."""
+    """Returns *a* rotation that makes something look away from X,Y or Z, and instead look in the 'from->to' direction"""
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
     arm_section = 'rotation'
@@ -21,7 +21,7 @@ class LookAtNode(ArmLogicTreeNode):
         self.add_input('NodeSocketVector', 'From Location')
         self.add_input('NodeSocketVector', 'To Location')
 
-        self.add_output('NodeSocketVector', 'Rotation')
+        self.add_output('ArmNodeSocketRotation', 'Rotation')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

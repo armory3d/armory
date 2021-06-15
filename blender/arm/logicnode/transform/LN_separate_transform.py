@@ -11,5 +11,5 @@ class SeparateTransformNode(ArmLogicTreeNode):
         self.add_input('NodeSocketShader', 'Transform')
 
         self.add_output('NodeSocketVector', 'Location')
-        self.add_output('NodeSocketVector', 'Rotation')
+        self.add_output('ArmNodeSocketRotation', 'Rotation')
         self.add_output('NodeSocketVector', 'Scale')

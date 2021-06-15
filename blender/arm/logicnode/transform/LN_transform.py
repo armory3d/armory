@@ -9,7 +9,7 @@ class TransformNode(ArmLogicTreeNode):
     def init(self, context):
         super(TransformNode, self).init(context)
         self.add_input('NodeSocketVector', 'Location')
-        self.add_input('NodeSocketVector', 'Rotation')
+        self.add_input('ArmNodeSocketRotation', 'Rotation')
         self.add_input('NodeSocketVector', 'Scale', default_value=[1.0, 1.0, 1.0])
 
-        self.add_output('NodeSocketShader', 'Transform')
+        self.add_output('NodeSocketShader', 'Transform', is_var=True)

@@ -1,6 +1,8 @@
+from math import pi, cos, sin, sqrt
 import bpy
-from bpy.props import PointerProperty
+from bpy.props import PointerProperty, EnumProperty, FloatProperty, FloatVectorProperty
 from bpy.types import NodeSocket
+import mathutils
 
 import arm.utils
 
@@ -68,6 +70,169 @@ class ArmAnimActionSocket(ArmCustomSocket):
     def draw_color(self, context, node):
         return 0.8, 0.8, 0.8, 1
 
+    
+class ArmRotationSocket(ArmCustomSocket):
+    bl_idname = 'ArmNodeSocketRotation'
+    bl_label = 'Rotation Socket'
+    arm_socket_type = 'ROTATION'  # the internal representation is a quaternion, AKA a '4D vector' (using mathutils.Vector((x,y,z,w)))
+    
+    def get_default_value(self):
+        if self.default_value_raw is None:
+            return Vector((0.0,0.0,0.0,1.0))
+        else:
+            return self.default_value_raw
+
+    def on_unit_update(self, context):
+        if self.default_value_unit == 'Rad':
+            fac = pi/180  # deg->rad conversion
+        else:
+            fac = 180/pi  # rad->deg conversion
+        if self.default_value_mode == 'AxisAngle':
+            self.default_value_s3 *= fac
+        elif self.default_value_mode == 'EulerAngles':
+            self.default_value_s0 *= fac
+            self.default_value_s1 *= fac
+            self.default_value_s2 *= fac
+        self.do_update_raw(context)
+        
+            
+    def on_mode_update(self, context):
+        if self.default_value_mode == 'Quat':
+            summ = abs(self.default_value_s0)
+            summ+= abs(self.default_value_s1)
+            summ+= abs(self.default_value_s2)
+            summ+= abs(self.default_value_s3)
+            if summ<0.01:
+                self.default_value_s3 = 1.0
+        elif self.default_value_mode == 'AxisAngle':
+            summ = abs(self.default_value_s0)
+            summ+= abs(self.default_value_s1)
+            summ+= abs(self.default_value_s2)
+            if summ<1E-5:
+                self.default_value_s3 = 0.0
+        self.do_update_raw(context)
+
+    def do_update_raw(self, context):
+        if self.default_value_mode == 'Quat':
+            qx = self.default_value_s0
+            qy = self.default_value_s1
+            qz = self.default_value_s2
+            qw = self.default_value_s3
+            # need to normalize the quaternion for a rotation (having it be 0 is not an option)
+            ql = sqrt(qx**2+qy**2+qz**2+qw**2)
+            if abs(ql)<1E-5:
+                qx, qy, qz, qw = 0.0,0.0,0.0,1.0
+            else:
+                qx /= ql
+                qy /= ql
+                qz /= ql
+                qw /= ql
+            self.default_value_raw = mathutils.Vector((qx,qy,qz,qw))
+
+        elif self.default_value_mode == 'AxisAngle':
+            if self.default_value_unit == 'Deg':
+                angle = self.default_value_s3 * pi/180
+            else:
+                angle = self.default_value_s3
+            cang, sang = cos(angle/2), sin(angle/2)
+            x = self.default_value_s0
+            y = self.default_value_s1
+            z = self.default_value_s2
+            veclen = sqrt(x**2+y**2+z**2)
+            if veclen<1E-5:
+                self.default_value_raw = mathutils.Vector((0.0,0.0,0.0,1.0))
+            else:
+                self.default_value_raw = mathutils.Vector((
+                    x/veclen * sang,
+                    y/veclen * sang,
+                    z/veclen * sang,
+                    cang
+                ))
+        else:
+            if self.default_value_unit == 'Deg':
+                x = self.default_value_s0 * pi/180
+                y = self.default_value_s1 * pi/180
+                z = self.default_value_s2 * pi/180
+            else:
+                x = self.default_value_s0
+                y = self.default_value_s1
+                z = self.default_value_s2
+            cx, sx = cos(x/2), sin(x/2)
+            cy, sy = cos(y/2), sin(y/2)
+            cz, sz = cos(z/2), sin(z/2)
+
+            qw, qx, qy, qz  = 1.0,0.0,0.0,0.0
+            for direction in self.default_value_order[::-1]:
+                qwi, qxi,qyi,qzi = {'X': (cx,sx,0,0), 'Y': (cy,0,sy,0), 'Z': (cz,0,0,sz)}[direction]
+
+                qw = qw*qwi -qx*qxi -qy*qyi -qz*qzi
+                qx = qx*qwi +qw*qxi +qy*qzi -qz*qyi
+                qy = qy*qwi +qw*qyi +qz*qxi -qx*qzi
+                qz = qz*qwi +qw*qzi +qx*qyi -qy*qxi
+            self.default_value_raw = mathutils.Vector((qx,qy,qz,qw))
+            
+        
+    def draw(self, context, layout, node, text):
+        if (self.is_output or self.is_linked):
+            layout.label(text=self.name)
+        else:
+            coll1 = layout.column(align=True)
+            coll1.label(text=self.name)
+            bx=coll1.box()
+            coll = bx.column(align=True)
+            coll.prop(self, 'default_value_mode')
+            if self.default_value_mode in ('EulerAngles', 'AxisAngle'):
+                coll.prop(self, 'default_value_unit')
+                
+            if self.default_value_mode == 'EulerAngles':
+                coll.prop(self, 'default_value_order')
+                coll.prop(self, 'default_value_s0', text='X')
+                coll.prop(self, 'default_value_s1', text='Y')
+                coll.prop(self, 'default_value_s2', text='Z')
+            elif self.default_value_mode == 'Quat':
+                coll.prop(self, 'default_value_s0', text='X')
+                coll.prop(self, 'default_value_s1', text='Y')
+                coll.prop(self, 'default_value_s2', text='Z')
+                coll.prop(self, 'default_value_s3', text='W')
+            elif self.default_value_mode == 'AxisAngle':
+                coll.prop(self, 'default_value_s0', text='X')
+                coll.prop(self, 'default_value_s1', text='Y')
+                coll.prop(self, 'default_value_s2', text='Z')
+                coll.separator()
+                coll.prop(self, 'default_value_s3', text='Angle')            
+
+    def draw_color(self, context, node):
+        return 0.68, 0.22, 0.62, 1
+
+    default_value_mode: EnumProperty(
+        items=[('EulerAngles', 'Euler Angles', 'Euler Angles'),
+               ('AxisAngle', 'Axis/Angle', 'Axis/Angle'),
+               ('Quat', 'Quaternion', 'Quaternion')],
+        name='', default='EulerAngles',
+        update=on_mode_update)
+
+    default_value_unit: EnumProperty(
+        items=[('Deg', 'Degrees', 'Degrees'),
+               ('Rad', 'Radians', 'Radians')],
+        name='', default='Rad',
+        update=on_unit_update)
+    default_value_order: EnumProperty(
+        items=[('XYZ','XYZ','XYZ'),
+               ('XZY','XZY (legacy Armory euler order)','XZY (legacy Armory euler order)'),
+               ('YXZ','YXZ','YXZ'),
+               ('YZX','YZX','YZX'),
+               ('ZXY','ZXY','ZXY'),
+               ('ZYX','ZYX','ZYX')],
+        name='', default='XYZ'
+    )
+
+    default_value_s0: FloatProperty(update=do_update_raw)
+    default_value_s1: FloatProperty(update=do_update_raw)
+    default_value_s2: FloatProperty(update=do_update_raw)
+    default_value_s3: FloatProperty(update=do_update_raw)
+
+    default_value_raw: FloatVectorProperty(size=4, default=(0,0,0,1))
+
 
 class ArmArraySocket(ArmCustomSocket):
     bl_idname = 'ArmNodeSocketArray'
@@ -118,6 +283,7 @@ class ArmObjectSocket(ArmCustomSocket):
 def register():
     bpy.utils.register_class(ArmActionSocket)
     bpy.utils.register_class(ArmAnimActionSocket)
+    bpy.utils.register_class(ArmRotationSocket)
     bpy.utils.register_class(ArmArraySocket)
     bpy.utils.register_class(ArmObjectSocket)
 
@@ -126,4 +292,5 @@ def unregister():
     bpy.utils.unregister_class(ArmObjectSocket)
     bpy.utils.unregister_class(ArmArraySocket)
     bpy.utils.unregister_class(ArmAnimActionSocket)
+    bpy.utils.unregister_class(ArmRotationSocket)
     bpy.utils.unregister_class(ArmActionSocket)
