@@ -1,5 +1,7 @@
-package iron.data;
+package armory.trait.internal;
 
+import iron.object.MeshObject;
+import iron.Trait;
 import kha.Image;
 import iron.math.Vec4;
 import iron.data.MaterialData;
@@ -8,7 +10,7 @@ import iron.object.Object;
 import iron.object.Uniforms;
 
 
-class UniformsManager{
+class UniformsManager extends Trait{
 
     static var floatsRegistered = false;
     static var floatsMap = new Map<Object, Map<MaterialData, Map<String, Null<kha.FastFloat>>>>();
@@ -18,6 +20,52 @@ class UniformsManager{
 
     static var texturesRegistered = false;
 	static var texturesMap = new Map<Object, Map<MaterialData, Map<String, kha.Image>>>();
+
+	static var sceneRemoveInitalized = false;
+
+	public var unifromExists = false;
+
+	public function new(){
+		super();
+
+		notifyOnInit(init);
+
+		notifyOnRemove(removeObject);
+
+		if(! sceneRemoveInitalized){
+
+			Scene.active.notifyOnRemove(removeScene);
+		}
+	}
+
+	function init() {
+		var materials = cast(object, MeshObject).materials;
+
+		for (material in materials){
+
+			var exists = registerShaderUniforms(material);
+			if(exists) {
+				unifromExists = true;
+			}
+
+		}
+
+		if(! unifromExists) {
+
+			this.remove();			
+		}
+	}
+
+	static function removeScene(){
+
+		removeObjectFromAllMaps(Scene.active.root);
+	}
+
+	function removeObject() {
+
+		removeObjectFromAllMaps(object);
+		
+	}
 
 	// Helper method to register float, vec3 and texture getter functions
 	static function register(type: UniformType){
@@ -47,7 +95,9 @@ class UniformsManager{
 	}
 
 	// Register and map shader uniforms if it is an armory shader parameter
-	public static function registerShaderUniforms(material: MaterialData) {
+	public static function registerShaderUniforms(material: MaterialData) : Bool {
+
+		var unifromExist = false;
 
 		if(! floatsMap.exists(Scene.active.root)) floatsMap.set(Scene.active.root, null);
 		if(! vectorsMap.exists(Scene.active.root)) vectorsMap.set(Scene.active.root, null);
@@ -57,6 +107,7 @@ class UniformsManager{
 			for (constant in context.constants){ // For each constant in the context
 				if(constant.is_arm_parameter){ // Chack if armory parameter
 
+					unifromExist = true;
 					var object = Scene.active.root; // Map default uniforms to scene root
 
 					switch (constant.type){
@@ -84,6 +135,7 @@ class UniformsManager{
 			for (texture in context.texture_units){
 				if(texture.is_arm_parameter){ // Chack if armory parameter
 
+					unifromExist = true;
 					var object = Scene.active.root; // Map default texture to scene root
 
 					iron.data.Data.getImage(texture.default_image_file, function(image: kha.Image) {
@@ -96,6 +148,8 @@ class UniformsManager{
 					
 			}
 		}
+
+		return unifromExist;
 		
 	}
 
