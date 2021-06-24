@@ -2440,7 +2440,7 @@ Make sure the mesh only has tris/quads.""")
             # Rigid body constraint
             rbc = bobject.rigid_body_constraint
             if rbc is not None and rbc.enabled:
-                self.add_rigidbody_constraint(o, rbc)
+                self.add_rigidbody_constraint(o, bobject, rbc)
 
         # Camera traits
         if type is NodeType.CAMERA:
@@ -2747,7 +2747,7 @@ Make sure the mesh only has tris/quads.""")
         o['traits'].append(out_trait)
 
     @staticmethod
-    def add_rigidbody_constraint(o, rbc):
+    def add_rigidbody_constraint(o, bobject, rbc):
         rb1 = rbc.object1
         rb2 = rbc.object2
         if rb1 is None or rb2 is None:
@@ -2766,7 +2766,8 @@ Make sure the mesh only has tris/quads.""")
                 "'" + rb1.name + "'",
                 "'" + rb2.name + "'",
                 str(rbc.disable_collisions).lower(),
-                str(breaking_threshold)
+                str(breaking_threshold),
+                str(bobject.arm_relative_physics_constraint).lower()
             ]
         }
         if rbc.type == "FIXED":
