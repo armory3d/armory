@@ -220,6 +220,9 @@ def register():
 
 
 def unregister():
+    bpy.app.timers.unregister(poll_threads)
+    bpy.app.timers.unregister(always)
+
     bpy.app.handlers.load_post.remove(on_load_post)
     bpy.app.handlers.depsgraph_update_post.remove(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.remove(on_undo_post)
