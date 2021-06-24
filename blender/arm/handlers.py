@@ -1,5 +1,6 @@
 import importlib
 import os
+import queue
 import sys
 
 import bpy
@@ -102,6 +103,24 @@ def always():
         space.node_tree.arm_cached = False
     return 0.5
 
+
+def poll_threads() -> float:
+    """Polls the thread callback queue and if a thread has finished, it
+    is joined with the main thread and the corresponding callback is
+    executed in the main thread.
+    """
+    try:
+        thread, callback = make.thread_callback_queue.get(block=False)
+    except queue.Empty:
+        return 0.25
+
+    thread.join()
+    callback()
+
+    # Quickly check if another thread has finished
+    return 0.01
+
+
 appended_py_paths = []
 context_screen = None
 
@@ -181,7 +200,9 @@ def register():
     bpy.app.handlers.load_post.append(on_load_post)
     bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.append(on_undo_post)
+
     bpy.app.timers.register(always, persistent=True)
+    bpy.app.timers.register(poll_threads, persistent=True)
 
     if arm.utils.get_fp() != '':
         appended_py_paths = []
