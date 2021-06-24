@@ -1,17 +1,16 @@
+import errno
 import glob
 import json
 import os
+from queue import Queue
+import shlex
 import shutil
-import time
 import stat
 import subprocess
 import threading
-import webbrowser
-import shlex
-import errno
-import math
+import time
 from typing import Callable
-from queue import Queue
+import webbrowser
 
 import bpy
 

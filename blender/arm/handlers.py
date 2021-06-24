@@ -90,16 +90,17 @@ def send_operator(op):
         else: # Rebuild
             make.patch()
 
-def always():
+
+def always() -> float:
     # Force ui redraw
-    if state.redraw_ui and context_screen != None:
+    if state.redraw_ui and context_screen is not None:
         for area in context_screen.areas:
             if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                 area.tag_redraw()
         state.redraw_ui = False
     # TODO: depsgraph.updates only triggers material trees
     space = arm.utils.logic_editor_space(context_screen)
-    if space != None:
+    if space is not None:
         space.node_tree.arm_cached = False
     return 0.5
 
