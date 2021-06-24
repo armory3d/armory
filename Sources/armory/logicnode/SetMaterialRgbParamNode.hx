@@ -4,7 +4,7 @@ import iron.Scene;
 import iron.math.Vec4;
 import iron.data.MaterialData;
 import iron.object.Object;
-import iron.data.UniformsManager;
+import armory.trait.internal.UniformsManager;
 
 class SetMaterialRgbParamNode extends LogicNode {
 	

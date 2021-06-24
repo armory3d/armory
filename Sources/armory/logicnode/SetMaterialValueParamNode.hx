@@ -3,7 +3,7 @@ package armory.logicnode;
 import iron.Scene;
 import iron.data.MaterialData;
 import iron.object.Object;
-import iron.data.UniformsManager;
+import armory.trait.internal.UniformsManager;
 
 class SetMaterialValueParamNode extends LogicNode {
 	
