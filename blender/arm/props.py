@@ -286,6 +286,7 @@ def init_properties():
             default=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False),
             size=20,
             subtype='LAYER')
+    bpy.types.Object.arm_relative_physics_constraint = BoolProperty(name="Relative Physics Constraint", description="Add physics constraint relative to the parent object or collection when spawned", default=False)
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')
