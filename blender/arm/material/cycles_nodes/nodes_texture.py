@@ -114,15 +114,22 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
 
         tex_name = c.node_name(node.name)
         tex = c.make_texture(node, tex_name)
-        tex_link = node.name if node.arm_material_param else None
+        tex_link = None
+        tex_default_file = None
+        is_arm_mat_param = None
+        if node.arm_material_param:
+            tex_link = node.name
+            is_arm_mat_param = True
+            if tex['file'] is not None:
+                tex_default_file = tex['file']
 
         if tex is not None:
             state.curshader.write_textures += 1
             if use_color_out:
                 to_linear = node.image is not None and node.image.colorspace_settings.name == 'sRGB'
-                res = f'{c.texture_store(node, tex, tex_name, to_linear, tex_link=tex_link)}.rgb'
+                res = f'{c.texture_store(node, tex, tex_name, to_linear, tex_link=tex_link, default_value=tex_default_file, is_arm_mat_param=is_arm_mat_param)}.rgb'
             else:
-                res = f'{c.texture_store(node, tex, tex_name, tex_link=tex_link)}.a'
+                res = f'{c.texture_store(node, tex, tex_name, tex_link=tex_link, default_value=tex_default_file, is_arm_mat_param=is_arm_mat_param)}.a'
             state.curshader.write_textures -= 1
             return res
 

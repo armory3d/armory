@@ -2460,6 +2460,13 @@ Make sure the mesh only has tris/quads.""")
             else:
                 self.material_to_object_dict[mat] = [bobject]
                 self.material_to_arm_object_dict[mat] = [o]
+        
+        # Add UniformsManager trait
+        if type is NodeType.MESH:
+            uniformManager = {}
+            uniformManager['type'] = 'Script'
+            uniformManager['class_name'] = 'armory.trait.internal.UniformsManager'
+            o['traits'].append(uniformManager)
 
         # Export constraints
         if len(bobject.constraints) > 0:

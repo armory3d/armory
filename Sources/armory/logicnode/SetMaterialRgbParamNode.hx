@@ -1,38 +1,33 @@
 package armory.logicnode;
 
+import iron.Scene;
 import iron.math.Vec4;
 import iron.data.MaterialData;
 import iron.object.Object;
+import armory.trait.internal.UniformsManager;
 
 class SetMaterialRgbParamNode extends LogicNode {
-
-	static var registered = false;
-	static var map = new Map<MaterialData, Map<String, Vec4>>();
-
+	
 	public function new(tree: LogicTree) {
 		super(tree);
-		if (!registered) {
-			registered = true;
-			iron.object.Uniforms.externalVec3Links.push(vec3Link);
-		}
 	}
 
 	override function run(from: Int) {
-		var mat = inputs[1].get();
-		if (mat == null) return;
-		var entry = map.get(mat);
-		if (entry == null) {
-			entry = new Map();
-			map.set(mat, entry);
-		}
-		entry.set(inputs[2].get(), inputs[3].get()); // Node name, value
-		runOutput(0);
-	}
+		var object = inputs[1].get();
+		if(object == null) return;
 
-	static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
-		if (mat == null) return null;
-		var entry = map.get(mat);
-		if (entry == null) return null;
-		return entry.get(link);
+		var perObject = inputs[2].get();
+		if(perObject == null) perObject = false;
+
+		var mat = inputs[3].get();
+		if(mat == null) return;
+
+		if(! perObject){
+			UniformsManager.removeObjectFromMap(object, Vector);
+			object = Scene.active.root;
+		}
+
+		UniformsManager.setVec3Value(mat, object, inputs[4].get(), inputs[5].get());
+		runOutput(0);
 	}
 }
