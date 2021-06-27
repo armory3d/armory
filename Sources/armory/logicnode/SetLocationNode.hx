@@ -13,18 +13,21 @@ class SetLocationNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var vec: Vec4 = inputs[2].get();
-		var relative: Bool = inputs[3].get();
 
 		if (object == null || vec == null) return;
 
-		if (!relative && object.parent != null) {
-			vec.sub(object.parent.transform.world.getLoc()); // Remove parent location influence
+		if (inputs.length > 3) { // Keep compatibility
+			var relative: Bool = inputs[3].get();
 
-			// Convert vec to parent local space
-			var dotX = vec.dot(object.parent.transform.right());
-			var dotY = vec.dot(object.parent.transform.look());
-			var dotZ = vec.dot(object.parent.transform.up());
-			vec.set(dotX, dotY, dotZ);
+			if (!relative && object.parent != null) {
+				vec.sub(object.parent.transform.world.getLoc()); // Remove parent location influence
+
+				// Convert vec to parent local space
+				var dotX = vec.dot(object.parent.transform.right());
+				var dotY = vec.dot(object.parent.transform.look());
+				var dotZ = vec.dot(object.parent.transform.up());
+				vec.set(dotX, dotY, dotZ);
+			}
 		}
 
 		object.transform.loc.setFrom(vec);
