@@ -6,8 +6,6 @@ import armory.trait.physics.RigidBody;
 
 class SetLocationNode extends LogicNode {
 
-	var quat = new Quat();
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -19,7 +17,7 @@ class SetLocationNode extends LogicNode {
 
 		if (object == null || vec == null) return;
 
-		if (!relative) {
+		if (!relative && object.parent != null) {
 			vec.sub(object.parent.transform.world.getLoc()); // Remove parent location influence
 
 			// Convert vec to parent local space
