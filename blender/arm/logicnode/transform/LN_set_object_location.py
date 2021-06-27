@@ -19,6 +19,6 @@ class SetLocationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Location')
-        self.add_input('NodeSocketBool', 'Parent Relative', default_value=True)
+        self.add_input('NodeSocketBool', 'Parent Relative')
 
         self.add_output('ArmNodeSocketAction', 'Out')
