@@ -19,6 +19,7 @@ msgbus_owner = object()
 
 
 def start():
+    """Start the live patch session."""
     log.debug("Live patch session started")
 
     listen(bpy.types.Object, "location", "obj_location")
@@ -30,6 +31,12 @@ def start():
     for light_type in (bpy.types.AreaLight, bpy.types.PointLight, bpy.types.SpotLight, bpy.types.SunLight):
         listen(light_type, "color", "light_color")
         listen(light_type, "energy", "light_energy")
+
+
+def stop():
+    """Stop the live patch session."""
+    log.debug("Live patch session stopped")
+    bpy.msgbus.clear_by_owner(msgbus_owner)
 
 
 def patch_export():
@@ -68,7 +75,6 @@ def patch_done():
     js = 'iron.Scene.patch();'
     write_patch(js)
     state.proc_build = None
-    bpy.msgbus.clear_by_owner(msgbus_owner)
 
 
 def write_patch(js: str):

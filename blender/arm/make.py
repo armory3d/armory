@@ -398,9 +398,11 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
 def play_done():
+    """Called if the player was stopped/terminated."""
     state.proc_play = None
     state.redraw_ui = True
     log.clear()
+    live_patch.stop()
 
 def assets_done():
     if state.proc_build == None:
