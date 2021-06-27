@@ -16,5 +16,6 @@ class WorldVectorToLocalSpaceNode(ArmLogicTreeNode):
         super(WorldVectorToLocalSpaceNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'World')
+        self.add_input('NodeSocketBool', 'Subtract', default_value=True)
 
         self.add_output('NodeSocketVector', 'Local')

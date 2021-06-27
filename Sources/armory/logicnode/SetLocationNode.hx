@@ -21,11 +21,10 @@ class SetLocationNode extends LogicNode {
 			vec.sub(object.parent.transform.world.getLoc()); // Remove parent location influence
 
 			// Convert vec to parent local space
-			var vec1 = new Vec4();
-			vec1.x = vec.dot(object.parent.transform.right());
-			vec1.y = vec.dot(object.parent.transform.look());
-			vec1.z = vec.dot(object.parent.transform.up());
-			vec.setFrom(vec1);
+			var dotX = vec.dot(object.parent.transform.right());
+			var dotY = vec.dot(object.parent.transform.look());
+			var dotZ = vec.dot(object.parent.transform.up());
+			vec.set(dotX, dotY, dotZ);
 		}
 
 		object.transform.loc.setFrom(vec);

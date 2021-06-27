@@ -21,11 +21,10 @@ class GetLocationNode extends LogicNode {
 			loc.sub(object.parent.transform.world.getLoc()); // Add parent location influence
 
 			// Convert vec to parent local space
-			var vec = new Vec4();
-			vec.x = loc.dot(object.parent.transform.right());
-			vec.y = loc.dot(object.parent.transform.look());
-			vec.z = loc.dot(object.parent.transform.up());
-			loc.setFrom(vec);
+			var dotX = vec.dot(object.parent.transform.right());
+			var dotY = vec.dot(object.parent.transform.look());
+			var dotZ = vec.dot(object.parent.transform.up());
+			loc.set(dotX, dotY, dotZ);
 		}
 
 		return loc;

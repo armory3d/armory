@@ -12,10 +12,15 @@ class WorldVectorToLocalSpaceNode extends LogicNode {
 	override function get(from: Int): Vec4 {
 		var object: Object = inputs[0].get();
 		var worldVec: Vec4 = inputs[1].get();
+		var sub: Bool = inputs[2].get();
 
 		if (object == null || worldVec == null) return null;
 
 		var localVec = new Vec4();
+
+		if (sub) {
+			localVec.sub(object.transform.world.getLoc());
+		}
 
 		localVec.x = worldVec.dot(object.transform.right());
 		localVec.y = worldVec.dot(object.transform.look());
