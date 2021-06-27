@@ -1,7 +1,14 @@
 from arm.logicnode.arm_nodes import *
 
 class SetLocationNode(ArmLogicTreeNode):
-    """Sets the location of the given object."""
+    """Set the location of the given object in world coordinates.
+
+    @input Parent Relative: If enabled, transforms the world coordinates into object parent local coordinates
+
+    @seeNode Get Object Location
+    @seeNode World Vector to Local Space
+    @seeNode Vector to Object Orientation
+    """
     bl_idname = 'LNSetLocationNode'
     bl_label = 'Set Object Location'
     arm_section = 'location'
@@ -12,5 +19,6 @@ class SetLocationNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketVector', 'Location')
+        self.add_input('NodeSocketBool', 'Parent Relative', default_value=True)
 
         self.add_output('ArmNodeSocketAction', 'Out')
