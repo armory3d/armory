@@ -2,7 +2,6 @@ package armory.logicnode;
 
 import iron.object.Object;
 import iron.math.Vec4;
-import iron.math.Quat;
 import armory.trait.physics.RigidBody;
 
 class SetLocationNode extends LogicNode {
