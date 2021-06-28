@@ -12,7 +12,7 @@ class GetLocationNode(ArmLogicTreeNode):
     bl_idname = 'LNGetLocationNode'
     bl_label = 'Get Object Location'
     arm_section = 'location'
-    arm_version = 1
+    arm_version = 2
 
     def init(self, context):
         super(GetLocationNode, self).init(context)
@@ -20,3 +20,8 @@ class GetLocationNode(ArmLogicTreeNode):
         self.add_input('NodeSocketBool', 'Parent Relative')
 
         self.add_output('NodeSocketVector', 'Location')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+        return NodeReplacement.Identity(self)
