@@ -7,7 +7,8 @@ import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
 
-# Pass NodeReplacment forward to individual node modules that import arm_nodes
+import arm  # we cannot import arm.livepatch here or we have a circular import
+# Pass NodeReplacement forward to individual node modules that import arm_nodes
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
 
@@ -47,6 +48,13 @@ class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def on_unregister(cls):
         pass
+
+    def get_tree(self):
+        return self.id_data
+
+    def insert_link(self, link: bpy.types.NodeLink):
+        """Called on *both* nodes when a link between two nodes is created."""
+        arm.live_patch.send_event('ln_insert_link', (self, link))
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         # needs to be overridden by individual node classes with arm_version>1

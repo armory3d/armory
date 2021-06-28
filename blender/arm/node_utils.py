@@ -1,7 +1,11 @@
-from typing import Type
+from typing import Type, Union
 
 import bpy
+from bpy.types import NodeSocket, NodeInputs, NodeOutputs
 from nodeitems_utils import NodeItem
+
+import arm.log
+import arm.utils
 
 
 def find_node_by_link(node_group, to_node, inp):
@@ -44,6 +48,39 @@ def get_output_node(node_group, from_node, output_index):
             if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
                 return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
             return link.to_node
+
+
+def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket) -> int:
+    """Find the socket index in the given node input or output
+    collection, return -1 if not found.
+    """
+    for i in range(0, len(sockets)):
+        if sockets[i] == socket:
+            return i
+    return -1
+
+
+def get_export_tree_name(tree: bpy.types.NodeTree, do_warn=False) -> str:
+    """Return the name of the given node tree that's used in the
+    exported Haxe code.
+
+    If `do_warn` is true, a warning is displayed if the export name
+    differs from the actual tree name.
+    """
+    export_name = arm.utils.safesrc(tree.name[0].upper() + tree.name[1:])
+
+    if export_name != tree.name:
+        arm.log.warn('Logic node tree and generated trait names differ! Node'
+                     f' tree: "{tree.name}", trait: "{export_name}"')
+
+    return export_name
+
+
+def get_export_node_name(node: bpy.types.Node) -> str:
+    """Return the name of the given node that's used in the exported
+    Haxe code.
+    """
+    return '_' + arm.utils.safesrc(node.name)
 
 
 def nodetype_to_nodeitem(node_type: Type[bpy.types.Node]) -> NodeItem:

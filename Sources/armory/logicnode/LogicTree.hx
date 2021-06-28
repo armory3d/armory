@@ -2,10 +2,23 @@ package armory.logicnode;
 
 class LogicTree extends iron.Trait {
 
+	#if arm_patch
+	public static var nodeTrees = new Map<String, LogicTree>();
+
+	/**
+		[node name => logic node] for later node replacement for live patching.
+	**/
+	public var nodes: Map<String, LogicNode>;
+	#end
+
 	public var loopBreak = false; // Trigger break from loop nodes
 
 	public function new() {
 		super();
+
+		#if arm_patch
+		nodes = new Map<String, LogicNode>();
+		#end
 	}
 
 	public function add() {}

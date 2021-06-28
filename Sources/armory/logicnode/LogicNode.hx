@@ -6,12 +6,15 @@ class LogicNode {
 	var inputs: Array<LogicNodeInput> = [];
 	var outputs: Array<Array<LogicNode>> = [];
 
-	#if arm_debug
+	#if (arm_debug || arm_patch)
 	public var name = "";
-	public function watch(b: Bool) { // Watch in debug console
-		var nodes = armory.trait.internal.DebugConsole.watchNodes;
-		b ? nodes.push(this) : nodes.remove(this);
-	}
+
+		#if (arm_debug)
+		public function watch(b: Bool) { // Watch in debug console
+			var nodes = armory.trait.internal.DebugConsole.watchNodes;
+			b ? nodes.push(this) : nodes.remove(this);
+		}
+		#end
 	#end
 
 	public function new(tree: LogicTree) {

@@ -5,6 +5,7 @@ import bpy
 
 from arm.exporter import ArmoryExporter
 import arm.log
+import arm.node_utils
 import arm.utils
 
 parsed_nodes = []
@@ -13,13 +14,15 @@ function_nodes = dict()
 function_node_outputs = dict()
 group_name = ''
 
-def get_logic_trees():
+
+def get_logic_trees() -> list['arm.nodes_logic.ArmLogicTree']:
     ar = []
     for node_group in bpy.data.node_groups:
         if node_group.bl_idname == 'ArmLogicTreeType':
-            node_group.use_fake_user = True # Keep fake references for now
+            node_group.use_fake_user = True  # Keep fake references for now
             ar.append(node_group)
     return ar
+
 
 # Generating node sources
 def build():
@@ -34,7 +37,7 @@ def build():
         for tree in trees:
             build_node_tree(tree)
 
-def build_node_tree(node_group):
+def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     global parsed_nodes
     global parsed_ids
     global function_nodes
@@ -48,12 +51,8 @@ def build_node_tree(node_group):
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
-    group_name = arm.utils.safesrc(node_group.name[0].upper() + node_group.name[1:])
 
-    if group_name != node_group.name:
-        arm.log.warn('Logic node tree and generated trait names differ! Node'
-                     f' tree: "{node_group.name}", trait: "{group_name}"')
-
+    group_name = arm.node_utils.get_export_tree_name(node_group, do_warn=True)
     file = path + group_name + '.hx'
 
     # Import referenced node group
@@ -65,6 +64,8 @@ def build_node_tree(node_group):
     if node_group.arm_cached and os.path.isfile(file):
         return
 
+    wrd = bpy.data.worlds['Arm']
+
     with open(file, 'w', encoding="utf-8") as f:
         f.write('package ' + pack_path + '.node;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
@@ -72,10 +73,12 @@ def build_node_tree(node_group):
         f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
         f.write('\tpublic function new() {\n')
         f.write('\t\tsuper();\n')
-        if bpy.data.worlds['Arm'].arm_debug_console:
+        if wrd.arm_debug_console:
             f.write('\t\tname = "' + group_name + '";\n')
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
+        if wrd.arm_live_patch:
+            f.write(f'\t\tarmory.logicnode.LogicTree.nodeTrees["{group_name}"] = this;\n')
         f.write('\t\tnotifyOnAdd(add);\n')
         f.write('\t}\n\n')
         f.write('\toverride public function add() {\n')
@@ -116,7 +119,7 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
             return None
 
     # Get node name
-    name = '_' + arm.utils.safesrc(node.name)
+    name = arm.node_utils.get_export_node_name(node)
 
     # Link nodes using IDs
     if node.arm_logic_id != '':
@@ -143,10 +146,16 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         # Index function output name by corresponding function name
         function_node_outputs[node.function_name] = name
 
+    wrd = bpy.data.worlds['Arm']
+
     # Watch in debug console
-    if node.arm_watch and bpy.data.worlds['Arm'].arm_debug_console:
+    if node.arm_watch and wrd.arm_debug_console:
         f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
         f.write('\t\t' + name + '.watch(true);\n')
+
+    elif wrd.arm_live_patch:
+        f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+        f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
 
     # Properties
     for i in range(0, 10):

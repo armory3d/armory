@@ -1,12 +1,14 @@
 import os
 import shutil
-from typing import Type
+from typing import Any, Type
 
 import bpy
 
-import arm.assets as assets
+import arm.assets
+import arm.node_utils
 from arm.exporter import ArmoryExporter
 import arm.log as log
+from arm.logicnode.arm_nodes import ArmLogicTreeNode
 import arm.make as make
 import arm.make_state as state
 import arm.utils
@@ -44,7 +46,7 @@ def patch_export():
     if state.proc_build is not None:
         return
 
-    assets.invalidate_enabled = False
+    arm.assets.invalidate_enabled = False
 
     with arm.utils.WorkingDir(arm.utils.get_fp()):
         asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
@@ -66,7 +68,7 @@ def patch_export():
             '--noproject'
         ]
 
-        assets.invalidate_enabled = True
+        arm.assets.invalidate_enabled = True
         state.proc_build = make.run_proc(cmd, patch_done)
 
 
@@ -99,7 +101,7 @@ def listen(rna_type: Type[bpy.types.bpy_struct], prop: str, event_id: str):
     )
 
 
-def send_event(event_id: str):
+def send_event(event_id: str, opt_data: Any = None):
     """Send the result of the given event to Krom."""
     if hasattr(bpy.context, 'object') and bpy.context.object is not None:
         obj = bpy.context.object.name
@@ -143,6 +145,29 @@ def send_event(event_id: str):
         else:
             patch_export()
 
+    if event_id == 'ln_insert_link':
+        node: ArmLogicTreeNode
+        link: bpy.types.NodeLink
+        node, link = opt_data
+
+        # This event is called twice for a connection but we only need
+        # send it once
+        if node == link.from_node:
+            node_tree = node.get_tree()
+            tree_name = arm.node_utils.get_export_tree_name(node_tree)
+
+            # [1:] is used here because make_logic already uses that for
+            # node names if arm_debug is used
+            from_node_name = arm.node_utils.get_export_node_name(node)[1:]
+            to_node_name = arm.node_utils.get_export_node_name(link.to_node)[1:]
+
+            from_index = arm.node_utils.get_socket_index(node.outputs, link.from_socket)
+            to_index = arm.node_utils.get_socket_index(link.to_node.inputs, link.to_socket)
+
+            js = f'LivePatch.patchCreateNodeLink("{tree_name}", "{from_node_name}", "{to_node_name}", "{from_index}", "{to_index}");'
+            write_patch(js)
+
+
 
 def on_operator(operator_id: str):
     """As long as bpy.msgbus doesn't listen to changes made by
@@ -151,7 +176,7 @@ def on_operator(operator_id: str):
     (*) https://developer.blender.org/T72109
     """
     # Don't re-export the scene for the following operators
-    if operator_id in ("VIEW3D_OT_select", "OUTLINER_OT_item_activate", "OBJECT_OT_editmode_toggle"):
+    if operator_id in ("VIEW3D_OT_select", "OUTLINER_OT_item_activate", "OBJECT_OT_editmode_toggle", "NODE_OT_select", "NODE_OT_translate_attach_remove_on_cancel"):
         return
 
     if operator_id == "TRANSFORM_OT_translate":
