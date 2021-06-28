@@ -211,8 +211,11 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
 
-        if obj.soft_body != None:
+        if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
+        
+        if obj.rigid_body_constraint is not None:
+            layout.prop(obj, 'arm_relative_physics_constraint')
 
 # Menu in data region
 class ARM_PT_DataPropsPanel(bpy.types.Panel):
