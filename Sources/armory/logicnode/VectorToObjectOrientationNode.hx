@@ -3,8 +3,6 @@ package armory.logicnode;
 import iron.object.Object;
 import iron.math.Vec4;
 
-using armory.object.TransformExtension;
-
 class VectorToObjectOrientationNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
@@ -18,7 +16,7 @@ class VectorToObjectOrientationNode extends LogicNode {
 
 		if (object == null || vec == null) return null;
 
-		return object.transform.worldVecToOrientation(vec);
+		return vec.applyQuat(object.transform.rot);
 	}
 
 }
