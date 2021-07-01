@@ -47,24 +47,17 @@ class UniformsManager extends Trait{
 			if(exists) {
 				unifromExists = true;
 			}
-
-		}
-
-		if(! unifromExists) {
-
-			this.remove();			
 		}
 	}
 
-	static function removeScene(){
+	static function removeScene() {
 
 		removeObjectFromAllMaps(Scene.active.root);
 	}
 
 	function removeObject() {
 
-		removeObjectFromAllMaps(object);
-		
+		removeObjectFromAllMaps(object);	
 	}
 
 	// Helper method to register float, vec3 and texture getter functions
@@ -310,7 +303,6 @@ class UniformsManager extends Trait{
 
 			case Texture: texturesMap.remove(object);
 		}
-		
 	}
 }
 
