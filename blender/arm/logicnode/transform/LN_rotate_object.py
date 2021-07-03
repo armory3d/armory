@@ -28,7 +28,7 @@ class RotateObjectNode(ArmLogicTreeNode):
             self.inputs[2].name = "Axis"
             self.inputs[3].name = "Angle"
         else:
-            raise ValueError('No nodesocket labels for current input mode: check self-consistancy of action_set_rotation.py')
+            raise ValueError('No nodesocket labels for current input mode: check self-consistancy of LN_rotate_object.py')
 
     def draw_buttons(self, context, layout):
         # this block is here to ensure backwards compatibility and warn the user.

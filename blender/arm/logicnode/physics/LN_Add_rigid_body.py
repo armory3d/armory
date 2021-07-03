@@ -1,12 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class AddRigidBodyNode(ArmLogicTreeNode):
-    """Adds a rigid body to an object if not already present. 
+    """Adds a rigid body to an object if not already present.
 
     @option Advanced: Shows optional advanced options for rigid body.
 
     @option Shape: Shape of the rigid body including Box, Sphere, Capsule, Cone, Cylinder, Convex Hull and Mesh
-    
+
     @input Object: Object to which rigid body is added.
 
     @input Mass: Mass of the rigid body. Must be > 0.
@@ -14,9 +14,9 @@ class AddRigidBodyNode(ArmLogicTreeNode):
     @input Active: Rigid body actively participates in the physics world and will be affected by collisions
 
     @input Animated: Rigid body follows animation and will affect other active non-animated rigid bodies.
-    
-    @input Trigger: Rigid body behaves as a trigger and detects collision. However, rigd body does not contribute to or receive collissions. 
-    
+
+    @input Trigger: Rigid body behaves as a trigger and detects collision. However, rigd body does not contribute to or receive collissions.
+
     @input Friction: Surface friction of the rigid body. Minimum value = 0, Preferred max value = 1.
 
     @input Bounciness: How elastic is the surface of the rigid body. Minimum value = 0, Preferred max value = 1.
@@ -34,7 +34,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
     @input Use Deactivation: Deactive this rigid body when below the Linear and Angular velocity threshold. Enable to improve performance.
 
     @input Linear Velocity Threshold: Velocity below which decativation occurs if enabled.
-    
+
     @input Angular Velocity Threshold: Velocity below which decativation occurs if enabled.
 
     @input Collision Group: A set of rigid bodies that can interact with each other
@@ -43,9 +43,9 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
     @output Rigid body: Object to which rigid body was added.
 
-    @output Out: activated after rigid body is added. 
+    @output Out: activated after rigid body is added.
     """
-    
+
     bl_idname = 'LNAddRigidBodyNode'
     bl_label = 'Add Rigid Body'
     arm_version = 1
@@ -80,7 +80,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(AddRigidBodyNode, self).init(context)
-        
+
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('NodeSocketFloat', 'Mass', 1.0)

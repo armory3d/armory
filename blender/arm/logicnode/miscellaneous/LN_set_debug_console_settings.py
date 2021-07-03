@@ -13,11 +13,11 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
                  ('right', 'Anchor Right', 'Anchor the debug console in the top right')],
         name='', default='right')
 
-    def init(self, context):  
-        super(SetDebugConsoleSettings, self).init(context) 
+    def init(self, context):
+        super(SetDebugConsoleSettings, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Visible')  
-        self.add_input('NodeSocketFloat', 'Scale')  
+        self.add_input('NodeSocketBool', 'Visible')
+        self.add_input('NodeSocketFloat', 'Scale')
         self.inputs[-1].default_value = 1.0
 
         self.add_output('ArmNodeSocketAction', 'Out')

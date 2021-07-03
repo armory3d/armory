@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class PhysicsConstraintNode(ArmLogicTreeNode):
     """
     Custom physics constraint to add to `Add Physics Constarint` node.
@@ -46,7 +47,7 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
         default=False,
         update=update_spring
     )
-    
+
     def __init__(self):
         array_nodes[str(id(self))] = self
 

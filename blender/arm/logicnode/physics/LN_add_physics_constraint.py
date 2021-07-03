@@ -3,11 +3,11 @@ from arm.logicnode.arm_nodes import *
 class AddPhysicsConstraintNode(ArmLogicTreeNode):
     """
     Add a physics constraint to constrain two rigid bodies if not already present.
-    
+
     @option Fixed: No fredom of movement. Relative positions and rotations of rigid bodies are fixed
 
     @option Point: Both rigid bodies are constrained at the pivot object.
-    
+
     @option Hinge: Constrained objects can move only along angular Z axis of the pivot object.
 
     @option Slider: Constrained objects can move only along linear X axis of the pivot object.
@@ -57,15 +57,15 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
     @staticmethod
     def get_count_in(type_name):
         return {
-            'Fixed': 0, 
-            'Point': 1, 
-            'Hinge': 2, 
+            'Fixed': 0,
+            'Point': 1,
+            'Hinge': 2,
             'Slider': 3,
-            'Piston': 4, 
+            'Piston': 4,
             'Generic Spring': 5
         }.get(type_name, 0)
 
-    def get_enum(self):   
+    def get_enum(self):
         return self.get('property0', 0)
 
     def set_enum(self, value):
@@ -133,7 +133,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                  ('Piston', 'Piston', 'Piston'),
                  ('Generic Spring', 'Generic Spring', 'Generic Spring')],
         name='Type', default='Fixed', set=set_enum, get=get_enum)
-    
+
     def __init__(self):
         array_nodes[str(id(self))] = self
 
@@ -150,7 +150,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-        
+
         #GenericSpring:
         if (self.get_count_in(self.property0) == 5):
             grid0 = layout.grid_flow(row_major=True, columns=1, align=True)

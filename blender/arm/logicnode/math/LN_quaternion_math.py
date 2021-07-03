@@ -84,7 +84,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 self.inputs.remove(self.inputs.values()[-1])
             if (select_prev == 'DotProduct') or (select_prev == 'ToAxisAngle') or (select_prev == 'Module'):
                 self.outputs.remove(self.outputs.values()[-1])
-            
+
             # Many arguments: Add, Subtract, DotProduct, Multiply, MultiplyFloat
             if (self.get_count_in(select_current) == 0):
                 if (select_current == "MultiplyFloats"):
@@ -95,7 +95,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                         self.add_input('NodeSocketVector', 'Quaternion ' + str(len(self.inputs)))
                 if (select_current == 'DotProduct'):
                     self.add_output('NodeSocketFloat', 'Scalar')
-            
+
             # 3 arguments: Lerp, Slerp, FromAxisAngle, FromEuler
             if (self.get_count_in(select_current) == 3):
                 if (select_current == 'Lerp') or (select_current == 'Slerp'):
@@ -111,7 +111,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                     self.add_input('NodeSocketFloat', 'X')
                     self.add_input('NodeSocketFloat', 'Y')
                     self.add_input('NodeSocketFloat', 'Z')
-            
+
             # 2 arguments: FromTo, FromMat, FromRotationMat, ToAxisAngle
             if (self.get_count_in(select_current) == 2):
                 if (select_current == 'FromTo'):
