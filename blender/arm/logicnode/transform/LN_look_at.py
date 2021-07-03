@@ -7,7 +7,8 @@ class LookAtNode(ArmLogicTreeNode):
     arm_section = 'rotation'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('X', ' X', 'X'),
                  ('-X', '-X', '-X'),
                  ('Y', ' Y', 'Y'),

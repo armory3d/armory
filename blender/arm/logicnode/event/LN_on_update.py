@@ -10,7 +10,8 @@ class OnUpdateNode(ArmLogicTreeNode):
     bl_idname = 'LNOnUpdateNode'
     bl_label = 'On Update'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Update', 'Update', 'Update'),
                  ('Late Update', 'Late Update', 'Late Update'),
                  ('Physics Pre-Update', 'Physics Pre-Update', 'Physics Pre-Update')],

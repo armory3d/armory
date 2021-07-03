@@ -20,7 +20,8 @@ class GateNode(ArmLogicTreeNode):
     arm_version = 1
 
     min_inputs = 3
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
@@ -31,7 +32,7 @@ class GateNode(ArmLogicTreeNode):
                  ('And', 'And', 'And')],
         name='', default='Equal',
         update=remove_extra_inputs)
-    property1: FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
+    property1: HaxeFloatProperty('property1', name='Tolerance', description='Precision for float compare', default=0.0001)
 
     def __init__(self):
         super(GateNode, self).__init__()

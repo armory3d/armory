@@ -59,18 +59,16 @@ class AddRigidBodyNode(ArmLogicTreeNode):
         further down."""
         self.update_sockets(context)
 
-    @property
-    def property1(self):
-        return 'true' if self.property1_ else 'false'
-
-    property1_: BoolProperty(
+    property1: HaxeBoolProperty(
+        'property1',
         name="Advanced",
         description="Show advanced options",
         default=False,
         update=update_advanced
     )
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Box', 'Box', 'Box'),
                  ('Sphere', 'Sphere', 'Sphere'),
                  ('Capsule', 'Capsule', 'Capsule'),
@@ -122,5 +120,5 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "property1_")
+        layout.prop(self, "property1")
         layout.prop(self, 'property0')

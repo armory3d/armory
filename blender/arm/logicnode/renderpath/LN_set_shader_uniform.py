@@ -21,7 +21,8 @@ class SetShaderUniformNode(ArmLogicTreeNode):
         elif self.property0 in ('vec2', 'vec3', 'vec4'):
             self.add_input('NodeSocketVector', 'Vector')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('int', 'int', 'int'),
                  ('float', 'float', 'float'),
                  ('vec2', 'vec2', 'vec2'),

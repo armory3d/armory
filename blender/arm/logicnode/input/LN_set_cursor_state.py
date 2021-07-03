@@ -14,7 +14,8 @@ class SetCursorStateNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('hide locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
                  ('hide', 'Hide', 'The mouse cursor is hidden'),
                  ('lock', 'Lock', 'The mouse cursor is locked'),

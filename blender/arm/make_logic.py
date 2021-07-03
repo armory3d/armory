@@ -158,26 +158,9 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
 
     # Properties
-    for i in range(0, 10):
-        prop_name = 'property' + str(i) + '_get'
-        prop_found = hasattr(node, prop_name)
-        if not prop_found:
-            prop_name = 'property' + str(i)
-            prop_found = hasattr(node, prop_name)
-        if prop_found:
-            prop = getattr(node, prop_name)
-            if isinstance(prop, str):
-                prop = '"' + str(prop) + '"'
-            elif isinstance(prop, bool):
-                prop = str(prop).lower()
-            elif hasattr(prop, 'name'): # PointerProperty
-                prop = '"' + str(prop.name) + '"'
-            else:
-                if prop is None:
-                    prop = 'null'
-                else:
-                    prop = str(prop)
-            f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
+    for prop_name in arm.node_utils.get_haxe_property_names(node):
+        prop = arm.node_utils.haxe_format_prop(node, prop_name)
+        f.write('\t\t' + name + '.' + prop_name + ' = ' + prop + ';\n')
 
     # Create inputs
     for inp in node.inputs:
@@ -284,22 +267,15 @@ def build_default_node(inp: bpy.types.NodeSocket):
 
     if is_custom_socket:
         # ArmCustomSockets need to implement get_default_value()
-        default_value = inp.get_default_value()
-        if isinstance(default_value, str):
-            default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
+        default_value = arm.node_utils.haxe_format_socket_val(inp.get_default_value())
         inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
     else:
         if hasattr(inp, 'default_value'):
             default_value = inp.default_value
         else:
             default_value = None
-        if isinstance(default_value, str):
-            default_value = '"{:s}"'.format(default_value.replace('"', '\\"') )
+        default_value = arm.node_utils.haxe_format_socket_val(default_value)
         inp_type = inp.type
-
-    # Don't write 'None' into the Haxe code
-    if default_value is None:
-        default_value = 'null'
 
     if inp_type == 'VECTOR':
         return f'new armory.logicnode.VectorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'

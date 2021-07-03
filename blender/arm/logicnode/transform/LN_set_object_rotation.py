@@ -33,7 +33,8 @@ class SetRotationNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Euler Angles', 'Euler Angles', 'Euler Angles'),
                  ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
                  ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),

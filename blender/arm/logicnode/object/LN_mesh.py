@@ -9,7 +9,7 @@ class MeshNode(ArmLogicTreeNode):
     bl_label = 'Mesh'
     arm_version = 1
 
-    property0_get: PointerProperty(name='', type=bpy.types.Mesh)
+    property0_get: HaxePointerProperty('property0_get', name='', type=bpy.types.Mesh)
 
     def init(self, context):
         super(MeshNode, self).init(context)

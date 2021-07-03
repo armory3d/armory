@@ -45,5 +45,15 @@ class LivePatch extends iron.Trait {
 		}
 		toNode.inputs[toIndex] = new LogicNodeInput(fromNode, fromIndex);
 	}
+
+	public static function patchUpdateNodeProp(treeName: String, nodeName: String, propName: String, value: Dynamic) {
+		var tree = LogicTree.nodeTrees[treeName];
+		if (tree == null) return;
+
+		var node = tree.nodes[nodeName];
+		if (node == null) return;
+
+		Reflect.setField(node, propName, value);
+	}
 #end
 }

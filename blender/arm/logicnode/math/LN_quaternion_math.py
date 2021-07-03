@@ -41,7 +41,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
             if (self.property0 == 'ToAxisAngle'):
                 self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
 
-    property1: BoolProperty(name='Separator Out', default=False, set=set_bool, get=get_bool)
+    property1: HaxeBoolProperty('property1', name='Separator Out', default=False, set=set_bool, get=get_bool)
 
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
@@ -132,7 +132,8 @@ class QuaternionMathNode(ArmLogicTreeNode):
                     self.add_output('NodeSocketFloat', 'Module')
         self['property0'] = value
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Add', 'Add', 'Add'),
                  ('Subtract', 'Subtract', 'Subtract'),
                  ('DotProduct', 'Dot Product', 'Dot Product'),

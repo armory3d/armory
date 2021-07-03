@@ -18,7 +18,7 @@ class MaterialNode(ArmLogicTreeNode):
             return self.property0.name
         return arm.utils.asset_name(bpy.data.materials[self.property0.name])
 
-    property0: PointerProperty(name='', type=bpy.types.Material)
+    property0: HaxePointerProperty('property0', name='', type=bpy.types.Material)
 
     def init(self, context):
         super(MaterialNode, self).init(context)

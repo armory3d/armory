@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Any, Generator, Type, Union
 
 import bpy
 from bpy.types import NodeSocket, NodeInputs, NodeOutputs
@@ -81,6 +81,50 @@ def get_export_node_name(node: bpy.types.Node) -> str:
     Haxe code.
     """
     return '_' + arm.utils.safesrc(node.name)
+
+
+def get_haxe_property_names(node: bpy.types.Node) -> Generator[str, None, None]:
+    """Generator that yields the names of all node properties that have
+    a counterpart in the node's Haxe class.
+    """
+    for i in range(0, 10):
+        prop_name = f'property{i}_get'
+        prop_found = hasattr(node, prop_name)
+        if not prop_found:
+            prop_name = f'property{i}'
+            prop_found = hasattr(node, prop_name)
+        if prop_found:
+            yield prop_name
+
+
+def haxe_format_socket_val(socket_val: Any) -> str:
+    """Formats a socket value to be valid Haxe syntax."""
+    if isinstance(socket_val, str):
+        socket_val = '"{:s}"'.format(socket_val.replace('"', '\\"'))
+
+    elif socket_val is None:
+        # Don't write 'None' into the Haxe code
+        socket_val = 'null'
+
+    return socket_val
+
+
+def haxe_format_prop(node: bpy.types.Node, prop_name: str) -> str:
+    """Formats a property value to be valid Haxe syntax."""
+    prop_value = getattr(node, prop_name)
+    if isinstance(prop_value, str):
+        prop_value = '"' + str(prop_value) + '"'
+    elif isinstance(prop_value, bool):
+        prop_value = str(prop_value).lower()
+    elif hasattr(prop_value, 'name'):  # PointerProperty
+        prop_value = '"' + str(prop_value.name) + '"'
+    else:
+        if prop_value is None:
+            prop_value = 'null'
+        else:
+            prop_value = str(prop_value)
+
+    return prop_value
 
 
 def nodetype_to_nodeitem(node_type: Type[bpy.types.Node]) -> NodeItem:

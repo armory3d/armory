@@ -155,8 +155,8 @@ class MathExpressionNode(ArmLogicTreeNode):
     def get_exp(self):
         return self.get('property0', 'a + b')
 
-    property0: StringProperty(name='', description='Expression (operation: +, -, *, /, ^, (, ), %)', set=set_exp, get=get_exp)
-    property1: BoolProperty(name='Clamp', default=False)
+    property0: HaxeStringProperty('property0', name='', description='Expression (operation: +, -, *, /, ^, (, ), %)', set=set_exp, get=get_exp)
+    property1: HaxeBoolProperty('property1', name='Clamp', default=False)
 
     def __init__(self):
         array_nodes[str(id(self))] = self

@@ -5,7 +5,8 @@ class RpShadowQualityNode(ArmLogicTreeNode):
     bl_idname = 'LNRpShadowQualityNode'
     bl_label = 'Set Shadows Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('High', 'High', 'High'),
                  ('Medium', 'Medium', 'Medium'),
                  ('Low', 'Low', 'Low')

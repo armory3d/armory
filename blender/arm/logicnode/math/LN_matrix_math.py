@@ -7,7 +7,8 @@ class MatrixMathNode(ArmLogicTreeNode):
     arm_section = 'matrix'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Multiply', 'Multiply', 'Multiply')],
         name='', default='Multiply')
 

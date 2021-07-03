@@ -9,7 +9,8 @@ class SetVisibleNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('object', 'Object', 'All object componenets visibility'),
                  ('mesh', 'Mesh', 'Mesh visibility only'),
                  ('shadow', 'Shadow', 'Shadow visibility only'),

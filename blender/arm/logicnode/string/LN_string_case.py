@@ -5,7 +5,8 @@ class CaseStringNode(ArmLogicTreeNode):
     bl_idname = 'LNCaseStringNode'
     bl_label = 'String Case'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Upper Case', 'Upper Case', 'Upper Case'),
                  ('Lower Case', 'Lower Case', 'Lower Case'),
                  ],

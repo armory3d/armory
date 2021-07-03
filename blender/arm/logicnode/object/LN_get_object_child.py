@@ -7,7 +7,8 @@ class GetChildNode(ArmLogicTreeNode):
     arm_section = 'relations'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),

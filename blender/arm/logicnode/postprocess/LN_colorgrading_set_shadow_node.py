@@ -32,7 +32,8 @@ class ColorgradingSetShadowNode(ArmLogicTreeNode):
     arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
-    property0 : EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('RGB', 'RGB', 'RGB'),
                  ('Uniform', 'Uniform', 'Uniform')],
         name='Mode', default='Uniform', update=update_node)

@@ -6,16 +6,19 @@ class OnCanvasElementNode(ArmLogicTreeNode):
     bl_label = 'On Canvas Element'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items=[('click', 'Click', 'Listen to mouse clicks'),
                ('hover', 'Hover', 'Listen to mouse hover')],
         name='Listen to', default='click')
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items=[('started', 'Started', 'Started'),
                ('down', 'Down', 'Down'),
                ('released', 'Released', 'Released')],
         name='Status', default='started')
-    property2: EnumProperty(
+    property2: HaxeEnumProperty(
+        'property2',
         items=[('left', 'Left', 'Left mouse button'),
                ('middle', 'Middle', 'Middle mouse button'),
                ('right', 'Right', 'Right mouse button')],

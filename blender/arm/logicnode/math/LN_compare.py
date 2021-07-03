@@ -10,7 +10,8 @@ class CompareNode(ArmLogicTreeNode):
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
@@ -22,7 +23,7 @@ class CompareNode(ArmLogicTreeNode):
         name='', default='Equal',
         update=remove_extra_inputs)
     min_inputs = 2
-    property1: FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
+    property1: HaxeFloatProperty('property1', name='Tolerance', description='Precision for float compare', default=0.0001)
 
     def __init__(self):
         super(CompareNode, self).__init__()

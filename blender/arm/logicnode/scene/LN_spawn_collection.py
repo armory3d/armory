@@ -28,7 +28,7 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     arm_section = 'collection'
     arm_version = 1
 
-    property0: PointerProperty(name='Collection', type=bpy.types.Collection)
+    property0: HaxePointerProperty('property0', name='Collection', type=bpy.types.Collection)
 
     def init(self, context):
         super(SpawnCollectionNode, self).init(context)

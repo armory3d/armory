@@ -42,7 +42,7 @@ class VectorMathNode(ArmLogicTreeNode):
             if (self.property0 == 'Dot Product'):
                 self.add_output('NodeSocketFloat', 'Scalar') # Scalar
 
-    property1: BoolProperty(name='Separator Out', default=False, set=set_bool, get=get_bool)
+    property1: HaxeBoolProperty('property1', name='Separator Out', default=False, set=set_bool, get=get_bool)
 
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
@@ -105,7 +105,8 @@ class VectorMathNode(ArmLogicTreeNode):
                     self.add_output('NodeSocketFloat', 'Length')
         self['property0'] = value
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),
                  ('Multiply', 'Multiply', 'Multiply'),

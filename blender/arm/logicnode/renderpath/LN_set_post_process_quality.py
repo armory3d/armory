@@ -5,7 +5,8 @@ class RpConfigNode(ArmLogicTreeNode):
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Set Post Process Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('SSGI', 'SSGI', 'SSGI'),
                  ('SSR', 'SSR', 'SSR'),
                  ('Bloom', 'Bloom', 'Bloom'),

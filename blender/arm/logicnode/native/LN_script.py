@@ -15,7 +15,7 @@ class ScriptNode(ArmLogicTreeNode):
         return bpy.data.texts[self.property0_].as_string() if self.property0_ in bpy.data.texts else ''
 
 
-    property0_: StringProperty(name='Text', default='')
+    property0_: HaxeStringProperty('property0', name='Text', default='')
 
     def init(self, context):
         super(ScriptNode, self).init(context)

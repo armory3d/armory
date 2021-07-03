@@ -124,7 +124,8 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
 
         self['property0'] = value
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Fixed', 'Fixed', 'Fixed'),
                  ('Point', 'Point', 'Point'),
                  ('Hinge', 'Hinge', 'Hinge'),

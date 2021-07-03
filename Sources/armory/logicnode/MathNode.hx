@@ -3,7 +3,7 @@ package armory.logicnode;
 class MathNode extends LogicNode {
 
 	public var property0: String; // Operation
-	public var property1: String; // Clamp
+	public var property1: Bool; // Clamp
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -80,7 +80,7 @@ class MathNode extends LogicNode {
 				}
 			}
 		// Clamp
-		if (property1 == "true") r = r < 0.0 ? 0.0 : (r > 1.0 ? 1.0 : r);
+		if (property1) r = r < 0.0 ? 0.0 : (r > 1.0 ? 1.0 : r);
 
 		return r;
 	}

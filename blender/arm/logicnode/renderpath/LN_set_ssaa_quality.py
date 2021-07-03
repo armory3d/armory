@@ -5,7 +5,8 @@ class RpSuperSampleNode(ArmLogicTreeNode):
     bl_idname = 'LNRpSuperSampleNode'
     bl_label = 'Set SSAA Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('1', '1', '1'),
                  ('1.5', '1.5', '1.5'),
                  ('2', '2', '2'),

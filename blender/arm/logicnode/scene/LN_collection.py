@@ -12,7 +12,7 @@ class GroupNode(ArmLogicTreeNode):
     arm_section = 'collection'
     arm_version = 1
 
-    property0: PointerProperty(name='', type=bpy.types.Collection)
+    property0: HaxePointerProperty('property0', name='', type=bpy.types.Collection)
 
     def init(self, context):
         super(GroupNode, self).init(context)

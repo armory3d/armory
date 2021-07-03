@@ -10,12 +10,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
     min_outputs = 2
     max_outputs = 8
 
-    # Separator
-    @property
-    def property0(self):
-        return True if self.property0_ else False
-
-    property0_: BoolProperty(name='Separator Out', default=False)
+    property0: HaxeBoolProperty('property0', name='Separator Out', default=False)
 
     def init(self, context):
         super(ScreenToWorldSpaceNode, self).init(context)
@@ -26,8 +21,8 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
         self.add_output('NodeSocketVector', 'Direction')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property0_') # Separator Out
-        if self.property0_:
+        layout.prop(self, 'property0') # Separator Out
+        if self.property0:
             if len(self.outputs) < self.max_outputs:
                 self.outputs.remove(self.outputs.values()[-1]) # Direction vector
                 self.add_output('NodeSocketFloat', 'X') # World X

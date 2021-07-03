@@ -5,7 +5,8 @@ class RpMSAANode(ArmLogicTreeNode):
     bl_idname = 'LNRpMSAANode'
     bl_label = 'Set MSAA Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('1', '1', '1'),
                  ('2', '2', '2'),
                  ('4', '4', '4'),

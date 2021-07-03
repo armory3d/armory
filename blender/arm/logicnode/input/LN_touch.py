@@ -7,7 +7,8 @@ class SurfaceNode(ArmLogicTreeNode):
     arm_section = 'surface'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('started', 'Started', 'The screen surface starts to be touched'),
                  ('down', 'Down', 'The screen surface is touched'),
                  ('released', 'Released', 'The screen surface stops being touched'),

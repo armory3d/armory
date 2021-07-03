@@ -9,7 +9,7 @@ class SceneNode(ArmLogicTreeNode):
     bl_label = 'Scene'
     arm_version = 1
 
-    property0_get: PointerProperty(name='', type=bpy.types.Scene)
+    property0_get: HaxePointerProperty('property0_get', name='', type=bpy.types.Scene)
 
     def init(self, context):
         super(SceneNode, self).init(context)

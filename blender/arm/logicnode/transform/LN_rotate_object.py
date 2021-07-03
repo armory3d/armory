@@ -40,10 +40,11 @@ class RotateObjectNode(ArmLogicTreeNode):
         else:
             layout.prop(self, 'property0')
 
-    property0: EnumProperty(
-        items = [('Euler Angles', 'Euler Angles', 'Euler Angles'),
-                 ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
-                 ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),
-                 ('Quaternion', 'Quaternion', 'Quaternion')],
+    property0: HaxeEnumProperty(
+        'property0',
+        items=[('Euler Angles', 'Euler Angles', 'Euler Angles'),
+               ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
+               ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),
+               ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Euler Angles',
-        update = on_property_update)
+        update=on_property_update)

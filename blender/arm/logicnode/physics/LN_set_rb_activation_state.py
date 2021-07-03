@@ -7,7 +7,8 @@ class SetActivationStateNode(ArmLogicTreeNode):
     bl_icon = 'NONE'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('inactive', 'Inactive', 'The rigid body simulation is deactivated'),
                  ('active', 'Active', 'The rigid body simulation is activated'),
                  ('always active', 'Always Active', 'The rigid body simulation is never deactivated'),

@@ -5,7 +5,8 @@ class MixNode(ArmLogicTreeNode):
     bl_idname = 'LNMixNode'
     bl_label = 'Mix'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Linear', 'Linear', 'Linear'),
                  ('Sine', 'Sine', 'Sine'),
                  ('Quad', 'Quad', 'Quad'),
@@ -19,18 +20,15 @@ class MixNode(ArmLogicTreeNode):
                  ('Elastic', 'Elastic', 'Elastic'),
                  ],
         name='', default='Linear')
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('In', 'In', 'In'),
                  ('Out', 'Out', 'Out'),
                  ('InOut', 'InOut', 'InOut'),
                  ],
         name='', default='Out')
 
-    @property
-    def property2(self):
-        return 'true' if self.property2_ else 'false'
-
-    property2_: BoolProperty(name='Clamp', default=False)
+    property2: HaxeBoolProperty('property2', name='Clamp', default=False)
 
     def init(self, context):
         super(MixNode, self).init(context)
@@ -41,6 +39,6 @@ class MixNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Result')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property2_')
+        layout.prop(self, 'property2')
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')

@@ -6,7 +6,8 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
     bl_label = 'Set Debug Console Settings'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('left', 'Anchor Left', 'Anchor debug console in the top left'),
                  ('center', 'Anchor Center', 'Anchor debug console in the top center'),
                  ('right', 'Anchor Right', 'Anchor the debug console in the top right')],

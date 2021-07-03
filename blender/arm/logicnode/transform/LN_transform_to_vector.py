@@ -31,7 +31,8 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Right', 'Right', 'The transform right (X) direction'),
                  ('Look', 'Look', 'The transform look (Y) direction'),
                  ('Up', 'Up', 'The transform up (Z) direction'),

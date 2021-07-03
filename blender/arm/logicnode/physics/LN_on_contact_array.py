@@ -7,7 +7,8 @@ class OnContactArrayNode(ArmLogicTreeNode):
     arm_section = 'contact'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('begin', 'Begin', 'The contact between the rigid bodies begins'),
                  ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
                  ('end', 'End', 'The contact between the rigid bodies ends')],

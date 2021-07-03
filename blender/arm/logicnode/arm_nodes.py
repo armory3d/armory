@@ -1,6 +1,6 @@
 import itertools
 from collections import OrderedDict
-from typing import Any, Generator, List, Optional, Type, Dict
+from typing import Any, Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -8,7 +8,9 @@ from bpy.props import *
 from nodeitems_utils import NodeItem
 
 import arm  # we cannot import arm.livepatch here or we have a circular import
-# Pass NodeReplacement forward to individual node modules that import arm_nodes
+# Pass custom property types and NodeReplacement forward to individual
+# node modules that import arm_nodes
+from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
 
@@ -51,6 +53,13 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def get_tree(self):
         return self.id_data
+
+    def on_prop_update(self, context: bpy.types.Context, prop_name: str):
+        """Called if a property created with a function from the
+        arm_props module is changed. If the property has a custom update
+        function, it is called before `on_prop_update()`.
+        """
+        arm.live_patch.send_event('ln_update_prop', (self, prop_name))
 
     def insert_link(self, link: bpy.types.NodeLink):
         """Called on *both* nodes when a link between two nodes is created."""

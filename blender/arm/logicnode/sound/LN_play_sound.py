@@ -31,25 +31,30 @@ class PlaySoundNode(ArmLogicTreeNode):
     bl_width_default = 200
     arm_version = 1
 
-    property0: PointerProperty(name='', type=bpy.types.Sound)
-    property1: BoolProperty(
+    property0: HaxePointerProperty('property0', name='', type=bpy.types.Sound)
+    property1: HaxeBoolProperty(
+        'property1',
         name='Loop',
         description='Play the sound in a loop',
         default=False)
-    property2: BoolProperty(
+    property2: HaxeBoolProperty(
+        'property2',
         name='Retrigger',
         description='Play the sound from the beginning every time',
         default=False)
-    property3: BoolProperty(
+    property3: HaxeBoolProperty(
+        'property3',
         name='Use Custom Sample Rate',
         description='If enabled, override the default sample rate',
         default=False)
-    property4: IntProperty(
+    property4: HaxeIntProperty(
+        'property4',
         name='Sample Rate',
         description='Set the sample rate used to play this sound',
         default=44100,
         min=0)
-    property5: BoolProperty(
+    property5: HaxeBoolProperty(
+        'property5',
         name='Stream',
         description='Stream the sound from disk',
         default=False

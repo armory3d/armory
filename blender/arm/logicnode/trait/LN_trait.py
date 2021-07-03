@@ -8,7 +8,7 @@ class TraitNode(ArmLogicTreeNode):
     bl_label = 'Trait'
     arm_version = 1
 
-    property0: StringProperty(name='', default='')
+    property0: HaxeStringProperty('property0', name='', default='')
 
     def init(self, context):
         super(TraitNode, self).init(context)

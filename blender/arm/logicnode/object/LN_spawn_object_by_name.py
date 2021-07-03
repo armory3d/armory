@@ -6,7 +6,8 @@ class SpawnObjectByNameNode(ArmLogicTreeNode):
     bl_label = 'Spawn Object By Name'
     arm_version = 1
 
-    property0: PointerProperty(
+    property0: HaxePointerProperty(
+        'property0',
         type=bpy.types.Scene, name='Scene',
         description='The scene from which to take the object')
 

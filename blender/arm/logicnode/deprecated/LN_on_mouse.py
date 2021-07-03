@@ -11,13 +11,15 @@ class OnMouseNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released'),
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Down')
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('left', 'left', 'left'),
                  ('right', 'right', 'right'),
                  ('middle', 'middle', 'middle')],

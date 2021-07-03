@@ -5,7 +5,8 @@ class ContainsStringNode(ArmLogicTreeNode):
     bl_idname = 'LNContainsStringNode'
     bl_label = 'String Contains'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),
                  ('Ends With', 'Ends With', 'Ends With'),

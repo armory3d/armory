@@ -64,7 +64,8 @@ class MathNode(ArmLogicTreeNode):
                     self.inputs.remove(self.inputs.values()[-1])
         self['property0'] = value
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
                  ('Sine', 'Sine', 'Sine'),
@@ -92,11 +93,7 @@ class MathNode(ArmLogicTreeNode):
                  ('Exponent', 'Exponent', 'Exponent')],
         name='', default='Add', set=set_enum, get=get_enum)
 
-    @property
-    def property1(self):
-        return 'true' if self.property1_ else 'false'
-
-    property1_: BoolProperty(name='Clamp', default=False)
+    property1: HaxeBoolProperty('property1', name='Clamp', default=False)
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -109,7 +106,7 @@ class MathNode(ArmLogicTreeNode):
         self.add_output('NodeSocketFloat', 'Result')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property1_')
+        layout.prop(self, 'property1')
         layout.prop(self, 'property0')
         # Many arguments: Add, Subtract, Multiply, Divide
         if (self.get_count_in(self.property0) == 0):

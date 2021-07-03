@@ -153,8 +153,7 @@ def send_event(event_id: str, opt_data: Any = None):
         # This event is called twice for a connection but we only need
         # send it once
         if node == link.from_node:
-            node_tree = node.get_tree()
-            tree_name = arm.node_utils.get_export_tree_name(node_tree)
+            tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
 
             # [1:] is used here because make_logic already uses that for
             # node names if arm_debug is used
@@ -167,6 +166,18 @@ def send_event(event_id: str, opt_data: Any = None):
             js = f'LivePatch.patchCreateNodeLink("{tree_name}", "{from_node_name}", "{to_node_name}", "{from_index}", "{to_index}");'
             write_patch(js)
 
+    if event_id == 'ln_update_prop':
+        node: ArmLogicTreeNode
+        prop_name: str
+        node, prop_name = opt_data
+
+        tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
+        node_name = arm.node_utils.get_export_node_name(node)[1:]
+
+        value = arm.node_utils.haxe_format_prop(node, prop_name)
+
+        js = f'LivePatch.patchUpdateNodeProp("{tree_name}", "{node_name}", "{prop_name}", {value});'
+        write_patch(js)
 
 
 def on_operator(operator_id: str):

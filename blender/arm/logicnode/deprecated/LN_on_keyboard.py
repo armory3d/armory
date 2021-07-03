@@ -11,13 +11,15 @@ class OnKeyboardNode(ArmLogicTreeNode):
     arm_section = 'keyboard'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
 
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('a', 'a', 'a'),
                  ('b', 'b', 'b'),
                  ('c', 'c', 'c'),

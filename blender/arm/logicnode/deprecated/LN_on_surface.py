@@ -11,7 +11,8 @@ class OnSurfaceNode(ArmLogicTreeNode):
     arm_section = 'surface'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released'),
