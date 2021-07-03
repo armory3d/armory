@@ -19,6 +19,9 @@ patch_id = 0
 # Any object can act as a message bus owner
 msgbus_owner = object()
 
+# Whether live patch is currently active
+__running = False
+
 
 def start():
     """Start the live patch session."""
@@ -34,9 +37,15 @@ def start():
         listen(light_type, "color", "light_color")
         listen(light_type, "energy", "light_energy")
 
+    global __running
+    __running = True
+
 
 def stop():
     """Stop the live patch session."""
+    global __running
+    __running = False
+
     log.debug("Live patch session stopped")
     bpy.msgbus.clear_by_owner(msgbus_owner)
 
@@ -103,6 +112,9 @@ def listen(rna_type: Type[bpy.types.bpy_struct], prop: str, event_id: str):
 
 def send_event(event_id: str, opt_data: Any = None):
     """Send the result of the given event to Krom."""
+    if not __running:
+        return
+
     if hasattr(bpy.context, 'object') and bpy.context.object is not None:
         obj = bpy.context.object.name
 
@@ -186,6 +198,8 @@ def on_operator(operator_id: str):
 
     (*) https://developer.blender.org/T72109
     """
+    if not __running:
+        return
     # Don't re-export the scene for the following operators
     if operator_id in ("VIEW3D_OT_select", "OUTLINER_OT_item_activate", "OBJECT_OT_editmode_toggle", "NODE_OT_select", "NODE_OT_translate_attach_remove_on_cancel"):
         return
