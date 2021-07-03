@@ -38,12 +38,16 @@ class LogicNode {
 	**/
 	function runOutput(i: Int) {
 		if (i >= outputs.length) return;
-		for (o in outputs[i]) {
+		for (output in outputs[i]) {
 			// Check which input activated the node
-			for (j in 0...o.inputs.length) {
-				if (o.inputs[j].node == this) {
-					o.run(j);
-					break;
+			for (j in 0...output.inputs.length) {
+				// Check if the node is connected to the current node
+				if (output.inputs[j].node == this) {
+					// Check if the input socekt is linked to current output socket
+					if (output.inputs[j].from == i) {
+						output.run(j);
+						break;
+					}
 				}
 			}
 		}
@@ -60,6 +64,7 @@ class LogicNodeInput {
 
 	@:allow(armory.logicnode.LogicNode)
 	var node: LogicNode;
+	@:allow(armory.logicnode.LogicNode)
 	var from: Int; // Socket index
 
 	public function new(node: LogicNode, from: Int) {
