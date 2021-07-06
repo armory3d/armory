@@ -58,18 +58,18 @@ class Canvas {
 		var rotated = element.rotation != null && element.rotation != 0;
 		if (rotated) ui.g.pushRotation(element.rotation, ui._x + scaled(element.width) / 2, ui._y + scaled(element.height) / 2);
 
+		var font = ui.ops.font;
+		var fontAsset = isFontAsset(element.asset);
+		if (fontAsset) ui.ops.font = getAsset(canvas, element.asset);
+
 		switch (element.type) {
 			case Text:
-				var font = ui.ops.font;
 				var size = ui.fontSize;
 
-				var fontAsset = element.asset != null && StringTools.endsWith(element.asset, ".ttf");
-				if (fontAsset) ui.ops.font = getAsset(canvas, element.asset);
 				ui.fontSize = scaled(element.height);
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.text(getText(canvas, element), element.alignment);
 
-				ui.ops.font = font;
 				ui.fontSize = size;
 
 			case Button:
@@ -90,7 +90,6 @@ class Canvas {
 
 			case Image:
 				var image = getAsset(canvas, element.asset);
-				var fontAsset = element.asset != null && StringTools.endsWith(element.asset, ".ttf");
 				if (image != null && !fontAsset) {
 					ui.imageScrollAlign = false;
 					var tint = element.color != null ? element.color : 0xffffffff;
@@ -218,6 +217,8 @@ class Canvas {
 			case Empty:
 		}
 
+		ui.ops.font = font;
+
 		if (element.children != null) {
 			for (id in element.children) {
 				drawElement(ui, canvas, elemById(canvas, id), scaled(element.x) + px, scaled(element.y) + py);
@@ -255,6 +256,10 @@ class Canvas {
 
 	static inline function scaled(f: Float): Int {
 		return Std.int(f * _ui.SCALE());
+	}
+
+	static inline function isFontAsset(assetName: Null<String>): Bool {
+		return assetName != null && StringTools.endsWith(assetName.toLowerCase(), ".ttf");
 	}
 
 	public static inline function getColor(color: Null<Int>, defaultColor: Int): Int {
