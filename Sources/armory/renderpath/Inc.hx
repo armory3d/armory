@@ -715,7 +715,9 @@ class ShadowMapAtlas {
 
 	public static inline function getMaxAtlasSize(type: String): Int {
 		#if arm_shadowmap_atlas_single_map
-			#if (rp_shadowmap_atlas_max_size == 1024)
+			#if (rp_shadowmap_atlas_max_size == 512)
+			return 512;
+			#elseif (rp_shadowmap_atlas_max_size == 1024)
 			return 1024;
 			#elseif (rp_shadowmap_atlas_max_size == 2048)
 			return 2048;
@@ -742,7 +744,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			case "spot": {
-				#if (rp_shadowmap_atlas_max_size_spot == 1024)
+				#if (rp_shadowmap_atlas_max_size_spot == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size_spot == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size_spot == 2048)
 				return 2048;
@@ -755,7 +759,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			case "sun": {
-				#if (rp_shadowmap_atlas_max_size_sun == 1024)
+				#if (rp_shadowmap_atlas_max_size_sun == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size_sun == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size_sun == 2048)
 				return 2048;
@@ -768,7 +774,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			default: {
-				#if (rp_shadowmap_atlas_max_size == 1024)
+				#if (rp_shadowmap_atlas_max_size == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size == 2048)
 				return 2048;
