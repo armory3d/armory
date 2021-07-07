@@ -5,7 +5,7 @@ import iron.system.Input;
 
 class InputMap {
 
-	static var inputMaps(default, null) = new Map<String, InputMap>();
+	static var inputMaps = new Map<String, InputMap>();
 
 	public var inputs(default, null) = new Array<InputMapKey>();
 	public var lastKeyPressed(default, null) = "";
