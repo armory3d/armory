@@ -36,7 +36,6 @@ class SetInputMapKeyNode extends LogicNode {
 			}
 		
 		} else {
-			k.key = key;
 			k.scale = scale;
 			k.deadzone = deadzone;
 			k.setIndex(index);

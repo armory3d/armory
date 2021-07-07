@@ -7,7 +7,7 @@ class InputMap {
 
 	static var inputMaps = new Map<String, InputMap>();
 
-	public var inputs(default, null) = new Array<InputMapKey>();
+	public var keys(default, null) = new Array<InputMapKey>();
 	public var lastKeyPressed(default, null) = "";
 
 	public function new() {}
@@ -26,7 +26,7 @@ class InputMap {
 
 	public static function getInputMapKey(inputMap: String, key: String): Null<InputMapKey> {
 		if (inputMaps.exists(inputMap)) {
-			for (i in inputMaps[inputMap].inputs) {
+			for (i in inputMaps[inputMap].keys) {
 				if (i.key == key) {
 					return i;
 				}
@@ -37,30 +37,30 @@ class InputMap {
 	}
 
 	public function addKeyboard(key: String, scale: FastFloat = 1.0): InputMapKey {
-		return addInput(new KeyboardKey(key, scale));
+		return addKey(new KeyboardKey(key, scale));
 	}
 
 	public function addMouse(key: String, scale: FastFloat = 1.0, deadzone: FastFloat = 0.0): InputMapKey {
-		return addInput(new MouseKey(key, scale, deadzone));
+		return addKey(new MouseKey(key, scale, deadzone));
 	}
 
 	public function addGamepad(key: String, scale: FastFloat = 1.0, deadzone: FastFloat = 0.0): InputMapKey {
-		return addInput(new GamepadKey(key, scale, deadzone));
+		return addKey(new GamepadKey(key, scale, deadzone));
 	}
 
-	public function addInput(input: InputMapKey): InputMapKey {
-		inputs.push(input);
-		return input;
+	public function addKey(key: InputMapKey): InputMapKey {
+		keys.push(key);
+		return key;
 	}
 
-	public function removeInput(input: InputMapKey): Bool {
-		return inputs.remove(input);
+	public function removeKey(key: InputMapKey): Bool {
+		return keys.remove(key);
 	}
 
 	public function value(): FastFloat {
 		var v = 0.0;
 
-		for (i in inputs) {
+		for (i in keys) {
 			v += i.value();
 		}
 
@@ -68,7 +68,7 @@ class InputMap {
 	}
 
 	public function started() {
-		for (i in inputs) {
+		for (i in keys) {
 			if (i.started()) {
 				lastKeyPressed = i.key;
 				return true;
@@ -79,7 +79,7 @@ class InputMap {
 	}
 
 	public function released() {
-		for (i in inputs) {
+		for (i in keys) {
 			if (i.released()) {
 				lastKeyPressed = i.key;
 				return true;

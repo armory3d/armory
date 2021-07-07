@@ -15,7 +15,7 @@ class RemoveInputMapKeyNode extends LogicNode {
 		var k = InputMap.getInputMapKey(inputMap, key);
 
 		if (k != null) {
-			if (InputMap.getInputMap(inputMap).removeInput(k)) {
+			if (InputMap.getInputMap(inputMap).removeKey(k)) {
 				runOutput(0);
 			}
 		}
