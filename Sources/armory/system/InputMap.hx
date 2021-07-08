@@ -26,14 +26,28 @@ class InputMap {
 
 	public static function getInputMapKey(inputMap: String, key: String): Null<InputMapKey> {
 		if (inputMaps.exists(inputMap)) {
-			for (i in inputMaps[inputMap].keys) {
-				if (i.key == key) {
-					return i;
+			for (k in inputMaps[inputMap].keys) {
+				if (k.key == key) {
+					return k;
 				}
 			}
 		}
 
 		return null;
+	}
+
+	public static function removeInputMapKey(inputMap: String, key: String): Bool {
+		if (inputMaps.exists(inputMap)) {
+			var i = inputMaps[inputMap];
+
+			for (k in i.keys) {
+				if (k.key == key) {
+					return i.removeKey(k);
+				}
+			}
+		}
+
+		return false;
 	}
 
 	public function addKeyboard(key: String, scale: FastFloat = 1.0): InputMapKey {
@@ -60,17 +74,17 @@ class InputMap {
 	public function value(): FastFloat {
 		var v = 0.0;
 
-		for (i in keys) {
-			v += i.value();
+		for (k in keys) {
+			v += k.value();
 		}
 
 		return v;
 	}
 
 	public function started() {
-		for (i in keys) {
-			if (i.started()) {
-				lastKeyPressed = i.key;
+		for (k in keys) {
+			if (k.started()) {
+				lastKeyPressed = k.key;
 				return true;
 			}
 		}
@@ -79,9 +93,9 @@ class InputMap {
 	}
 
 	public function released() {
-		for (i in keys) {
-			if (i.released()) {
-				lastKeyPressed = i.key;
+		for (k in keys) {
+			if (k.released()) {
+				lastKeyPressed = k.key;
 				return true;
 			}
 		}
