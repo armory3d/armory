@@ -224,17 +224,29 @@ def on_operator(operator_id: str):
     """
     if not __running:
         return
-    # Don't re-export the scene for the following operators
-    if operator_id in ("VIEW3D_OT_select", "OUTLINER_OT_item_activate", "OBJECT_OT_editmode_toggle", "NODE_OT_select", "NODE_OT_translate_attach_remove_on_cancel"):
+
+    if operator_id in IGNORE_OPERATORS:
         return
 
-    if operator_id == "TRANSFORM_OT_translate":
-        send_event("obj_location")
-    elif operator_id in ("TRANSFORM_OT_rotate", "TRANSFORM_OT_trackball"):
-        send_event("obj_rotation")
-    elif operator_id == "TRANSFORM_OT_resize":
-        send_event("obj_scale")
+    if operator_id == 'TRANSFORM_OT_translate':
+        send_event('obj_location')
+    elif operator_id in ('TRANSFORM_OT_rotate', 'TRANSFORM_OT_trackball'):
+        send_event('obj_rotation')
+    elif operator_id == 'TRANSFORM_OT_resize':
+        send_event('obj_scale')
 
     # Rebuild
     else:
         patch_export()
+
+
+# Don't re-export the scene for the following operators
+IGNORE_OPERATORS = (
+    'VIEW3D_OT_select',
+    'VIEW3D_OT_select_box',
+    'OUTLINER_OT_item_activate',
+    'OBJECT_OT_editmode_toggle',
+    'NODE_OT_select',
+    'NODE_OT_translate_attach_remove_on_cancel',
+    'NODE_OT_translate_attach'
+)
