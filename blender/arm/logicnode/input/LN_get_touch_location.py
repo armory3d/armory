@@ -9,7 +9,7 @@ class GetTouchLocationNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetTouchLocationNode, self).init(context)
-        self.add_output('NodeSocketInt', 'X')
-        self.add_output('NodeSocketInt', 'Y')
-        self.add_output('NodeSocketInt', 'Inverted X')
-        self.add_output('NodeSocketInt', 'Inverted Y')
+        self.add_output('ArmIntSocket', 'X')
+        self.add_output('ArmIntSocket', 'Y')
+        self.add_output('ArmIntSocket', 'Inverted X')
+        self.add_output('ArmIntSocket', 'Inverted Y')

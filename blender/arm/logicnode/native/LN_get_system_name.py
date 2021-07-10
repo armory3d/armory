@@ -10,9 +10,9 @@ class GetSystemName(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetSystemName, self).init(context)
-        self.add_output('NodeSocketString', 'System Name')
-        self.add_output('NodeSocketBool', 'Windows')
-        self.add_output('NodeSocketBool', 'Linux')
-        self.add_output('NodeSocketBool', 'Mac')
-        self.add_output('NodeSocketBool', 'HTML5')
-        self.add_output('NodeSocketBool', 'Android')
+        self.add_output('ArmStringSocket', 'System Name')
+        self.add_output('ArmBoolSocket', 'Windows')
+        self.add_output('ArmBoolSocket', 'Linux')
+        self.add_output('ArmBoolSocket', 'Mac')
+        self.add_output('ArmBoolSocket', 'HTML5')
+        self.add_output('ArmBoolSocket', 'Android')

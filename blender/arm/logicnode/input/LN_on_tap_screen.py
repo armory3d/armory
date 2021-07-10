@@ -20,15 +20,15 @@ class OnTapScreen(ArmLogicTreeNode):
 
     def init(self, context):
         super(OnTapScreen, self).init(context)
-        self.add_input('NodeSocketFloat', 'Duration')
+        self.add_input('ArmFloatSocket', 'Duration')
         self.inputs[-1].default_value = 0.3
-        self.add_input('NodeSocketFloat', 'Interval')
+        self.add_input('ArmFloatSocket', 'Interval')
         self.inputs[-1].default_value = 0.0
-        self.add_input('NodeSocketInt', 'Repeat')
+        self.add_input('ArmIntSocket', 'Repeat')
         self.inputs[-1].default_value = 2
 
         self.add_output('ArmNodeSocketAction', 'Done')
         self.add_output('ArmNodeSocketAction', 'Fail')
         self.add_output('ArmNodeSocketAction', 'Tap')
-        self.add_output('NodeSocketInt', 'Tap Number')
-        self.add_output('NodeSocketVector', 'Coords')
+        self.add_output('ArmIntSocket', 'Tap Number')
+        self.add_output('ArmVectorSocket', 'Coords')

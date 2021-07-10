@@ -12,6 +12,6 @@ class GetGroupNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetGroupNode, self).init(context)
-        self.add_input('NodeSocketString', 'Name')
+        self.add_input('ArmStringSocket', 'Name')
 
         self.add_output('ArmNodeSocketArray', 'Objects')

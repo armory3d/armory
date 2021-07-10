@@ -11,6 +11,6 @@ class GetTilesheetStateNode(ArmLogicTreeNode):
         super(GetTilesheetStateNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketString', 'Name')
-        self.add_output('NodeSocketInt', 'Frame')
-        self.add_output('NodeSocketBool', 'Is Paused')
+        self.add_output('ArmStringSocket', 'Name')
+        self.add_output('ArmIntSocket', 'Frame')
+        self.add_output('ArmBoolSocket', 'Is Paused')

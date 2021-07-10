@@ -22,7 +22,7 @@ class MaterialNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MaterialNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Material', is_var=True)
+        self.add_output('ArmDynamicSocket', 'Material', is_var=True)
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'materials', icon='NONE', text='')

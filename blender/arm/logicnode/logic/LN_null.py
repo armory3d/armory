@@ -8,4 +8,4 @@ class NoneNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(NoneNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Null')
+        self.add_output('ArmDynamicSocket', 'Null')

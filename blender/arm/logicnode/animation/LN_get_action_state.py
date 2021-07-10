@@ -10,6 +10,6 @@ class AnimationStateNode(ArmLogicTreeNode):
         super(AnimationStateNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketString', 'Action')
-        self.add_output('NodeSocketInt', 'Frame')
-        self.add_output('NodeSocketBool', 'Is Paused')
+        self.add_output('ArmStringSocket', 'Action')
+        self.add_output('ArmIntSocket', 'Frame')
+        self.add_output('ArmBoolSocket', 'Is Paused')

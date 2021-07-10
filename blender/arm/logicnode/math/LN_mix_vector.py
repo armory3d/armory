@@ -34,11 +34,11 @@ class VectorMixNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VectorMixNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
-        self.add_input('NodeSocketVector', 'Vector 1', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketVector', 'Vector 2', default_value=[1.0, 1.0, 1.0])
+        self.add_input('ArmFloatSocket', 'Factor', default_value=0.0)
+        self.add_input('ArmVectorSocket', 'Vector 1', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmVectorSocket', 'Vector 2', default_value=[1.0, 1.0, 1.0])
 
-        self.add_output('NodeSocketVector', 'Result')
+        self.add_output('ArmVectorSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property2')

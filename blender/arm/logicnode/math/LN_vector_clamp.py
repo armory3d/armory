@@ -9,8 +9,8 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VectorClampToSizeNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Vector In', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketFloat', 'Min')
-        self.add_input('NodeSocketFloat', 'Max')
+        self.add_input('ArmVectorSocket', 'Vector In', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmFloatSocket', 'Min')
+        self.add_input('ArmFloatSocket', 'Max')
 
-        self.add_output('NodeSocketVector', 'Vector Out')
+        self.add_output('ArmVectorSocket', 'Vector Out')

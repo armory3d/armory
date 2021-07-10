@@ -10,6 +10,6 @@ class SetActionPausedNode(ArmLogicTreeNode):
         super(SetActionPausedNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Paused')
+        self.add_input('ArmBoolSocket', 'Paused')
 
         self.add_output('ArmNodeSocketAction', 'Out')

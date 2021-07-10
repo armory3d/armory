@@ -16,7 +16,7 @@ class ExpressionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketShader', 'Result')
+        self.add_output('ArmDynamicSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

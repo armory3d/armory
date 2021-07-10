@@ -8,4 +8,4 @@ class NavigableLocationNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(NavigableLocationNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Location')
+        self.add_output('ArmDynamicSocket', 'Location')

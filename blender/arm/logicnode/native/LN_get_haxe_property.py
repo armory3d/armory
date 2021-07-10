@@ -11,7 +11,7 @@ class GetHaxePropertyNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetHaxePropertyNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Dynamic')
-        self.add_input('NodeSocketString', 'Property')
+        self.add_input('ArmDynamicSocket', 'Dynamic')
+        self.add_input('ArmStringSocket', 'Property')
 
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')

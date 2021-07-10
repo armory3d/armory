@@ -42,20 +42,20 @@ class ColorgradingSetShadowNode(ArmLogicTreeNode):
 
 
     def draw_nodes_uniform(self, context):
-        self.add_input('NodeSocketFloat', 'ShadowMax', default_value=1)
-        self.add_input('NodeSocketFloat', 'Saturation', default_value=1)
-        self.add_input('NodeSocketFloat', 'Contrast', default_value=1)
-        self.add_input('NodeSocketFloat', 'Gamma', default_value=1)
-        self.add_input('NodeSocketFloat', 'Gain', default_value=1)
-        self.add_input('NodeSocketFloat', 'Offset', default_value=1)
+        self.add_input('ArmFloatSocket', 'ShadowMax', default_value=1)
+        self.add_input('ArmFloatSocket', 'Saturation', default_value=1)
+        self.add_input('ArmFloatSocket', 'Contrast', default_value=1)
+        self.add_input('ArmFloatSocket', 'Gamma', default_value=1)
+        self.add_input('ArmFloatSocket', 'Gain', default_value=1)
+        self.add_input('ArmFloatSocket', 'Offset', default_value=1)
 
     def draw_nodes_rgb(self, context):
-        self.add_input('NodeSocketFloat', 'ShadowMax', default_value=1)
-        self.add_input('NodeSocketVector', 'Saturation', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Contrast', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Gamma', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Gain', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Offset', default_value=[1,1,1])
+        self.add_input('ArmFloatSocket', 'ShadowMax', default_value=1)
+        self.add_input('ArmVectorSocket', 'Saturation', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Contrast', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Gamma', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Gain', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Offset', default_value=[1,1,1])
 
     def draw_nodes_colorwheel(self, context):
         pass

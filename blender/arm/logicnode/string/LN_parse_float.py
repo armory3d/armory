@@ -9,6 +9,6 @@ class ParseFloatNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ParseFloatNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Float')
+        self.add_output('ArmFloatSocket', 'Float')
 
-        self.add_input('NodeSocketString', 'String')
+        self.add_input('ArmStringSocket', 'String')

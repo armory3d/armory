@@ -12,5 +12,5 @@ class DisplayInfoNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(DisplayInfoNode, self).init(context)
-        self.add_output('NodeSocketInt', 'Width')
-        self.add_output('NodeSocketInt', 'Height')
+        self.add_output('ArmIntSocket', 'Width')
+        self.add_output('ArmIntSocket', 'Height')

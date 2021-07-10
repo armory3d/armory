@@ -8,6 +8,6 @@ class CanvasGetInputTextNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(CanvasGetInputTextNode, self).init(context)
-        self.add_input('NodeSocketString', 'Element')
+        self.add_input('ArmStringSocket', 'Element')
 
-        self.add_output('NodeSocketString', 'Text')
+        self.add_output('ArmStringSocket', 'Text')

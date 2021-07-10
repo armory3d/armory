@@ -9,9 +9,9 @@ class ColorgradingGetShadowNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ColorgradingGetShadowNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'ShadowMax')
-        self.add_output('NodeSocketVector', 'Saturation')
-        self.add_output('NodeSocketVector', 'Contrast')
-        self.add_output('NodeSocketVector', 'Gamma')
-        self.add_output('NodeSocketVector', 'Gain')
-        self.add_output('NodeSocketVector', 'Offset')
+        self.add_output('ArmFloatSocket', 'ShadowMax')
+        self.add_output('ArmVectorSocket', 'Saturation')
+        self.add_output('ArmVectorSocket', 'Contrast')
+        self.add_output('ArmVectorSocket', 'Gamma')
+        self.add_output('ArmVectorSocket', 'Gain')
+        self.add_output('ArmVectorSocket', 'Offset')

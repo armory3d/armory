@@ -8,6 +8,6 @@ class SSAOGetNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SSAOGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Radius')
-        self.add_output('NodeSocketFloat', 'Strength')
-        self.add_output('NodeSocketFloat', 'Max Steps')
+        self.add_output('ArmFloatSocket', 'Radius')
+        self.add_output('ArmFloatSocket', 'Strength')
+        self.add_output('ArmFloatSocket', 'Max Steps')

@@ -8,4 +8,4 @@ class GetFPSNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetFPSNode, self).init(context)
-        self.add_output('NodeSocketInt', 'Count')
+        self.add_output('ArmIntSocket', 'Count')

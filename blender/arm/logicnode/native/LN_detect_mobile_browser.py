@@ -8,4 +8,4 @@ class DetectMobileBrowserNode(ArmLogicTreeNode):
 
 	def init(self, context):
 		super(DetectMobileBrowserNode, self).init(context)
-		self.add_output('NodeSocketBool', 'Mobile')
+		self.add_output('ArmBoolSocket', 'Mobile')

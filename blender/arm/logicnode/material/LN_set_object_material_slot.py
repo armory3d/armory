@@ -10,7 +10,7 @@ class SetMaterialSlotNode(ArmLogicTreeNode):
         super(SetMaterialSlotNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Material')
-        self.add_input('NodeSocketInt', 'Slot')
+        self.add_input('ArmDynamicSocket', 'Material')
+        self.add_input('ArmIntSocket', 'Slot')
 
         self.add_output('ArmNodeSocketAction', 'Out')

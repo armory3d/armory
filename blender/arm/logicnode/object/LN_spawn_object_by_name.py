@@ -14,9 +14,9 @@ class SpawnObjectByNameNode(ArmLogicTreeNode):
     def init(self, context):
         super(SpawnObjectByNameNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Name')
-        self.add_input('NodeSocketShader', 'Transform')
-        self.add_input('NodeSocketBool', 'Children', default_value=True)
+        self.add_input('ArmStringSocket', 'Name')
+        self.add_input('ArmDynamicSocket', 'Transform')
+        self.add_input('ArmBoolSocket', 'Children', default_value=True)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Object')

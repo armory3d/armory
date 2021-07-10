@@ -13,7 +13,7 @@ class SceneNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SceneNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Scene')
+        self.add_output('ArmDynamicSocket', 'Scene')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_get', bpy.data, 'scenes', icon='NONE', text='')

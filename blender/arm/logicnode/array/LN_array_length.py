@@ -10,4 +10,4 @@ class ArrayLengthNode(ArmLogicTreeNode):
         super(ArrayLengthNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
 
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')

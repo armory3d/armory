@@ -9,6 +9,6 @@ class SetTimeScaleNode(ArmLogicTreeNode):
     def init(self, context):
         super(SetTimeScaleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketFloat', 'Scale', default_value=1.0)
+        self.add_input('ArmFloatSocket', 'Scale', default_value=1.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')

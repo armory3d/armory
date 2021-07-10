@@ -12,4 +12,4 @@ class GetTransformNode(ArmLogicTreeNode):
         super(GetTransformNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketShader', 'Transform')
+        self.add_output('ArmDynamicSocket', 'Transform')

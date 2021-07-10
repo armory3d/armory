@@ -13,11 +13,11 @@ class GamepadCoordsNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GamepadCoordsNode, self).init(context)
-        self.add_output('NodeSocketVector', 'Left Stick')
-        self.add_output('NodeSocketVector', 'Right Stick')
-        self.add_output('NodeSocketVector', 'Left Movement')
-        self.add_output('NodeSocketVector', 'Right Movement')
-        self.add_output('NodeSocketFloat', 'Left Trigger')
-        self.add_output('NodeSocketFloat', 'Right Trigger')
+        self.add_output('ArmVectorSocket', 'Left Stick')
+        self.add_output('ArmVectorSocket', 'Right Stick')
+        self.add_output('ArmVectorSocket', 'Left Movement')
+        self.add_output('ArmVectorSocket', 'Right Movement')
+        self.add_output('ArmFloatSocket', 'Left Trigger')
+        self.add_output('ArmFloatSocket', 'Right Trigger')
 
-        self.add_input('NodeSocketInt', 'Gamepad')
+        self.add_input('ArmIntSocket', 'Gamepad')

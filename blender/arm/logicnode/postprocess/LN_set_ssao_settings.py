@@ -9,8 +9,8 @@ class SSAOSetNode(ArmLogicTreeNode):
     def init(self, context):
         super(SSAOSetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketFloat', 'Radius', default_value=1.0)
-        self.add_input('NodeSocketFloat', 'Strength', default_value=5.0)
-        self.add_input('NodeSocketInt', 'Max Steps', default_value=8)
+        self.add_input('ArmFloatSocket', 'Radius', default_value=1.0)
+        self.add_input('ArmFloatSocket', 'Strength', default_value=5.0)
+        self.add_input('ArmIntSocket', 'Max Steps', default_value=8)
 
         self.add_output('ArmNodeSocketAction', 'Out')

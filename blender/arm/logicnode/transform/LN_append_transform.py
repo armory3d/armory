@@ -10,6 +10,6 @@ class AppendTransformNode(ArmLogicTreeNode):
         super(AppendTransformNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('ArmDynamicSocket', 'Transform')
 
         self.add_output('ArmNodeSocketAction', 'Out')

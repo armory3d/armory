@@ -11,6 +11,6 @@ class SetFrictionNode (ArmLogicTreeNode):
         super(SetFrictionNode, self).init(context)
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
-        self.inputs.new('NodeSocketFloat', 'Friction')
+        self.inputs.new('ArmFloatSocket', 'Friction')
 
         self.outputs.new('ArmNodeSocketAction', 'Out')

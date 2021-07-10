@@ -11,4 +11,4 @@ class RandomChoiceNode(ArmLogicTreeNode):
         super().init(context)
 
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')

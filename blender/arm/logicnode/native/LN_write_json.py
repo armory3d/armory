@@ -12,5 +12,5 @@ class WriteJsonNode(ArmLogicTreeNode):
     def init(self, context):
         super(WriteJsonNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'File')
-        self.add_input('NodeSocketShader', 'Dynamic')
+        self.add_input('ArmStringSocket', 'File')
+        self.add_input('ArmDynamicSocket', 'Dynamic')

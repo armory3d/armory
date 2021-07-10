@@ -24,7 +24,7 @@ class VolumeTriggerNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object 1')
         self.add_input('ArmNodeSocketObject', 'Object 2')
 
-        self.add_output('NodeSocketBool', 'Bool')
+        self.add_output('ArmBoolSocket', 'Bool')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

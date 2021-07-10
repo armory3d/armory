@@ -8,4 +8,4 @@ class SelfTraitNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SelfTraitNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Trait')
+        self.add_output('ArmDynamicSocket', 'Trait')

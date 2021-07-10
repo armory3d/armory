@@ -9,4 +9,4 @@ class SensorCoordsNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SensorCoordsNode, self).init(context)
-        self.add_output('NodeSocketVector', 'Coords')
+        self.add_output('ArmVectorSocket', 'Coords')

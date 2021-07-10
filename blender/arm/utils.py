@@ -948,6 +948,10 @@ def get_link_web_server():
 def compare_version_blender_arm():
     return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 93)
 
+def get_file_arm_version_tuple() -> tuple[int]:
+    wrd = bpy.data.worlds['Arm']
+    return tuple(map(int, wrd.arm_version.split('.')))
+
 def type_name_to_type(name: str) -> bpy.types.bpy_struct:
     """Return the Blender type given by its name, if registered."""
     return bpy.types.bpy_struct.bl_rna_get_subclass_py(name)

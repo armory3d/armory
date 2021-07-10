@@ -9,4 +9,4 @@ class RandomBooleanNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(RandomBooleanNode, self).init(context)
-        self.add_output('NodeSocketBool', 'Bool')
+        self.add_output('ArmBoolSocket', 'Bool')

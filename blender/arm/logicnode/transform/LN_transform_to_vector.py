@@ -8,11 +8,11 @@ class VectorFromTransformNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VectorFromTransformNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('ArmDynamicSocket', 'Transform')
 
-        self.add_output('NodeSocketVector', 'Vector')
-        self.add_output('NodeSocketVector', 'Quaternion XYZ')
-        self.add_output('NodeSocketFloat', 'Quaternion W')
+        self.add_output('ArmVectorSocket', 'Vector')
+        self.add_output('ArmVectorSocket', 'Quaternion XYZ')
+        self.add_output('ArmFloatSocket', 'Quaternion W')
 
     def on_property_update(self, context):
         """called by the EnumProperty, used to update the node socket labels"""

@@ -11,4 +11,4 @@ class GetNameNode(ArmLogicTreeNode):
         super(GetNameNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketString', 'Name')
+        self.add_output('ArmStringSocket', 'Name')

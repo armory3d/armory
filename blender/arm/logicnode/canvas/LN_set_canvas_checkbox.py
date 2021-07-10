@@ -9,7 +9,7 @@ class CanvasSetCheckBoxNode(ArmLogicTreeNode):
     def init(self, context):
         super(CanvasSetCheckBoxNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketBool', 'Check')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmBoolSocket', 'Check')
 
         self.add_output('ArmNodeSocketAction', 'Out')

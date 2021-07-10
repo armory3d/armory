@@ -15,10 +15,10 @@ class ContainsStringNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ContainsStringNode, self).init(context)
-        self.add_input('NodeSocketString', 'String')
-        self.add_input('NodeSocketString', 'Find')
+        self.add_input('ArmStringSocket', 'String')
+        self.add_input('ArmStringSocket', 'Find')
 
-        self.add_output('NodeSocketBool', 'Contains')
+        self.add_output('ArmBoolSocket', 'Contains')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

@@ -23,7 +23,7 @@ class ScriptNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketShader', 'Result')
+        self.add_output('ArmDynamicSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'texts', icon='NONE', text='')

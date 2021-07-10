@@ -18,7 +18,7 @@ class SwitchNode(ArmLogicTreeNode):
     def init(self, context):
         super(SwitchNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Default')
 
@@ -26,7 +26,7 @@ class SwitchNode(ArmLogicTreeNode):
         row = layout.row(align=True)
         op = row.operator('arm.node_add_input_output', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.in_socket_type = 'NodeSocketShader'
+        op.in_socket_type = 'ArmDynamicSocket'
         op.out_socket_type = 'ArmNodeSocketAction'
         op.in_name_format = 'Case {0}'
         op.out_name_format = 'Case {0}'

@@ -61,6 +61,9 @@ class ArmLogicTreeNode(bpy.types.Node):
         """
         arm.live_patch.send_event('ln_update_prop', (self, prop_name))
 
+    def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
+        pass
+
     def insert_link(self, link: bpy.types.NodeLink):
         """Called on *both* nodes when a link between two nodes is created."""
         arm.live_patch.send_event('ln_insert_link', (self, link))
@@ -132,7 +135,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
     bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
     name_format: StringProperty(name='Name Format', default='Input {0}')
     index_name_offset: IntProperty(name='Index Name Offset', default=0)
 
@@ -143,7 +146,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.socket_type = 'NodeSocketShader'
+        self.socket_type = 'ArmDynamicSocket'
         self.name_format = 'Input {0}'
         self.index_name_offset = 0
 
@@ -155,7 +158,7 @@ class ArmNodeAddInputValueButton(bpy.types.Operator):
     bl_label = 'Add Input'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
 
     def execute(self, context):
         global array_nodes
@@ -202,7 +205,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
     bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
     name_format: StringProperty(name='Name Format', default='Output {0}')
     index_name_offset: IntProperty(name='Index Name Offset', default=0)
 
@@ -213,7 +216,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.socket_type = 'NodeSocketShader'
+        self.socket_type = 'ArmDynamicSocket'
         self.name_format = 'Output {0}'
         self.index_name_offset = 0
 
@@ -242,8 +245,8 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
     bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    in_socket_type: StringProperty(name='In Socket Type', default='NodeSocketShader')
-    out_socket_type: StringProperty(name='Out Socket Type', default='NodeSocketShader')
+    in_socket_type: StringProperty(name='In Socket Type', default='ArmDynamicSocket')
+    out_socket_type: StringProperty(name='Out Socket Type', default='ArmDynamicSocket')
     in_name_format: StringProperty(name='In Name Format', default='Input {0}')
     out_name_format: StringProperty(name='Out Name Format', default='Output {0}')
     in_index_name_offset: IntProperty(name='Index Name Offset', default=0)
@@ -258,8 +261,8 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.in_socket_type = 'NodeSocketShader'
-        self.out_socket_type = 'NodeSocketShader'
+        self.in_socket_type = 'ArmDynamicSocket'
+        self.out_socket_type = 'ArmDynamicSocket'
         self.in_name_format = 'Input {0}'
         self.out_name_format = 'Output {0}'
         self.in_index_name_offset = 0

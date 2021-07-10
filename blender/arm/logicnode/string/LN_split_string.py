@@ -10,5 +10,5 @@ class SplitStringNode(ArmLogicTreeNode):
         super(SplitStringNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array')
 
-        self.add_input('NodeSocketString', 'String')
-        self.add_input('NodeSocketString', 'Split')
+        self.add_input('ArmStringSocket', 'String')
+        self.add_input('ArmStringSocket', 'Split')

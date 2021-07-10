@@ -9,8 +9,8 @@ class CanvasSetLocationNode(ArmLogicTreeNode):
     def init(self, context):
         super(CanvasSetLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketFloat', 'X')
-        self.add_input('NodeSocketFloat', 'Y')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmFloatSocket', 'X')
+        self.add_input('ArmFloatSocket', 'Y')
 
         self.add_output('ArmNodeSocketAction', 'Out')

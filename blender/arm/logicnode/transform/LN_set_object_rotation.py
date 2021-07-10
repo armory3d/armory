@@ -11,8 +11,8 @@ class SetRotationNode(ArmLogicTreeNode):
         super(SetRotationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Euler Angles / Vector XYZ')
-        self.add_input('NodeSocketFloat', 'Angle / W')
+        self.add_input('ArmVectorSocket', 'Euler Angles / Vector XYZ')
+        self.add_input('ArmFloatSocket', 'Angle / W')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

@@ -8,4 +8,4 @@ class ActiveSceneNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ActiveSceneNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Scene')
+        self.add_output('ArmDynamicSocket', 'Scene')

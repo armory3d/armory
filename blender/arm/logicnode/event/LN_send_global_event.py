@@ -15,6 +15,6 @@ class SendGlobalEventNode(ArmLogicTreeNode):
     def init(self, context):
         super(SendGlobalEventNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Event')
+        self.add_input('ArmStringSocket', 'Event')
 
         self.add_output('ArmNodeSocketAction', 'Out')

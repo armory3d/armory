@@ -11,7 +11,7 @@ class TranslateObjectNode(ArmLogicTreeNode):
         super(TranslateObjectNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Vector')
-        self.add_input('NodeSocketBool', 'On Local Axis')
+        self.add_input('ArmVectorSocket', 'Vector')
+        self.add_input('ArmBoolSocket', 'On Local Axis')
 
         self.add_output('ArmNodeSocketAction', 'Out')

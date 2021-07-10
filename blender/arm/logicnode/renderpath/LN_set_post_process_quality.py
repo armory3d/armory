@@ -18,7 +18,7 @@ class RpConfigNode(ArmLogicTreeNode):
     def init(self, context):
         super(RpConfigNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Enable')
+        self.add_input('ArmBoolSocket', 'Enable')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

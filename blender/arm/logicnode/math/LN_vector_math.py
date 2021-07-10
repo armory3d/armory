@@ -17,15 +17,15 @@ class VectorMathNode(ArmLogicTreeNode):
         if value:
             if (self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product'):
                 self.outputs.remove(self.outputs.values()[-1]) # Distance/Length/Scalar
-            self.add_output('NodeSocketFloat', 'X') # Result X
-            self.add_output('NodeSocketFloat', 'Y') # Result Y
-            self.add_output('NodeSocketFloat', 'Z') # Result Z
+            self.add_output('ArmFloatSocket', 'X') # Result X
+            self.add_output('ArmFloatSocket', 'Y') # Result Y
+            self.add_output('ArmFloatSocket', 'Z') # Result Z
             if (self.property0 == 'Length'):
-                self.add_output('NodeSocketFloat', 'Length') # Length
+                self.add_output('ArmFloatSocket', 'Length') # Length
             if (self.property0 == 'Distance'):
-                self.add_output('NodeSocketFloat', 'Distance') # Distance
+                self.add_output('ArmFloatSocket', 'Distance') # Distance
             if (self.property0 == 'Dot Product'):
-                self.add_output('NodeSocketFloat', 'Scalar') # Scalar
+                self.add_output('ArmFloatSocket', 'Scalar') # Scalar
         else:
             if ((self.property0 == 'Length') or (self.property0 == 'Distance') or (self.property0 == 'Dot Product')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Distance/Length/Scalar
@@ -36,11 +36,11 @@ class VectorMathNode(ArmLogicTreeNode):
                 else:
                     break
             if (self.property0 == 'Length'):
-                self.add_output('NodeSocketFloat', 'Length') # Length
+                self.add_output('ArmFloatSocket', 'Length') # Length
             if (self.property0 == 'Distance'):
-                self.add_output('NodeSocketFloat', 'Distance') # Distance
+                self.add_output('ArmFloatSocket', 'Distance') # Distance
             if (self.property0 == 'Dot Product'):
-                self.add_output('NodeSocketFloat', 'Scalar') # Scalar
+                self.add_output('ArmFloatSocket', 'Scalar') # Scalar
 
     property1: HaxeBoolProperty('property1', name='Separator Out', default=False, set=set_bool, get=get_bool)
 
@@ -80,12 +80,12 @@ class VectorMathNode(ArmLogicTreeNode):
                     while (len(self.inputs) > 1):
                         self.inputs.remove(self.inputs.values()[-1])
                 if (select_current == "MultiplyFloats"):
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
                 else:
                     while (len(self.inputs) < 2):
-                        self.add_input('NodeSocketVector', 'Value ' + str(len(self.inputs)))
+                        self.add_input('ArmVectorSocket', 'Value ' + str(len(self.inputs)))
                 if (select_current == 'Dot Product'):
-                    self.add_output('NodeSocketFloat', 'Scalar')
+                    self.add_output('ArmFloatSocket', 'Scalar')
             # 2 arguments: Distance, Reflect
             if (self.get_count_in(select_current) == 2):
                 count = 2
@@ -94,15 +94,15 @@ class VectorMathNode(ArmLogicTreeNode):
                 while (len(self.inputs) > count):
                     self.inputs.remove(self.inputs.values()[-1])
                 while (len(self.inputs) < 2):
-                    self.add_input('NodeSocketVector', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmVectorSocket', 'Value ' + str(len(self.inputs)))
                 if (select_current == 'Distance'):
-                    self.add_output('NodeSocketFloat', 'Distance')
+                    self.add_output('ArmFloatSocket', 'Distance')
             # 1 argument: Normalize, Length
             if (self.get_count_in(select_current) == 1):
                 while (len(self.inputs) > 1):
                     self.inputs.remove(self.inputs.values()[-1])
                 if (select_current == 'Length'):
-                    self.add_output('NodeSocketFloat', 'Length')
+                    self.add_output('ArmFloatSocket', 'Length')
         self['property0'] = value
 
     property0: HaxeEnumProperty(
@@ -125,10 +125,10 @@ class VectorMathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(VectorMathNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Value 0', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketVector', 'Value 1', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmVectorSocket', 'Value 0', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmVectorSocket', 'Value 1', default_value=[0.0, 0.0, 0.0])
 
-        self.add_output('NodeSocketVector', 'Result')
+        self.add_output('ArmVectorSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1') # Separator Out
@@ -141,9 +141,9 @@ class VectorMathNode(ArmLogicTreeNode):
             op.node_index = str(id(self))
             op.name_format = 'Value {0}'
             if (self.property0 == "MultiplyFloats"):
-                op.socket_type = 'NodeSocketFloat'
+                op.socket_type = 'ArmFloatSocket'
             else:
-                op.socket_type = 'NodeSocketVector'
+                op.socket_type = 'ArmVectorSocket'
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op.node_index = str(id(self))

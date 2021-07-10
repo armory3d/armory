@@ -32,11 +32,11 @@ class MixNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MixNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Factor', default_value=0.0)
-        self.add_input('NodeSocketFloat', 'Value 1', default_value=0.0)
-        self.add_input('NodeSocketFloat', 'Value 2', default_value=1.0)
+        self.add_input('ArmFloatSocket', 'Factor', default_value=0.0)
+        self.add_input('ArmFloatSocket', 'Value 1', default_value=0.0)
+        self.add_input('ArmFloatSocket', 'Value 2', default_value=1.0)
 
-        self.add_output('NodeSocketFloat', 'Result')
+        self.add_output('ArmFloatSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property2')

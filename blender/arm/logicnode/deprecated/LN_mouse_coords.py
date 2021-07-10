@@ -13,9 +13,9 @@ class MouseCoordsNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MouseCoordsNode, self).init(context)
-        self.add_output('NodeSocketVector', 'Coords')
-        self.add_output('NodeSocketVector', 'Movement')
-        self.add_output('NodeSocketInt', 'Wheel')
+        self.add_output('ArmVectorSocket', 'Coords')
+        self.add_output('ArmVectorSocket', 'Movement')
+        self.add_output('ArmIntSocket', 'Wheel')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):

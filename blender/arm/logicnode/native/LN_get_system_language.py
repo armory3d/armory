@@ -9,4 +9,4 @@ class GetSystemLanguage(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetSystemLanguage, self).init(context)
-        self.add_output('NodeSocketString', 'Language')
+        self.add_output('ArmStringSocket', 'Language')

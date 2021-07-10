@@ -9,6 +9,6 @@ class RandomIntegerNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(RandomIntegerNode, self).init(context)
-        self.add_input('NodeSocketInt', 'Min')
-        self.add_input('NodeSocketInt', 'Max', default_value=2)
-        self.add_output('NodeSocketInt', 'Int')
+        self.add_input('ArmIntSocket', 'Min')
+        self.add_input('ArmIntSocket', 'Max', default_value=2)
+        self.add_output('ArmIntSocket', 'Int')

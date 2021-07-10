@@ -19,9 +19,9 @@ class ArrayAddNode(ArmLogicTreeNode):
         super(ArrayAddNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketBool', 'Modify Original', default_value=True)
-        self.add_input('NodeSocketBool', 'Unique Values')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmBoolSocket', 'Modify Original', default_value=True)
+        self.add_input('ArmBoolSocket', 'Unique Values')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketArray', 'Array')
@@ -31,6 +31,6 @@ class ArrayAddNode(ArmLogicTreeNode):
 
         op = row.operator('arm.node_add_input_value', text='Add Input', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketShader'
+        op.socket_type = 'ArmDynamicSocket'
         op2 = row.operator('arm.node_remove_input_value', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))

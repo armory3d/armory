@@ -9,7 +9,7 @@ class CanvasSetVisibleNode(ArmLogicTreeNode):
     def init(self, context):
         super(CanvasSetVisibleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketBool', 'Visible')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmBoolSocket', 'Visible')
 
         self.add_output('ArmNodeSocketAction', 'Out')

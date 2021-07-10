@@ -14,14 +14,14 @@ class ColorArrayNode(ArmLogicTreeNode):
     def init(self, context):
         super(ColorArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
 
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketColor'
+        op.socket_type = 'ArmColorSocket'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 

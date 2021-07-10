@@ -10,7 +10,7 @@ class GoToLocationNode(ArmLogicTreeNode):
         super(GoToLocationNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Location')
+        self.add_input('ArmDynamicSocket', 'Location')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

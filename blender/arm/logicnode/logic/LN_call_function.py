@@ -16,17 +16,17 @@ class CallFunctionNode(ArmLogicTreeNode):
     def init(self, context):
         super(CallFunctionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Trait/Any')
-        self.add_input('NodeSocketString', 'Function')
+        self.add_input('ArmDynamicSocket', 'Trait/Any')
+        self.add_input('ArmStringSocket', 'Function')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketShader', 'Result')
+        self.add_output('ArmDynamicSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
         op = row.operator('arm.node_add_input', text='Add Arg', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketShader'
+        op.socket_type = 'ArmDynamicSocket'
         op.name_format = "Arg {0}"
         op.index_name_offset = -2
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)

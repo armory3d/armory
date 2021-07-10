@@ -9,7 +9,7 @@ class CanvasSetAssetNode(ArmLogicTreeNode):
     def init(self, context):
         super(CanvasSetAssetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketString', 'Asset')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmStringSocket', 'Asset')
 
         self.add_output('ArmNodeSocketAction', 'Out')

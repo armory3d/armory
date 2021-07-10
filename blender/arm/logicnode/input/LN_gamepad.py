@@ -49,9 +49,9 @@ class GamepadNode(ArmLogicTreeNode):
     def init(self, context):
         super(GamepadNode, self).init(context)
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketBool', 'State')
+        self.add_output('ArmBoolSocket', 'State')
 
-        self.add_input('NodeSocketInt', 'Gamepad')
+        self.add_input('ArmIntSocket', 'Gamepad')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

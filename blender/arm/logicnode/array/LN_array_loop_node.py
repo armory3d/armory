@@ -13,6 +13,6 @@ class ArrayLoopNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmNodeSocketAction', 'Loop')
-        self.add_output('NodeSocketShader', 'Value')
-        self.add_output('NodeSocketInt', 'Index')
+        self.add_output('ArmDynamicSocket', 'Value')
+        self.add_output('ArmIntSocket', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')

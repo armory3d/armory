@@ -8,8 +8,8 @@ class SSRGetNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SSRGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'SSR Step')
-        self.add_output('NodeSocketFloat', 'SSR Step Min')
-        self.add_output('NodeSocketFloat', 'SSR Search')
-        self.add_output('NodeSocketFloat', 'SSR Falloff')
-        self.add_output('NodeSocketFloat', 'SSR Jitter')
+        self.add_output('ArmFloatSocket', 'SSR Step')
+        self.add_output('ArmFloatSocket', 'SSR Step Min')
+        self.add_output('ArmFloatSocket', 'SSR Search')
+        self.add_output('ArmFloatSocket', 'SSR Falloff')
+        self.add_output('ArmFloatSocket', 'SSR Jitter')

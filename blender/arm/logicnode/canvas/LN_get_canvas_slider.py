@@ -8,6 +8,6 @@ class CanvasGetSliderNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(CanvasGetSliderNode, self).init(context)
-        self.add_input('NodeSocketString', 'Element')
+        self.add_input('ArmStringSocket', 'Element')
 
-        self.add_output('NodeSocketFloat', 'Float')
+        self.add_output('ArmFloatSocket', 'Float')

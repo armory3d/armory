@@ -23,11 +23,11 @@ class LoopNode(ArmLogicTreeNode):
     def init(self, context):
         super(LoopNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketInt', 'From')
-        self.add_input('NodeSocketInt', 'To')
+        self.add_input('ArmIntSocket', 'From')
+        self.add_input('ArmIntSocket', 'To')
 
         self.add_output('ArmNodeSocketAction', 'Loop')
-        self.add_output('NodeSocketInt', 'Index')
+        self.add_output('ArmIntSocket', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')
 
     def draw_label(self) -> str:

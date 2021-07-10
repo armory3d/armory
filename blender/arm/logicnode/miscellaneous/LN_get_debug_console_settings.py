@@ -8,6 +8,6 @@ class GetDebugConsoleSettings(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetDebugConsoleSettings, self).init(context)
-        self.add_output('NodeSocketBool', 'Visible')
-        self.add_output('NodeSocketFloat', 'Scale')
-        self.add_output('NodeSocketString', 'Position')
+        self.add_output('ArmBoolSocket', 'Visible')
+        self.add_output('ArmFloatSocket', 'Scale')
+        self.add_output('ArmStringSocket', 'Position')

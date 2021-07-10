@@ -8,5 +8,5 @@ class ChromaticAberrationGetNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ChromaticAberrationGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Strength')
-        self.add_output('NodeSocketFloat', 'Samples')
+        self.add_output('ArmFloatSocket', 'Strength')
+        self.add_output('ArmFloatSocket', 'Samples')

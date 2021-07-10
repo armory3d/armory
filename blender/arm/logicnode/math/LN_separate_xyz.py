@@ -9,8 +9,8 @@ class SeparateVectorNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(SeparateVectorNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Vector')
+        self.add_input('ArmVectorSocket', 'Vector')
 
-        self.add_output('NodeSocketFloat', 'X')
-        self.add_output('NodeSocketFloat', 'Y')
-        self.add_output('NodeSocketFloat', 'Z')
+        self.add_output('ArmFloatSocket', 'X')
+        self.add_output('ArmFloatSocket', 'Y')
+        self.add_output('ArmFloatSocket', 'Z')

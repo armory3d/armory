@@ -83,13 +83,13 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketFloat', 'Mass', 1.0)
-        self.add_input('NodeSocketBool', 'Active', True)
-        self.add_input('NodeSocketBool', 'Animated', False)
-        self.add_input('NodeSocketBool', 'Trigger', False)
-        self.add_input('NodeSocketFloat', 'Friction', 0.5)
-        self.add_input('NodeSocketFloat', 'Bounciness', 0.0)
-        self.add_input('NodeSocketBool', 'Continuous Collision Detection', False)
+        self.add_input('ArmFloatSocket', 'Mass', 1.0)
+        self.add_input('ArmBoolSocket', 'Active', True)
+        self.add_input('ArmBoolSocket', 'Animated', False)
+        self.add_input('ArmBoolSocket', 'Trigger', False)
+        self.add_input('ArmFloatSocket', 'Friction', 0.5)
+        self.add_input('ArmFloatSocket', 'Bounciness', 0.0)
+        self.add_input('ArmBoolSocket', 'Continuous Collision Detection', False)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Rigid body')
 
@@ -108,15 +108,15 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
         # Add dynamic input sockets
         if self.property1_:
-            self.add_input('NodeSocketBool', 'Collision Margin', False)
-            self.add_input('NodeSocketFloat', 'Margin', 0.04)
-            self.add_input('NodeSocketFloat', 'Linear Damping', 0.04)
-            self.add_input('NodeSocketFloat', 'Angular Damping', 0.1)
-            self.add_input('NodeSocketBool', 'Use Deacivation')
-            self.add_input('NodeSocketFloat', 'Linear Velocity Threshold', 0.4)
-            self.add_input('NodeSocketFloat', 'Angular Velocity Threshold', 0.5)
-            self.add_input('NodeSocketInt', 'Collision Group', 1)
-            self.add_input('NodeSocketInt', 'Collision Mask', 1)
+            self.add_input('ArmBoolSocket', 'Collision Margin', False)
+            self.add_input('ArmFloatSocket', 'Margin', 0.04)
+            self.add_input('ArmFloatSocket', 'Linear Damping', 0.04)
+            self.add_input('ArmFloatSocket', 'Angular Damping', 0.1)
+            self.add_input('ArmBoolSocket', 'Use Deacivation')
+            self.add_input('ArmFloatSocket', 'Linear Velocity Threshold', 0.4)
+            self.add_input('ArmFloatSocket', 'Angular Velocity Threshold', 0.5)
+            self.add_input('ArmIntSocket', 'Collision Group', 1)
+            self.add_input('ArmIntSocket', 'Collision Mask', 1)
 
 
     def draw_buttons(self, context, layout):

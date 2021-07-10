@@ -10,6 +10,6 @@ class AddTraitNode(ArmLogicTreeNode):
         super(AddTraitNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Trait')
+        self.add_input('ArmDynamicSocket', 'Trait')
 
         self.add_output('ArmNodeSocketAction', 'Out')

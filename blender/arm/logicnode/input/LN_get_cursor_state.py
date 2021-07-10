@@ -18,6 +18,6 @@ class GetCursorStateNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetCursorStateNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Is Hidden Locked')
-        self.outputs.new('NodeSocketBool', 'Is Hidden')
-        self.outputs.new('NodeSocketBool', 'Is Locked')
+        self.outputs.new('ArmBoolSocket', 'Is Hidden Locked')
+        self.outputs.new('ArmBoolSocket', 'Is Hidden')
+        self.outputs.new('ArmBoolSocket', 'Is Locked')

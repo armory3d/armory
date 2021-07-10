@@ -10,6 +10,7 @@ Original author: @niacdoial
 import os.path
 import time
 import traceback
+import typing
 from typing import Dict, List, Optional, Tuple
 
 import bpy.props
@@ -17,6 +18,7 @@ import bpy.props
 import arm.log as log
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.arm_sockets
+import arm.node_utils as node_utils
 
 # List of errors that occurred during the replacement
 # Format: (error identifier, node.bl_idname (or None), tree name, exception traceback (optional))
@@ -272,3 +274,78 @@ def replace_all():
         log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
 
         bpy.ops.arm.show_node_update_errors()
+
+
+def node_compat_sdk2108():
+    """SDK 21.08 broke compatibility with older nodes as nodes now use
+    custom sockets even for Blender's default data types and custom
+    property "constructors". This allows to listen for events for the
+    live patch system.
+
+    In order to update older nodes this routine is used. It creates a
+    full copy of the nodes and replaces all properties and sockets with
+    their new equivalents.
+    """
+    for tree in bpy.data.node_groups:
+        if tree.bl_idname == "ArmLogicTreeType":
+            for node in list(tree.nodes):
+                # Don't raise exceptions for invalid unregistered nodes, this
+                # function didn't cause the registration problem if there is one
+                if not node.__class__.is_registered_node_type():
+                    continue
+
+                newnode = tree.nodes.new(node.__class__.bl_idname)
+
+                newnode.parent = node.parent
+                newnode.location = node.location
+                newnode.select = node.select
+
+                # Also copy the node's version number to _not_ prevent actual node
+                # replacement after this step
+                newnode.arm_version = node.arm_version
+
+                # First replace all properties
+                for prop_name, prop in typing.get_type_hints(node.__class__, {}, {}).items():
+                    if isinstance(prop, bpy.props._PropertyDeferred):
+                        if hasattr(node, prop_name) and hasattr(newnode, prop_name):
+                            setattr(newnode, prop_name, getattr(node, prop_name))
+
+                # Replace sockets with new socket types
+                socket_replacements = {
+                    'NodeSocketBool': 'ArmBoolSocket',
+                    'NodeSocketColor': 'ArmColorSocket',
+                    'NodeSocketFloat': 'ArmFloatSocket',
+                    'NodeSocketInt': 'ArmIntSocket',
+                    'NodeSocketShader': 'ArmDynamicSocket',
+                    'NodeSocketString': 'ArmStringSocket',
+                    'NodeSocketVector': 'ArmVectorSocket'
+                }
+
+                # Recreate all sockets
+                newnode.inputs.clear()
+                for inp in node.inputs:
+                    inp_idname = inp.bl_idname
+                    inp_idname = socket_replacements.get(inp_idname, inp_idname)
+
+                    newinp = newnode.inputs.new(inp_idname, inp.name, identifier=inp.identifier)
+
+                    if inp.is_linked:
+                        for link in inp.links:
+                            tree.links.new(link.from_socket, newinp)
+                    else:
+                        node_utils.set_socket_default(newinp, node_utils.get_socket_default(inp))
+
+                newnode.outputs.clear()
+                for out in node.outputs:
+                    out_idname = out.bl_idname
+                    out_idname = socket_replacements.get(out_idname, out_idname)
+
+                    newout = newnode.outputs.new(out_idname, out.name, identifier=out.identifier)
+
+                    if out.is_linked:
+                        for link in out.links:
+                            tree.links.new(newout, link.to_socket)
+                    else:
+                        node_utils.set_socket_default(newout, node_utils.get_socket_default(out))
+
+                tree.nodes.remove(node)

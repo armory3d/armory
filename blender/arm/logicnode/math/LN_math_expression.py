@@ -163,9 +163,9 @@ class MathExpressionNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MathExpressionNode, self).init(context)
-        self.add_input('NodeSocketFloat', self.get_variable_name(0), default_value=0.0)
-        self.add_input('NodeSocketFloat', self.get_variable_name(1), default_value=0.0)
-        self.add_output('NodeSocketFloat', 'Result')
+        self.add_input('ArmFloatSocket', self.get_variable_name(0), default_value=0.0)
+        self.add_input('ArmFloatSocket', self.get_variable_name(1), default_value=0.0)
+        self.add_output('ArmFloatSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1')
@@ -181,7 +181,7 @@ class MathExpressionNode(ArmLogicTreeNode):
         if len(self.inputs) == 10:
             column.enabled = False
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketFloat'
+        op.socket_type = 'ArmFloatSocket'
         op.name_format = self.get_variable_name(len(self.inputs))
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)

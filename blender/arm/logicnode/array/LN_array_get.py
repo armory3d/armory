@@ -9,6 +9,6 @@ class ArrayGetNode(ArmLogicTreeNode):
     def init(self, context):
         super(ArrayGetNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketInt', 'Index')
+        self.add_input('ArmIntSocket', 'Index')
 
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')

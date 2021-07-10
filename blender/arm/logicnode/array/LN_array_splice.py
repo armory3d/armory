@@ -12,7 +12,7 @@ class ArraySpliceNode(ArmLogicTreeNode):
         super(ArraySpliceNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketInt', 'Index')
-        self.add_input('NodeSocketInt', 'Length')
+        self.add_input('ArmIntSocket', 'Index')
+        self.add_input('ArmIntSocket', 'Length')
 
         self.add_output('ArmNodeSocketAction', 'Out')

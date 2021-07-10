@@ -12,5 +12,5 @@ class WriteFileNode(ArmLogicTreeNode):
     def init(self, context):
         super(WriteFileNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'File')
-        self.add_input('NodeSocketString', 'String')
+        self.add_input('ArmStringSocket', 'File')
+        self.add_input('ArmStringSocket', 'String')

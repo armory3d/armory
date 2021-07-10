@@ -91,31 +91,31 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
                 #Z ang limits
-                self.add_input('NodeSocketBool', 'Z angle')
-                self.add_input('NodeSocketFloat', 'Z ang lower', -45.0)
-                self.add_input('NodeSocketFloat', 'Z ang upper', 45.0)
+                self.add_input('ArmBoolSocket', 'Z angle')
+                self.add_input('ArmFloatSocket', 'Z ang lower', -45.0)
+                self.add_input('ArmFloatSocket', 'Z ang upper', 45.0)
 
             #Arguements for type Slider
             if (self.get_count_in(select_current) == 3):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
                 #X lin limits
-                self.add_input('NodeSocketBool', 'X linear')
-                self.add_input('NodeSocketFloat', 'X lin lower')
-                self.add_input('NodeSocketFloat', 'X lin upper')
+                self.add_input('ArmBoolSocket', 'X linear')
+                self.add_input('ArmFloatSocket', 'X lin lower')
+                self.add_input('ArmFloatSocket', 'X lin upper')
 
             #Arguements for type Piston
             if (self.get_count_in(select_current) == 4):
                 while (len(self.inputs) > 7):
                     self.inputs.remove(self.inputs.values()[-1])
                 #X lin limits
-                self.add_input('NodeSocketBool', 'X linear')
-                self.add_input('NodeSocketFloat', 'X lin lower')
-                self.add_input('NodeSocketFloat', 'X lin upper')
+                self.add_input('ArmBoolSocket', 'X linear')
+                self.add_input('ArmFloatSocket', 'X lin lower')
+                self.add_input('ArmFloatSocket', 'X lin upper')
                 #X ang limits
-                self.add_input('NodeSocketBool', 'X angle')
-                self.add_input('NodeSocketFloat', 'X ang lower', -45.0)
-                self.add_input('NodeSocketFloat', 'X ang upper', 45.0)
+                self.add_input('ArmBoolSocket', 'X angle')
+                self.add_input('ArmFloatSocket', 'X ang lower', -45.0)
+                self.add_input('ArmFloatSocket', 'X ang upper', 45.0)
 
             #Arguements for type GenericSpring
             if (self.get_count_in(select_current) == 5):
@@ -143,9 +143,9 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Pivot Object')
         self.add_input('ArmNodeSocketObject', 'RB 1')
         self.add_input('ArmNodeSocketObject', 'RB 2')
-        self.add_input('NodeSocketBool', 'Disable Collissions')
-        self.add_input('NodeSocketBool', 'Breakable')
-        self.add_input('NodeSocketFloat', 'Breaking Threshold')
+        self.add_input('ArmBoolSocket', 'Disable Collissions')
+        self.add_input('ArmBoolSocket', 'Breakable')
+        self.add_input('ArmFloatSocket', 'Breaking Threshold')
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
@@ -163,7 +163,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
             column = row.column(align=True)
             op = column.operator('arm.node_add_input', text='Add Constraint', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
-            op.socket_type = 'NodeSocketShader'
+            op.socket_type = 'ArmDynamicSocket'
             op.name_format = 'Constraint {0}'.format(len(self.inputs) - 6)
             column1 = row.column(align=True)
             op = column1.operator('arm.node_remove_input', text='', icon='X', emboss=True)

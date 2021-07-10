@@ -11,4 +11,4 @@ class GetGravityNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetGravityNode, self).init(context)
-        self.add_output('NodeSocketVector', 'World Gravity')
+        self.add_output('ArmVectorSocket', 'World Gravity')

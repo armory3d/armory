@@ -12,14 +12,14 @@ class ConcatenateStringNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ConcatenateStringNode, self).init(context)
-        self.add_input('NodeSocketString', 'Input 0')
+        self.add_input('ArmStringSocket', 'Input 0')
 
-        self.add_output('NodeSocketString', 'String')
+        self.add_output('ArmStringSocket', 'String')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketString'
+        op.socket_type = 'ArmStringSocket'
         op = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))

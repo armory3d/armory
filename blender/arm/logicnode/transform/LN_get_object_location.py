@@ -11,4 +11,4 @@ class GetLocationNode(ArmLogicTreeNode):
         super(GetLocationNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketVector', 'Location')
+        self.add_output('ArmVectorSocket', 'Location')

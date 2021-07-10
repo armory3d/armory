@@ -8,6 +8,6 @@ class NotNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(NotNode, self).init(context)
-        self.add_input('NodeSocketBool', 'Bool In')
+        self.add_input('ArmBoolSocket', 'Bool In')
 
-        self.add_output('NodeSocketBool', 'Bool Out')
+        self.add_output('ArmBoolSocket', 'Bool Out')

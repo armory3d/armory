@@ -8,6 +8,6 @@ class BloomGetNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(BloomGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Threshold')
-        self.add_output('NodeSocketFloat', 'Strength')
-        self.add_output('NodeSocketFloat', 'Radius')
+        self.add_output('ArmFloatSocket', 'Threshold')
+        self.add_output('ArmFloatSocket', 'Strength')
+        self.add_output('ArmFloatSocket', 'Radius')

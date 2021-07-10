@@ -16,7 +16,7 @@ class SendEventNode(ArmLogicTreeNode):
     def init(self, context):
         super(SendEventNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Event')
+        self.add_input('ArmStringSocket', 'Event')
         self.add_input('ArmNodeSocketObject', 'Object')
 
         self.add_output('ArmNodeSocketAction', 'Out')

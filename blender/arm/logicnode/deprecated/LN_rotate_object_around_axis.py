@@ -15,8 +15,8 @@ class RotateObjectAroundAxisNode(ArmLogicTreeNode):
         super(RotateObjectAroundAxisNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Axis', default_value=[0, 0, 1])
-        self.add_input('NodeSocketFloat', 'Angle')
+        self.add_input('ArmVectorSocket', 'Axis', default_value=[0, 0, 1])
+        self.add_input('ArmFloatSocket', 'Angle')
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

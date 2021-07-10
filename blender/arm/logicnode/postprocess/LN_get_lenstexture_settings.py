@@ -8,8 +8,8 @@ class LenstextureGetNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(LenstextureGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Center Min Clip')
-        self.add_output('NodeSocketFloat', 'Center Max Clip')
-        self.add_output('NodeSocketFloat', 'Luminance Min')
-        self.add_output('NodeSocketFloat', 'Luminance Max')
-        self.add_output('NodeSocketFloat', 'Brightness Exponent')
+        self.add_output('ArmFloatSocket', 'Center Min Clip')
+        self.add_output('ArmFloatSocket', 'Center Max Clip')
+        self.add_output('ArmFloatSocket', 'Luminance Min')
+        self.add_output('ArmFloatSocket', 'Luminance Max')
+        self.add_output('ArmFloatSocket', 'Brightness Exponent')

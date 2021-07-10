@@ -51,13 +51,13 @@ class MathNode(ArmLogicTreeNode):
             # Many arguments: Add, Subtract, Multiply, Divide
             if (self.get_count_in(select_current) == 0):
                 while (len(self.inputs) < 2):
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
             # 2 arguments: Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than
             if (self.get_count_in(select_current) == 2):
                 while (len(self.inputs) > 2):
                     self.inputs.remove(self.inputs.values()[-1])
                 while (len(self.inputs) < 2):
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
             # 1 argument: Sine, Cosine, Abs, Tangent, Arcsine, Arccosine, Arctangent, Logarithm, Round, Floor, Ceil, Square Root, Fract, Exponent
             if (self.get_count_in(select_current) == 1):
                 while (len(self.inputs) > 1):
@@ -100,10 +100,10 @@ class MathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(MathNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Value 0', default_value=0.0)
-        self.add_input('NodeSocketFloat', 'Value 1', default_value=0.0)
+        self.add_input('ArmFloatSocket', 'Value 0', default_value=0.0)
+        self.add_input('ArmFloatSocket', 'Value 1', default_value=0.0)
 
-        self.add_output('NodeSocketFloat', 'Result')
+        self.add_output('ArmFloatSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1')
@@ -114,7 +114,7 @@ class MathNode(ArmLogicTreeNode):
             column = row.column(align=True)
             op = column.operator('arm.node_add_input', text='Add Value', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
-            op.socket_type = 'NodeSocketFloat'
+            op.socket_type = 'ArmFloatSocket'
             op.name_format = 'Value {0}'
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)

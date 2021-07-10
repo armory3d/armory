@@ -12,4 +12,4 @@ class HasContactNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'RB 1')
         self.add_input('ArmNodeSocketObject', 'RB 2')
 
-        self.add_output('NodeSocketBool', 'Has Contact')
+        self.add_output('ArmBoolSocket', 'Has Contact')

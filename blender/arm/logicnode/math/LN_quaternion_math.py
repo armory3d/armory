@@ -15,16 +15,16 @@ class QuaternionMathNode(ArmLogicTreeNode):
         if value:
             if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
-            self.add_output('NodeSocketFloat', 'X') # Result X
-            self.add_output('NodeSocketFloat', 'Y') # Result Y
-            self.add_output('NodeSocketFloat', 'Z') # Result Z
-            self.add_output('NodeSocketFloat', 'W') # Result W
+            self.add_output('ArmFloatSocket', 'X') # Result X
+            self.add_output('ArmFloatSocket', 'Y') # Result Y
+            self.add_output('ArmFloatSocket', 'Z') # Result Z
+            self.add_output('ArmFloatSocket', 'W') # Result W
             if (self.property0 == 'Module'):
-                self.add_output('NodeSocketFloat', 'Module') # Module
+                self.add_output('ArmFloatSocket', 'Module') # Module
             if (self.property0 == 'DotProduct'):
-                self.add_output('NodeSocketFloat', 'Scalar') # DotProduct
+                self.add_output('ArmFloatSocket', 'Scalar') # DotProduct
             if (self.property0 == 'ToAxisAngle'):
-                self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
+                self.add_output('ArmFloatSocket', 'To Axis Angle') # ToAxisAngle
         else:
             if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
                 self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
@@ -35,11 +35,11 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 else:
                     break
             if (self.property0 == 'Module'):
-                self.add_output('NodeSocketFloat', 'Module') # Module
+                self.add_output('ArmFloatSocket', 'Module') # Module
             if (self.property0 == 'DotProduct'):
-                self.add_output('NodeSocketFloat', 'Scalar') # DotProduct
+                self.add_output('ArmFloatSocket', 'Scalar') # DotProduct
             if (self.property0 == 'ToAxisAngle'):
-                self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
+                self.add_output('ArmFloatSocket', 'To Axis Angle') # ToAxisAngle
 
     property1: HaxeBoolProperty('property1', name='Separator Out', default=False, set=set_bool, get=get_bool)
 
@@ -88,48 +88,48 @@ class QuaternionMathNode(ArmLogicTreeNode):
             # Many arguments: Add, Subtract, DotProduct, Multiply, MultiplyFloat
             if (self.get_count_in(select_current) == 0):
                 if (select_current == "MultiplyFloats"):
-                    self.add_input('NodeSocketVector', 'Quaternion ' + str(len(self.inputs)))
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmVectorSocket', 'Quaternion ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
                 else:
                     while (len(self.inputs) < 2):
-                        self.add_input('NodeSocketVector', 'Quaternion ' + str(len(self.inputs)))
+                        self.add_input('ArmVectorSocket', 'Quaternion ' + str(len(self.inputs)))
                 if (select_current == 'DotProduct'):
-                    self.add_output('NodeSocketFloat', 'Scalar')
+                    self.add_output('ArmFloatSocket', 'Scalar')
 
             # 3 arguments: Lerp, Slerp, FromAxisAngle, FromEuler
             if (self.get_count_in(select_current) == 3):
                 if (select_current == 'Lerp') or (select_current == 'Slerp'):
                     while (len(self.inputs) < 3):
-                        self.add_input('NodeSocketVector', 'From')
-                        self.add_input('NodeSocketVector', 'To')
-                        self.add_input('NodeSocketFloat', 'T')
+                        self.add_input('ArmVectorSocket', 'From')
+                        self.add_input('ArmVectorSocket', 'To')
+                        self.add_input('ArmFloatSocket', 'T')
                 if (select_current == 'FromAxisAngle'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketVector', 'Axis')
-                    self.add_input('NodeSocketFloat', 'Angle')
+                    self.add_input('ArmVectorSocket', 'Quaternion')
+                    self.add_input('ArmVectorSocket', 'Axis')
+                    self.add_input('ArmFloatSocket', 'Angle')
                 if (select_current == 'FromEuler'):
-                    self.add_input('NodeSocketFloat', 'X')
-                    self.add_input('NodeSocketFloat', 'Y')
-                    self.add_input('NodeSocketFloat', 'Z')
+                    self.add_input('ArmFloatSocket', 'X')
+                    self.add_input('ArmFloatSocket', 'Y')
+                    self.add_input('ArmFloatSocket', 'Z')
 
             # 2 arguments: FromTo, FromMat, FromRotationMat, ToAxisAngle
             if (self.get_count_in(select_current) == 2):
                 if (select_current == 'FromTo'):
-                    self.add_input('NodeSocketVector', 'Vector ' + str(len(self.inputs)))
-                    self.add_input('NodeSocketVector', 'Vector ' + str(len(self.inputs)))
+                    self.add_input('ArmVectorSocket', 'Vector ' + str(len(self.inputs)))
+                    self.add_input('ArmVectorSocket', 'Vector ' + str(len(self.inputs)))
                 if (select_current == 'FromMat') or (select_current == 'FromRotationMat'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketShader', 'Matrix')
+                    self.add_input('ArmVectorSocket', 'Quaternion')
+                    self.add_input('ArmDynamicSocket', 'Matrix')
                 if (select_current == 'ToAxisAngle'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketVector', 'Axis')
-                    self.add_output('NodeSocketFloat', 'Angle')
+                    self.add_input('ArmVectorSocket', 'Quaternion')
+                    self.add_input('ArmVectorSocket', 'Axis')
+                    self.add_output('ArmFloatSocket', 'Angle')
 
             # 1 argument: Module, Normalize, GetEuler
             if (self.get_count_in(select_current) == 1):
-                self.add_input('NodeSocketVector', 'Quaternion')
+                self.add_input('ArmVectorSocket', 'Quaternion')
                 if (select_current == 'Module'):
-                    self.add_output('NodeSocketFloat', 'Module')
+                    self.add_output('ArmFloatSocket', 'Module')
         self['property0'] = value
 
     property0: HaxeEnumProperty(
@@ -157,9 +157,9 @@ class QuaternionMathNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(QuaternionMathNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Quaternion 0', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketVector', 'Quaternion 1', default_value=[0.0, 0.0, 0.0])
-        self.add_output('NodeSocketVector', 'Result')
+        self.add_input('ArmVectorSocket', 'Quaternion 0', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmVectorSocket', 'Quaternion 1', default_value=[0.0, 0.0, 0.0])
+        self.add_output('ArmVectorSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1') # Separator Out
@@ -175,9 +175,9 @@ class QuaternionMathNode(ArmLogicTreeNode):
             else:
                 op.name_format = 'Value {0}'
             if (self.property0 == "MultiplyFloats"):
-                op.socket_type = 'NodeSocketFloat'
+                op.socket_type = 'ArmFloatSocket'
             else:
-                op.socket_type = 'NodeSocketVector'
+                op.socket_type = 'ArmVectorSocket'
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op.node_index = str(id(self))

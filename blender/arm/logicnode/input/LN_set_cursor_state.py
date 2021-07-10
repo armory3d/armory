@@ -25,7 +25,7 @@ class SetCursorStateNode(ArmLogicTreeNode):
     def init(self, context):
         super(SetCursorStateNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'State')
+        self.add_input('ArmBoolSocket', 'State')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

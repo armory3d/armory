@@ -11,7 +11,7 @@ class ArraySliceNode(ArmLogicTreeNode):
     def init(self, context):
         super(ArraySliceNode, self).init(context)
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketInt', 'Index')
-        self.add_input('NodeSocketInt', 'End')
+        self.add_input('ArmIntSocket', 'Index')
+        self.add_input('ArmIntSocket', 'End')
 
         self.add_output('ArmNodeSocketArray', 'Array')

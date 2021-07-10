@@ -7,7 +7,7 @@ class NodeAddOutputButton(bpy.types.Operator):
     bl_label = 'Add 4 States'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
     name_format: StringProperty(name='Name Format', default='Output {0}')
     index_name_offset: IntProperty(name='Index Name Offset', default=0)
 
@@ -21,10 +21,10 @@ class NodeAddOutputButton(bpy.types.Operator):
         global array_nodes
         node = array_nodes[self.node_index]
         outs = node.outputs
-        outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
-        outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
-        outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
-        outs.new('NodeSocketBool', self.get_name_state(len(outs), node.min_outputs))
+        outs.new('ArmBoolSocket', self.get_name_state(len(outs), node.min_outputs))
+        outs.new('ArmBoolSocket', self.get_name_state(len(outs), node.min_outputs))
+        outs.new('ArmBoolSocket', self.get_name_state(len(outs), node.min_outputs))
+        outs.new('ArmBoolSocket', self.get_name_state(len(outs), node.min_outputs))
         return{'FINISHED'}
 
 # Custom class for remove output parameters (in 4 directions)
@@ -61,14 +61,14 @@ class OnSwipeNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(OnSwipeNode, self).init(context)
-        self.inputs.new('NodeSocketFloat', 'Time')
+        self.inputs.new('ArmFloatSocket', 'Time')
         self.inputs[-1].default_value = 0.15
-        self.inputs.new('NodeSocketInt', 'Min Length (px)')
+        self.inputs.new('ArmIntSocket', 'Min Length (px)')
         self.inputs[-1].default_value = 100
         self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('NodeSocketVector', 'Direction')
-        self.outputs.new('NodeSocketInt', 'Length (px)')
-        self.outputs.new('NodeSocketInt', 'Angle (0-360)')
+        self.outputs.new('ArmVectorSocket', 'Direction')
+        self.outputs.new('ArmIntSocket', 'Length (px)')
+        self.outputs.new('ArmIntSocket', 'Angle (0-360)')
 
     # Draw node buttons
     def draw_buttons(self, context, layout):

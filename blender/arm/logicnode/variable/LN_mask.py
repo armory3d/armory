@@ -10,6 +10,6 @@ class MaskNode(ArmLogicTreeNode):
         super(MaskNode, self).init(context)
         for i in range(1, 21):
             label = 'Group {:02d}'.format(i)
-            self.inputs.new('NodeSocketBool', label)
+            self.inputs.new('ArmBoolSocket', label)
 
-        self.add_output('NodeSocketInt', 'Mask', is_var=True)
+        self.add_output('ArmIntSocket', 'Mask', is_var=True)

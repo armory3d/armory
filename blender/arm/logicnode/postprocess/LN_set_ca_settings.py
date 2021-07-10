@@ -9,7 +9,7 @@ class ChromaticAberrationSetNode(ArmLogicTreeNode):
     def init(self, context):
         super(ChromaticAberrationSetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketFloat', 'Strength', default_value=2.0)
-        self.add_input('NodeSocketInt', 'Samples', default_value=32)
+        self.add_input('ArmFloatSocket', 'Strength', default_value=2.0)
+        self.add_input('ArmIntSocket', 'Samples', default_value=32)
 
         self.add_output('ArmNodeSocketAction', 'Out')

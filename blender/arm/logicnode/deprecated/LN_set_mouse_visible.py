@@ -14,7 +14,7 @@ class ShowMouseNode(ArmLogicTreeNode):
     def init(self, context):
         super(ShowMouseNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Show')
+        self.add_input('ArmBoolSocket', 'Show')
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

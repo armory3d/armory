@@ -53,9 +53,9 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(PhysicsConstraintNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Lower limit')
-        self.add_input('NodeSocketFloat', 'Upper limit')
-        self.add_output('NodeSocketShader', 'Constraint')
+        self.add_input('ArmFloatSocket', 'Lower limit')
+        self.add_input('ArmFloatSocket', 'Upper limit')
+        self.add_output('ArmDynamicSocket', 'Constraint')
 
     def update_sockets(self, context):
         while len(self.inputs) > 0:
@@ -63,11 +63,11 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
 
         # Add dynamic input sockets
         if self.property2:
-            self.add_input('NodeSocketFloat', 'Stiffness', 10.0)
-            self.add_input('NodeSocketFloat', 'Damping', 0.5)
+            self.add_input('ArmFloatSocket', 'Stiffness', 10.0)
+            self.add_input('ArmFloatSocket', 'Damping', 0.5)
         else:
-            self.add_input('NodeSocketFloat', 'Lower limit')
-            self.add_input('NodeSocketFloat', 'Upper limit')
+            self.add_input('ArmFloatSocket', 'Lower limit')
+            self.add_input('ArmFloatSocket', 'Upper limit')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

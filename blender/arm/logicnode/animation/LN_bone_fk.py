@@ -11,7 +11,7 @@ class BoneFKNode(ArmLogicTreeNode):
         super(BoneFKNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Bone')
-        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('ArmStringSocket', 'Bone')
+        self.add_input('ArmDynamicSocket', 'Transform')
 
         self.add_output('ArmNodeSocketAction', 'Out')

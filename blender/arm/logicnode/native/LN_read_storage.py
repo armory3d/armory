@@ -11,7 +11,7 @@ class ReadStorageNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ReadStorageNode, self).init(context)
-        self.add_input('NodeSocketString', 'Key')
-        self.add_input('NodeSocketString', 'Default')
+        self.add_input('ArmStringSocket', 'Key')
+        self.add_input('ArmStringSocket', 'Default')
 
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')

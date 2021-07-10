@@ -10,9 +10,9 @@ class SetVelocityNode(ArmLogicTreeNode):
         super(SetVelocityNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'RB')
-        self.add_input('NodeSocketVector', 'Linear')
-        self.add_input('NodeSocketVector', 'Linear Factor', default_value=[1.0, 1.0, 1.0])
-        self.add_input('NodeSocketVector', 'Angular')
-        self.add_input('NodeSocketVector', 'Angular Factor', default_value=[1.0, 1.0, 1.0])
+        self.add_input('ArmVectorSocket', 'Linear')
+        self.add_input('ArmVectorSocket', 'Linear Factor', default_value=[1.0, 1.0, 1.0])
+        self.add_input('ArmVectorSocket', 'Angular')
+        self.add_input('ArmVectorSocket', 'Angular Factor', default_value=[1.0, 1.0, 1.0])
 
         self.add_output('ArmNodeSocketAction', 'Out')

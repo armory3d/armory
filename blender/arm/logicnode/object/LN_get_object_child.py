@@ -19,7 +19,7 @@ class GetChildNode(ArmLogicTreeNode):
     def init(self, context):
         super(GetChildNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Parent')
-        self.add_input('NodeSocketString', 'Child Name')
+        self.add_input('ArmStringSocket', 'Child Name')
 
         self.add_output('ArmNodeSocketObject', 'Child')
 

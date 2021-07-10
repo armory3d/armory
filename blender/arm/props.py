@@ -492,18 +492,25 @@ def init_properties_on_load():
 def update_armory_world():
     global arm_version
     wrd = bpy.data.worlds['Arm']
+
     # Outdated project
-    if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
-        # This allows for seamless migration from ealier versions of Armory
-        for rp in wrd.arm_rplist: # TODO: deprecated
+    file_version = tuple(map(int, wrd.arm_version.split('.')))
+    sdk_version = tuple(map(int, arm_version.split('.')))
+    if bpy.data.filepath != '' and (file_version < sdk_version or wrd.arm_commit != arm_commit):
+        # This allows for seamless migration from earlier versions of Armory
+        for rp in wrd.arm_rplist:  # TODO: deprecated
             if rp.rp_gi != 'Off':
                 rp.rp_gi = 'Off'
                 rp.rp_voxelao = True
 
-        # Replace deprecated nodes
+        if file_version < (2021, 8):
+            # There were breaking changes in SDK 2021.08, use a special
+            # update routine first before regularly replacing nodes
+            arm.logicnode.replacement.node_compat_sdk2108()
+
         arm.logicnode.replacement.replace_all()
 
-        print('Project updated to sdk v' + arm_version + ' (' + arm_commit + ')')
+        print(f'Project updated to SDK v{arm_version}({arm_commit})')
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
         arm.make.clean()

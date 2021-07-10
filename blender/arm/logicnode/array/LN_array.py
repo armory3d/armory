@@ -13,14 +13,14 @@ class ArrayNode(ArmLogicTreeNode):
     def init(self, context):
         super(ArrayNode, self).init(context)
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
 
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketShader'
+        op.socket_type = 'ArmDynamicSocket'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 

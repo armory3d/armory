@@ -9,7 +9,7 @@ class CanvasSetSliderNode(ArmLogicTreeNode):
     def init(self, context):
         super(CanvasSetSliderNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketFloat', 'Float')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmFloatSocket', 'Float')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -9,7 +9,7 @@ class ValueChangedNode(ArmLogicTreeNode):
     def init(self, context):
         super(ValueChangedNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Changed')
         self.add_output('ArmNodeSocketAction', 'Unchanged')

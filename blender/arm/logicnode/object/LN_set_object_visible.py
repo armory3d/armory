@@ -21,8 +21,8 @@ class SetVisibleNode(ArmLogicTreeNode):
         super(SetVisibleNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Visible')
-        self.add_input('NodeSocketBool', 'Children', default_value=True)
+        self.add_input('ArmBoolSocket', 'Visible')
+        self.add_input('ArmBoolSocket', 'Children', default_value=True)
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

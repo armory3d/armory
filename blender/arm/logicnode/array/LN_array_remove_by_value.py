@@ -15,16 +15,16 @@ class ArrayRemoveValueNode(ArmLogicTreeNode):
         super(ArrayRemoveValueNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')
 
     # def draw_buttons(self, context, layout):
     #     row = layout.row(align=True)
 
     #     op = row.operator('arm.node_add_input_value', text='New', icon='PLUS', emboss=True)
     #     op.node_index = str(id(self))
-    #     op.socket_type = 'NodeSocketShader'
+    #     op.socket_type = 'ArmDynamicSocket'
     #     op2 = row.operator('arm.node_remove_input_value', text='', icon='X', emboss=True)
     #     op2.node_index = str(id(self))

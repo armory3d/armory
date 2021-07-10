@@ -11,7 +11,7 @@ class BranchNode(ArmLogicTreeNode):
     def init(self, context):
         super(BranchNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Bool')
+        self.add_input('ArmBoolSocket', 'Bool')
 
         self.add_output('ArmNodeSocketAction', 'True')
         self.add_output('ArmNodeSocketAction', 'False')

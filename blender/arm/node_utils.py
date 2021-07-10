@@ -5,6 +5,7 @@ from bpy.types import NodeSocket, NodeInputs, NodeOutputs
 from nodeitems_utils import NodeItem
 
 import arm.log
+import arm.logicnode.arm_sockets
 import arm.utils
 
 
@@ -58,6 +59,30 @@ def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket
         if sockets[i] == socket:
             return i
     return -1
+
+
+def get_socket_default(socket: NodeSocket) -> Any:
+    """Get the socket's default value, or `None` if it doesn't exist."""
+    if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
+        if socket.arm_socket_type != 'NONE':
+            return socket.default_value_raw
+
+    # Shader-type sockets don't have a default value
+    elif socket.type != 'SHADER':
+        return socket.default_value
+
+    return None
+
+
+def set_socket_default(socket: NodeSocket, value: Any):
+    """Set the socket's default value if it exists."""
+    if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
+        if socket.arm_socket_type != 'NONE':
+            socket.default_value_raw = value
+
+    # Shader-type sockets don't have a default value
+    elif socket.type != 'SHADER':
+        socket.default_value = value
 
 
 def get_export_tree_name(tree: bpy.types.NodeTree, do_warn=False) -> str:

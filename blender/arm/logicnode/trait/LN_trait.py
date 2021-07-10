@@ -12,7 +12,7 @@ class TraitNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(TraitNode, self).init(context)
-        self.add_output('NodeSocketShader', 'Trait', is_var=True)
+        self.add_output('ArmDynamicSocket', 'Trait', is_var=True)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

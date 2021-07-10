@@ -11,4 +11,4 @@ class GetScaleNode(ArmLogicTreeNode):
         super(GetScaleNode, self).init(context)
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketVector', 'Scale')
+        self.add_output('ArmVectorSocket', 'Scale')

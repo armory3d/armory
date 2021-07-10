@@ -9,6 +9,6 @@ class BooleanNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(BooleanNode, self).init(context)
-        self.add_input('NodeSocketBool', 'Bool In')
+        self.add_input('ArmBoolSocket', 'Bool In')
 
-        self.add_output('NodeSocketBool', 'Bool Out', is_var=True)
+        self.add_output('ArmBoolSocket', 'Bool Out', is_var=True)

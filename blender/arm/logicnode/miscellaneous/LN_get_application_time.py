@@ -8,5 +8,5 @@ class TimeNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(TimeNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Time')
-        self.add_output('NodeSocketFloat', 'Delta')
+        self.add_output('ArmFloatSocket', 'Time')
+        self.add_output('ArmFloatSocket', 'Delta')

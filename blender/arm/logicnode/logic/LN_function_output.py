@@ -13,7 +13,7 @@ class FunctionOutputNode(ArmLogicTreeNode):
     def init(self, context):
         super(FunctionOutputNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmDynamicSocket', 'Value')
 
     function_name: StringProperty(name="Name")
 

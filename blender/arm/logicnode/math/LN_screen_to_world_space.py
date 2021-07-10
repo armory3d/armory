@@ -14,24 +14,24 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(ScreenToWorldSpaceNode, self).init(context)
-        self.add_input('NodeSocketInt', 'Screen X')
-        self.add_input('NodeSocketInt', 'Screen Y')
+        self.add_input('ArmIntSocket', 'Screen X')
+        self.add_input('ArmIntSocket', 'Screen Y')
 
-        self.add_output('NodeSocketVector', 'World')
-        self.add_output('NodeSocketVector', 'Direction')
+        self.add_output('ArmVectorSocket', 'World')
+        self.add_output('ArmVectorSocket', 'Direction')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0') # Separator Out
         if self.property0:
             if len(self.outputs) < self.max_outputs:
                 self.outputs.remove(self.outputs.values()[-1]) # Direction vector
-                self.add_output('NodeSocketFloat', 'X') # World X
-                self.add_output('NodeSocketFloat', 'Y') # World Y
-                self.add_output('NodeSocketFloat', 'Z') # World Z
-                self.add_output('NodeSocketVector', 'Direction') # Vector
-                self.add_output('NodeSocketFloat', 'X') # Direction X
-                self.add_output('NodeSocketFloat', 'Y') # Direction Y
-                self.add_output('NodeSocketFloat', 'Z') # Direction Z
+                self.add_output('ArmFloatSocket', 'X') # World X
+                self.add_output('ArmFloatSocket', 'Y') # World Y
+                self.add_output('ArmFloatSocket', 'Z') # World Z
+                self.add_output('ArmVectorSocket', 'Direction') # Vector
+                self.add_output('ArmFloatSocket', 'X') # Direction X
+                self.add_output('ArmFloatSocket', 'Y') # Direction Y
+                self.add_output('ArmFloatSocket', 'Z') # Direction Z
         else:
             if len(self.outputs) == self.max_outputs:
                 self.outputs.remove(self.outputs.values()[-1]) # Z
@@ -41,4 +41,4 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
                 self.outputs.remove(self.outputs.values()[-1]) # Z
                 self.outputs.remove(self.outputs.values()[-1]) # Y
                 self.outputs.remove(self.outputs.values()[-1]) # X
-                self.add_output('NodeSocketVector', 'Direction')
+                self.add_output('ArmVectorSocket', 'Direction')

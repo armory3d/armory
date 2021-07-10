@@ -8,6 +8,6 @@ class GetTraitPausedNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetTraitPausedNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Trait')
+        self.add_input('ArmDynamicSocket', 'Trait')
 
-        self.add_output('NodeSocketBool', 'Is Paused')
+        self.add_output('ArmBoolSocket', 'Is Paused')

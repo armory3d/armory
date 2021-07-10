@@ -9,10 +9,10 @@ class GetTouchMovementNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(GetTouchMovementNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'X Multiplier', default_value=-1.0)
-        self.add_input('NodeSocketFloat', 'Y Multiplier', default_value=-1.0)
+        self.add_input('ArmFloatSocket', 'X Multiplier', default_value=-1.0)
+        self.add_input('ArmFloatSocket', 'Y Multiplier', default_value=-1.0)
 
-        self.add_output('NodeSocketFloat', 'X')
-        self.add_output('NodeSocketFloat', 'Y')
-        self.add_output('NodeSocketFloat', 'Multiplied X')
-        self.add_output('NodeSocketFloat', 'Multiplied Y')
+        self.add_output('ArmFloatSocket', 'X')
+        self.add_output('ArmFloatSocket', 'Y')
+        self.add_output('ArmFloatSocket', 'Multiplied X')
+        self.add_output('ArmFloatSocket', 'Multiplied Y')

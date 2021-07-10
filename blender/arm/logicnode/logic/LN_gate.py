@@ -41,8 +41,8 @@ class GateNode(ArmLogicTreeNode):
     def init(self, context):
         super(GateNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Input 1')
-        self.add_input('NodeSocketShader', 'Input 2')
+        self.add_input('ArmDynamicSocket', 'Input 1')
+        self.add_input('ArmDynamicSocket', 'Input 2')
 
         self.add_output('ArmNodeSocketAction', 'True')
         self.add_output('ArmNodeSocketAction', 'False')
@@ -57,6 +57,6 @@ class GateNode(ArmLogicTreeNode):
             row = layout.row(align=True)
             op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
-            op.socket_type = 'NodeSocketShader'
+            op.socket_type = 'ArmDynamicSocket'
             op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op2.node_index = str(id(self))

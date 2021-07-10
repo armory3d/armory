@@ -33,7 +33,7 @@ class SpawnCollectionNode(ArmLogicTreeNode):
     def init(self, context):
         super(SpawnCollectionNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Transform')
+        self.add_input('ArmDynamicSocket', 'Transform')
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketArray', 'Top-Level Objects')

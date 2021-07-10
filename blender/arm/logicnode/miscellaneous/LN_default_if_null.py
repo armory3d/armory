@@ -12,7 +12,7 @@ class DefaultIfNullNode(ArmLogicTreeNode):
 
     def init(self, context):
         super(DefaultIfNullNode, self).init(context)
-        self.inputs.new('NodeSocketShader', 'Value In')
-        self.inputs.new('NodeSocketShader', 'Default')
+        self.inputs.new('ArmDynamicSocket', 'Value In')
+        self.inputs.new('ArmDynamicSocket', 'Default')
 
-        self.outputs.new('NodeSocketShader', 'Value Out')
+        self.outputs.new('ArmDynamicSocket', 'Value Out')

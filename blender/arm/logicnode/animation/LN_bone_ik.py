@@ -11,7 +11,7 @@ class BoneIKNode(ArmLogicTreeNode):
         super(BoneIKNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Bone')
-        self.add_input('NodeSocketVector', 'Goal')
+        self.add_input('ArmStringSocket', 'Bone')
+        self.add_input('ArmVectorSocket', 'Goal')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -10,7 +10,7 @@ class ArraySetNode(ArmLogicTreeNode):
         super(ArraySetNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_input('NodeSocketInt', 'Index')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmIntSocket', 'Index')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Out')

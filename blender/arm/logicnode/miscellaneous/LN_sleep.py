@@ -10,6 +10,6 @@ class SleepNode(ArmLogicTreeNode):
     def init(self, context):
         super(SleepNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketFloat', 'Time')
+        self.add_input('ArmFloatSocket', 'Time')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -11,6 +11,6 @@ class SetMeshNode(ArmLogicTreeNode):
         super(SetMeshNode, self).init(context)
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Mesh')
+        self.add_input('ArmDynamicSocket', 'Mesh')
 
         self.add_output('ArmNodeSocketAction', 'Out')
