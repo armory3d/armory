@@ -594,7 +594,7 @@ class DebugConsole extends Trait {
 					}
 
 					function drawTiles(tile: ShadowMapTile, atlas: ShadowMapAtlas, atlasVisualSize: Float) {
-						var color = kha.Color.fromFloats(0.1, 0.1, 0.1);
+						var color: Null<kha.Color> = kha.Color.fromFloats(0.1, 0.1, 0.1);
 						var borderColor = color;
 						var tileScale = (tile.size / atlas.sizew) * atlasVisualSize; //* 0.95;
 						var x = (tile.coordsX / atlas.sizew) * atlasVisualSize;
