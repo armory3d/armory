@@ -62,7 +62,7 @@ class ArmLogicTreeNode(bpy.types.Node):
         arm.live_patch.send_event('ln_update_prop', (self, prop_name))
 
     def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
-        pass
+        arm.live_patch.send_event('ln_socket_val', (self, socket))
 
     def insert_link(self, link: bpy.types.NodeLink):
         """Called on *both* nodes when a link between two nodes is created."""

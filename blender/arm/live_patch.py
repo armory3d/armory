@@ -178,7 +178,7 @@ def send_event(event_id: str, opt_data: Any = None):
             js = f'LivePatch.patchCreateNodeLink("{tree_name}", "{from_node_name}", "{to_node_name}", "{from_index}", "{to_index}");'
             write_patch(js)
 
-    if event_id == 'ln_update_prop':
+    elif event_id == 'ln_update_prop':
         node: ArmLogicTreeNode
         prop_name: str
         node, prop_name = opt_data
@@ -190,6 +190,30 @@ def send_event(event_id: str, opt_data: Any = None):
 
         js = f'LivePatch.patchUpdateNodeProp("{tree_name}", "{node_name}", "{prop_name}", {value});'
         write_patch(js)
+
+    elif event_id == 'ln_socket_val':
+        node: ArmLogicTreeNode
+        socket: bpy.types.NodeSocket
+        node, socket = opt_data
+
+        socket_index = arm.node_utils.get_socket_index(node.inputs, socket)
+
+        if socket_index != -1:
+            tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
+            node_name = arm.node_utils.get_export_node_name(node)[1:]
+
+            value = arm.node_utils.haxe_format_socket_val(socket.get_default_value())
+            inp_type = socket.arm_socket_type
+
+            if inp_type in ('VECTOR', 'RGB'):
+                value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}' + '}'
+            elif inp_type == 'RGBA':
+                value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}, "w": {value[3]}' + '}'
+            elif inp_type == 'BOOLEAN':
+                value = str(value).lower()
+
+            js = f'LivePatch.patchUpdateNodeInputVal("{tree_name}", "{node_name}", {socket_index}, {value});'
+            write_patch(js)
 
 
 def on_operator(operator_id: str):
