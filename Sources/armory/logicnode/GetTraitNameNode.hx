@@ -16,12 +16,12 @@ class GetTraitNameNode extends LogicNode {
 			case 0: {
 			// Check CanvasScript
 			var cname = cast Type.resolveClass("armory.trait.internal.CanvasScript");
-			if (Std.is(trait, cname)) {
+			if (Std.isOfType(trait, cname)) {
 				return trait.cnvName;
 			}
 			// Check WasmScript
 			var cname = cast Type.resolveClass("armory.trait.internal.WasmScript");
-			if (Std.is(trait, cname)) {
+			if (Std.isOfType(trait, cname)) {
 				return trait.wasmName;
 			}
 			// Other
