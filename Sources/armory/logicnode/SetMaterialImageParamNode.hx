@@ -13,10 +13,12 @@ class SetMaterialImageParamNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		var perObject: Null<Bool>;
+		
 		var object = inputs[1].get();
 		if(object == null) return;
 
-		var perObject = inputs[2].get();
+		perObject = inputs[2].get();
 		if(perObject == null) perObject = false;
 
 		var mat = inputs[3].get();

@@ -23,7 +23,7 @@ class UniformsManager extends Trait{
 
 	static var sceneRemoveInitalized = false;
 
-	public var unifromExists = false;
+	public var uniformExists = false;
 
 	public function new(){
 		super();
@@ -45,7 +45,7 @@ class UniformsManager extends Trait{
 
 			var exists = registerShaderUniforms(material);
 			if(exists) {
-				unifromExists = true;
+				uniformExists = true;
 			}
 		}
 	}
@@ -90,7 +90,7 @@ class UniformsManager extends Trait{
 	// Register and map shader uniforms if it is an armory shader parameter
 	public static function registerShaderUniforms(material: MaterialData) : Bool {
 
-		var unifromExist = false;
+		var uniformExist = false;
 
 		if(! floatsMap.exists(Scene.active.root)) floatsMap.set(Scene.active.root, null);
 		if(! vectorsMap.exists(Scene.active.root)) vectorsMap.set(Scene.active.root, null);
@@ -98,15 +98,15 @@ class UniformsManager extends Trait{
 
 		for(context in material.shader.raw.contexts){ // For each context in shader
 			for (constant in context.constants){ // For each constant in the context
-				if(constant.is_arm_parameter){ // Chack if armory parameter
+				if(constant.is_arm_parameter){ // Check if armory parameter
 
-					unifromExist = true;
+					uniformExist = true;
 					var object = Scene.active.root; // Map default uniforms to scene root
 
 					switch (constant.type){
 						case "float":{
 							var link = constant.link;
-							var value:Float = constant.float;
+							var value = constant.float;
 							setFloatValue(material, object, link, value);
 							register(Float);
 						}
@@ -126,9 +126,9 @@ class UniformsManager extends Trait{
 				}
 			}
 			for (texture in context.texture_units){
-				if(texture.is_arm_parameter){ // Chack if armory parameter
+				if(texture.is_arm_parameter){ // Check if armory parameter
 
-					unifromExist = true;
+					uniformExist = true;
 					var object = Scene.active.root; // Map default texture to scene root
 
 					iron.data.Data.getImage(texture.default_image_file, function(image: kha.Image) {
@@ -142,7 +142,7 @@ class UniformsManager extends Trait{
 			}
 		}
 
-		return unifromExist;
+		return uniformExist;
 		
 	}
 
