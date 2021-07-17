@@ -369,7 +369,7 @@ class Inc {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = getDisplayp();
-		t.format = "RGBA64";
+		t.format = "RGBA48";
 		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
@@ -524,7 +524,7 @@ class Inc {
 
 	public static inline function getHdrFormat(): String {
 		#if rp_hdr
-		return "RGBA64";
+		return "RGBA48";
 		#else
 		return "RGBA32";
 		#end
