@@ -202,18 +202,39 @@ def send_event(event_id: str, opt_data: Any = None):
             tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
             node_name = arm.node_utils.get_export_node_name(node)[1:]
 
-            value = arm.node_utils.haxe_format_socket_val(socket.get_default_value())
+            value = socket.get_default_value()
             inp_type = socket.arm_socket_type
 
             if inp_type in ('VECTOR', 'RGB'):
                 value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}' + '}'
             elif inp_type == 'RGBA':
                 value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}, "w": {value[3]}' + '}'
-            elif inp_type == 'BOOLEAN':
-                value = str(value).lower()
+            else:
+                value = arm.node_utils.haxe_format_socket_val(value)
 
             js = f'LivePatch.patchUpdateNodeInputVal("{tree_name}", "{node_name}", {socket_index}, {value});'
             write_patch(js)
+
+    elif event_id == 'ln_copy':
+        newnode: ArmLogicTreeNode
+        node: ArmLogicTreeNode
+        newnode, node = opt_data
+
+        # Use newnode to get the tree, node has no id_data at this moment
+        tree_name = arm.node_utils.get_export_tree_name(newnode.get_tree())
+
+        newnode_name = arm.node_utils.get_export_node_name(newnode)[1:]
+        node_name = arm.node_utils.get_export_node_name(node)[1:]
+
+        props_list = '[' + ','.join(f'"{p}"' for p in arm.node_utils.get_haxe_property_names(node)) + ']'
+
+        inp_data = [(inp.arm_socket_type, inp.get_default_value()) for inp in newnode.inputs]
+        inp_data = arm.node_utils.haxe_format_socket_val(inp_data)
+        out_data = [(out.arm_socket_type, out.get_default_value()) for out in newnode.outputs]
+        out_data = arm.node_utils.haxe_format_socket_val(out_data)
+
+        js = f'LivePatch.patchNodeCopy("{tree_name}", "{node_name}", "{newnode_name}", {props_list}, {inp_data}, {out_data});'
+        write_patch(js)
 
 
 def on_operator(operator_id: str):
@@ -246,6 +267,8 @@ IGNORE_OPERATORS = (
     'VIEW3D_OT_select_box',
     'OUTLINER_OT_item_activate',
     'OBJECT_OT_editmode_toggle',
+    'NODE_OT_duplicate_move',
+    'NODE_OT_link',
     'NODE_OT_select',
     'NODE_OT_translate_attach_remove_on_cancel',
     'NODE_OT_translate_attach'

@@ -54,6 +54,12 @@ class ArmLogicTreeNode(bpy.types.Node):
     def get_tree(self):
         return self.id_data
 
+    def copy(self, node):
+        """Called if the node was copied. `self` holds the copied node,
+        `node` the original one.
+        """
+        arm.live_patch.send_event('ln_copy', (self, node))
+
     def on_prop_update(self, context: bpy.types.Context, prop_name: str):
         """Called if a property created with a function from the
         arm_props module is changed. If the property has a custom update

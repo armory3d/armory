@@ -267,28 +267,27 @@ def build_default_node(inp: bpy.types.NodeSocket):
 
     if is_custom_socket:
         # ArmCustomSockets need to implement get_default_value()
-        default_value = arm.node_utils.haxe_format_socket_val(inp.get_default_value())
+        default_value = inp.get_default_value()
         inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
     else:
         if hasattr(inp, 'default_value'):
             default_value = inp.default_value
         else:
             default_value = None
-        default_value = arm.node_utils.haxe_format_socket_val(default_value)
         inp_type = inp.type
 
+    default_value = arm.node_utils.haxe_format_socket_val(default_value, array_outer_brackets=False)
+
     if inp_type == 'VECTOR':
-        return f'new armory.logicnode.VectorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
-    elif inp_type == 'RGBA':
-        return f'new armory.logicnode.ColorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]}, {default_value[3]})'
-    elif inp_type == 'RGB':
-        return f'new armory.logicnode.ColorNode(this, {default_value[0]}, {default_value[1]}, {default_value[2]})'
+        return f'new armory.logicnode.VectorNode(this, {default_value})'
+    elif inp_type in ('RGB', 'RGBA'):
+        return f'new armory.logicnode.ColorNode(this, {default_value})'
     elif inp_type == 'VALUE':
         return f'new armory.logicnode.FloatNode(this, {default_value})'
     elif inp_type == 'INT':
         return f'new armory.logicnode.IntegerNode(this, {default_value})'
     elif inp_type == 'BOOLEAN':
-        return f'new armory.logicnode.BooleanNode(this, {str(default_value).lower()})'
+        return f'new armory.logicnode.BooleanNode(this, {default_value})'
     elif inp_type == 'STRING':
         return f'new armory.logicnode.StringNode(this, {default_value})'
     elif inp_type == 'NONE':

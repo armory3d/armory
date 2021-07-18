@@ -1,6 +1,8 @@
+import collections
 from typing import Any, Generator, Type, Union
 
 import bpy
+import mathutils
 from bpy.types import NodeSocket, NodeInputs, NodeOutputs
 from nodeitems_utils import NodeItem
 
@@ -122,16 +124,31 @@ def get_haxe_property_names(node: bpy.types.Node) -> Generator[str, None, None]:
             yield prop_name
 
 
-def haxe_format_socket_val(socket_val: Any) -> str:
-    """Formats a socket value to be valid Haxe syntax."""
-    if isinstance(socket_val, str):
+def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:
+    """Formats a socket value to be valid Haxe syntax.
+
+    If `array_outer_brackets` is false, no square brackets are put
+    around array values.
+
+    Make sure that elements of sequence types are not yet in Haxe
+    syntax, otherwise they are strings and get additional quotes!
+    """
+    if isinstance(socket_val, bool):
+        socket_val = str(socket_val).lower()
+
+    elif isinstance(socket_val, str):
         socket_val = '"{:s}"'.format(socket_val.replace('"', '\\"'))
+
+    elif isinstance(socket_val, (collections.Sequence, bpy.types.bpy_prop_array, mathutils.Color, mathutils.Euler, mathutils.Vector)):
+        socket_val = ','.join(haxe_format_socket_val(v, array_outer_brackets=True) for v in socket_val)
+        if array_outer_brackets:
+            socket_val = f'[{socket_val}]'
 
     elif socket_val is None:
         # Don't write 'None' into the Haxe code
         socket_val = 'null'
 
-    return socket_val
+    return str(socket_val)
 
 
 def haxe_format_prop(node: bpy.types.Node, prop_name: str) -> str:
