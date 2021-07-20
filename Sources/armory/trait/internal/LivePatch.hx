@@ -133,28 +133,18 @@ class LivePatch extends iron.Trait {
 		}
 	}
 
-	static inline function createSocketDefaultNode(tree: LogicTree, inputType: String, value: Dynamic): LogicNode {
-		return switch (inputType) {
-			case "VECTOR":
-				new armory.logicnode.VectorNode(tree, value[0], value[1], value[2]);
-			case "RGBA":
-				new armory.logicnode.ColorNode(tree, value[0], value[1], value[2], value[3]);
-			case "RGB":
-				new armory.logicnode.ColorNode(tree, value[0], value[1], value[2]);
-			case "VALUE":
-				new armory.logicnode.FloatNode(tree, value);
-			case "INT":
-				new armory.logicnode.IntegerNode(tree, value);
-			case "BOOLEAN":
-				new armory.logicnode.BooleanNode(tree, value);
-			case "STRING":
-				new armory.logicnode.StringNode(tree, value);
-			case "NONE":
-				new armory.logicnode.NullNode(tree);
-			case "OBJECT":
-				new armory.logicnode.ObjectNode(tree, value);
-			default:
-				new armory.logicnode.DynamicNode(tree, value);
+	static inline function createSocketDefaultNode(tree: LogicTree, socketType: String, value: Dynamic): LogicNode {
+		return switch (socketType) {
+			case "VECTOR": new armory.logicnode.VectorNode(tree, value[0], value[1], value[2]);
+			case "RGBA": new armory.logicnode.ColorNode(tree, value[0], value[1], value[2], value[3]);
+			case "RGB": new armory.logicnode.ColorNode(tree, value[0], value[1], value[2]);
+			case "VALUE": new armory.logicnode.FloatNode(tree, value);
+			case "INT": new armory.logicnode.IntegerNode(tree, value);
+			case "BOOLEAN": new armory.logicnode.BooleanNode(tree, value);
+			case "STRING": new armory.logicnode.StringNode(tree, value);
+			case "NONE": new armory.logicnode.NullNode(tree);
+			case "OBJECT": new armory.logicnode.ObjectNode(tree, value);
+			default: new armory.logicnode.DynamicNode(tree, value);
 		}
 	}
 #end
