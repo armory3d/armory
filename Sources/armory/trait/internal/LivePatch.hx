@@ -66,6 +66,45 @@ class LivePatch extends iron.Trait {
 		@:privateAccess node.inputs[socketIndex].set(value);
 	}
 
+	public static function patchNodeDelete(treeName: String, nodeName: String, outputDatas: Array<Array<Dynamic>>) {
+		var tree = LogicTree.nodeTrees[treeName];
+		if (tree == null) return;
+
+		var node = tree.nodes[nodeName];
+		if (node == null) return;
+
+		// Remove this node from the outputs of connected nodes
+		for (input in node.inputs) {
+			var inNodeOutputs = input.node.outputs;
+
+			// Default nodes don't have outputs when exported from Blender
+			if (input.from < inNodeOutputs.length) {
+				for (outNode in inNodeOutputs[input.from]) {
+					if (outNode == node) {
+						inNodeOutputs[input.from].remove(outNode);
+					}
+				}
+			}
+
+		}
+
+		// Replace connected inputs of other nodes with default nodes
+		for (outputNodes in node.outputs) {
+			for (outNode in outputNodes) {
+				for (outNodeInput in outNode.inputs) {
+					if (outNodeInput.node == node) {
+						var outputIndex = outNodeInput.from;
+						var socketType = outputDatas[outputIndex][0];
+						var socketValue = outputDatas[outputIndex][1];
+						outNodeInput.node = createSocketDefaultNode(node.tree, socketType, socketValue);
+					}
+				}
+			}
+		}
+
+		tree.nodes.remove(nodeName);
+	}
+
 	public static function patchNodeCopy(treeName: String, nodeName: String, newNodeName: String, copyProps: Array<String>, inputDatas: Array<Array<Dynamic>>, outputDatas: Array<Array<Dynamic>>) {
 		var tree = LogicTree.nodeTrees[treeName];
 		if (tree == null) return;

@@ -215,6 +215,18 @@ def send_event(event_id: str, opt_data: Any = None):
             js = f'LivePatch.patchUpdateNodeInputVal("{tree_name}", "{node_name}", {socket_index}, {value});'
             write_patch(js)
 
+    elif event_id == 'ln_delete':
+        node: ArmLogicTreeNode = opt_data
+
+        tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
+        node_name = arm.node_utils.get_export_node_name(node)[1:]
+
+        out_data = [(out.arm_socket_type, out.get_default_value()) for out in node.outputs]
+        out_data = arm.node_utils.haxe_format_socket_val(out_data)
+
+        js = f'LivePatch.patchNodeDelete("{tree_name}", "{node_name}", {out_data});'
+        write_patch(js)
+
     elif event_id == 'ln_copy':
         newnode: ArmLogicTreeNode
         node: ArmLogicTreeNode

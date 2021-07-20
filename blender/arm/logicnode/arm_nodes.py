@@ -54,6 +54,10 @@ class ArmLogicTreeNode(bpy.types.Node):
     def get_tree(self):
         return self.id_data
 
+    def free(self):
+        """Called before the node is deleted."""
+        arm.live_patch.send_event('ln_delete', self)
+
     def copy(self, node):
         """Called if the node was copied. `self` holds the copied node,
         `node` the original one.
