@@ -209,6 +209,8 @@ def send_event(event_id: str, opt_data: Any = None):
                 value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}' + '}'
             elif inp_type == 'RGBA':
                 value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}, "w": {value[3]}' + '}'
+            elif inp_type == 'OBJECT':
+                value = f'iron.Scene.active.getChild("{value}")' if value != '' else 'null'
             else:
                 value = arm.node_utils.haxe_format_socket_val(value)
 
