@@ -1,9 +1,12 @@
+from typing import Optional
+
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_skin as make_skin
 import arm.material.make_particle as make_particle
 import arm.material.make_inst as make_inst
-import arm.material.shader as shader
+import arm.material.make_tess as make_tess
+from arm.material.shader import Shader, ShaderContext
 import arm.utils
 
 
@@ -33,7 +36,7 @@ def write_vertpos(vert):
         vert.write('gl_Position = WVP * spos;')
 
 
-def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=False, write_nor=True):
+def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor=True):
     is_bone = con_mesh.is_elem('bone')
     if is_bone:
         make_skin.skin_pos(vert)
@@ -45,3 +48,33 @@ def write_norpos(con_mesh: shader.ShaderContext, vert: shader.Shader, declare=Fa
             vert.write_attrib(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
     if con_mesh.is_elem('ipos'):
         make_inst.inst_pos(con_mesh, vert)
+
+
+def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: Optional[Shader]):
+    rpdat = arm.utils.get_rp()
+
+    if con_mesh.is_elem('tex'):
+        vert.add_out('vec2 texCoord')
+        vert.add_uniform('float texUnpack', link='_texUnpack')
+        if mat_state.material.arm_tilesheet_flag:
+            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
+                make_particle.write_tilesheet(vert)
+            else:
+                vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+                vert.write_attrib('texCoord = tex * texUnpack + tilesheetOffset;')
+        else:
+            vert.write_attrib('texCoord = tex * texUnpack;')
+
+        if tese is not None:
+            tese.write_pre = True
+            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
+            tese.write_pre = False
+
+    if con_mesh.is_elem('tex1'):
+        vert.add_out('vec2 texCoord1')
+        vert.add_uniform('float texUnpack', link='_texUnpack')
+        vert.write_attrib('texCoord1 = tex1 * texUnpack;')
+        if tese is not None:
+            tese.write_pre = True
+            make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
+            tese.write_pre = False
