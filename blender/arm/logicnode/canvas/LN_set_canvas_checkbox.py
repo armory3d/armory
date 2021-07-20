@@ -6,8 +6,7 @@ class CanvasSetCheckBoxNode(ArmLogicTreeNode):
     bl_label = 'Set Canvas Checkbox'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasSetCheckBoxNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Element')
         self.add_input('ArmBoolSocket', 'Check')

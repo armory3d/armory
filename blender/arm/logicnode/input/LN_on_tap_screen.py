@@ -18,8 +18,7 @@ class OnTapScreen(ArmLogicTreeNode):
     arm_section = 'Input'
     arm_version = 1
 
-    def init(self, context):
-        super(OnTapScreen, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Duration')
         self.inputs[-1].default_value = 0.3
         self.add_input('ArmFloatSocket', 'Interval')

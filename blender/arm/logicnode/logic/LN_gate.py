@@ -38,8 +38,7 @@ class GateNode(ArmLogicTreeNode):
         super(GateNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(GateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Input 1')
         self.add_input('ArmDynamicSocket', 'Input 2')

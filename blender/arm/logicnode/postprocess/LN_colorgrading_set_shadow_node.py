@@ -60,8 +60,7 @@ class ColorgradingSetShadowNode(ArmLogicTreeNode):
     def draw_nodes_colorwheel(self, context):
         pass
 
-    def init(self, context):
-        super(ColorgradingSetShadowNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)

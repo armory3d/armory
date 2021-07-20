@@ -7,8 +7,7 @@ class RandomIntegerNode(ArmLogicTreeNode):
     bl_label = 'Random Integer'
     arm_version = 1
 
-    def init(self, context):
-        super(RandomIntegerNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmIntSocket', 'Min')
         self.add_input('ArmIntSocket', 'Max', default_value=2)
         self.add_output('ArmIntSocket', 'Int')

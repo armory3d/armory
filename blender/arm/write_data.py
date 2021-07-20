@@ -174,6 +174,9 @@ project.addSources('Sources');
             import_traits.append('armory.trait.internal.Bridge')
             if live_patch:
                 assets.add_khafile_def('arm_patch')
+                # Include all logic node classes so that they can later
+                # get instantiated
+                khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):

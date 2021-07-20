@@ -6,8 +6,7 @@ class CanvasGetSliderNode(ArmLogicTreeNode):
     bl_label = 'Get Canvas Slider'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasGetSliderNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'Element')
 
         self.add_output('ArmFloatSocket', 'Float')

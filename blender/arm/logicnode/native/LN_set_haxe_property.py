@@ -9,8 +9,7 @@ class SetHaxePropertyNode(ArmLogicTreeNode):
     arm_section = 'haxe'
     arm_version = 1
 
-    def init(self, context):
-        super(SetHaxePropertyNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Dynamic')
         self.add_input('ArmStringSocket', 'Property')

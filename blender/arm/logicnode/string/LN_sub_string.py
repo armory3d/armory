@@ -6,8 +6,7 @@ class SubStringNode(ArmLogicTreeNode):
     bl_label = 'Sub String'
     arm_version = 1
 
-    def init(self, context):
-        super(SubStringNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'String In')
         self.add_input('ArmIntSocket', 'Start')
         self.add_input('ArmIntSocket', 'End')

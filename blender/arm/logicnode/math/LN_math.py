@@ -98,8 +98,7 @@ class MathNode(ArmLogicTreeNode):
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(MathNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Value 0', default_value=0.0)
         self.add_input('ArmFloatSocket', 'Value 1', default_value=0.0)
 

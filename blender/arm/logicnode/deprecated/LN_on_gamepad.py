@@ -42,8 +42,7 @@ class OnGamepadNode(ArmLogicTreeNode):
                  ('touchpad', 'touchpad', 'touchpad'),],
         name='', default='cross')
 
-    def init(self, context):
-        super(OnGamepadNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_input('ArmIntSocket', 'Gamepad')
 

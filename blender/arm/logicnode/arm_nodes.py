@@ -37,6 +37,14 @@ class ArmLogicTreeNode(bpy.types.Node):
         else:
             self.arm_version = 1
 
+        if not hasattr(self, 'arm_init'):
+            # Show warning for older node packages
+            arm.log.warn(f'Node {self.bl_idname} has no arm_init function and might not work correctly!')
+        else:
+            self.arm_init(context)
+
+        arm.live_patch.send_event('ln_create', self)
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'

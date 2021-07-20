@@ -29,8 +29,7 @@ class CompareNode(ArmLogicTreeNode):
         super(CompareNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(CompareNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmDynamicSocket', 'Value')
         self.add_input('ArmDynamicSocket', 'Value')
 

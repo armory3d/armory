@@ -6,6 +6,5 @@ class SelfTraitNode(ArmLogicTreeNode):
     bl_label = 'Self Trait'
     arm_version = 1
 
-    def init(self, context):
-        super(SelfTraitNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Trait')

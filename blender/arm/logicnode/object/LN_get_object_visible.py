@@ -10,8 +10,7 @@ class GetVisibleNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(GetVisibleNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
         self.add_output('ArmBoolSocket', 'Is Object Visible')

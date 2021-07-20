@@ -8,8 +8,7 @@ class ArrayShiftNode(ArmLogicTreeNode):
     bl_label = 'Array Shift'
     arm_version = 1
 
-    def init(self, context):
-        super(ArrayShiftNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmDynamicSocket', 'Value')

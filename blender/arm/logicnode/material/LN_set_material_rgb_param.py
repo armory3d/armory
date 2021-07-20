@@ -7,8 +7,7 @@ class SetMaterialRgbParamNode(ArmLogicTreeNode):
     arm_section = 'params'
     arm_version = 1
 
-    def init(self, context):
-        super(SetMaterialRgbParamNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Material')
         self.add_input('ArmStringSocket', 'Node')

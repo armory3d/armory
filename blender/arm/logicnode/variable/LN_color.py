@@ -6,8 +6,7 @@ class ColorNode(ArmLogicTreeNode):
     bl_label = 'Color'
     arm_version = 1
 
-    def init(self, context):
-        super(ColorNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmColorSocket', 'Color In', default_value=[1.0, 1.0, 1.0, 1.0])
 
         self.add_output('ArmColorSocket', 'Color Out', is_var=True)

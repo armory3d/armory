@@ -21,8 +21,7 @@ class MouseNode(ArmLogicTreeNode):
                  ('right', 'Right', 'Right mouse button')],
         name='', default='left')
 
-    def init(self, context):
-        super(MouseNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmBoolSocket', 'State')
 

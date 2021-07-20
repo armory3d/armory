@@ -11,8 +11,7 @@ class SpawnObjectByNameNode(ArmLogicTreeNode):
         type=bpy.types.Scene, name='Scene',
         description='The scene from which to take the object')
 
-    def init(self, context):
-        super(SpawnObjectByNameNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Name')
         self.add_input('ArmDynamicSocket', 'Transform')

@@ -6,8 +6,7 @@ class CanvasSetPBNode(ArmLogicTreeNode):
     bl_label = 'Set Canvas Progress Bar'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasSetPBNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Element')
         self.add_input('ArmIntSocket', 'At')

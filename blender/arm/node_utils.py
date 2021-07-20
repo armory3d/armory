@@ -151,7 +151,7 @@ def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:
     return str(socket_val)
 
 
-def haxe_format_prop(node: bpy.types.Node, prop_name: str) -> str:
+def haxe_format_prop_value(node: bpy.types.Node, prop_name: str) -> str:
     """Formats a property value to be valid Haxe syntax."""
     prop_value = getattr(node, prop_name)
     if isinstance(prop_value, str):

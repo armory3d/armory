@@ -161,8 +161,7 @@ class MathExpressionNode(ArmLogicTreeNode):
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(MathExpressionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', self.get_variable_name(0), default_value=0.0)
         self.add_input('ArmFloatSocket', self.get_variable_name(1), default_value=0.0)
         self.add_output('ArmFloatSocket', 'Result')

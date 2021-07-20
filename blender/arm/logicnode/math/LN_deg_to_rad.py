@@ -7,8 +7,7 @@ class DegToRadNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'angle'
 
-    def init(self, context):
-        super(DegToRadNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Degrees')
 
         self.add_output('ArmFloatSocket', 'Radians')

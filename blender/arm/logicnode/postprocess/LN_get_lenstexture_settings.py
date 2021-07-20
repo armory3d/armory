@@ -6,8 +6,7 @@ class LenstextureGetNode(ArmLogicTreeNode):
     bl_label = 'Get Lenstexture Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(LenstextureGetNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'Center Min Clip')
         self.add_output('ArmFloatSocket', 'Center Max Clip')
         self.add_output('ArmFloatSocket', 'Luminance Min')

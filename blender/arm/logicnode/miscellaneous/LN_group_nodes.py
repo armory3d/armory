@@ -7,6 +7,5 @@ class GroupOutputNode(ArmLogicTreeNode):
     arm_section = 'group'
     arm_version = 1
 
-    def init(self, context):
-        super(GroupOutputNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

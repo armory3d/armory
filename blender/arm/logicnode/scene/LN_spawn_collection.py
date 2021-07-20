@@ -30,8 +30,7 @@ class SpawnCollectionNode(ArmLogicTreeNode):
 
     property0: HaxePointerProperty('property0', name='Collection', type=bpy.types.Collection)
 
-    def init(self, context):
-        super(SpawnCollectionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Transform')
 

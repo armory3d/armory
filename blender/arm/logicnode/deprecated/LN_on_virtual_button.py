@@ -19,8 +19,7 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
         name='', default='Started')
     property1: HaxeStringProperty('property1', name='', default='button')
 
-    def init(self, context):
-        super(OnVirtualButtonNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

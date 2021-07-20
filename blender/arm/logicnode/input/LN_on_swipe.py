@@ -59,8 +59,7 @@ class OnSwipeNode(ArmLogicTreeNode):
         super(OnSwipeNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(OnSwipeNode, self).init(context)
+    def arm_init(self, context):
         self.inputs.new('ArmFloatSocket', 'Time')
         self.inputs[-1].default_value = 0.15
         self.inputs.new('ArmIntSocket', 'Min Length (px)')

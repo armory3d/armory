@@ -30,8 +30,7 @@ class MixNode(ArmLogicTreeNode):
 
     property2: HaxeBoolProperty('property2', name='Clamp', default=False)
 
-    def init(self, context):
-        super(MixNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Factor', default_value=0.0)
         self.add_input('ArmFloatSocket', 'Value 1', default_value=0.0)
         self.add_input('ArmFloatSocket', 'Value 2', default_value=1.0)

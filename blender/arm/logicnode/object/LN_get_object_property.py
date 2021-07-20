@@ -9,8 +9,7 @@ class GetPropertyNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'props'
 
-    def init(self, context):
-        super(GetPropertyNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmStringSocket', 'Property')
 

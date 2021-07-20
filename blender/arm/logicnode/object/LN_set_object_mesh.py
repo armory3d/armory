@@ -7,8 +7,7 @@ class SetMeshNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(SetMeshNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmDynamicSocket', 'Mesh')

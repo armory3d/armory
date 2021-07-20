@@ -13,8 +13,7 @@ class ContainsStringNode(ArmLogicTreeNode):
                  ],
         name='', default='Contains')
 
-    def init(self, context):
-        super(ContainsStringNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'String')
         self.add_input('ArmStringSocket', 'Find')
 

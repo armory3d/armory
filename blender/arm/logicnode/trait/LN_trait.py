@@ -10,8 +10,7 @@ class TraitNode(ArmLogicTreeNode):
 
     property0: HaxeStringProperty('property0', name='', default='')
 
-    def init(self, context):
-        super(TraitNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Trait', is_var=True)
 
     def draw_buttons(self, context, layout):

@@ -7,8 +7,7 @@ class ParseFloatNode(ArmLogicTreeNode):
     arm_section = 'parse'
     arm_version = 1
 
-    def init(self, context):
-        super(ParseFloatNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'Float')
 
         self.add_input('ArmStringSocket', 'String')

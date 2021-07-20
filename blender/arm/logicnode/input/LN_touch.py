@@ -15,8 +15,7 @@ class SurfaceNode(ArmLogicTreeNode):
                  ('moved', 'Moved', 'Moved')],
         name='', default='down')
 
-    def init(self, context):
-        super(SurfaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmBoolSocket', 'State')
 

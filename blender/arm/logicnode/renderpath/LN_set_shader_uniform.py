@@ -33,8 +33,7 @@ class SetShaderUniformNode(ArmLogicTreeNode):
         description="The type of the uniform",
         update=on_update_uniform_type)
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Uniform Name')
         self.add_input('ArmFloatSocket', 'Float')

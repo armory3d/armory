@@ -9,8 +9,7 @@ class OnTimerNode(ArmLogicTreeNode):
     bl_label = 'On Timer'
     arm_version = 1
 
-    def init(self, context):
-        super(OnTimerNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Duration')
         self.add_input('ArmBoolSocket', 'Repeat')
 

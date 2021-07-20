@@ -7,8 +7,7 @@ class BoneIKNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'armature'
 
-    def init(self, context):
-        super(BoneIKNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmStringSocket', 'Bone')

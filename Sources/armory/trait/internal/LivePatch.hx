@@ -6,6 +6,7 @@ import armory.logicnode.LogicTree;
 
 #if arm_patch @:expose("LivePatch") #end
 @:access(armory.logicnode.LogicNode)
+@:access(armory.logicnode.LogicNodeInput)
 class LivePatch extends iron.Trait {
 
 #if !arm_patch
@@ -105,6 +106,31 @@ class LivePatch extends iron.Trait {
 		tree.nodes.remove(nodeName);
 	}
 
+	public static function patchNodeCreate(treeName: String, nodeName: String, nodeType: String, propDatas: Array<Array<Dynamic>>, inputDatas: Array<Array<Dynamic>>, outputDatas: Array<Array<Dynamic>>) {
+		var tree = LogicTree.nodeTrees[treeName];
+		if (tree == null) return;
+
+		// No further constructor parameters required here, all variable nodes
+		// use optional further parameters and all values are set later in this
+		// function.
+		var newNode: LogicNode = Type.createInstance(Type.resolveClass(nodeType), [tree]);
+		newNode.name = nodeName;
+		tree.nodes[nodeName] = newNode;
+
+		for (propData in propDatas) {
+			Reflect.setField(newNode, propData[0], propData[1]);
+		}
+
+		var i = 0;
+		for (inputData in inputDatas) {
+			newNode.addInput(createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), i++);
+		}
+
+		for (outputData in outputDatas) {
+			newNode.addOutputs([createSocketDefaultNode(newNode.tree, outputData[0], outputData[1])]);
+		}
+	}
+
 	public static function patchNodeCopy(treeName: String, nodeName: String, newNodeName: String, copyProps: Array<String>, inputDatas: Array<Array<Dynamic>>, outputDatas: Array<Array<Dynamic>>) {
 		var tree = LogicTree.nodeTrees[treeName];
 		if (tree == null) return;
@@ -115,7 +141,7 @@ class LivePatch extends iron.Trait {
 		// No further constructor parameters required here, all variable nodes
 		// use optional further parameters and all values are set later in this
 		// function.
-		var newNode = Type.createInstance(Type.getClass(node), [tree]);
+		var newNode: LogicNode = Type.createInstance(Type.getClass(node), [tree]);
 		newNode.name = newNodeName;
 		tree.nodes[newNodeName] = newNode;
 

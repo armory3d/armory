@@ -15,8 +15,7 @@ class RpConfigNode(ArmLogicTreeNode):
                  ],
         name='', default='SSGI')
 
-    def init(self, context):
-        super(RpConfigNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmBoolSocket', 'Enable')
 

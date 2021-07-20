@@ -25,8 +25,7 @@ class OnMouseNode(ArmLogicTreeNode):
                  ('middle', 'middle', 'middle')],
         name='', default='left')
 
-    def init(self, context):
-        super(OnMouseNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

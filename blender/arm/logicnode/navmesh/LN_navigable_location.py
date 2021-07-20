@@ -6,6 +6,5 @@ class NavigableLocationNode(ArmLogicTreeNode):
     bl_label = 'Navigable Location'
     arm_version = 1
 
-    def init(self, context):
-        super(NavigableLocationNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Location')

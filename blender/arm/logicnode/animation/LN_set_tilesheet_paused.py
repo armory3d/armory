@@ -7,8 +7,7 @@ class SetTilesheetPausedNode(ArmLogicTreeNode):
     arm_section = 'tilesheet'
     arm_version = 1
 
-    def init(self, context):
-        super(SetTilesheetPausedNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmBoolSocket', 'Paused')

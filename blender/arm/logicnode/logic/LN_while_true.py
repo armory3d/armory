@@ -15,8 +15,7 @@ class WhileNode(ArmLogicTreeNode):
     arm_section = 'flow'
     arm_version = 1
 
-    def init(self, context):
-        super(WhileNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmBoolSocket', 'Condition')
 

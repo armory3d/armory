@@ -11,8 +11,7 @@ class MouseCoordsNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 2
 
-    def init(self, context):
-        super(MouseCoordsNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmVectorSocket', 'Coords')
         self.add_output('ArmVectorSocket', 'Movement')
         self.add_output('ArmIntSocket', 'Wheel')

@@ -8,8 +8,7 @@ class ArrayPopNode(ArmLogicTreeNode):
     bl_label = 'Array Pop'
     arm_version = 1
 
-    def init(self, context):
-        super(ArrayPopNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmDynamicSocket', 'Value')

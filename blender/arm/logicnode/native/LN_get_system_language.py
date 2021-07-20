@@ -7,6 +7,5 @@ class GetSystemLanguage(ArmLogicTreeNode):
     arm_section = 'Native'
     arm_version = 1
 
-    def init(self, context):
-        super(GetSystemLanguage, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmStringSocket', 'Language')

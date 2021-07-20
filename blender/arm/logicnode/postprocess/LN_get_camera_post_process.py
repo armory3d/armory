@@ -6,8 +6,7 @@ class CameraGetNode(ArmLogicTreeNode):
     bl_label = 'Get Camera Post Process'
     arm_version = 1
 
-    def init(self, context):
-        super(CameraGetNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'F-Stop')
         self.add_output('ArmFloatSocket', 'Shutter Time')
         self.add_output('ArmFloatSocket', 'ISO')

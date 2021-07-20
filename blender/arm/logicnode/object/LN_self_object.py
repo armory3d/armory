@@ -6,6 +6,5 @@ class SelfObjectNode(ArmLogicTreeNode):
     bl_label = 'Self Object'
     arm_version = 1
 
-    def init(self, context):
-        super(SelfObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')

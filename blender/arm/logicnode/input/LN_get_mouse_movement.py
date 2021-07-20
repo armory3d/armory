@@ -9,8 +9,7 @@ class GetMouseMovementNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    def init(self, context):
-        super(GetMouseMovementNode, self).init(context)
+    def arm_init(self, context):
 
         self.add_input('ArmFloatSocket', 'X Multiplier', default_value=-1.0)
         self.add_input('ArmFloatSocket', 'Y Multiplier', default_value=-1.0)

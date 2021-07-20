@@ -6,8 +6,7 @@ class MaskNode(ArmLogicTreeNode):
     bl_label = 'Mask'
     arm_version = 1
 
-    def init(self, context):
-        super(MaskNode, self).init(context)
+    def arm_init(self, context):
         for i in range(1, 21):
             label = 'Group {:02d}'.format(i)
             self.inputs.new('ArmBoolSocket', label)

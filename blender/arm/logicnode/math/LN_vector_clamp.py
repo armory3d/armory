@@ -7,8 +7,7 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
     arm_section = 'vector'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorClampToSizeNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Vector In', default_value=[0.0, 0.0, 0.0])
         self.add_input('ArmFloatSocket', 'Min')
         self.add_input('ArmFloatSocket', 'Max')

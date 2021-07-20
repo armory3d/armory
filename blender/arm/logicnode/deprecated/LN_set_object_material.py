@@ -10,8 +10,7 @@ class SetMaterialNode(ArmLogicTreeNode):
     arm_category = 'Material'
     arm_version = 2
 
-    def init(self, context):
-        super(SetMaterialNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmDynamicSocket', 'Material')

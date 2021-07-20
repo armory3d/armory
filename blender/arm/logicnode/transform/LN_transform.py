@@ -6,8 +6,7 @@ class TransformNode(ArmLogicTreeNode):
     bl_label = 'Transform'
     arm_version = 1
 
-    def init(self, context):
-        super(TransformNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Location')
         self.add_input('ArmVectorSocket', 'Rotation')
         self.add_input('ArmVectorSocket', 'Scale', default_value=[1.0, 1.0, 1.0])

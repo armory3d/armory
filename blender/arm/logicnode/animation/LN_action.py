@@ -6,8 +6,7 @@ class AnimActionNode(ArmLogicTreeNode):
     bl_label = 'Action'
     arm_version = 1
 
-    def init(self, context):
-        super(AnimActionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAnimAction', 'Action')
 
         self.add_output('ArmNodeSocketAnimAction', 'Action', is_var=True)

@@ -11,8 +11,7 @@ class ColorArrayNode(ArmLogicTreeNode):
         super(ColorArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(ColorArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('ArmIntSocket', 'Length')
 

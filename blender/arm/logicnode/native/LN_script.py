@@ -17,8 +17,7 @@ class ScriptNode(ArmLogicTreeNode):
 
     property0_: HaxeStringProperty('property0', name='Text', default='')
 
-    def init(self, context):
-        super(ScriptNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
 

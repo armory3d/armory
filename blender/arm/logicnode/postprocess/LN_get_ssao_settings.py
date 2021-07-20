@@ -6,8 +6,7 @@ class SSAOGetNode(ArmLogicTreeNode):
     bl_label = 'Get SSAO Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(SSAOGetNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'Radius')
         self.add_output('ArmFloatSocket', 'Strength')
         self.add_output('ArmFloatSocket', 'Max Steps')

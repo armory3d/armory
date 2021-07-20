@@ -74,8 +74,7 @@ class OnKeyboardNode(ArmLogicTreeNode):
                  ('down', 'down', 'down'),],
         name='', default='space')
 
-    def init(self, context):
-        super(OnKeyboardNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

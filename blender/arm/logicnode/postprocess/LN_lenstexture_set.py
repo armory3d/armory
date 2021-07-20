@@ -6,8 +6,7 @@ class LenstextureSetNode(ArmLogicTreeNode):
     bl_label = 'Set Lenstexture'
     arm_version = 1
 
-    def init(self, context):
-        super(LenstextureSetNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmFloatSocket', 'Center Min Clip', default_value=0.1)
         self.add_input('ArmFloatSocket', 'Center Max Clip', default_value=0.5)

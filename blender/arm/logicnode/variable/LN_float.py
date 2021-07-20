@@ -9,7 +9,6 @@ class FloatNode(ArmLogicTreeNode):
     bl_label = 'Float'
     arm_version = 1
 
-    def init(self, context):
-        super(FloatNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Float In')
         self.add_output('ArmFloatSocket', 'Float Out', is_var=True)

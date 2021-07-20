@@ -6,8 +6,7 @@ class TimerNode(ArmLogicTreeNode):
     bl_label = 'Timer'
     arm_version = 1
 
-    def init(self, context):
-        super(TimerNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Start')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')

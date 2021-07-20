@@ -159,7 +159,7 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
 
     # Properties
     for prop_name in arm.node_utils.get_haxe_property_names(node):
-        prop = arm.node_utils.haxe_format_prop(node, prop_name)
+        prop = arm.node_utils.haxe_format_prop_value(node, prop_name)
         f.write('\t\t' + name + '.' + prop_name + ' = ' + prop + ';\n')
 
     # Create inputs
@@ -262,7 +262,6 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp: bpy.types.NodeSocket):
     """Creates a new node to give a not connected input socket a value"""
-
     is_custom_socket = isinstance(inp, arm.logicnode.arm_sockets.ArmCustomSocket)
 
     if is_custom_socket:

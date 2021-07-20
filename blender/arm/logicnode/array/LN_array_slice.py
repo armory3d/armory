@@ -8,8 +8,7 @@ class ArraySliceNode(ArmLogicTreeNode):
     bl_label = 'Array Slice'
     arm_version = 1
 
-    def init(self, context):
-        super(ArraySliceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('ArmIntSocket', 'Index')
         self.add_input('ArmIntSocket', 'End')

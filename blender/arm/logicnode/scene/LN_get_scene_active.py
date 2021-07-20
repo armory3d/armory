@@ -6,6 +6,5 @@ class ActiveSceneNode(ArmLogicTreeNode):
     bl_label = 'Get Scene Active'
     arm_version = 1
 
-    def init(self, context):
-        super(ActiveSceneNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Scene')

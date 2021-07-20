@@ -7,8 +7,7 @@ class GetObjectOffscreenNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(GetObjectOffscreenNode, self).init(context)
+    def arm_init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
 
         self.outputs.new('ArmBoolSocket', 'Is Object Offscreen')

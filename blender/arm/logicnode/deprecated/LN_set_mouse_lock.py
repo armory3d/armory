@@ -11,8 +11,7 @@ class SetMouseLockNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 2
 
-    def init(self, context):
-        super(SetMouseLockNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmBoolSocket', 'Lock')
         self.add_output('ArmNodeSocketAction', 'Out')

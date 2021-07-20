@@ -14,8 +14,7 @@ class RpSuperSampleNode(ArmLogicTreeNode):
                  ],
         name='', default='1')
 
-    def init(self, context):
-        super(RpSuperSampleNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')

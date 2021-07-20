@@ -15,8 +15,7 @@ class FunctionNode(ArmLogicTreeNode):
         super(FunctionNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(FunctionNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     function_name: StringProperty(name="Name")

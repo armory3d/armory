@@ -9,8 +9,7 @@ class GetDistanceNode(ArmLogicTreeNode):
     bl_label = 'Get Distance'
     arm_version = 1
 
-    def init(self, context):
-        super(GetDistanceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketObject', 'Object')
 

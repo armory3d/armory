@@ -17,8 +17,7 @@ class OnUpdateNode(ArmLogicTreeNode):
                  ('Physics Pre-Update', 'Physics Pre-Update', 'Physics Pre-Update')],
         name='On', default='Update')
 
-    def init(self, context):
-        super(OnUpdateNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

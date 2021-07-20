@@ -13,8 +13,7 @@ class RpShadowQualityNode(ArmLogicTreeNode):
                  ],
         name='', default='Medium')
 
-    def init(self, context):
-        super(RpShadowQualityNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')

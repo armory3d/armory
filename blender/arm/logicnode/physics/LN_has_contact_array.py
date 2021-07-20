@@ -7,8 +7,7 @@ class HasContactArrayNode(ArmLogicTreeNode):
     arm_section = 'contact'
     arm_version = 1
 
-    def init(self, context):
-        super(HasContactArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmNodeSocketArray', 'RBs')
 

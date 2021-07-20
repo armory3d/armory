@@ -20,8 +20,7 @@ class MaterialNode(ArmLogicTreeNode):
 
     property0: HaxePointerProperty('property0', name='', type=bpy.types.Material)
 
-    def init(self, context):
-        super(MaterialNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Material', is_var=True)
 
     def draw_buttons(self, context, layout):

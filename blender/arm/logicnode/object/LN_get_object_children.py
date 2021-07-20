@@ -7,8 +7,7 @@ class GetChildrenNode(ArmLogicTreeNode):
     arm_section = 'relations'
     arm_version = 1
 
-    def init(self, context):
-        super(GetChildrenNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Parent')
 
         self.add_output('ArmNodeSocketArray', 'Children')

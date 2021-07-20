@@ -11,8 +11,7 @@ class BooleanArrayNode(ArmLogicTreeNode):
         super(BooleanArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(BooleanArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('ArmIntSocket', 'Length')
 

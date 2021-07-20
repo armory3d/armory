@@ -9,8 +9,7 @@ class WriteStorageNode(ArmLogicTreeNode):
     arm_section = 'file'
     arm_version = 1
 
-    def init(self, context):
-        super(WriteStorageNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Key')
         self.add_input('ArmDynamicSocket', 'Value')

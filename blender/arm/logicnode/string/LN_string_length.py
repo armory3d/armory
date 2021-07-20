@@ -6,8 +6,7 @@ class LengthStringNode(ArmLogicTreeNode):
     bl_label = 'String Length'
     arm_version = 1
 
-    def init(self, context):
-        super(LengthStringNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmIntSocket', 'Length')
 
         self.add_input('ArmStringSocket', 'String')

@@ -22,8 +22,7 @@ class SetCursorStateNode(ArmLogicTreeNode):
                  ],
         name='', default='hide locked')
 
-    def init(self, context):
-        super(SetCursorStateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmBoolSocket', 'State')
 

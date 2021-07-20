@@ -12,8 +12,7 @@ class ScreenToWorldSpaceNode(ArmLogicTreeNode):
 
     property0: HaxeBoolProperty('property0', name='Separator Out', default=False)
 
-    def init(self, context):
-        super(ScreenToWorldSpaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmIntSocket', 'Screen X')
         self.add_input('ArmIntSocket', 'Screen Y')
 

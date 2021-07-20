@@ -11,8 +11,7 @@ class ExpressionNode(ArmLogicTreeNode):
 
     property0: HaxeStringProperty('property0', name='', default='')
 
-    def init(self, context):
-        super(ExpressionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')

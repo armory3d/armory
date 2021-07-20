@@ -11,8 +11,7 @@ class VectorArrayNode(ArmLogicTreeNode):
         super(VectorArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(VectorArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('ArmIntSocket', 'Length')
 

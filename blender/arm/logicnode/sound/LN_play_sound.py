@@ -60,8 +60,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         default=False
     )
 
-    def init(self, context):
-        super(PlaySoundNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')

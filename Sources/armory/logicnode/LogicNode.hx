@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+#if arm_patch @:keep @:keepSub #end
 class LogicNode {
 
 	var tree: LogicTree;

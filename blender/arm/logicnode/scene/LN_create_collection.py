@@ -7,8 +7,7 @@ class CreateCollectionNode(ArmLogicTreeNode):
     arm_section = 'collection'
     arm_version = 1
 
-    def init(self, context):
-        super(CreateCollectionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Collection')
 

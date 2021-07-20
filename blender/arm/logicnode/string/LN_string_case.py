@@ -12,8 +12,7 @@ class CaseStringNode(ArmLogicTreeNode):
                  ],
         name='', default='Upper Case')
 
-    def init(self, context):
-        super(CaseStringNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'String In')
 
         self.add_output('ArmStringSocket', 'String Out')

@@ -6,8 +6,7 @@ class CanvasGetPositionNode(ArmLogicTreeNode):
     bl_label = 'Get Canvas Position'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasGetPositionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'Element')
 
         self.add_output('ArmIntSocket', 'Position')

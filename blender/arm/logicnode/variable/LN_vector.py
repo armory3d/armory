@@ -6,8 +6,7 @@ class VectorNode(ArmLogicTreeNode):
     bl_label = 'Vector'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'X')
         self.add_input('ArmFloatSocket', 'Y')
         self.add_input('ArmFloatSocket', 'Z')

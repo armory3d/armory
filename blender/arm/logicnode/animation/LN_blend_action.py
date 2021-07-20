@@ -6,8 +6,7 @@ class BlendActionNode(ArmLogicTreeNode):
     bl_label = 'Blend Action'
     arm_version = 1
 
-    def init(self, context):
-        super(BlendActionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketAnimAction', 'Action 1')

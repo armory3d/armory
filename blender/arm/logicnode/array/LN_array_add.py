@@ -15,8 +15,7 @@ class ArrayAddNode(ArmLogicTreeNode):
         super(ArrayAddNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(ArrayAddNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('ArmBoolSocket', 'Modify Original', default_value=True)

@@ -7,8 +7,7 @@ class QuaternionNode(ArmLogicTreeNode):
     arm_section = 'quaternions'
     arm_version = 1
 
-    def init(self, context):
-        super(QuaternionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'X')
         self.add_input('ArmFloatSocket', 'Y')
         self.add_input('ArmFloatSocket', 'Z')

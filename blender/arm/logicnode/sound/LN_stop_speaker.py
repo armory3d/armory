@@ -11,8 +11,7 @@ class StopSpeakerNode(ArmLogicTreeNode):
     bl_label = 'Stop Speaker'
     arm_version = 1
 
-    def init(self, context):
-        super(StopSpeakerNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Speaker')
 

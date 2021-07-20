@@ -11,8 +11,7 @@ class MeshNode(ArmLogicTreeNode):
 
     property0_get: HaxePointerProperty('property0_get', name='', type=bpy.types.Mesh)
 
-    def init(self, context):
-        super(MeshNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Mesh', is_var=True)
 
     def draw_buttons(self, context, layout):

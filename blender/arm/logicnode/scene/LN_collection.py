@@ -14,8 +14,7 @@ class GroupNode(ArmLogicTreeNode):
 
     property0: HaxePointerProperty('property0', name='', type=bpy.types.Collection)
 
-    def init(self, context):
-        super(GroupNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array')
 
     def draw_buttons(self, context, layout):

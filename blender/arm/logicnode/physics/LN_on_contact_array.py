@@ -14,8 +14,7 @@ class OnContactArrayNode(ArmLogicTreeNode):
                  ('end', 'End', 'The contact between the rigid bodies ends')],
         name='', default='begin')
 
-    def init(self, context):
-        super(OnContactArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmNodeSocketArray', 'RBs')
 

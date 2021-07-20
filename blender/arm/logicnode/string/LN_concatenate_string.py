@@ -10,8 +10,7 @@ class ConcatenateStringNode(ArmLogicTreeNode):
         super(ConcatenateStringNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(ConcatenateStringNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'Input 0')
 
         self.add_output('ArmStringSocket', 'String')

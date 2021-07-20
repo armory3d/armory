@@ -6,8 +6,7 @@ class SSRGetNode(ArmLogicTreeNode):
     bl_label = 'Get SSR Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(SSRGetNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'SSR Step')
         self.add_output('ArmFloatSocket', 'SSR Step Min')
         self.add_output('ArmFloatSocket', 'SSR Search')

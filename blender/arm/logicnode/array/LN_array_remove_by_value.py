@@ -11,8 +11,7 @@ class ArrayRemoveValueNode(ArmLogicTreeNode):
     # def __init__(self):
         # array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(ArrayRemoveValueNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
         self.add_input('ArmDynamicSocket', 'Value')

@@ -19,8 +19,7 @@ class OnSurfaceNode(ArmLogicTreeNode):
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Touched')
 
-    def init(self, context):
-        super(OnSurfaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

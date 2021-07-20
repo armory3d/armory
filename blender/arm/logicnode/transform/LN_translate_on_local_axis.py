@@ -8,8 +8,7 @@ class TranslateOnLocalAxisNode(ArmLogicTreeNode):
     arm_section = 'location'
     arm_version = 1
 
-    def init(self, context):
-        super(TranslateOnLocalAxisNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmFloatSocket', 'Speed')

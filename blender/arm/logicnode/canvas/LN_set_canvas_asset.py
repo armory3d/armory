@@ -6,8 +6,7 @@ class CanvasSetAssetNode(ArmLogicTreeNode):
     bl_label = 'Set Canvas Asset'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasSetAssetNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Element')
         self.add_input('ArmStringSocket', 'Asset')

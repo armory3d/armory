@@ -13,8 +13,7 @@ class CallFunctionNode(ArmLogicTreeNode):
         super(CallFunctionNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(CallFunctionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Trait/Any')
         self.add_input('ArmStringSocket', 'Function')

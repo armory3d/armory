@@ -7,8 +7,7 @@ class SleepNode(ArmLogicTreeNode):
     bl_label = 'Sleep'
     arm_version = 1
 
-    def init(self, context):
-        super(SleepNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmFloatSocket', 'Time')
 

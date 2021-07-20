@@ -123,8 +123,7 @@ class VectorMathNode(ArmLogicTreeNode):
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(VectorMathNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Value 0', default_value=[0.0, 0.0, 0.0])
         self.add_input('ArmVectorSocket', 'Value 1', default_value=[0.0, 0.0, 0.0])
 

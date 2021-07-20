@@ -11,8 +11,7 @@ class ScaleObjectNode(ArmLogicTreeNode):
     arm_section = 'scale'
     arm_version = 2
 
-    def init(self, context):
-        super(ScaleObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmVectorSocket', 'Scale')

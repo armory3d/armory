@@ -70,8 +70,7 @@ class KeyboardNode(ArmLogicTreeNode):
                  ('down', 'down', 'down'),],
         name='', default='space')
 
-    def init(self, context):
-        super(KeyboardNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmBoolSocket', 'State')
 

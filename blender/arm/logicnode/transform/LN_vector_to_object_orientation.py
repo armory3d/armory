@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorToObjectOrientationNode(ArmLogicTreeNode):
-    """Converts the given world vector to a vector oriented by the given object. 
+    """Converts the given world vector to a vector oriented by the given object.
     The object scale is taken in count.
 
     @seeNode World Vector To Object Space
@@ -13,8 +13,7 @@ class VectorToObjectOrientationNode(ArmLogicTreeNode):
     arm_section = 'location'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorToObjectOrientationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmVectorSocket', 'World')
 

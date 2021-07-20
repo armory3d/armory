@@ -11,8 +11,7 @@ class SceneNode(ArmLogicTreeNode):
 
     property0_get: HaxePointerProperty('property0_get', name='', type=bpy.types.Scene)
 
-    def init(self, context):
-        super(SceneNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Scene')
 
     def draw_buttons(self, context, layout):

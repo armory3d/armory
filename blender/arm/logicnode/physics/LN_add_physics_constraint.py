@@ -137,8 +137,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(AddPhysicsConstraintNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Pivot Object')
         self.add_input('ArmNodeSocketObject', 'RB 1')

@@ -24,8 +24,7 @@ class OnCanvasElementNode(ArmLogicTreeNode):
                ('right', 'Right', 'Right mouse button')],
         name='Mouse Button', default='left')
 
-    def init(self, context):
-        super(OnCanvasElementNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmStringSocket', 'Element')
 
         self.add_output('ArmNodeSocketAction', 'Out')

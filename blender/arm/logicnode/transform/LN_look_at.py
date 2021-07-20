@@ -17,8 +17,7 @@ class LookAtNode(ArmLogicTreeNode):
                  ('-Z', '-Z', '-Z')],
         name='With', default='Z')
 
-    def init(self, context):
-        super(LookAtNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'From Location')
         self.add_input('ArmVectorSocket', 'To Location')
 

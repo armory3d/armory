@@ -6,6 +6,5 @@ class DynamicNode(ArmLogicTreeNode):
     bl_label = 'Dynamic'
     arm_version = 1
 
-    def init(self, context):
-        super(DynamicNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Dynamic', is_var=True)

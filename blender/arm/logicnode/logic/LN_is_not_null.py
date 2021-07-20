@@ -9,8 +9,7 @@ class IsNotNoneNode(ArmLogicTreeNode):
     bl_label = 'Is Not Null'
     arm_version = 1
 
-    def init(self, context):
-        super(IsNotNoneNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Value')
 

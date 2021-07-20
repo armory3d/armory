@@ -7,8 +7,7 @@ class WorldToScreenSpaceNode(ArmLogicTreeNode):
     arm_section = 'matrix'
     arm_version = 1
 
-    def init(self, context):
-        super(WorldToScreenSpaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'World')
 
         self.add_output('ArmVectorSocket', 'Screen')

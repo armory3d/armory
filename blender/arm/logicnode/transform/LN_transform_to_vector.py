@@ -6,8 +6,7 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     bl_label = 'Transform to Vector'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorFromTransformNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmDynamicSocket', 'Transform')
 
         self.add_output('ArmVectorSocket', 'Vector')

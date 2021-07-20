@@ -8,8 +8,7 @@ class GetSystemName(ArmLogicTreeNode):
     arm_section = 'Native'
     arm_version = 1
 
-    def init(self, context):
-        super(GetSystemName, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmStringSocket', 'System Name')
         self.add_output('ArmBoolSocket', 'Windows')
         self.add_output('ArmBoolSocket', 'Linux')

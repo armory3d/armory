@@ -186,7 +186,7 @@ def send_event(event_id: str, opt_data: Any = None):
         tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
         node_name = arm.node_utils.get_export_node_name(node)[1:]
 
-        value = arm.node_utils.haxe_format_prop(node, prop_name)
+        value = arm.node_utils.haxe_format_prop_value(node, prop_name)
 
         js = f'LivePatch.patchUpdateNodeProp("{tree_name}", "{node_name}", "{prop_name}", {value});'
         write_patch(js)
@@ -214,6 +214,25 @@ def send_event(event_id: str, opt_data: Any = None):
 
             js = f'LivePatch.patchUpdateNodeInputVal("{tree_name}", "{node_name}", {socket_index}, {value});'
             write_patch(js)
+
+    elif event_id == 'ln_create':
+        node: ArmLogicTreeNode = opt_data
+
+        tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
+        node_name = arm.node_utils.get_export_node_name(node)[1:]
+        node_type = 'armory.logicnode.' + node.bl_idname[2:]
+
+        prop_names = (p for p in arm.node_utils.get_haxe_property_names(node))
+        prop_values = (getattr(node, prop_name) for prop_name in prop_names)
+        prop_datas = arm.node_utils.haxe_format_socket_val(list(zip(prop_names, prop_values)))
+
+        inp_data = [(inp.arm_socket_type, inp.get_default_value()) for inp in node.inputs]
+        inp_data = arm.node_utils.haxe_format_socket_val(inp_data)
+        out_data = [(out.arm_socket_type, out.get_default_value()) for out in node.outputs]
+        out_data = arm.node_utils.haxe_format_socket_val(out_data)
+
+        js = f'LivePatch.patchNodeCreate("{tree_name}", "{node_name}", "{node_type}", {prop_datas}, {inp_data}, {out_data});'
+        write_patch(js)
 
     elif event_id == 'ln_delete':
         node: ArmLogicTreeNode = opt_data

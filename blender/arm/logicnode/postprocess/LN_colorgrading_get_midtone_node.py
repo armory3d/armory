@@ -7,8 +7,7 @@ class ColorgradingGetMidtoneNode(ArmLogicTreeNode):
     arm_section = 'colorgrading'
     arm_version = 1
 
-    def init(self, context):
-        super(ColorgradingGetMidtoneNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmVectorSocket', 'Saturation')
         self.add_output('ArmVectorSocket', 'Contrast')
         self.add_output('ArmVectorSocket', 'Gamma')

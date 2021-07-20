@@ -9,8 +9,7 @@ class ReadJsonNode(ArmLogicTreeNode):
     arm_section = 'file'
     arm_version = 1
 
-    def init(self, context):
-        super(ReadJsonNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'File')
         self.add_input('ArmBoolSocket', 'Use cache', default_value=1)

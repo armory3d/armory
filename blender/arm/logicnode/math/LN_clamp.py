@@ -9,8 +9,7 @@ class ClampNode(ArmLogicTreeNode):
     bl_label = 'Clamp'
     arm_version = 1
 
-    def init(self, context):
-        super(ClampNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Value')
         self.add_input('ArmFloatSocket', 'Min')
         self.add_input('ArmFloatSocket', 'Max')

@@ -6,8 +6,7 @@ class VectorFromBooleanNode(ArmLogicTreeNode):
     bl_label = 'Boolean to Vector'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorFromBooleanNode, self).init(context)
+    def arm_init(self, context):
         self.inputs.new('ArmBoolSocket', 'X')
         self.inputs.new('ArmBoolSocket', '-X')
         self.inputs.new('ArmBoolSocket', 'Y')

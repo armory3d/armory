@@ -7,8 +7,7 @@ class SeparateVectorNode(ArmLogicTreeNode):
     arm_section = 'vector'
     arm_version = 1
 
-    def init(self, context):
-        super(SeparateVectorNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Vector')
 
         self.add_output('ArmFloatSocket', 'X')

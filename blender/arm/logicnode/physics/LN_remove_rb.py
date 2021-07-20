@@ -6,8 +6,7 @@ class RemovePhysicsNode (ArmLogicTreeNode):
     bl_label = 'Remove RB'
     arm_version = 1
 
-    def init(self, context):
-        super(RemovePhysicsNode, self).init(context)
+    def arm_init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'RB')
 

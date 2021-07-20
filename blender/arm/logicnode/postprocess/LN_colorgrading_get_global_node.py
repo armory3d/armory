@@ -7,8 +7,7 @@ class ColorgradingGetGlobalNode(ArmLogicTreeNode):
     arm_section = 'colorgrading'
     arm_version = 1
 
-    def init(self, context):
-        super(ColorgradingGetGlobalNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'Whitebalance')
         self.add_output('ArmVectorSocket', 'Tint')
         self.add_output('ArmVectorSocket', 'Saturation')

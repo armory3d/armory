@@ -12,8 +12,7 @@ class MatrixMathNode(ArmLogicTreeNode):
         items = [('Multiply', 'Multiply', 'Multiply')],
         name='', default='Multiply')
 
-    def init(self, context):
-        super(MatrixMathNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmDynamicSocket', 'Matrix 1')
         self.add_input('ArmDynamicSocket', 'Matrix 2')
 

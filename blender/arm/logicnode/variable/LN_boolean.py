@@ -7,8 +7,7 @@ class BooleanNode(ArmLogicTreeNode):
     bl_label = 'Boolean'
     arm_version = 1
 
-    def init(self, context):
-        super(BooleanNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmBoolSocket', 'Bool In')
 
         self.add_output('ArmBoolSocket', 'Bool Out', is_var=True)

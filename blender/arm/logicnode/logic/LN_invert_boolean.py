@@ -6,8 +6,7 @@ class NotNode(ArmLogicTreeNode):
     bl_label = 'Invert Boolean'
     arm_version = 1
 
-    def init(self, context):
-        super(NotNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmBoolSocket', 'Bool In')
 
         self.add_output('ArmBoolSocket', 'Bool Out')

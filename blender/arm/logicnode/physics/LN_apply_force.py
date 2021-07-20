@@ -16,8 +16,7 @@ class ApplyForceNode(ArmLogicTreeNode):
     arm_section = 'force'
     arm_version = 1
 
-    def init(self, context):
-        super(ApplyForceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmVectorSocket', 'Force')

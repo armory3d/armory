@@ -6,8 +6,7 @@ class SeparateTransformNode(ArmLogicTreeNode):
     bl_label = 'Separate Transform'
     arm_version = 1
 
-    def init(self, context):
-        super(SeparateTransformNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmDynamicSocket', 'Transform')
 
         self.add_output('ArmVectorSocket', 'Location')

@@ -6,8 +6,7 @@ class GetTraitPausedNode(ArmLogicTreeNode):
     bl_label = 'Get Trait Paused'
     arm_version = 1
 
-    def init(self, context):
-        super(GetTraitPausedNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmDynamicSocket', 'Trait')
 
         self.add_output('ArmBoolSocket', 'Is Paused')

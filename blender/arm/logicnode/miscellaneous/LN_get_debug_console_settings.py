@@ -6,8 +6,7 @@ class GetDebugConsoleSettings(ArmLogicTreeNode):
     bl_label = 'Get Debug Console Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(GetDebugConsoleSettings, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmBoolSocket', 'Visible')
         self.add_output('ArmFloatSocket', 'Scale')
         self.add_output('ArmStringSocket', 'Position')

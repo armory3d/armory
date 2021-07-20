@@ -9,8 +9,7 @@ class MapRangeNode(ArmLogicTreeNode):
     bl_label = 'Map Range'
     arm_version = 1
 
-    def init(self, context):
-        super(MapRangeNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Value', default_value=1.0)
         self.add_input('ArmFloatSocket', 'From Min')
         self.add_input('ArmFloatSocket', 'From Max', default_value=1.0)
