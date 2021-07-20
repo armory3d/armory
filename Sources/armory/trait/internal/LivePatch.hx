@@ -86,36 +86,36 @@ class LivePatch extends iron.Trait {
 
 		var i = 0;
 		for (inputData in inputDatas) {
-			newNode.addInput(createSocketDefaultNode(newNode, inputData[0], inputData[1]), i++);
+			newNode.addInput(createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), i++);
 		}
 
 		for (outputData in outputDatas) {
-			newNode.addOutputs([createSocketDefaultNode(newNode, outputData[0], outputData[1])]);
+			newNode.addOutputs([createSocketDefaultNode(newNode.tree, outputData[0], outputData[1])]);
 		}
 	}
 
-	static inline function createSocketDefaultNode(node: LogicNode, inputType: String, value: Dynamic): LogicNode {
+	static inline function createSocketDefaultNode(tree: LogicTree, inputType: String, value: Dynamic): LogicNode {
 		return switch (inputType) {
 			case "VECTOR":
-				new armory.logicnode.VectorNode(node.tree, value[0], value[1], value[2]);
+				new armory.logicnode.VectorNode(tree, value[0], value[1], value[2]);
 			case "RGBA":
-				new armory.logicnode.ColorNode(node.tree, value[0], value[1], value[2], value[3]);
+				new armory.logicnode.ColorNode(tree, value[0], value[1], value[2], value[3]);
 			case "RGB":
-				new armory.logicnode.ColorNode(node.tree, value[0], value[1], value[2]);
+				new armory.logicnode.ColorNode(tree, value[0], value[1], value[2]);
 			case "VALUE":
-				new armory.logicnode.FloatNode(node.tree, value);
+				new armory.logicnode.FloatNode(tree, value);
 			case "INT":
-				new armory.logicnode.IntegerNode(node.tree, value);
+				new armory.logicnode.IntegerNode(tree, value);
 			case "BOOLEAN":
-				new armory.logicnode.BooleanNode(node.tree, value);
+				new armory.logicnode.BooleanNode(tree, value);
 			case "STRING":
-				new armory.logicnode.StringNode(node.tree, value);
+				new armory.logicnode.StringNode(tree, value);
 			case "NONE":
-				new armory.logicnode.NullNode(node.tree);
+				new armory.logicnode.NullNode(tree);
 			case "OBJECT":
-				new armory.logicnode.ObjectNode(node.tree, value);
+				new armory.logicnode.ObjectNode(tree, value);
 			default:
-				new armory.logicnode.DynamicNode(node.tree, value);
+				new armory.logicnode.DynamicNode(tree, value);
 		}
 	}
 #end
