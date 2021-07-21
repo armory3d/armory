@@ -206,9 +206,9 @@ def send_event(event_id: str, opt_data: Any = None):
             inp_type = socket.arm_socket_type
 
             if inp_type in ('VECTOR', 'RGB'):
-                value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}' + '}'
+                value = f'new iron.Vec4({arm.node_utils.haxe_format_socket_val(value, array_outer_brackets=False)}, 1.0)'
             elif inp_type == 'RGBA':
-                value = '{' + f'"x": {value[0]}, "y": {value[1]}, "z": {value[2]}, "w": {value[3]}' + '}'
+                value = f'new iron.Vec4({arm.node_utils.haxe_format_socket_val(value, array_outer_brackets=False)})'
             elif inp_type == 'OBJECT':
                 value = f'iron.Scene.active.getChild("{value}")' if value != '' else 'null'
             else:
