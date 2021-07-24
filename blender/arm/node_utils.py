@@ -110,7 +110,7 @@ def get_export_node_name(node: bpy.types.Node) -> str:
     return '_' + arm.utils.safesrc(node.name)
 
 
-def get_haxe_property_names(node: bpy.types.Node) -> Generator[str, None, None]:
+def get_haxe_property_names(node: bpy.types.Node) -> Generator[tuple[str, str], None, None]:
     """Generator that yields the names of all node properties that have
     a counterpart in the node's Haxe class.
     """
@@ -121,7 +121,10 @@ def get_haxe_property_names(node: bpy.types.Node) -> Generator[str, None, None]:
             prop_name = f'property{i}'
             prop_found = hasattr(node, prop_name)
         if prop_found:
-            yield prop_name
+            # Haxe properties are called property0 - property9 even if
+            # their Python equivalent can end with '_get', so yield
+            # both names
+            yield prop_name, f'property{i}'
 
 
 def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:

@@ -159,9 +159,9 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
 
     # Properties
-    for prop_name in arm.node_utils.get_haxe_property_names(node):
-        prop = arm.node_utils.haxe_format_prop_value(node, prop_name)
-        f.write('\t\t' + name + '.' + prop_name + ' = ' + prop + ';\n')
+    for prop_py_name, prop_hx_name in arm.node_utils.get_haxe_property_names(node):
+        prop = arm.node_utils.haxe_format_prop_value(node, prop_py_name)
+        f.write('\t\t' + name + '.' + prop_hx_name + ' = ' + prop + ';\n')
 
     # Avoid unnecessary input/output array resizes
     f.write(f'\t\t{name}.preallocInputs({len(node.inputs)});\n')

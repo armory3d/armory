@@ -188,6 +188,11 @@ def send_event(event_id: str, opt_data: Any = None):
 
         value = arm.node_utils.haxe_format_prop_value(node, prop_name)
 
+        if prop_name.endswith('_get'):
+            # Hack because some nodes use a different Python property
+            # name than they use in Haxe
+            prop_name = prop_name[:-4]
+
         js = f'LivePatch.patchUpdateNodeProp("{tree_name}", "{node_name}", "{prop_name}", {value});'
         write_patch(js)
 
@@ -224,9 +229,9 @@ def send_event(event_id: str, opt_data: Any = None):
         node_name = arm.node_utils.get_export_node_name(node)[1:]
         node_type = 'armory.logicnode.' + node.bl_idname[2:]
 
-        prop_names = tuple(arm.node_utils.get_haxe_property_names(node))
-        prop_values = (getattr(node, prop_name) for prop_name in prop_names)
-        prop_datas = arm.node_utils.haxe_format_socket_val(list(zip(prop_names, prop_values)))
+        prop_py_names, prop_hx_names = zip(*arm.node_utils.get_haxe_property_names(node))
+        prop_values = (getattr(node, prop_name) for prop_name in prop_py_names)
+        prop_datas = arm.node_utils.haxe_format_socket_val(list(zip(prop_hx_names, prop_values)))
 
         inp_data = [(inp.arm_socket_type, inp.get_default_value()) for inp in node.inputs]
         inp_data = arm.node_utils.haxe_format_socket_val(inp_data)
@@ -256,7 +261,7 @@ def send_event(event_id: str, opt_data: Any = None):
         newnode_name = arm.node_utils.get_export_node_name(newnode)[1:]
         node_name = arm.node_utils.get_export_node_name(node)[1:]
 
-        props_list = '[' + ','.join(f'"{p}"' for p in arm.node_utils.get_haxe_property_names(node)) + ']'
+        props_list = '[' + ','.join(f'"{p}"' for _, p in arm.node_utils.get_haxe_property_names(node)) + ']'
 
         inp_data = [(inp.arm_socket_type, inp.get_default_value()) for inp in newnode.inputs]
         inp_data = arm.node_utils.haxe_format_socket_val(inp_data)
