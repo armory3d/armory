@@ -6,7 +6,7 @@ import armory.logicnode.LogicTree;
 
 #if arm_patch @:expose("LivePatch") #end
 @:access(armory.logicnode.LogicNode)
-@:access(armory.logicnode.LogicNodeInput)
+@:access(armory.logicnode.LogicNodeLink)
 class LivePatch extends iron.Trait {
 
 #if !arm_patch
@@ -40,11 +40,54 @@ class LivePatch extends iron.Trait {
 		var toNode = tree.nodes[toNodeName];
 		if (fromNode == null || toNode == null) return;
 
-		// Don't add a connection twice
-		if (!fromNode.outputs[fromIndex].contains(toNode)) {
-			fromNode.outputs[fromIndex].push(toNode);
+		LogicNode.addLink(fromNode, toNode, fromIndex, toIndex);
+	}
+
+	public static function patchSetNodeLinks(treeName: String, nodeName: String, inputDatas: Array<Dynamic>, outputDatas: Array<Array<Dynamic>>) {
+		var tree = LogicTree.nodeTrees[treeName];
+		if (tree == null) return;
+
+		var node = tree.nodes[nodeName];
+		if (node == null) return;
+
+		node.clearInputs();
+		node.clearOutputs();
+
+		for (inputData in inputDatas) {
+			var fromNode: LogicNode;
+			var fromIndex: Int;
+
+			if (inputData.isLinked) {
+				fromNode = tree.nodes[inputData.fromNode];
+				if (fromNode == null) continue;
+				fromIndex = inputData.fromIndex;
+			}
+			else {
+				fromNode = LogicNode.createSocketDefaultNode(node.tree, inputData.socketType, inputData.socketValue);
+				fromIndex = 0;
+			}
+
+			LogicNode.addLink(fromNode, node, fromIndex, inputData.toIndex);
 		}
-		toNode.inputs[toIndex] = new LogicNodeInput(fromNode, fromIndex);
+
+		for (outputData in outputDatas) {
+			for (linkData in outputData) {
+				var toNode: LogicNode;
+				var toIndex: Int;
+
+				if (linkData.isLinked) {
+					toNode = tree.nodes[linkData.toNode];
+					if (toNode == null) continue;
+					toIndex = linkData.toIndex;
+				}
+				else {
+					toNode = LogicNode.createSocketDefaultNode(node.tree, linkData.socketType, linkData.socketValue);
+					toIndex = 0;
+				}
+
+				LogicNode.addLink(node, toNode, linkData.fromIndex, toIndex);
+			}
+		}
 	}
 
 	public static function patchUpdateNodeProp(treeName: String, nodeName: String, propName: String, value: Dynamic) {
@@ -123,11 +166,12 @@ class LivePatch extends iron.Trait {
 
 		var i = 0;
 		for (inputData in inputDatas) {
-			newNode.addInput(createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), i++);
+			LogicNode.addLink(LogicNode.createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), newNode, 0, i++);
 		}
 
+		i = 0;
 		for (outputData in outputDatas) {
-			newNode.addOutputs([createSocketDefaultNode(newNode.tree, outputData[0], outputData[1])]);
+			LogicNode.addLink(newNode, LogicNode.createSocketDefaultNode(newNode.tree, outputData[0], outputData[1]), i++, 0);
 		}
 	}
 
@@ -151,27 +195,14 @@ class LivePatch extends iron.Trait {
 
 		var i = 0;
 		for (inputData in inputDatas) {
-			newNode.addInput(createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), i++);
+			LogicNode.addLink(LogicNode.createSocketDefaultNode(newNode.tree, inputData[0], inputData[1]), newNode, 0, i++);
 		}
 
+		i = 0;
 		for (outputData in outputDatas) {
-			newNode.addOutputs([createSocketDefaultNode(newNode.tree, outputData[0], outputData[1])]);
+			LogicNode.addLink(newNode, LogicNode.createSocketDefaultNode(newNode.tree, outputData[0], outputData[1]), i++, 0);
 		}
 	}
 
-	static inline function createSocketDefaultNode(tree: LogicTree, socketType: String, value: Dynamic): LogicNode {
-		return switch (socketType) {
-			case "VECTOR": new armory.logicnode.VectorNode(tree, value[0], value[1], value[2]);
-			case "RGBA": new armory.logicnode.ColorNode(tree, value[0], value[1], value[2], value[3]);
-			case "RGB": new armory.logicnode.ColorNode(tree, value[0], value[1], value[2]);
-			case "VALUE": new armory.logicnode.FloatNode(tree, value);
-			case "INT": new armory.logicnode.IntegerNode(tree, value);
-			case "BOOLEAN": new armory.logicnode.BooleanNode(tree, value);
-			case "STRING": new armory.logicnode.StringNode(tree, value);
-			case "NONE": new armory.logicnode.NullNode(tree);
-			case "OBJECT": new armory.logicnode.ObjectNode(tree, value);
-			default: new armory.logicnode.DynamicNode(tree, value);
-		}
-	}
 #end
 }

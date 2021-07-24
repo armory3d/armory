@@ -24,6 +24,10 @@ category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
 array_nodes = dict()
 
+# See ArmLogicTreeNode.update()
+# format: [tree pointer => (num inputs, num input links, num outputs, num output links)]
+last_node_state: dict[int, tuple[int, int, int, int]] = {}
+
 
 class ArmLogicTreeNode(bpy.types.Node):
     arm_category = PKG_AS_CATEGORY
@@ -62,6 +66,40 @@ class ArmLogicTreeNode(bpy.types.Node):
     def get_tree(self):
         return self.id_data
 
+    def update(self):
+        """Called if the node was updated in some way, for example
+        if socket connections change. This callback is not called if
+        socket values were changed.
+        """
+        def num_connected(sockets):
+            return sum([socket.is_linked for socket in sockets])
+
+        # If a link between sockets is removed, there is currently no
+        # _reliable_ way in the Blender API to check which connection
+        # was removed (*).
+        #
+        # So instead we just check _if_ the number of links or sockets
+        # has changed (the update function is called before and after
+        # each link removal). Because we listen for those updates in
+        # general, we automatically also listen to link creation events,
+        # which is more stable than using the dedicated callback for
+        # that (`insert_link()`), because adding links can remove other
+        # links and we would need to react to that as well.
+        #
+        # (*) https://devtalk.blender.org/t/how-to-detect-which-link-was-deleted-by-user-in-node-editor
+
+        self_id = self.as_pointer()
+
+        current_state = (len(self.inputs), num_connected(self.inputs), len(self.outputs), num_connected(self.outputs))
+        if self_id not in last_node_state:
+            # Lazily initialize the last_node_state dict to also store
+            # state for nodes that already exist in the tree
+            last_node_state[self_id] = current_state
+
+        if last_node_state[self_id] != current_state:
+            arm.live_patch.send_event('ln_update_sockets', self)
+            last_node_state[self_id] = current_state
+
     def free(self):
         """Called before the node is deleted."""
         arm.live_patch.send_event('ln_delete', self)
@@ -84,7 +122,8 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def insert_link(self, link: bpy.types.NodeLink):
         """Called on *both* nodes when a link between two nodes is created."""
-        arm.live_patch.send_event('ln_insert_link', (self, link))
+        # arm.live_patch.send_event('ln_insert_link', (self, link))
+        pass
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         # needs to be overridden by individual node classes with arm_version>1

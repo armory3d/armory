@@ -269,6 +269,53 @@ def send_event(event_id: str, opt_data: Any = None):
         js = f'LivePatch.patchNodeCopy("{tree_name}", "{node_name}", "{newnode_name}", {props_list}, {inp_data}, {out_data});'
         write_patch(js)
 
+    elif event_id == 'ln_update_sockets':
+        node: ArmLogicTreeNode = opt_data
+
+        tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
+        node_name = arm.node_utils.get_export_node_name(node)[1:]
+
+        inp_data = '['
+        for idx, inp in enumerate(node.inputs):
+            inp_data += '{'
+            # is_linked can be true even if there are no links if the
+            # user starts dragging a connection away before releasing
+            # the mouse
+            if inp.is_linked and len(inp.links) > 0:
+                inp_data += 'isLinked: true,'
+                inp_data += f'fromNode: "{arm.node_utils.get_export_node_name(inp.links[0].from_node)[1:]}",'
+                inp_data += f'fromIndex: {arm.node_utils.get_socket_index(inp.links[0].from_node.outputs, inp.links[0].from_socket)},'
+            else:
+                inp_data += 'isLinked: false,'
+                inp_data += f'socketType: "{inp.arm_socket_type}",'
+                inp_data += f'socketValue: {arm.node_utils.haxe_format_socket_val(inp.get_default_value())},'
+
+            inp_data += f'toIndex: {idx}'
+            inp_data += '},'
+        inp_data += ']'
+
+        out_data = '['
+        for idx, out in enumerate(node.outputs):
+            out_data += '['
+            for link in out.links:
+                out_data += '{'
+                if out.is_linked:
+                    out_data += 'isLinked: true,'
+                    out_data += f'toNode: "{arm.node_utils.get_export_node_name(link.to_node)[1:]}",'
+                    out_data += f'toIndex: {arm.node_utils.get_socket_index(link.to_node.inputs, link.to_socket)},'
+                else:
+                    out_data += 'isLinked: false,'
+                    out_data += f'socketType: "{out.arm_socket_type}",'
+                    out_data += f'socketValue: {arm.node_utils.haxe_format_socket_val(out.get_default_value())},'
+
+                out_data += f'fromIndex: {idx}'
+                out_data += '},'
+            out_data += '],'
+        out_data += ']'
+
+        js = f'LivePatch.patchSetNodeLinks("{tree_name}", "{node_name}", {inp_data}, {out_data});'
+        write_patch(js)
+
 
 def on_operator(operator_id: str):
     """As long as bpy.msgbus doesn't listen to changes made by

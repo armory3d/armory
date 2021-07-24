@@ -68,6 +68,7 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
 
     with open(file, 'w', encoding="utf-8") as f:
         f.write('package ' + pack_path + '.node;\n\n')
+        f.write('@:access(armory.logicnode.LogicNode)')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tvar functionNodes:Map<String, armory.logicnode.FunctionNode>;\n\n')
         f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
@@ -162,8 +163,12 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         prop = arm.node_utils.haxe_format_prop_value(node, prop_name)
         f.write('\t\t' + name + '.' + prop_name + ' = ' + prop + ';\n')
 
+    # Avoid unnecessary input/output array resizes
+    f.write(f'\t\t{name}.preallocInputs({len(node.inputs)});\n')
+    f.write(f'\t\t{name}.preallocOutputs({len(node.outputs)});\n')
+
     # Create inputs
-    for inp in node.inputs:
+    for idx, inp in enumerate(node.inputs):
         # True if the input is connected to a unlinked reroute
         # somewhere down the reroute line
         unconnected = False
@@ -191,34 +196,40 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
                 for i in range(0, len(n.outputs)):
                     if n.outputs[i] == socket:
                         inp_from = i
+                        from_type = socket.arm_socket_type
                         break
 
         # Not linked -> create node with default values
         else:
             inp_name = build_default_node(inp)
             inp_from = 0
+            from_type = inp.arm_socket_type
 
         # The input is linked to a reroute, but the reroute is unlinked
         if unconnected:
             inp_name = build_default_node(inp)
             inp_from = 0
+            from_type = inp.arm_socket_type
 
         # Add input
-        f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
+        f.write(f'\t\t{"var __link = " if wrd.arm_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
+        if wrd.arm_live_patch:
+            to_type = inp.arm_socket_type
+            f.write(f'\t\t__link.fromType = "{from_type}";')
+            f.write(f'\t\t__link.toType = "{to_type}";')
+            f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};')
 
     # Create outputs
-    for out in node.outputs:
-        if out.is_linked:
-            out_name = ''
-            for node in collect_nodes_from_output(out, f):
-                out_name += '[' if len(out_name) == 0 else ', '
-                out_name += node
-            out_name += ']'
-        # Not linked - create node with default values
-        else:
-            out_name = '[' + build_default_node(out) + ']'
-        # Add outputs
-        f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
+    for idx, out in enumerate(node.outputs):
+        # Linked outputs are already handled after iterating over inputs
+        # above, so only unconnected outputs are handled here
+        if not out.is_linked:
+            f.write(f'\t\t{"var __link = " if wrd.arm_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
+            if wrd.arm_live_patch:
+                out_type = out.arm_socket_type
+                f.write(f'\t\t__link.fromType = "{out_type}";')
+                f.write(f'\t\t__link.toType = "{out_type}";')
+                f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(out.get_default_value())};')
 
     return name
 
