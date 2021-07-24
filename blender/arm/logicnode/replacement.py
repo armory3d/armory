@@ -294,6 +294,9 @@ def node_compat_sdk2108():
                 if not node.__class__.is_registered_node_type():
                     continue
 
+                if node.type in ('FRAME', 'REROUTE'):
+                    continue
+
                 newnode = tree.nodes.new(node.__class__.bl_idname)
 
                 newnode.parent = node.parent
