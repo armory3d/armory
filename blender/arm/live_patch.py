@@ -224,7 +224,7 @@ def send_event(event_id: str, opt_data: Any = None):
         node_name = arm.node_utils.get_export_node_name(node)[1:]
         node_type = 'armory.logicnode.' + node.bl_idname[2:]
 
-        prop_names = (p for p in arm.node_utils.get_haxe_property_names(node))
+        prop_names = tuple(arm.node_utils.get_haxe_property_names(node))
         prop_values = (getattr(node, prop_name) for prop_name in prop_names)
         prop_datas = arm.node_utils.haxe_format_socket_val(list(zip(prop_names, prop_values)))
 
