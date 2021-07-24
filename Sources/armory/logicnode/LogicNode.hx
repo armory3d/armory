@@ -58,7 +58,7 @@ class LogicNode {
 			fromNodeOuts.resize(fromIndex + 1);
 
 			// Initialize with empty arrays
-			for (i in 0...(fromIndex - (outLen - 1))) {
+			for (i in outLen...fromIndex + 1) {
 				fromNodeOuts[i] = [];
 			}
 		}
