@@ -219,8 +219,7 @@ def export_data(fp, sdk_path):
 
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
-    import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()

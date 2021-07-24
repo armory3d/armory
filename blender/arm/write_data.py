@@ -54,7 +54,7 @@ def remove_readonly(func, path, excinfo):
 
 
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
-                    enable_dce: bool, import_traits: List[str], import_logicnodes) -> None:
+                    enable_dce: bool, import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
 
     sdk_path = arm.utils.get_sdk_path()
@@ -159,9 +159,6 @@ project.addSources('Sources');
             #         khafile.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
             # if export_navigation:
             #     khafile.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
-
-        # if import_logicnodes: # Live patching for logic nodes
-            # khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         if not wrd.arm_compiler_inline:
             khafile.write("project.addParameter('--no-inline');\n")
