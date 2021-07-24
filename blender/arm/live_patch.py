@@ -242,10 +242,7 @@ def send_event(event_id: str, opt_data: Any = None):
         tree_name = arm.node_utils.get_export_tree_name(node.get_tree())
         node_name = arm.node_utils.get_export_node_name(node)[1:]
 
-        out_data = [(out.arm_socket_type, out.get_default_value()) for out in node.outputs]
-        out_data = arm.node_utils.haxe_format_socket_val(out_data)
-
-        js = f'LivePatch.patchNodeDelete("{tree_name}", "{node_name}", {out_data});'
+        js = f'LivePatch.patchNodeDelete("{tree_name}", "{node_name}");'
         write_patch(js)
 
     elif event_id == 'ln_copy':
