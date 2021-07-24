@@ -361,7 +361,7 @@ IGNORE_OPERATORS = (
 
     'OBJECT_OT_editmode_toggle',
     'OUTLINER_OT_item_activate',
-    'UI_OT_button_string_clear'
+    'UI_OT_button_string_clear',
     'VIEW3D_OT_select',
     'VIEW3D_OT_select_box',
 )
