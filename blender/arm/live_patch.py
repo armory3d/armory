@@ -52,7 +52,7 @@ def stop():
 
 def patch_export():
     """Re-export the current scene and update the game accordingly."""
-    if state.proc_build is not None:
+    if not __running or state.proc_build is not None:
         return
 
     arm.assets.invalidate_enabled = False
