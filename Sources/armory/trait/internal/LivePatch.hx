@@ -107,7 +107,7 @@ class LivePatch extends iron.Trait {
 		var node = tree.nodes[nodeName];
 		if (node == null) return;
 
-		@:privateAccess node.inputs[socketIndex].set(value);
+		node.inputs[socketIndex].set(value);
 	}
 
 	public static function patchNodeDelete(treeName: String, nodeName: String) {
