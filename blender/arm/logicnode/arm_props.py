@@ -15,9 +15,6 @@ from typing import Any, Callable, Sequence, Union
 import bpy
 from bpy.props import *
 
-# Property parameter name `set` shadows built-in type `set`
-__set = set
-
 
 def __haxe_prop(prop_type: Callable, prop_name: str, *args, **kwargs) -> Any:
     """Declares a logic node property as a property that will be
@@ -55,8 +52,8 @@ def HaxeBoolProperty(
         get=None,
         set=None
 ) -> 'bpy.types.BoolProperty':
-    """Declares a new BoolProperty that has a counterpart with the given
-    prop_name (Python and Haxe names must be identical for now).
+    """Declares a new BoolProperty that has a Haxe counterpart with the
+    given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(BoolProperty, **locals())
 
@@ -76,8 +73,9 @@ def HaxeBoolVectorProperty(
         get=None,
         set=None
 ) -> list['bpy.types.BoolProperty']:
-    """Declares a new BoolVectorProperty that has a counterpart with the
-    given prop_name (Python and Haxe names must be identical for now).
+    """Declares a new BoolVectorProperty that has a Haxe counterpart
+    with the given prop_name (Python and Haxe names must be identical
+    for now).
     """
     return __haxe_prop(BoolVectorProperty, **locals())
 
@@ -92,8 +90,9 @@ def HaxeCollectionProperty(
         override: set = set(),
         tags: set = set()
 ) -> 'bpy.types.CollectionProperty':
-    """Declares a new CollectionProperty that has a counterpart with the
-    given prop_name (Python and Haxe names must be identical for now).
+    """Declares a new CollectionProperty that has a Haxe counterpart
+    with the given prop_name (Python and Haxe names must be identical
+    for now).
     """
     return __haxe_prop(CollectionProperty, **locals())
 
@@ -112,8 +111,8 @@ def HaxeEnumProperty(
         get=None,
         set=None
 ) -> 'bpy.types.EnumProperty':
-    """Declares a new EnumProperty that has a counterpart with the given
-    prop_name (Python and Haxe names must be identical for now).
+    """Declares a new EnumProperty that has a Haxe counterpart with the
+    given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(EnumProperty, **locals())
 
@@ -139,7 +138,7 @@ def HaxeFloatProperty(
         get=None,
         set=None
 ) -> 'bpy.types.FloatProperty':
-    """Declares a new FloatProperty that has a counterpart with the
+    """Declares a new FloatProperty that has a Haxe counterpart with the
     given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(FloatProperty, **locals())
@@ -167,8 +166,9 @@ def HaxeFloatVectorProperty(
         get=None,
         set=None
 ) -> list['bpy.types.FloatProperty']:
-    """Declares a new FloatVectorProperty that has a counterpart with the
-    given prop_name (Python and Haxe names must be identical for now).
+    """Declares a new FloatVectorProperty that has a Haxe counterpart
+    with the given prop_name (Python and Haxe names must be identical
+    for now).
     """
     return __haxe_prop(FloatVectorProperty, **locals())
 
@@ -192,8 +192,8 @@ def HaxeIntProperty(
         get=None,
         set=None
 ) -> 'bpy.types.IntProperty':
-    """Declares a new IntProperty that has a counterpart with the given
-    prop_name (Python and Haxe names must be identical for now).
+    """Declares a new IntProperty that has a Haxe counterpart with the
+    given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(IntProperty, **locals())
 
@@ -218,8 +218,8 @@ def HaxeIntVectorProperty(
         get=None,
         set=None
 ) -> list['bpy.types.IntProperty']:
-    """Declares a new IntVectorProperty that has a counterpart with the given
-    prop_name (Python and Haxe names must be identical for now).
+    """Declares a new IntVectorProperty that has a Haxe counterpart with
+    the given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(IntVectorProperty, **locals())
 
@@ -236,8 +236,8 @@ def HaxePointerProperty(
         poll=None,
         update=None
 ) -> 'bpy.types.PointerProperty':
-    """Declares a new PointerProperty that has a counterpart with the
-    given prop_name (Python and Haxe names must be identical for now).
+    """Declares a new PointerProperty that has a Haxe counterpart with
+    the given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(PointerProperty, **locals())
 
@@ -261,7 +261,7 @@ def HaxeStringProperty(
         get=None,
         set=None
 ) -> 'bpy.types.StringProperty':
-    """Declares a new StringProperty that has a counterpart with the
-    given prop_name (Python and Haxe names must be identical for now).
+    """Declares a new StringProperty that has a Haxe counterpart with
+    the given prop_name (Python and Haxe names must be identical for now).
     """
     return __haxe_prop(StringProperty, **locals())
