@@ -229,7 +229,8 @@ def send_event(event_id: str, opt_data: Any = None):
         node_name = arm.node_utils.get_export_node_name(node)[1:]
         node_type = 'armory.logicnode.' + node.bl_idname[2:]
 
-        prop_py_names, prop_hx_names = zip(*arm.node_utils.get_haxe_property_names(node))
+        prop_names = list(arm.node_utils.get_haxe_property_names(node))
+        prop_py_names, prop_hx_names = zip(*prop_names) if len(prop_names) > 0 else ([], [])
         prop_values = (getattr(node, prop_name) for prop_name in prop_py_names)
         prop_datas = arm.node_utils.haxe_format_socket_val(list(zip(prop_hx_names, prop_values)))
 
