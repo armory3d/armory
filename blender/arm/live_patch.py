@@ -340,16 +340,28 @@ def on_operator(operator_id: str):
 
 # Don't re-export the scene for the following operators
 IGNORE_OPERATORS = (
-    'VIEW3D_OT_select',
-    'VIEW3D_OT_select_box',
-    'OUTLINER_OT_item_activate',
-    'OBJECT_OT_editmode_toggle',
+    'ARM_OT_node_add_input',
+    'ARM_OT_node_add_input_output',
+    'ARM_OT_node_add_input_value',
+    'ARM_OT_node_add_output',
+    'ARM_OT_node_call_func',
+    'ARM_OT_node_remove_input',
+    'ARM_OT_node_remove_input_output',
+    'ARM_OT_node_remove_input_value',
+    'ARM_OT_node_remove_output',
+    'ARM_OT_node_search',
+
     'NODE_OT_delete',
     'NODE_OT_duplicate_move',
     'NODE_OT_hide_toggle',
     'NODE_OT_link',
     'NODE_OT_select',
-    'NODE_OT_translate_attach_remove_on_cancel',
     'NODE_OT_translate_attach',
+    'NODE_OT_translate_attach_remove_on_cancel',
+
+    'OBJECT_OT_editmode_toggle',
+    'OUTLINER_OT_item_activate',
     'UI_OT_button_string_clear'
+    'VIEW3D_OT_select',
+    'VIEW3D_OT_select_box',
 )
