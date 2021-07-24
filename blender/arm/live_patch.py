@@ -349,6 +349,7 @@ IGNORE_OPERATORS = (
     'OBJECT_OT_editmode_toggle',
     'NODE_OT_delete',
     'NODE_OT_duplicate_move',
+    'NODE_OT_hide_toggle',
     'NODE_OT_link',
     'NODE_OT_select',
     'NODE_OT_translate_attach_remove_on_cancel',
