@@ -129,15 +129,11 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
     if isinstance(response, arm_nodes.ArmLogicTreeNode):
         newnode = response
         # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
+        copy_basic_node_props(from_node=node, to_node=newnode)
 
     elif isinstance(response, list):  # a list of nodes:
         for newnode in response:
-            newnode.parent = node.parent
-            newnode.location = node.location
-            newnode.select = node.select
+            copy_basic_node_props(from_node=node, to_node=newnode)
 
     elif isinstance(response, NodeReplacement):
         replacement = response
@@ -152,9 +148,7 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
             raise LookupError("The provided NodeReplacement doesn't seem to correspond to the node needing replacement")
 
         # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
+        copy_basic_node_props(from_node=node, to_node=newnode)
 
         # now, use the `replacement` to hook up the new node correctly
         # start by applying defaults
@@ -276,6 +270,15 @@ def replace_all():
         bpy.ops.arm.show_node_update_errors()
 
 
+def copy_basic_node_props(from_node: bpy.types.Node, to_node: bpy.types.Node):
+    to_node.parent = from_node.parent
+    to_node.location = from_node.location
+    to_node.select = from_node.select
+
+    to_node.arm_logic_id = from_node.arm_logic_id
+    to_node.arm_watch = from_node.arm_watch
+
+
 def node_compat_sdk2108():
     """SDK 21.08 broke compatibility with older nodes as nodes now use
     custom sockets even for Blender's default data types and custom
@@ -298,10 +301,7 @@ def node_compat_sdk2108():
                     continue
 
                 newnode = tree.nodes.new(node.__class__.bl_idname)
-
-                newnode.parent = node.parent
-                newnode.location = node.location
-                newnode.select = node.select
+                copy_basic_node_props(from_node=node, to_node=newnode)
 
                 # Also copy the node's version number to _not_ prevent actual node
                 # replacement after this step

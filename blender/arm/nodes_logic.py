@@ -354,7 +354,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
     bl_description = "Replace deprecated nodes"
 
     def execute(self, context):
-        arm.logicnode.replacement.replace_all(force_replacement=True)
+        arm.logicnode.replacement.replace_all()
         return {'FINISHED'}
 
     @classmethod
