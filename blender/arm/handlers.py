@@ -10,6 +10,7 @@ import arm.api
 import arm.live_patch as live_patch
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
+import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.utils
@@ -103,7 +104,7 @@ def always() -> float:
         space.node_tree.arm_cached = False
     return 0.5
 
-  
+
 def poll_threads() -> float:
     """Polls the thread callback queue and if a thread has finished, it
     is joined with the main thread and the corresponding callback is
@@ -120,7 +121,7 @@ def poll_threads() -> float:
     # Quickly check if another thread has finished
     return 0.01
 
-  
+
 appended_py_paths = []
 context_screen = None
 
