@@ -2454,7 +2454,7 @@ Make sure the mesh only has tris/quads.""")
             else:
                 self.material_to_object_dict[mat] = [bobject]
                 self.material_to_arm_object_dict[mat] = [o]
-        
+
         # Add UniformsManager trait
         if type is NodeType.MESH:
             uniformManager = {}
@@ -2672,7 +2672,7 @@ Make sure the mesh only has tris/quads.""")
             }
             self.output['traits'].append(out_trait)
 
-        if wrd.arm_live_patch:
+        if arm.utils.is_livepatch_enabled():
             if 'traits' not in self.output:
                 self.output['traits'] = []
             out_trait = {'type': 'Script', 'class_name': 'armory.trait.internal.LivePatch'}

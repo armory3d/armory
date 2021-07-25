@@ -166,10 +166,10 @@ project.addSources('Sources');
         if enable_dce:
             khafile.write("project.addParameter('-dce full');\n")
 
-        live_patch = wrd.arm_live_patch and state.target == 'krom'
-        if wrd.arm_debug_console or live_patch:
+        use_live_patch = arm.utils.is_livepatch_enabled()
+        if wrd.arm_debug_console or use_live_patch:
             import_traits.append('armory.trait.internal.Bridge')
-            if live_patch:
+            if use_live_patch:
                 assets.add_khafile_def('arm_patch')
                 # Include all logic node classes so that they can later
                 # get instantiated

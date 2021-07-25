@@ -78,7 +78,7 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
             f.write('\t\tname = "' + group_name + '";\n')
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
-        if wrd.arm_live_patch:
+        if arm.utils.is_livepatch_enabled():
             f.write(f'\t\tarmory.logicnode.LogicTree.nodeTrees["{group_name}"] = this;\n')
         f.write('\t\tnotifyOnAdd(add);\n')
         f.write('\t}\n\n')
@@ -112,6 +112,8 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
     """Builds the given node and returns its name. f is an opened file object."""
     global parsed_nodes
     global parsed_ids
+
+    use_live_patch = arm.utils.is_livepatch_enabled()
 
     if node.type == 'REROUTE':
         if len(node.inputs) > 0 and len(node.inputs[0].links) > 0:
@@ -154,7 +156,7 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
         f.write('\t\t' + name + '.watch(true);\n')
 
-    elif wrd.arm_live_patch:
+    elif use_live_patch:
         f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
         f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
 
@@ -212,8 +214,8 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
             from_type = inp.arm_socket_type
 
         # Add input
-        f.write(f'\t\t{"var __link = " if wrd.arm_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
-        if wrd.arm_live_patch:
+        f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
+        if use_live_patch:
             to_type = inp.arm_socket_type
             f.write(f'\t\t__link.fromType = "{from_type}";')
             f.write(f'\t\t__link.toType = "{to_type}";')
@@ -224,8 +226,8 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         # Linked outputs are already handled after iterating over inputs
         # above, so only unconnected outputs are handled here
         if not out.is_linked:
-            f.write(f'\t\t{"var __link = " if wrd.arm_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
-            if wrd.arm_live_patch:
+            f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
+            if use_live_patch:
                 out_type = out.arm_socket_type
                 f.write(f'\t\t__link.fromType = "{out_type}";')
                 f.write(f'\t\t__link.toType = "{out_type}";')
