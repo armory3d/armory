@@ -37,7 +37,7 @@ class ColorgradingSetMidtoneNode(ArmLogicTreeNode):
         items = [('RGB', 'RGB', 'RGB'),
                  ('Uniform', 'Uniform', 'Uniform')],
         name='Mode', default='Uniform', update=update_node)
-    property1 : StringProperty(name="Loaded Data", description="Loaded data - Just ignore", default="")
+    property1 : HaxeStringProperty('property1', name="Loaded Data", description="Loaded data - Just ignore", default="")
     filepath : StringProperty(name="Preset File", description="Postprocess colorgrading preset file", default="", subtype="FILE_PATH", update=set_data)
 
 

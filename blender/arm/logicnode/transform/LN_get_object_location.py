@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 class GetLocationNode(ArmLogicTreeNode):
     """Get the location of the given object in world coordinates.
-    
+
     @input Parent Relative: If enabled, transforms the world coordinates into object parent local coordinates
 
     @seeNode Set Object Location
@@ -16,7 +16,7 @@ class GetLocationNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Parent Relative')
+        self.add_input('ArmBoolSocket', 'Parent Relative')
 
         self.add_output('ArmVectorSocket', 'Location')
 

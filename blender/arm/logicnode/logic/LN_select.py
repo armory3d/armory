@@ -37,7 +37,8 @@ class SelectNode(ArmLogicTreeNode):
     def update_exec_mode(self, context):
         self.set_mode()
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         name='Execution Mode',
         description="The node's behaviour.",
         items=[
@@ -55,9 +56,7 @@ class SelectNode(ArmLogicTreeNode):
         super().__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super().init(context)
-
+    def arm_init(self, context):
         self.set_mode()
 
     def set_mode(self):
@@ -65,8 +64,8 @@ class SelectNode(ArmLogicTreeNode):
         self.outputs.clear()
 
         if self.property0 == 'from_index':
-            self.add_input('NodeSocketInt', 'Index')
-            self.add_input('NodeSocketShader', 'Default')
+            self.add_input('ArmIntSocket', 'Index')
+            self.add_input('ArmDynamicSocket', 'Default')
             self.num_choices = 0
 
         # from_input
@@ -75,12 +74,12 @@ class SelectNode(ArmLogicTreeNode):
             # 0 for the "from_index" mode and it makes the code simpler
             # if we stick to the same convention for both exec modes
             self.add_input('ArmNodeSocketAction', 'Input 0')
-            self.add_input('NodeSocketShader', 'Value 0')
+            self.add_input('ArmDynamicSocket', 'Value 0')
             self.num_choices = 1
 
             self.add_output('ArmNodeSocketAction', 'Out')
 
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0', text='')
@@ -102,7 +101,7 @@ class SelectNode(ArmLogicTreeNode):
             # Move new action input up to the end of all other action inputs
             self.inputs.move(from_index=len(self.inputs) - 1, to_index=self.num_choices)
 
-        self.add_input('NodeSocketShader', f'Value {self.num_choices}')
+        self.add_input('ArmDynamicSocket', f'Value {self.num_choices}')
 
         self.num_choices += 1
 

@@ -6,11 +6,10 @@ class OnInputMapNode(ArmLogicTreeNode):
     bl_label = 'On Input Map'
     arm_version = 1
 
-    def init(self, context):
-        super(OnInputMapNode, self).init(context)
-        self.add_input('NodeSocketString', 'Input Map')
+    def arm_init(self, context):
+        self.add_input('ArmStringSocket', 'Input Map')
 
         self.add_output('ArmNodeSocketAction', 'Started')
         self.add_output('ArmNodeSocketAction', 'Released')
-        self.add_output('NodeSocketFloat', 'Value')
-        self.add_output('NodeSocketString', 'Key Pressed')
+        self.add_output('ArmFloatSocket', 'Value')
+        self.add_output('ArmStringSocket', 'Key Pressed')

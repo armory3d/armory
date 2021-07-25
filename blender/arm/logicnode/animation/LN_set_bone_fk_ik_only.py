@@ -7,11 +7,10 @@ class SetBoneFkIkOnlyNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'armature'
 
-    def init(self, context):
-        super(SetBoneFkIkOnlyNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Bone')
-        self.add_input('NodeSocketBool', 'FK or IK only')
+        self.add_input('ArmStringSocket', 'Bone')
+        self.add_input('ArmBoolSocket', 'FK or IK only')
 
         self.add_output('ArmNodeSocketAction', 'Out')

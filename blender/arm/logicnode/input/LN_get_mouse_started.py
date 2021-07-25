@@ -6,9 +6,8 @@ class GetMouseStartedNode(ArmLogicTreeNode):
     bl_label = 'Get Mouse Started'
     arm_version = 1
 
-    def init(self, context):
-        super(GetMouseStartedNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketString', 'Button')
+        self.add_output('ArmStringSocket', 'Button')

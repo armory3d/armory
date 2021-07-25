@@ -6,10 +6,9 @@ class GetInputMapKeyNode(ArmLogicTreeNode):
     bl_label = 'Get Input Map Key'
     arm_version = 1
 
-    def init(self, context):
-        super(GetInputMapKeyNode, self).init(context)
-        self.add_input('NodeSocketString', 'Input Map')
-        self.add_input('NodeSocketString', 'Key')
+    def arm_init(self, context):
+        self.add_input('ArmStringSocket', 'Input Map')
+        self.add_input('ArmStringSocket', 'Key')
 
-        self.add_output('NodeSocketFloat', 'Scale', default_value = 1.0)
-        self.add_output('NodeSocketFloat', 'Deadzone')
+        self.add_output('ArmFloatSocket', 'Scale', default_value = 1.0)
+        self.add_output('ArmFloatSocket', 'Deadzone')

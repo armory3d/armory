@@ -6,9 +6,8 @@ class GetKeyboardStartedNode(ArmLogicTreeNode):
     bl_label = 'Get Keyboard Started'
     arm_version = 1
 
-    def init(self, context):
-        super(GetKeyboardStartedNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketString', 'Key')
+        self.add_output('ArmStringSocket', 'Key')
