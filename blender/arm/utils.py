@@ -300,7 +300,7 @@ script_warnings: Dict[str, List[Tuple[str, str]]] = {}  # Script name -> List of
 # See https://regex101.com/r/bbrCzN/8
 RX_MODIFIERS = r'(?P<modifiers>(?:public\s+|private\s+|static\s+|inline\s+|final\s+)*)?'  # Optional modifiers
 RX_IDENTIFIER = r'(?P<identifier>[_$a-z]+[_a-z0-9]*)'  # Variable name, follow Haxe rules
-RX_TYPE = r'(?::\s+(?P<type>[_a-z]+[\._a-z0-9]*))?'  # Optional type annotation
+RX_TYPE = r'(?:\s*:\s*(?P<type>[_a-z]+[\._a-z0-9]*))?'  # Optional type annotation
 RX_VALUE = r'(?:\s*=\s*(?P<value>(?:\".*\")|(?:[^;]+)|))?'  # Optional default value
 
 PROP_REGEX_RAW = fr'@prop\s+{RX_MODIFIERS}(?P<attr_type>var|final)\s+{RX_IDENTIFIER}{RX_TYPE}{RX_VALUE};'

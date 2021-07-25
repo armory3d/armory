@@ -14,7 +14,8 @@ class SetParentNode extends LogicNode {
 
 		var parent: Object;
 		var isUnparent = false;
-		if (Std.is(inputs[2].fromNode, ObjectNode)) {
+
+		if (Std.isOfType(inputs[2].fromNode, ObjectNode)) {
 			var parentNode = cast(inputs[2].fromNode, ObjectNode);
 			isUnparent = parentNode.objectName == "";
 		}

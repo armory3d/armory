@@ -4,7 +4,7 @@ import armory.trait.internal.CanvasScript;
 import iron.Scene;
 
 #if arm_ui
-import zui.Canvas.Anchor;
+import armory.ui.Canvas.Anchor;
 #end
 
 class OnCanvasElementNode extends LogicNode {

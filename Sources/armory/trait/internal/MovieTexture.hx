@@ -2,14 +2,29 @@ package armory.trait.internal;
 
 import kha.Image;
 import kha.Video;
+
 import iron.Trait;
 import iron.object.MeshObject;
 
+/**
+	Replaces the diffuse texture of the first material of the trait's object
+	with a video texture.
+
+	@see https://github.com/armory3d/armory_examples/tree/master/material_movie
+**/
 class MovieTexture extends Trait {
 
+	/**
+		Caches all render targets used by this trait for re-use when having
+		multiple videos of the same size. The lookup only takes place on trait
+		initialization.
+
+		Map layout: `[width => [height => image]]`
+	**/
+	static var imageCache: Map<Int, Map<Int, Image>> = new Map();
+
 	var video: Video;
-	public static var image: Image;
-	public static var created = false;
+	var image: Image;
 
 	var videoName: String;
 
@@ -33,10 +48,7 @@ class MovieTexture extends Trait {
 
 		this.videoName = videoName;
 
-		if (!created) {
-			created = true;
-			notifyOnInit(init);
-		}
+		notifyOnInit(init);
 	}
 
 	function init() {
@@ -44,9 +56,21 @@ class MovieTexture extends Trait {
 			video = vid;
 			video.play(true);
 
-			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
+			var w = getPower2(video.width());
+			var h = getPower2(video.height());
 
-			var o = cast(object, iron.object.MeshObject);
+			// Lazily fill the outer map
+			var hMap: Map<Int, Image> = imageCache[w];
+			if (hMap == null) {
+				imageCache[w] = new Map<Int, Image>();
+			}
+
+			image = imageCache[w][h];
+			if (image == null) {
+				imageCache[w][h] = image = Image.createRenderTarget(w, h);
+			}
+
+			var o = cast(object, MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
 			notifyOnRender2D(render);
 		});

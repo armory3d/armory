@@ -60,7 +60,7 @@ float random(vec2 coords) {
 
 vec3 nishita_lookupLUT(const float height, const float sunTheta) {
 	vec2 coords = vec2(
-	sqrt(height * (1 / nishita_atmo_radius)),
+		sqrt(height * (1 / nishita_atmo_radius)),
 		0.5 + 0.5 * sign(sunTheta - HALF_PI) * sqrt(abs(sunTheta * (1 / HALF_PI) - 1))
 	);
 	return textureLod(nishitaLUT, coords, 0.0).rgb;
@@ -125,7 +125,7 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		// Idea behind this: "Rotate" everything by iPos (-> iPos is the new zenith) and then all calculations for the
 		// inner integral only depend on the sample height (iHeight) and sunTheta (angle between sun and new zenith).
 		float sunTheta = acos(dot(normalize(iPos), normalize(pSun)));
-		vec3 jODepth = nishita_lookupLUT(iHeight, sunTheta);// * vec3(14000000 / 255, 14000000 / 255, 2000000 / 255);
+		vec3 jODepth = nishita_lookupLUT(iHeight, sunTheta);
 
 		// Apply dithering to reduce visible banding
 		jODepth += mix(-1000, 1000, random(r.xy));

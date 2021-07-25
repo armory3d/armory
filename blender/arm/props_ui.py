@@ -211,8 +211,11 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
 
-        if obj.soft_body != None:
+        if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
+        
+        if obj.rigid_body_constraint is not None:
+            layout.prop(obj, 'arm_relative_physics_constraint')
 
 # Menu in data region
 class ARM_PT_DataPropsPanel(bpy.types.Panel):
@@ -626,7 +629,6 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.scale_y = 1.3
-        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
         row.operator("arm.build_project", icon="MOD_BUILD")
         # row.operator("arm.patch_project")
         row.operator("arm.publish_project", icon="EXPORT")
@@ -1053,9 +1055,14 @@ class ArmoryStopButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
-    '''Build and compile project'''
+    """Build and compile project"""
     bl_idname = 'arm.build_project'
     bl_label = 'Build'
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
         # Compare version Blender and Armory (major, minor)
@@ -1093,9 +1100,14 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPublishProjectButton(bpy.types.Operator):
-    '''Build project ready for publishing'''
+    """Build project ready for publishing."""
     bl_idname = 'arm.publish_project'
     bl_label = 'Publish'
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
         # Compare version Blender and Armory (major, minor)

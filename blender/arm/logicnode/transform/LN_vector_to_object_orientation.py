@@ -1,10 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class VectorToObjectOrientationNode(ArmLogicTreeNode):
-    """Converts the given world vector to a vector oriented by the given object.
-    The object scale is taken in count.
+    """Transform world coordinates into object oriented coordinates (in other words: apply object rotation to it).
 
-    @seeNode World Vector To Object Space
+    @seeNode World Vector to Object Space
     @seeNode Get World Orientation
     @seeNode Vector From Transform
     """

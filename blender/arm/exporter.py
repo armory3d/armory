@@ -2434,7 +2434,7 @@ Make sure the mesh only has tris/quads.""")
             # Rigid body constraint
             rbc = bobject.rigid_body_constraint
             if rbc is not None and rbc.enabled:
-                self.add_rigidbody_constraint(o, rbc)
+                self.add_rigidbody_constraint(o, bobject, rbc)
 
         # Camera traits
         if type is NodeType.CAMERA:
@@ -2454,6 +2454,13 @@ Make sure the mesh only has tris/quads.""")
             else:
                 self.material_to_object_dict[mat] = [bobject]
                 self.material_to_arm_object_dict[mat] = [o]
+        
+        # Add UniformsManager trait
+        if type is NodeType.MESH:
+            uniformManager = {}
+            uniformManager['type'] = 'Script'
+            uniformManager['class_name'] = 'armory.trait.internal.UniformsManager'
+            o['traits'].append(uniformManager)
 
         # Export constraints
         if len(bobject.constraints) > 0:
@@ -2741,7 +2748,7 @@ Make sure the mesh only has tris/quads.""")
         o['traits'].append(out_trait)
 
     @staticmethod
-    def add_rigidbody_constraint(o, rbc):
+    def add_rigidbody_constraint(o, bobject, rbc):
         rb1 = rbc.object1
         rb2 = rbc.object2
         if rb1 is None or rb2 is None:
@@ -2760,7 +2767,8 @@ Make sure the mesh only has tris/quads.""")
                 "'" + rb1.name + "'",
                 "'" + rb2.name + "'",
                 str(rbc.disable_collisions).lower(),
-                str(breaking_threshold)
+                str(breaking_threshold),
+                str(bobject.arm_relative_physics_constraint).lower()
             ]
         }
         if rbc.type == "FIXED":

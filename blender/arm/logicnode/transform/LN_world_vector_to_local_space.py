@@ -1,10 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class WorldVectorToLocalSpaceNode(ArmLogicTreeNode):
-    """Converts the given world vector to a object space vector.
-    The object scale is taken in count.
+    """Transform world coordinates into object local coordinates.
 
-    @seeNode Vector To Object Orientation
+    @seeNode Vector to Object Orientation
     @seeNode Get World Orientation
     @seeNode Vector From Transform
     """

@@ -132,31 +132,7 @@ def make_base(con_mesh, parse_opacity):
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
 
-    if con_mesh.is_elem('tex'):
-        vert.add_out('vec2 texCoord')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_flag:
-            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
-                make_particle.write_tilesheet(vert)
-            else:
-                vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-                vert.write_attrib('texCoord = tex * texUnpack + tilesheetOffset;')
-        else:
-            vert.write_attrib('texCoord = tex * texUnpack;')
-
-        if tese is not None:
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
-            tese.write_pre = False
-
-    if con_mesh.is_elem('tex1'):
-        vert.add_out('vec2 texCoord1')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        vert.write_attrib('texCoord1 = tex1 * texUnpack;')
-        if tese is not None:
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
-            tese.write_pre = False
+    make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -296,8 +272,6 @@ def make_forward_mobile(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -320,14 +294,7 @@ def make_forward_mobile(con_mesh):
         opac = mat_state.material.arm_discard_opacity
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    if con_mesh.is_elem('tex'):
-        vert.add_out('vec2 texCoord')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_flag:
-            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-            vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
-        else:
-            vert.write('texCoord = tex * texUnpack;')
+    make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -343,6 +310,8 @@ def make_forward_mobile(con_mesh):
         vert.add_out('vec3 wnormal')
         make_attrib.write_norpos(con_mesh, vert)
         frag.write_attrib('vec3 n = normalize(wnormal);')
+
+    make_attrib.write_vertpos(vert)
 
     frag.add_include('std/math.glsl')
     frag.add_include('std/brdf.glsl')
@@ -474,8 +443,6 @@ def make_forward_solid(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -512,6 +479,7 @@ def make_forward_solid(con_mesh):
         vert.write('vcolor = col.rgb;')
 
     make_attrib.write_norpos(con_mesh, vert, write_nor=False)
+    make_attrib.write_vertpos(vert)
 
     frag.add_out('vec4 fragColor')
     if blend and parse_opacity:

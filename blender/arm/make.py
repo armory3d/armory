@@ -1,15 +1,16 @@
+import errno
 import glob
 import json
 import os
+from queue import Queue
+import shlex
 import shutil
-import time
 import stat
 import subprocess
 import threading
+import time
+from typing import Callable
 import webbrowser
-import shlex
-import errno
-import math
 
 import bpy
 
@@ -29,14 +30,41 @@ import arm.write_data as write_data
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
-def run_proc(cmd, done):
-    def fn(p, done):
-        p.wait()
-        if done != None:
+# Queue of threads and their done callbacks. Item format: [thread, done]
+thread_callback_queue = Queue(maxsize=0)
+
+
+def run_proc(cmd, done: Callable) -> subprocess.Popen:
+    """Creates a subprocess with the given command and returns it.
+
+    If Blender is not running in background mode, a thread is spawned
+    that waits until the subprocess has finished executing to not freeze
+    the UI, otherwise (in background mode) execution is blocked until
+    the subprocess has finished.
+
+    If `done` is not `None`, it is called afterwards in the main thread.
+    """
+    use_thread = not bpy.app.background
+
+    def wait_for_proc(proc: subprocess.Popen):
+        proc.wait()
+
+        if use_thread:
+            # Put the done callback into the callback queue so that it
+            # can be received by a polling function in the main thread
+            thread_callback_queue.put([threading.current_thread(), done], block=True)
+        else:
             done()
+
     p = subprocess.Popen(cmd)
-    threading.Thread(target=fn, args=(p, done)).start()
+
+    if use_thread:
+        threading.Thread(target=wait_for_proc, args=(p,)).start()
+    else:
+        wait_for_proc(p)
+
     return p
+
 
 def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants):
     os.chdir(raw_shaders_path + '/' + shader_name)

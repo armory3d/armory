@@ -1,5 +1,6 @@
 import importlib
 import os
+import queue
 import sys
 
 import bpy
@@ -70,20 +71,56 @@ def on_operator_post(operator_id: str) -> None:
             target_obj.arm_rb_collision_filter_mask = source_obj.arm_rb_collision_filter_mask
 
 
-def always():
+def send_operator(op):
+    if hasattr(bpy.context, 'object') and bpy.context.object != None:
+        obj = bpy.context.object.name
+        if op.name == 'Move':
+            vec = bpy.context.object.location
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        elif op.name == 'Resize':
+            vec = bpy.context.object.scale
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        elif op.name == 'Rotate':
+            vec = bpy.context.object.rotation_euler.to_quaternion()
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        else: # Rebuild
+            make.patch()
+
+
+def always() -> float:
     # Force ui redraw
-    if state.redraw_ui and context_screen != None:
+    if state.redraw_ui and context_screen is not None:
         for area in context_screen.areas:
             if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                 area.tag_redraw()
         state.redraw_ui = False
     # TODO: depsgraph.updates only triggers material trees
     space = arm.utils.logic_editor_space(context_screen)
-    if space != None:
+    if space is not None:
         space.node_tree.arm_cached = False
     return 0.5
 
+  
+def poll_threads() -> float:
+    """Polls the thread callback queue and if a thread has finished, it
+    is joined with the main thread and the corresponding callback is
+    executed in the main thread.
+    """
+    try:
+        thread, callback = make.thread_callback_queue.get(block=False)
+    except queue.Empty:
+        return 0.25
 
+    thread.join()
+    callback()
+
+    # Quickly check if another thread has finished
+    return 0.01
+
+  
 appended_py_paths = []
 context_screen = None
 
@@ -164,7 +201,9 @@ def register():
     bpy.app.handlers.load_post.append(on_load_post)
     bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.append(on_undo_post)
+
     bpy.app.timers.register(always, persistent=True)
+    bpy.app.timers.register(poll_threads, persistent=True)
 
     if arm.utils.get_fp() != '':
         appended_py_paths = []
@@ -181,6 +220,9 @@ def register():
 
 
 def unregister():
+    bpy.app.timers.unregister(poll_threads)
+    bpy.app.timers.unregister(always)
+
     bpy.app.handlers.load_post.remove(on_load_post)
     bpy.app.handlers.depsgraph_update_post.remove(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.remove(on_undo_post)
