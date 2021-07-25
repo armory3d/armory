@@ -3,7 +3,10 @@ package armory.logicnode;
 class LogicTree extends iron.Trait {
 
 	#if arm_patch
-	public static var nodeTrees = new Map<String, LogicTree>();
+	/**
+		Stores all trait instances of the tree via its name.
+	**/
+	public static var nodeTrees = new Map<String, Array<LogicTree>>();
 
 	/**
 		[node name => logic node] for later node replacement for live patching.

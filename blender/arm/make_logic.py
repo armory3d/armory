@@ -79,7 +79,14 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
         if arm.utils.is_livepatch_enabled():
-            f.write(f'\t\tarmory.logicnode.LogicTree.nodeTrees["{group_name}"] = this;\n')
+            # Store a reference to this trait instance in Logictree.nodeTrees
+            f.write('\t\tvar nodeTrees = armory.logicnode.LogicTree.nodeTrees;\n')
+            f.write(f'\t\tif (nodeTrees.exists("{group_name}")) ' + '{\n')
+            f.write(f'\t\t\tnodeTrees["{group_name}"].push(this);\n')
+            f.write('\t\t} else {\n')
+            f.write(f'\t\t\tnodeTrees["{group_name}"] = cast [this];\n')
+            f.write('\t\t}\n')
+            f.write('\t\tnotifyOnRemove(() -> { nodeTrees.remove("' + group_name + '"); });\n')
         f.write('\t\tnotifyOnAdd(add);\n')
         f.write('\t}\n\n')
         f.write('\toverride public function add() {\n')
@@ -217,9 +224,9 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
         if use_live_patch:
             to_type = inp.arm_socket_type
-            f.write(f'\t\t__link.fromType = "{from_type}";')
-            f.write(f'\t\t__link.toType = "{to_type}";')
-            f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};')
+            f.write(f'\t\t__link.fromType = "{from_type}";\n')
+            f.write(f'\t\t__link.toType = "{to_type}";\n')
+            f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
 
     # Create outputs
     for idx, out in enumerate(node.outputs):
@@ -229,9 +236,9 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
             f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
             if use_live_patch:
                 out_type = out.arm_socket_type
-                f.write(f'\t\t__link.fromType = "{out_type}";')
-                f.write(f'\t\t__link.toType = "{out_type}";')
-                f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(out.get_default_value())};')
+                f.write(f'\t\t__link.fromType = "{out_type}";\n')
+                f.write(f'\t\t__link.toType = "{out_type}";\n')
+                f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(out.get_default_value())};\n')
 
     return name
 
