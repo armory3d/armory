@@ -44,10 +44,11 @@ def start():
 def stop():
     """Stop the live patch session."""
     global __running
-    __running = False
+    if __running:
+        __running = False
 
-    log.debug("Live patch session stopped")
-    bpy.msgbus.clear_by_owner(msgbus_owner)
+        log.debug("Live patch session stopped")
+        bpy.msgbus.clear_by_owner(msgbus_owner)
 
 
 def patch_export():
