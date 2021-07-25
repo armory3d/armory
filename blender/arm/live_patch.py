@@ -362,6 +362,7 @@ IGNORE_OPERATORS = (
     'NODE_OT_duplicate_move',
     'NODE_OT_hide_toggle',
     'NODE_OT_link',
+    'NODE_OT_move_detach_links',
     'NODE_OT_select',
     'NODE_OT_translate_attach',
     'NODE_OT_translate_attach_remove_on_cancel',
@@ -369,6 +370,7 @@ IGNORE_OPERATORS = (
     'OBJECT_OT_editmode_toggle',
     'OUTLINER_OT_item_activate',
     'UI_OT_button_string_clear',
+    'UI_OT_eyedropper_id',
     'VIEW3D_OT_select',
     'VIEW3D_OT_select_box',
 )
