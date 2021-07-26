@@ -11,15 +11,15 @@ class OnSurfaceNode(ArmLogicTreeNode):
     arm_section = 'surface'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Touched', 'Touched', 'Touched'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released'),
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Touched')
 
-    def init(self, context):
-        super(OnSurfaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

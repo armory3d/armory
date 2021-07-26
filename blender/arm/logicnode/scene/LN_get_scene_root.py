@@ -6,6 +6,5 @@ class SceneRootNode(ArmLogicTreeNode):
     bl_label = 'Get Scene Root'
     arm_version = 1
 
-    def init(self, context):
-        super(SceneRootNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')

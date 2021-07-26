@@ -78,6 +78,15 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
 
+
+def is_livepatch_enabled():
+    """Returns whether live patch is enabled and can be used."""
+    wrd = bpy.data.worlds['Arm']
+    # If the game is published, the target is krom-[OS] and not krom,
+    # so there is no live patch when publishing
+    return wrd.arm_live_patch and state.target == 'krom'
+
+
 def blend_name():
     return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.', 1)[0]
 
@@ -948,6 +957,10 @@ def get_link_web_server():
 def compare_version_blender_arm():
     return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 93)
 
+def get_file_arm_version_tuple() -> tuple[int]:
+    wrd = bpy.data.worlds['Arm']
+    return tuple(map(int, wrd.arm_version.split('.')))
+
 def type_name_to_type(name: str) -> bpy.types.bpy_struct:
     """Return the Blender type given by its name, if registered."""
     return bpy.types.bpy_struct.bl_rna_get_subclass_py(name)
@@ -977,11 +990,11 @@ def get_visual_studio_from_version(version: str) -> str:
 def get_list_installed_vs(get_version: bool, get_name: bool, get_path: bool) -> []:
     err = ''
     items = []
-    path_file = os.path.join(get_sdk_path(), 'Kha', 'Kinc', 'Tools', 'kincmake', 'Data', 'windows', 'vswhere.exe')  
+    path_file = os.path.join(get_sdk_path(), 'Kha', 'Kinc', 'Tools', 'kincmake', 'Data', 'windows', 'vswhere.exe')
     if not os.path.isfile(path_file):
         err = 'File "'+ path_file +'" not found.'
         return items, err
-    
+
     if (not get_version) and (not get_name) and (not get_path):
         return items, err
 
@@ -1007,8 +1020,8 @@ def get_list_installed_vs(get_version: bool, get_name: bool, get_path: bool) -> 
         return items, err
 
     for i in range(count_items):
-        v = items_ver[i][0] if len(items_ver) > i else '' 
-        v_full = items_ver[i][1] if len(items_ver) > i else '' 
+        v = items_ver[i][0] if len(items_ver) > i else ''
+        v_full = items_ver[i][1] if len(items_ver) > i else ''
         n = items_name[i] if len(items_name) > i else ''
         p = items_path[i] if len(items_path) > i else ''
         items.append((v, n, p, v_full))

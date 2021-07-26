@@ -7,11 +7,10 @@ class TranslateObjectNode(ArmLogicTreeNode):
     arm_section = 'location'
     arm_version = 1
 
-    def init(self, context):
-        super(TranslateObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Vector')
-        self.add_input('NodeSocketBool', 'On Local Axis')
+        self.add_input('ArmVectorSocket', 'Vector')
+        self.add_input('ArmBoolSocket', 'On Local Axis')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -18,6 +18,7 @@ import arm.assets as assets
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
+import arm.live_patch as live_patch
 import arm.log as log
 import arm.make_logic as make_logic
 import arm.make_renderpath as make_renderpath
@@ -246,8 +247,7 @@ def export_data(fp, sdk_path):
 
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
-    import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -425,9 +425,11 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
 def play_done():
+    """Called if the player was stopped/terminated."""
     state.proc_play = None
     state.redraw_ui = True
     log.clear()
+    live_patch.stop()
 
 def assets_done():
     if state.proc_build == None:
@@ -473,40 +475,6 @@ def build_done():
     else:
         log.error('Build failed, check console')
 
-def patch():
-    if state.proc_build != None:
-        return
-    assets.invalidate_enabled = False
-    fp = arm.utils.get_fp()
-    os.chdir(fp)
-    asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
-    ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
-    if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
-        raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
-        shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
-    node_path = arm.utils.get_node_path()
-    khamake_path = arm.utils.get_khamake_path()
-
-    cmd = [node_path, khamake_path, 'krom']
-    cmd.extend(('--shaderversion', '330', '--parallelAssetConversion', '4',
-                '--to', arm.utils.build_dir() + '/debug', '--nohaxe', '--noproject'))
-
-    assets.invalidate_enabled = True
-    state.proc_build = run_proc(cmd, patch_done)
-
-def patch_done():
-    js = 'iron.Scene.patch();'
-    write_patch(js)
-    state.proc_build = None
-
-patch_id = 0
-
-def write_patch(js):
-    global patch_id
-    with open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w') as f:
-        patch_id += 1
-        f.write(str(patch_id) + '\n')
-        f.write(js)
 
 def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
@@ -573,6 +541,7 @@ def build_success():
             webbrowser.open(html5_app_path)
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
+                live_patch.start()
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)

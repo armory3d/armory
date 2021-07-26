@@ -6,17 +6,17 @@ class SetDebugConsoleSettings(ArmLogicTreeNode):
     bl_label = 'Set Debug Console Settings'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('left', 'Anchor Left', 'Anchor debug console in the top left'),
                  ('center', 'Anchor Center', 'Anchor debug console in the top center'),
                  ('right', 'Anchor Right', 'Anchor the debug console in the top right')],
         name='', default='right')
 
-    def init(self, context):  
-        super(SetDebugConsoleSettings, self).init(context) 
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Visible')  
-        self.add_input('NodeSocketFloat', 'Scale')  
+        self.add_input('ArmBoolSocket', 'Visible')
+        self.add_input('ArmFloatSocket', 'Scale')
         self.inputs[-1].default_value = 1.0
 
         self.add_output('ArmNodeSocketAction', 'Out')

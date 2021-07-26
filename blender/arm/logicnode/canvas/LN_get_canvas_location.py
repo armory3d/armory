@@ -6,11 +6,10 @@ class CanvasGetLocationNode(ArmLogicTreeNode):
     bl_label = 'Get Canvas Location'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasGetLocationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
+        self.add_input('ArmStringSocket', 'Element')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketInt', 'X')
-        self.add_output('NodeSocketInt', 'Y')
+        self.add_output('ArmIntSocket', 'X')
+        self.add_output('ArmIntSocket', 'Y')

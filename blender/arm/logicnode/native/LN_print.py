@@ -6,9 +6,8 @@ class PrintNode(ArmLogicTreeNode):
     bl_label = 'Print'
     arm_version = 1
 
-    def init(self, context):
-        super(PrintNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'String')
+        self.add_input('ArmStringSocket', 'String')
 
         self.add_output('ArmNodeSocketAction', 'Out')

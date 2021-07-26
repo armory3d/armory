@@ -8,6 +8,5 @@ class ActiveCameraNode(ArmLogicTreeNode):
     bl_label = 'Get Camera Active'
     arm_version = 1
 
-    def init(self, context):
-        super(ActiveCameraNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketObject', 'Camera')

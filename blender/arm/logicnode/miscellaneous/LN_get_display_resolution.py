@@ -10,7 +10,6 @@ class DisplayInfoNode(ArmLogicTreeNode):
     arm_section = 'screen'
     arm_version = 1
 
-    def init(self, context):
-        super(DisplayInfoNode, self).init(context)
-        self.add_output('NodeSocketInt', 'Width')
-        self.add_output('NodeSocketInt', 'Height')
+    def arm_init(self, context):
+        self.add_output('ArmIntSocket', 'Width')
+        self.add_output('ArmIntSocket', 'Height')

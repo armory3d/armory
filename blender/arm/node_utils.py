@@ -1,7 +1,14 @@
-from typing import Type
+import collections
+from typing import Any, Generator, Type, Union
 
 import bpy
+import mathutils
+from bpy.types import NodeSocket, NodeInputs, NodeOutputs
 from nodeitems_utils import NodeItem
+
+import arm.log
+import arm.logicnode.arm_sockets
+import arm.utils
 
 
 def find_node_by_link(node_group, to_node, inp):
@@ -44,6 +51,125 @@ def get_output_node(node_group, from_node, output_index):
             if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
                 return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
             return link.to_node
+
+
+def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket) -> int:
+    """Find the socket index in the given node input or output
+    collection, return -1 if not found.
+    """
+    for i in range(0, len(sockets)):
+        if sockets[i] == socket:
+            return i
+    return -1
+
+
+def get_socket_default(socket: NodeSocket) -> Any:
+    """Get the socket's default value, or `None` if it doesn't exist."""
+    if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
+        if socket.arm_socket_type != 'NONE':
+            return socket.default_value_raw
+
+    # Shader-type sockets don't have a default value
+    elif socket.type != 'SHADER':
+        return socket.default_value
+
+    return None
+
+
+def set_socket_default(socket: NodeSocket, value: Any):
+    """Set the socket's default value if it exists."""
+    if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
+        if socket.arm_socket_type != 'NONE':
+            socket.default_value_raw = value
+
+    # Shader-type sockets don't have a default value
+    elif socket.type != 'SHADER':
+        socket.default_value = value
+
+
+def get_export_tree_name(tree: bpy.types.NodeTree, do_warn=False) -> str:
+    """Return the name of the given node tree that's used in the
+    exported Haxe code.
+
+    If `do_warn` is true, a warning is displayed if the export name
+    differs from the actual tree name.
+    """
+    export_name = arm.utils.safesrc(tree.name[0].upper() + tree.name[1:])
+
+    if export_name != tree.name:
+        arm.log.warn('Logic node tree and generated trait names differ! Node'
+                     f' tree: "{tree.name}", trait: "{export_name}"')
+
+    return export_name
+
+
+def get_export_node_name(node: bpy.types.Node) -> str:
+    """Return the name of the given node that's used in the exported
+    Haxe code.
+    """
+    return '_' + arm.utils.safesrc(node.name)
+
+
+def get_haxe_property_names(node: bpy.types.Node) -> Generator[tuple[str, str], None, None]:
+    """Generator that yields the names of all node properties that have
+    a counterpart in the node's Haxe class.
+    """
+    for i in range(0, 10):
+        prop_name = f'property{i}_get'
+        prop_found = hasattr(node, prop_name)
+        if not prop_found:
+            prop_name = f'property{i}'
+            prop_found = hasattr(node, prop_name)
+        if prop_found:
+            # Haxe properties are called property0 - property9 even if
+            # their Python equivalent can end with '_get', so yield
+            # both names
+            yield prop_name, f'property{i}'
+
+
+def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:
+    """Formats a socket value to be valid Haxe syntax.
+
+    If `array_outer_brackets` is false, no square brackets are put
+    around array values.
+
+    Make sure that elements of sequence types are not yet in Haxe
+    syntax, otherwise they are strings and get additional quotes!
+    """
+    if isinstance(socket_val, bool):
+        socket_val = str(socket_val).lower()
+
+    elif isinstance(socket_val, str):
+        socket_val = '"{:s}"'.format(socket_val.replace('"', '\\"'))
+
+    elif isinstance(socket_val, (collections.Sequence, bpy.types.bpy_prop_array, mathutils.Color, mathutils.Euler, mathutils.Vector)):
+        socket_val = ','.join(haxe_format_socket_val(v, array_outer_brackets=True) for v in socket_val)
+        if array_outer_brackets:
+            socket_val = f'[{socket_val}]'
+
+    elif socket_val is None:
+        # Don't write 'None' into the Haxe code
+        socket_val = 'null'
+
+    return str(socket_val)
+
+
+def haxe_format_prop_value(node: bpy.types.Node, prop_name: str) -> str:
+    """Formats a property value to be valid Haxe syntax."""
+    prop_value = getattr(node, prop_name)
+    if isinstance(prop_value, str):
+        prop_value = '"' + str(prop_value) + '"'
+    elif isinstance(prop_value, bool):
+        prop_value = str(prop_value).lower()
+    elif hasattr(prop_value, 'name'):  # PointerProperty
+        prop_value = '"' + str(prop_value.name) + '"'
+    else:
+        if prop_value is None:
+            prop_value = 'null'
+        else:
+            prop_value = str(prop_value)
+
+    return prop_value
 
 
 def nodetype_to_nodeitem(node_type: Type[bpy.types.Node]) -> NodeItem:

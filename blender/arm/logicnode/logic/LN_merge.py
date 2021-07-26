@@ -29,7 +29,8 @@ class MergeNode(ArmLogicTreeNode):
     def update_exec_mode(self, context):
         self.outputs['Active Input Index'].hide = self.property0 == 'once_per_frame'
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         name='Execution Mode',
         description='The node\'s behaviour if multiple inputs are active on the same frame',
         items=[('once_per_input', 'Once Per Input',
@@ -45,10 +46,9 @@ class MergeNode(ArmLogicTreeNode):
         super(MergeNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(MergeNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketInt', 'Active Input Index')
+        self.add_output('ArmIntSocket', 'Active Input Index')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0', text='')

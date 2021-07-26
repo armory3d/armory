@@ -6,11 +6,10 @@ class SetMaterialSlotNode(ArmLogicTreeNode):
     bl_label = 'Set Object Material Slot'
     arm_version = 1
 
-    def init(self, context):
-        super(SetMaterialSlotNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketShader', 'Material')
-        self.add_input('NodeSocketInt', 'Slot')
+        self.add_input('ArmDynamicSocket', 'Material')
+        self.add_input('ArmIntSocket', 'Slot')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -10,10 +10,9 @@ class GetVisibleNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(GetVisibleNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketBool', 'Is Object Visible')
-        self.add_output('NodeSocketBool', 'Is Mesh Visible')
-        self.add_output('NodeSocketBool', 'Is Shadow Visible')
+        self.add_output('ArmBoolSocket', 'Is Object Visible')
+        self.add_output('ArmBoolSocket', 'Is Mesh Visible')
+        self.add_output('ArmBoolSocket', 'Is Shadow Visible')

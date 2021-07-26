@@ -7,12 +7,14 @@ import bpy
 from bpy.app.handlers import persistent
 
 import arm.api
+import arm.live_patch as live_patch
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.utils
+
 
 @persistent
 def on_depsgraph_update_post(self):
@@ -41,12 +43,10 @@ def on_depsgraph_update_post(self):
 
     # Send last operator to Krom
     wrd = bpy.data.worlds['Arm']
-    if state.proc_play != None and \
-       state.target == 'krom' and \
-       wrd.arm_live_patch:
+    if state.proc_play is not None and state.target == 'krom' and wrd.arm_live_patch:
         ops = bpy.context.window_manager.operators
-        if len(ops) > 0 and ops[-1] != None:
-            send_operator(ops[-1])
+        if len(ops) > 0 and ops[-1] is not None:
+            live_patch.on_operator(ops[-1].bl_idname)
 
     # Hacky solution to update armory props after operator executions
     last_operator = bpy.context.active_operator
@@ -124,6 +124,7 @@ def poll_threads() -> float:
 
 appended_py_paths = []
 context_screen = None
+
 
 @persistent
 def on_load_post(context):

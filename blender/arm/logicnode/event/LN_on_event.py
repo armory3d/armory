@@ -10,10 +10,9 @@ class OnEventNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'custom'
 
-    property0: StringProperty(name='', default='')
+    property0: HaxeStringProperty('property0', name='', default='')
 
-    def init(self, context):
-        super(OnEventNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

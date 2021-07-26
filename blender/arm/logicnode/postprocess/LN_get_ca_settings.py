@@ -6,7 +6,6 @@ class ChromaticAberrationGetNode(ArmLogicTreeNode):
     bl_label = 'Get CA Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(ChromaticAberrationGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'Strength')
-        self.add_output('NodeSocketFloat', 'Samples')
+    def arm_init(self, context):
+        self.add_output('ArmFloatSocket', 'Strength')
+        self.add_output('ArmFloatSocket', 'Samples')

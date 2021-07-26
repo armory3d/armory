@@ -6,8 +6,7 @@ class RemoveObjectNode(ArmLogicTreeNode):
     bl_label = 'Remove Object'
     arm_version = 1
 
-    def init(self, context):
-        super(RemoveObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
 

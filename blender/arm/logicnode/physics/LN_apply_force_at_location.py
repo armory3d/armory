@@ -19,13 +19,12 @@ class ApplyForceAtLocationNode(ArmLogicTreeNode):
     arm_section = 'force'
     arm_version = 1
 
-    def init(self, context):
-        super(ApplyForceAtLocationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'RB')
-        self.add_input('NodeSocketVector', 'Force')
-        self.add_input('NodeSocketBool', 'Force On Local Axis')
-        self.add_input('NodeSocketVector', 'Location')
-        self.add_input('NodeSocketBool', 'Location On Local Axis')
+        self.add_input('ArmVectorSocket', 'Force')
+        self.add_input('ArmBoolSocket', 'Force On Local Axis')
+        self.add_input('ArmVectorSocket', 'Location')
+        self.add_input('ArmBoolSocket', 'Location On Local Axis')
 
         self.add_output('ArmNodeSocketAction', 'Out')

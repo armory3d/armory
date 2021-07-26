@@ -15,10 +15,9 @@ class CallGroupNode(ArmLogicTreeNode):
     def property0(self):
         return arm.utils.safesrc(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(self.property0_.name)
 
-    property0_: PointerProperty(name='Group', type=bpy.types.NodeTree)
+    property0_: HaxePointerProperty('property0', name='Group', type=bpy.types.NodeTree)
 
-    def init(self, context):
-        super(CallGroupNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')

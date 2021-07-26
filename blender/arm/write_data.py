@@ -54,7 +54,7 @@ def remove_readonly(func, path, excinfo):
 
 
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
-                    enable_dce: bool, import_traits: List[str], import_logicnodes) -> None:
+                    enable_dce: bool, import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
 
     sdk_path = arm.utils.get_sdk_path()
@@ -160,20 +160,20 @@ project.addSources('Sources');
             # if export_navigation:
             #     khafile.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
-        # if import_logicnodes: # Live patching for logic nodes
-            # khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
-
         if not wrd.arm_compiler_inline:
             khafile.write("project.addParameter('--no-inline');\n")
 
         if enable_dce:
             khafile.write("project.addParameter('-dce full');\n")
 
-        live_patch = wrd.arm_live_patch and state.target == 'krom'
-        if wrd.arm_debug_console or live_patch:
+        use_live_patch = arm.utils.is_livepatch_enabled()
+        if wrd.arm_debug_console or use_live_patch:
             import_traits.append('armory.trait.internal.Bridge')
-            if live_patch:
+            if use_live_patch:
                 assets.add_khafile_def('arm_patch')
+                # Include all logic node classes so that they can later
+                # get instantiated
+                khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):

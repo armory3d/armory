@@ -22,14 +22,13 @@ class SetMaterialValueParamNode(ArmLogicTreeNode):
     arm_section = 'params'
     arm_version = 2
 
-    def init(self, context):
-        super(SetMaterialValueParamNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Per Object')
-        self.add_input('NodeSocketShader', 'Material')
-        self.add_input('NodeSocketString', 'Node')
-        self.add_input('NodeSocketFloat', 'Float')
+        self.add_input('ArmBoolSocket', 'Per Object')
+        self.add_input('ArmDynamicSocket', 'Material')
+        self.add_input('ArmStringSocket', 'Node')
+        self.add_input('ArmFloatSocket', 'Float')
 
         self.add_output('ArmNodeSocketAction', 'Out')
     

@@ -22,12 +22,11 @@ class RayCastNode(ArmLogicTreeNode):
     arm_section = 'ray'
     arm_version = 1
 
-    def init(self, context):
-        super(RayCastNode, self).init(context)
-        self.add_input('NodeSocketVector', 'From')
-        self.add_input('NodeSocketVector', 'To')
-        self.add_input('NodeSocketInt', 'Mask', default_value=1)
+    def arm_init(self, context):
+        self.add_input('ArmVectorSocket', 'From')
+        self.add_input('ArmVectorSocket', 'To')
+        self.add_input('ArmIntSocket', 'Mask', default_value=1)
 
         self.add_output('ArmNodeSocketObject', 'RB')
-        self.add_output('NodeSocketVector', 'Hit')
-        self.add_output('NodeSocketVector', 'Normal')
+        self.add_output('ArmVectorSocket', 'Hit')
+        self.add_output('ArmVectorSocket', 'Normal')

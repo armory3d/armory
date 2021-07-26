@@ -7,6 +7,5 @@ class RandomColorNode(ArmLogicTreeNode):
     bl_label = 'Random Color'
     arm_version = 1
 
-    def init(self, context):
-        super(RandomColorNode, self).init(context)
-        self.add_output('NodeSocketColor', 'Color')
+    def arm_init(self, context):
+        self.add_output('ArmColorSocket', 'Color')

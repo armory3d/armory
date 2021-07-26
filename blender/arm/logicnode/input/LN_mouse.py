@@ -7,22 +7,23 @@ class MouseNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('started', 'Started', 'The mouse button startes to be pressed'),
                  ('down', 'Down', 'The mouse button is pressed'),
                  ('released', 'Released', 'The mouse button stops being pressed'),
                  ('moved', 'Moved', 'Moved')],
         name='', default='down')
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('left', 'Left', 'Left mouse button'),
                  ('middle', 'Middle', 'Middle mouse button'),
                  ('right', 'Right', 'Right mouse button')],
         name='', default='left')
 
-    def init(self, context):
-        super(MouseNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketBool', 'State')
+        self.add_output('ArmBoolSocket', 'State')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

@@ -1531,24 +1531,18 @@ Make sure the mesh only has tris/quads.""")
                 # Less bias for bigger maps
                 out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            out_light['strength'] *= 2.6
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['fov'] = 1.5708 # pi/2
             out_light['shadowmap_cube'] = True
             if light_ref.shadow_soft_size > 0.1:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            out_light['strength'] *= 2.6
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
             # Cycles defaults to 0.15
             out_light['spot_blend'] = light_ref.spot_blend / 10
         elif objtype == 'AREA':
-            out_light['strength'] *= 80.0 / (light_ref.size * light_ref.size_y)
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y
 
@@ -2460,7 +2454,7 @@ Make sure the mesh only has tris/quads.""")
             else:
                 self.material_to_object_dict[mat] = [bobject]
                 self.material_to_arm_object_dict[mat] = [o]
-        
+
         # Add UniformsManager trait
         if type is NodeType.MESH:
             uniformManager = {}
@@ -2678,7 +2672,7 @@ Make sure the mesh only has tris/quads.""")
             }
             self.output['traits'].append(out_trait)
 
-        if wrd.arm_live_patch:
+        if arm.utils.is_livepatch_enabled():
             if 'traits' not in self.output:
                 self.output['traits'] = []
             out_trait = {'type': 'Script', 'class_name': 'armory.trait.internal.LivePatch'}

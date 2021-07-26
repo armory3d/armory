@@ -6,11 +6,10 @@ class BloomSetNode(ArmLogicTreeNode):
     bl_label = 'Set Bloom Settings'
     arm_version = 1
 
-    def init(self, context):
-        super(BloomSetNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketFloat', 'Threshold', default_value=1.00)
-        self.add_input('NodeSocketFloat', 'Strength', default_value=3.50)
-        self.add_input('NodeSocketFloat', 'Radius', default_value=3.0)
+        self.add_input('ArmFloatSocket', 'Threshold', default_value=1.00)
+        self.add_input('ArmFloatSocket', 'Strength', default_value=3.50)
+        self.add_input('ArmFloatSocket', 'Radius', default_value=3.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')

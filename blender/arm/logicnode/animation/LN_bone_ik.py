@@ -26,19 +26,17 @@ class BoneIKNode(ArmLogicTreeNode):
     arm_version = 2
     arm_section = 'armature'
 
-    def init(self, context):
-        super(BoneIKNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Bone')
-        self.add_input('NodeSocketVector', 'Goal Position')
-        self.add_input('NodeSocketBool', 'Enable Pole')
-        self.add_input('NodeSocketVector', 'Pole Position')
-        self.add_input('NodeSocketInt', 'Chain Length')
-        self.add_input('NodeSocketInt', 'Max Iterations', 10)
-        self.add_input('NodeSocketFloat', 'Precision', 0.01)
-        self.add_input('NodeSocketFloat', 'Roll Angle')
-
+        self.add_input('ArmStringSocket', 'Bone')
+        self.add_input('ArmVectorSocket', 'Goal Position')
+        self.add_input('ArmBoolSocket', 'Enable Pole')
+        self.add_input('ArmVectorSocket', 'Pole Position')
+        self.add_input('ArmIntSocket', 'Chain Length')
+        self.add_input('ArmIntSocket', 'Max Iterations', 10)
+        self.add_input('ArmFloatSocket', 'Precision', 0.01)
+        self.add_input('ArmFloatSocket', 'Roll Angle')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

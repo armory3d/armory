@@ -9,6 +9,5 @@ class GetGravityNode(ArmLogicTreeNode):
     bl_label = 'Get World Gravity'
     arm_version = 1
 
-    def init(self, context):
-        super(GetGravityNode, self).init(context)
-        self.add_output('NodeSocketVector', 'World Gravity')
+    def arm_init(self, context):
+        self.add_output('ArmVectorSocket', 'World Gravity')

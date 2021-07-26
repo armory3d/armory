@@ -9,9 +9,8 @@ class IsTrueNode(ArmLogicTreeNode):
     bl_label = 'Is True'
     arm_version = 1
 
-    def init(self, context):
-        super(IsTrueNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Bool')
+        self.add_input('ArmBoolSocket', 'Bool')
 
         self.add_output('ArmNodeSocketAction', 'Out')

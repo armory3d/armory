@@ -7,9 +7,8 @@ class GetCursorLocationNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    def init(self, context):
-        super(GetCursorLocationNode, self).init(context)
-        self.add_output('NodeSocketInt', 'X')
-        self.add_output('NodeSocketInt', 'Y')
-        self.add_output('NodeSocketInt', 'Inverted X')
-        self.add_output('NodeSocketInt', 'Inverted Y')
+    def arm_init(self, context):
+        self.add_output('ArmIntSocket', 'X')
+        self.add_output('ArmIntSocket', 'Y')
+        self.add_output('ArmIntSocket', 'Inverted X')
+        self.add_output('ArmIntSocket', 'Inverted Y')

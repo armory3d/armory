@@ -8,15 +8,15 @@ class MathExpressionNode(ArmLogicTreeNode):
     arm_version = 1
     min_inputs = 2
     max_inputs = 10
-    
+
     @staticmethod
     def get_variable_name(index):
         return {
-            0: 'a', 
-            1: 'b', 
-            2: 'c', 
-            3: 'd', 
-            4: 'e', 
+            0: 'a',
+            1: 'b',
+            2: 'c',
+            3: 'd',
+            4: 'e',
             5: 'x',
             6: 'y',
             7: 'h',
@@ -27,7 +27,7 @@ class MathExpressionNode(ArmLogicTreeNode):
     @staticmethod
     def get_clear_exp(value):
         return re.sub(r'[\-\+\*\/\(\)\^\%abcdexyhik0123456789. ]', '', value).strip()
-    
+
     @staticmethod
     def get_invalid_characters(value):
         value = value.replace(' ', '')
@@ -70,7 +70,7 @@ class MathExpressionNode(ArmLogicTreeNode):
                 return False
         return True
 
-    @staticmethod   
+    @staticmethod
     def matches(line, opendelim='(', closedelim=')'):
         stack = []
         for m in re.finditer(r'[{}{}]'.format(opendelim, closedelim), line):
@@ -92,7 +92,7 @@ class MathExpressionNode(ArmLogicTreeNode):
         if len(stack) > 0:
             for pos in stack:
                 yield (False, 0, 0, 0)
-    
+
     @staticmethod
     def isPartCorrect(s):
         if len(s.replace('p', '').replace(' ', '').split()) == 0:
@@ -151,21 +151,20 @@ class MathExpressionNode(ArmLogicTreeNode):
         elif not self.isCorrect(self, value.replace(' ', '')):
             val_error = True
         self.set_exp_error(val_error)
-    
+
     def get_exp(self):
         return self.get('property0', 'a + b')
 
-    property0: StringProperty(name='', description='Expression (operation: +, -, *, /, ^, (, ), %)', set=set_exp, get=get_exp)
-    property1: BoolProperty(name='Clamp', default=False)
+    property0: HaxeStringProperty('property0', name='', description='Expression (operation: +, -, *, /, ^, (, ), %)', set=set_exp, get=get_exp)
+    property1: HaxeBoolProperty('property1', name='Clamp', default=False)
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(MathExpressionNode, self).init(context)
-        self.add_input('NodeSocketFloat', self.get_variable_name(0), default_value=0.0)
-        self.add_input('NodeSocketFloat', self.get_variable_name(1), default_value=0.0)
-        self.add_output('NodeSocketFloat', 'Result')
+    def arm_init(self, context):
+        self.add_input('ArmFloatSocket', self.get_variable_name(0), default_value=0.0)
+        self.add_input('ArmFloatSocket', self.get_variable_name(1), default_value=0.0)
+        self.add_output('ArmFloatSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property1')
@@ -181,7 +180,7 @@ class MathExpressionNode(ArmLogicTreeNode):
         if len(self.inputs) == 10:
             column.enabled = False
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketFloat'
+        op.socket_type = 'ArmFloatSocket'
         op.name_format = self.get_variable_name(len(self.inputs))
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)

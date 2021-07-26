@@ -7,12 +7,11 @@ class RotateObjectNode(ArmLogicTreeNode):
     arm_section = 'rotation'
     arm_version = 1
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Euler Angles')
-        self.add_input('NodeSocketFloat', 'Angle / W')
+        self.add_input('ArmVectorSocket', 'Euler Angles')
+        self.add_input('ArmFloatSocket', 'Angle / W')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
@@ -28,7 +27,7 @@ class RotateObjectNode(ArmLogicTreeNode):
             self.inputs[2].name = "Axis"
             self.inputs[3].name = "Angle"
         else:
-            raise ValueError('No nodesocket labels for current input mode: check self-consistancy of action_set_rotation.py')
+            raise ValueError('No nodesocket labels for current input mode: check self-consistancy of LN_rotate_object.py')
 
     def draw_buttons(self, context, layout):
         # this block is here to ensure backwards compatibility and warn the user.
@@ -40,10 +39,11 @@ class RotateObjectNode(ArmLogicTreeNode):
         else:
             layout.prop(self, 'property0')
 
-    property0: EnumProperty(
-        items = [('Euler Angles', 'Euler Angles', 'Euler Angles'),
-                 ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
-                 ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),
-                 ('Quaternion', 'Quaternion', 'Quaternion')],
+    property0: HaxeEnumProperty(
+        'property0',
+        items=[('Euler Angles', 'Euler Angles', 'Euler Angles'),
+               ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
+               ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),
+               ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='Euler Angles',
-        update = on_property_update)
+        update=on_property_update)

@@ -7,14 +7,14 @@ class OnContactArrayNode(ArmLogicTreeNode):
     arm_section = 'contact'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('begin', 'Begin', 'The contact between the rigid bodies begins'),
                  ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
                  ('end', 'End', 'The contact between the rigid bodies ends')],
         name='', default='begin')
 
-    def init(self, context):
-        super(OnContactArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'RB')
         self.add_input('ArmNodeSocketArray', 'RBs')
 

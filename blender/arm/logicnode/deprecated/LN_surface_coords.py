@@ -12,7 +12,6 @@ class SurfaceCoordsNode(ArmLogicTreeNode):
     arm_is_obsolete = 'is_obsolete'
     arm_version = 2
 
-    def init(self, context):
-        super(SurfaceCoordsNode, self).init(context)
-        self.add_output('NodeSocketVector', 'Coords')
-        self.add_output('NodeSocketVector', 'Movement')
+    def arm_init(self, context):
+        self.add_output('ArmVectorSocket', 'Coords')
+        self.add_output('ArmVectorSocket', 'Movement')

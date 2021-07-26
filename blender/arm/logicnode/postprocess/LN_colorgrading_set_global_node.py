@@ -32,37 +32,37 @@ class ColorgradingSetGlobalNode(ArmLogicTreeNode):
     arm_version = 1
 
     # TODO: RRESET FILE OPTION FOR THE BELOW
-    property0 : EnumProperty(
+    property0 : HaxeEnumProperty(
+        'property0',
         items = [('RGB', 'RGB', 'RGB'),
                  ('Uniform', 'Uniform', 'Uniform')],
         name='Mode', default='Uniform', update=update_node)
-    property1 : StringProperty(name="Loaded Data", description="Loaded data - Just ignore", default="")
+    property1 : HaxeStringProperty('property1', name="Loaded Data", description="Loaded data - Just ignore", default="")
     filepath : StringProperty(name="Preset File", description="Postprocess colorgrading preset file", default="", subtype="FILE_PATH", update=set_data)
 
 
     def draw_nodes_uniform(self, context):
-        self.add_input('NodeSocketFloat', 'Whitebalance', default_value=6500.0)
-        self.add_input('NodeSocketColor', 'Tint', default_value=[1.0, 1.0, 1.0, 1.0])
-        self.add_input('NodeSocketFloat', 'Saturation', default_value=1)
-        self.add_input('NodeSocketFloat', 'Contrast', default_value=1)
-        self.add_input('NodeSocketFloat', 'Gamma', default_value=1)
-        self.add_input('NodeSocketFloat', 'Gain', default_value=1)
-        self.add_input('NodeSocketFloat', 'Offset', default_value=1)
+        self.add_input('ArmFloatSocket', 'Whitebalance', default_value=6500.0)
+        self.add_input('ArmColorSocket', 'Tint', default_value=[1.0, 1.0, 1.0, 1.0])
+        self.add_input('ArmFloatSocket', 'Saturation', default_value=1)
+        self.add_input('ArmFloatSocket', 'Contrast', default_value=1)
+        self.add_input('ArmFloatSocket', 'Gamma', default_value=1)
+        self.add_input('ArmFloatSocket', 'Gain', default_value=1)
+        self.add_input('ArmFloatSocket', 'Offset', default_value=1)
 
     def draw_nodes_rgb(self, context):
-        self.add_input('NodeSocketFloat', 'Whitebalance', default_value=6500.0)
-        self.add_input('NodeSocketVector', 'Tint', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Saturation', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Contrast', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Gamma', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Gain', default_value=[1,1,1])
-        self.add_input('NodeSocketVector', 'Offset', default_value=[1,1,1])
+        self.add_input('ArmFloatSocket', 'Whitebalance', default_value=6500.0)
+        self.add_input('ArmVectorSocket', 'Tint', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Saturation', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Contrast', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Gamma', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Gain', default_value=[1,1,1])
+        self.add_input('ArmVectorSocket', 'Offset', default_value=[1,1,1])
 
     def draw_nodes_colorwheel(self, context):
         pass
 
-    def init(self, context):
-        super(ColorgradingSetGlobalNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.draw_nodes_uniform(context)

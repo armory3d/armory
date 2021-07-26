@@ -6,16 +6,16 @@ class SpawnObjectByNameNode(ArmLogicTreeNode):
     bl_label = 'Spawn Object By Name'
     arm_version = 1
 
-    property0: PointerProperty(
+    property0: HaxePointerProperty(
+        'property0',
         type=bpy.types.Scene, name='Scene',
         description='The scene from which to take the object')
 
-    def init(self, context):
-        super(SpawnObjectByNameNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Name')
-        self.add_input('NodeSocketShader', 'Transform')
-        self.add_input('NodeSocketBool', 'Children', default_value=True)
+        self.add_input('ArmStringSocket', 'Name')
+        self.add_input('ArmDynamicSocket', 'Transform')
+        self.add_input('ArmBoolSocket', 'Children', default_value=True)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Object')

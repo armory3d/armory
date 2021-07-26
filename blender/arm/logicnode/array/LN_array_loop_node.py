@@ -7,12 +7,11 @@ class ArrayLoopNode(ArmLogicTreeNode):
     bl_label = 'Array Loop'
     arm_version = 1
 
-    def init(self, context):
-        super(ArrayLoopNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmNodeSocketAction', 'Loop')
-        self.add_output('NodeSocketShader', 'Value')
-        self.add_output('NodeSocketInt', 'Index')
+        self.add_output('ArmDynamicSocket', 'Value')
+        self.add_output('ArmIntSocket', 'Index')
         self.add_output('ArmNodeSocketAction', 'Done')

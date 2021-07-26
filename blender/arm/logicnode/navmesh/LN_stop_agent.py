@@ -6,8 +6,7 @@ class StopAgentNode(ArmLogicTreeNode):
     bl_label = 'Stop Agent'
     arm_version = 1
 
-    def init(self, context):
-        super(StopAgentNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
 

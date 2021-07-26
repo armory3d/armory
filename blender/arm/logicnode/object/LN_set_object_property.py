@@ -14,11 +14,10 @@ class SetPropertyNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(SetPropertyNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Property')
-        self.add_input('NodeSocketShader', 'Value')
+        self.add_input('ArmStringSocket', 'Property')
+        self.add_input('ArmDynamicSocket', 'Value')
 
         self.add_output('ArmNodeSocketAction', 'Out')

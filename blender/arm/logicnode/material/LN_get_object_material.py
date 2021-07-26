@@ -6,9 +6,8 @@ class GetMaterialNode(ArmLogicTreeNode):
     bl_label = 'Get Object Material'
     arm_version = 1
 
-    def init(self, context):
-        super(GetMaterialNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketInt', 'Slot')
+        self.add_input('ArmIntSocket', 'Slot')
 
-        self.add_output('NodeSocketShader', 'Material')
+        self.add_output('ArmDynamicSocket', 'Material')

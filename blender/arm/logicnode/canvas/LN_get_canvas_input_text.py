@@ -6,8 +6,7 @@ class CanvasGetInputTextNode(ArmLogicTreeNode):
     bl_label = 'Get Canvas Input Text'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasGetInputTextNode, self).init(context)
-        self.add_input('NodeSocketString', 'Element')
+    def arm_init(self, context):
+        self.add_input('ArmStringSocket', 'Element')
 
-        self.add_output('NodeSocketString', 'Text')
+        self.add_output('ArmStringSocket', 'Text')

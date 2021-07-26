@@ -6,8 +6,7 @@ class OnApplicationStateNode(ArmLogicTreeNode):
     bl_label = 'On Application State'
     arm_version = 1
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'On Foreground')
         self.add_output('ArmNodeSocketAction', 'On Background')
         self.add_output('ArmNodeSocketAction', 'On Shutdown')

@@ -6,9 +6,8 @@ class PickLocationNode(ArmLogicTreeNode):
     bl_label = 'Pick NavMesh Location'
     arm_version = 1
 
-    def init(self, context):
-        super(PickLocationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'NavMesh')
-        self.add_input('NodeSocketVector', 'Screen Coords')
+        self.add_input('ArmVectorSocket', 'Screen Coords')
 
-        self.add_output('NodeSocketVector', 'Location')
+        self.add_output('ArmVectorSocket', 'Location')

@@ -6,13 +6,12 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     bl_label = 'Transform to Vector'
     arm_version = 1
 
-    def init(self, context):
-        super(VectorFromTransformNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Transform')
+    def arm_init(self, context):
+        self.add_input('ArmDynamicSocket', 'Transform')
 
-        self.add_output('NodeSocketVector', 'Vector')
-        self.add_output('NodeSocketVector', 'Quaternion XYZ')
-        self.add_output('NodeSocketFloat', 'Quaternion W')
+        self.add_output('ArmVectorSocket', 'Vector')
+        self.add_output('ArmVectorSocket', 'Quaternion XYZ')
+        self.add_output('ArmFloatSocket', 'Quaternion W')
 
     def on_property_update(self, context):
         """called by the EnumProperty, used to update the node socket labels"""
@@ -31,7 +30,8 @@ class VectorFromTransformNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Right', 'Right', 'The transform right (X) direction'),
                  ('Look', 'Look', 'The transform look (Y) direction'),
                  ('Up', 'Up', 'The transform up (Z) direction'),

@@ -10,6 +10,7 @@ Original author: @niacdoial
 import os.path
 import time
 import traceback
+import typing
 from typing import Dict, List, Optional, Tuple
 
 import bpy.props
@@ -17,6 +18,7 @@ import bpy.props
 import arm.log as log
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.arm_sockets
+import arm.node_utils as node_utils
 
 # List of errors that occurred during the replacement
 # Format: (error identifier, node.bl_idname (or None), tree name, exception traceback (optional))
@@ -61,28 +63,27 @@ class NodeReplacement:
         """
         in_socks = {i: i for i in range(len(node.inputs))}
         out_socks = {i: i for i in range(len(node.outputs))}
-        props = {}
-        i = 0
 
-        # finding all the properties fo a node is not possible in a clean way for now.
-        # so, I'll assume their names start with "property", and list all the node's attributes that fulfill that condition.
-        # next, to check that those are indeed properties (in the blender sense), we need to check the class's type annotations.
-        # those annotations are not even instances of bpy.types.Property, but tuples, with the first element being a function accessible at bpy.props.XXXProperty
-        property_types = []
-        for possible_prop_type in dir(bpy.props):
-            if possible_prop_type.endswith('Property'):
-                property_types.append(getattr(bpy.props, possible_prop_type))
+        # Find all properties for this node
+        props = {}
         possible_properties = []
         for attrname in dir(node):
+            # We assume that property names start with 'property'
             if attrname.startswith('property'):
                 possible_properties.append(attrname)
+
         for attrname in possible_properties:
+            # Search in type annotations
             if attrname not in node.__annotations__:
                 continue
-            if not isinstance(node.__annotations__[attrname], tuple):
+
+            # Properties must be annotated with '_PropertyDeferred', see
+            # https://developer.blender.org/rB37e6a1995ac7eeabd5b6a56621ad5a850dae4149
+            # and https://developer.blender.org/rBc44c611c6d8c6ae071b48efb5fc07168f18cd17e
+            if not isinstance(node.__annotations__[attrname], bpy.props._PropertyDeferred):
                 continue
-            if node.__annotations__[attrname][0] in property_types:
-                props[attrname] = attrname
+
+            props[attrname] = attrname
 
         return NodeReplacement(
             node.bl_idname, node.arm_version, node.bl_idname, type(node).arm_version,
@@ -128,15 +129,11 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
     if isinstance(response, arm_nodes.ArmLogicTreeNode):
         newnode = response
         # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
+        copy_basic_node_props(from_node=node, to_node=newnode)
 
     elif isinstance(response, list):  # a list of nodes:
         for newnode in response:
-            newnode.parent = node.parent
-            newnode.location = node.location
-            newnode.select = node.select
+            copy_basic_node_props(from_node=node, to_node=newnode)
 
     elif isinstance(response, NodeReplacement):
         replacement = response
@@ -151,9 +148,7 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
             raise LookupError("The provided NodeReplacement doesn't seem to correspond to the node needing replacement")
 
         # some misc. properties
-        newnode.parent = node.parent
-        newnode.location = node.location
-        newnode.select = node.select
+        copy_basic_node_props(from_node=node, to_node=newnode)
 
         # now, use the `replacement` to hook up the new node correctly
         # start by applying defaults
@@ -274,3 +269,87 @@ def replace_all():
         log.error(f'There were errors in the node update procedure, a detailed report has been written to {reportfile}')
 
         bpy.ops.arm.show_node_update_errors()
+
+
+def copy_basic_node_props(from_node: bpy.types.Node, to_node: bpy.types.Node):
+    to_node.parent = from_node.parent
+    to_node.location = from_node.location
+    to_node.select = from_node.select
+
+    to_node.arm_logic_id = from_node.arm_logic_id
+    to_node.arm_watch = from_node.arm_watch
+
+
+def node_compat_sdk2108():
+    """SDK 21.08 broke compatibility with older nodes as nodes now use
+    custom sockets even for Blender's default data types and custom
+    property "constructors". This allows to listen for events for the
+    live patch system.
+
+    In order to update older nodes this routine is used. It creates a
+    full copy of the nodes and replaces all properties and sockets with
+    their new equivalents.
+    """
+    for tree in bpy.data.node_groups:
+        if tree.bl_idname == "ArmLogicTreeType":
+            for node in list(tree.nodes):
+                # Don't raise exceptions for invalid unregistered nodes, this
+                # function didn't cause the registration problem if there is one
+                if not node.__class__.is_registered_node_type():
+                    continue
+
+                if node.type in ('FRAME', 'REROUTE'):
+                    continue
+
+                newnode = tree.nodes.new(node.__class__.bl_idname)
+                copy_basic_node_props(from_node=node, to_node=newnode)
+
+                # Also copy the node's version number to _not_ prevent actual node
+                # replacement after this step
+                newnode.arm_version = node.arm_version
+
+                # First replace all properties
+                for prop_name, prop in typing.get_type_hints(node.__class__, {}, {}).items():
+                    if isinstance(prop, bpy.props._PropertyDeferred):
+                        if hasattr(node, prop_name) and hasattr(newnode, prop_name):
+                            setattr(newnode, prop_name, getattr(node, prop_name))
+
+                # Replace sockets with new socket types
+                socket_replacements = {
+                    'NodeSocketBool': 'ArmBoolSocket',
+                    'NodeSocketColor': 'ArmColorSocket',
+                    'NodeSocketFloat': 'ArmFloatSocket',
+                    'NodeSocketInt': 'ArmIntSocket',
+                    'NodeSocketShader': 'ArmDynamicSocket',
+                    'NodeSocketString': 'ArmStringSocket',
+                    'NodeSocketVector': 'ArmVectorSocket'
+                }
+
+                # Recreate all sockets
+                newnode.inputs.clear()
+                for inp in node.inputs:
+                    inp_idname = inp.bl_idname
+                    inp_idname = socket_replacements.get(inp_idname, inp_idname)
+
+                    newinp = newnode.inputs.new(inp_idname, inp.name, identifier=inp.identifier)
+
+                    if inp.is_linked:
+                        for link in inp.links:
+                            tree.links.new(link.from_socket, newinp)
+                    else:
+                        node_utils.set_socket_default(newinp, node_utils.get_socket_default(inp))
+
+                newnode.outputs.clear()
+                for out in node.outputs:
+                    out_idname = out.bl_idname
+                    out_idname = socket_replacements.get(out_idname, out_idname)
+
+                    newout = newnode.outputs.new(out_idname, out.name, identifier=out.identifier)
+
+                    if out.is_linked:
+                        for link in out.links:
+                            tree.links.new(newout, link.to_socket)
+                    else:
+                        node_utils.set_socket_default(newout, node_utils.get_socket_default(out))
+
+                tree.nodes.remove(node)

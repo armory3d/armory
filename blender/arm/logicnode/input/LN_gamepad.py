@@ -15,7 +15,8 @@ class GamepadNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'gamepad'
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('started', 'Started', 'The gamepad button starts to be pressed'),
                  ('down', 'Down', 'The gamepad button is pressed'),
                  ('released', 'Released', 'The gamepad button stops being pressed')],
@@ -23,7 +24,8 @@ class GamepadNode(ArmLogicTreeNode):
                  # ('Moved Right', 'Moved Right', 'Moved Right'),],
         name='', default='down')
 
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('cross', 'cross / a', 'cross / a'),
                  ('circle', 'circle / b', 'circle / b'),
                  ('square', 'square / x', 'square / x'),
@@ -44,12 +46,11 @@ class GamepadNode(ArmLogicTreeNode):
                  ('touchpad', 'touchpad', 'touchpad'),],
         name='', default='cross')
 
-    def init(self, context):
-        super(GamepadNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketBool', 'State')
+        self.add_output('ArmBoolSocket', 'State')
 
-        self.add_input('NodeSocketInt', 'Gamepad')
+        self.add_input('ArmIntSocket', 'Gamepad')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

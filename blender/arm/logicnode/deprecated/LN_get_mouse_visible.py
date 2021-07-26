@@ -14,9 +14,8 @@ class GetMouseVisibleNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 2
 
-    def init(self, context):
-        super(GetMouseVisibleNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Is Visible')
+    def arm_init(self, context):
+        self.outputs.new('ArmBoolSocket', 'Is Visible')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):

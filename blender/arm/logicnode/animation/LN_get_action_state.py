@@ -6,10 +6,9 @@ class AnimationStateNode(ArmLogicTreeNode):
     bl_label = 'Get Action State'
     arm_version = 1
 
-    def init(self, context):
-        super(AnimationStateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketString', 'Action')
-        self.add_output('NodeSocketInt', 'Frame')
-        self.add_output('NodeSocketBool', 'Is Paused')
+        self.add_output('ArmStringSocket', 'Action')
+        self.add_output('ArmIntSocket', 'Frame')
+        self.add_output('ArmBoolSocket', 'Is Paused')

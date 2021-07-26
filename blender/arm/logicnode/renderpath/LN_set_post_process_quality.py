@@ -5,7 +5,8 @@ class RpConfigNode(ArmLogicTreeNode):
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Set Post Process Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('SSGI', 'SSGI', 'SSGI'),
                  ('SSR', 'SSR', 'SSR'),
                  ('Bloom', 'Bloom', 'Bloom'),
@@ -14,10 +15,9 @@ class RpConfigNode(ArmLogicTreeNode):
                  ],
         name='', default='SSGI')
 
-    def init(self, context):
-        super(RpConfigNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Enable')
+        self.add_input('ArmBoolSocket', 'Enable')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

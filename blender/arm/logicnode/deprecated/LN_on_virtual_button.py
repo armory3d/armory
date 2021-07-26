@@ -11,15 +11,15 @@ class OnVirtualButtonNode(ArmLogicTreeNode):
     arm_section = 'virtual'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
-    property1: StringProperty(name='', default='button')
+    property1: HaxeStringProperty('property1', name='', default='button')
 
-    def init(self, context):
-        super(OnVirtualButtonNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

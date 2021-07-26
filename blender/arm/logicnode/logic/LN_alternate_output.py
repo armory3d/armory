@@ -8,8 +8,7 @@ class AlternateNode(ArmLogicTreeNode):
     arm_section = 'flow'
     arm_version = 1
 
-    def init(self, context):
-        super(AlternateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', '0')

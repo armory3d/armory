@@ -10,11 +10,10 @@ class PlayActionNode(ArmLogicTreeNode):
     arm_category = 'Animation'
     arm_version = 2
 
-    def init(self, context):
-        super(PlayActionNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketAnimAction', 'Action')
-        self.add_input('NodeSocketFloat', 'Blend', default_value=0.2)
+        self.add_input('ArmFloatSocket', 'Blend', default_value=0.2)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')

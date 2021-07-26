@@ -7,17 +7,17 @@ class SurfaceNode(ArmLogicTreeNode):
     arm_section = 'surface'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('started', 'Started', 'The screen surface starts to be touched'),
                  ('down', 'Down', 'The screen surface is touched'),
                  ('released', 'Released', 'The screen surface stops being touched'),
                  ('moved', 'Moved', 'Moved')],
         name='', default='down')
 
-    def init(self, context):
-        super(SurfaceNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('NodeSocketBool', 'State')
+        self.add_output('ArmBoolSocket', 'State')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

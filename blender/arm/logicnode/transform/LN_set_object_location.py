@@ -14,12 +14,11 @@ class SetLocationNode(ArmLogicTreeNode):
     arm_section = 'location'
     arm_version = 2
 
-    def init(self, context):
-        super(SetLocationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketVector', 'Location')
-        self.add_input('NodeSocketBool', 'Parent Relative')
+        self.add_input('ArmVectorSocket', 'Location')
+        self.add_input('ArmBoolSocket', 'Parent Relative')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

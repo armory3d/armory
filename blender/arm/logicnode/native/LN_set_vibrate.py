@@ -8,10 +8,9 @@ class SetVibrateNode(ArmLogicTreeNode):
     arm_section = 'Native'
     arm_version = 1
 
-    def init(self, context):
-        super(SetVibrateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketInt', 'Milliseconds')
+        self.add_input('ArmIntSocket', 'Milliseconds')
         self.inputs[-1].default_value = 100
 
         self.add_output('ArmNodeSocketAction', 'Out')

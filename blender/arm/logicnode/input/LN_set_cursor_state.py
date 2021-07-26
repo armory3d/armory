@@ -14,17 +14,17 @@ class SetCursorStateNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('hide locked', 'Hide Locked', 'The mouse cursor is hidden and locked'),
                  ('hide', 'Hide', 'The mouse cursor is hidden'),
                  ('lock', 'Lock', 'The mouse cursor is locked'),
                  ],
         name='', default='hide locked')
 
-    def init(self, context):
-        super(SetCursorStateNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'State')
+        self.add_input('ArmBoolSocket', 'State')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

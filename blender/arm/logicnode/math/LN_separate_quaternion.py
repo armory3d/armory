@@ -7,11 +7,10 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
     arm_section = 'quaternions'
     arm_version = 1
 
-    def init(self, context):
-        super(SeparateQuaternionNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Quaternion')
+    def arm_init(self, context):
+        self.add_input('ArmVectorSocket', 'Quaternion')
 
-        self.add_output('NodeSocketFloat', 'X')
-        self.add_output('NodeSocketFloat', 'Y')
-        self.add_output('NodeSocketFloat', 'Z')
-        self.add_output('NodeSocketFloat', 'W')
+        self.add_output('ArmFloatSocket', 'X')
+        self.add_output('ArmFloatSocket', 'Y')
+        self.add_output('ArmFloatSocket', 'Z')
+        self.add_output('ArmFloatSocket', 'W')

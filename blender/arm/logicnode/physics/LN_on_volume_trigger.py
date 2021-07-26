@@ -10,14 +10,14 @@ class OnVolumeTriggerNode(ArmLogicTreeNode):
     bl_label = 'On Volume Trigger'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('begin', 'Begin', 'The contact between the rigid bodies begins'),
                  ('overlap', 'Overlap', 'The contact between the rigid bodies is happening'),
                  ('end', 'End', 'The contact between the rigid bodies ends')],
         name='', default='begin')
 
-    def init(self, context):
-        super(OnVolumeTriggerNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object 1')
         self.add_input('ArmNodeSocketObject', 'Object 2')
 
