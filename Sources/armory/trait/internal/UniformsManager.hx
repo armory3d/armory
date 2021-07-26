@@ -131,10 +131,17 @@ class UniformsManager extends Trait{
 					uniformExist = true;
 					var object = Scene.active.root; // Map default texture to scene root
 
-					iron.data.Data.getImage(texture.default_image_file, function(image: kha.Image) {
-						setTextureValue(material, object, texture.link, image);
-					
-					});
+					if(texture.default_image_file == null){
+						setTextureValue(material, object, texture.link, null);
+
+					}
+					else{
+						iron.data.Data.getImage(texture.default_image_file, function(image: kha.Image) {
+							setTextureValue(material, object, texture.link, image);
+
+						});
+											
+					}
 					register(Texture);
 
 				}
