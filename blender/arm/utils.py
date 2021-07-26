@@ -100,7 +100,17 @@ def get_fp():
     else:
         s = bpy.data.filepath.split(os.path.sep)
         s.pop()
-        return os.path.sep.join(s)
+        s = os.path.sep.join(s)
+        if get_os_is_windows() and len(s) == 2 and s[1] == ':':
+            # If the project is located at a drive root (C:/ for example),
+            # then s = "C:". If joined later with another path, no path
+            # separator is added by default because C:some_path is valid
+            # Windows path syntax (some_path is then relative to the CWD on the
+            # C drive). We prevent this by manually adding the path separator
+            # in these cases. Please refer to the Python doc of os.path.join()
+            # for more details.
+            s += os.path.sep
+        return s
 
 def get_fp_build():
     return os.path.join(get_fp(), build_dir())
