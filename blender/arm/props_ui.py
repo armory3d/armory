@@ -1923,7 +1923,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
         node.location = (-200, -200)
         node.inputs[0].default_value = 5.0
         links.new(nodes['Bump'].inputs[2], nodes['_TerrainHeight'].outputs[0])
-        links.new(nodes['Principled BSDF'].inputs[17], nodes['Bump'].outputs[0])
+        links.new(nodes['Principled BSDF'].inputs[20], nodes['Bump'].outputs[0])
 
         # Create sectors
         root_obj = bpy.data.objects.new("Terrain", None)
