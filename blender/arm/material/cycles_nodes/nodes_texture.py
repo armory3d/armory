@@ -120,11 +120,11 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
         if node.arm_material_param:
             tex_link = node.name
             is_arm_mat_param = True
-            if tex['file'] is not None:
-                tex_default_file = tex['file']
 
         if tex is not None:
             state.curshader.write_textures += 1
+            if node.arm_material_param and tex['file'] is not None:
+                tex_default_file = tex['file']
             if use_color_out:
                 to_linear = node.image is not None and node.image.colorspace_settings.name == 'sRGB'
                 res = f'{c.texture_store(node, tex, tex_name, to_linear, tex_link=tex_link, default_value=tex_default_file, is_arm_mat_param=is_arm_mat_param)}.rgb'
@@ -140,8 +140,8 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
                 'file': ''
             }
             if use_color_out:
-                return '{0}.rgb'.format(c.texture_store(node, tex, tex_name, to_linear=False, tex_link=tex_link))
-            return '{0}.a'.format(c.texture_store(node, tex, tex_name, to_linear=True, tex_link=tex_link))
+                return '{0}.rgb'.format(c.texture_store(node, tex, tex_name, to_linear=False, tex_link=tex_link, is_arm_mat_param=is_arm_mat_param))
+            return '{0}.a'.format(c.texture_store(node, tex, tex_name, to_linear=True, tex_link=tex_link, is_arm_mat_param=is_arm_mat_param))
 
         # Pink color for missing texture
         else:
