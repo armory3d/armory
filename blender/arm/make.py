@@ -73,7 +73,7 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
         else:
             done()
 
-    p = subprocess.Popen(cmd)
+    p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     if use_thread:
         threading.Thread(target=wait_for_proc, args=(p,)).start()
@@ -481,14 +481,53 @@ def build_done():
     if state.proc_build is None:
         return
     result = state.proc_build.poll()
-    state.proc_build = None
-    state.redraw_ui = True
+    # state.proc_build = None
+    # state.redraw_ui = True
+    # if result == 0:
+    #     bpy.data.worlds['Arm'].arm_recompile = False
+    #     build_success()
+    # else:
+    #     log.error('Build failed, check console')
     if result == 0:
+        state.proc_build = None
+        state.redraw_ui = True
         bpy.data.worlds['Arm'].arm_recompile = False
         build_success()
     else:
-        log.error('Build failed, check console')
+        # log.error('Build failed')
+        err = state.proc_build.communicate()[1].decode("utf-8").strip()
+        err = err.split("\n")[0]
+        log.error(err)
+        if arm.utils.get_arm_preferences().open_script_error:
+            try:
+                parts = err.split(":")
+                path = parts[0]
+                linenum = parts[1]
+                column = parts[2][12:-1].split("-")
+                arm.utils.open_editor(path,linenum,column[0])
+            except:
+                log.debug('Failed to parse error position')
+    state.proc_build = None
+    state.redraw_ui = True
 
+# def build_fail(info=None):
+#     if info != None:
+#         log.error(info,'')
+#     if state.proc_build != None:
+#         err = state.proc_build.communicate()[1].decode("utf-8").strip()
+#         err = err.split("\n")[0]
+#         log.error(err)
+#         if arm.utils.get_arm_preferences().open_script_error:
+#             try:
+#                 parts = err.split(":")
+#                 path = parts[0]
+#                 linenum = parts[1]
+#                 column = parts[2][12:-1].split("-")
+#                 arm.utils.open_editor(path,linenum,column[0])
+#             except:
+#                 log.debug('Failed to parse error position')
+#     state.proc_build = None
+#     state.redraw_ui = True
 
 def runtime_to_target():
     wrd = bpy.data.worlds['Arm']

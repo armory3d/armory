@@ -748,13 +748,14 @@ def export_bone_data(bobject: bpy.types.Object) -> bool:
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
 
-def open_editor(hx_path=None):
+def open_editor(hx_path=None,line=None,pos=None):
     ide_bin = get_ide_bin()
+    editor = get_code_editor()
 
     if hx_path is None:
         hx_path = arm.utils.get_fp()
 
-    if get_code_editor() == 'default':
+    if editor == 'default':
         # Get editor environment variables
         # https://unix.stackexchange.com/q/4859
         env_v_editor = os.environ.get('VISUAL')
@@ -773,33 +774,31 @@ def open_editor(hx_path=None):
 
     if os.path.exists(ide_bin):
         args = [ide_bin, arm.utils.get_fp()]
-
-        # Sublime Text
-        if get_code_editor() == 'sublime':
+        if editor == 'sublime':
             project_name = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_name)
             subl_project_path = arm.utils.get_fp() + f'/{project_name}.sublime-project'
-
             if not os.path.exists(subl_project_path):
                 generate_sublime_project(subl_project_path)
-
             args += ['--project', subl_project_path]
-
             args.append('--add')
-
-        args.append(hx_path)
-
+            args.append(hx_path)
+        elif editor == 'code'or ide_bin == 'code' or editor == 'kodestudio':
+            args.append('--goto')
+            goto = hx_path
+            if line != None: goto += ":"+line
+            if pos != None: goto += ":"+pos
+            args.append(goto)
+        else:
+            args.append(hx_path)
         if arm.utils.get_os() == 'mac':
             argstr = ""
-
             for arg in args:
                 if not (arg.startswith('-') or arg.startswith('--')):
                     argstr += '"' + arg + '"'
                 argstr += ' '
-
             subprocess.Popen(argstr[:-1], shell=True)
         else:
             subprocess.Popen(args)
-
     else:
         raise FileNotFoundError(f'Code editor executable not found: {ide_bin}. You can change the path in the Armory preferences.')
 
