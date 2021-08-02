@@ -116,7 +116,16 @@ def poll_threads() -> float:
         return 0.25
 
     thread.join()
-    callback()
+
+    try:
+        callback()
+    except Exception as e:
+        # If there is an exception, we can no longer return the time to
+        # the next call to this polling function, so to keep it running
+        # we re-register it and then raise the original exception.
+        bpy.app.timers.unregister(poll_threads)
+        bpy.app.timers.register(poll_threads, first_interval=0.01, persistent=True)
+        raise e
 
     # Quickly check if another thread has finished
     return 0.01
