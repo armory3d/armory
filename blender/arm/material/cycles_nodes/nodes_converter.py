@@ -8,6 +8,19 @@ import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    log = arm.reload_module(log)
+    c = arm.reload_module(c)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import floatstr, vec3str
+else:
+    DO_RELOAD_MODULE = True
+
+
 def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
 
     interp = node.interpolation_type
@@ -40,7 +53,7 @@ def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.Nod
         return f'map_range_smootherstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
 
 def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    
+
     t = c.parse_value_input(node.inputs[0])
 
     state.curshader.add_function(c_functions.str_blackbody)

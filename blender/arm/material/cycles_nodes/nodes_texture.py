@@ -6,12 +6,26 @@ import bpy
 
 import arm.assets as assets
 import arm.log as log
-import arm.material.cycles_functions as c_functions
 import arm.material.cycles as c
+import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
 import arm.write_probes as write_probes
+
+if "DO_RELOAD_MODULE" in locals():
+    assets = arm.reload_module(assets)
+    log = arm.reload_module(log)
+    c = arm.reload_module(c)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState, ParserContext
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import floatstr, vec3str
+    arm.utils = arm.reload_module(arm.utils)
+    write_probes = arm.reload_module(write_probes)
+else:
+    DO_RELOAD_MODULE = True
 
 
 def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:

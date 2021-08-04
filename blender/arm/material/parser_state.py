@@ -5,6 +5,13 @@ import bpy
 
 from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
+else:
+    DO_RELOAD_MODULE = True
+
 
 class ParserContext(Enum):
     """Describes which kind of node tree is parsed."""

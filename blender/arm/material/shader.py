@@ -1,5 +1,10 @@
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 # Type aliases for type hints to make it easier to see which kind of
 # shader data type is stored in a string
 floatstr = str

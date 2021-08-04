@@ -1,7 +1,15 @@
 import bpy
+
 import arm.props_ui as props_ui
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    props_ui = arm.reload_module(props_ui)
+else:
+    DO_RELOAD_MODULE = True
+
 arm_keymaps = []
+
 
 def register():
     wm = bpy.context.window_manager
@@ -20,6 +28,7 @@ def register():
     km.keymap_items.new("tlm.build_lightmaps", type='F6', value='PRESS')
     km.keymap_items.new("tlm.clean_lightmaps", type='F7', value='PRESS')
     arm_keymaps.append(km)
+
 
 def unregister():
     wm = bpy.context.window_manager

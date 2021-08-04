@@ -12,6 +12,21 @@ import arm.node_utils as node_utils
 import arm.utils
 import arm.write_probes as write_probes
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.assets = arm.reload_module(arm.assets)
+    arm.log = arm.reload_module(arm.log)
+    arm.material = arm.reload_module(arm.material)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState, ParserContext
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import ShaderContext, Shader
+    cycles = arm.reload_module(cycles)
+    node_utils = arm.reload_module(node_utils)
+    arm.utils = arm.reload_module(arm.utils)
+    write_probes = arm.reload_module(write_probes)
+else:
+    DO_RELOAD_MODULE = True
+
 callback = None
 shader_datas = []
 

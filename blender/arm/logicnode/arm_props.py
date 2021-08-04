@@ -15,6 +15,20 @@ from typing import Any, Callable, Sequence, Union
 import bpy
 from bpy.props import *
 
+__all__ = [
+    'HaxeBoolProperty',
+    'HaxeBoolVectorProperty',
+    'HaxeCollectionProperty',
+    'HaxeEnumProperty',
+    'HaxeFloatProperty',
+    'HaxeFloatVectorProperty',
+    'HaxeIntProperty',
+    'HaxeIntVectorProperty',
+    'HaxePointerProperty',
+    'HaxeStringProperty',
+    'RemoveHaxeProperty'
+]
+
 
 def __haxe_prop(prop_type: Callable, prop_name: str, *args, **kwargs) -> Any:
     """Declares a logic node property as a property that will be

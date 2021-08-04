@@ -11,6 +11,16 @@ import arm.props_traits
 import arm.ui_icons as ui_icons
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.logicnode = arm.reload_module(arm.logicnode)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 registered_nodes = []
 registered_categories = []
 

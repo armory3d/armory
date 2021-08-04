@@ -5,6 +5,8 @@ import shutil
 import bpy
 from bpy.props import *
 
+from arm.lightmapper.panels import scene
+
 import arm.api
 import arm.assets as assets
 from arm.exporter import ArmoryExporter
@@ -20,10 +22,24 @@ import arm.proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 
-from arm.lightmapper.utility import icon
-from arm.lightmapper.properties.denoiser import oidn, optix
-from arm.lightmapper.panels import scene
-import importlib
+if "DO_RELOAD_MODULE" in locals():
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    log = arm.reload_module(log)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    props = arm.reload_module(props)
+    arm.props_properties = arm.reload_module(arm.props_properties)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    arm.proxy = arm.reload_module(arm.proxy)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
 
 
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
@@ -213,7 +229,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
 
         if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
-        
+
         if obj.rigid_body_constraint is not None:
             layout.prop(obj, 'arm_relative_physics_constraint')
 

@@ -4,7 +4,14 @@ from bpy.types import Material, UILayout
 
 from arm.material.shader import ShaderContext
 
-drivers: Dict[str, Dict] = dict()
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import ShaderContext
+else:
+    drivers: Dict[str, Dict] = dict()
+
+    DO_RELOAD_MODULE = True
 
 
 def add_driver(driver_name: str,

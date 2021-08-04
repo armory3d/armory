@@ -10,6 +10,18 @@ from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    log = arm.reload_module(log)
+    c = arm.reload_module(c)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState, ParserContext
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import floatstr, vec3str
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     out_type = 'float' if out_socket.type == 'VALUE' else 'vec3'

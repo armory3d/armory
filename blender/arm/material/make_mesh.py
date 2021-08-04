@@ -1,4 +1,5 @@
 import bpy
+
 import arm.assets as assets
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -9,6 +10,20 @@ import arm.material.make_cluster as make_cluster
 import arm.material.make_finalize as make_finalize
 import arm.material.make_attrib as make_attrib
 import arm.utils
+
+if "DO_RELOAD_MODULE" in locals():
+    assets = arm.reload_module(assets)
+    mat_state = arm.reload_module(mat_state)
+    mat_utils = arm.reload_module(mat_utils)
+    cycles = arm.reload_module(cycles)
+    make_tess = arm.reload_module(make_tess)
+    make_particle = arm.reload_module(make_particle)
+    make_cluster = arm.reload_module(make_cluster)
+    make_finalize = arm.reload_module(make_finalize)
+    make_attrib = arm.reload_module(make_attrib)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
 
 is_displacement = False
 write_material_attribs = None

@@ -1,4 +1,5 @@
 import bpy
+
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -9,6 +10,21 @@ import arm.material.make_particle as make_particle
 import arm.material.make_finalize as make_finalize
 import arm.assets as assets
 import arm.utils
+
+if "DO_RELOAD_MODULE" in locals():
+    cycles = arm.reload_module(cycles)
+    mat_state = arm.reload_module(mat_state)
+    mat_utils = arm.reload_module(mat_utils)
+    make_skin = arm.reload_module(make_skin)
+    make_inst = arm.reload_module(make_inst)
+    make_tess = arm.reload_module(make_tess)
+    make_particle = arm.reload_module(make_particle)
+    make_finalize = arm.reload_module(make_finalize)
+    assets = arm.reload_module(assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def make(context_id, rpasses, shadowmap=False):
 

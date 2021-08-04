@@ -22,6 +22,26 @@ import arm.material.mat_utils as mat_utils
 from arm.material.shader import Shader, ShaderContext, ShaderData
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    log = arm.reload_module(log)
+    cycles = arm.reload_module(cycles)
+    make_decal = arm.reload_module(make_decal)
+    make_depth = arm.reload_module(make_depth)
+    make_mesh = arm.reload_module(make_mesh)
+    make_overlay = arm.reload_module(make_overlay)
+    make_transluc = arm.reload_module(make_transluc)
+    make_voxel = arm.reload_module(make_voxel)
+    mat_state = arm.reload_module(mat_state)
+    mat_utils = arm.reload_module(mat_utils)
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext, ShaderData
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 rpass_hook = None
 
 

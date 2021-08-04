@@ -1,13 +1,29 @@
 import importlib
 import inspect
 import pkgutil
+import sys
 
+import arm
 import arm.logicnode.arm_nodes as arm_nodes
+from arm.logicnode.arm_props import *
 import arm.logicnode.arm_sockets as arm_sockets
+from arm.logicnode.replacement import NodeReplacement
+
+if "DO_RELOAD_MODULE" in locals():
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
+    from arm.logicnode.arm_props import *
+    arm_sockets = arm.reload_module(arm_sockets)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    from arm.logicnode.replacement import NodeReplacement
+
+    HAS_RELOADED = True
+else:
+    DO_RELOAD_MODULE = True
 
 
 def init_categories():
-    # Register node menu categories
+    """Register default node menu categories."""
     arm_nodes.add_category('Logic', icon='OUTLINER', section="basic",
                            description="Logic nodes are used to control execution flow using branching, loops, gates etc.")
     arm_nodes.add_category('Event', icon='INFO', section="basic")
@@ -56,8 +72,15 @@ def init_nodes():
             # The package must be loaded as well so that the modules from that package can be accessed (see the
             # pkgutil.walk_packages documentation for more information on this)
             loader.find_module(module_name).load_module(module_name)
-        else:
-            _module = importlib.import_module(module_name)
+
+        # Only look at modules in sub packages
+        elif module_name.rsplit('.', 1)[0] != __package__:
+            if 'HAS_RELOADED' not in globals():
+                _module = importlib.import_module(module_name)
+            else:
+                # Reload the module if the SDK was reloaded at least once
+                _module = importlib.reload(sys.modules[module_name])
+
             for name, obj in inspect.getmembers(_module, inspect.isclass):
                 if name == "ArmLogicTreeNode":
                     continue

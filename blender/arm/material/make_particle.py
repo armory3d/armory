@@ -1,6 +1,12 @@
-
 import arm.utils
 import arm.material.mat_state as mat_state
+
+if "DO_RELOAD_MODULE" in locals():
+    arm.utils = arm.reload_module(arm.utils)
+    mat_state = arm.reload_module(mat_state)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def write(vert, particle_info=None, shadowmap=False):
 
@@ -17,7 +23,7 @@ def write(vert, particle_info=None, shadowmap=False):
 
     str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }\n"
     vert.add_function(str_tex_hash)
-    
+
     prep = 'float '
     if out_age:
         prep = ''
@@ -45,7 +51,7 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('}')
 
     # vert.write('p_age /= 2;') # Match
-    
+
     # object_align_factor / 2 + gxyz
     prep = 'vec3 '
     if out_velocity:

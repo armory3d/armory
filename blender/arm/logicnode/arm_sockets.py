@@ -4,6 +4,11 @@ from bpy.types import NodeSocket
 
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def _on_update_socket(self, context):
     self.node.on_socket_val_update(context, self)

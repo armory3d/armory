@@ -1,5 +1,5 @@
-import itertools
 from collections import OrderedDict
+import itertools
 from typing import Any, Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
@@ -13,6 +13,15 @@ import arm  # we cannot import arm.livepatch here or we have a circular import
 from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
+
+if "DO_RELOAD_MODULE" in locals():
+    arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
+    from arm.logicnode.arm_props import *
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    from arm.logicnode.replacement import NodeReplacement
+    arm.node_utils = arm.reload_module(arm.node_utils)
+else:
+    DO_RELOAD_MODULE = True
 
 # When passed as a category to add_node(), this will use the capitalized
 # name of the package of the node as the category to make renaming

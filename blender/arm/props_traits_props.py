@@ -1,6 +1,8 @@
 import bpy
 from bpy.props import *
 
+__all__ = ['ArmTraitPropWarning', 'ArmTraitPropListItem', 'ARM_UL_PropList']
+
 PROP_TYPE_ICONS = {
     "String": "SORTALPHA",
     "Int": "CHECKBOX_DEHLT",

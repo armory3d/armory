@@ -32,7 +32,19 @@ import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
 
-import arm.log as log
+if "DO_RELOAD_MODULE" in locals():
+    assets = arm.reload_module(assets)
+    exporter_opt = arm.reload_module(exporter_opt)
+    log = arm.reload_module(log)
+    make_renderpath = arm.reload_module(make_renderpath)
+    cycles = arm.reload_module(cycles)
+    make_material = arm.reload_module(make_material)
+    mat_batch = arm.reload_module(mat_batch)
+    arm.utils = arm.reload_module(arm.utils)
+    arm.profiler = arm.reload_module(arm.profiler)
+else:
+    DO_RELOAD_MODULE = True
+
 
 @unique
 class NodeType(Enum):

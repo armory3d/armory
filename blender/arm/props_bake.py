@@ -1,9 +1,18 @@
-import arm.utils
-import arm.assets
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+
 from arm.lightmapper import operators, properties, utility
+
+import arm.assets
+import arm.utils
+
+if "DO_RELOAD_MODULE" in locals():
+    arm.assets = arm.reload_module(arm.assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -166,7 +175,7 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node.image = img
                 img_node.select = True
                 nodes.active = img_node
-        
+
         obs = bpy.context.view_layer.objects
 
         # Unwrap

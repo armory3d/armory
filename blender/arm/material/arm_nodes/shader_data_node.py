@@ -4,6 +4,15 @@ from bpy.types import Node
 from arm.material.arm_nodes.arm_nodes import add_node
 from arm.material.shader import Shader
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    arm.material.arm_nodes.arm_nodes = arm.reload_module(arm.material.arm_nodes.arm_nodes)
+    from arm.material.arm_nodes.arm_nodes import add_node
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader
+else:
+    DO_RELOAD_MODULE = True
+
 
 class ShaderDataNode(Node):
     """Allows access to shader data such as uniforms and inputs."""

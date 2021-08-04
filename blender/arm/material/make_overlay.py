@@ -3,6 +3,15 @@ import arm.material.make_mesh as make_mesh
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    make_finalize = arm.reload_module(make_finalize)
+    make_mesh = arm.reload_module(make_mesh)
+    mat_state = arm.reload_module(mat_state)
+    mat_utils = arm.reload_module(mat_utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def make(context_id):
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }

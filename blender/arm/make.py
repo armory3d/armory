@@ -27,6 +27,23 @@ import arm.make_world as make_world
 import arm.utils
 import arm.write_data as write_data
 
+if "DO_RELOAD_MODULE" in locals():
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    arm.lib.make_datas = arm.reload_module(arm.lib.make_datas)
+    arm.lib.server = arm.reload_module(arm.lib.server)
+    live_patch = arm.reload_module(live_patch)
+    log = arm.reload_module(log)
+    make_logic = arm.reload_module(make_logic)
+    make_renderpath = arm.reload_module(make_renderpath)
+    state = arm.reload_module(state)
+    make_world = arm.reload_module(make_world)
+    arm.utils = arm.reload_module(arm.utils)
+    write_data = arm.reload_module(write_data)
+else:
+    DO_RELOAD_MODULE = True
+
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
