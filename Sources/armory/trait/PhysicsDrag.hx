@@ -2,6 +2,7 @@ package armory.trait;
 
 import iron.Trait;
 import iron.system.Input;
+import iron.math.Vec3;
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.math.RayCaster;
@@ -13,6 +14,11 @@ class PhysicsDrag extends Trait {
 #if (!arm_bullet)
 	public function new() { super(); }
 #else
+
+	@prop public var linearLowerLimit = new Vec3(0,0,0);
+	@prop public var linearUpperLimit = new Vec3(0,0,0);
+	@prop public var angularLowerLimit = new Vec3(-10,-10,-10);
+	@prop public var angularUpperLimit = new Vec3(10,10,10);
 
 	var pickConstraint: bullet.Bt.Generic6DofConstraint = null;
 	var pickDist: Float;
@@ -56,10 +62,10 @@ class PhysicsDrag extends Trait {
 				tr.setOrigin(localPivot);
 
 				pickConstraint = new bullet.Bt.Generic6DofConstraint(b.body, tr, false);
-				pickConstraint.setLinearLowerLimit(new bullet.Bt.Vector3(0, 0, 0));
-				pickConstraint.setLinearUpperLimit(new bullet.Bt.Vector3(0, 0, 0));
-				pickConstraint.setAngularLowerLimit(new bullet.Bt.Vector3(-10, -10, -10));
-				pickConstraint.setAngularUpperLimit(new bullet.Bt.Vector3(10, 10, 10));
+				pickConstraint.setLinearLowerLimit(new bullet.Bt.Vector3(linearLowerLimit.x, linearLowerLimit.y, linearLowerLimit.z));
+				pickConstraint.setLinearUpperLimit(new bullet.Bt.Vector3(linearUpperLimit.x, linearUpperLimit.y, linearUpperLimit.z));
+				pickConstraint.setAngularLowerLimit(new bullet.Bt.Vector3(angularLowerLimit.x, angularLowerLimit.y, angularLowerLimit.z));
+				pickConstraint.setAngularUpperLimit(new bullet.Bt.Vector3(angularUpperLimit.x, angularUpperLimit.y, angularUpperLimit.z));
 				physics.world.addConstraint(pickConstraint, false);
 
 				/*pickConstraint.setParam(4, 0.8, 0);
