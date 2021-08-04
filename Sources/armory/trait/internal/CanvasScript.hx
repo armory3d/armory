@@ -40,20 +40,27 @@ class CanvasScript extends Trait {
 					Canvas.themes.push(armory.ui.Themes.light);
 				}
 
-				iron.data.Data.getFont(font, function(f: kha.Font) {
+				iron.data.Data.getFont(font, function(defaultFont: kha.Font) {
 					var c: TCanvas = haxe.Json.parse(blob.toString());
 					if (c.theme == null) c.theme = Canvas.themes[0].NAME;
-					cui = new Zui({font: f, theme: Canvas.getTheme(c.theme)});
+					cui = new Zui({font: defaultFont, theme: Canvas.getTheme(c.theme)});
 
 					if (c.assets == null || c.assets.length == 0) canvas = c;
 					else { // Load canvas assets
 						var loaded = 0;
 						for (asset in c.assets) {
 							var file = asset.name;
-							iron.data.Data.getImage(file, function(image: kha.Image) {
-								Canvas.assetMap.set(asset.id, image);
-								if (++loaded >= c.assets.length) canvas = c;
-							});
+							if (Canvas.isFontAsset(file)) {
+								iron.data.Data.getFont(file, function(f: kha.Font) {
+									Canvas.assetMap.set(asset.id, f);
+									if (++loaded >= c.assets.length) canvas = c;
+								});
+							} else {
+								iron.data.Data.getImage(file, function(image: kha.Image) {
+									Canvas.assetMap.set(asset.id, image);
+									if (++loaded >= c.assets.length) canvas = c;
+								});
+							}
 						}
 					}
 				});
