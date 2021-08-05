@@ -258,7 +258,7 @@ class Canvas {
 		return Std.int(f * _ui.SCALE());
 	}
 
-	static inline function isFontAsset(assetName: Null<String>): Bool {
+	public static inline function isFontAsset(assetName: Null<String>): Bool {
 		return assetName != null && StringTools.endsWith(assetName.toLowerCase(), ".ttf");
 	}
 
