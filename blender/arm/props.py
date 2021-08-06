@@ -11,7 +11,7 @@ import arm.proxy
 import arm.utils
 
 # Armory version
-arm_version = '2021.7'
+arm_version = '2021.8'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
