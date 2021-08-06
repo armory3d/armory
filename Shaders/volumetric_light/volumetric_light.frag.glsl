@@ -44,7 +44,15 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
+	#ifdef _ShadowMapAtlas
+	#ifndef _SingleAtlas
+	uniform sampler2DShadow shadowMapAtlasSun;
+	#else
+	uniform sampler2DShadow shadowMapAtlas;
+	#endif
+	#else
 	uniform sampler2DShadow shadowMap;
+	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
 	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
@@ -95,7 +103,17 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	#endif
 	vec4 lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
-	visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias));
+	visibility = texture(
+		#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			shadowMapAtlasSun
+			#else
+			shadowMapAtlas
+			#endif
+		#else
+		shadowMap
+		#endif
+	, vec3(lPos.xy, lPos.z - shadowsBias));
 #endif
 
 #ifdef _SinglePoint
