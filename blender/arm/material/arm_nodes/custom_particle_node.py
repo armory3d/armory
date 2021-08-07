@@ -5,6 +5,17 @@ from arm.material.arm_nodes.arm_nodes import add_node
 from arm.material.shader import Shader
 from arm.material.cycles import *
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    arm.material.arm_nodes.arm_nodes = arm.reload_module(arm.material.arm_nodes.arm_nodes)
+    from arm.material.arm_nodes.arm_nodes import add_node
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader
+    arm.material.cycles = arm.reload_module(arm.material.cycles)
+    from arm.material.cycles import *
+else:
+    DO_RELOAD_MODULE = True
+
 
 class CustomParticleNode(Node):
     """Input data for paricles."""
@@ -174,7 +185,7 @@ class CustomParticleNode(Node):
 
             if self.posZ:
                 vertshdr.write(f'spos.z += {pos}.z;')
-                
+
         vertshdr.write('wposition = vec4(W * spos).xyz;')
 
 

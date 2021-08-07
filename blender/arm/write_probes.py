@@ -11,6 +11,14 @@ import arm.assets as assets
 import arm.log as log
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    assets = arm.reload_module(assets)
+    log = arm.reload_module(log)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def add_irr_assets(output_file_irr):
     assets.add(output_file_irr + '.arm')

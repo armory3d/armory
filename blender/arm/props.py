@@ -10,6 +10,16 @@ import arm.nodes_logic
 import arm.proxy
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    assets = arm.reload_module(assets)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.make = arm.reload_module(arm.make)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    arm.proxy = arm.reload_module(arm.proxy)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 # Armory version
 arm_version = '2021.8'
 arm_commit = '$Id$'

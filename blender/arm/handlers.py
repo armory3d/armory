@@ -15,6 +15,18 @@ import arm.make_state as state
 import arm.props as props
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.api = arm.reload_module(arm.api)
+    live_patch = arm.reload_module(live_patch)
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    props = arm.reload_module(props)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 @persistent
 def on_depsgraph_update_post(self):

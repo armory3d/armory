@@ -11,6 +11,14 @@ import arm.assets as assets
 import arm.make_state as state
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    assets = arm.reload_module(assets)
+    state = arm.reload_module(state)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def on_same_drive(path1: str, path2: str) -> bool:
     drive_path1, _ = os.path.splitdrive(path1)

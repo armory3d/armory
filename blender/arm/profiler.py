@@ -5,6 +5,13 @@ import pstats
 import arm.log as log
 import arm.utils as utils
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    log = arm.reload_module(log)
+    utils = arm.reload_module(utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 class Profile:
     """Context manager for profiling the enclosed code when the given condition is true.

@@ -7,6 +7,14 @@ import arm.material.arm_nodes.arm_nodes as arm_nodes
 # even if it looks unused
 from arm.material.arm_nodes import *
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.material.arm_nodes = arm.reload_module(arm.material.arm_nodes)
+    from arm.material.arm_nodes import *
+else:
+    DO_RELOAD_MODULE = True
+
 registered_nodes = []
 
 

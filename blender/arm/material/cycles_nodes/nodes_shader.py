@@ -4,6 +4,14 @@ from bpy.types import NodeSocket
 import arm.material.cycles as c
 from arm.material.parser_state import ParserState
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    c = arm.reload_module(c)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState
+else:
+    DO_RELOAD_MODULE = True
+
 
 def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket, state: ParserState) -> None:
     prefix = '' if node.inputs[0].is_linked else 'const '

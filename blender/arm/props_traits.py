@@ -6,6 +6,7 @@ from typing import Union
 import webbrowser
 
 from bpy.types import NodeTree
+from bpy.props import *
 import bpy.utils.previews
 
 import arm.make as make
@@ -14,6 +15,17 @@ import arm.proxy as proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
+
+if "DO_RELOAD_MODULE" in locals():
+    arm.make = arm.reload_module(arm.make)
+    arm.props_traits_props = arm.reload_module(arm.props_traits_props)
+    from arm.props_traits_props import *
+    proxy = arm.reload_module(proxy)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+    arm.write_data = arm.reload_module(arm.write_data)
+else:
+    DO_RELOAD_MODULE = True
 
 ICON_HAXE = ui_icons.get_id('haxe')
 ICON_NODES = 'NODETREE'
@@ -103,13 +115,13 @@ class ARM_UL_TraitList(bpy.types.UIList):
         custom_icon = "NONE"
         custom_icon_value = 0
         if item.type_prop == "Haxe Script":
-            custom_icon_value = ui_icons.get_id("haxe")
+            custom_icon_value = ICON_HAXE
         elif item.type_prop == "WebAssembly":
-            custom_icon_value = ui_icons.get_id("wasm")
+            custom_icon_value = ICON_WASM
         elif item.type_prop == "UI Canvas":
             custom_icon = "NODE_COMPOSITING"
         elif item.type_prop == "Bundled Script":
-            custom_icon_value = ui_icons.get_id("bundle")
+            custom_icon_value = ICON_BUNDLED
         elif item.type_prop == "Logic Nodes":
             custom_icon = 'NODETREE'
 

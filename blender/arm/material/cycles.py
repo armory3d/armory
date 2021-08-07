@@ -30,6 +30,23 @@ from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    arm.assets = arm.reload_module(arm.assets)
+    log = arm.reload_module(log)
+    arm.make_state = arm.reload_module(arm.make_state)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.cycles_nodes = arm.reload_module(arm.material.cycles_nodes)
+    from arm.material.cycles_nodes import *
+    mat_state = arm.reload_module(mat_state)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState, ParserContext
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
+
 # Particle info export
 particle_info: Dict[str, bool] = {}
 

@@ -5,22 +5,36 @@ from typing import Any, Type
 import bpy
 
 import arm.assets
-import arm.node_utils
 from arm.exporter import ArmoryExporter
 import arm.log as log
 from arm.logicnode.arm_nodes import ArmLogicTreeNode
 import arm.make as make
 import arm.make_state as state
+import arm.node_utils
 import arm.utils
 
-# Current patch id
-patch_id = 0
+if "DO_RELOAD_MODULE" in locals():
+    arm.assets = arm.reload_module(arm.assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    log = arm.reload_module(log)
+    arm.logicnode.arm_nodes = arm.reload_module(arm.logicnode.arm_nodes)
+    from arm.logicnode.arm_nodes import ArmLogicTreeNode
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    arm.node_utils = arm.reload_module(arm.node_utils)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
+    patch_id = 0
+    """Current patch id"""
+
+    __running = False
+    """Whether live patch is currently active"""
 
 # Any object can act as a message bus owner
 msgbus_owner = object()
-
-# Whether live patch is currently active
-__running = False
 
 
 def start():
@@ -43,9 +57,10 @@ def start():
 
 def stop():
     """Stop the live patch session."""
-    global __running
+    global __running, patch_id
     if __running:
         __running = False
+        patch_id = 0
 
         log.debug("Live patch session stopped")
         bpy.msgbus.clear_by_owner(msgbus_owner)

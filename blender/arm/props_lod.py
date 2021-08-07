@@ -1,5 +1,4 @@
 import bpy
-from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 def update_size_prop(self, context):

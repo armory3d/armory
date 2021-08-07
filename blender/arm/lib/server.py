@@ -1,7 +1,7 @@
+import atexit
 import http.server
 import socketserver
 import subprocess
-import atexit
 
 haxe_server = None
 

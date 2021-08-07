@@ -20,9 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-import struct
 import io
 import numpy as np
+import struct
+
 
 def _pack_integer(obj, fp):
     if obj < 0:

@@ -1,13 +1,14 @@
+from enum import Enum, unique
 import glob
 import json
+import locale
 import os
 import platform
 import re
+import shlex
 import subprocess
 from typing import Any, Dict, List, Optional, Tuple
 import webbrowser
-import shlex
-import locale
 
 import numpy as np
 
@@ -18,7 +19,17 @@ from arm.lib.lz4 import LZ4
 import arm.log as log
 import arm.make_state as state
 import arm.props_renderpath
-from enum import Enum, unique
+
+if "DO_RELOAD_MODULE" in locals():
+    arm.lib.armpack = arm.reload_module(arm.lib.armpack)
+    arm.lib.lz4 = arm.reload_module(arm.lib.lz4)
+    from arm.lib.lz4 import LZ4
+    log = arm.reload_module(log)
+    state = arm.reload_module(state)
+    arm.props_renderpath = arm.reload_module(arm.props_renderpath)
+else:
+    DO_RELOAD_MODULE = True
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):

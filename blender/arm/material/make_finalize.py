@@ -3,6 +3,14 @@ import bpy
 import arm.material.make_tess as make_tess
 from arm.material.shader import ShaderContext
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    make_tess = arm.reload_module(make_tess)
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import ShaderContext
+else:
+    DO_RELOAD_MODULE = True
+
 
 def make(con_mesh: ShaderContext):
     vert = con_mesh.vert

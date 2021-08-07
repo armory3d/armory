@@ -9,6 +9,19 @@ import arm.material.make_tess as make_tess
 from arm.material.shader import Shader, ShaderContext
 import arm.utils
 
+if "DO_RELOAD_MODULE" in locals():
+    cycles = arm.reload_module(cycles)
+    mat_state = arm.reload_module(mat_state)
+    make_skin = arm.reload_module(make_skin)
+    make_particle = arm.reload_module(make_particle)
+    make_inst = arm.reload_module(make_inst)
+    make_tess = arm.reload_module(make_tess)
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    DO_RELOAD_MODULE = True
+
 
 def write_vertpos(vert):
     billboard = mat_state.material.arm_billboard

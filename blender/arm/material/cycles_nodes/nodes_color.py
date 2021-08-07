@@ -6,6 +6,18 @@ import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
+if "DO_RELOAD_MODULE" in locals():
+    import arm
+    log = arm.reload_module(log)
+    c = arm.reload_module(c)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import floatstr, vec3str
+else:
+    DO_RELOAD_MODULE = True
+
 
 def parse_brightcontrast(node: bpy.types.ShaderNodeBrightContrast, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     out_col = c.parse_vector_input(node.inputs[0])

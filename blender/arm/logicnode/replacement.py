@@ -20,6 +20,14 @@ import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.arm_sockets
 import arm.node_utils as node_utils
 
+if "DO_RELOAD_MODULE" in locals():
+    log = arm.reload_module(log)
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.logicnode.arm_sockets = arm.reload_module(arm.logicnode.arm_sockets)
+    node_utils = arm.reload_module(node_utils)
+else:
+    DO_RELOAD_MODULE = True
+
 # List of errors that occurred during the replacement
 # Format: (error identifier, node.bl_idname (or None), tree name, exception traceback (optional))
 replacement_errors: List[Tuple[str, Optional[str], str, Optional[str]]] = []
