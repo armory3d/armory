@@ -29,7 +29,7 @@ class CanvasScript extends Trait {
 		iron.data.Data.getBlob(canvasName + ".json", function(blob: kha.Blob) {
 
 			iron.data.Data.getBlob("_themes.json", function(tBlob: kha.Blob) {
-				if (tBlob.get_length() != 0) {
+				if (@:privateAccess tBlob.get_length() != 0) {
 					Canvas.themes = haxe.Json.parse(tBlob.toString());
 				}
 				else {
