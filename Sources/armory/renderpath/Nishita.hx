@@ -80,10 +80,23 @@ class NishitaData {
 	**/
 	public static var radiusPlanet = 6360000;
 
+	/** Rayleigh scattering coefficient. **/
+	public static var rayleighCoeff = new Vec3(5.5e-6, 13.0e-6, 22.4e-6);
 	/** Rayleigh scattering scale parameter. **/
 	public static var rayleighScale = 8e3;
+
+	/** Mie scattering coefficient. **/
+	public static var mieCoeff = 2e-5;
 	/** Mie scattering scale parameter. **/
 	public static var mieScale = 1.2e3;
+
+	/** Ozone scattering coefficient. **/
+	// The ozone absorption coefficients are taken from Cycles code.
+	// Because Cycles calculates 21 wavelengths, we use the coefficients
+	// which are closest to the RGB wavelengths (645nm, 510nm, 440nm).
+	// Precalculating values by simulating Blender's spec_to_xyz() function
+	// to include all 21 wavelengths gave unrealistic results.
+	public static var ozoneCoeff = new Vec3(1.59051840791988e-6, 0.00000096707041180970, 0.00000007309568762914);
 
 	public function new() {}
 
@@ -185,6 +198,29 @@ class NishitaData {
 			jTime += jStepSize;
 		}
 
-		return jODepth.mult(jStepSize);
+		jODepth.mult(jStepSize);
+
+		// Precalculate a part of the secondary attenuation.
+		// For one variable (e.g. x) in the vector, the formula is as follows:
+		//
+		// attn.x = exp(-(coeffX * (firstOpticalDepth.x + secondOpticalDepth.x)))
+		//
+		// We can split that up via:
+		//
+		// attn.x = exp(-(coeffX * firstOpticalDepth.x + coeffX * secondOpticalDepth.x))
+		//        = exp(-(coeffX * firstOpticalDepth.x)) * exp(-(coeffX * secondOpticalDepth.x))
+		//
+		// The first factor of the resulting multiplication is calculated in the
+		// shader, but we can already precalculate the second one. As a side
+		// effect this keeps the range of the LUT values small because we don't
+		// store the optical depth but the attenuation.
+		var jAttenuation = new Vec3();
+		var mie = mieCoeff * jODepth.y;
+		jAttenuation.addf(mie, mie, mie);
+		jAttenuation.add(rayleighCoeff.clone().mult(jODepth.x));
+		jAttenuation.add(ozoneCoeff.clone().mult(jODepth.z));
+		jAttenuation.exp(jAttenuation.mult(-1));
+
+		return jAttenuation;
 	}
 }
