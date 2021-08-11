@@ -5,7 +5,7 @@ from arm.material.arm_nodes.arm_nodes import add_node
 from arm.material.shader import Shader
 from arm.material.cycles import *
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     import arm
     arm.material.arm_nodes.arm_nodes = arm.reload_module(arm.material.arm_nodes.arm_nodes)
     from arm.material.arm_nodes.arm_nodes import add_node
@@ -14,7 +14,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.material.cycles = arm.reload_module(arm.material.cycles)
     from arm.material.cycles import *
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class CustomParticleNode(Node):

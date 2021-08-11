@@ -6,7 +6,9 @@ from typing import Optional
 
 import bpy.utils.previews
 
-if "DO_RELOAD_MODULE" in locals():
+import arm
+
+if arm.is_reload(__name__):
     # _unload_icons is not available in the module scope yet
     def __unload():
         _unload_icons()
@@ -14,7 +16,7 @@ if "DO_RELOAD_MODULE" in locals():
     # Refresh icons after reload
     __unload()
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 __all__ = ["get_id"]

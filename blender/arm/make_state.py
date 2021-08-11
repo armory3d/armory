@@ -1,5 +1,7 @@
-if "DO_RELOAD_MODULE" not in locals():
-    DO_RELOAD_MODULE = True
+import arm
+
+if not arm.is_reload(__name__):
+    arm.enable_reload(__name__)
 
     redraw_ui = False
     target = 'krom'

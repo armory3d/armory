@@ -1,11 +1,11 @@
 import arm.utils
 import arm.material.mat_state as mat_state
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     mat_state = arm.reload_module(mat_state)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def write(vert, particle_info=None, shadowmap=False):

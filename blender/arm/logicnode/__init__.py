@@ -9,7 +9,7 @@ from arm.logicnode.arm_props import *
 import arm.logicnode.arm_sockets as arm_sockets
 from arm.logicnode.replacement import NodeReplacement
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm_nodes = arm.reload_module(arm_nodes)
     arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
     from arm.logicnode.arm_props import *
@@ -19,7 +19,7 @@ if "DO_RELOAD_MODULE" in locals():
 
     HAS_RELOADED = True
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def init_categories():

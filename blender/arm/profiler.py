@@ -2,15 +2,15 @@ import cProfile
 import os
 import pstats
 
+import arm
 import arm.log as log
 import arm.utils as utils
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     log = arm.reload_module(log)
     utils = arm.reload_module(utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class Profile:

@@ -1,9 +1,9 @@
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 # Type aliases for type hints to make it easier to see which kind of
 # shader data type is stored in a string

@@ -14,14 +14,14 @@ from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
     from arm.logicnode.arm_props import *
     arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
     from arm.logicnode.replacement import NodeReplacement
     arm.node_utils = arm.reload_module(arm.node_utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 # When passed as a category to add_node(), this will use the capitalized
 # name of the package of the node as the category to make renaming

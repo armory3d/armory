@@ -21,7 +21,7 @@ import arm.keymap
 
 reload_started = 0
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.log.debug('Reloading Armory SDK...')
     reload_started = time.time()
 
@@ -46,7 +46,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     arm.keymap = arm.reload_module(arm.keymap)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 registered = False
 

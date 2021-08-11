@@ -6,14 +6,14 @@ import arm.log as log
 import arm.make_state as state
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     assets = arm.reload_module(assets)
     log = arm.reload_module(log)
     state = arm.reload_module(state)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 callback = None
 

@@ -1,16 +1,16 @@
+import arm
 import arm.material.make_finalize as make_finalize
 import arm.material.make_mesh as make_mesh
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     make_finalize = arm.reload_module(make_finalize)
     make_mesh = arm.reload_module(make_mesh)
     mat_state = arm.reload_module(mat_state)
     mat_utils = arm.reload_module(mat_utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def make(context_id):

@@ -2,14 +2,14 @@ from typing import Union
 
 import bpy
 
+import arm
 import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     log = arm.reload_module(log)
     c = arm.reload_module(c)
     c_functions = arm.reload_module(c_functions)
@@ -18,7 +18,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import floatstr, vec3str
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:

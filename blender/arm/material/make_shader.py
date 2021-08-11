@@ -22,7 +22,7 @@ import arm.material.mat_utils as mat_utils
 from arm.material.shader import Shader, ShaderContext, ShaderData
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
@@ -40,7 +40,7 @@ if "DO_RELOAD_MODULE" in locals():
     from arm.material.shader import Shader, ShaderContext, ShaderData
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 rpass_hook = None
 
