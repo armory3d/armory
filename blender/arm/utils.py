@@ -20,7 +20,7 @@ import arm.log as log
 import arm.make_state as state
 import arm.props_renderpath
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.lib.armpack = arm.reload_module(arm.lib.armpack)
     arm.lib.lz4 = arm.reload_module(arm.lib.lz4)
     from arm.lib.lz4 import LZ4
@@ -28,7 +28,7 @@ if "DO_RELOAD_MODULE" in locals():
     state = arm.reload_module(state)
     arm.props_renderpath = arm.reload_module(arm.props_renderpath)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class NumpyEncoder(json.JSONEncoder):

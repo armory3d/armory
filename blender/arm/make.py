@@ -27,7 +27,7 @@ import arm.make_world as make_world
 import arm.utils
 import arm.write_data as write_data
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
@@ -42,7 +42,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     write_data = arm.reload_module(write_data)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0

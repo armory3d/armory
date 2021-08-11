@@ -8,14 +8,14 @@ import arm.log
 import arm.node_utils
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
     arm.log = arm.reload_module(arm.log)
     arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 parsed_nodes = []
 parsed_ids = dict() # Sharing node data

@@ -16,7 +16,7 @@ import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.make = arm.reload_module(arm.make)
     arm.props_traits_props = arm.reload_module(arm.props_traits_props)
     from arm.props_traits_props import *
@@ -25,7 +25,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     arm.write_data = arm.reload_module(arm.write_data)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 ICON_HAXE = ui_icons.get_id('haxe')
 ICON_NODES = 'NODETREE'

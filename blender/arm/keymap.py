@@ -1,12 +1,12 @@
 import bpy
 
+import arm
 import arm.props_ui as props_ui
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     props_ui = arm.reload_module(props_ui)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 arm_keymaps = []
 

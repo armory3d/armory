@@ -1,17 +1,17 @@
 from bpy.props import *
 from bpy.types import Node
 
+import arm
 from arm.material.arm_nodes.arm_nodes import add_node
 from arm.material.shader import Shader
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     arm.material.arm_nodes.arm_nodes = arm.reload_module(arm.material.arm_nodes.arm_nodes)
     from arm.material.arm_nodes.arm_nodes import add_node
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import Shader
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class ShaderDataNode(Node):

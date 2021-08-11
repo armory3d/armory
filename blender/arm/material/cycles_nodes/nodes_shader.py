@@ -1,16 +1,16 @@
 import bpy
 from bpy.types import NodeSocket
 
+import arm
 import arm.material.cycles as c
 from arm.material.parser_state import ParserState
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     c = arm.reload_module(c)
     arm.material.parser_state = arm.reload_module(arm.material.parser_state)
     from arm.material.parser_state import ParserState
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket, state: ParserState) -> None:

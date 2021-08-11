@@ -30,7 +30,7 @@ from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.assets = arm.reload_module(arm.assets)
     log = arm.reload_module(log)
     arm.make_state = arm.reload_module(arm.make_state)
@@ -44,7 +44,7 @@ if "DO_RELOAD_MODULE" in locals():
     from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 # Particle info export

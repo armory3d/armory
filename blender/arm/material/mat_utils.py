@@ -5,13 +5,13 @@ import arm.make_state as make_state
 import arm.material.cycles as cycles
 import arm.log as log
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     make_state = arm.reload_module(make_state)
     cycles = arm.reload_module(cycles)
     log = arm.reload_module(log)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 add_mesh_contexts = []
 

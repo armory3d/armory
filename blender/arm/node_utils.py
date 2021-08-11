@@ -10,12 +10,12 @@ import arm.log
 import arm.logicnode.arm_sockets
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.log = arm.reload_module(arm.log)
     arm.logicnode.arm_sockets = arm.reload_module(arm.logicnode.arm_sockets)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def find_node_by_link(node_group, to_node, inp):

@@ -22,7 +22,8 @@ import arm.proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+
+if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
@@ -39,7 +40,7 @@ if "DO_RELOAD_MODULE" in locals():
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):

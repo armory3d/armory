@@ -2,18 +2,18 @@ import bpy
 import nodeitems_utils
 from nodeitems_utils import NodeCategory
 
+import arm
 import arm.material.arm_nodes.arm_nodes as arm_nodes
 # Import all nodes so that they register. Do not remove this import
 # even if it looks unused
 from arm.material.arm_nodes import *
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     arm_nodes = arm.reload_module(arm_nodes)
     arm.material.arm_nodes = arm.reload_module(arm.material.arm_nodes)
     from arm.material.arm_nodes import *
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 registered_nodes = []
 

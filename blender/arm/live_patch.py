@@ -13,7 +13,7 @@ import arm.make_state as state
 import arm.node_utils
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.assets = arm.reload_module(arm.assets)
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
@@ -25,7 +25,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
     patch_id = 0
     """Current patch id"""

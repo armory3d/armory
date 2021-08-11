@@ -6,6 +6,7 @@ import sys
 import bpy
 from bpy.app.handlers import persistent
 
+import arm
 import arm.api
 import arm.live_patch as live_patch
 import arm.logicnode.arm_nodes as arm_nodes
@@ -15,7 +16,7 @@ import arm.make_state as state
 import arm.props as props
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     live_patch = arm.reload_module(live_patch)
     arm_nodes = arm.reload_module(arm_nodes)
@@ -25,7 +26,7 @@ if "DO_RELOAD_MODULE" in locals():
     props = arm.reload_module(props)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 @persistent

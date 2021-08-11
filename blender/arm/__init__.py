@@ -1,8 +1,26 @@
 import importlib
+import sys
 import types
 
 # This gets cleared if this package/the __init__ module is reloaded
 _module_cache: dict[str, types.ModuleType] = {}
+
+
+def enable_reload(module_name: str):
+    """Enable reloading for the next time the module with `module_name`
+    is executed.
+    """
+    mod = sys.modules[module_name]
+    setattr(mod, module_name.replace('.', '_') + "_DO_RELOAD_MODULE", True)
+
+
+def is_reload(module_name: str) -> bool:
+    """True if the module  given by `module_name` should reload the
+    modules it imports. This is the case if `enable_reload()` was called
+    for the module before.
+    """
+    mod = sys.modules[module_name]
+    return hasattr(mod, module_name.replace('.', '_') + "_DO_RELOAD_MODULE")
 
 
 def reload_module(module: types.ModuleType) -> types.ModuleType:

@@ -3,14 +3,14 @@ from typing import List, Set, Tuple, Union, Optional
 
 import bpy
 
+import arm
 from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class ParserContext(Enum):

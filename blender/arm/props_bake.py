@@ -7,11 +7,11 @@ from arm.lightmapper import operators, properties, utility
 import arm.assets
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.assets = arm.reload_module(arm.assets)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 class ArmBakeListItem(bpy.types.PropertyGroup):

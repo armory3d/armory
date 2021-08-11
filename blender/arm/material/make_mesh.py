@@ -11,7 +11,7 @@ import arm.material.make_finalize as make_finalize
 import arm.material.make_attrib as make_attrib
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     mat_state = arm.reload_module(mat_state)
     mat_utils = arm.reload_module(mat_utils)
@@ -23,7 +23,7 @@ if "DO_RELOAD_MODULE" in locals():
     make_attrib = arm.reload_module(make_attrib)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 is_displacement = False
 write_material_attribs = None

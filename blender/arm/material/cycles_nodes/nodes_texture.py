@@ -13,7 +13,7 @@ from arm.material.shader import floatstr, vec3str
 import arm.utils
 import arm.write_probes as write_probes
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     log = arm.reload_module(log)
     c = arm.reload_module(c)
@@ -25,7 +25,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     write_probes = arm.reload_module(write_probes)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:

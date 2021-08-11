@@ -2,16 +2,16 @@ from typing import Callable, Dict, Optional
 
 from bpy.types import Material, UILayout
 
+import arm
 from arm.material.shader import ShaderContext
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import ShaderContext
 else:
     drivers: Dict[str, Dict] = dict()
 
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def add_driver(driver_name: str,

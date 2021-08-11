@@ -9,7 +9,7 @@ import arm.material.make_tess as make_tess
 from arm.material.shader import Shader, ShaderContext
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     cycles = arm.reload_module(cycles)
     mat_state = arm.reload_module(mat_state)
     make_skin = arm.reload_module(make_skin)
@@ -20,7 +20,7 @@ if "DO_RELOAD_MODULE" in locals():
     from arm.material.shader import Shader, ShaderContext
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def write_vertpos(vert):

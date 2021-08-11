@@ -6,11 +6,11 @@ import bpy
 import arm.log as log
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     log = arm.reload_module(log)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 assets = []
 reserved_names = ['return.']

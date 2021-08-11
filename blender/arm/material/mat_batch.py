@@ -1,14 +1,14 @@
+import arm
 import arm.material.cycles as cycles
 import arm.material.make_shader as make_shader
 import arm.material.mat_state as mat_state
 
-if "DO_RELOAD_MODULE" in locals():
-    import arm
+if arm.is_reload(__name__):
     cycles = arm.reload_module(cycles)
     make_shader = arm.reload_module(make_shader)
     mat_state = arm.reload_module(mat_state)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 # TODO: handle groups
 # TODO: handle cached shaders

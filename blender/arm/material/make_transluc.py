@@ -1,20 +1,20 @@
 import bpy
 
+import arm
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_mesh as make_mesh
 import arm.material.make_finalize as make_finalize
 import arm.assets as assets
 
-if "DO_RELOAD_MODULE" in locals():
-	import arm
+if arm.is_reload(__name__):
 	cycles = arm.reload_module(cycles)
 	mat_state = arm.reload_module(mat_state)
 	make_mesh = arm.reload_module(make_mesh)
 	make_finalize = arm.reload_module(make_finalize)
 	assets = arm.reload_module(assets)
 else:
-	DO_RELOAD_MODULE = True
+	arm.enable_reload(__name__)
 
 
 def make(context_id):

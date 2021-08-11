@@ -32,7 +32,7 @@ import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     exporter_opt = arm.reload_module(exporter_opt)
     log = arm.reload_module(log)
@@ -43,7 +43,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     arm.profiler = arm.reload_module(arm.profiler)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 @unique

@@ -4,11 +4,11 @@ from bpy.props import *
 import arm.assets as assets
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 atlas_sizes = [ ('256', '256', '256'),
                 ('512', '512', '512'),

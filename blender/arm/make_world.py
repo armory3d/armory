@@ -12,7 +12,7 @@ import arm.node_utils as node_utils
 import arm.utils
 import arm.write_probes as write_probes
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     arm.assets = arm.reload_module(arm.assets)
     arm.log = arm.reload_module(arm.log)
     arm.material = arm.reload_module(arm.material)
@@ -25,7 +25,7 @@ if "DO_RELOAD_MODULE" in locals():
     arm.utils = arm.reload_module(arm.utils)
     write_probes = arm.reload_module(write_probes)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 callback = None
 shader_datas = []

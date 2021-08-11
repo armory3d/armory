@@ -10,14 +10,14 @@ import arm.material.mat_batch as mat_batch
 import arm.node_utils
 import arm.utils
 
-if "DO_RELOAD_MODULE" in locals():
+if arm.is_reload(__name__):
     cycles = arm.reload_module(cycles)
     make_shader = arm.reload_module(make_shader)
     mat_batch = arm.reload_module(mat_batch)
     arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
-    DO_RELOAD_MODULE = True
+    arm.enable_reload(__name__)
 
 
 def glsl_value(val):
