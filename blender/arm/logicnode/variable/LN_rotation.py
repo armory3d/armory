@@ -4,6 +4,7 @@ class RotationNode(ArmLogicTreeNode):
     """A rotation, created from one of its possible mathematical representations"""
     bl_idname = 'LNRotationNode'
     bl_label = 'Rotation'
+    bl_description = 'Create a Rotation object, describing the difference between two orientations (internally represented as a quaternion for efficiency)'
     #arm_section = 'rotation'
     arm_version = 1
 

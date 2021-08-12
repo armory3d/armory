@@ -5,7 +5,7 @@ class LookAtNode(ArmLogicTreeNode):
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
     arm_section = 'rotation'
-    arm_version = 1
+    arm_version = 2
 
     property0: EnumProperty(
         items = [('X', ' X', 'X'),
@@ -25,3 +25,23 @@ class LookAtNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+
+
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        
+        # transition from version 1 to version 2: make rotations their own sockets
+        # this transition is a mess, I know.    
+        newself = self.id_data.nodes.new('LNLookAtNode')
+        converter = self.id_data.nodes.new('LNSeparateRotationNode')
+        self.id_data.links.new(newself.outputs[0], converter.inputs[0])
+        converter.property0 = 'EulerAngles'
+        converter.property1 = 'Rad'
+        converter.property2 = 'XZY'
+        for link in self.outputs[0].links:
+            self.id_data.links.new(converter.outputs[0], link.to_socket)
+
+        return [newself, converter]

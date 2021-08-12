@@ -112,12 +112,16 @@ class ArmRotationSocket(ArmCustomSocket):
                 self.default_value_s3 = 0.0
         self.do_update_raw(context)
 
-    def do_update_raw(self, context):
-        if self.default_value_mode == 'Quat':
-            qx = self.default_value_s0
-            qy = self.default_value_s1
-            qz = self.default_value_s2
-            qw = self.default_value_s3
+    @staticmethod
+    def convert_to_quaternion(part1,part2,param1,param2,param3):
+        """converts a representation of rotation into a quaternion.
+        ``part1`` is a vector, ``part2`` is a scalar or None,
+        ``param1`` is in ('Quat', 'EulerAngles', 'AxisAngle'),
+        ``param2`` is in ('Rad','Deg') for both EulerAngles and AxisAngle,
+        ``param3`` is a len-3 string like "XYZ", for EulerAngles """
+        if param1 == 'Quat':
+            qx, qy, qz = part1[0], part1[1], part1[2]
+            qw = part2
             # need to normalize the quaternion for a rotation (having it be 0 is not an option)
             ql = sqrt(qx**2+qy**2+qz**2+qw**2)
             if abs(ql)<1E-5:
@@ -127,49 +131,61 @@ class ArmRotationSocket(ArmCustomSocket):
                 qy /= ql
                 qz /= ql
                 qw /= ql
-            self.default_value_raw = mathutils.Vector((qx,qy,qz,qw))
-
-        elif self.default_value_mode == 'AxisAngle':
-            if self.default_value_unit == 'Deg':
-                angle = self.default_value_s3 * pi/180
+            return mathutils.Vector((qx,qy,qz,qw))
+        
+        elif param1 == 'AxisAngle':
+            if param2 == 'Deg':
+                angle = part2 * pi/180
             else:
-                angle = self.default_value_s3
+                angle = part2
             cang, sang = cos(angle/2), sin(angle/2)
-            x = self.default_value_s0
-            y = self.default_value_s1
-            z = self.default_value_s2
+            x,y,z = part1[0], part1[1], part1[2]
             veclen = sqrt(x**2+y**2+z**2)
             if veclen<1E-5:
-                self.default_value_raw = mathutils.Vector((0.0,0.0,0.0,1.0))
+                return mathutils.Vector((0.0,0.0,0.0,1.0))
             else:
-                self.default_value_raw = mathutils.Vector((
+                return mathutils.Vector((
                     x/veclen * sang,
                     y/veclen * sang,
                     z/veclen * sang,
                     cang
                 ))
-        else:
-            if self.default_value_unit == 'Deg':
-                x = self.default_value_s0 * pi/180
-                y = self.default_value_s1 * pi/180
-                z = self.default_value_s2 * pi/180
-            else:
-                x = self.default_value_s0
-                y = self.default_value_s1
-                z = self.default_value_s2
+        else:  # param1 == 'EulerAngles'
+            x,y,z = part1[0], part1[1], part1[2]
+            if param2 == 'Deg':
+                x *= pi/180
+                y *= pi/180
+                z *= pi/180
             cx, sx = cos(x/2), sin(x/2)
             cy, sy = cos(y/2), sin(y/2)
             cz, sz = cos(z/2), sin(z/2)
 
             qw, qx, qy, qz  = 1.0,0.0,0.0,0.0
-            for direction in self.default_value_order[::-1]:
+            for direction in param3[::-1]:
                 qwi, qxi,qyi,qzi = {'X': (cx,sx,0,0), 'Y': (cy,0,sy,0), 'Z': (cz,0,0,sz)}[direction]
 
                 qw = qw*qwi -qx*qxi -qy*qyi -qz*qzi
                 qx = qx*qwi +qw*qxi +qy*qzi -qz*qyi
                 qy = qy*qwi +qw*qyi +qz*qxi -qx*qzi
                 qz = qz*qwi +qw*qzi +qx*qyi -qy*qxi
-            self.default_value_raw = mathutils.Vector((qx,qy,qz,qw))
+            return mathutils.Vector((qx,qy,qz,qw))
+
+        
+    def do_update_raw(self, context):
+        part1 = mathutils.Vector((
+            self.default_value_s0,
+            self.default_value_s1,
+            self.default_value_s2, 1
+        ))
+        part2 = self.default_value_s3
+
+        self.default_value_raw = self.convert_to_quaternion(
+            part1,
+            self.default_value_s3,
+            self.default_value_mode,
+            self.defualt_value_unit,
+            self.default_value_order
+        )
             
         
     def draw(self, context, layout, node, text):

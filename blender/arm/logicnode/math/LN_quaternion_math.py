@@ -4,44 +4,46 @@ class QuaternionMathNode(ArmLogicTreeNode):
     """Mathematical operations on quaternions."""
     bl_idname = 'LNQuaternionMathNode'
     bl_label = 'Quaternion Math'
+    bl_description = 'Mathematical operations that can be performed on rotations, when represented as quaternions specifically'
     arm_section = 'quaternions'
-    arm_version = 1
+    arm_version = 2
 
-    def get_bool(self):
-        return self.get('property1', False)
 
-    def set_bool(self, value):
-        self['property1'] = value
-        if value:
-            if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
-                self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
-            self.add_output('NodeSocketFloat', 'X') # Result X
-            self.add_output('NodeSocketFloat', 'Y') # Result Y
-            self.add_output('NodeSocketFloat', 'Z') # Result Z
-            self.add_output('NodeSocketFloat', 'W') # Result W
-            if (self.property0 == 'Module'):
-                self.add_output('NodeSocketFloat', 'Module') # Module
-            if (self.property0 == 'DotProduct'):
-                self.add_output('NodeSocketFloat', 'Scalar') # DotProduct
-            if (self.property0 == 'ToAxisAngle'):
-                self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
+    def ensure_input_socket(self, socket_number, newclass, newname, default_value=None):
+        while len(self.inputs) < socket_number:
+            self.inputs.new('NodeSocketFloat', 'BOGUS')
+        if len(self.inputs) > socket_number:
+            if len(self.inputs[socket_number].links) == 1:
+                source_socket = self.inputs[socket_number].links[0].from_socket
+            else:    
+                source_socket = None
+            if self.inputs[socket_number].bl_idname == newclass:
+                default_value = self.inputs[socket_number].default_value
+            self.inputs.remove(self.inputs[socket_number])
         else:
-            if ((self.property0 == 'Module') or (self.property0 == 'DotProduct') or (self.property0 == 'ToAxisAngle')) and (len(self.outputs) > 1):
-                self.outputs.remove(self.outputs.values()[-1]) # Module/DotProduct/ToAxisAngle
-            # Remove X, Y, Z, W
-            for i in range(4):
-                if len(self.outputs) > 1:
-                    self.outputs.remove(self.outputs.values()[-1])
-                else:
-                    break
-            if (self.property0 == 'Module'):
-                self.add_output('NodeSocketFloat', 'Module') # Module
-            if (self.property0 == 'DotProduct'):
-                self.add_output('NodeSocketFloat', 'Scalar') # DotProduct
-            if (self.property0 == 'ToAxisAngle'):
-                self.add_output('NodeSocketFloat', 'To Axis Angle') # ToAxisAngle
+            source_socket = None
+        
+            
+        self.inputs.new(newclass, newname)
+        if default_value != None:
+            self.inputs[-1].default_value = default_value
+        self.inputs.move(len(self.inputs)-1, socket_number)
+        if source_socket is not None:
+            self.id_data.links.new(source_socket, self.inputs[socket_number])
+        
+    def ensure_output_socket(self, socket_number, newclass, newname):
+        sink_sockets = []
+        while len(self.outputs) < socket_number:
+            self.outputs.new('NodeSocketFloat', 'BOGUS')
+        if len(self.outputs) > socket_number:
+            for link in self.inputs[socket_number].links:
+                sink_sockets.append(link.to_socket)
+            self.inputs.remove(self.inputs[socket_number])
 
-    property1: BoolProperty(name='Separator Out', default=False, set=set_bool, get=get_bool)
+        self.inputs.new(newclass, newname)
+        self.inputs.move(len(self.inputs)-1, socket_number)
+        for socket in sink_sockets:
+            self.id_data.links.new(self.inputs[socket_number], socket)
 
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
@@ -75,62 +77,40 @@ class QuaternionMathNode(ArmLogicTreeNode):
         # Checking the selection of another operation
         select_current = self.get_enum_id_value(self, 'property0', value)
         select_prev = self.property0
-        if select_prev != select_current:
-            # Remove
-            count = 0
-            if ((select_prev == 'Add') or (select_prev == 'Subtract') or (select_prev == 'Multiply') or (select_prev == 'DotProduct')) and ((select_current == 'Add') or (select_current == 'Subtract') or (select_current == 'Multiply') or (select_current == 'DotProduct')) or (((select_current == 'Lerp') or (select_current == 'Slerp')) and ((select_prev == 'Lerp') or (select_prev == 'Slerp'))):
-                count = len(self.inputs)
-            while (len(self.inputs) > count):
-                self.inputs.remove(self.inputs.values()[-1])
-            if (select_prev == 'DotProduct') or (select_prev == 'ToAxisAngle') or (select_prev == 'Module'):
-                self.outputs.remove(self.outputs.values()[-1])
-            
-            # Many arguments: Add, Subtract, DotProduct, Multiply, MultiplyFloat
-            if (self.get_count_in(select_current) == 0):
-                if (select_current == "MultiplyFloats"):
-                    self.add_input('NodeSocketVector', 'Quaternion ' + str(len(self.inputs)))
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
-                else:
-                    while (len(self.inputs) < 2):
-                        self.add_input('NodeSocketVector', 'Quaternion ' + str(len(self.inputs)))
-                if (select_current == 'DotProduct'):
-                    self.add_output('NodeSocketFloat', 'Scalar')
-            
-            # 3 arguments: Lerp, Slerp, FromAxisAngle, FromEuler
-            if (self.get_count_in(select_current) == 3):
-                if (select_current == 'Lerp') or (select_current == 'Slerp'):
-                    while (len(self.inputs) < 3):
-                        self.add_input('NodeSocketVector', 'From')
-                        self.add_input('NodeSocketVector', 'To')
-                        self.add_input('NodeSocketFloat', 'T')
-                if (select_current == 'FromAxisAngle'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketVector', 'Axis')
-                    self.add_input('NodeSocketFloat', 'Angle')
-                if (select_current == 'FromEuler'):
-                    self.add_input('NodeSocketFloat', 'X')
-                    self.add_input('NodeSocketFloat', 'Y')
-                    self.add_input('NodeSocketFloat', 'Z')
-            
-            # 2 arguments: FromTo, FromMat, FromRotationMat, ToAxisAngle
-            if (self.get_count_in(select_current) == 2):
-                if (select_current == 'FromTo'):
-                    self.add_input('NodeSocketVector', 'Vector ' + str(len(self.inputs)))
-                    self.add_input('NodeSocketVector', 'Vector ' + str(len(self.inputs)))
-                if (select_current == 'FromMat') or (select_current == 'FromRotationMat'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketShader', 'Matrix')
-                if (select_current == 'ToAxisAngle'):
-                    self.add_input('NodeSocketVector', 'Quaternion')
-                    self.add_input('NodeSocketVector', 'Axis')
-                    self.add_output('NodeSocketFloat', 'Angle')
 
-            # 1 argument: Module, Normalize, GetEuler
-            if (self.get_count_in(select_current) == 1):
-                self.add_input('NodeSocketVector', 'Quaternion')
-                if (select_current == 'Module'):
-                    self.add_output('NodeSocketFloat', 'Module')
+
+        if select_current in ('Add','Subtract','Multiply','DotProduct') \
+           and select_prev in ('Add','Subtract','Multiply','DotProduct'):
+            pass  # same as select_current==select_prev for the sockets
+        elif select_prev != select_current:
+            if select_current in ('Add','Subtract','Multiply','DotProduct'):
+                for i in range(  max(len(self.inputs)//2 ,2)  ):
+                    self.ensure_input_socket(2*i, 'NodeSocketVector', 'Quaternion %d XYZ'%i)
+                    self.ensure_input_socket(2*i+1, 'NodeSocketFloat', 'Quaternion %d W'%i, default_value=1.0)
+                if len(self.inputs)%1:
+                    self.inputs.remove(self.inputs[len(self.inputs)-1])
+            elif select_current == 'MultiplyFloats':
+                self.ensure_input_socket(0, 'NodeSocketVector', 'Quaternion XYZ')
+                self.ensure_input_socket(1, 'NodeSocketFloat', 'Quaternion W', default_value=1.0)
+                for i in range(  max(len(self.inputs)-2 ,1)  ):
+                    self.ensure_input_socket(i+2, 'NodeSocketFloat', 'Value %d'%i)
+            elif select_current in ('Module', 'Normalize'):
+                self.ensure_input_socket(0, 'NodeSocketVector', 'Quaternion XYZ')
+                self.ensure_input_socket(1, 'NodeSocketFloat', 'Quaternion W', default_value=1.0)
+                while len(self.inputs)>2:
+                    self.inputs.remove(self.inputs[2])
+            else:
+                raise ValueError('Internal code of LNQuaternionMathNode failed to deal correctly with math operation "%s". Please report this to the developers.' %select_current)
+
+        if select_current in ('Add','Subtract','Multiply','MultiplyFloats','Normalize'):
+            self.outputs[0].name = 'XYZ Out'
+            self.outputs[1].name = 'W Out'
+        else:
+            self.outputs[0].name = '[unused]'
+            self.outputs[1].name = 'Value Out'
+
         self['property0'] = value
+        self['property0_proxy'] = value
 
     property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
@@ -139,30 +119,35 @@ class QuaternionMathNode(ArmLogicTreeNode):
                  ('Multiply', 'Multiply', 'Multiply'),
                  ('MultiplyFloats', 'Multiply (Floats)', 'Multiply (Floats)'),
                  ('Module', 'Module', 'Module'),
-                 ('Normalize', 'Normalize', 'Normalize'),
-                 ('Lerp', 'Lerp', 'Linearly interpolate'),
-                 ('Slerp', 'Slerp', 'Spherical linear interpolation'),
-                 ('FromTo', 'From To', 'From To'),
-                 ('FromMat', 'From Mat', 'From Mat'),
-                 ('FromRotationMat', 'From Rotation Mat', 'From Rotation Mat'),
-                 ('ToAxisAngle', 'To Axis Angle', 'To Axis Angle'),
-                 ('FromAxisAngle', 'From Axis Angle', 'From Axis Angle'),
-                 ('FromEuler', 'From Euler', 'From Euler'),
-                 ('GetEuler', 'To Euler', 'To Euler')],
-        name='', default='Add', set=set_enum, get=get_enum)
+                 ('Normalize', 'Normalize', 'Normalize'), #],
+                 # NOTE: the unused parts need to exist to be read from an old version from the node.
+                 # this is so dumb…
+                 ('Lerp', 'DO NOT USE',''),
+                 ('Slerp', 'DO NOT USE',''),
+                 ('FromTo', 'DO NOT USE',''),
+                 ('FromMat', 'DO NOT USE',''),
+                 ('FromRotationMat', 'DO NOT USE',''),
+                 ('ToAxisAngle', 'DO NOT USE',''),
+                 ('FromAxisAngle', 'DO NOT USE',''),
+                 ('FromEuler', 'DO NOT USE',''),
+                 ('GetEuler', 'DO NOT USE','')],
+        name='', default='Add')  #, set=set_enum, get=get_enum)
 
     def __init__(self):
+        super(QuaternionMathNode, self).__init__()
         array_nodes[str(id(self))] = self
 
     def init(self, context):
         super(QuaternionMathNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Quaternion 0', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketVector', 'Quaternion 1', default_value=[0.0, 0.0, 0.0])
-        self.add_output('NodeSocketVector', 'Result')
+        self.add_input('NodeSocketVector', 'Quaternion 0 XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_input('NodeSocketFloat', 'Quaternion 0 W', default_value=1)        
+        self.add_input('NodeSocketVector', 'Quaternion 1 XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_input('NodeSocketFloat', 'Quaternion 1 W', default_value=1)
+        self.add_output('NodeSocketVector', 'Result XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_output('NodeSocketFloat', 'Result W', default_value=1)
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property1') # Separator Out
-        layout.prop(self, 'property0') # Operation
+        layout.prop(self, 'property0_proxy') # Operation
         # Buttons
         if (self.get_count_in(self.property0) == 0):
             row = layout.row(align=True)
@@ -170,15 +155,201 @@ class QuaternionMathNode(ArmLogicTreeNode):
             op = column.operator('arm.node_add_input', text='Add Value', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
             if (self.property0 == 'Add') or (self.property0 == 'Subtract') or (self.property0 == 'Multiply') or (self.property0 == 'DotProduct'):
-                op.name_format = 'Quaternion {0}'
+                op.name_format = 'Quaternion {0} XYZ;Quaternion {0} W'
             else:
                 op.name_format = 'Value {0}'
             if (self.property0 == "MultiplyFloats"):
                 op.socket_type = 'NodeSocketFloat'
             else:
-                op.socket_type = 'NodeSocketVector'
+                op.socket_type = 'NodeSocketVector;NodeSocketFloat'
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op.node_index = str(id(self))
+            if self.property0 != "MultiplyFloats":
+                op.count = 2
+                op.min_inputs = 4
+            else:
+                op.min_inputs = 2
             if len(self.inputs) == 2:
                 column.enabled = False
+
+
+
+
+
+
+        
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+
+        ret=[]
+        if self.property0 == 'GetEuler':
+            newself = node_tree.nodes.new('LNSeparateRotationNode')
+            ret.append(newself)
+            newself.property0='EulerAngles'
+            newself.property2='XZY'
+            newself.property1='Rad'
+        
+            for link in self.inputs[0].links:  # 0 or 1
+                node_tree.links.new(link.from_socket, newself.inputs[0])
+        elif self.property0 == 'ToEuler':
+            newself = node_tree.nodes.new('LNRotationNode')
+            ret.append(newself)
+            preconv = node_tree.nodes.new('LNVectorNode')
+            ret.append(preconv)
+            newself.property0='EulerAngles'
+            newself.property2='XZY'
+            newself.property1='Rad'
+            node_tree.links.new(preconv.outputs[0], newself.inputs[0])
+
+            preconv.inputs[0].default_value = self.inputs[0].default_value
+            for link in self.inputs[0].links:  # 0 or 1
+                node_tree.links.new(link.from_socket, preconv.inputs[0])
+            preconv.inputs[1].default_value = self.inputs[1].default_value
+            for link in self.inputs[1].links:  # 0 or 1
+                node_tree.links.new(link.from_socket, preconv.inputs[1])
+            preconv.inputs[2].default_value = self.inputs[2].default_value
+            for link in self.inputs[2].links:  # 0 or 1
+                node_tree.links.new(link.from_socket, preconv.inputs[2])
+        elif self.property0 == 'ToAxisAngle':
+            newself = node_tree.nodes.new('LNSeparateRotationNode')
+            ret.append(newself)
+            newself.property0='AxisAngle'
+            newself.property1='Rad'
+        
+            for link in self.inputs[0].links:  # 0 or 1
+                node_tree.links.new(link.from_node, newself.inputs[0])
+        elif self.property0 == 'FromAxisAngle':
+            newself = node_tree.nodes.new('LNRotationNode')
+            ret.append(newself)
+            newself.property0='AxisAngle'
+            newself.property1='Rad'
+
+            newself.inputs[0].default_value = self.inputs[1].default_value
+            for link in self.inputs[1].links:  # 0 or 1
+                node_tree.links.new(link.from_node, newself.inputs[0])
+            newself.inputs[1].default_value = self.inputs[2].default_value
+            for link in self.inputs[2].links:  # 0 or 1
+                node_tree.links.new(link.from_node, newself.inputs[1])
+        elif self.property0 in ('FromMat','FromRotationMat'):
+            newself = node_tree.nodes.new('LNSeparateTransformNode')
+            ret.append(newself)
+            for link in self.inputs[1].links:  # 0 or 1
+                node_tree.links.new(link.from_node, newself.inputs[0])
+
+        elif self.property0 in ('Lerp','Slerp','FromTo'):
+            newself = node_tree.nodes.new('LNRotationMathNode')
+            ret.append(newself)
+            newself.property0 = self.property0
+            for in1, in2 in zip(self.inputs, newself.inputs):
+                if in1.bl_idname in ('NodeSocketFloat', 'NodeSocketVector'):
+                    in2.default_value = in1.default_value
+                for link in in1.links:
+                    node_tree.links.new(link.from_socket, in2)
+
+        else:
+            newself = node_tree.nodes.new('LNQuaternionMathNode')
+            ret.append(newself)
+            newself.property0 = self.property0
+        
+            # convert the inputs… this is going to be hard lmao.
+            i_in_1 = 0
+            i_in_2 = 0
+            while i_in_1 < len(self.inputs):
+                in1 = self.inputs[i_in_1]
+                if in1.bl_idname == 'NodeSocketVector':
+                    # quaternion input: now two sockets, not one.
+                    convnode = node_tree.nodes.new('LNSeparateRotationNode')
+                    convnode.property0 = 'Quaternion'
+                    ret.append(convnode)
+                    node_tree.links.new(convnode.outputs[0], newself.inputs[i_in_2])
+                    node_tree.links.new(convnode.outputs[1], newself.inputs[i_in_2+1])
+                    for link in in1.links:
+                        node_tree.links.new(link.from_socket, convnode.inputs[0])
+                    i_in_2 +=1
+                    i_in_1 +=2
+                elif in1.bl_idname == 'NodeSocketfloat':
+                    for link in in1.links:
+                        node_tree.links.new(link.from_socket, newself.inputs[i_in_2])
+                else:
+                    raise ValueError('get_replacement_node() for is not LNQuaternionMathNode V1->V2 is not prepared to deal with an input socket of type %s. This is a bug to report to the developers' %in1.bl_idname)
+
+        # #### now that the input has been dealt with, let's deal with the output.
+
+        if self.property0 in ('FromEuler','FromMat','FromRotationMat','FromAxisAngle','Lerp','Slerp','FromTo'):
+            # the new self returns a rotation
+            for link in self.outputs[0].links:
+                node_tree.links.new(newself.outputs[0], link.to_socket)
+        elif self.property0 in ('DotProduct','Module'):
+            # new self returns a float
+            for link in self.outputs[1 + 4*int(self.property1)].links:
+                node_tree.links.new(newself.outputs[1], link.to_socket)
+        elif self.property0 in ('GetEuler', 'ToAxisAngle'):
+            # new self returns misc.
+            for link in self.outputs[0].links:
+                node_tree.links.new(newself.outputs[0], link.to_socket)
+            if self.property0 == 'ToAxisAngle':
+                for link in self.outputs[1 + 4*int(self.property1)].links:
+                    node_tree.links.new(newself.outputs[1], link.to_socket)
+            if self.property1:
+                xlinks = self.outputs[1].links
+                ylinks = self.outputs[2].links
+                zlinks = self.outputs[3].links
+                if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
+                    conv = node_tree.nodes.new('LNSeparateVectorNode')
+                    ret.append(conv)
+                    node_tree.links.new(newself.outputs[0], conv.inputs[0])
+                    for link in xlinks:
+                        node_tree.links.new(conv.outputs[0], link.to_socket)
+                    for link in ylinks:
+                        node_tree.links.new(conv.outputs[1], link.to_socket)
+                    for link in zlinks:
+                        node_tree.links.new(conv.outputs[2], link.to_socket)
+        else:
+            # new self returns a proper quaternion XYZ/W
+            outlinks = self.outputs[0].links
+            if len(outlinks)>0:
+                conv = node_tree.nodes.new('LNRotationNode')
+                conv.property0='Quaternion'
+                ret.append(conv)
+                node_tree.links.new(newself.outputs[0], conv.inputs[0])
+                node_tree.links.new(newself.outputs[1], conv.inputs[1])
+                for link in outlinks:
+                    node_tree.links.new(conv.outputs[0], link.to_socket)
+            if self.property1:
+                for link in self.outputs[4].links:  # for W
+                    node_tree.links.new(newself.outputs[1], link.to_socket)
+                xlinks = self.outputs[1].links
+                ylinks = self.outputs[2].links
+                zlinks = self.outputs[3].links
+                if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
+                    conv = node_tree.nodes.new('LNSeparateVectorNode')
+                    ret.append(conv)
+                    node_tree.links.new(newself.outputs[0], conv.inputs[0])
+                for link in xlinks:
+                    node_tree.links.new(conv.outputs[0], link.to_socket)
+                for link in ylinks:
+                    node_tree.links.new(conv.outputs[1], link.to_socket)
+                for link in zlinks:
+                    node_tree.links.new(conv.outputs[2], link.to_socket)
+
+        return ret
+
+
+    # note: keep property1, so that it is actually readable for node conversion.
+    property1: BoolProperty(name='DEPRECATED', default=False)
+
+    # this is the version of property0 that is shown in the interface,
+    # even though the real property0 is the one used elsewhere.
+    # NOTE FOR FUTURE MAINTAINERS: the value of this proxy property does **not** matter, only the value of property0 does.
+    property0_proxy: EnumProperty(
+        items = [('Add', 'Add', 'Add'),
+                 ('Subtract', 'Subtract', 'Subtract'),
+                 ('DotProduct', 'Dot Product', 'Dot Product'),
+                 ('Multiply', 'Multiply', 'Multiply'),
+                 ('MultiplyFloats', 'Multiply (Floats)', 'Multiply (Floats)'),
+                 ('Module', 'Module', 'Module'),
+                 ('Normalize', 'Normalize', 'Normalize')],
+        name='', default='Add', set=set_enum, get=get_enum)

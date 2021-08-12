@@ -4,6 +4,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
     """Mathematical operations on rotations."""
     bl_idname = 'LNRotationMathNode'
     bl_label = 'Rotation Math'
+    bl_description = 'Mathematical operations that can be performed on rotations, no matter their internal representation'
     arm_section = 'quaternions'
     arm_version = 1
 
@@ -97,7 +98,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
     property0: EnumProperty(
         items = [('Compose', 'Compose (multiply)', 'compose (multiply) two rotations. Note that order of the composition matters.'),
                  ('Amplify', 'Amplify (multiply by float)', 'Amplify or diminish the effect of a rotation'),
-                 ('Normalize', 'Normalize', 'Normalize'),
+                 #('Normalize', 'Normalize', 'Normalize'),
                  ('Inverse', 'Get Inverse', 'from r, get the rotation r2 so that " r×r2=r2×r= <no rotation>" '),
                  ('Lerp', 'Lerp', 'Linearly interpolation'),
                  ('Slerp', 'Slerp', 'Spherical linear interpolation'),

@@ -40,7 +40,7 @@ class SeparateRotationNode(ArmLogicTreeNode):
     property0: EnumProperty(
         items = [('EulerAngles', 'Euler Angles', 'Euler Angles'),
                  ('AxisAngle', 'Axis/Angle', 'Axis/Angle'),
-                 ('Quat', 'Quaternion', 'Quaternion')],
+                 ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='EulerAngles',
         update=on_property_update)
 
