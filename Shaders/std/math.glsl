@@ -40,4 +40,9 @@ float attenuate(const float dist) {
 	// 1.0 / (quadratic * dist * dist);
 }
 
+float safe_acos(const float x) {
+	// acos is undefined if |x| > 1
+	return acos(clamp(x, -1.0, 1.0));
+}
+
 #endif

@@ -20,6 +20,8 @@
 #ifndef _SKY_GLSL_
 #define _SKY_GLSL_
 
+#include "std/math.glsl"
+
 uniform sampler2D nishitaLUT;
 uniform vec2 nishitaDensity;
 
@@ -119,7 +121,7 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 
 		// Idea behind this: "Rotate" everything by iPos (-> iPos is the new zenith) and then all calculations for the
 		// inner integral only depend on the sample height (iHeight) and sunTheta (angle between sun and new zenith).
-		float sunTheta = acos(dot(normalize(iPos), normalize(pSun)));
+		float sunTheta = safe_acos(dot(normalize(iPos), normalize(pSun)));
 		vec3 jAttn = nishita_lookupLUT(iHeight, sunTheta);
 
 		// Calculate attenuation
