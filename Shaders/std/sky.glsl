@@ -46,14 +46,8 @@ uniform vec2 nishitaDensity;
 #define nishita_mie_dir 0.76 // Aerosols anisotropy ("direction")
 #define nishita_mie_dir_sq 0.5776 // Squared aerosols anisotropy
 
-
 // Values from [Hill: 60]
 #define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
-
-float random(vec2 coords) {
-	// Returned value is in [0, 1]
-	return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
 
 vec3 nishita_lookupLUT(const float height, const float sunTheta) {
 	vec2 coords = vec2(
@@ -133,7 +127,7 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 		vec3 attn = iAttn * jAttn;
 
 		// Apply dithering to reduce visible banding
-		attn *= 0.98 + random(r.xy) * 0.04;
+		attn *= 0.98 + rand(r.xy) * 0.04;
 
 		// Accumulate scattering
 		totalRlh += odStepRlh * attn;
