@@ -1034,6 +1034,13 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_idname = 'arm.play'
     bl_label = 'Play'
 
+    def invoke(self, context, event):
+        if event.shift:
+            state.is_play = True
+            make.build_success()
+            return{'FINISHED'}
+        return self.execute(context)
+
     def execute(self, context):
         if state.proc_build != None:
             return {"CANCELLED"}
