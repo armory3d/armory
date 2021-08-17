@@ -20,6 +20,8 @@
 #ifndef _SKY_GLSL_
 #define _SKY_GLSL_
 
+#include "std/math.glsl"
+
 uniform sampler2D nishitaLUT;
 uniform vec2 nishitaDensity;
 
@@ -44,19 +46,8 @@ uniform vec2 nishitaDensity;
 #define nishita_mie_dir 0.76 // Aerosols anisotropy ("direction")
 #define nishita_mie_dir_sq 0.5776 // Squared aerosols anisotropy
 
-// The ozone absorption coefficients are taken from Cycles code.
-// Because Cycles calculates 21 wavelengths, we use the coefficients
-// which are closest to the RGB wavelengths (645nm, 510nm, 440nm).
-// Precalculating values by simulating Blender's spec_to_xyz() function
-// to include all 21 wavelengths gave unrealistic results
-#define nishita_ozone_coeff vec3(1.59051840791988e-6, 0.00000096707041180970, 0.00000007309568762914)
-
 // Values from [Hill: 60]
 #define sun_limb_darkening_col vec3(0.397, 0.503, 0.652)
-
-float random(vec2 coords) {
-	return fract(sin(dot(coords.xy, vec2(12.9898,78.233))) * 43758.5453);
-}
 
 vec3 nishita_lookupLUT(const float height, const float sunTheta) {
 	vec2 coords = vec2(
@@ -124,18 +115,19 @@ vec3 nishita_atmosphere(const vec3 r, const vec3 r0, const vec3 pSun, const floa
 
 		// Idea behind this: "Rotate" everything by iPos (-> iPos is the new zenith) and then all calculations for the
 		// inner integral only depend on the sample height (iHeight) and sunTheta (angle between sun and new zenith).
-		float sunTheta = acos(dot(normalize(iPos), normalize(pSun)));
-		vec3 jODepth = nishita_lookupLUT(iHeight, sunTheta);
-
-		// Apply dithering to reduce visible banding
-		jODepth += mix(-1000, 1000, random(r.xy));
+		float sunTheta = safe_acos(dot(normalize(iPos), normalize(pSun)));
+		vec3 jAttn = nishita_lookupLUT(iHeight, sunTheta);
 
 		// Calculate attenuation
-		vec3 attn = exp(-(
-			nishita_mie_coeff * (iOdMie + jODepth.y)
-			+ (nishita_rayleigh_coeff) * (iOdRlh + jODepth.x)
-			+ nishita_ozone_coeff * jODepth.z
+		vec3 iAttn = exp(-(
+			nishita_mie_coeff * iOdMie
+			+ nishita_rayleigh_coeff * iOdRlh
+			// + 0 for ozone
 		));
+		vec3 attn = iAttn * jAttn;
+
+		// Apply dithering to reduce visible banding
+		attn *= 0.98 + rand(r.xy) * 0.04;
 
 		// Accumulate scattering
 		totalRlh += odStepRlh * attn;

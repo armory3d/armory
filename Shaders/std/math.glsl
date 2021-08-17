@@ -23,7 +23,7 @@ vec2 rand2(const vec2 coord) {
 	const float width = 1100.0;
 	const float height = 500.0;
 	float noiseX = ((fract(1.0 - coord.s * (width / 2.0)) * 0.25) + (fract(coord.t * (height / 2.0)) * 0.75)) * 2.0 - 1.0;
-	float noiseY = ((fract(1.0 - coord.s * (width / 2.0)) * 0.75) + (fract(coord.t * (height / 2.0)) * 0.25)) * 2.0 - 1.0;	
+	float noiseY = ((fract(1.0 - coord.s * (width / 2.0)) * 0.75) + (fract(coord.t * (height / 2.0)) * 0.25)) * 2.0 - 1.0;
 	return vec2(noiseX, noiseY);
 }
 
@@ -38,6 +38,11 @@ float attenuate(const float dist) {
 	// 1.0 / (constant * 1.0)
 	// 1.0 / (linear * dist)
 	// 1.0 / (quadratic * dist * dist);
+}
+
+float safe_acos(const float x) {
+	// acos is undefined if |x| > 1
+	return acos(clamp(x, -1.0, 1.0));
 }
 
 #endif
