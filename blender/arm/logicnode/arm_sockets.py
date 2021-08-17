@@ -97,7 +97,7 @@ class ArmRotationSocket(ArmCustomSocket):
         
             
     def on_mode_update(self, context):
-        if self.default_value_mode == 'Quat':
+        if self.default_value_mode == 'Quaternion':
             summ = abs(self.default_value_s0)
             summ+= abs(self.default_value_s1)
             summ+= abs(self.default_value_s2)
@@ -116,10 +116,10 @@ class ArmRotationSocket(ArmCustomSocket):
     def convert_to_quaternion(part1,part2,param1,param2,param3):
         """converts a representation of rotation into a quaternion.
         ``part1`` is a vector, ``part2`` is a scalar or None,
-        ``param1`` is in ('Quat', 'EulerAngles', 'AxisAngle'),
+        ``param1`` is in ('Quaternion', 'EulerAngles', 'AxisAngle'),
         ``param2`` is in ('Rad','Deg') for both EulerAngles and AxisAngle,
         ``param3`` is a len-3 string like "XYZ", for EulerAngles """
-        if param1 == 'Quat':
+        if param1=='Quaternion':
             qx, qy, qz = part1[0], part1[1], part1[2]
             qw = part2
             # need to normalize the quaternion for a rotation (having it be 0 is not an option)
@@ -183,7 +183,7 @@ class ArmRotationSocket(ArmCustomSocket):
             part1,
             self.default_value_s3,
             self.default_value_mode,
-            self.defualt_value_unit,
+            self.default_value_unit,
             self.default_value_order
         )
             
@@ -205,7 +205,7 @@ class ArmRotationSocket(ArmCustomSocket):
                 coll.prop(self, 'default_value_s0', text='X')
                 coll.prop(self, 'default_value_s1', text='Y')
                 coll.prop(self, 'default_value_s2', text='Z')
-            elif self.default_value_mode == 'Quat':
+            elif self.default_value_mode == 'Quaternion':
                 coll.prop(self, 'default_value_s0', text='X')
                 coll.prop(self, 'default_value_s1', text='Y')
                 coll.prop(self, 'default_value_s2', text='Z')
@@ -223,7 +223,7 @@ class ArmRotationSocket(ArmCustomSocket):
     default_value_mode: EnumProperty(
         items=[('EulerAngles', 'Euler Angles', 'Euler Angles'),
                ('AxisAngle', 'Axis/Angle', 'Axis/Angle'),
-               ('Quat', 'Quaternion', 'Quaternion')],
+               ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='EulerAngles',
         update=on_mode_update)
 

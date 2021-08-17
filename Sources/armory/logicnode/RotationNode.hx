@@ -38,6 +38,9 @@ class RotationNode extends LogicNode {
 	        //var inp0 = inputs[0].get();
 		//var inp
 	        //if (inputs[0].get())
+		if (inputs.length == 0){
+			return this.value;
+		}
 	
 		switch (property0){
 		case "Quaternion": {

@@ -7,6 +7,8 @@ import armory.trait.physics.RigidBody;
 
 class SetRotationNode extends LogicNode {
 
+	public var property0: String; // UNUSED
+
 	public function new(tree: LogicTree) {
 		super(tree);
 	}

@@ -6,6 +6,7 @@ from typing import OrderedDict as ODict  # Prevent naming conflicts
 import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
+from arm.logicnode.arm_sockets import ArmCustomSocket
 
 # Pass NodeReplacment forward to individual node modules that import arm_nodes
 from arm.logicnode.replacement import NodeReplacement
@@ -83,7 +84,13 @@ class ArmLogicTreeNode(bpy.types.Node):
         socket = self.inputs.new(socket_type, socket_name)
 
         if default_value is not None:
-            socket.default_value = default_value
+            if isinstance(socket, ArmCustomSocket):
+                if socket.arm_socket_type != 'NONE':
+                    socket.default_value_raw = default_value
+                else:
+                    raise ValueError('specified a default value for an input node that doesn\'t accept one')
+            else:
+                socket.default_value = default_value
 
         if is_var and not socket.display_shape.endswith('_DOT'):
             socket.display_shape += '_DOT'

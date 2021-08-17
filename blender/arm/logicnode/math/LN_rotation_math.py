@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
+from mathutils import Vector
 
-class QuaternionMathNode(ArmLogicTreeNode):
+class RotationMathNode(ArmLogicTreeNode):
     """Mathematical operations on rotations."""
     bl_idname = 'LNRotationMathNode'
     bl_label = 'Rotation Math'
@@ -54,7 +55,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
         for socket in sink_sockets:
             self.id_data.links.new(self.inputs[socket_number], socket)
 
-    def on_update_operation(self, context):
+    def on_property_update(self, context):
         # Checking the selection of another operation
 
 
@@ -73,13 +74,13 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 self.ensure_input_socket(2, "NodeSocketFloat", "Interpolation factor")
 
         elif self.property0 == 'FromTo':
-            self.ensure_input_socket(0, "ArmNodeSocketRotation", "From")
-            self.ensure_input_socket(1, "ArmNodeSocketRotation", "To")
+            self.ensure_input_socket(0, "NodeSocketVector", "From")
+            self.ensure_input_socket(1, "NodeSocketVector", "To")
             
         # Rotation as argument 1:
         if self.property0 in ('Compose','Lerp','Slerp'):
             if self.inputs[1].bl_idname != "ArmNodeSocketRotation":
-                self.replace_input_socket(1, "ArmNodeSocketRotation", "Quaternion 2")
+                self.replace_input_socket(1, "ArmNodeSocketRotation", "Rotation 2")
                 if self.property0 == 'Compose':
                     self.inputs[1].name = "Inner quaternion"
         # Float as argument 1:
@@ -105,15 +106,15 @@ class QuaternionMathNode(ArmLogicTreeNode):
                  ('FromTo', 'From To', 'From direction To direction'),
                  #('FromRotationMat', 'From Rotation Mat', 'From Rotation Mat')
                  ],
-        name='', default='Compose', update=on_update_operation)
+        name='', default='Compose', update=on_property_update)
 
     #def __init__(self):    
     #    array_nodes[str(id(self))] = self
 
     def init(self, context):
-        super(QuaternionMathNode, self).init(context)
-        self.add_input('ArmNodeSocketRotation', 'Quaternion 0', default_value=[0.0, 0.0, 0.0])
-        self.add_input('ArmNodeSocketRotation', 'Quaternion 1', default_value=[0.0, 0.0, 0.0])
+        super(RotationMathNode, self).init(context)
+        self.add_input('ArmNodeSocketRotation', 'Outer rotation', default_value=Vector((0.0, 0.0, 0.0, 1.0)) )
+        self.add_input('ArmNodeSocketRotation', 'Inner rotation', default_value=Vector((0.0, 0.0, 0.0, 1.0)))
         self.add_output('ArmNodeSocketRotation', 'Result')
 
     def draw_buttons(self, context, layout):

@@ -17,13 +17,13 @@ class SeparateRotationNode(ArmLogicTreeNode):
 
     def on_property_update(self, context):
         """called by the EnumProperty, used to update the node socket labels"""
-        if self.property0 == "Quat":
+        if self.property0 == 'Quaternion':
             self.outputs[0].name = "Quaternion XYZ"
             self.outputs[1].name = "Quaternion W"
-        elif self.property0 == "EulerAngles":
+        elif self.property0 == 'EulerAngles':
             self.outputs[0].name = "Euler Angles"
             self.outputs[1].name = "[unused for Euler output]"
-        elif self.property0.startswith("AxisAngle"):
+        elif self.property0 == 'AxisAngle':
             self.outputs[0].name = "Axis"
             self.outputs[1].name = "Angle"
         else:

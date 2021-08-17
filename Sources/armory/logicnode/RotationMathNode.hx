@@ -17,17 +17,21 @@ class RotationMathNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-		var q: Quat = inputs[0].get();
-		if (q==null) return null;
+		//var q: Quat = inputs[0].get();
+		//if (q==null) return null;
 		
-		var res_q: Quat = new Quat();
+		//var res_q: Quat = new Quat();
 		switch (property0) {
 			// 1 argument: Normalize, Inverse
 			case "Normalize": {
+			        var q: Quat = inputs[0].get();
+				if (q==null) return null;
 				res_q.setFrom(q);
 				res_q = res_q.normalize();
 			}
 			case "Inverse": {
+			var q: Quat = inputs[0].get();
+				if (q==null) return null;
 			        var modl = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
 				modl = -1/modl;
 				res_q.w = -q.w*modl;
@@ -72,17 +76,19 @@ class RotationMathNode extends LogicNode {
 			// # 3 arguments: Lerp, Slerp, FromAxisAngle, FromEuler
 			case "Lerp": {
 				//var from = q;
+				var from: Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
 				var f: Float = inputs[2].get();
-				if ((f == null) || (to == null)) return null;
-				res_q = res_q.lerp(q, to, f);
+				if ((from == null) || (f == null) || (to == null)) return null;
+				res_q = res_q.lerp(from, to, f);
 			}
 			case "Slerp": {
 				//var from = q;
+				var from:Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
 				var f: Float = inputs[2].get();
-				if ((f == null) || (to == null)) return null;
-				res_q = res_q.slerp(q, to, f);
+				if ((from == null) || (f == null) || (to == null)) return null;
+				res_q = res_q.slerp(from, to, f);
 			}
 		}
 		return res_q;

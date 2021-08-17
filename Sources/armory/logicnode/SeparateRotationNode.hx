@@ -50,7 +50,7 @@ class SeparateRotationNode extends LogicNode {
 				case "Deg": return toDEG*aa_angle_cache;
 			        }
 			}
-		case "Quat":
+		case "Quaternion":
 			switch(from){
 			case 0: return new Vec4(q.x,q.y,q.z);
 			case 1: return q.w;
