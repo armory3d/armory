@@ -1,8 +1,17 @@
 import bpy
+
 import arm.utils
 import arm.make_state as make_state
 import arm.material.cycles as cycles
 import arm.log as log
+
+if arm.is_reload(__name__):
+    arm.utils = arm.reload_module(arm.utils)
+    make_state = arm.reload_module(make_state)
+    cycles = arm.reload_module(cycles)
+    log = arm.reload_module(log)
+else:
+    arm.enable_reload(__name__)
 
 add_mesh_contexts = []
 
@@ -42,7 +51,7 @@ def get_rpasses(material):
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
-            
+
     if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
         ar.append('shadowmap')
 
@@ -73,7 +82,8 @@ def is_transluc_type(node):
        node.type == 'BSDF_TRANSPARENT' or \
        node.type == 'BSDF_TRANSLUCENT' or \
        (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[18].is_linked or node.inputs[18].default_value != 1.0)):
+       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[18].is_linked or node.inputs[18].default_value != 1.0)) or \
+       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 21 and (node.inputs[19].is_linked or node.inputs[19].default_value != 1.0)):
        return True
     return False
 

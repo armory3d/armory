@@ -1,15 +1,16 @@
+import errno
 import glob
 import json
 import os
+from queue import Queue
+import shlex
 import shutil
-import time
 import stat
 import subprocess
 import threading
+import time
+from typing import Callable
 import webbrowser
-import shlex
-import errno
-import math
 
 import bpy
 
@@ -17,6 +18,7 @@ import arm.assets as assets
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
+import arm.live_patch as live_patch
 import arm.log as log
 import arm.make_logic as make_logic
 import arm.make_renderpath as make_renderpath
@@ -25,17 +27,61 @@ import arm.make_world as make_world
 import arm.utils
 import arm.write_data as write_data
 
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    arm.lib.make_datas = arm.reload_module(arm.lib.make_datas)
+    arm.lib.server = arm.reload_module(arm.lib.server)
+    live_patch = arm.reload_module(live_patch)
+    log = arm.reload_module(log)
+    make_logic = arm.reload_module(make_logic)
+    make_renderpath = arm.reload_module(make_renderpath)
+    state = arm.reload_module(state)
+    make_world = arm.reload_module(make_world)
+    arm.utils = arm.reload_module(arm.utils)
+    write_data = arm.reload_module(write_data)
+else:
+    arm.enable_reload(__name__)
+
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
-def run_proc(cmd, done):
-    def fn(p, done):
-        p.wait()
-        if done != None:
+# Queue of threads and their done callbacks. Item format: [thread, done]
+thread_callback_queue = Queue(maxsize=0)
+
+
+def run_proc(cmd, done: Callable) -> subprocess.Popen:
+    """Creates a subprocess with the given command and returns it.
+
+    If Blender is not running in background mode, a thread is spawned
+    that waits until the subprocess has finished executing to not freeze
+    the UI, otherwise (in background mode) execution is blocked until
+    the subprocess has finished.
+
+    If `done` is not `None`, it is called afterwards in the main thread.
+    """
+    use_thread = not bpy.app.background
+
+    def wait_for_proc(proc: subprocess.Popen):
+        proc.wait()
+
+        if use_thread:
+            # Put the done callback into the callback queue so that it
+            # can be received by a polling function in the main thread
+            thread_callback_queue.put([threading.current_thread(), done], block=True)
+        else:
             done()
+
     p = subprocess.Popen(cmd)
-    threading.Thread(target=fn, args=(p, done)).start()
+
+    if use_thread:
+        threading.Thread(target=wait_for_proc, args=(p,)).start()
+    else:
+        wait_for_proc(p)
+
     return p
+
 
 def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants):
     os.chdir(raw_shaders_path + '/' + shader_name)
@@ -211,15 +257,14 @@ def export_data(fp, sdk_path):
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     if wrd.arm_write_config:
         write_data.write_config(resx, resy)
-    
+
     # Change project version (Build, Publish)
     if (not state.is_play) and (wrd.arm_project_version_autoinc):
         wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
-    import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -338,7 +383,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
     if arm.utils.get_save_on_build():
         bpy.ops.wm.save_mainfile()
 
-    log.clear(clear_warnings=True)
+    log.clear(clear_warnings=True, clear_errors=True)
 
     # Set camera in active scene
     active_scene = arm.utils.get_active_scene()
@@ -397,9 +442,11 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
 def play_done():
+    """Called if the player was stopped/terminated."""
     state.proc_play = None
     state.redraw_ui = True
     log.clear()
+    live_patch.stop()
 
 def assets_done():
     if state.proc_build == None:
@@ -433,7 +480,7 @@ def compilation_server_done():
 def build_done():
     print('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
-        log.print_warn(f'{log.num_warnings} warnings occurred during compilation')
+        log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:
         return
     result = state.proc_build.poll()
@@ -445,40 +492,6 @@ def build_done():
     else:
         log.error('Build failed, check console')
 
-def patch():
-    if state.proc_build != None:
-        return
-    assets.invalidate_enabled = False
-    fp = arm.utils.get_fp()
-    os.chdir(fp)
-    asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
-    ArmoryExporter.export_scene(bpy.context, asset_path, scene=bpy.context.scene)
-    if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
-        raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
-        shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
-    node_path = arm.utils.get_node_path()
-    khamake_path = arm.utils.get_khamake_path()
-
-    cmd = [node_path, khamake_path, 'krom']
-    cmd.extend(('--shaderversion', '330', '--parallelAssetConversion', '4',
-                '--to', arm.utils.build_dir() + '/debug', '--nohaxe', '--noproject'))
-
-    assets.invalidate_enabled = True
-    state.proc_build = run_proc(cmd, patch_done)
-
-def patch_done():
-    js = 'iron.Scene.patch();'
-    write_patch(js)
-    state.proc_build = None
-
-patch_id = 0
-
-def write_patch(js):
-    global patch_id
-    with open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w') as f:
-        patch_id += 1
-        f.write(str(patch_id) + '\n')
-        f.write(js)
 
 def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
@@ -545,6 +558,7 @@ def build_success():
             webbrowser.open(html5_app_path)
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
+                live_patch.start()
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
@@ -654,12 +668,12 @@ def build_success():
                         state.proc_publish_build = run_proc(cmd, done_gradlew_build)
                 else:
                     print('\nBuilding APK Warning: ANDROID_SDK_ROOT is not specified in environment variables and "Android SDK Path" setting is not specified in preferences: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path" in the preferences, then repeat operation "Publish"')
-        
+
         # HTML5 After Publish
         if target_name.startswith('html5'):
             if len(arm.utils.get_html5_copy_path()) > 0 and (wrd.arm_project_html5_copy):
                 project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
-                dst = os.path.join(arm.utils.get_html5_copy_path(), project_name) 
+                dst = os.path.join(arm.utils.get_html5_copy_path(), project_name)
                 if os.path.exists(dst):
                     shutil.rmtree(dst)
                 try:
@@ -673,10 +687,10 @@ def build_success():
                     link_html5_app = arm.utils.get_link_web_server() +'/'+ project_name
                     print("Running a browser with a link " + link_html5_app)
                     webbrowser.open(link_html5_app)
-        
+
         # Windows After Publish
         if target_name.startswith('windows'):
-            list_vs = [] 
+            list_vs = []
             err = ''
             # Print message
             project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
@@ -707,18 +721,18 @@ def build_success():
                     for vs in list_vs:
                         print('- ' + vs[1] + ' (version ' + vs[3] +')')
                     return
-                # Current VS 
+                # Current VS
                 vs_path = ''
                 for vs in list_vs:
                     if vs[0] == wrd.arm_project_win_list_vs:
                         vs_path = vs[2]
                         break
-                # Open in Visual Studio                
+                # Open in Visual Studio
                 if int(wrd.arm_project_win_build) == 1:
                     cmd = os.path.join('start "' + vs_path, 'Common7', 'IDE', 'devenv.exe" "' + os.path.join(project_path, project_name + '.sln"'))
                     subprocess.Popen(cmd, shell=True)
                 # Compile
-                if int(wrd.arm_project_win_build) > 1:                    
+                if int(wrd.arm_project_win_build) > 1:
                     bits = '64' if wrd.arm_project_win_build_arch == 'x64' else '32'
                     # vcvars
                     cmd = os.path.join(vs_path, 'VC', 'Auxiliary', 'Build', 'vcvars' + bits + '.bat')
@@ -792,7 +806,7 @@ def done_vs_vars():
         # MSBuild
         wrd = bpy.data.worlds['Arm']
         list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
-        # Current VS 
+        # Current VS
         vs_path = ''
         vs_name = ''
         for vs in list_vs:
@@ -851,7 +865,7 @@ def done_vs_build():
             os.chdir(res_path) # set work folder
             subprocess.Popen(cmd, shell=True)
         # Open Build Directory
-        if wrd.arm_project_win_build_open:               
+        if wrd.arm_project_win_build_open:
             arm.utils.open_folder(path)
         state.redraw_ui = True
     else:

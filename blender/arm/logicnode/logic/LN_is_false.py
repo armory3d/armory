@@ -10,9 +10,8 @@ class IsFalseNode(ArmLogicTreeNode):
     bl_label = 'Is False'
     arm_version = 1
 
-    def init(self, context):
-        super(IsFalseNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketBool', 'Bool')
+        self.add_input('ArmBoolSocket', 'Bool')
 
         self.add_output('ArmNodeSocketAction', 'Out')

@@ -8,8 +8,7 @@ class GetTransformNode(ArmLogicTreeNode):
     bl_label = 'Get Object Transform'
     arm_version = 1
 
-    def init(self, context):
-        super(GetTransformNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('NodeSocketShader', 'Transform')
+        self.add_output('ArmDynamicSocket', 'Transform')

@@ -1,5 +1,5 @@
 import bpy.ops as O
-import bpy, os, re, sys, importlib, struct, platform, subprocess, threading, string, bmesh
+import bpy, os, re, sys, importlib, struct, platform, subprocess, threading, string, bmesh, shutil, glob, uuid
 from io import StringIO
 from threading  import Thread
 from queue import Queue, Empty
@@ -81,14 +81,7 @@ def save_image(image):
 
     image.filepath_raw = savepath
     
-    # if "Normal" in image.name:
-    #     bpy.context.scene.render.image_settings.quality = 90
-    #     image.save_render( filepath = image.filepath_raw, scene = bpy.context.scene )
-    # else:
     image.save()
-
-  
-
 
 def get_file_size(filepath):
     size = "Unpack Files"
@@ -141,7 +134,7 @@ def check_is_org_material(self,material):
 
 
 def clean_empty_materials(self):
-    for obj in bpy.data.objects:
+    for obj in bpy.context.scene.objects:
         for slot in obj.material_slots:
             mat = slot.material
             if mat is None:
@@ -319,6 +312,11 @@ def lightmap_to_ao(material,lightmap_node):
 # https://github.com/mattedicksoncom/blender-xatlas/
 ###########################################################
 
+def gen_safe_name():
+    genId = uuid.uuid4().hex
+    # genId = "u_" + genId.replace("-","_")
+    return "u_" + genId
+
 def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
     blender_xatlas = importlib.util.find_spec("blender_xatlas")
@@ -330,32 +328,54 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
     packOptions = bpy.context.scene.pack_tool
     chartOptions = bpy.context.scene.chart_tool
+
     sharedProperties = bpy.context.scene.shared_properties
+    #sharedProperties.unwrapSelection
 
     context = bpy.context
-    
-    if obj.type == 'MESH':
-        context.view_layer.objects.active = obj
-        if obj.data.users > 1:
-            obj.data = obj.data.copy() #make single user copy
-        uv_layers = obj.data.uv_layers
 
-        #setup the lightmap uvs
-        uvName = "UVMap_Lightmap"
-        if sharedProperties.lightmapUVChoiceType == "NAME":
-            uvName = sharedProperties.lightmapUVName
-        elif sharedProperties.lightmapUVChoiceType == "INDEX":
-            if sharedProperties.lightmapUVIndex < len(uv_layers):
-                uvName = uv_layers[sharedProperties.lightmapUVIndex].name
+    #save whatever mode the user was in
+    startingMode = bpy.context.object.mode
+    selected_objects = bpy.context.selected_objects
 
-        if not uvName in uv_layers:
-            uvmap = uv_layers.new(name=uvName)
-            uv_layers.active_index = len(uv_layers) - 1
-        else:
-            for i in range(0, len(uv_layers)):
-                if uv_layers[i].name == uvName:
-                    uv_layers.active_index = i
-        obj.select_set(True)
+    #check something is actually selected
+    #external function/operator will select them
+    if len(selected_objects) == 0:
+        print("Nothing Selected")
+        self.report({"WARNING"}, "Nothing Selected, please select Something")
+        return {'FINISHED'}
+
+    #store the names of objects to be lightmapped
+    rename_dict = dict()
+    safe_dict = dict()
+
+    #make sure all the objects have ligthmap uvs
+    for obj in selected_objects:
+        if obj.type == 'MESH':
+            safe_name = gen_safe_name();
+            rename_dict[obj.name] = (obj.name,safe_name)
+            safe_dict[safe_name] = obj.name
+            context.view_layer.objects.active = obj
+            if obj.data.users > 1:
+                obj.data = obj.data.copy() #make single user copy
+            uv_layers = obj.data.uv_layers
+
+            #setup the lightmap uvs
+            uvName = "UVMap_Lightmap"
+            if sharedProperties.lightmapUVChoiceType == "NAME":
+                uvName = sharedProperties.lightmapUVName
+            elif sharedProperties.lightmapUVChoiceType == "INDEX":
+                if sharedProperties.lightmapUVIndex < len(uv_layers):
+                    uvName = uv_layers[sharedProperties.lightmapUVIndex].name
+
+            if not uvName in uv_layers:
+                uvmap = uv_layers.new(name=uvName)
+                uv_layers.active_index = len(uv_layers) - 1
+            else:
+                for i in range(0, len(uv_layers)):
+                    if uv_layers[i].name == uvName:
+                        uv_layers.active_index = i
+            obj.select_set(True)
 
     #save all the current edges
     if sharedProperties.packOnly:
@@ -381,8 +401,11 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    #Create a fake obj export to a string
+    #Will strip this down further later
     fakeFile = StringIO()
     blender_xatlas.export_obj_simple.save(
+        rename_dict=rename_dict,
         context=bpy.context,
         filepath=fakeFile,
         mainUVChoiceType=sharedProperties.mainUVChoiceType,
@@ -393,20 +416,26 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
         use_mesh_modifiers=True,
         use_edges=True,
         use_smooth_groups=False,
-        use_smooth_groups_bitflags=False, 
+        use_smooth_groups_bitflags=False,
         use_normals=True,
         use_uvs=True,
         use_materials=False,
         use_triangles=False,
-        use_nurbs=False, 
-        use_vertex_groups=False, 
+        use_nurbs=False,
+        use_vertex_groups=False,
         use_blen_objects=True,
         group_by_object=False,
         group_by_material=False,
         keep_vertex_order=False,
     )
 
-    file_path = os.path.dirname(os.path.abspath(blender_xatlas.__file__))
+    #print just for reference
+    # print(fakeFile.getvalue())
+
+    #get the path to xatlas
+    #file_path = os.path.dirname(os.path.abspath(__file__))
+    scriptsDir = bpy.utils.user_resource('SCRIPTS', "addons")
+    file_path = os.path.join(scriptsDir, "blender_xatlas")
     if platform.system() == "Windows":
         xatlas_path = os.path.join(file_path, "xatlas", "xatlas-blender.exe")
     elif platform.system() == "Linux":
@@ -458,6 +487,8 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
         shell=True
     )
 
+    print(xatlas_path)
+
     #shove the fake file in stdin
     stdin = xatlas_process.stdin
     value = bytes(fakeFile.getvalue() + "\n", 'UTF-8') #The \n is needed to end the input properly
@@ -482,17 +513,17 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
         obName: string = ""
         uvArray: List[float] = field(default_factory=list)
         faceArray: List[int] = field(default_factory=list)
-    
+
     convertedObjects = []
     uvArrayComplete = []
 
-    
+
     #search through the out put for STARTOBJ
     #then start reading the objects
     obTest = None
     startRead = False
     for line in outObj.splitlines():
-        
+
         line_split = line.split()
 
         if not line_split:
@@ -504,14 +535,14 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
             print("Start reading the objects----------------------------------------")
             startRead = True
             # obTest = uvObject()
-        
+
         if startRead:
             #if it's a new obj
             if line_start == 'o':
                 #if there is already an object append it
                 if obTest is not None:
                     convertedObjects.append(obTest)
-                
+
                 obTest = uvObject() #create new uv object
                 obTest.obName = line_split[1]
 
@@ -536,9 +567,9 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
     #append the final object
     convertedObjects.append(obTest)
-    # print(convertedObjects)
-    
-    
+    print(convertedObjects)
+
+
     #apply the output-------------------------------------------------------------
     #copy the uvs to the original objects
     # objIndex = 0
@@ -548,7 +579,7 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
         bpy.ops.object.select_all(action='DESELECT')
 
         obTest = importObject
-
+        obTest.obName = safe_dict[obTest.obName] #probably shouldn't just replace it
         bpy.context.scene.objects[obTest.obName].select_set(True)
         context.view_layer.objects.active = bpy.context.scene.objects[obTest.obName]
         bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -563,7 +594,7 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
         nFaces = len(bm.faces)
         #need to ensure lookup table for some reason?
-        if hasattr(bm.faces, "ensure_lookup_table"): 
+        if hasattr(bm.faces, "ensure_lookup_table"):
             bm.faces.ensure_lookup_table()
 
         #loop through the faces
@@ -601,7 +632,7 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
             currentObject = bpy.context.scene.objects[edgeList['object']]
             bm = bmesh.new()
             bm.from_mesh(currentObject.data)
-            if hasattr(bm.edges, "ensure_lookup_table"): 
+            if hasattr(bm.edges, "ensure_lookup_table"):
                 bm.edges.ensure_lookup_table()
 
             #assume that all the triangulated edges come after the original edges
@@ -617,6 +648,27 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
             bm.free()
             bpy.ops.object.mode_set(mode='EDIT')
 
-    #End setting the quads back again------------------------------------------------------------
+    #End setting the quads back again-------------------------------------------------------------
+
+    #select the original objects that were selected
+    for objectName in rename_dict:
+        if objectName[0] in bpy.context.scene.objects:
+            current_object = bpy.context.scene.objects[objectName[0]]
+            current_object.select_set(True)
+            context.view_layer.objects.active = current_object
+
+    bpy.ops.object.mode_set(mode=startingMode)
 
     print("Finished Xatlas----------------------------------------")
+    return {'FINISHED'}
+
+def transfer_assets(copy, source, destination):
+    for filename in glob.glob(os.path.join(source, '*.*')):
+        shutil.copy(filename, destination)
+
+def transfer_load():
+    load_folder = bpy.path.abspath(os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_SceneProperties.tlm_load_folder))
+    lightmap_folder = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+    print(load_folder)
+    print(lightmap_folder)
+    transfer_assets(True, load_folder, lightmap_folder)

@@ -15,13 +15,14 @@ class SetShaderUniformNode(ArmLogicTreeNode):
         self.inputs.remove(self.inputs[2])
 
         if self.property0 == 'int':
-            self.add_input('NodeSocketInt', 'Int')
+            self.add_input('ArmIntSocket', 'Int')
         elif self.property0 == 'float':
-            self.add_input('NodeSocketFloat', 'Float')
+            self.add_input('ArmFloatSocket', 'Float')
         elif self.property0 in ('vec2', 'vec3', 'vec4'):
-            self.add_input('NodeSocketVector', 'Vector')
+            self.add_input('ArmVectorSocket', 'Vector')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('int', 'int', 'int'),
                  ('float', 'float', 'float'),
                  ('vec2', 'vec2', 'vec2'),
@@ -32,11 +33,10 @@ class SetShaderUniformNode(ArmLogicTreeNode):
         description="The type of the uniform",
         update=on_update_uniform_type)
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Uniform Name')
-        self.add_input('NodeSocketFloat', 'Float')
+        self.add_input('ArmStringSocket', 'Uniform Name')
+        self.add_input('ArmFloatSocket', 'Float')
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

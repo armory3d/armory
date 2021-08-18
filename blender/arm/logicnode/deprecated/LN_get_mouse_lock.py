@@ -14,9 +14,8 @@ class GetMouseLockNode(ArmLogicTreeNode):
     arm_category = 'Input'
     arm_section = 'mouse'
 
-    def init(self, context):
-        super(GetMouseLockNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Is Locked')
+    def arm_init(self, context):
+        self.outputs.new('ArmBoolSocket', 'Is Locked')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):

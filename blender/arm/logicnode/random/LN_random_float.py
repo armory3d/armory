@@ -7,9 +7,8 @@ class RandomFloatNode(ArmLogicTreeNode):
     bl_label = 'Random Float'
     arm_version = 1
 
-    def init(self, context):
-        super(RandomFloatNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Min')
-        self.add_input('NodeSocketFloat', 'Max', default_value=1.0)
-        # self.add_input('NodeSocketInt', 'Seed')
-        self.add_output('NodeSocketFloat', 'Float')
+    def arm_init(self, context):
+        self.add_input('ArmFloatSocket', 'Min')
+        self.add_input('ArmFloatSocket', 'Max', default_value=1.0)
+        # self.add_input('ArmIntSocket', 'Seed')
+        self.add_output('ArmFloatSocket', 'Float')

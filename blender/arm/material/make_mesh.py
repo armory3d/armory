@@ -1,4 +1,5 @@
 import bpy
+
 import arm.assets as assets
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -9,6 +10,20 @@ import arm.material.make_cluster as make_cluster
 import arm.material.make_finalize as make_finalize
 import arm.material.make_attrib as make_attrib
 import arm.utils
+
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    mat_state = arm.reload_module(mat_state)
+    mat_utils = arm.reload_module(mat_utils)
+    cycles = arm.reload_module(cycles)
+    make_tess = arm.reload_module(make_tess)
+    make_particle = arm.reload_module(make_particle)
+    make_cluster = arm.reload_module(make_cluster)
+    make_finalize = arm.reload_module(make_finalize)
+    make_attrib = arm.reload_module(make_attrib)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
 
 is_displacement = False
 write_material_attribs = None
@@ -125,34 +140,14 @@ def make_base(con_mesh, parse_opacity):
     if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
 
+    vert.add_out('vec3 wnormal')
+    make_attrib.write_norpos(con_mesh, vert)
+    frag.write_attrib('vec3 n = normalize(wnormal);')
+
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
 
-    if con_mesh.is_elem('tex'):
-        vert.add_out('vec2 texCoord')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_flag:
-            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
-                make_particle.write_tilesheet(vert)
-            else:
-                vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-                vert.write_attrib('texCoord = tex * texUnpack + tilesheetOffset;')
-        else:
-            vert.write_attrib('texCoord = tex * texUnpack;')
-
-        if tese is not None:
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
-            tese.write_pre = False
-
-    if con_mesh.is_elem('tex1'):
-        vert.add_out('vec2 texCoord1')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        vert.write_attrib('texCoord1 = tex1 * texUnpack;')
-        if tese is not None:
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
-            tese.write_pre = False
+    make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -161,10 +156,6 @@ def make_base(con_mesh, parse_opacity):
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
-
-    vert.add_out('vec3 wnormal')
-    make_attrib.write_norpos(con_mesh, vert)
-    frag.write_attrib('vec3 n = normalize(wnormal);')
 
     if con_mesh.is_elem('tang'):
         if tese is not None:
@@ -296,8 +287,6 @@ def make_forward_mobile(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -320,14 +309,7 @@ def make_forward_mobile(con_mesh):
         opac = mat_state.material.arm_discard_opacity
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    if con_mesh.is_elem('tex'):
-        vert.add_out('vec2 texCoord')
-        vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_flag:
-            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-            vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
-        else:
-            vert.write('texCoord = tex * texUnpack;')
+    make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -344,6 +326,8 @@ def make_forward_mobile(con_mesh):
         make_attrib.write_norpos(con_mesh, vert)
         frag.write_attrib('vec3 n = normalize(wnormal);')
 
+    make_attrib.write_vertpos(vert)
+
     frag.add_include('std/math.glsl')
     frag.add_include('std/brdf.glsl')
 
@@ -358,9 +342,9 @@ def make_forward_mobile(con_mesh):
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
     if is_shadows_atlas:
+        is_single_atlas = '_SingleAtlas' in wrd.world_defs
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
     frag.write('vec3 direct = vec3(0.0);')
@@ -372,7 +356,7 @@ def make_forward_mobile(con_mesh):
         frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
-            vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
+            vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
             vert.write('lightPosition = LWVP * spos;')
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}')
@@ -474,8 +458,6 @@ def make_forward_solid(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
-    make_attrib.write_vertpos(vert)
-
     frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -512,6 +494,7 @@ def make_forward_solid(con_mesh):
         vert.write('vcolor = col.rgb;')
 
     make_attrib.write_norpos(con_mesh, vert, write_nor=False)
+    make_attrib.write_vertpos(vert)
 
     frag.add_out('vec4 fragColor')
     if blend and parse_opacity:
@@ -575,7 +558,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     arm_discard = mat_state.material.arm_discard
     make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
-    
+
     blend = mat_state.material.arm_blending
 
     vert = con_mesh.vert
@@ -694,7 +677,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                         vert.write('lightPosition = LVP * vec4(wposition, 1.0);')
                     else:
                         vert.add_out('vec4 lightPosition')
-                        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
+                        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
                         vert.write('lightPosition = LWVP * spos;')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')

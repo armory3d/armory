@@ -8,12 +8,11 @@ class RotationNode(ArmLogicTreeNode):
     #arm_section = 'rotation'
     arm_version = 1
 
-    def init(self, context):
-        super(RotationNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Euler Angles / Vector XYZ')
-        self.add_input('NodeSocketFloat', 'Angle / W')
+    def arm_init(self, context):
+        self.add_input('ArmVectorSocket', 'Euler Angles / Vector XYZ')
+        self.add_input('ArmFloatSocket', 'Angle / W')
         
-        self.add_output('ArmNodeSocketRotation', 'Out', is_var=True)
+        self.add_output('ArmRotationSocket', 'Out', is_var=True)
 
     def on_property_update(self, context):
         """called by the EnumProperty, used to update the node socket labels"""
@@ -37,18 +36,21 @@ class RotationNode(ArmLogicTreeNode):
             if self.property0=='EulerAngles':
                 coll.prop(self, 'property2')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('EulerAngles', 'Euler Angles', 'Euler Angles'),
                  ('AxisAngle', 'Axis/Angle', 'Axis/Angle'),
                  ('Quaternion', 'Quaternion', 'Quaternion')],
         name='', default='EulerAngles',
         update=on_property_update)
 
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items=[('Deg', 'Degrees', 'Degrees'),
                ('Rad', 'Radians', 'Radians')],
         name='', default='Rad')
-    property2: EnumProperty(
+    property2: HaxeEnumProperty(
+        'property2',
         items=[('XYZ','XYZ','XYZ'),
                ('XZY','XZY (legacy Armory euler order)','XZY (legacy Armory euler order)'),
                ('YXZ','YXZ','YXZ'),

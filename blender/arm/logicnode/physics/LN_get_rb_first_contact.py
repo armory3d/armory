@@ -10,8 +10,7 @@ class GetFirstContactNode(ArmLogicTreeNode):
     arm_section = 'contact'
     arm_version = 1
 
-    def init(self, context):
-        super(GetFirstContactNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'RB')
 
         self.add_output('ArmNodeSocketObject', 'First Contact')

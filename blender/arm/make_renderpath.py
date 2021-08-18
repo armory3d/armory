@@ -1,9 +1,19 @@
 import bpy
+
+import arm.api
 import arm.assets as assets
-import arm.utils
 import arm.log as log
 import arm.make_state as state
-import arm.api
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    log = arm.reload_module(log)
+    state = arm.reload_module(state)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
 
 callback = None
 
@@ -373,8 +383,11 @@ def build():
         if obj.type == "MESH":
             for slot in obj.material_slots:
                 mat = slot.material
-                if mat.arm_ignore_irradiance:
-                    ignoreIrr = True
+
+                if mat: #Check if not NoneType
+
+                    if mat.arm_ignore_irradiance:
+                        ignoreIrr = True
 
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'

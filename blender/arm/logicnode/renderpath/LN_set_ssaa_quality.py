@@ -5,7 +5,8 @@ class RpSuperSampleNode(ArmLogicTreeNode):
     bl_idname = 'LNRpSuperSampleNode'
     bl_label = 'Set SSAA Quality'
     arm_version = 1
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('1', '1', '1'),
                  ('1.5', '1.5', '1.5'),
                  ('2', '2', '2'),
@@ -13,8 +14,7 @@ class RpSuperSampleNode(ArmLogicTreeNode):
                  ],
         name='', default='1')
 
-    def init(self, context):
-        super(RpSuperSampleNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
         self.add_output('ArmNodeSocketAction', 'Out')

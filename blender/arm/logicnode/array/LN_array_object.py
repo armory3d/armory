@@ -11,10 +11,9 @@ class ObjectArrayNode(ArmLogicTreeNode):
         super(ObjectArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(ObjectArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

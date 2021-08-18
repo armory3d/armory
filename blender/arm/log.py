@@ -29,12 +29,15 @@ else:
 
 info_text = ''
 num_warnings = 0
+num_errors = 0
 
-def clear(clear_warnings=False):
-    global info_text, num_warnings
+def clear(clear_warnings=False, clear_errors=False):
+    global info_text, num_warnings, num_errors
     info_text = ''
     if clear_warnings:
         num_warnings = 0
+    if clear_errors:
+        num_errors = 0
 
 def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
@@ -62,4 +65,6 @@ def warn(text):
     print_warn(text)
 
 def error(text):
+    global num_errors
+    num_errors += 1
     log('ERROR: ' + text, ERROR)

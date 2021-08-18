@@ -9,16 +9,15 @@ class GetMouseMovementNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    def init(self, context):
-        super(GetMouseMovementNode, self).init(context)
+    def arm_init(self, context):
 
-        self.add_input('NodeSocketFloat', 'X Multiplier', default_value=-1.0)
-        self.add_input('NodeSocketFloat', 'Y Multiplier', default_value=-1.0)
-        self.add_input('NodeSocketFloat', 'Wheel Delta Multiplier', default_value=-1.0)
+        self.add_input('ArmFloatSocket', 'X Multiplier', default_value=-1.0)
+        self.add_input('ArmFloatSocket', 'Y Multiplier', default_value=-1.0)
+        self.add_input('ArmFloatSocket', 'Wheel Delta Multiplier', default_value=-1.0)
 
-        self.add_output('NodeSocketFloat', 'X')
-        self.add_output('NodeSocketFloat', 'Y')
-        self.add_output('NodeSocketFloat', 'Multiplied X')
-        self.add_output('NodeSocketFloat', 'Multiplied Y')
-        self.add_output('NodeSocketInt', 'Wheel Delta')
-        self.add_output('NodeSocketFloat', 'Multiplied Wheel Delta')
+        self.add_output('ArmFloatSocket', 'X')
+        self.add_output('ArmFloatSocket', 'Y')
+        self.add_output('ArmFloatSocket', 'Multiplied X')
+        self.add_output('ArmFloatSocket', 'Multiplied Y')
+        self.add_output('ArmIntSocket', 'Wheel Delta')
+        self.add_output('ArmFloatSocket', 'Multiplied Wheel Delta')

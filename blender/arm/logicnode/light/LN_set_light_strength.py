@@ -6,10 +6,9 @@ class SetLightStrengthNode(ArmLogicTreeNode):
     bl_label = 'Set Light Strength'
     arm_version = 1
 
-    def init(self, context):
-        super(SetLightStrengthNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Light')
-        self.add_input('NodeSocketFloat', 'Strength', default_value=250)
+        self.add_input('ArmFloatSocket', 'Strength', default_value=250)
 
         self.add_output('ArmNodeSocketAction', 'Out')

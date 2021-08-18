@@ -7,8 +7,7 @@ class RandomChoiceNode(ArmLogicTreeNode):
     bl_label = 'Random Choice'
     arm_version = 1
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
 
         self.add_input('ArmNodeSocketArray', 'Array')
-        self.add_output('NodeSocketShader', 'Value')
+        self.add_output('ArmDynamicSocket', 'Value')

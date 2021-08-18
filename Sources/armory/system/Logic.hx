@@ -94,6 +94,10 @@ class Logic {
 		var v = createClassInstance(node.type, [tree]);
 		nodeMap.set(name, v);
 
+		#if arm_patch
+		tree.nodes.set(name, v);
+		#end
+
 		// Properties
 		for (i in 0...5) {
 			for (b in node.buttons) {
@@ -103,9 +107,13 @@ class Logic {
 			}
 		}
 
+		@:privateAccess v.preallocInputs(node.inputs.length);
+		@:privateAccess v.preallocOutputs(node.outputs.length);
+
 		// Create inputs
 		var inp_node: armory.logicnode.LogicNode = null;
 		var inp_from = 0;
+		var from_type: String;
 		for (i in 0...node.inputs.length) {
 			var inp = node.inputs[i];
 			// Is linked - find node
@@ -117,6 +125,7 @@ class Logic {
 				for (i in 0...n.outputs.length) {
 					if (n.outputs[i] == socket) {
 						inp_from = i;
+						from_type = socket.type;
 						break;
 					}
 				}
@@ -124,27 +133,33 @@ class Logic {
 			else { // Not linked - create node with default values
 				inp_node = build_default_node(inp);
 				inp_from = 0;
+				from_type = inp.type;
 			}
 			// Add input
-			v.addInput(inp_node, inp_from);
+			var link = LogicNode.addLink(inp_node, v, inp_from, i);
+			#if arm_patch
+			link.fromType = from_type;
+			link.toType = inp.type;
+			link.toValue = getSocketDefaultValue(inp);
+			#end
 		}
 
 		// Create outputs
-		for (out in node.outputs) {
-			var outNodes: Array<armory.logicnode.LogicNode> = [];
+		for (i in 0...node.outputs.length) {
+			var out = node.outputs[i];
 			var ls = getOutputLinks(out);
-			if (ls != null && ls.length > 0) {
-				for (l in ls) {
-					var n = getNode(l.to_id);
-					var out_name = build_node(n);
-					outNodes.push(nodeMap.get(out_name));
-				}
+
+			// Linked outputs are already handled after iterating over inputs
+			// above, so only unconnected outputs are handled here
+			if (ls == null || ls.length == 0) {
+				var link = LogicNode.addLink(v, build_default_node(out), i, 0);
+
+				#if arm_patch
+				link.fromType = out.type;
+				link.toType = out.type;
+				link.toValue = getSocketDefaultValue(out);
+				#end
 			}
-			else { // Not linked - create node with default values
-				outNodes.push(build_default_node(out));
-			}
-			// Add outputs
-			v.addOutputs(outNodes);
 		}
 
 		return name;
@@ -210,6 +225,22 @@ class Logic {
 			v = createClassInstance("NullNode", [tree]);
 		}
 		return v;
+	}
+
+	static function getSocketDefaultValue(socket: TNodeSocket): Any {
+
+		var v: armory.logicnode.LogicNode = null;
+
+		return switch (socket.type) {
+			case "OBJECT" | "VALUE" | "INT" | "BOOLEAN" | "STRING":
+				socket.default_value;
+			case "VECTOR" | "RGB":
+				socket.default_value == null ? [0, 0, 0] : [socket.default_value[0], socket.default_value[1], socket.default_value[2]];
+			case "RGBA":
+				socket.default_value == null ? [0, 0, 0, 1] : [socket.default_value[0], socket.default_value[1], socket.default_value[2], socket.default_value[3]];
+			default:
+				null;
+		}
 	}
 
 	static function createClassInstance(className: String, args: Array<Dynamic>): Dynamic {

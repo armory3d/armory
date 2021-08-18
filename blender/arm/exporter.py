@@ -32,6 +32,19 @@ import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
 
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    exporter_opt = arm.reload_module(exporter_opt)
+    log = arm.reload_module(log)
+    make_renderpath = arm.reload_module(make_renderpath)
+    cycles = arm.reload_module(cycles)
+    make_material = arm.reload_module(make_material)
+    mat_batch = arm.reload_module(mat_batch)
+    arm.utils = arm.reload_module(arm.utils)
+    arm.profiler = arm.reload_module(arm.profiler)
+else:
+    arm.enable_reload(__name__)
+
 
 @unique
 class NodeType(Enum):
@@ -278,6 +291,8 @@ class ArmoryExporter:
         return out_track
 
     def export_object_transform(self, bobject: bpy.types.Object, o):
+        wrd = bpy.data.worlds['Arm']
+
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
 
@@ -291,7 +306,7 @@ class ArmoryExporter:
                 fp = self.get_meshes_file_path('action_' + action_name, compressed=ArmoryExporter.compress_enabled)
                 assets.add(fp)
                 ext = '.lz4' if ArmoryExporter.compress_enabled else ''
-                if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                if ext == '' and not wrd.arm_minimize:
                     ext = '.json'
 
                 if 'object_actions' not in o:
@@ -307,6 +322,7 @@ class ArmoryExporter:
 
                 self.export_pose_markers(out_anim, action)
 
+                unresolved_data_paths = set()
                 for fcurve in action.fcurves:
                     data_path = fcurve.data_path
 
@@ -314,7 +330,11 @@ class ArmoryExporter:
                         out_track = self.export_animation_track(fcurve, frame_range, FCURVE_TARGET_NAMES[data_path][fcurve.array_index])
                     except KeyError:
                         if data_path not in FCURVE_TARGET_NAMES:
-                            log.warn(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            # This can happen if the target is simply not
+                            # supported or the action shares both bone
+                            # and object transform data (FCURVE_TARGET_NAMES
+                            # only contains object transform targets)
+                            unresolved_data_paths.add(data_path)
                             continue
                         # Missing target entry for array_index or something else
                         else:
@@ -322,8 +342,20 @@ class ArmoryExporter:
 
                     out_anim['tracks'].append(out_track)
 
+                if len(unresolved_data_paths) > 0:
+                    warning = (
+                        f'The action "{action_name}" has fcurve channels with data paths that could not be resolved.'
+                        ' This can be caused by the following things:\n'
+                        '  - The data paths are not supported.\n'
+                        '  - The action exists on both armature and non-armature objects or has both bone and object transform data.'
+                    )
+                    if wrd.arm_verbose_output:
+                        warning += f'\n  Unresolved data paths: {unresolved_data_paths}'
+                    else:
+                        warning += '\n  To see the list of unresolved data paths please recompile with Armory Project > Verbose Output enabled.'
+                    log.warn(warning)
+
                 if True:  # not action.arm_cached or not os.path.exists(fp):
-                    wrd = bpy.data.worlds['Arm']
                     if wrd.arm_verbose_output:
                         print('Exporting object action ' + action_name)
 
@@ -1157,7 +1189,16 @@ class ArmoryExporter:
             else:
                 invscale_tex = 1 * 32767
             if has_tang:
-                exportMesh.calc_tangents(uvmap=lay0.name)
+                try:
+                    exportMesh.calc_tangents(uvmap=lay0.name)
+                except Exception as e:
+                    if hasattr(e, 'message'):
+                        log.error(e.message)
+                    else:
+                        # Assume it was caused because of encountering n-gons
+                        log.error(f"""object {bobject.name} contains n-gons in its mesh, so it's impossible to compute tanget space for normal mapping.
+Make sure the mesh only has tris/quads.""")
+
                 tangdata = np.empty(num_verts * 3, dtype='<f4')
         if has_col:
             cdata = np.empty(num_verts * 3, dtype='<f4')
@@ -1502,24 +1543,18 @@ class ArmoryExporter:
                 # Less bias for bigger maps
                 out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            out_light['strength'] *= 2.6
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['fov'] = 1.5708 # pi/2
             out_light['shadowmap_cube'] = True
             if light_ref.shadow_soft_size > 0.1:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            out_light['strength'] *= 2.6
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
             # Cycles defaults to 0.15
             out_light['spot_blend'] = light_ref.spot_blend / 10
         elif objtype == 'AREA':
-            out_light['strength'] *= 80.0 / (light_ref.size * light_ref.size_y)
-            if bpy.app.version >= (2, 80, 72):
-                out_light['strength'] *= 0.01
+            out_light['strength'] *= 0.01
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y
 
@@ -1565,9 +1600,11 @@ class ArmoryExporter:
 
                 asset_name = arm.utils.asset_name(bobject)
 
+                # Collection is in the same file
                 if collection.library is None:
-                    # collection is in the same file, but (likely) on another scene
-                    if asset_name not in scene_objects:
+                    # Only export linked objects (from other scenes for example),
+                    # all other objects (in scene_objects) are already exported.
+                    if bobject.name not in scene_objects:
                         self.process_bobject(bobject)
                         self.export_object(bobject, self.scene)
                 else:
@@ -2308,6 +2345,10 @@ class ArmoryExporter:
 
         return instanced_type, instanced_data
 
+    @staticmethod
+    def rigid_body_static(rb):
+        return (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+
     def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
@@ -2334,7 +2375,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = rb.mass
-            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
+            is_static = self.rigid_body_static(rb)
             if is_static:
                 body_mass = 0
             x = {}
@@ -2405,7 +2446,7 @@ class ArmoryExporter:
             # Rigid body constraint
             rbc = bobject.rigid_body_constraint
             if rbc is not None and rbc.enabled:
-                self.add_rigidbody_constraint(o, rbc)
+                self.add_rigidbody_constraint(o, bobject, rbc)
 
         # Camera traits
         if type is NodeType.CAMERA:
@@ -2425,6 +2466,13 @@ class ArmoryExporter:
             else:
                 self.material_to_object_dict[mat] = [bobject]
                 self.material_to_arm_object_dict[mat] = [o]
+
+        # Add UniformsManager trait
+        if type is NodeType.MESH:
+            uniformManager = {}
+            uniformManager['type'] = 'Script'
+            uniformManager['class_name'] = 'armory.trait.internal.UniformsManager'
+            o['traits'].append(uniformManager)
 
         # Export constraints
         if len(bobject.constraints) > 0:
@@ -2600,7 +2648,7 @@ class ArmoryExporter:
 
             rbw = self.scene.rigidbody_world
             if rbw is not None and rbw.enabled:
-                out_trait['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
+                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
 
             self.output['traits'].append(out_trait)
 
@@ -2636,7 +2684,7 @@ class ArmoryExporter:
             }
             self.output['traits'].append(out_trait)
 
-        if wrd.arm_live_patch:
+        if arm.utils.is_livepatch_enabled():
             if 'traits' not in self.output:
                 self.output['traits'] = []
             out_trait = {'type': 'Script', 'class_name': 'armory.trait.internal.LivePatch'}
@@ -2712,7 +2760,7 @@ class ArmoryExporter:
         o['traits'].append(out_trait)
 
     @staticmethod
-    def add_rigidbody_constraint(o, rbc):
+    def add_rigidbody_constraint(o, bobject, rbc):
         rb1 = rbc.object1
         rb2 = rbc.object2
         if rb1 is None or rb2 is None:
@@ -2731,7 +2779,8 @@ class ArmoryExporter:
                 "'" + rb1.name + "'",
                 "'" + rb2.name + "'",
                 str(rbc.disable_collisions).lower(),
-                str(breaking_threshold)
+                str(breaking_threshold),
+                str(bobject.arm_relative_physics_constraint).lower()
             ]
         }
         if rbc.type == "FIXED":
@@ -2847,6 +2896,7 @@ class ArmoryExporter:
             out_world['sun_direction'] = list(world.arm_envtex_sun_direction)
             out_world['turbidity'] = world.arm_envtex_turbidity
             out_world['ground_albedo'] = world.arm_envtex_ground_albedo
+            out_world['nishita_density'] = list(world.arm_nishita_density)
 
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
 
@@ -2861,16 +2911,9 @@ class ArmoryExporter:
         rpdat = arm.utils.get_rp()
         solid_mat = rpdat.arm_material_model == 'Solid'
         arm_irradiance = rpdat.arm_irradiance and not solid_mat
-        arm_radiance = False
-        radtex = world.arm_envtex_name.rsplit('.', 1)[0]
+        arm_radiance = rpdat.arm_radiance
+        radtex = world.arm_envtex_name.rsplit('.', 1)[0]  # Remove file extension
         irrsharmonics = world.arm_envtex_irr_name
-
-        # Radiance
-        if '_EnvTex' in world.world_defs:
-            arm_radiance = rpdat.arm_radiance
-        elif '_EnvSky' in world.world_defs:
-            arm_radiance = rpdat.arm_radiance
-            radtex = 'hosek'
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
 

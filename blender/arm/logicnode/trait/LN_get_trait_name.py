@@ -6,9 +6,8 @@ class GetTraitNameNode(ArmLogicTreeNode):
     bl_label = 'Get Trait Name'
     arm_version = 1
 
-    def init(self, context):
-        super(GetTraitNameNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Trait')
+    def arm_init(self, context):
+        self.add_input('ArmDynamicSocket', 'Trait')
 
-        self.add_output('NodeSocketString', 'Name')
-        self.add_output('NodeSocketString', 'Class Type')
+        self.add_output('ArmStringSocket', 'Name')
+        self.add_output('ArmStringSocket', 'Class Type')

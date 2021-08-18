@@ -11,6 +11,14 @@ import arm.assets as assets
 import arm.make_state as state
 import arm.utils
 
+if arm.is_reload(__name__):
+    import arm
+    assets = arm.reload_module(assets)
+    state = arm.reload_module(state)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 def on_same_drive(path1: str, path2: str) -> bool:
     drive_path1, _ = os.path.splitdrive(path1)
@@ -54,7 +62,7 @@ def remove_readonly(func, path, excinfo):
 
 
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
-                    enable_dce: bool, import_traits: List[str], import_logicnodes) -> None:
+                    enable_dce: bool, import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
 
     sdk_path = arm.utils.get_sdk_path()
@@ -160,20 +168,20 @@ project.addSources('Sources');
             # if export_navigation:
             #     khafile.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
-        # if import_logicnodes: # Live patching for logic nodes
-            # khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
-
         if not wrd.arm_compiler_inline:
             khafile.write("project.addParameter('--no-inline');\n")
 
         if enable_dce:
             khafile.write("project.addParameter('-dce full');\n")
 
-        live_patch = wrd.arm_live_patch and state.target == 'krom'
-        if wrd.arm_debug_console or live_patch:
+        use_live_patch = arm.utils.is_livepatch_enabled()
+        if wrd.arm_debug_console or use_live_patch:
             import_traits.append('armory.trait.internal.Bridge')
-            if live_patch:
+            if use_live_patch:
                 assets.add_khafile_def('arm_patch')
+                # Include all logic node classes so that they can later
+                # get instantiated
+                khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
@@ -253,7 +261,7 @@ project.addSources('Sources');
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
             khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
-    
+
         if not is_publish and state.target == 'html5':
             khafile.write("project.addParameter('--debug');\n")
 
@@ -537,6 +545,9 @@ def write_compiledglsl(defs, make_variants):
 #endif
 """)
 
+        if state.target == 'html5' or arm.utils.get_gapi() == 'direct3d11':
+            f.write("#define _FlipY\n")
+
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
@@ -708,7 +719,7 @@ const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) 
             f.write(
 """const int maxLights = """ + max_lights + """;
 const int maxLightsCluster = """ + max_lights_clusters + """;
-const float clusterNear = 4.0;
+const float clusterNear = 3.0;
 """)
 
         f.write(add_compiledglsl + '\n') # External defined constants

@@ -1,11 +1,20 @@
+"""
+Exports smaller geometry but is slower.
+To be replaced with https://github.com/zeux/meshoptimizer
+"""
+
 from mathutils import *
 import numpy as np
 
-import arm.utils
 import arm.log as log
+import arm.utils
 
-# Exports smaller geometry but is slower
-# To be replaced with https://github.com/zeux/meshoptimizer
+if arm.is_reload(__name__):
+    log = arm.reload_module(log)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 class Vertex:
     __slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertex_index")

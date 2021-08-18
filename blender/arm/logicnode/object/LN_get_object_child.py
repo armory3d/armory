@@ -7,7 +7,8 @@ class GetChildNode(ArmLogicTreeNode):
     arm_section = 'relations'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),
@@ -15,10 +16,9 @@ class GetChildNode(ArmLogicTreeNode):
                  ],
         name='', default='By Name')
 
-    def init(self, context):
-        super(GetChildNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Parent')
-        self.add_input('NodeSocketString', 'Child Name')
+        self.add_input('ArmStringSocket', 'Child Name')
 
         self.add_output('ArmNodeSocketObject', 'Child')
 

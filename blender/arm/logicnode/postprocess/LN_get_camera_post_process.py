@@ -6,15 +6,14 @@ class CameraGetNode(ArmLogicTreeNode):
     bl_label = 'Get Camera Post Process'
     arm_version = 1
 
-    def init(self, context):
-        super(CameraGetNode, self).init(context)
-        self.add_output('NodeSocketFloat', 'F-Stop')
-        self.add_output('NodeSocketFloat', 'Shutter Time')
-        self.add_output('NodeSocketFloat', 'ISO')
-        self.add_output('NodeSocketFloat', 'Exposure Compensation')
-        self.add_output('NodeSocketFloat', 'Fisheye Distortion')
-        self.add_output('NodeSocketBool', 'Auto Focus')
-        self.add_output('NodeSocketFloat', 'DOF Distance')
-        self.add_output('NodeSocketFloat', 'DOF Length')
-        self.add_output('NodeSocketFloat', 'DOF F-Stop')
-        self.add_output('NodeSocketFloat', 'Film Grain')
+    def arm_init(self, context):
+        self.add_output('ArmFloatSocket', 'F-Stop')
+        self.add_output('ArmFloatSocket', 'Shutter Time')
+        self.add_output('ArmFloatSocket', 'ISO')
+        self.add_output('ArmFloatSocket', 'Exposure Compensation')
+        self.add_output('ArmFloatSocket', 'Fisheye Distortion')
+        self.add_output('ArmBoolSocket', 'Auto Focus')
+        self.add_output('ArmFloatSocket', 'DOF Distance')
+        self.add_output('ArmFloatSocket', 'DOF Length')
+        self.add_output('ArmFloatSocket', 'DOF F-Stop')
+        self.add_output('ArmFloatSocket', 'Film Grain')

@@ -51,20 +51,21 @@ class MathNode(ArmLogicTreeNode):
             # Many arguments: Add, Subtract, Multiply, Divide
             if (self.get_count_in(select_current) == 0):
                 while (len(self.inputs) < 2):
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
             # 2 arguments: Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than
             if (self.get_count_in(select_current) == 2):
                 while (len(self.inputs) > 2):
                     self.inputs.remove(self.inputs.values()[-1])
                 while (len(self.inputs) < 2):
-                    self.add_input('NodeSocketFloat', 'Value ' + str(len(self.inputs)))
+                    self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
             # 1 argument: Sine, Cosine, Abs, Tangent, Arcsine, Arccosine, Arctangent, Logarithm, Round, Floor, Ceil, Square Root, Fract, Exponent
             if (self.get_count_in(select_current) == 1):
                 while (len(self.inputs) > 1):
                     self.inputs.remove(self.inputs.values()[-1])
         self['property0'] = value
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
                  ('Sine', 'Sine', 'Sine'),
@@ -92,24 +93,19 @@ class MathNode(ArmLogicTreeNode):
                  ('Exponent', 'Exponent', 'Exponent')],
         name='', default='Add', set=set_enum, get=get_enum)
 
-    @property
-    def property1(self):
-        return 'true' if self.property1_ else 'false'
-
-    property1_: BoolProperty(name='Clamp', default=False)
+    property1: HaxeBoolProperty('property1', name='Clamp', default=False)
 
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(MathNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Value 0', default_value=0.0)
-        self.add_input('NodeSocketFloat', 'Value 1', default_value=0.0)
+    def arm_init(self, context):
+        self.add_input('ArmFloatSocket', 'Value 0', default_value=0.0)
+        self.add_input('ArmFloatSocket', 'Value 1', default_value=0.0)
 
-        self.add_output('NodeSocketFloat', 'Result')
+        self.add_output('ArmFloatSocket', 'Result')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property1_')
+        layout.prop(self, 'property1')
         layout.prop(self, 'property0')
         # Many arguments: Add, Subtract, Multiply, Divide
         if (self.get_count_in(self.property0) == 0):
@@ -117,7 +113,7 @@ class MathNode(ArmLogicTreeNode):
             column = row.column(align=True)
             op = column.operator('arm.node_add_input', text='Add Value', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
-            op.socket_type = 'NodeSocketFloat'
+            op.socket_type = 'ArmFloatSocket'
             op.name_format = 'Value {0}'
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)

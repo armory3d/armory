@@ -8,22 +8,48 @@ class RotateObjectNode(ArmLogicTreeNode):
     arm_section = 'rotation'
     arm_version = 2
 
-    def init(self, context):
-        super().init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('ArmNodeSocketRotation', 'Rotation')
+        self.add_input('ArmRotationSocket', 'Rotation')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property0')
+        layout.prop(self, 'property0_proxy')
 
-    property0: EnumProperty(
+        
+    # this property swaperoo is kinda janky-looking, but listen out:
+    # - when you reload an old file, the properties of loaded nodes can be mangled if the node class drops the property or the specific value within the property.
+    # -> to fix this, 'property0' needs to contain the old values so that node replacement can be done decently.
+    # - "but", I hear you ask, "why not make property0 a simple blender property, and create a property0v2 HaxeProperty to be bound to the haxe-time property0?"
+    # -> well, at the time of writing, a HaxeProperty's prop_name is only used for livepatching, not at initial setup, so a freshly-compiled game would get completely borked properties.
+    # solution: have a property0 HaxeProperty contain every possible value, and have a property0_proxy Property be in the UI.
+
+    # NOTE FOR FUTURE MAINTAINERS: the value of the proxy property does **not** matter, only the value of property0 does. When eventually editing this class, you can safely drop the values in the proxy property, and *only* the proxy property.
+
+    def on_proxyproperty_update(self, context=None):
+        self.property0 = self.property0_proxy
+
+    property0_proxy: EnumProperty(
         items = [('Local', 'Local F.O.R.', 'Frame of reference oriented with the object'),
                  ('Global', 'Global/Parent F.O.R.',
                   'Frame of reference oriented with the object\'s parent or the world')],
+        name='', default='Local',
+        update = on_proxyproperty_update
+    )
+    property0: HaxeEnumProperty(
+        'property0',
+        items=[('Euler Angles', 'NODE REPLACEMENT ONLY', ''),
+               ('Angle Axies (Radians)', 'NODE REPLACEMENT ONLY', ''),  
+               ('Angle Axies (Degrees)', 'NODE REPLACEMENT ONLY', ''),
+               ('Quaternion', 'NODE REPLACEMENT ONLY', ''),
+               ('Local', 'Local F.O.R.', 'Frame of reference oriented with the object'),
+                 ('Global', 'Global/Parent F.O.R.',
+                  'Frame of reference oriented with the object\'s parent or the world')
+               ],
         name='', default='Local')
+
 
 
 

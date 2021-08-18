@@ -8,7 +8,18 @@ import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
 import arm.logicnode
 import arm.props_traits
+import arm.ui_icons as ui_icons
 import arm.utils
+
+if arm.is_reload(__name__):
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.logicnode = arm.reload_module(arm.logicnode)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
 
 registered_nodes = []
 registered_categories = []
@@ -58,13 +69,14 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
     bl_idname = "arm.add_node_override"
     bl_label = "Add Node"
     bl_property = "type"
+    bl_options = {'INTERNAL'}
 
     type: StringProperty(name="NodeItem type")
     use_transform: BoolProperty(name="Use Transform")
 
     def invoke(self, context, event):
         bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
-        return {"FINISHED"}
+        return {'FINISHED'}
 
     @classmethod
     def description(cls, context, properties):
@@ -173,7 +185,7 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
             layout.operator('arm.open_node_documentation', icon='HELP')
             column = layout.column(align=True)
             column.operator('arm.open_node_python_source', icon='FILE_SCRIPT')
-            column.operator('arm.open_node_haxe_source', icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
+            column.operator('arm.open_node_haxe_source', icon_value=ui_icons.get_id("haxe"))
 
 
 class ArmOpenNodeHaxeSource(bpy.types.Operator):
@@ -261,7 +273,7 @@ class ARM_PT_Variables(bpy.types.Panel):
             setN.ntype = ID
 
 class ARMAddVarNode(bpy.types.Operator):
-    '''Add a linked node of that Variable'''
+    """Add a linked node of that Variable"""
     bl_idname = 'arm.add_var_node'
     bl_label = 'Add Get'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
@@ -296,7 +308,7 @@ class ARMAddVarNode(bpy.types.Operator):
         return({'FINISHED'})
 
 class ARMAddSetVarNode(bpy.types.Operator):
-    '''Add a node to set this Variable'''
+    """Add a node to set this Variable"""
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Set'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
@@ -361,6 +373,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
 
 
 def register():
+    arm.logicnode.arm_nodes.register()
     arm.logicnode.arm_sockets.register()
 
     bpy.utils.register_class(ArmLogicTree)
@@ -401,3 +414,4 @@ def unregister():
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
 
     arm.logicnode.arm_sockets.unregister()
+    arm.logicnode.arm_nodes.unregister()

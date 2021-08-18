@@ -10,9 +10,8 @@ class DefaultIfNullNode(ArmLogicTreeNode):
     bl_label = 'Default if Null'
     arm_version = 1
 
-    def init(self, context):
-        super(DefaultIfNullNode, self).init(context)
-        self.inputs.new('NodeSocketShader', 'Value In')
-        self.inputs.new('NodeSocketShader', 'Default')
+    def arm_init(self, context):
+        self.inputs.new('ArmDynamicSocket', 'Value In')
+        self.inputs.new('ArmDynamicSocket', 'Default')
 
-        self.outputs.new('NodeSocketShader', 'Value Out')
+        self.outputs.new('ArmDynamicSocket', 'Value Out')

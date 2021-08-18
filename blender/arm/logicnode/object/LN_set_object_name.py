@@ -7,10 +7,9 @@ class SetNameNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    def init(self, context):
-        super(SetNameNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketString', 'Name')
+        self.add_input('ArmStringSocket', 'Name')
 
         self.add_output('ArmNodeSocketAction', 'Out')

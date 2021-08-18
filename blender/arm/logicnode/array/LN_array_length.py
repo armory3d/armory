@@ -6,8 +6,7 @@ class ArrayLengthNode(ArmLogicTreeNode):
     bl_label = 'Array Length'
     arm_version = 1
 
-    def init(self, context):
-        super(ArrayLengthNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketArray', 'Array')
 
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')

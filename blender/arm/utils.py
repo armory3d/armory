@@ -1,13 +1,14 @@
+from enum import Enum, unique
 import glob
 import json
+import locale
 import os
 import platform
 import re
-import subprocess
-from typing import Any
-import webbrowser
 import shlex
-import locale
+import subprocess
+from typing import Any, Dict, List, Optional, Tuple
+import webbrowser
 
 import numpy as np
 
@@ -18,7 +19,17 @@ from arm.lib.lz4 import LZ4
 import arm.log as log
 import arm.make_state as state
 import arm.props_renderpath
-from enum import Enum, unique
+
+if arm.is_reload(__name__):
+    arm.lib.armpack = arm.reload_module(arm.lib.armpack)
+    arm.lib.lz4 = arm.reload_module(arm.lib.lz4)
+    from arm.lib.lz4 import LZ4
+    log = arm.reload_module(log)
+    state = arm.reload_module(state)
+    arm.props_renderpath = arm.reload_module(arm.props_renderpath)
+else:
+    arm.enable_reload(__name__)
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -78,6 +89,15 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
 
+
+def is_livepatch_enabled():
+    """Returns whether live patch is enabled and can be used."""
+    wrd = bpy.data.worlds['Arm']
+    # If the game is published, the target is krom-[OS] and not krom,
+    # so there is no live patch when publishing
+    return wrd.arm_live_patch and state.target == 'krom'
+
+
 def blend_name():
     return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.', 1)[0]
 
@@ -91,7 +111,17 @@ def get_fp():
     else:
         s = bpy.data.filepath.split(os.path.sep)
         s.pop()
-        return os.path.sep.join(s)
+        s = os.path.sep.join(s)
+        if get_os_is_windows() and len(s) == 2 and s[1] == ':':
+            # If the project is located at a drive root (C:/ for example),
+            # then s = "C:". If joined later with another path, no path
+            # separator is added by default because C:some_path is valid
+            # Windows path syntax (some_path is then relative to the CWD on the
+            # C drive). We prevent this by manually adding the path separator
+            # in these cases. Please refer to the Python doc of os.path.join()
+            # for more details.
+            s += os.path.sep
+        return s
 
 def get_fp_build():
     return os.path.join(get_fp(), build_dir())
@@ -292,116 +322,97 @@ def fetch_bundled_script_names():
         for file in glob.glob('*.hx'):
             wrd.arm_bundled_scripts_list.add().name = file.rsplit('.', 1)[0]
 
+
 script_props = {}
 script_props_defaults = {}
-script_warnings = {}
-def fetch_script_props(file):
-    with open(file, encoding="utf-8") as f:
-        name = file.rsplit('.', 1)[0]
-        if 'Sources' in name:
-            name = name[name.index('Sources') + 8:]
-        if '/' in name:
-            name = name.replace('/', '.')
-        if '\\' in file:
-            name = name.replace('\\', '.')
+script_warnings: Dict[str, List[Tuple[str, str]]] = {}  # Script name -> List of (identifier, warning message)
 
-        script_props[name] = []
-        script_props_defaults[name] = []
-        script_warnings[name] = []
+# See https://regex101.com/r/bbrCzN/8
+RX_MODIFIERS = r'(?P<modifiers>(?:public\s+|private\s+|static\s+|inline\s+|final\s+)*)?'  # Optional modifiers
+RX_IDENTIFIER = r'(?P<identifier>[_$a-z]+[_a-z0-9]*)'  # Variable name, follow Haxe rules
+RX_TYPE = r'(?:\s*:\s*(?P<type>[_a-z]+[\._a-z0-9]*))?'  # Optional type annotation
+RX_VALUE = r'(?:\s*=\s*(?P<value>(?:\".*\")|(?:[^;]+)|))?'  # Optional default value
 
-        lines = f.read().splitlines()
+PROP_REGEX_RAW = fr'@prop\s+{RX_MODIFIERS}(?P<attr_type>var|final)\s+{RX_IDENTIFIER}{RX_TYPE}{RX_VALUE};'
+PROP_REGEX = re.compile(PROP_REGEX_RAW, re.IGNORECASE)
+def fetch_script_props(filename: str):
+    """Parses @prop declarations from the given Haxe script."""
+    with open(filename, 'r', encoding='utf-8') as sourcefile:
+        source = sourcefile.read()
 
-        # Read next line
-        read_prop = False
-        for lineno, line in enumerate(lines):
-            # enumerate() starts with 0
-            lineno += 1
+    if source == '':
+        return
 
-            if not read_prop:
-                read_prop = line.lstrip().startswith('@prop')
+    name = filename.rsplit('.', 1)[0]
+
+    # Convert the name into a package path relative to the "Sources" dir
+    if 'Sources' in name:
+        name = name[name.index('Sources') + 8:]
+    if '/' in name:
+        name = name.replace('/', '.')
+    if '\\' in filename:
+        name = name.replace('\\', '.')
+
+    script_props[name] = []
+    script_props_defaults[name] = []
+    script_warnings[name] = []
+
+    for match in re.finditer(PROP_REGEX, source):
+
+        p_modifiers: Optional[str] = match.group('modifiers')
+        p_identifier: str = match.group('identifier')
+        p_type: Optional[str] = match.group('type')
+        p_default_val: Optional[str] = match.group('value')
+
+        if p_modifiers is not None:
+            if 'static' in p_modifiers:
+                script_warnings[name].append((p_identifier, '`static` modifier might cause unwanted behaviour!'))
+            if 'inline' in p_modifiers:
+                script_warnings[name].append((p_identifier, '`inline` modifier is not supported!'))
+                continue
+            if 'final' in p_modifiers or match.group('attr_type') == 'final':
+                script_warnings[name].append((p_identifier, '`final` properties are not supported!'))
                 continue
 
-            if read_prop:
-                if 'var ' in line:
-                    # Line of code
-                    code_ref = line.split('var ')[1].split(';')[0]
-                else:
-                    script_warnings[name].append(f"Line {lineno - 1}: Unused @prop")
-                    read_prop = line.lstrip().startswith('@prop')
-                    continue
+        # Property type is annotated
+        if p_type is not None:
+            if p_type.startswith("iron.object."):
+                p_type = p_type[12:]
+            elif p_type.startswith("iron.math."):
+                p_type = p_type[10:]
 
-                valid_prop = False
+            type_default_val = get_type_default_value(p_type)
+            if type_default_val is None:
+                script_warnings[name].append((p_identifier, f'unsupported type `{p_type}`!'))
+                continue
 
-                # Declaration = Assignment;
-                var_sides = code_ref.split('=')
-                # DeclarationName: DeclarationType
-                decl_sides = var_sides[0].split(':')
+            # Default value exists
+            if p_default_val is not None:
+                # Remove string quotes
+                p_default_val = p_default_val.replace('\'', '').replace('"', '')
+            else:
+                p_default_val = type_default_val
 
-                prop_name = decl_sides[0].strip()
+        # Default value is given instead, try to infer the properties type from it
+        elif p_default_val is not None:
+            p_type = get_prop_type_from_value(p_default_val)
 
-                if 'static ' in line:
-                    # Static properties can be overwritten multiple times
-                    # from multiple property lists
-                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Static properties may result in undefined behaviours!")
+            # Type is not recognized
+            if p_type is None:
+                script_warnings[name].append((p_identifier, 'could not infer property type from given value!'))
+                continue
+            if p_type == "String":
+                p_default_val = p_default_val.replace('\'', '').replace('"', '')
 
-                # If the prop type is annotated in the code
-                # (= declaration has two parts)
-                if len(decl_sides) > 1:
-                    prop_type = decl_sides[1].strip()
-                    if prop_type.startswith("iron.object."):
-                        prop_type = prop_type[12:]
-                    elif prop_type.startswith("iron.math."):
-                        prop_type = prop_type[10:]
+        else:
+            script_warnings[name].append((p_identifier, 'missing type or default value!'))
+            continue
 
-                    # Default value exists
-                    if len(var_sides) > 1 and var_sides[1].strip() != "":
-                        # Type is not supported
-                        if get_type_default_value(prop_type) is None:
-                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
-                            read_prop = False
-                            continue
+        # Register prop
+        prop = (p_identifier, p_type)
+        script_props[name].append(prop)
+        script_props_defaults[name].append(p_default_val)
 
-                        prop_value = var_sides[1].replace('\'', '').replace('"', '').strip()
-
-                    else:
-                        prop_value = get_type_default_value(prop_type)
-
-                        # Type is not supported
-                        if prop_value is None:
-                            script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Type {prop_type} is not supported!")
-                            read_prop = False
-                            continue
-
-                    valid_prop = True
-
-                # Default value exists
-                elif len(var_sides) > 1 and var_sides[1].strip() != "":
-                    prop_value = var_sides[1].strip()
-                    prop_type = get_prop_type_from_value(prop_value)
-
-                    # Type is not recognized
-                    if prop_type is None:
-                        script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Property type not recognized!")
-                        read_prop = False
-                        continue
-                    if prop_type == "String":
-                        prop_value = prop_value.replace('\'', '').replace('"', '')
-
-                    valid_prop = True
-
-                else:
-                    script_warnings[name].append(f"Line {lineno} (\"{prop_name}\"): Not a valid property!")
-                    read_prop = False
-                    continue
-
-                prop = (prop_name, prop_type)
-
-                # Register prop
-                if valid_prop:
-                    script_props[name].append(prop)
-                    script_props_defaults[name].append(prop_value)
-
-                read_prop = False
 
 def get_prop_type_from_value(value: str):
     """
@@ -555,7 +566,8 @@ def fetch_prop(o):
             item.arm_traitpropswarnings.clear()
             for warning in warnings:
                 entry = item.arm_traitpropswarnings.add()
-                entry.warning = warning
+                entry.propName = warning[0]
+                entry.warning = warning[1]
 
 def fetch_bundled_trait_props():
     # Bundled script props
@@ -594,7 +606,7 @@ def safesrc(s):
 def safestr(s: str) -> str:
     """Outputs a string where special characters have been replaced with
     '_', which can be safely used in file and path names."""
-    for c in r'[]/\;,><&*:%=+@!#^()|?^':
+    for c in r'''[]/\;,><&*:%=+@!#^()|?^'"''':
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
@@ -964,7 +976,11 @@ def get_link_web_server():
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
 
 def compare_version_blender_arm():
-    return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 83)
+    return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 93)
+
+def get_file_arm_version_tuple() -> tuple[int]:
+    wrd = bpy.data.worlds['Arm']
+    return tuple(map(int, wrd.arm_version.split('.')))
 
 def type_name_to_type(name: str) -> bpy.types.bpy_struct:
     """Return the Blender type given by its name, if registered."""
@@ -995,11 +1011,11 @@ def get_visual_studio_from_version(version: str) -> str:
 def get_list_installed_vs(get_version: bool, get_name: bool, get_path: bool) -> []:
     err = ''
     items = []
-    path_file = os.path.join(get_sdk_path(), 'Kha', 'Kinc', 'Tools', 'kincmake', 'Data', 'windows', 'vswhere.exe')  
+    path_file = os.path.join(get_sdk_path(), 'Kha', 'Kinc', 'Tools', 'kincmake', 'Data', 'windows', 'vswhere.exe')
     if not os.path.isfile(path_file):
         err = 'File "'+ path_file +'" not found.'
         return items, err
-    
+
     if (not get_version) and (not get_name) and (not get_path):
         return items, err
 
@@ -1025,8 +1041,8 @@ def get_list_installed_vs(get_version: bool, get_name: bool, get_path: bool) -> 
         return items, err
 
     for i in range(count_items):
-        v = items_ver[i][0] if len(items_ver) > i else '' 
-        v_full = items_ver[i][1] if len(items_ver) > i else '' 
+        v = items_ver[i][0] if len(items_ver) > i else ''
+        v_full = items_ver[i][1] if len(items_ver) > i else ''
         n = items_name[i] if len(items_name) > i else ''
         p = items_path[i] if len(items_path) > i else ''
         items.append((v, n, p, v_full))

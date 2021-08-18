@@ -10,7 +10,7 @@ class SetTraitPausedNode extends LogicNode {
 		var trait: Dynamic = inputs[1].get();
 		var paused: Bool = inputs[2].get();
 
-		if (trait == null || !Std.is(trait, LogicTree)) return;
+		if (trait == null || !Std.isOfType(trait, LogicTree)) return;
 
 		paused ? cast(trait, LogicTree).pause() : cast(trait, LogicTree).resume();
 

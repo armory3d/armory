@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class PhysicsConstraintNode(ArmLogicTreeNode):
     """
     Custom physics constraint to add to `Add Physics Constarint` node.
@@ -26,62 +27,48 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
     def update_spring(self, context):
         self.update_sockets(context)
 
-    property0: EnumProperty(
-        items = [('Linear', 'Linear', 'Linear'),
-                 ('Angular', 'Angular', 'Angular')],
+    property0: HaxeEnumProperty(
+        'property0',
+        items=[('Linear', 'Linear', 'Linear'),
+               ('Angular', 'Angular', 'Angular')],
         name='Type', default='Linear')
-    
-    @property
-    def property1(self):
-        if(self.property1_ == 'X'):
-            return 'X'
-        if(self.property1_ == 'Y'):
-            return 'Y'
-        if(self.property1_ == 'Z'):
-            return 'Z'
 
-    property1_: EnumProperty(
-        items = [('X', 'X', 'X'),
-                 ('Y', 'Y', 'Y'),
-                 ('Z', 'Z', 'Z')],
+    property1: HaxeEnumProperty(
+        'property1',
+        items=[('X', 'X', 'X'),
+               ('Y', 'Y', 'Y'),
+               ('Z', 'Z', 'Z')],
         name='Axis', default='X')
 
-    @property
-    def property2(self):
-        if(self.property2_):
-            return 'true' if self.property2_ else 'false'
-
-    property2_: BoolProperty(
+    property2: HaxeBoolProperty(
+        'property2',
         name="Spring",
         description="Is a spring constraint",
         default=False,
         update=update_spring
     )
-    
+
     def __init__(self):
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(PhysicsConstraintNode, self).init(context)
-        self.add_input('NodeSocketFloat', 'Lower limit')
-        self.add_input('NodeSocketFloat', 'Upper limit')
-        self.add_output('NodeSocketShader', 'Constraint')
-    
-    def update_sockets(self, context):
+    def arm_init(self, context):
+        self.add_input('ArmFloatSocket', 'Lower limit')
+        self.add_input('ArmFloatSocket', 'Upper limit')
+        self.add_output('ArmDynamicSocket', 'Constraint')
 
-        while (len(self.inputs) > 0):
+    def update_sockets(self, context):
+        while len(self.inputs) > 0:
             self.inputs.remove(self.inputs.values()[-1])
 
         # Add dynamic input sockets
-        if self.property2_:
-            self.add_input('NodeSocketFloat', 'Stiffness', 10.0)
-            self.add_input('NodeSocketFloat', 'Damping', 0.5)
+        if self.property2:
+            self.add_input('ArmFloatSocket', 'Stiffness', 10.0)
+            self.add_input('ArmFloatSocket', 'Damping', 0.5)
         else:
-            self.add_input('NodeSocketFloat', 'Lower limit')
-            self.add_input('NodeSocketFloat', 'Upper limit')
+            self.add_input('ArmFloatSocket', 'Lower limit')
+            self.add_input('ArmFloatSocket', 'Upper limit')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-        layout.prop(self, 'property1_')
-        layout.prop(self, 'property2_')
-
+        layout.prop(self, 'property1')
+        layout.prop(self, 'property2')

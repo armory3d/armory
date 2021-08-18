@@ -1,12 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class AddRigidBodyNode(ArmLogicTreeNode):
-    """Adds a rigid body to an object if not already present. 
+    """Adds a rigid body to an object if not already present.
 
     @option Advanced: Shows optional advanced options for rigid body.
 
     @option Shape: Shape of the rigid body including Box, Sphere, Capsule, Cone, Cylinder, Convex Hull and Mesh
-    
+
     @input Object: Object to which rigid body is added.
 
     @input Mass: Mass of the rigid body. Must be > 0.
@@ -14,9 +14,9 @@ class AddRigidBodyNode(ArmLogicTreeNode):
     @input Active: Rigid body actively participates in the physics world and will be affected by collisions
 
     @input Animated: Rigid body follows animation and will affect other active non-animated rigid bodies.
-    
-    @input Trigger: Rigid body behaves as a trigger and detects collision. However, rigd body does not contribute to or receive collissions. 
-    
+
+    @input Trigger: Rigid body behaves as a trigger and detects collision. However, rigd body does not contribute to or receive collissions.
+
     @input Friction: Surface friction of the rigid body. Minimum value = 0, Preferred max value = 1.
 
     @input Bounciness: How elastic is the surface of the rigid body. Minimum value = 0, Preferred max value = 1.
@@ -34,7 +34,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
     @input Use Deactivation: Deactive this rigid body when below the Linear and Angular velocity threshold. Enable to improve performance.
 
     @input Linear Velocity Threshold: Velocity below which decativation occurs if enabled.
-    
+
     @input Angular Velocity Threshold: Velocity below which decativation occurs if enabled.
 
     @input Collision Group: A set of rigid bodies that can interact with each other
@@ -43,9 +43,9 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
     @output Rigid body: Object to which rigid body was added.
 
-    @output Out: activated after rigid body is added. 
+    @output Out: activated after rigid body is added.
     """
-    
+
     bl_idname = 'LNAddRigidBodyNode'
     bl_label = 'Add Rigid Body'
     arm_version = 1
@@ -59,18 +59,16 @@ class AddRigidBodyNode(ArmLogicTreeNode):
         further down."""
         self.update_sockets(context)
 
-    @property
-    def property1(self):
-        return 'true' if self.property1_ else 'false'
-
-    property1_: BoolProperty(
+    property1: HaxeBoolProperty(
+        'property1',
         name="Advanced",
         description="Show advanced options",
         default=False,
         update=update_advanced
     )
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Box', 'Box', 'Box'),
                  ('Sphere', 'Sphere', 'Sphere'),
                  ('Capsule', 'Capsule', 'Capsule'),
@@ -80,18 +78,17 @@ class AddRigidBodyNode(ArmLogicTreeNode):
                  ('Mesh', 'Mesh', 'Mesh')],
         name='Shape', default='Box')
 
-    def init(self, context):
-        super(AddRigidBodyNode, self).init(context)
-        
+    def arm_init(self, context):
+
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketFloat', 'Mass', 1.0)
-        self.add_input('NodeSocketBool', 'Active', True)
-        self.add_input('NodeSocketBool', 'Animated', False)
-        self.add_input('NodeSocketBool', 'Trigger', False)
-        self.add_input('NodeSocketFloat', 'Friction', 0.5)
-        self.add_input('NodeSocketFloat', 'Bounciness', 0.0)
-        self.add_input('NodeSocketBool', 'Continuous Collision Detection', False)
+        self.add_input('ArmFloatSocket', 'Mass', 1.0)
+        self.add_input('ArmBoolSocket', 'Active', True)
+        self.add_input('ArmBoolSocket', 'Animated', False)
+        self.add_input('ArmBoolSocket', 'Trigger', False)
+        self.add_input('ArmFloatSocket', 'Friction', 0.5)
+        self.add_input('ArmFloatSocket', 'Bounciness', 0.0)
+        self.add_input('ArmBoolSocket', 'Continuous Collision Detection', False)
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketObject', 'Rigid body')
 
@@ -110,17 +107,17 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
         # Add dynamic input sockets
         if self.property1_:
-            self.add_input('NodeSocketBool', 'Collision Margin', False)
-            self.add_input('NodeSocketFloat', 'Margin', 0.04)
-            self.add_input('NodeSocketFloat', 'Linear Damping', 0.04)
-            self.add_input('NodeSocketFloat', 'Angular Damping', 0.1)
-            self.add_input('NodeSocketBool', 'Use Deacivation')
-            self.add_input('NodeSocketFloat', 'Linear Velocity Threshold', 0.4)
-            self.add_input('NodeSocketFloat', 'Angular Velocity Threshold', 0.5)
-            self.add_input('NodeSocketInt', 'Collision Group', 1)
-            self.add_input('NodeSocketInt', 'Collision Mask', 1)
+            self.add_input('ArmBoolSocket', 'Collision Margin', False)
+            self.add_input('ArmFloatSocket', 'Margin', 0.04)
+            self.add_input('ArmFloatSocket', 'Linear Damping', 0.04)
+            self.add_input('ArmFloatSocket', 'Angular Damping', 0.1)
+            self.add_input('ArmBoolSocket', 'Use Deacivation')
+            self.add_input('ArmFloatSocket', 'Linear Velocity Threshold', 0.4)
+            self.add_input('ArmFloatSocket', 'Angular Velocity Threshold', 0.5)
+            self.add_input('ArmIntSocket', 'Collision Group', 1)
+            self.add_input('ArmIntSocket', 'Collision Mask', 1)
 
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "property1_")
+        layout.prop(self, "property1")
         layout.prop(self, 'property0')

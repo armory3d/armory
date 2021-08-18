@@ -7,15 +7,16 @@ class GetRotationNode(ArmLogicTreeNode):
     arm_section = 'rotation'
     arm_version = 2
 
-    def init(self, context):
-        super(GetRotationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_output('ArmNodeSocketRotation', 'Rotation')
+        self.add_output('ArmRotationSocket', 'Rotation')
+        
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Local', 'Local', 'Local'),
                  ('Global', 'Global', 'Global')],
         name='', default='Local')

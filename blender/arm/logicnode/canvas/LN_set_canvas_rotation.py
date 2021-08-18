@@ -6,10 +6,9 @@ class CanvasSetRotationNode(ArmLogicTreeNode):
     bl_label = 'Set Canvas Rotation'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasSetRotationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketString', 'Element')
-        self.add_input('NodeSocketFloat', 'Rad')
+        self.add_input('ArmStringSocket', 'Element')
+        self.add_input('ArmFloatSocket', 'Rad')
 
         self.add_output('ArmNodeSocketAction', 'Out')

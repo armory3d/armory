@@ -10,14 +10,13 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
     arm_version = 2  # deprecate
     
 
-    def init(self, context):
-        super(SeparateQuaternionNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Quaternion')
+    def arm_init(self, context):
+        self.add_input('ArmVectorSocket', 'Quaternion')
 
-        self.add_output('NodeSocketFloat', 'X')
-        self.add_output('NodeSocketFloat', 'Y')
-        self.add_output('NodeSocketFloat', 'Z')
-        self.add_output('NodeSocketFloat', 'W')
+        self.add_output('ArmFloatSocket', 'X')
+        self.add_output('ArmFloatSocket', 'Y')
+        self.add_output('ArmFloatSocket', 'Z')
+        self.add_output('ArmFloatSocket', 'W')
 
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

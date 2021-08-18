@@ -30,6 +30,23 @@ from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 import arm.utils
 
+if arm.is_reload(__name__):
+    arm.assets = arm.reload_module(arm.assets)
+    log = arm.reload_module(log)
+    arm.make_state = arm.reload_module(arm.make_state)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.cycles_nodes = arm.reload_module(arm.material.cycles_nodes)
+    from arm.material.cycles_nodes import *
+    mat_state = arm.reload_module(mat_state)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState, ParserContext
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
 # Particle info export
 particle_info: Dict[str, bool] = {}
 
@@ -204,6 +221,8 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
         'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
     }
 
+    state.reset_outs()
+
     if node.type in node_parser_funcs:
         node_parser_funcs[node.type](node, socket, state)
 
@@ -331,6 +350,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'COMBXYZ': nodes_converter.parse_combxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
         'DISPLACEMENT': nodes_vector.parse_displacement,
+        'VECTOR_ROTATE': nodes_vector.parse_vectorrotate,
     }
 
     if node.type in node_parser_funcs:
@@ -433,6 +453,7 @@ def parse_value(node, socket):
         'SEPRGB': nodes_converter.parse_seprgb,
         'SEPXYZ': nodes_converter.parse_sepxyz,
         'VECT_MATH': nodes_converter.parse_vectormath,
+        'MAP_RANGE': nodes_converter.parse_maprange,
     }
 
     if node.type in node_parser_funcs:
@@ -556,7 +577,7 @@ def to_uniform(inp: bpy.types.NodeSocket):
 def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
-def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
+def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
     curshader = state.curshader
 
     tex_store = store_var_name(node)
@@ -565,7 +586,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     state.parsed.add(tex_store)
     mat_bind_texture(tex)
     state.con.add_elem('tex', 'short2norm')
-    curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
+    curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
     triplanar = node.projection == 'BOX'
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
@@ -640,8 +661,47 @@ def to_vec1(v):
     return str(v)
 
 
+def to_vec2(v):
+    return f'vec2({v[0]}, {v[1]})'
+
+
 def to_vec3(v):
-    return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
+    return f'vec3({v[0]}, {v[1]}, {v[2]})'
+
+
+def cast_value(val: str, from_type: str, to_type: str) -> str:
+    """Casts a value that is already parsed in a glsl string to another
+    value in a string.
+
+    vec2 types are not supported (not used in the node editor) and there
+    is no cast towards int types. If casting from vec3 to vec4, the w
+    coordinate/alpha channel is filled with a 1.
+
+    If this function is called with invalid parameters, a TypeError is
+    raised.
+    """
+    if from_type == to_type:
+        return val
+
+    if from_type in ('int', 'float'):
+        if to_type in ('int', 'float'):
+            return val
+        elif to_type in ('vec2', 'vec3', 'vec4'):
+            return f'{to_type}({val})'
+
+    elif from_type == 'vec3':
+        if to_type == 'float':
+            return rgb_to_bw(val)
+        elif to_type == 'vec4':
+            return f'vec4({val}, 1.0)'
+
+    elif from_type == 'vec4':
+        if to_type == 'float':
+            return rgb_to_bw(val)
+        elif to_type == 'vec3':
+            return f'{val}.xyz'
+
+    raise TypeError("Invalid type cast in shader!")
 
 
 def rgb_to_bw(res_var: vec3str) -> floatstr:

@@ -88,7 +88,7 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrixSun",
 					"ifndef": ["_CSM"],
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
@@ -106,6 +106,11 @@
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "smSizeUniform",
+					"link": "_shadowMapSize",
+					"ifdef": ["_SMSizeUniform"]
 				},
 				{
 					"name": "lightProj",

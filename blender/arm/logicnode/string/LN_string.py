@@ -6,8 +6,7 @@ class StringNode(ArmLogicTreeNode):
     bl_label = 'String'
     arm_version = 1
 
-    def init(self, context):
-        super(StringNode, self).init(context)
-        self.add_input('NodeSocketString', 'String In')
+    def arm_init(self, context):
+        self.add_input('ArmStringSocket', 'String In')
 
-        self.add_output('NodeSocketString', 'String Out', is_var=True)
+        self.add_output('ArmStringSocket', 'String Out', is_var=True)

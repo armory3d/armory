@@ -2,79 +2,62 @@ from typing import Union
 
 import bpy
 
+import arm
 import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
 from arm.material.parser_state import ParserState
 from arm.material.shader import floatstr, vec3str
 
+if arm.is_reload(__name__):
+    log = arm.reload_module(log)
+    c = arm.reload_module(c)
+    c_functions = arm.reload_module(c_functions)
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import floatstr, vec3str
+else:
+    arm.enable_reload(__name__)
+
+
+def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+
+    interp = node.interpolation_type
+
+    value: str = c.parse_value_input(node.inputs[0]) if node.inputs[0].is_linked else c.to_vec1(node.inputs[0].default_value)
+    fromMin = c.parse_value_input(node.inputs[1])
+    fromMax = c.parse_value_input(node.inputs[2])
+    toMin = c.parse_value_input(node.inputs[3])
+    toMax = c.parse_value_input(node.inputs[4])
+
+    if interp == "LINEAR":
+
+        state.curshader.add_function(c_functions.str_map_range_linear)
+        return f'map_range_linear({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+
+    elif interp == "STEPPED":
+
+        steps = float(c.parse_value_input(node.inputs[5]))
+        state.curshader.add_function(c_functions.str_map_range_stepped)
+        return f'map_range_stepped({value}, {fromMin}, {fromMax}, {toMin}, {toMax}, {steps})'
+
+    elif interp == "SMOOTHSTEP":
+
+        state.curshader.add_function(c_functions.str_map_range_smoothstep)
+        return f'map_range_smoothstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+
+    elif interp == "SMOOTHERSTEP":
+
+        state.curshader.add_function(c_functions.str_map_range_smootherstep)
+        return f'map_range_smootherstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
 
 def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    t = float(c.parse_value_input(node.inputs[0]))
 
-    rgb = [0, 0, 0]
-    blackbody_table_r = [
-        [2.52432244e+03, -1.06185848e-03, 3.11067539e+00],
-        [3.37763626e+03, -4.34581697e-04, 1.64843306e+00],
-        [4.10671449e+03, -8.61949938e-05, 6.41423749e-01],
-        [4.66849800e+03, 2.85655028e-05, 1.29075375e-01],
-        [4.60124770e+03, 2.89727618e-05, 1.48001316e-01],
-        [3.78765709e+03, 9.36026367e-06, 3.98995841e-01]
-    ]
-    blackbody_table_g = [
-        [-7.50343014e+02, 3.15679613e-04, 4.73464526e-01],
-        [-1.00402363e+03, 1.29189794e-04, 9.08181524e-01],
-        [-1.22075471e+03, 2.56245413e-05, 1.20753416e+00],
-        [-1.42546105e+03, -4.01730887e-05, 1.44002695e+00],
-        [-1.18134453e+03, -2.18913373e-05, 1.30656109e+00],
-        [-5.00279505e+02, -4.59745390e-06, 1.09090465e+00]
-    ]
-    blackbody_table_b = [
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [-2.02524603e-11, 1.79435860e-07, -2.60561875e-04, -1.41761141e-02],
-        [-2.22463426e-13, -1.55078698e-08, 3.81675160e-04, -7.30646033e-01],
-        [6.72595954e-13, -2.73059993e-08, 4.24068546e-04, -7.52204323e-01]
-    ]
+    t = c.parse_value_input(node.inputs[0])
 
-    if t >= 12000:
-        rgb[0] = 0.826270103
-        rgb[1] = 0.994478524
-        rgb[2] = 1.56626022
-
-    elif t < 965.0:
-        rgb[0] = 4.70366907
-        rgb[1] = 0.0
-        rgb[2] = 0.0
-
-    else:
-        if t >= 6365.0:
-            i = 5
-        elif t >= 3315.0:
-            i = 4
-        elif t >= 1902.0:
-            i = 3
-        elif t >= 1449.0:
-            i = 2
-        elif t >= 1167.0:
-            i = 1
-        else:
-            i = 0
-
-        r = blackbody_table_r[i]
-        g = blackbody_table_g[i]
-        b = blackbody_table_b[i]
-
-        t_inv = 1.0 / t
-
-        rgb[0] = r[0] * t_inv + r[1] * t + r[2]
-        rgb[1] = g[0] * t_inv + g[1] * t + g[2]
-        rgb[2] = ((b[0] * t + b[1]) * t + b[2]) * t + b[3]
-
-    # Pass constant
-    return c.to_vec3([rgb[0], rgb[1], rgb[2]])
-
+    state.curshader.add_function(c_functions.str_blackbody)
+    return f'blackbody({t})'
 
 def parse_clamp(node: bpy.types.ShaderNodeClamp, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
     value = c.parse_value_input(node.inputs['Value'])
@@ -262,14 +245,21 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = '({0} * {1})'.format(val1, val2)
     elif op == 'DIVIDE':
         out_val = '({0} / {1})'.format(val1, val2)
+    elif op == 'MULTIPLY_ADD':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = '({0} * {1} + {2})'.format(val1, val2, val3)
     elif op == 'POWER':
         out_val = 'pow({0}, {1})'.format(val1, val2)
     elif op == 'LOGARITHM':
         out_val = 'log({0})'.format(val1)
     elif op == 'SQRT':
         out_val = 'sqrt({0})'.format(val1)
+    elif op == 'INVERSE_SQRT':
+        out_val = 'inversesqrt({0})'.format(val1)
     elif op == 'ABSOLUTE':
         out_val = 'abs({0})'.format(val1)
+    elif op == 'EXPONENT':
+        out_val = 'exp({0})'.format(val1)
     elif op == 'MINIMUM':
         out_val = 'min({0}, {1})'.format(val1, val2)
     elif op == 'MAXIMUM':
@@ -278,6 +268,17 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'float({0} < {1})'.format(val1, val2)
     elif op == 'GREATER_THAN':
         out_val = 'float({0} > {1})'.format(val1, val2)
+    elif op == 'SIGN':
+        out_val = 'sign({0})'.format(val1)
+    elif op == 'COMPARE':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float((abs({0} - {1}) <= max({2}, 1e-5)) ? 1.0 : 0.0)'.format(val1, val2, val3)
+    elif op == 'SMOOTH_MIN':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float(float({2} != 0.0 ? min({0},{1}) - (max({2} - abs({0} - {1}), 0.0) / {2}) * (max({2} - abs({0} - {1}), 0.0) / {2}) * (max({2} - abs({0} - {1}), 0.0) / {2}) * {2} * (1.0 / 6.0) : min({0}, {1})))'.format(val1, val2, val3)
+    elif op == 'SMOOTH_MAX':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float(0-(float({2} != 0.0 ? min(-{0},-{1}) - (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * (max({2} - abs(-{0} - (-{1})), 0.0) / {2}) * {2} * (1.0 / 6.0) : min(-{0}, (-{1})))))'.format(val1, val2, val3)
     elif op == 'ROUND':
         # out_val = 'round({0})'.format(val1)
         out_val = 'floor({0} + 0.5)'.format(val1)
@@ -285,11 +286,20 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'floor({0})'.format(val1)
     elif op == 'CEIL':
         out_val = 'ceil({0})'.format(val1)
+    elif op == 'TRUNC':
+        out_val = 'trunc({0})'.format(val1)
     elif op == 'FRACT':
         out_val = 'fract({0})'.format(val1)
     elif op == 'MODULO':
         # out_val = 'float({0} % {1})'.format(val1, val2)
         out_val = 'mod({0}, {1})'.format(val1, val2)
+    elif op == 'WRAP':
+        val3 = c.parse_value_input(node.inputs[2])
+        out_val = 'float((({1}-{2}) != 0.0) ? {0} - (({1}-{2}) * floor(({0} - {2}) / ({1}-{2}))) : {2})'.format(val1, val2, val3)
+    elif op == 'SNAP':
+        out_val = 'floor(({1} != 0.0) ? {0} / {1} : 0.0) * {1}'.format(val1, val2)
+    elif op == 'PINGPONG':
+        out_val = 'float(({1} != 0.0) ? abs(fract(({0} - {1}) / ({1} * 2.0)) * {1} * 2.0 - {1}) : 0.0)'.format(val1, val2)
     elif op == 'SINE':
         out_val = 'sin({0})'.format(val1)
     elif op == 'COSINE':
@@ -304,6 +314,16 @@ def parse_math(node: bpy.types.ShaderNodeMath, out_socket: bpy.types.NodeSocket,
         out_val = 'atan({0})'.format(val1)
     elif op == 'ARCTAN2':
         out_val = 'atan({0}, {1})'.format(val1, val2)
+    elif op == 'SINH':
+        out_val = 'sinh({0})'.format(val1)
+    elif op == 'COSH':
+        out_val = 'cosh({0})'.format(val1)
+    elif op == 'TANH':
+        out_val = 'tanh({0})'.format(val1)
+    elif op == 'RADIANS':
+        out_val = 'radians({0})'.format(val1)
+    elif op == 'DEGREES':
+        out_val = 'degrees({0})'.format(val1)
 
     if node.use_clamp:
         return 'clamp({0}, 0.0, 1.0)'.format(out_val)

@@ -9,6 +9,8 @@ def register():
         winman = bpy.context.window_manager
         keyman = winman.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
 
+
+        #TODO - In Armory3D, merge with keymap.py
         keyman.keymap_items.new('tlm.build_lightmaps', type='F6', value='PRESS')
         keyman.keymap_items.new('tlm.clean_lightmaps', type='F7', value='PRESS')
         tlm_keymaps.append(keyman)

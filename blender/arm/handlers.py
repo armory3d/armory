@@ -1,17 +1,33 @@
 import importlib
 import os
+import queue
 import sys
 
 import bpy
 from bpy.app.handlers import persistent
 
+import arm
 import arm.api
+import arm.live_patch as live_patch
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
 import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.utils
+
+if arm.is_reload(__name__):
+    arm.api = arm.reload_module(arm.api)
+    live_patch = arm.reload_module(live_patch)
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    props = arm.reload_module(props)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 @persistent
 def on_depsgraph_update_post(self):
@@ -40,12 +56,10 @@ def on_depsgraph_update_post(self):
 
     # Send last operator to Krom
     wrd = bpy.data.worlds['Arm']
-    if state.proc_play != None and \
-       state.target == 'krom' and \
-       wrd.arm_live_patch:
+    if state.proc_play is not None and state.target == 'krom' and wrd.arm_live_patch:
         ops = bpy.context.window_manager.operators
-        if len(ops) > 0 and ops[-1] != None:
-            send_operator(ops[-1])
+        if len(ops) > 0 and ops[-1] is not None:
+            live_patch.on_operator(ops[-1].bl_idname)
 
     # Hacky solution to update armory props after operator executions
     last_operator = bpy.context.active_operator
@@ -89,21 +103,50 @@ def send_operator(op):
         else: # Rebuild
             make.patch()
 
-def always():
+
+def always() -> float:
     # Force ui redraw
-    if state.redraw_ui and context_screen != None:
+    if state.redraw_ui and context_screen is not None:
         for area in context_screen.areas:
             if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                 area.tag_redraw()
         state.redraw_ui = False
     # TODO: depsgraph.updates only triggers material trees
     space = arm.utils.logic_editor_space(context_screen)
-    if space != None:
+    if space is not None:
         space.node_tree.arm_cached = False
     return 0.5
 
+
+def poll_threads() -> float:
+    """Polls the thread callback queue and if a thread has finished, it
+    is joined with the main thread and the corresponding callback is
+    executed in the main thread.
+    """
+    try:
+        thread, callback = make.thread_callback_queue.get(block=False)
+    except queue.Empty:
+        return 0.25
+
+    thread.join()
+
+    try:
+        callback()
+    except Exception as e:
+        # If there is an exception, we can no longer return the time to
+        # the next call to this polling function, so to keep it running
+        # we re-register it and then raise the original exception.
+        bpy.app.timers.unregister(poll_threads)
+        bpy.app.timers.register(poll_threads, first_interval=0.01, persistent=True)
+        raise e
+
+    # Quickly check if another thread has finished
+    return 0.01
+
+
 appended_py_paths = []
 context_screen = None
+
 
 @persistent
 def on_load_post(context):
@@ -181,7 +224,9 @@ def register():
     bpy.app.handlers.load_post.append(on_load_post)
     bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.append(on_undo_post)
+
     bpy.app.timers.register(always, persistent=True)
+    bpy.app.timers.register(poll_threads, persistent=True)
 
     if arm.utils.get_fp() != '':
         appended_py_paths = []
@@ -198,6 +243,9 @@ def register():
 
 
 def unregister():
+    bpy.app.timers.unregister(poll_threads)
+    bpy.app.timers.unregister(always)
+
     bpy.app.handlers.load_post.remove(on_load_post)
     bpy.app.handlers.depsgraph_update_post.remove(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.remove(on_undo_post)

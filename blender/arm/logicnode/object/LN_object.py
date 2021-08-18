@@ -6,8 +6,7 @@ class ObjectNode(ArmLogicTreeNode):
     bl_label = 'Object'
     arm_version = 1
 
-    def init(self, context):
-        super(ObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object In')
 
         self.add_output('ArmNodeSocketObject', 'Object Out', is_var=True)

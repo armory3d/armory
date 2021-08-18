@@ -3,8 +3,6 @@ package armory.logicnode;
 import iron.math.Vec4;
 import iron.object.Object;
 
-using armory.object.TransformExtension;
-
 class WorldVectorToLocalSpaceNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
@@ -17,7 +15,8 @@ class WorldVectorToLocalSpaceNode extends LogicNode {
 
 		if (object == null || worldVec == null) return null;
 
-		var localVec: Vec4 = new Vec4();
+		var localVec = new Vec4();
+		localVec.sub(object.transform.world.getLoc());
 
 		localVec.x = worldVec.dot(object.transform.right());
 		localVec.y = worldVec.dot(object.transform.look());

@@ -10,8 +10,7 @@ class ResumeTraitNode(ArmLogicTreeNode):
     arm_category = 'Trait'
     arm_version = 2
 
-    def init(self, context):
-        super(ResumeTraitNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('NodeSocketShader', 'Trait')
+        self.add_input('ArmDynamicSocket', 'Trait')
         self.add_output('ArmNodeSocketAction', 'Out')

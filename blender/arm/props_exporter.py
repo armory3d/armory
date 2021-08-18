@@ -1,13 +1,22 @@
 import os
 import shutil
-import arm.assets as assets
-import arm.utils
-import bpy
 import stat
 import subprocess
 import webbrowser
+
+import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+
+import arm.assets as assets
+import arm.utils
+
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -358,7 +367,7 @@ class ArmExporterSpecialsMenu(bpy.types.Menu):
         layout.operator("arm.exporter_gpuprofile")
 
 class ArmoryExporterOpenFolderButton(bpy.types.Operator):
-    '''Open published folder'''
+    """Open published folder"""
     bl_idname = 'arm.exporter_open_folder'
     bl_label = 'Open Folder'
 
@@ -417,7 +426,7 @@ def register():
     bpy.types.World.arm_exporterlist = CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = IntProperty(name="Index for my_list", default=0)
     bpy.types.World.arm_exporter_android_permission_list = CollectionProperty(type=ArmExporterAndroidPermissionListItem)
-    bpy.types.World.arm_exporter_android_permission_list_index = IntProperty(name="Index for my_list", default=0)    
+    bpy.types.World.arm_exporter_android_permission_list_index = IntProperty(name="Index for my_list", default=0)
     bpy.types.World.arm_exporter_android_abi_list = CollectionProperty(type=ArmExporterAndroidAbiListItem)
     bpy.types.World.arm_exporter_android_abi_list_index = IntProperty(name="Index for my_list", default=0)
 

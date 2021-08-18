@@ -2,8 +2,15 @@ import cProfile
 import os
 import pstats
 
+import arm
 import arm.log as log
 import arm.utils as utils
+
+if arm.is_reload(__name__):
+    log = arm.reload_module(log)
+    utils = arm.reload_module(utils)
+else:
+    arm.enable_reload(__name__)
 
 
 class Profile:

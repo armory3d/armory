@@ -6,9 +6,8 @@ class TransformMathNode(ArmLogicTreeNode):
     bl_label = 'Transform Math'
     arm_version = 1
 
-    def init(self, context):
-        super(TransformMathNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Transform 1')
-        self.add_input('NodeSocketShader', 'Transform 2')
+    def arm_init(self, context):
+        self.add_input('ArmDynamicSocket', 'Transform 1')
+        self.add_input('ArmDynamicSocket', 'Transform 2')
 
-        self.add_output('NodeSocketShader', 'Result')
+        self.add_output('ArmDynamicSocket', 'Result')

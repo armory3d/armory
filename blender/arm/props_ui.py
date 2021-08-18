@@ -5,8 +5,11 @@ import shutil
 import bpy
 from bpy.props import *
 
+from arm.lightmapper.panels import scene
+
 import arm.api
 import arm.assets as assets
+from arm.exporter import ArmoryExporter
 import arm.log as log
 import arm.logicnode.replacement
 import arm.make as make
@@ -16,14 +19,32 @@ import arm.props_properties
 import arm.props_traits
 import arm.nodes_logic
 import arm.proxy
+import arm.ui_icons as ui_icons
 import arm.utils
 
-from arm.lightmapper.utility import icon
-from arm.lightmapper.properties.denoiser import oidn, optix
-import importlib
 
-# Menu in object region
+if arm.is_reload(__name__):
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    log = arm.reload_module(log)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    props = arm.reload_module(props)
+    arm.props_properties = arm.reload_module(arm.props_properties)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    arm.proxy = arm.reload_module(arm.proxy)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
+    """Menu in object region."""
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -38,12 +59,13 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'arm_export')
+        col = layout.column()
+        col.prop(obj, 'arm_export')
         if not obj.arm_export:
             return
-        layout.prop(obj, 'arm_spawn')
-        layout.prop(obj, 'arm_mobile')
-        layout.prop(obj, 'arm_animation_enabled')
+        col.prop(obj, 'arm_spawn')
+        col.prop(obj, 'arm_mobile')
+        col.prop(obj, 'arm_animation_enabled')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -71,9 +93,18 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
 
                 row = layout.row()
-                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_resolution")
+                row.prop(obj.TLM_ObjectProperties, "tlm_use_default_channel")
+
+                if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+
+                    row = layout.row()
+                    row.prop_search(obj.TLM_ObjectProperties, "tlm_uv_channel", obj.data, "uv_layers", text='UV Channel')
+
                 row = layout.row()
-                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_unwrap_mode")
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_resolution")
+                if obj.TLM_ObjectProperties.tlm_use_default_channel:
+                    row = layout.row()
+                    row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_unwrap_mode")
                 row = layout.row()
                 if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
 
@@ -90,7 +121,6 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
                     row = layout.row()
                     row.prop(obj.TLM_ObjectProperties, "tlm_postpack_object")
                     row = layout.row()
-
 
                 if obj.TLM_ObjectProperties.tlm_postpack_object and obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
                     if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
@@ -180,14 +210,29 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        if obj.rigid_body != None:
+        rb = obj.rigid_body
+        if rb is not None:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+
+            rb_type = 'Dynamic'
+            if ArmoryExporter.rigid_body_static(rb):
+                rb_type = 'Static'
+            if rb.kinematic:
+                rb_type = 'Kinematic'
+            row.label(text=(f'Rigid Body Export Type: {rb_type}'), icon='AUTO')
+
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
 
-        if obj.soft_body != None:
+        if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
+
+        if obj.rigid_body_constraint is not None:
+            layout.prop(obj, 'arm_relative_physics_constraint')
 
 # Menu in data region
 class ARM_PT_DataPropsPanel(bpy.types.Panel):
@@ -243,6 +288,7 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         layout.prop(world, 'arm_use_clouds')
         col = layout.column(align=True)
         col.enabled = world.arm_use_clouds
+        col.prop(world, 'arm_darken_clouds')
         col.prop(world, 'arm_clouds_lower')
         col.prop(world, 'arm_clouds_upper')
         col.prop(world, 'arm_clouds_precipitation')
@@ -269,7 +315,7 @@ class ARM_PT_ScenePropsPanel(bpy.types.Panel):
         row.prop(scene, 'arm_export')
 
 class InvalidateCacheButton(bpy.types.Operator):
-    '''Delete cached mesh data'''
+    """Delete cached mesh data"""
     bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
 
@@ -278,7 +324,7 @@ class InvalidateCacheButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class InvalidateMaterialCacheButton(bpy.types.Operator):
-    '''Delete cached material data'''
+    """Delete cached material data"""
     bl_idname = "arm.invalidate_material_cache"
     bl_label = "Invalidate Cache"
 
@@ -511,7 +557,7 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_parent_id = "ARM_PT_MaterialPropsPanel"
 
     def draw_header(self, context):
-        if context.material == None:
+        if context.material is None:
             return
         self.layout.prop(context.material, 'arm_blending', text="")
 
@@ -520,16 +566,18 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         mat = bpy.context.material
-        if mat == None:
+        if mat is None:
             return
 
         flow = layout.grid_flow()
         flow.enabled = mat.arm_blending
-        col = flow.column()
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source')
         col.prop(mat, 'arm_blending_destination')
         col.prop(mat, 'arm_blending_operation')
-        col = flow.column()
+        flow.separator()
+
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source_alpha')
         col.prop(mat, 'arm_blending_destination_alpha')
         col.prop(mat, 'arm_blending_operation_alpha')
@@ -545,22 +593,40 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
+        row.scale_y = 1.3
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
-        row.operator("arm.clean_menu")
-        layout.prop(wrd, 'arm_runtime')
-        layout.prop(wrd, 'arm_play_camera')
-        layout.prop(wrd, 'arm_play_scene')
+        row.operator("arm.clean_menu", icon="BRUSH_DATA")
+
+        box = layout.box()
+        box.prop(wrd, 'arm_runtime')
+        box.prop(wrd, 'arm_play_camera')
+        box.prop(wrd, 'arm_play_scene')
 
         if log.num_warnings > 0:
             box = layout.box()
+            box.alert = True
+
+            col = box.column(align=True)
+            warnings = 'warnings' if log.num_warnings > 1 else 'warning'
+            col.label(text=f'{log.num_warnings} {warnings} occurred during compilation!', icon='ERROR')
+            # Blank icon to achieve the same indentation as the line before
+            # prevent showing "open console" twice:
+            if log.num_errors == 0:
+                col.label(text='Please open the console to get more information.', icon='BLANK1')
+
+        if log.num_errors > 0:
+            box = layout.box()
+            box.alert = True
             # Less spacing between lines
             col = box.column(align=True)
-            col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
+            errors = 'errors' if log.num_errors > 1 else 'error'
+            col.label(text=f'{log.num_errors} {errors} occurred during compilation!', icon='CANCEL')
             # Blank icon to achieve the same indentation as the line before
             col.label(text='Please open the console to get more information.', icon='BLANK1')
 
@@ -576,12 +642,13 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        row.operator("arm.build_project")
+        row.scale_y = 1.3
+        row.operator("arm.build_project", icon="MOD_BUILD")
         # row.operator("arm.patch_project")
         row.operator("arm.publish_project", icon="EXPORT")
-        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
         rows = 2
         if len(wrd.arm_exporterlist) > 1:
@@ -614,59 +681,78 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
             layout.separator()
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(wrd, 'arm_project_name')
         col.prop(wrd, 'arm_project_package')
         col.prop(wrd, 'arm_project_bundle')
+
+        col = layout.column(align=True)
         col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_version_autoinc')
+
+        col = layout.column()
         col.prop(wrd, 'arm_project_icon')
+
+        col = layout.column(heading='Code Output')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_minify_js')
+
+        col = layout.column(heading='Data')
+        col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
 
-class ARM_PT_ArmoryExporterAndroidSettingsPanel(bpy.types.Panel):
-    bl_label = "Android Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
+
+class ExporterTargetSettingsMixin:
+    """Mixin for common exporter setting subpanel functionality.
+
+    Panels that inherit from this mixin need to have a arm_target
+    variable for polling."""
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'render'
+    bl_parent_id = 'ARM_PT_ArmoryExporterPanel'
+
+    # Override this in sub classes
+    arm_panel = ''
 
     @classmethod
     def poll(cls, context):
         wrd = bpy.data.worlds['Arm']
         if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'android-hl'
-        else:
-            return False
+            return item.arm_project_target == cls.arm_target
+        return False
+
+    def draw_header(self, context):
+        self.layout.label(text='', icon='SETTINGS')
+
+
+class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
+    bl_label = "Android Settings"
+    arm_target = 'android-hl'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='Android Settings', icon='SETTINGS')
-        row = layout.row()
-        row.prop(wrd, 'arm_winorient')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_compile')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_min')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_sdk_target')
+
+        col = layout.column()
+        col.prop(wrd, 'arm_winorient')
+        col.prop(wrd, 'arm_project_android_sdk_compile')
+        col.prop(wrd, 'arm_project_android_sdk_min')
+        col.prop(wrd, 'arm_project_android_sdk_target')
+
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_label = "Permissions"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED' }
+    bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
     def draw(self, context):
@@ -724,7 +810,7 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_options = { 'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
 
     def draw(self, context):
@@ -732,109 +818,84 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_build_apk')
         path = arm.utils.get_android_sdk_root_path()
+
+        col = layout.column()
+
+        row = col.row()
         row.enabled = len(path) > 0
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_rename_apk')
+        row.prop(wrd, 'arm_project_android_build_apk')
+
+        row = col.row()
         row.enabled = wrd.arm_project_android_build_apk
-        row = layout.row()
+        row.prop(wrd, 'arm_project_android_rename_apk')
+        row = col.row()
+        row.enabled = wrd.arm_project_android_build_apk and len(arm.utils.get_android_apk_copy_path()) > 0
         row.prop(wrd, 'arm_project_android_copy_apk')
-        row.enabled = (wrd.arm_project_android_build_apk) and (len(arm.utils.get_android_apk_copy_path()) > 0)
-        row = layout.row()
+
+        row = col.row(align=True)
         row.prop(wrd, 'arm_project_android_list_avd')
-        col = row.column(align=True)
-        col.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
-        col.enabled = len(path) > 0
-        col = row.column(align=True)
-        col.operator('arm.run_android_emulator', text='', icon='PLAY')
-        col.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
-        row = layout.row()
-        row.prop(wrd, 'arm_project_android_run_avd')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0
+        sub.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
+        sub.operator('arm.run_android_emulator', text='', icon='PLAY')
+
+        row = col.row()
         row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
+        row.prop(wrd, 'arm_project_android_run_avd')
 
-class ARM_PT_ArmoryExporterHTML5SettingsPanel(bpy.types.Panel):
+
+class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "HTML5 Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
-
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'html5'
-        else:
-            return False
+    arm_target = 'html5'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='HTML5 Settings', icon='SETTINGS')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
-        row = layout.row()
-        row.prop(wrd, 'arm_project_html5_copy')
+
+        col = layout.column()
+        col.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
+        row = col.row()
         row.enabled = len(arm.utils.get_html5_copy_path()) > 0
-        row = layout.row()
+        row.prop(wrd, 'arm_project_html5_copy')
+        row = col.row()
+        row.enabled = len(arm.utils.get_html5_copy_path()) > 0 and wrd.arm_project_html5_copy and len(arm.utils.get_link_web_server()) > 0
         row.prop(wrd, 'arm_project_html5_start_browser')
-        row.enabled = (len(arm.utils.get_html5_copy_path()) > 0) and (wrd.arm_project_html5_copy) and (len(arm.utils.get_link_web_server()) > 0)
 
-class ARM_PT_ArmoryExporterWindowsSettingsPanel(bpy.types.Panel):
+
+class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "Windows Settings"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = { 'HIDE_HEADER' }
-    bl_parent_id = "ARM_PT_ArmoryExporterPanel"
-
-    @classmethod
-    def poll(cls, context):
-        wrd = bpy.data.worlds['Arm']
-        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            return item.arm_project_target == 'windows-hl'
-        else:
-            return False
+    arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        # Options
-        layout.label(text='Windows Settings', icon='SETTINGS')
-        row = layout.row()
+
+        col = layout.column()
+        row = col.row(align=True)
         row.prop(wrd, 'arm_project_win_list_vs')
-        col = row.column(align=True)
-        col.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
-        col.enabled = arm.utils.get_os_is_windows()
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build')
+        sub = row.column(align=True)
+        sub.enabled = arm.utils.get_os_is_windows()
+        sub.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+
+        row = col.row()
         row.enabled = arm.utils.get_os_is_windows()
-        is_enable = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_mode')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_arch')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_log')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_cpu')
-        row.enabled = is_enable
-        row = layout.row()
-        row.prop(wrd, 'arm_project_win_build_open')
-        row.enabled = is_enable
+        row.prop(wrd, 'arm_project_win_build', text='After Publish')
+        layout.separator()
+
+        col = layout.column()
+        col.enabled = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        col.prop(wrd, 'arm_project_win_build_mode')
+        col.prop(wrd, 'arm_project_win_build_arch')
+        col.prop(wrd, 'arm_project_win_build_log')
+        col.prop(wrd, 'arm_project_win_build_cpu')
+        col.prop(wrd, 'arm_project_win_build_open')
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -863,19 +924,26 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        layout.prop(wrd, 'arm_verbose_output')
-        layout.prop(wrd, 'arm_cache_build')
-        layout.prop(wrd, 'arm_live_patch')
-        layout.prop(wrd, 'arm_stream_scene')
-        layout.prop(wrd, 'arm_batch_meshes')
-        layout.prop(wrd, 'arm_batch_materials')
-        layout.prop(wrd, 'arm_write_config')
-        layout.prop(wrd, 'arm_minimize')
-        layout.prop(wrd, 'arm_deinterleaved_buffers')
-        layout.prop(wrd, 'arm_export_tangents')
-        layout.prop(wrd, 'arm_loadscreen')
-        layout.prop(wrd, 'arm_texture_quality')
-        layout.prop(wrd, 'arm_sound_quality')
+
+        col = layout.column(heading='Debug')
+        col.prop(wrd, 'arm_verbose_output')
+        col.prop(wrd, 'arm_cache_build')
+
+        col = layout.column(heading='Runtime')
+        col.prop(wrd, 'arm_live_patch')
+        col.prop(wrd, 'arm_stream_scene')
+        col.prop(wrd, 'arm_loadscreen')
+        col.prop(wrd, 'arm_write_config')
+
+        col = layout.column(heading='Renderer')
+        col.prop(wrd, 'arm_batch_meshes')
+        col.prop(wrd, 'arm_batch_materials')
+        col.prop(wrd, 'arm_deinterleaved_buffers')
+        col.prop(wrd, 'arm_export_tangents')
+
+        col = layout.column(heading='Quality')
+        col.prop(wrd, 'arm_texture_quality')
+        col.prop(wrd, 'arm_sound_quality')
 
 class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
     bl_label = "Debug Console"
@@ -885,23 +953,20 @@ class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_ProjectFlagsPanel"
 
+    def draw_header(self, context):
+        wrd = bpy.data.worlds['Arm']
+        self.layout.prop(wrd, 'arm_debug_console', text='')
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.enabled = wrd.arm_ui != 'Disabled'
-        row.prop(wrd, 'arm_debug_console')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_position')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_scale')
-        row = layout.row()
-        row.enabled = wrd.arm_debug_console
-        row.prop(wrd, 'arm_debug_console_visible')
+        col = layout.column()
+        col.enabled = wrd.arm_debug_console
+        col.prop(wrd, 'arm_debug_console_position')
+        col.prop(wrd, 'arm_debug_console_scale')
+        col.prop(wrd, 'arm_debug_console_visible')
 
 class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"
@@ -917,11 +982,15 @@ class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_winmode')
-        layout.prop(wrd, 'arm_winresize')
-        col = layout.column()
-        col.enabled = wrd.arm_winresize
-        col.prop(wrd, 'arm_winmaximize')
-        layout.prop(wrd, 'arm_winminimize')
+
+        col = layout.column(align=True)
+        col.prop(wrd, 'arm_winresize')
+        sub = col.column()
+        sub.enabled = wrd.arm_winresize
+        sub.prop(wrd, 'arm_winmaximize')
+        col.enabled = True
+        col.prop(wrd, 'arm_winminimize')
+
         layout.prop(wrd, 'arm_vsync')
 
 class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
@@ -971,7 +1040,7 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         # Compare version Blender and Armory (major, minor)
         if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1003,14 +1072,19 @@ class ArmoryStopButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
-    '''Build and compile project'''
+    """Build and compile project"""
     bl_idname = 'arm.build_project'
     bl_label = 'Build'
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
         # Compare version Blender and Armory (major, minor)
         if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1043,14 +1117,19 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPublishProjectButton(bpy.types.Operator):
-    '''Build project ready for publishing'''
+    """Build project ready for publishing."""
     bl_idname = 'arm.publish_project'
     bl_label = 'Publish'
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
         # Compare version Blender and Armory (major, minor)
         if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.83 LTS.')
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1242,17 +1321,23 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_tess_shadows_outer')
 
         layout.prop(rpdat, 'arm_particles')
-        layout.prop(rpdat, 'arm_skin')
-        row = layout.row()
-        row.enabled = rpdat.arm_skin == 'On'
-        row.prop(rpdat, 'arm_skin_max_bones_auto')
-        row = layout.row()
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_skin')
+        col = col.column()
+        col.enabled = rpdat.arm_skin == 'On'
+        col.prop(rpdat, 'arm_skin_max_bones_auto')
+        row = col.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto
         row.prop(rpdat, 'arm_skin_max_bones')
-        layout.prop(rpdat, "rp_hdr")
-        layout.prop(rpdat, "rp_stereo")
-        layout.prop(rpdat, 'arm_culling')
-        layout.prop(rpdat, 'rp_pp')
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, "rp_hdr")
+        col.prop(rpdat, "rp_stereo")
+        col.prop(rpdat, 'arm_culling')
+        col.prop(rpdat, 'rp_pp')
 
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
@@ -1276,6 +1361,20 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
             max = max / 2
         return l
 
+    def tiles_per_light_type(self, rpdat: arm.props_renderpath.ArmRPListItem, light_type: str) -> int:
+        if light_type == 'point':
+            return 6
+        elif light_type == 'spot':
+            return 1
+        else:
+            return int(rpdat.rp_shadowmap_cascades)
+
+    def lights_number_atlas(self, rpdat: arm.props_renderpath.ArmRPListItem, atlas_size: int, shadowmap_size: int, light_type: str) -> int:
+        '''Compute number lights that could fit in an atlas'''
+        lights = atlas_size / shadowmap_size
+        lights *= lights / self.tiles_per_light_type(rpdat, light_type)
+        return int(lights)
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1286,7 +1385,9 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_shadows
-        layout.prop(rpdat, 'rp_shadowmap_cube')
+        col = layout.column()
+        col.enabled = not rpdat.rp_shadowmap_atlas_single_map or not rpdat.rp_shadowmap_atlas
+        col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
         col = layout.column()
@@ -1311,39 +1412,88 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         colatlas_lod_info = colatlas_lod.row()
         colatlas_lod_info.alignment = 'RIGHT'
         subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cascade), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
-        subdiv_text = "Subdivisions: " + ', '.join(map(str, subdivs_list))
+        subdiv_text = "Subdivisions for spot lights: " + ', '.join(map(str, subdivs_list))
         colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        if not rpdat.rp_shadowmap_atlas_single_map:
+            colatlas_lod_info = colatlas_lod.row()
+            colatlas_lod_info.alignment = 'RIGHT'
+            subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cube), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
+            subdiv_text = "Subdivisions for point lights: " + ', '.join(map(str, subdivs_list))
+            colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        size_warning = int(rpdat.rp_shadowmap_cascade) > 2048 or int(rpdat.rp_shadowmap_cube) > 2048
 
         colatlas.prop(rpdat, 'rp_shadowmap_atlas_single_map')
         # show size for single texture
         if rpdat.rp_shadowmap_atlas_single_map:
             colatlas_single = colatlas.column()
             colatlas_single.prop(rpdat, 'rp_shadowmap_atlas_max_size')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size):
-                print(rpdat.rp_shadowmap_atlas_max_size)
-                colatlas_warning = colatlas_single.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+            if rpdat.rp_shadowmap_atlas_max_size != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                col = colatlas_single.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for { point_lights } point lights or { spot_lights } spot lights or { dir_lights } directional lights.')
         else:
             # show size for all types
             colatlas_mixed = colatlas.column()
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_spot')
-            if int(rpdat.rp_shadowmap_cascade) > int(rpdat.rp_shadowmap_atlas_max_size_spot):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_spot} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_spot != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_spot)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {spot_lights} spot lights.')
 
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_point')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size_point):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_point} is too small for the shadowmap size: {rpdat.rp_shadowmap_cube}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_point != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_point)
+                shadowmap_size = int(rpdat.rp_shadowmap_cube)
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {point_lights} point lights.')
 
             colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_sun')
-            if int(rpdat.rp_shadowmap_cascade) >= int(rpdat.rp_shadowmap_atlas_max_size_sun):
-                colatlas_warning = colatlas_mixed.row()
-                colatlas_warning.alignment = 'RIGHT'
-                colatlas_warning.label(text=f'Warning: {rpdat.rp_shadowmap_atlas_max_size_sun} is too small for the shadowmap size: {rpdat.rp_shadowmap_cascade}', icon="ERROR")
+
+            if rpdat.rp_shadowmap_atlas_max_size_sun != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_sun)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {dir_lights} directional lights.')
+
+        # show warning when user picks a size higher than 2048 (arbitrary number).
+        if size_warning:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+            row.label(text='Warning: Game will crash if texture size is higher than max texture size allowed by target.', icon='ERROR')
 
 class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_label = "Voxel AO"
@@ -1404,16 +1554,22 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.prop(rpdat, "rp_background")
-        layout.prop(rpdat, 'arm_irradiance')
+
         col = layout.column()
-        col.enabled = rpdat.arm_irradiance
-        col.prop(rpdat, 'arm_radiance')
+        col.prop(rpdat, 'arm_irradiance')
         colb = col.column()
-        colb.enabled = rpdat.arm_radiance
-        colb.prop(rpdat, 'arm_radiance_size')
+        colb.enabled = rpdat.arm_irradiance
+        colb.prop(rpdat, 'arm_radiance')
+        sub = colb.row()
+        sub.enabled = rpdat.arm_radiance
+        sub.prop(rpdat, 'arm_radiance_size')
+        layout.separator()
+
         layout.prop(rpdat, 'arm_clouds')
-        layout.prop(rpdat, "rp_water")
+
         col = layout.column(align=True)
+        col.prop(rpdat, "rp_water")
+        col = col.column(align=True)
         col.enabled = rpdat.rp_water
         col.prop(rpdat, 'arm_water_level')
         col.prop(rpdat, 'arm_water_density')
@@ -1449,27 +1605,35 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_render_to_texture
-        row = layout.row()
-        row.prop(rpdat, "rp_antialiasing")
-        layout.prop(rpdat, "rp_supersampling")
-        layout.prop(rpdat, 'arm_rp_resolution')
+        col = layout.column()
+        col.prop(rpdat, "rp_antialiasing")
+        col.prop(rpdat, "rp_supersampling")
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_rp_resolution')
         if rpdat.arm_rp_resolution == 'Custom':
-            layout.prop(rpdat, 'arm_rp_resolution_size')
-            layout.prop(rpdat, 'arm_rp_resolution_filter')
-        layout.prop(rpdat, 'rp_dynres')
+            col.prop(rpdat, 'arm_rp_resolution_size')
+            col.prop(rpdat, 'arm_rp_resolution_filter')
+        col.prop(rpdat, 'rp_dynres')
         layout.separator()
-        row = layout.row()
-        row.prop(rpdat, "rp_ssgi")
+
         col = layout.column()
-        col.enabled = rpdat.rp_ssgi != 'Off'
-        col.prop(rpdat, 'arm_ssgi_half_res')
-        col.prop(rpdat, 'arm_ssgi_rays')
-        col.prop(rpdat, 'arm_ssgi_radius')
-        col.prop(rpdat, 'arm_ssgi_strength')
-        col.prop(rpdat, 'arm_ssgi_max_steps')
+        col.prop(rpdat, "rp_ssgi")
+        sub = col.column()
+        sub.enabled = rpdat.rp_ssgi != 'Off'
+        sub.prop(rpdat, 'arm_ssgi_half_res')
+        sub.prop(rpdat, 'arm_ssgi_rays')
+        sub.prop(rpdat, 'arm_ssgi_radius')
+        sub.prop(rpdat, 'arm_ssgi_strength')
+        sub.prop(rpdat, 'arm_ssgi_max_steps')
+        layout.separator(factor=0.5)
+
+        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_ssr")
+
         col = layout.column()
+        col.prop(rpdat, "rp_ssr")
+        col = col.column()
         col.enabled = rpdat.rp_ssr
         col.prop(rpdat, 'arm_ssr_half_res')
         col.prop(rpdat, 'arm_ssr_ray_step')
@@ -1478,33 +1642,42 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
         layout.separator()
-        layout.prop(rpdat, 'arm_ssrs')
+
         col = layout.column()
+        col.prop(rpdat, 'arm_ssrs')
+        col = col.column()
         col.enabled = rpdat.arm_ssrs
         col.prop(rpdat, 'arm_ssrs_ray_step')
-        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_bloom")
+
         col = layout.column()
+        col.prop(rpdat, "rp_bloom")
+        col = col.column()
         col.enabled = rpdat.rp_bloom
         col.prop(rpdat, 'arm_bloom_threshold')
         col.prop(rpdat, 'arm_bloom_strength')
         col.prop(rpdat, 'arm_bloom_radius')
         layout.separator()
-        layout.prop(rpdat, "rp_motionblur")
+
         col = layout.column()
+        col.prop(rpdat, "rp_motionblur")
+        col = col.column()
         col.enabled = rpdat.rp_motionblur != 'Off'
         col.prop(rpdat, 'arm_motion_blur_intensity')
         layout.separator()
-        layout.prop(rpdat, "rp_volumetriclight")
+
         col = layout.column()
+        col.prop(rpdat, "rp_volumetriclight")
+        col = col.column()
         col.enabled = rpdat.rp_volumetriclight
         col.prop(rpdat, 'arm_volumetric_light_air_color')
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
         layout.separator()
-        layout.prop(rpdat, "rp_chromatic_aberration")
+
         col = layout.column()
+        col.prop(rpdat, "rp_chromatic_aberration")
+        col = col.column()
         col.enabled = rpdat.rp_chromatic_aberration
         col.prop(rpdat, 'arm_chromatic_aberration_type')
         col.prop(rpdat, 'arm_chromatic_aberration_strength')
@@ -1537,45 +1710,51 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
 
         layout.enabled = rpdat.rp_compositornodes
         layout.prop(rpdat, 'arm_tonemap')
-        layout.prop(rpdat, 'arm_letterbox')
+        layout.separator()
+
         col = layout.column()
-        col.enabled = rpdat.arm_letterbox
-        col.prop(rpdat, 'arm_letterbox_size')
-        layout.prop(rpdat, 'arm_sharpen')
+        draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
+        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
+        draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
+        draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
+        layout.separator()
+
         col = layout.column()
-        col.enabled = rpdat.arm_sharpen
-        col.prop(rpdat, 'arm_sharpen_strength')
-        layout.prop(rpdat, 'arm_fisheye')
-        layout.prop(rpdat, 'arm_vignette')
-        col = layout.column()
-        col.enabled = rpdat.arm_vignette
-        col.prop(rpdat, 'arm_vignette_strength')
-        layout.prop(rpdat, 'arm_lensflare')
-        layout.prop(rpdat, 'arm_grain')
-        col = layout.column()
-        col.enabled = rpdat.arm_grain
-        col.prop(rpdat, 'arm_grain_strength')
-        layout.prop(rpdat, 'arm_fog')
-        col = layout.column(align=True)
+        col.prop(rpdat, 'arm_fog')
+        col = col.column(align=True)
         col.enabled = rpdat.arm_fog
         col.prop(rpdat, 'arm_fog_color')
         col.prop(rpdat, 'arm_fog_amounta')
         col.prop(rpdat, 'arm_fog_amountb')
         layout.separator()
-        layout.prop(rpdat, "rp_autoexposure")
+
         col = layout.column()
-        col.enabled = rpdat.rp_autoexposure
-        col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
-        col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
-        layout.prop(rpdat, 'arm_lens_texture')
+        col.prop(rpdat, "rp_autoexposure")
+        sub = col.column(align=True)
+        sub.enabled = rpdat.rp_autoexposure
+        sub.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
+        sub.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lensflare')
+        col.prop(rpdat, 'arm_fisheye')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lens_texture')
         if rpdat.arm_lens_texture != "":
-            layout.prop(rpdat, 'arm_lens_texture_masking')
+            col.prop(rpdat, 'arm_lens_texture_masking')
             if rpdat.arm_lens_texture_masking:
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
-                layout.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
+                col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                layout.separator()
+
         layout.prop(rpdat, 'arm_lut_texture')
 
 class ARM_PT_BakePanel(bpy.types.Panel):
@@ -1630,425 +1809,8 @@ class ARM_PT_BakePanel(bpy.types.Panel):
                 layout.prop(item, "res_x")
                 layout.prop(item, "res_y")
 
-        else:
-
-            scene = context.scene
-            sceneProperties = scene.TLM_SceneProperties
-            row = layout.row(align=True)
-
-            row = layout.row(align=True)
-
-            #We list LuxCoreRender as available, by default we assume Cycles exists
-            row.prop(sceneProperties, "tlm_lightmap_engine")
-
-            if sceneProperties.tlm_lightmap_engine == "Cycles":
-
-                #CYCLES SETTINGS HERE
-                engineProperties = scene.TLM_EngineProperties
-
-                row = layout.row(align=True)
-                row.label(text="General Settings")
-                row = layout.row(align=True)
-                row.operator("tlm.build_lightmaps")
-                row = layout.row(align=True)
-                row.operator("tlm.clean_lightmaps")
-                row = layout.row(align=True)
-                row.operator("tlm.explore_lightmaps")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_apply_on_unwrap")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_headless")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_alert_on_finish")
-
-                if sceneProperties.tlm_alert_on_finish:
-                    row = layout.row(align=True)
-                    row.prop(sceneProperties, "tlm_alert_sound")
-
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_verbose")
-                #row = layout.row(align=True)
-                #row.prop(sceneProperties, "tlm_compile_statistics")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_override_bg_color")
-                if sceneProperties.tlm_override_bg_color:
-                    row = layout.row(align=True)
-                    row.prop(sceneProperties, "tlm_override_color")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_reset_uv")
-
-                row = layout.row(align=True)
-                try:
-                    if bpy.context.scene["TLM_Buildstat"] is not None:
-                        row.label(text="Last build completed in: " + str(bpy.context.scene["TLM_Buildstat"][0]))
-                except:
-                    pass
-
-                row = layout.row(align=True)
-                row.label(text="Cycles Settings")
-
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_mode")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_quality")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_resolution_scale")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_bake_mode")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_lighting_mode")
-
-                if scene.TLM_EngineProperties.tlm_bake_mode == "Background":
-                    row = layout.row(align=True)
-                    row.label(text="Warning! Background mode is currently unstable", icon_value=2)
-                    row = layout.row(align=True)
-                    row.prop(sceneProperties, "tlm_network_render")
-                    if sceneProperties.tlm_network_render:
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_network_paths")
-                        #row = layout.row(align=True)
-                        #row.prop(sceneProperties, "tlm_network_dir")
-                row = layout.row(align=True)
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_caching_mode")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_directional_mode")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_lightmap_savedir")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_dilation_margin")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_exposure_multiplier")
-                row = layout.row(align=True)
-                row.prop(engineProperties, "tlm_setting_supersample")
-                row = layout.row(align=True)
-                row.prop(sceneProperties, "tlm_metallic_clamp")
-
-            elif sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
-
-                #LUXCORE SETTINGS HERE
-                luxcore_available = False
-
-                #Look for Luxcorerender in the renderengine classes
-                for engine in bpy.types.RenderEngine.__subclasses__():
-                    if engine.bl_idname == "LUXCORE":
-                        luxcore_available = True
-                        break
-
-                row = layout.row(align=True)
-                if not luxcore_available:
-                    row.label(text="Please install BlendLuxCore.")
-                else:
-                    row.label(text="LuxCoreRender not yet available.")
-
-            elif sceneProperties.tlm_lightmap_engine == "OctaneRender":
-
-                #LUXCORE SETTINGS HERE
-                octane_available = False
-
-                row = layout.row(align=True)
-                row.label(text="Octane Render not yet available.")
-
-
-            ##################
-            #DENOISE SETTINGS!
-            row = layout.row(align=True)
-            row.label(text="Denoise Settings")
-            row = layout.row(align=True)
-            row.prop(sceneProperties, "tlm_denoise_use")
-            row = layout.row(align=True)
-
-            if sceneProperties.tlm_denoise_use:
-                row.prop(sceneProperties, "tlm_denoise_engine", expand=True)
-                row = layout.row(align=True)
-
-                if sceneProperties.tlm_denoise_engine == "Integrated":
-                    row.label(text="No options for Integrated.")
-                elif sceneProperties.tlm_denoise_engine == "OIDN":
-                    denoiseProperties = scene.TLM_OIDNEngineProperties
-                    row.prop(denoiseProperties, "tlm_oidn_path")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_oidn_verbose")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_oidn_threads")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_oidn_maxmem")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_oidn_affinity")
-                    # row = layout.row(align=True)
-                    # row.prop(denoiseProperties, "tlm_denoise_ao")
-                elif sceneProperties.tlm_denoise_engine == "Optix":
-                    denoiseProperties = scene.TLM_OptixEngineProperties
-                    row.prop(denoiseProperties, "tlm_optix_path")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_optix_verbose")
-                    row = layout.row(align=True)
-                    row.prop(denoiseProperties, "tlm_optix_maxmem")
-
-
-            ##################
-            #FILTERING SETTINGS!
-            row = layout.row(align=True)
-            row.label(text="Filtering Settings")
-            row = layout.row(align=True)
-            row.prop(sceneProperties, "tlm_filtering_use")
-            row = layout.row(align=True)
-
-            if sceneProperties.tlm_filtering_use:
-
-                if sceneProperties.tlm_filtering_engine == "OpenCV":
-
-                    cv2 = importlib.util.find_spec("cv2")
-
-                    if cv2 is None:
-                        row = layout.row(align=True)
-                        row.label(text="OpenCV is not installed. Install it below.")
-                        row = layout.row(align=True)
-                        row.label(text="It is recommended to install as administrator.")
-                        row = layout.row(align=True)
-                        row.operator("tlm.install_opencv_lightmaps")
-                    else:
-                        row = layout.row(align=True)
-                        row.prop(scene.TLM_SceneProperties, "tlm_filtering_mode")
-                        row = layout.row(align=True)
-                        if scene.TLM_SceneProperties.tlm_filtering_mode == "Gaussian":
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_gaussian_strength")
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_iterations")
-                        elif scene.TLM_SceneProperties.tlm_filtering_mode == "Box":
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_box_strength")
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_iterations")
-
-                        elif scene.TLM_SceneProperties.tlm_filtering_mode == "Bilateral":
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_bilateral_diameter")
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_bilateral_color_deviation")
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_bilateral_coordinate_deviation")
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_iterations")
-                        else:
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_median_kernel", expand=True)
-                            row = layout.row(align=True)
-                            row.prop(scene.TLM_SceneProperties, "tlm_filtering_iterations")
-                else:
-                    row = layout.row(align=True)
-                    row.prop(scene.TLM_SceneProperties, "tlm_numpy_filtering_mode")
-
-
-            ##################
-            #ENCODING SETTINGS!
-            row = layout.row(align=True)
-            row.label(text="Encoding Settings")
-            row = layout.row(align=True)
-            row.prop(sceneProperties, "tlm_encoding_use")
-            row = layout.row(align=True)
-
-            if sceneProperties.tlm_encoding_use:
-
-
-                if scene.TLM_EngineProperties.tlm_bake_mode == "Background":
-                    row.label(text="Encoding options disabled in background mode")
-                    row = layout.row(align=True)
-
-                row.prop(sceneProperties, "tlm_encoding_device", expand=True)
-                row = layout.row(align=True)
-
-                if sceneProperties.tlm_encoding_device == "CPU":
-                    row.prop(sceneProperties, "tlm_encoding_mode_a", expand=True)
-                else:
-                    row.prop(sceneProperties, "tlm_encoding_mode_b", expand=True)
-
-                if sceneProperties.tlm_encoding_device == "CPU":
-                    if sceneProperties.tlm_encoding_mode_a == "RGBM":
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_encoding_range")
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_decoder_setup")
-                    if sceneProperties.tlm_encoding_mode_a == "RGBD":
-                        pass
-                    if sceneProperties.tlm_encoding_mode_a == "HDR":
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_format")
-                else:
-
-                    if sceneProperties.tlm_encoding_mode_b == "RGBM":
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_encoding_range")
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_decoder_setup")
-
-                    if sceneProperties.tlm_encoding_mode_b == "LogLuv" and sceneProperties.tlm_encoding_device == "GPU":
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_decoder_setup")
-                    if sceneProperties.tlm_encoding_mode_b == "HDR":
-                        row = layout.row(align=True)
-                        row.prop(sceneProperties, "tlm_format")
-
-            ##################
-            #SELECTION OPERATORS!
-
-            row = layout.row(align=True)
-            row.label(text="Selection Operators")
-            row = layout.row(align=True)
-
-            row = layout.row(align=True)
-            row.operator("tlm.enable_selection")
-            row = layout.row(align=True)
-            row.operator("tlm.disable_selection")
-            row = layout.row(align=True)
-            row.prop(sceneProperties, "tlm_override_object_settings")
-
-            if sceneProperties.tlm_override_object_settings:
-
-                row = layout.row(align=True)
-                row = layout.row()
-                row.prop(sceneProperties, "tlm_mesh_lightmap_unwrap_mode")
-                row = layout.row()
-
-                if sceneProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
-
-                    if scene.TLM_AtlasListItem >= 0 and len(scene.TLM_AtlasList) > 0:
-                        row = layout.row()
-                        item = scene.TLM_AtlasList[scene.TLM_AtlasListItem]
-                        row.prop_search(sceneProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
-                    else:
-                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
-
-                else:
-                    row = layout.row()
-                    row.prop(sceneProperties, "tlm_postpack_object")
-                    row = layout.row()
-
-                if sceneProperties.tlm_postpack_object and sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
-                    if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
-                        row = layout.row()
-                        item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
-                        row.prop_search(sceneProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
-                        row = layout.row()
-
-                    else:
-                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
-                        row = layout.row()
-
-                if sceneProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
-                    row.prop(sceneProperties, "tlm_mesh_lightmap_resolution")
-                    row = layout.row()
-                    row.prop(sceneProperties, "tlm_mesh_unwrap_margin")
-
-            row = layout.row(align=True)
-            row.operator("tlm.remove_uv_selection")
-            row = layout.row(align=True)
-            row.operator("tlm.select_lightmapped_objects")
-            row = layout.row(align=True)
-
-            ##################
-            #Additional settings
-            row = layout.row(align=True)
-            row.label(text="Additional options")
-            sceneProperties = scene.TLM_SceneProperties
-            atlasListItem = scene.TLM_AtlasListItem
-            atlasList = scene.TLM_AtlasList
-            postatlasListItem = scene.TLM_PostAtlasListItem
-            postatlasList = scene.TLM_PostAtlasList
-
-            layout.label(text="Atlas Groups")
-            row = layout.row()
-            row.prop(sceneProperties, "tlm_atlas_mode", expand=True)
-
-            if sceneProperties.tlm_atlas_mode == "Prepack":
-
-                rows = 2
-                if len(atlasList) > 1:
-                    rows = 4
-                row = layout.row()
-                row.template_list("TLM_UL_AtlasList", "Atlas List", scene, "TLM_AtlasList", scene, "TLM_AtlasListItem", rows=rows)
-                col = row.column(align=True)
-                col.operator("tlm_atlaslist.new_item", icon='ADD', text="")
-                col.operator("tlm_atlaslist.delete_item", icon='REMOVE', text="")
-                #col.menu("ARM_MT_BakeListSpecials", icon='DOWNARROW_HLT', text="")
-
-                # if len(scene.TLM_AtlasList) > 1:
-                #     col.separator()
-                #     op = col.operator("arm_bakelist.move_item", icon='TRIA_UP', text="")
-                #     op.direction = 'UP'
-                #     op = col.operator("arm_bakelist.move_item", icon='TRIA_DOWN', text="")
-                #     op.direction = 'DOWN'
-
-                if atlasListItem >= 0 and len(atlasList) > 0:
-                    item = atlasList[atlasListItem]
-                    #layout.prop_search(item, "obj", bpy.data, "objects", text="Object")
-                    #layout.prop(item, "res_x")
-                    layout.prop(item, "tlm_atlas_lightmap_unwrap_mode")
-                    layout.prop(item, "tlm_atlas_lightmap_resolution")
-                    layout.prop(item, "tlm_atlas_unwrap_margin")
-
-                    amount = 0
-
-                    for obj in bpy.data.objects:
-                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
-                            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
-                                if obj.TLM_ObjectProperties.tlm_atlas_pointer == item.name:
-                                    amount = amount + 1
-
-                    layout.label(text="Objects: " + str(amount))
-
-                # layout.use_property_split = True
-                # layout.use_property_decorate = False
-                # layout.label(text="Enable for selection")
-                # layout.label(text="Disable for selection")
-                # layout.label(text="Something...")
-
-            else:
-
-                layout.label(text="Postpacking is unstable.")
-                rows = 2
-                if len(atlasList) > 1:
-                    rows = 4
-                row = layout.row()
-                row.template_list("TLM_UL_PostAtlasList", "PostList", scene, "TLM_PostAtlasList", scene, "TLM_PostAtlasListItem", rows=rows)
-                col = row.column(align=True)
-                col.operator("tlm_postatlaslist.new_item", icon='ADD', text="")
-                col.operator("tlm_postatlaslist.delete_item", icon='REMOVE', text="")
-
-                if postatlasListItem >= 0 and len(postatlasList) > 0:
-                    item = postatlasList[postatlasListItem]
-                    layout.prop(item, "tlm_atlas_lightmap_resolution")
-
-                    #Below list object counter
-                    amount = 0
-                    utilized = 0
-                    atlasUsedArea = 0
-                    atlasSize = item.tlm_atlas_lightmap_resolution
-
-                    for obj in bpy.data.objects:
-                        if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
-                            if obj.TLM_ObjectProperties.tlm_postpack_object:
-                                if obj.TLM_ObjectProperties.tlm_postatlas_pointer == item.name:
-                                    amount = amount + 1
-
-                                    atlasUsedArea += int(obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution) ** 2
-
-                    row = layout.row()
-                    row.prop(item, "tlm_atlas_repack_on_cleanup")
-
-                    #TODO SET A CHECK FOR THIS! ADD A CV2 CHECK TO UTILITY!
-                    cv2 = True
-
-                    if cv2:
-                        row = layout.row()
-                        row.prop(item, "tlm_atlas_dilation")
-                    layout.label(text="Objects: " + str(amount))
-
-                    utilized = atlasUsedArea / (int(atlasSize) ** 2)
-                    layout.label(text="Utilized: " + str(utilized * 100) + "%")
-
-                    if (utilized * 100) > 100:
-                        layout.label(text="Warning! Overflow not yet supported")
-
 class ArmGenLodButton(bpy.types.Operator):
-    '''Automatically generate LoD levels'''
+    """Automatically generate LoD levels."""
     bl_idname = 'arm.generate_lod'
     bl_label = 'Auto Generate'
 
@@ -2178,7 +1940,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
         node.location = (-200, -200)
         node.inputs[0].default_value = 5.0
         links.new(nodes['Bump'].inputs[2], nodes['_TerrainHeight'].outputs[0])
-        links.new(nodes['Principled BSDF'].inputs[17], nodes['Bump'].outputs[0])
+        links.new(nodes['Principled BSDF'].inputs[20], nodes['Bump'].outputs[0])
 
         # Create sectors
         root_obj = bpy.data.objects.new("Terrain", None)
@@ -2312,20 +2074,27 @@ class ARM_PT_ProxyPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         layout.operator("arm.make_proxy")
+
         obj = bpy.context.object
-        if obj != None and obj.proxy != None:
-            layout.label(text="Sync")
-            layout.prop(obj, "arm_proxy_sync_loc")
-            layout.prop(obj, "arm_proxy_sync_rot")
-            layout.prop(obj, "arm_proxy_sync_scale")
-            layout.prop(obj, "arm_proxy_sync_materials")
-            layout.prop(obj, "arm_proxy_sync_modifiers")
-            layout.prop(obj, "arm_proxy_sync_traits")
-            row = layout.row()
+        if obj is not None and obj.proxy is not None:
+            col = layout.column(heading="Sync")
+            col.prop(obj, "arm_proxy_sync_loc")
+            col.prop(obj, "arm_proxy_sync_rot")
+            col.prop(obj, "arm_proxy_sync_scale")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_materials")
+            col.prop(obj, "arm_proxy_sync_modifiers")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_traits")
+            row = col.row()
             row.enabled = obj.arm_proxy_sync_traits
             row.prop(obj, "arm_proxy_sync_trait_props")
-            layout.operator("arm.proxy_toggle_all")
-            layout.operator("arm.proxy_apply_all")
+
+            row = layout.row(align=True)
+            row.operator("arm.proxy_toggle_all")
+            row.operator("arm.proxy_apply_all")
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
@@ -2437,7 +2206,7 @@ class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
     bl_idname = 'arm.show_old_file_version_info'
     bl_description = ('Displays an info panel that warns about opening a file'
                        'which was created in a previous version of Armory')
-    # bl_options = {'INTERNAL'}
+    bl_options = {'INTERNAL'}
 
     wrd = None
 
@@ -2726,7 +2495,7 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.operator("arm.open_node_documentation", text="Show documentation for this node", icon='HELP')
-            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=arm.props_traits.icons_dict['haxe'].icon_id)
+            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=ui_icons.get_id("haxe"))
             layout.operator("arm.open_node_python_source", text="Open .py source in the browser", icon='FILE_SCRIPT')
 
     elif context.space_data.tree_type == 'ShaderNodeTree':
@@ -2734,6 +2503,18 @@ def draw_custom_node_menu(self, context):
             layout = self.layout
             layout.separator()
             layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
+
+
+def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.types.AnyType, prop_condition: str, prop_value: str) -> None:
+    """Draws a property row with a checkbox that enables a value field.
+    The function fails when prop_condition is not a boolean property.
+    """
+    col = layout.column(heading=heading)
+    row = col.row()
+    row.prop(data, prop_condition, text='')
+    sub = row.row()
+    sub.enabled = getattr(data, prop_condition)
+    sub.prop(data, prop_value, expand=True)
 
 
 def register():
@@ -2800,6 +2581,13 @@ def register():
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
     bpy.utils.register_class(ArmoryUpdateListInstalledVSButton)
+
+    bpy.utils.register_class(scene.TLM_PT_Settings)
+    bpy.utils.register_class(scene.TLM_PT_Denoise)
+    bpy.utils.register_class(scene.TLM_PT_Filtering)
+    bpy.utils.register_class(scene.TLM_PT_Encoding)
+    bpy.utils.register_class(scene.TLM_PT_Utility)
+    bpy.utils.register_class(scene.TLM_PT_Additional)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
@@ -2874,3 +2662,10 @@ def unregister():
     bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
     bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)
+
+    bpy.utils.unregister_class(scene.TLM_PT_Settings)
+    bpy.utils.unregister_class(scene.TLM_PT_Denoise)
+    bpy.utils.unregister_class(scene.TLM_PT_Filtering)
+    bpy.utils.unregister_class(scene.TLM_PT_Encoding)
+    bpy.utils.unregister_class(scene.TLM_PT_Utility)
+    bpy.utils.unregister_class(scene.TLM_PT_Additional)

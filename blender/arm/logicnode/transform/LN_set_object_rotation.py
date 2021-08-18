@@ -9,11 +9,10 @@ class SetRotationNode(ArmLogicTreeNode):
     arm_version = 2
     
 
-    def init(self, context):
-        super(SetRotationNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('ArmNodeSocketRotation', 'Rotation')
+        self.add_input('ArmRotationSocket', 'Rotation')
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

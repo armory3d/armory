@@ -7,6 +7,5 @@ class SensorCoordsNode(ArmLogicTreeNode):
     arm_section = 'sensor'
     arm_version = 1
 
-    def init(self, context):
-        super(SensorCoordsNode, self).init(context)
-        self.add_output('NodeSocketVector', 'Coords')
+    def arm_init(self, context):
+        self.add_output('ArmVectorSocket', 'Coords')

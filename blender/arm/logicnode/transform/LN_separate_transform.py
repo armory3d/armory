@@ -6,13 +6,12 @@ class SeparateTransformNode(ArmLogicTreeNode):
     bl_label = 'Separate Transform'
     arm_version = 2
 
-    def init(self, context):
-        super(SeparateTransformNode, self).init(context)
-        self.add_input('NodeSocketShader', 'Transform')
+    def arm_init(self, context):
+        self.add_input('ArmDynamicSocket', 'Transform')
 
-        self.add_output('NodeSocketVector', 'Location')
-        self.add_output('ArmNodeSocketRotation', 'Rotation')
-        self.add_output('NodeSocketVector', 'Scale')
+        self.add_output('ArmVectorSocket', 'Location')
+        self.add_output('ArmRotationSocket', 'Rotation')
+        self.add_output('ArmVectorSocket', 'Scale')
 
 
 

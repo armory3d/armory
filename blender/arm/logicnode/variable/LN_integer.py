@@ -6,7 +6,6 @@ class IntegerNode(ArmLogicTreeNode):
     bl_label = 'Integer'
     arm_version = 1
 
-    def init(self, context):
-        super(IntegerNode, self).init(context)
-        self.add_input('NodeSocketInt', 'Int In')
-        self.add_output('NodeSocketInt', 'Int Out', is_var=True)
+    def arm_init(self, context):
+        self.add_input('ArmIntSocket', 'Int In')
+        self.add_output('ArmIntSocket', 'Int Out', is_var=True)

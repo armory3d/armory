@@ -4,347 +4,223 @@ import kha.FastFloat;
 import iron.system.Input;
 
 class InputMap {
-	var commands = new Map<String, Null<Array<InputCommand>>>();
+
+	static var inputMaps = new Map<String, InputMap>();
+
+	public var keys(default, null) = new Array<InputMapKey>();
+	public var lastKeyPressed(default, null) = "";
 
 	public function new() {}
 
-	public function addKeyboard(config: String) {
-		var command = new KeyboardCommand();
-		return addCustomCommand(command, config);
+	public static function getInputMap(inputMap: String): Null<InputMap> {
+		if (inputMaps.exists(inputMap)) {
+			return inputMaps[inputMap];
+		}
+
+		return null;
 	}
 
-	public function addGamepad(config: String) {
-		var command = new GamepadCommand();
-		return addCustomCommand(command, config);
+	public static function addInputMap(inputMap: String): InputMap {
+		return inputMaps[inputMap] = new InputMap();
 	}
 
-	public function addCustomCommand(command: InputCommand, config: String) {
-		if (commands[config] == null) commands[config] = new Array<InputCommand>();
-		commands[config].push(command);
-		return command;
-	}
-}
-
-class ActionMap extends InputMap {
-
-	public inline function started(config: String) {
-		var started = false;
-
-		for (c in commands[config]) {
-			if (c.started()) {
-				started = true;
-				break;
+	public static function getInputMapKey(inputMap: String, key: String): Null<InputMapKey> {
+		if (inputMaps.exists(inputMap)) {
+			for (k in inputMaps[inputMap].keys) {
+				if (k.key == key) {
+					return k;
+				}
 			}
 		}
 
-		return started;
+		return null;
 	}
 
-	public inline function released(config: String) {
-		var released = false;
+	public static function removeInputMapKey(inputMap: String, key: String): Bool {
+		if (inputMaps.exists(inputMap)) {
+			var i = inputMaps[inputMap];
 
-		for (c in commands[config]) {
-			if (c.released()) {
-				released = true;
-				break;
+			for (k in i.keys) {
+				if (k.key == key) {
+					return i.removeKey(k);
+				}
 			}
 		}
 
-		return released;
+		return false;
 	}
-}
 
-class AxisMap extends InputMap {
-	var scale: FastFloat = 1.0;
+	public function addKeyboard(key: String, scale: FastFloat = 1.0): InputMapKey {
+		return addKey(new KeyboardKey(key, scale));
+	}
 
-	public inline function getAxis(config: String) {
-		var axis = 0.0;
+	public function addMouse(key: String, scale: FastFloat = 1.0, deadzone: FastFloat = 0.0): InputMapKey {
+		return addKey(new MouseKey(key, scale, deadzone));
+	}
 
-		for (c in commands[config]) {
-			var tempAxis = c.getAxis();
+	public function addGamepad(key: String, scale: FastFloat = 1.0, deadzone: FastFloat = 0.0): InputMapKey {
+		return addKey(new GamepadKey(key, scale, deadzone));
+	}
 
-			if (tempAxis != 0.0 && tempAxis != axis) {
-				axis += tempAxis;
-				scale = c.getScale();
-			}
+	public function addKey(key: InputMapKey): InputMapKey {
+		keys.push(key);
+		return key;
+	}
+
+	public function removeKey(key: InputMapKey): Bool {
+		return keys.remove(key);
+	}
+
+	public function value(): FastFloat {
+		var v = 0.0;
+
+		for (k in keys) {
+			v += k.value();
 		}
 
-		return axis;
-	}
-
-	public inline function getScale() {
-		return scale;
-	}
-}
-
-class InputCommand {
-	var keys = new Array<String>();
-	var modifiers = new Array<String>();
-	var displacementKeys = new Array<String>();
-	var displacementModifiers = new Array<String>();
-	var deadzone: FastFloat = 0.0;
-	var scale: FastFloat = 1.0;
-
-	public function new() {}
-
-	public function setKeys(keys: Array<String>) {
-		return this.keys = keys;
-	}
-
-	public function setMods(modifiers: Array<String>) {
-		return this.modifiers = modifiers;
-	}
-
-	public function setDisplacementKeys(keys: Array<String>) {
-		return displacementKeys = keys;
-	}
-
-	public function setDisplacementMods(modifiers: Array<String>) {
-		return displacementModifiers = modifiers;
-	}
-
-	public function setDeadzone(deadzone: FastFloat) {
-		return this.deadzone = deadzone;
-	}
-
-	public function setScale(scale: FastFloat) {
-		return this.scale = scale;
-	}
-
-	public function getScale() {
-		return scale;
+		return v;
 	}
 
 	public function started() {
+		for (k in keys) {
+			if (k.started()) {
+				lastKeyPressed = k.key;
+				return true;
+			}
+		}
+
 		return false;
 	}
 
 	public function released() {
+		for (k in keys) {
+			if (k.released()) {
+				lastKeyPressed = k.key;
+				return true;
+			}
+		}
+
+		return false;
+	}
+}
+
+class InputMapKey {
+
+	public var key: String;
+	public var scale: FastFloat;
+	public var deadzone: FastFloat;
+
+	public function new(key: String, scale = 1.0, deadzone = 0.0) {
+		this.key = key.toLowerCase();
+		this.scale = scale;
+		this.deadzone = deadzone;
+	}
+
+	public function started(): Bool {
 		return false;
 	}
 
-	public function getAxis(): FastFloat {
+	public function released(): Bool {
+		return false;
+	}
+
+	public function value(): FastFloat {
 		return 0.0;
 	}
-}
 
-class KeyboardCommand extends InputCommand {
-	var keyboard = Input.getKeyboard();
-	var mouse = Input.getMouse();
+	public function setIndex(index: Int) {}
 
-	public inline override function started() {
-		for (k in keys) {
-			if (keyboard.started(k)) {
-				for (m in modifiers) {
-					if (!keyboard.down(m)) return false;
-				}
+	function evalDeadzone(value: FastFloat): FastFloat {
+		var v = 0.0;
 
-				for (m in displacementModifiers) {
-					if (!mouse.down(m)) return false;
-				}
+		if (value > deadzone) {
+			v = value - deadzone;
 
-				return true;
-			}
+		} else if (value < -deadzone) {
+			v = value + deadzone;
 		}
 
-		for (k in displacementKeys) {
-			if (mouse.started(k)) {
-				for (m in modifiers) {
-					if (!keyboard.down(m)) return false;
-				}
-					
-				for (m in displacementModifiers) {
-					if (!mouse.down(m)) return false;
-				}
-
-				return true;
-			}
-		}
-
-		return false;
+		return v * scale;
 	}
 
-	public inline override function released() {
-		for (k in keys) {
-			if (keyboard.released(k)) {
-				for (m in modifiers) {
-					if (!keyboard.down(m)) return false;
-				}
+	function evalPressure(value: FastFloat): FastFloat {
+		var v = value - deadzone;
 
-				for (m in displacementModifiers) {
-					if (!mouse.down(m)) return false;
-				}
+		if (v > 0.0) {
+			v /= (1.0 - deadzone);
 
-				return true;
-			}
+		} else {
+			v = 0.0;
 		}
-
-		for (k in displacementKeys) {
-			if (mouse.released(k)) {
-				for (m in modifiers) {
-					if (!keyboard.down(m)) return false;
-				}
-					
-				for (m in displacementModifiers) {
-					if (!mouse.down(m)) return false;
-				}
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public inline override function getAxis() {
-		var axis = 0.0;
-		var movementX = mouse.movementX;
-		var movementY = mouse.movementY;
-		var wheelDelta = mouse.wheelDelta;
-
-		for (k in keys) {
-			if (keyboard.down(k)) {
-				axis++;
-				break;
-			}
-		}
-
-		for (m in modifiers) {
-			if (keyboard.down(m)) {
-				axis --;
-				break;
-			}
-		}
-
-		for (k in displacementKeys) {
-			switch (k) {
-				case "moved x": if (movementX > deadzone) axis++;
-				case "moved y": if (movementY > deadzone) axis--;
-				case "wheel": if (wheelDelta < -deadzone) axis++;
-				case "movement x": if (movementX > deadzone) return movementX - deadzone;
-				case "movement y": if (movementY > deadzone) return movementY - deadzone;
-				default: {
-					if (mouse.down(k)) {
-						axis ++;
-						break;
-					}
-				}
-			}
-		}
-
-		for (m in displacementModifiers) {
-			switch (m) {
-				case "moved x": if (movementX < -deadzone) axis--;
-				case "moved y": if (movementY < -deadzone) axis++;
-				case "wheel": if (wheelDelta > deadzone) axis--;
-				case "movement x": if (movementX < -deadzone) return movementX + deadzone;
-				case "movement y": if (movementY < -deadzone) return movementY + deadzone;
-				default: {
-					if (mouse.down(m)) {
-						axis --;
-						break;
-					}
-				}
-			}
-		}
-
-		return axis > 1 ? 1 : axis < -1 ? -1 : axis;
+		
+		return v;
 	}
 }
 
-class GamepadCommand extends InputCommand {
-	var gamepad = Input.getGamepad(0);
+class KeyboardKey extends InputMapKey {
+
+	var kb = Input.getKeyboard();
 
 	public inline override function started() {
-		for (k in keys) {
-			if (gamepad.started(k)) {
-				for (m in modifiers) {
-					if (gamepad.down(m) < deadzone) return false;
-				}
-
-				return true;
-			}
-		}
-
-		return false;
+		return kb.started(key);
 	}
 
 	public inline override function released() {
-		for (k in keys) {
-			if (gamepad.released(k)) {
-				for (m in modifiers) {
-					if (gamepad.down(m) < deadzone) return false;
-				}
-
-				return true;
-			}
-		}
-
-		return false;
+		return kb.released(key);
 	}
 
-	public inline override function getAxis() {
-		var axis = 0.0;
-		var rsMovementX = gamepad.rightStick.movementX;
-		var rsMovementY = gamepad.rightStick.movementY;
-		var lsMovementX = gamepad.leftStick.movementX;
-		var lsMovementY = gamepad.leftStick.movementY;
-		var rtPressure = gamepad.down("r2") > 0.0 ? (gamepad.down("r2") - deadzone) / (1 - deadzone) : 0.0;
-		var ltPressure = gamepad.down("l2") > 0.0 ? (gamepad.down("r2") - deadzone) / (1 - deadzone) : 0.0;
+	public inline override function value(): FastFloat {
+		return kb.down(key) ? scale : 0.0;
+	}
+}
 
-		for (k in keys) {
-			switch(k) {
-				case "rtPressure": axis += rtPressure;
-				case "ltPressure": axis += ltPressure;
-				default: {
-					if (gamepad.down(k) > deadzone) {
-						axis++;
-						break;
-					}
-				}
-			}
+class MouseKey extends InputMapKey {
+
+	var m = Input.getMouse();
+
+	public inline override function started() {
+		return m.started(key);
+	}
+
+	public inline override function released() {
+		return m.released(key);
+	}
+
+	public override function value(): FastFloat {
+		return switch (key) {
+			case "movement x": evalDeadzone(m.movementX);
+			case "movement y": evalDeadzone(m.movementY);
+			case "wheel": evalDeadzone(m.wheelDelta);
+			default: m.down(key) ? scale : 0.0;
 		}
+	}
+}
 
-		for (m in modifiers) {
-			switch (m) {
-				case "rtPressure": axis -= rtPressure;
-				case "ltPressure": axis -= ltPressure;
-				default: {
-					if (gamepad.down(m) > deadzone) {
-						axis--;
-						break;
-					}
-				}
-			}
+class GamepadKey extends InputMapKey {
+
+	var g = Input.getGamepad();
+
+	public inline override function started() {
+		return g.started(key);
+	}
+
+	public inline override function released() {
+		return g.released(key);
+	}
+
+	public override function value(): FastFloat {
+		return switch(key) {
+			case "ls movement x": evalDeadzone(g.leftStick.movementX);
+			case "ls movement y": evalDeadzone(g.leftStick.movementY);
+			case "rs movement x": evalDeadzone(g.rightStick.movementX);
+			case "rs movement y": evalDeadzone(g.rightStick.movementY);
+			case "lt pressure": evalDeadzone(evalPressure(g.down("l2")));
+			case "rt pressure": evalDeadzone(evalPressure(g.down("r2")));
+			default: evalDeadzone(g.down(key));
 		}
+	}
 
-		for (k in displacementKeys) {
-			switch(k) {
-			case "rs moved x": if (rsMovementX > deadzone) axis++;
-			case "rs moved y": if (rsMovementY > deadzone) axis++;
-			case "ls moved x": if (lsMovementX > deadzone) axis++;
-			case "ls moved y": if (lsMovementY > deadzone) axis++;
-			case "rs movement x": if (rsMovementX > deadzone) return rsMovementX - deadzone;
-			case "rs movement y": if (rsMovementY > deadzone) return rsMovementY - deadzone;
-			case "ls movement x": if (lsMovementX > deadzone) return lsMovementX - deadzone;
-			case "ls movement y": if (lsMovementY > deadzone) return lsMovementY - deadzone;
-			}
-		}
-
-		for (m in displacementModifiers) {
-			switch (m) {
-				case "rs moved x": if (rsMovementX < -deadzone) axis--;
-				case "rs moved y": if (rsMovementY < -deadzone) axis--;
-				case "ls moved x": if (lsMovementX < -deadzone) axis--;
-				case "ls moved y": if (lsMovementY < -deadzone) axis--;
-				case "rs movement x": if (rsMovementX < -deadzone) return rsMovementX + deadzone;
-				case "rs movement y": if (rsMovementY < -deadzone) return rsMovementY + deadzone;
-				case "ls movement x": if (lsMovementX < -deadzone) return lsMovementX + deadzone;
-				case "ls movement y": if (lsMovementY < -deadzone) return lsMovementY + deadzone;
-
-			}
-		}
-
-		return axis > 1 ? 1 : axis < -1 ? -1 : axis;
+	public override function setIndex(index: Int) {
+		g = Input.getGamepad(index);
 	}
 }

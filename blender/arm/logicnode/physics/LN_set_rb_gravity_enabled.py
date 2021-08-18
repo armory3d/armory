@@ -6,10 +6,9 @@ class SetGravityEnabledNode(ArmLogicTreeNode):
     bl_label = 'Set RB Gravity Enabled'
     arm_version = 1
 
-    def init(self, context):
-        super(SetGravityEnabledNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'RB')
-        self.add_input('NodeSocketBool', 'Enabled')
+        self.add_input('ArmBoolSocket', 'Enabled')
 
         self.add_output('ArmNodeSocketAction', 'Out')

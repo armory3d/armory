@@ -25,7 +25,7 @@ class RotationMathNode(ArmLogicTreeNode):
 
     def ensure_input_socket(self, socket_number, newclass, newname):
         while len(self.inputs) < socket_number:
-            self.inputs.new('NodeSocketFloat', 'BOGUS')
+            self.inputs.new('ArmFloatSocket', 'BOGUS')
         if len(self.inputs) > socket_number:
             if len(self.inputs[socket_number].links) == 1:
                 source_socket = self.inputs[socket_number].links[0].from_socket
@@ -44,7 +44,7 @@ class RotationMathNode(ArmLogicTreeNode):
     def ensure_output_socket(self, socket_number, newclass, newname):
         sink_sockets = []
         while len(self.outputs) < socket_number:
-            self.outputs.new('NodeSocketFloat', 'BOGUS')
+            self.outputs.new('ArmFloatSocket', 'BOGUS')
         if len(self.outputs) > socket_number:
             for link in self.inputs[socket_number].links:
                 sink_sockets.append(link.to_socket)
@@ -61,32 +61,32 @@ class RotationMathNode(ArmLogicTreeNode):
 
         # Rotation as argument 0:
         if self.property0 in ('Inverse','Normalize','Amplify'):
-            self.ensure_input_socket(0, "ArmNodeSocketRotation", "Rotation")
-            self.ensure_input_socket(1, "NodeSocketFloat", "Amplification factor")
+            self.ensure_input_socket(0, "ArmRotationSocket", "Rotation")
+            self.ensure_input_socket(1, "ArmFloatSocket", "Amplification factor")
         elif self.property0 in ('Slerp','Lerp','Compose'):
-            self.ensure_input_socket(0, "ArmNodeSocketRotation", "From")
-            self.ensure_input_socket(1, "ArmNodeSocketRotation", "To")
+            self.ensure_input_socket(0, "ArmRotationSocket", "From")
+            self.ensure_input_socket(1, "ArmRotationSocket", "To")
 
             if self.property0 == 'Compose':
                 self.inputs[0].name = 'Outer rotation'
                 self.inputs[1].name = 'Inner rotation'
             else:
-                self.ensure_input_socket(2, "NodeSocketFloat", "Interpolation factor")
+                self.ensure_input_socket(2, "ArmFloatSocket", "Interpolation factor")
 
         elif self.property0 == 'FromTo':
-            self.ensure_input_socket(0, "NodeSocketVector", "From")
-            self.ensure_input_socket(1, "NodeSocketVector", "To")
+            self.ensure_input_socket(0, "ArmVectorSocket", "From")
+            self.ensure_input_socket(1, "ArmVectorSocket", "To")
             
         # Rotation as argument 1:
         if self.property0 in ('Compose','Lerp','Slerp'):
-            if self.inputs[1].bl_idname != "ArmNodeSocketRotation":
-                self.replace_input_socket(1, "ArmNodeSocketRotation", "Rotation 2")
+            if self.inputs[1].bl_idname != "ArmRotationSocket":
+                self.replace_input_socket(1, "ArmRotationSocket", "Rotation 2")
                 if self.property0 == 'Compose':
                     self.inputs[1].name = "Inner quaternion"
         # Float as argument 1:
         if self.property0 == 'Amplify':
-            if self.inputs[1].bl_idname != 'NodeSocketFloat':
-                self.replace_input_socket(1, "NodeSocketFloat", "Amplification factor")
+            if self.inputs[1].bl_idname != 'ArmFloatSocket':
+                self.replace_input_socket(1, "ArmFloatSocket", "Amplification factor")
         # Vector as argument 1:
         #if self.property0 == 'FromRotationMat':
         #    # WHAT??
@@ -96,7 +96,8 @@ class RotationMathNode(ArmLogicTreeNode):
             self.inputs.remove(self.inputs[len(self.inputs)-1])
         
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Compose', 'Compose (multiply)', 'compose (multiply) two rotations. Note that order of the composition matters.'),
                  ('Amplify', 'Amplify (multiply by float)', 'Amplify or diminish the effect of a rotation'),
                  #('Normalize', 'Normalize', 'Normalize'),
@@ -111,11 +112,10 @@ class RotationMathNode(ArmLogicTreeNode):
     #def __init__(self):    
     #    array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(RotationMathNode, self).init(context)
-        self.add_input('ArmNodeSocketRotation', 'Outer rotation', default_value=Vector((0.0, 0.0, 0.0, 1.0)) )
-        self.add_input('ArmNodeSocketRotation', 'Inner rotation', default_value=Vector((0.0, 0.0, 0.0, 1.0)))
-        self.add_output('ArmNodeSocketRotation', 'Result')
+    def arm_init(self, context):
+        self.add_input('ArmRotationSocket', 'Outer rotation', default_value=(0.0, 0.0, 0.0, 1.0) )
+        self.add_input('ArmRotationSocket', 'Inner rotation', default_value=(0.0, 0.0, 0.0, 1.0) )
+        self.add_output('ArmRotationSocket', 'Result')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0') # Operation

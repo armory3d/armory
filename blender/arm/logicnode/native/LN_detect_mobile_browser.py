@@ -6,6 +6,5 @@ class DetectMobileBrowserNode(ArmLogicTreeNode):
 	bl_label = 'Detect Mobile Browser'
 	arm_version = 1
 
-	def init(self, context):
-		super(DetectMobileBrowserNode, self).init(context)
-		self.add_output('NodeSocketBool', 'Mobile')
+	def arm_init(self, context):
+		self.add_output('ArmBoolSocket', 'Mobile')

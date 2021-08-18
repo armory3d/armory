@@ -9,17 +9,19 @@ class QuaternionMathNode(ArmLogicTreeNode):
     arm_section = 'quaternions'
     arm_version = 2
 
-
     def ensure_input_socket(self, socket_number, newclass, newname, default_value=None):
         while len(self.inputs) < socket_number:
-            self.inputs.new('NodeSocketFloat', 'BOGUS')
+            self.inputs.new('ArmFloatSocket', 'BOGUS')
         if len(self.inputs) > socket_number:
             if len(self.inputs[socket_number].links) == 1:
                 source_socket = self.inputs[socket_number].links[0].from_socket
             else:    
                 source_socket = None
-            if self.inputs[socket_number].bl_idname == newclass:
-                default_value = self.inputs[socket_number].default_value
+            if (
+                self.inputs[socket_number].bl_idname == newclass \
+                and self.inputs[socket_number].arm_socket_type != 'NONE'
+            ):
+                default_value = self.inputs[socket_number].default_value_raw
             self.inputs.remove(self.inputs[socket_number])
         else:
             source_socket = None
@@ -27,7 +29,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
             
         self.inputs.new(newclass, newname)
         if default_value != None:
-            self.inputs[-1].default_value = default_value
+            self.inputs[-1].default_value_raw = default_value
         self.inputs.move(len(self.inputs)-1, socket_number)
         if source_socket is not None:
             self.id_data.links.new(source_socket, self.inputs[socket_number])
@@ -35,7 +37,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
     def ensure_output_socket(self, socket_number, newclass, newname):
         sink_sockets = []
         while len(self.outputs) < socket_number:
-            self.outputs.new('NodeSocketFloat', 'BOGUS')
+            self.outputs.new('ArmFloatSocket', 'BOGUS')
         if len(self.outputs) > socket_number:
             for link in self.inputs[socket_number].links:
                 sink_sockets.append(link.to_socket)
@@ -79,25 +81,24 @@ class QuaternionMathNode(ArmLogicTreeNode):
         select_current = self.get_enum_id_value(self, 'property0', value)
         select_prev = self.property0
 
-
         if select_current in ('Add','Subtract','Multiply','DotProduct') \
            and select_prev in ('Add','Subtract','Multiply','DotProduct'):
             pass  # same as select_current==select_prev for the sockets
         elif select_prev != select_current:
             if select_current in ('Add','Subtract','Multiply','DotProduct'):
                 for i in range(  max(len(self.inputs)//2 ,2)  ):
-                    self.ensure_input_socket(2*i, 'NodeSocketVector', 'Quaternion %d XYZ'%i)
-                    self.ensure_input_socket(2*i+1, 'NodeSocketFloat', 'Quaternion %d W'%i, default_value=1.0)
+                    self.ensure_input_socket(2*i, 'ArmVectorSocket', 'Quaternion %d XYZ'%i)
+                    self.ensure_input_socket(2*i+1, 'ArmFloatSocket', 'Quaternion %d W'%i, default_value=1.0)
                 if len(self.inputs)%1:
                     self.inputs.remove(self.inputs[len(self.inputs)-1])
             elif select_current == 'MultiplyFloats':
-                self.ensure_input_socket(0, 'NodeSocketVector', 'Quaternion XYZ')
-                self.ensure_input_socket(1, 'NodeSocketFloat', 'Quaternion W', default_value=1.0)
+                self.ensure_input_socket(0, 'ArmVectorSocket', 'Quaternion XYZ')
+                self.ensure_input_socket(1, 'ArmFloatSocket', 'Quaternion W', default_value=1.0)
                 for i in range(  max(len(self.inputs)-2 ,1)  ):
-                    self.ensure_input_socket(i+2, 'NodeSocketFloat', 'Value %d'%i)
+                    self.ensure_input_socket(i+2, 'ArmFloatSocket', 'Value %d'%i)
             elif select_current in ('Module', 'Normalize'):
-                self.ensure_input_socket(0, 'NodeSocketVector', 'Quaternion XYZ')
-                self.ensure_input_socket(1, 'NodeSocketFloat', 'Quaternion W', default_value=1.0)
+                self.ensure_input_socket(0, 'ArmVectorSocket', 'Quaternion XYZ')
+                self.ensure_input_socket(1, 'ArmFloatSocket', 'Quaternion W', default_value=1.0)
                 while len(self.inputs)>2:
                     self.inputs.remove(self.inputs[2])
             else:
@@ -113,7 +114,11 @@ class QuaternionMathNode(ArmLogicTreeNode):
         self['property0'] = value
         self['property0_proxy'] = value
 
-    property0: EnumProperty(
+        
+    # this property swaperoo is kinda janky-looking, but necessary.
+    # Read more on LN_rotate_object.py
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Add', 'Add', 'Add'),
                  ('Subtract', 'Subtract', 'Subtract'),
                  ('DotProduct', 'Dot Product', 'Dot Product'),
@@ -133,19 +138,28 @@ class QuaternionMathNode(ArmLogicTreeNode):
                  ('FromEuler', 'DO NOT USE',''),
                  ('GetEuler', 'DO NOT USE','')],
         name='', default='Add')  #, set=set_enum, get=get_enum)
+    property0_proxy: EnumProperty(
+        items = [('Add', 'Add', 'Add'),
+                 ('Subtract', 'Subtract', 'Subtract'),
+                 ('DotProduct', 'Dot Product', 'Dot Product'),
+                 ('Multiply', 'Multiply', 'Multiply'),
+                 ('MultiplyFloats', 'Multiply (Floats)', 'Multiply (Floats)'),
+                 ('Module', 'Module', 'Module'),
+                 ('Normalize', 'Normalize', 'Normalize')],
+        name='', default='Add', set=set_enum, get=get_enum)
 
+    
     def __init__(self):
         super(QuaternionMathNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(QuaternionMathNode, self).init(context)
-        self.add_input('NodeSocketVector', 'Quaternion 0 XYZ', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketFloat', 'Quaternion 0 W', default_value=1)        
-        self.add_input('NodeSocketVector', 'Quaternion 1 XYZ', default_value=[0.0, 0.0, 0.0])
-        self.add_input('NodeSocketFloat', 'Quaternion 1 W', default_value=1)
-        self.add_output('NodeSocketVector', 'Result XYZ', default_value=[0.0, 0.0, 0.0])
-        self.add_output('NodeSocketFloat', 'Result W', default_value=1)
+    def arm_init(self, context):
+        self.add_input('ArmVectorSocket', 'Quaternion 0 XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmFloatSocket', 'Quaternion 0 W', default_value=1)        
+        self.add_input('ArmVectorSocket', 'Quaternion 1 XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_input('ArmFloatSocket', 'Quaternion 1 W', default_value=1)
+        self.add_output('ArmVectorSocket', 'Result XYZ', default_value=[0.0, 0.0, 0.0])
+        self.add_output('ArmFloatSocket', 'Result W', default_value=1)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0_proxy') # Operation
@@ -160,9 +174,10 @@ class QuaternionMathNode(ArmLogicTreeNode):
             else:
                 op.name_format = 'Value {0}'
             if (self.property0 == "MultiplyFloats"):
-                op.socket_type = 'NodeSocketFloat'
+                op.socket_type = 'ArmFloatSocket'
             else:
-                op.socket_type = 'NodeSocketVector;NodeSocketFloat'
+                op.socket_type = 'ArmVectorSocket;ArmFloatSocket'
+
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op.node_index = str(id(self))
@@ -246,12 +261,12 @@ class QuaternionMathNode(ArmLogicTreeNode):
             newself.property0 = self.property0
             
             for in1, in2 in zip(self.inputs, newself.inputs):
-                if in2.bl_idname == 'ArmNodeSocketRotation':
+                if in2.bl_idname == 'ArmRotationSocket':
                     in2.default_value_raw = Rotation.convert_to_quaternion(
                         in1.default_value,0,
                         'EulerAngles','Rad','XZY'
                     )
-                elif in1.bl_idname in ('NodeSocketFloat', 'NodeSocketVector'):
+                elif in1.bl_idname in ('ArmFloatSocket', 'ArmVectorSocket'):
                     in2.default_value = in1.default_value
                 for link in in1.links:
                     node_tree.links.new(link.from_socket, in2)
@@ -266,21 +281,21 @@ class QuaternionMathNode(ArmLogicTreeNode):
             i_in_2 = 0
             while i_in_1 < len(self.inputs):
                 in1 = self.inputs[i_in_1]
-                if in1.bl_idname == 'NodeSocketVector':
+                if in1.bl_idname == 'ArmVectorSocket':
                     # quaternion input: now two sockets, not one.
                     convnode = node_tree.nodes.new('LNSeparateRotationNode')
                     convnode.property0 = 'Quaternion'
                     ret.append(convnode)
                     if i_in_2 >= len(newself.inputs):
-                        newself.ensure_input_socket(i_in_2, 'NodeSocketVector', 'Quaternion %d XYZ'%(i_in_1))
-                        newself.ensure_input_socket(i_in_2+1, 'NodeSocketFloat', 'Quaternion %d W'%(i_in_1), 1.0)
+                        newself.ensure_input_socket(i_in_2, 'ArmVectorSocket', 'Quaternion %d XYZ'%(i_in_1))
+                        newself.ensure_input_socket(i_in_2+1, 'ArmFloatSocket', 'Quaternion %d W'%(i_in_1), 1.0)
                     node_tree.links.new(convnode.outputs[0], newself.inputs[i_in_2])
                     node_tree.links.new(convnode.outputs[1], newself.inputs[i_in_2+1])
                     for link in in1.links:
                         node_tree.links.new(link.from_socket, convnode.inputs[0])
                     i_in_2 +=2
                     i_in_1 +=1
-                elif in1.bl_idname == 'NodeSocketFloat':
+                elif in1.bl_idname == 'ArmFloatSocket':
                     for link in in1.links:
                         node_tree.links.new(link.from_socket, newself.inputs[i_in_2])
                     i_in_1 +=1
@@ -362,16 +377,3 @@ class QuaternionMathNode(ArmLogicTreeNode):
 
     # note: keep property1, so that it is actually readable for node conversion.
     property1: BoolProperty(name='DEPRECATED', default=False)
-
-    # this is the version of property0 that is shown in the interface,
-    # even though the real property0 is the one used elsewhere.
-    # NOTE FOR FUTURE MAINTAINERS: the value of this proxy property does **not** matter, only the value of property0 does.
-    property0_proxy: EnumProperty(
-        items = [('Add', 'Add', 'Add'),
-                 ('Subtract', 'Subtract', 'Subtract'),
-                 ('DotProduct', 'Dot Product', 'Dot Product'),
-                 ('Multiply', 'Multiply', 'Multiply'),
-                 ('MultiplyFloats', 'Multiply (Floats)', 'Multiply (Floats)'),
-                 ('Module', 'Module', 'Module'),
-                 ('Normalize', 'Normalize', 'Normalize')],
-        name='', default='Add', set=set_enum, get=get_enum)

@@ -21,7 +21,9 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+#ifdef _gbuffer2
 uniform sampler2D gbuffer2;
+#endif
 
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
@@ -94,7 +96,7 @@ uniform vec3 eye;
 uniform vec3 eyeLook;
 
 #ifdef _Clusters
-uniform vec4 lightsArray[maxLights * 2];
+uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
 	uniform vec4 lightsArraySpot[maxLights];
 	#endif
@@ -206,7 +208,9 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
+#ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
+#endif
 
 #ifdef _MicroShadowing
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
@@ -221,14 +225,16 @@ void main() {
 
 	vec3 envl = shIrradiance(n, shirr);
 
-	if (g2.b < 0.5) {
-		envl = envl;
-	} else {
-		envl = vec3(1.0);
-	}
+	#ifdef _gbuffer2
+		if (g2.b < 0.5) {
+			envl = envl;
+		} else {
+			envl = vec3(1.0);
+		}
+	#endif
 
 	#ifdef _EnvTex
-	envl /= PI;
+		envl /= PI;
 	#endif
 #else
 	vec3 envl = vec3(1.0);
@@ -456,18 +462,19 @@ void main() {
 			n,
 			v,
 			dotNV,
-			lightsArray[li * 2].xyz, // lp
-			lightsArray[li * 2 + 1].xyz, // lightCol
+			lightsArray[li * 3].xyz, // lp
+			lightsArray[li * 3 + 1].xyz, // lightCol
 			albedo,
 			roughness,
 			occspec.y,
 			f0
 			#ifdef _ShadowMap
-				, li, lightsArray[li * 2].w, true // bias
+				// light index, shadow bias, cast_shadows
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
 			#endif
 			#ifdef _Spot
-			, lightsArray[li * 2 + 1].w != 0.0
-			, lightsArray[li * 2 + 1].w // cutoff
+			, lightsArray[li * 3 + 2].y != 0.0
+			, lightsArray[li * 3 + 2].y // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
 			, lightsArraySpot[li].xyz // spotDir
 			#endif

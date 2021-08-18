@@ -57,7 +57,11 @@ class Inc {
 					break;
 				if (LightObject.discardLightCulled(light)) continue;
 				if (light.data.raw.type == "point") {
-					for(k in 0...light.tileOffsetX.length) {
+					if (!light.data.raw.cast_shadow) {
+						j += 4 * 6;
+						continue;
+					}
+					for(k in 0...6) {
 						LightObject.pointLightsData[j	 ] = light.tileOffsetX[k]; // posx
 						LightObject.pointLightsData[j + 1] = light.tileOffsetY[k]; // posy
 						LightObject.pointLightsData[j + 2] = light.tileScale[k]; // tile scale factor relative to atlas
@@ -108,10 +112,17 @@ class Inc {
 		lastFrame = RenderPath.active.frame;
 		#end
 		// add new lights to the atlases
+		#if arm_debug
+		beginShadowsLogicProfile();
+		// reset data on rejected lights
+		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
+			atlas.rejectedLights = [];
+		}
+		#end
 		for (light in iron.Scene.active.lights) {
 			if (!light.lightInAtlas && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
-				light.lightInAtlas = ShadowMapAtlas.addLight(light);
+				ShadowMapAtlas.addLight(light);
 			}
 		}
 		// update point light data before rendering
@@ -151,8 +162,8 @@ class Inc {
 				// set the tile offset for this tile and every linked tile to this one
 				var j = 0;
 				tile.forEachTileLinked(function (lTile) {
-					tile.light.tileOffsetX[j] = (lTile.coordsX == 0) ? 0.0 : lTile.coordsX / atlas.sizew;
-					tile.light.tileOffsetY[j] = (lTile.coordsY == 0) ? 0.0 : lTile.coordsY / atlas.sizew;
+					tile.light.tileOffsetX[j] = lTile.coordsX / atlas.sizew;
+					tile.light.tileOffsetY[j] = lTile.coordsY / atlas.sizew;
 					tile.light.tileScale[j] = lTile.size / atlas.sizew;
 					j++;
 				});
@@ -164,6 +175,9 @@ class Inc {
 				var face = 0;
 				var faces = ShadowMapTile.tilesLightType(tile.light.data.raw.type);
 
+				#if arm_debug
+				beginShadowsRenderProfile();
+				#end
 				tile.forEachTileLinked(function (lTile) {
 					if (faces > 1) {
 						#if arm_csm
@@ -180,6 +194,9 @@ class Inc {
 
 					path.drawMeshesStream("shadowmap");
 				});
+				#if arm_debug
+				endShadowsRenderProfile();
+				#end
 
 				path.currentFace = -1;
 			}
@@ -202,6 +219,9 @@ class Inc {
 				tile.freeTile();
 			}
 		}
+		#if arm_debug
+		endShadowsLogicProfile();
+		#end
 		#end // rp_shadowmap
 	}
 	#else
@@ -517,6 +537,25 @@ class Inc {
 		return null;
 		#end
 	}
+
+	#if arm_debug
+	public static var shadowsLogicTime = 0.0;
+	public static var shadowsRenderTime = 0.0;
+	static var startShadowsLogicTime = 0.0;
+	static var startShadowsRenderTime = 0.0;
+	static var callBackSetup = false;
+	static function setupEndFrameCallback() {
+		if (!callBackSetup) {
+			callBackSetup = true;
+			iron.App.endFrameCallbacks.push(endFrame);
+		}
+	}
+	static function beginShadowsLogicProfile() { setupEndFrameCallback(); startShadowsLogicTime = kha.Scheduler.realTime(); }
+	static function beginShadowsRenderProfile() { startShadowsRenderTime = kha.Scheduler.realTime(); }
+	static function endShadowsLogicProfile() { shadowsLogicTime += kha.Scheduler.realTime() - startShadowsLogicTime - shadowsRenderTime; }
+	static function endShadowsRenderProfile() { shadowsRenderTime += kha.Scheduler.realTime() - startShadowsRenderTime; }
+	public static function endFrame() { shadowsLogicTime = 0;  shadowsRenderTime = 0; }
+	#end
 }
 
 #if arm_shadowmap_atlas
@@ -534,11 +573,16 @@ class ShadowMapAtlas {
 	public var activeTiles: Array<ShadowMapTile> = [];
 	public var depth = 1;
 	#if arm_shadowmap_atlas_lod
-	static var tileSizes: Array<Int> = [];
-	static var tileSizeFactor: Array<Float> = [];
+	var tileSizes: Array<Int> = [];
+	var tileSizeFactor: Array<Float> = [];
 	#end
 	public var updateRenderTarget = false;
 	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
+
+	#if arm_debug
+	public var lightType: String;
+	public var rejectedLights: Array<LightObject> = [];
+	#end
 
 	function new(light: LightObject) {
 
@@ -549,8 +593,15 @@ class ShadowMapAtlas {
 		this.maxAtlasSizeConst = getMaxAtlasSize(light.data.raw.type);
 
 		#if arm_shadowmap_atlas_lod
-		if (tileSizes.length == 0)
-			computeTileSizes(maxTileSize, depth);
+		computeTileSizes(maxTileSize, depth);
+		#end
+
+		#if arm_debug
+		#if arm_shadowmap_atlas_single_map
+		this.lightType = "any";
+		#else
+		this.lightType = light.data.raw.type;
+		#end
 		#end
 
 	}
@@ -560,11 +611,7 @@ class ShadowMapAtlas {
 	 * @param light of type LightObject to be added to an yatlas
 	 * @return if the light was added succesfully
 	 */
-	public static function addLight(light: LightObject): Bool {
-		// check if light can be added based on culling
-		if (light.culledLight || light.shadowMapScale == 0.0)
-			return false;
-
+	public static function addLight(light: LightObject) {
 		var atlasName = shadowMapAtlasName(light.data.raw.type);
 		var atlas = shadowMapAtlases.get(atlasName);
 		if (atlas == null) {
@@ -575,11 +622,21 @@ class ShadowMapAtlas {
 
 		// find a free tile for this light
 		var mainTile = ShadowMapTile.assignTiles(light, atlas, null);
-		if (mainTile == null)
-			return false;
-		// push main tile to active tiles
+		if (mainTile == null) {
+			#if arm_debug
+			if (!atlas.rejectedLights.contains(light))
+				atlas.rejectedLights.push(light);
+			#end
+			return;
+		}
+
 		atlas.activeTiles.push(mainTile);
-		return true;
+		// notify the tile on light remove
+		light.tileNotifyOnRemove = mainTile.notifyOnLightRemove;
+		// notify atlas when this tile is freed
+		mainTile.notifyOnFree = atlas.freeActiveTile;
+		// "lock" light to make sure it's not eligible to be added again
+		light.lightInAtlas = true;
 	}
 
 	static inline function shadowMapAtlasSize(light:LightObject):Int {
@@ -602,17 +659,17 @@ class ShadowMapAtlas {
 	}
 
 	#if arm_shadowmap_atlas_lod
-	static function computeTileSizes(maxTileSize: Int, depth: Int): Void {
+	function computeTileSizes(maxTileSize: Int, depth: Int): Void {
 		// find the highest value based on the calculation done in the cluster code
 		var base = LightObject.zToShadowMapScale(0, 16);
 		var subdiv = base / depth;
 		for(i in 0...depth){
-			tileSizes.push(Std.int(maxTileSize / Math.pow(2, i)));
-			tileSizeFactor.push(base);
+			this.tileSizes.push(Std.int(maxTileSize / Math.pow(2, i)));
+			this.tileSizeFactor.push(base);
 			base -= subdiv;
 		}
-		tileSizes.push(0);
-		tileSizeFactor.push(0.0);
+		this.tileSizes.push(0);
+		this.tileSizeFactor.push(0.0);
 	}
 	#end
 
@@ -658,7 +715,9 @@ class ShadowMapAtlas {
 
 	public static inline function getMaxAtlasSize(type: String): Int {
 		#if arm_shadowmap_atlas_single_map
-			#if (rp_shadowmap_atlas_max_size == 1024)
+			#if (rp_shadowmap_atlas_max_size == 512)
+			return 512;
+			#elseif (rp_shadowmap_atlas_max_size == 1024)
 			return 1024;
 			#elseif (rp_shadowmap_atlas_max_size == 2048)
 			return 2048;
@@ -685,7 +744,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			case "spot": {
-				#if (rp_shadowmap_atlas_max_size_spot == 1024)
+				#if (rp_shadowmap_atlas_max_size_spot == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size_spot == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size_spot == 2048)
 				return 2048;
@@ -698,7 +759,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			case "sun": {
-				#if (rp_shadowmap_atlas_max_size_sun == 1024)
+				#if (rp_shadowmap_atlas_max_size_sun == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size_sun == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size_sun == 2048)
 				return 2048;
@@ -711,7 +774,9 @@ class ShadowMapAtlas {
 				#end
 			}
 			default: {
-				#if (rp_shadowmap_atlas_max_size == 1024)
+				#if (rp_shadowmap_atlas_max_size == 512)
+				return 512;
+				#elseif (rp_shadowmap_atlas_max_size == 1024)
 				return 1024;
 				#elseif (rp_shadowmap_atlas_max_size == 2048)
 				return 2048;
@@ -726,6 +791,10 @@ class ShadowMapAtlas {
 
 		}
 		#end
+	}
+
+	function freeActiveTile(tile: ShadowMapTile) {
+		activeTiles.remove(tile);
 	}
 }
 
@@ -792,7 +861,6 @@ class ShadowMapTile {
 	static inline function findCreateTiles(light: LightObject, oldTile: ShadowMapTile, atlas: ShadowMapAtlas, tilesPerLightType: Int, tileSize: Int): Array<ShadowMapTile> {
 		var tilesFound: Array<ShadowMapTile> = [];
 
-		var updateAtlas = false;
 		while (tilesFound.length < tilesPerLightType) {
 			findTiles(light, oldTile, atlas.tiles, tileSize, tilesPerLightType, tilesFound);
 
@@ -946,6 +1014,11 @@ class ShadowMapTile {
 		}
 	}
 
+	public function notifyOnLightRemove() {
+		unlockLight = true;
+		freeTile();
+	}
+
 	inline function lockTile(light: LightObject): Void {
 		if (this.light != null)
 			return;
@@ -959,6 +1032,7 @@ class ShadowMapTile {
 	}
 
 	public var unlockLight: Bool = false;
+	public var notifyOnFree: ShadowMapTile -> Void;
 
 	public function freeTile(): Void {
 		// prevent duplicates
@@ -983,6 +1057,11 @@ class ShadowMapTile {
 			// unlink linked tiles
 			tempTile.linkedTile = null;
 			tempTile = linkedTile;
+		}
+		// notify atlas that this tile has been freed
+		if (notifyOnFree != null) {
+			notifyOnFree(this);
+			notifyOnFree = null;
 		}
 	}
 

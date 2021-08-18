@@ -16,8 +16,7 @@ class GetCursorStateNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 1
 
-    def init(self, context):
-        super(GetCursorStateNode, self).init(context)
-        self.outputs.new('NodeSocketBool', 'Is Hidden Locked')
-        self.outputs.new('NodeSocketBool', 'Is Hidden')
-        self.outputs.new('NodeSocketBool', 'Is Locked')
+    def arm_init(self, context):
+        self.outputs.new('ArmBoolSocket', 'Is Hidden Locked')
+        self.outputs.new('ArmBoolSocket', 'Is Hidden')
+        self.outputs.new('ArmBoolSocket', 'Is Locked')

@@ -3,7 +3,14 @@ from typing import List, Set, Tuple, Union, Optional
 
 import bpy
 
+import arm
 from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
+
+if arm.is_reload(__name__):
+    arm.material.shader = arm.reload_module(arm.material.shader)
+    from arm.material.shader import Shader, ShaderContext, vec3str, floatstr
+else:
+    arm.enable_reload(__name__)
 
 
 class ParserContext(Enum):
@@ -63,6 +70,16 @@ class ParserState:
         self.out_specular: floatstr = '1.0'
         self.out_opacity: floatstr = '1.0'
         self.out_emission: floatstr = '0.0'
+
+    def reset_outs(self):
+        """Reset the shader output values to their default values."""
+        self.out_basecol = 'vec3(0.8)'
+        self.out_roughness = '0.0'
+        self.out_metallic = '0.0'
+        self.out_occlusion = '1.0'
+        self.out_specular = '1.0'
+        self.out_opacity = '1.0'
+        self.out_emission = '0.0'
 
     def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr]:
         """Return the shader output values as a tuple."""

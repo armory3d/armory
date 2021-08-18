@@ -1,9 +1,18 @@
-import arm.utils
-import arm.assets
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from arm.lightmapper import operators, properties, utility, keymap
+
+from arm.lightmapper import operators, properties, utility
+
+import arm.assets
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm.assets = arm.reload_module(arm.assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -166,7 +175,7 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node.image = img
                 img_node.select = True
                 nodes.active = img_node
-        
+
         obs = bpy.context.view_layer.objects
 
         # Unwrap
@@ -361,7 +370,6 @@ def register():
 
     operators.register()
     properties.register()
-    keymap.register()
 
 def unregister():
     bpy.utils.unregister_class(ArmBakeListItem)
@@ -381,4 +389,3 @@ def unregister():
 
     operators.unregister()
     properties.unregister()
-    keymap.unregister()

@@ -1,5 +1,4 @@
 import bpy
-from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 def update_size_prop(self, context):
@@ -34,29 +33,29 @@ class ArmLodListItem(bpy.types.PropertyGroup):
 
 class ARM_UL_LodList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # We could write some code to decide which icon to use here...
-        custom_icon = 'OBJECT_DATAMODE'
+        layout.use_property_split = False
 
-        # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.prop(item, "enabled_prop")
+            row = layout.row()
+            row.separator(factor=0.1)
+            row.prop(item, "enabled_prop")
             name = item.name
             if name == '':
                 name = 'None'
-            row = layout.row()
-            row.label(text=name, icon=custom_icon)
+            row.label(text=name, icon='OBJECT_DATAMODE')
             col = row.column()
             col.alignment = 'RIGHT'
             col.label(text="{:.2f}".format(item.screen_size_prop))
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label(text="", icon = custom_icon)
+            layout.label(text="", icon='OBJECT_DATAMODE')
 
 class ArmLodListNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "arm_lodlist.new_item"
     bl_label = "Add a new item"
+    bl_options = {'UNDO'}
 
     def execute(self, context):
         mdata = bpy.context.object.data
@@ -69,10 +68,13 @@ class ArmLodListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
     bl_idname = "arm_lodlist.delete_item"
     bl_label = "Deletes an item"
+    bl_options = {'INTERNAL', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         """ Enable if there's something in the list """
+        if bpy.context.object is None:
+            return False
         mdata = bpy.context.object.data
         return len(mdata.arm_lodlist) > 0
 
@@ -98,6 +100,7 @@ class ArmLodListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_lodlist.move_item"
     bl_label = "Move an item in the list"
+    bl_options = {'INTERNAL', 'UNDO'}
     direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),

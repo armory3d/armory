@@ -11,13 +11,15 @@ class OnKeyboardNode(ArmLogicTreeNode):
     arm_section = 'keyboard'
     arm_version = 2
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
 
-    property1: EnumProperty(
+    property1: HaxeEnumProperty(
+        'property1',
         items = [('a', 'a', 'a'),
                  ('b', 'b', 'b'),
                  ('c', 'c', 'c'),
@@ -72,8 +74,7 @@ class OnKeyboardNode(ArmLogicTreeNode):
                  ('down', 'down', 'down'),],
         name='', default='space')
 
-    def init(self, context):
-        super(OnKeyboardNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

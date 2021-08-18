@@ -11,17 +11,16 @@ class FloatArrayNode(ArmLogicTreeNode):
         super(FloatArrayNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(FloatArrayNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
-        self.add_output('NodeSocketInt', 'Length')
+        self.add_output('ArmIntSocket', 'Length')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
 
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketFloat'
+        op.socket_type = 'ArmFloatSocket'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 

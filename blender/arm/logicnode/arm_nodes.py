@@ -1,6 +1,6 @@
-import itertools
 from collections import OrderedDict
-from typing import Any, Generator, List, Optional, Type, Dict
+import itertools
+from typing import Any, Generator, List, Optional, Type
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -8,9 +8,21 @@ from bpy.props import *
 from nodeitems_utils import NodeItem
 from arm.logicnode.arm_sockets import ArmCustomSocket
 
-# Pass NodeReplacment forward to individual node modules that import arm_nodes
+import arm  # we cannot import arm.livepatch here or we have a circular import
+# Pass custom property types and NodeReplacement forward to individual
+# node modules that import arm_nodes
+from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
+
+if arm.is_reload(__name__):
+    arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
+    from arm.logicnode.arm_props import *
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    from arm.logicnode.replacement import NodeReplacement
+    arm.node_utils = arm.reload_module(arm.node_utils)
+else:
+    arm.enable_reload(__name__)
 
 # When passed as a category to add_node(), this will use the capitalized
 # name of the package of the node as the category to make renaming
@@ -21,6 +33,10 @@ nodes = []
 category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
 array_nodes = dict()
+
+# See ArmLogicTreeNode.update()
+# format: [tree pointer => (num inputs, num input links, num outputs, num output links)]
+last_node_state: dict[int, tuple[int, int, int, int]] = {}
 
 
 class ArmLogicTreeNode(bpy.types.Node):
@@ -35,6 +51,14 @@ class ArmLogicTreeNode(bpy.types.Node):
         else:
             self.arm_version = 1
 
+        if not hasattr(self, 'arm_init'):
+            # Show warning for older node packages
+            arm.log.warn(f'Node {self.bl_idname} has no arm_init function and might not work correctly!')
+        else:
+            self.arm_init(context)
+
+        arm.live_patch.send_event('ln_create', self)
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
@@ -47,6 +71,68 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     @classmethod
     def on_unregister(cls):
+        pass
+
+    def get_tree(self):
+        return self.id_data
+
+    def update(self):
+        """Called if the node was updated in some way, for example
+        if socket connections change. This callback is not called if
+        socket values were changed.
+        """
+        def num_connected(sockets):
+            return sum([socket.is_linked for socket in sockets])
+
+        # If a link between sockets is removed, there is currently no
+        # _reliable_ way in the Blender API to check which connection
+        # was removed (*).
+        #
+        # So instead we just check _if_ the number of links or sockets
+        # has changed (the update function is called before and after
+        # each link removal). Because we listen for those updates in
+        # general, we automatically also listen to link creation events,
+        # which is more stable than using the dedicated callback for
+        # that (`insert_link()`), because adding links can remove other
+        # links and we would need to react to that as well.
+        #
+        # (*) https://devtalk.blender.org/t/how-to-detect-which-link-was-deleted-by-user-in-node-editor
+
+        self_id = self.as_pointer()
+
+        current_state = (len(self.inputs), num_connected(self.inputs), len(self.outputs), num_connected(self.outputs))
+        if self_id not in last_node_state:
+            # Lazily initialize the last_node_state dict to also store
+            # state for nodes that already exist in the tree
+            last_node_state[self_id] = current_state
+
+        if last_node_state[self_id] != current_state:
+            arm.live_patch.send_event('ln_update_sockets', self)
+            last_node_state[self_id] = current_state
+
+    def free(self):
+        """Called before the node is deleted."""
+        arm.live_patch.send_event('ln_delete', self)
+
+    def copy(self, node):
+        """Called if the node was copied. `self` holds the copied node,
+        `node` the original one.
+        """
+        arm.live_patch.send_event('ln_copy', (self, node))
+
+    def on_prop_update(self, context: bpy.types.Context, prop_name: str):
+        """Called if a property created with a function from the
+        arm_props module is changed. If the property has a custom update
+        function, it is called before `on_prop_update()`.
+        """
+        arm.live_patch.send_event('ln_update_prop', (self, prop_name))
+
+    def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
+        arm.live_patch.send_event('ln_socket_val', (self, socket))
+
+    def insert_link(self, link: bpy.types.NodeLink):
+        """Called on *both* nodes when a link between two nodes is created."""
+        # arm.live_patch.send_event('ln_insert_link', (self, link))
         pass
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
@@ -89,7 +175,7 @@ class ArmLogicTreeNode(bpy.types.Node):
                     socket.default_value_raw = default_value
                 else:
                     raise ValueError('specified a default value for an input node that doesn\'t accept one')
-            else:
+            else:  # should not happen anymore?
                 socket.default_value = default_value
 
         if is_var and not socket.display_shape.endswith('_DOT'):
@@ -106,8 +192,12 @@ class ArmLogicTreeNode(bpy.types.Node):
         """
         socket = self.outputs.new(socket_type, socket_name)
 
+        # FIXME: …a default_value on an output socket? Why is that a thing?
         if default_value is not None:
-            socket.default_value = default_value
+            if socket.arm_socket_type != 'NONE':
+                socket.default_value_raw = default_value
+            else:
+                raise ValueError('specified a default value for an input node that doesn\'t accept one')
 
         if is_var and not socket.display_shape.endswith('_DOT'):
             socket.display_shape += '_DOT'
@@ -119,9 +209,10 @@ class ArmNodeAddInputButton(bpy.types.Operator):
     """Add a new input socket to the node set by node_index."""
     bl_idname = 'arm.node_add_input'
     bl_label = 'Add Input'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
     name_format: StringProperty(name='Name Format', default='Input {0}')
     index_name_offset: IntProperty(name='Index Name Offset', default=0)
 
@@ -139,29 +230,31 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.socket_type = 'NodeSocketShader'
+        self.socket_type = 'ArmDynamicSocket'
         self.name_format = 'Input {0}'
         self.index_name_offset = 0
 
         return{'FINISHED'}
 
 class ArmNodeAddInputValueButton(bpy.types.Operator):
-     """Add new input"""
-     bl_idname = 'arm.node_add_input_value'
-     bl_label = 'Add Input'
-     node_index: StringProperty(name='Node Index', default='')
-     socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    """Add new input"""
+    bl_idname = 'arm.node_add_input_value'
+    bl_label = 'Add Input'
+    bl_options = {'UNDO', 'INTERNAL'}
+    node_index: StringProperty(name='Node Index', default='')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
 
-     def execute(self, context):
-         global array_nodes
-         inps = array_nodes[self.node_index].inputs
-         inps.new(self.socket_type, 'Value')
-         return{'FINISHED'}
+    def execute(self, context):
+        global array_nodes
+        inps = array_nodes[self.node_index].inputs
+        inps.new(self.socket_type, 'Value')
+        return{'FINISHED'}
 
 class ArmNodeRemoveInputButton(bpy.types.Operator):
     """Remove last input"""
     bl_idname = 'arm.node_remove_input'
     bl_label = 'Remove Input'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     count: IntProperty(name='Number of inputs to remove', default=1, min=1)
     min_inputs: IntProperty(name='Number of inputs to keep', default=0, min=0)
@@ -180,6 +273,7 @@ class ArmNodeRemoveInputValueButton(bpy.types.Operator):
     """Remove last input"""
     bl_idname = 'arm.node_remove_input_value'
     bl_label = 'Remove Input'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     target_name: StringProperty(name='Name of socket to remove', default='Value')
 
@@ -196,9 +290,10 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
     """Add a new output socket to the node set by node_index"""
     bl_idname = 'arm.node_add_output'
     bl_label = 'Add Output'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    socket_type: StringProperty(name='Socket Type', default='NodeSocketShader')
+    socket_type: StringProperty(name='Socket Type', default='ArmDynamicSocket')
     name_format: StringProperty(name='Name Format', default='Output {0}')
     index_name_offset: IntProperty(name='Index Name Offset', default=0)
 
@@ -216,7 +311,7 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.socket_type = 'NodeSocketShader'
+        self.socket_type = 'ArmDynamicSocket'
         self.name_format = 'Output {0}'
         self.index_name_offset = 0
 
@@ -226,6 +321,7 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
     """Remove last output"""
     bl_idname = 'arm.node_remove_output'
     bl_label = 'Remove Output'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     count: IntProperty(name='Number of outputs to remove', default=1, min=1)
 
@@ -243,10 +339,11 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
     """Add new input and output"""
     bl_idname = 'arm.node_add_input_output'
     bl_label = 'Add Input Output'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     node_index: StringProperty(name='Node Index', default='')
-    in_socket_type: StringProperty(name='In Socket Type', default='NodeSocketShader')
-    out_socket_type: StringProperty(name='Out Socket Type', default='NodeSocketShader')
+    in_socket_type: StringProperty(name='In Socket Type', default='ArmDynamicSocket')
+    out_socket_type: StringProperty(name='Out Socket Type', default='ArmDynamicSocket')
     in_name_format: StringProperty(name='In Name Format', default='Input {0}')
     out_name_format: StringProperty(name='Out Name Format', default='Output {0}')
     in_index_name_offset: IntProperty(name='Index Name Offset', default=0)
@@ -274,8 +371,8 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
-        self.in_socket_type = 'NodeSocketShader'
-        self.out_socket_type = 'NodeSocketShader'
+        self.in_socket_type = 'ArmDynamicSocket'
+        self.out_socket_type = 'ArmDynamicSocket'
         self.in_name_format = 'Input {0}'
         self.out_name_format = 'Output {0}'
         self.in_index_name_offset = 0
@@ -286,6 +383,7 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
     """Remove last input and output"""
     bl_idname = 'arm.node_remove_input_output'
     bl_label = 'Remove Input Output'
+    bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
     in_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
     out_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
@@ -306,10 +404,34 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
+class ArmNodeCallFuncButton(bpy.types.Operator):
+    """Operator that calls a function on a specified
+    node (used for dynamic callbacks)."""
+    bl_idname = 'arm.node_call_func'
+    bl_label = 'Execute'
+    bl_options = {'UNDO', 'INTERNAL'}
+
+    node_index: StringProperty(name='Node Index', default='')
+    callback_name: StringProperty(name='Callback Name', default='')
+
+    def execute(self, context):
+        node = array_nodes[self.node_index]
+        if hasattr(node, self.callback_name):
+            getattr(node, self.callback_name)()
+        else:
+            return {'CANCELLED'}
+
+        # Reset to default again for subsequent calls of this operator
+        self.node_index = ''
+        self.callback_name = ''
+
+        return {'FINISHED'}
+
+
 class ArmNodeSearch(bpy.types.Operator):
     bl_idname = "arm.node_search"
     bl_label = "Search..."
-    bl_options = {"REGISTER"}
+    bl_options = {"REGISTER", "INTERNAL"}
     bl_property = "item"
 
     def get_search_items(self, context):
@@ -499,12 +621,16 @@ def reset_globals():
     category_items = OrderedDict()
 
 
-bpy.utils.register_class(ArmNodeSearch)
-bpy.utils.register_class(ArmNodeAddInputButton)
-bpy.utils.register_class(ArmNodeAddInputValueButton)
-bpy.utils.register_class(ArmNodeRemoveInputButton)
-bpy.utils.register_class(ArmNodeRemoveInputValueButton)
-bpy.utils.register_class(ArmNodeAddOutputButton)
-bpy.utils.register_class(ArmNodeRemoveOutputButton)
-bpy.utils.register_class(ArmNodeAddInputOutputButton)
-bpy.utils.register_class(ArmNodeRemoveInputOutputButton)
+REG_CLASSES = (
+    ArmNodeSearch,
+    ArmNodeAddInputButton,
+    ArmNodeAddInputValueButton,
+    ArmNodeRemoveInputButton,
+    ArmNodeRemoveInputValueButton,
+    ArmNodeAddOutputButton,
+    ArmNodeRemoveOutputButton,
+    ArmNodeAddInputOutputButton,
+    ArmNodeRemoveInputOutputButton,
+    ArmNodeCallFuncButton
+)
+register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)

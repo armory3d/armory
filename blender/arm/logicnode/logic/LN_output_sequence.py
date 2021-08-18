@@ -11,8 +11,7 @@ class SequenceNode(ArmLogicTreeNode):
         super(SequenceNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(SequenceNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
 
     def draw_buttons(self, context, layout):

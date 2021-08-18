@@ -1,10 +1,19 @@
 from math import pi, cos, sin, sqrt
 import bpy
-from bpy.props import PointerProperty, EnumProperty, FloatProperty, FloatVectorProperty
+from bpy.props import *
 from bpy.types import NodeSocket
 import mathutils
 
 import arm.utils
+
+if arm.is_reload(__name__):
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
+def _on_update_socket(self, context):
+    self.node.on_socket_val_update(context, self)
 
 
 class ArmCustomSocket(NodeSocket):
@@ -43,7 +52,7 @@ class ArmAnimActionSocket(ArmCustomSocket):
     arm_socket_type = 'STRING'
 
     default_value_get: PointerProperty(name='Action', type=bpy.types.Action)  # legacy version of the line after this one
-    default_value_raw: PointerProperty(name='Action', type=bpy.types.Action)
+    default_value_raw: PointerProperty(name='Action', type=bpy.types.Action, update=_on_update_socket)
 
     def __init__(self):
         super().__init__()
@@ -72,13 +81,13 @@ class ArmAnimActionSocket(ArmCustomSocket):
 
     
 class ArmRotationSocket(ArmCustomSocket):
-    bl_idname = 'ArmNodeSocketRotation'
+    bl_idname = 'ArmRotationSocket'
     bl_label = 'Rotation Socket'
     arm_socket_type = 'ROTATION'  # the internal representation is a quaternion, AKA a '4D vector' (using mathutils.Vector((x,y,z,w)))
     
     def get_default_value(self):
         if self.default_value_raw is None:
-            return Vector((0.0,0.0,0.0,1.0))
+            return mathutils.Vector((0.0,0.0,0.0,1.0))
         else:
             return self.default_value_raw
 
@@ -247,7 +256,12 @@ class ArmRotationSocket(ArmCustomSocket):
     default_value_s2: FloatProperty(update=do_update_raw)
     default_value_s3: FloatProperty(update=do_update_raw)
 
-    default_value_raw: FloatVectorProperty(size=4, default=(0,0,0,1))
+    default_value_raw: FloatVectorProperty(
+        name='Value',
+        description='Raw quaternion obtained for the default value of a ArmRotationSocket socket',
+        size=4, default=(0,0,0,1),
+        update = _on_update_socket
+    )
 
 
 class ArmArraySocket(ArmCustomSocket):
@@ -262,13 +276,114 @@ class ArmArraySocket(ArmCustomSocket):
         return 0.8, 0.4, 0.0, 1
 
 
+class ArmBoolSocket(ArmCustomSocket):
+    bl_idname = 'ArmBoolSocket'
+    bl_label = 'Boolean Socket'
+    arm_socket_type = 'BOOLEAN'
+
+    default_value_raw: BoolProperty(
+        name='Value',
+        description='Input value used for unconnected socket',
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.8, 0.651, 0.839, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+
+class ArmColorSocket(ArmCustomSocket):
+    bl_idname = 'ArmColorSocket'
+    bl_label = 'Color Socket'
+    arm_socket_type = 'RGBA'
+
+    default_value_raw: FloatVectorProperty(
+        name='Value',
+        size=4,
+        subtype='COLOR',
+        min=0.0,
+        max=1.0,
+        description='Input value used for unconnected socket',
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.78, 0.78, 0.161, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+
+class ArmDynamicSocket(ArmCustomSocket):
+    bl_idname = 'ArmDynamicSocket'
+    bl_label = 'Dynamic Socket'
+    arm_socket_type = 'NONE'
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=self.name)
+
+    def draw_color(self, context, node):
+        return 0.388, 0.78, 0.388, 1
+
+
+class ArmFloatSocket(ArmCustomSocket):
+    bl_idname = 'ArmFloatSocket'
+    bl_label = 'Float Socket'
+    arm_socket_type = 'VALUE'
+
+    default_value_raw: FloatProperty(
+        name='Value',
+        description='Input value used for unconnected socket',
+        precision=3,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.631, 0.631, 0.631, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+
+class ArmIntSocket(ArmCustomSocket):
+    bl_idname = 'ArmIntSocket'
+    bl_label = 'Integer Socket'
+    arm_socket_type = 'INT'
+
+    default_value_raw: IntProperty(
+        name='Value',
+        description='Input value used for unconnected socket',
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.059, 0.522, 0.149, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+
 class ArmObjectSocket(ArmCustomSocket):
     bl_idname = 'ArmNodeSocketObject'
     bl_label = 'Object Socket'
     arm_socket_type = 'OBJECT'
 
     default_value_get: PointerProperty(name='Object', type=bpy.types.Object)  # legacy version of the line after this one
-    default_value_raw: PointerProperty(name='Object', type=bpy.types.Object)
+    default_value_raw: PointerProperty(name='Object', type=bpy.types.Object, update=_on_update_socket)
 
     def __init__(self):
         super().__init__()
@@ -296,17 +411,83 @@ class ArmObjectSocket(ArmCustomSocket):
         return 0.15, 0.55, 0.75, 1
 
 
-def register():
-    bpy.utils.register_class(ArmActionSocket)
-    bpy.utils.register_class(ArmAnimActionSocket)
-    bpy.utils.register_class(ArmRotationSocket)
-    bpy.utils.register_class(ArmArraySocket)
-    bpy.utils.register_class(ArmObjectSocket)
+
+class ArmStringSocket(ArmCustomSocket):
+    bl_idname = 'ArmStringSocket'
+    bl_label = 'String Socket'
+    arm_socket_type = 'STRING'
+
+    default_value_raw: StringProperty(
+        name='Value',
+        description='Input value used for unconnected socket',
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout_split(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.439, 0.698, 1, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
 
 
-def unregister():
-    bpy.utils.unregister_class(ArmObjectSocket)
-    bpy.utils.unregister_class(ArmArraySocket)
-    bpy.utils.unregister_class(ArmAnimActionSocket)
-    bpy.utils.unregister_class(ArmRotationSocket)
-    bpy.utils.unregister_class(ArmActionSocket)
+class ArmVectorSocket(ArmCustomSocket):
+    bl_idname = 'ArmVectorSocket'
+    bl_label = 'Vector Socket'
+    arm_socket_type = 'VECTOR'
+
+    default_value_raw: FloatVectorProperty(
+        name='Value',
+        size=3,
+        description='Input value used for unconnected socket',
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        if not self.is_output and not self.is_linked:
+            col = layout.column(align=True)
+            col.prop(self, 'default_value_raw', text='')
+        else:
+            layout.label(text=self.name)
+
+    def draw_color(self, context, node):
+        return 0.388, 0.388, 0.78, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+
+def draw_socket_layout(socket: bpy.types.NodeSocket, layout: bpy.types.UILayout, prop_name='default_value_raw'):
+    if not socket.is_output and not socket.is_linked:
+        layout.prop(socket, prop_name, text=socket.name)
+    else:
+        layout.label(text=socket.name)
+
+
+def draw_socket_layout_split(socket: bpy.types.NodeSocket, layout: bpy.types.UILayout, prop_name='default_value_raw'):
+    if not socket.is_output and not socket.is_linked:
+        # Blender layouts use 0.4 splits
+        layout = layout.split(factor=0.4, align=True)
+
+    layout.label(text=socket.name)
+
+    if not socket.is_output and not socket.is_linked:
+        layout.prop(socket, prop_name, text='')
+
+REG_CLASSES = (
+    ArmActionSocket,
+    ArmAnimActionSocket,
+    ArmRotationSocket,
+    ArmArraySocket,
+    ArmBoolSocket,
+    ArmColorSocket,
+    ArmDynamicSocket,
+    ArmFloatSocket,
+    ArmIntSocket,
+    ArmObjectSocket,
+    ArmStringSocket,
+    ArmVectorSocket,
+)
+register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)

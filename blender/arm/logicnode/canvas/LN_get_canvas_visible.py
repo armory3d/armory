@@ -9,8 +9,7 @@ class CanvasGetVisibleNode(ArmLogicTreeNode):
     bl_label = 'Get Canvas Visible'
     arm_version = 1
 
-    def init(self, context):
-        super(CanvasGetVisibleNode, self).init(context)
-        self.inputs.new('NodeSocketString', 'Element')
+    def arm_init(self, context):
+        self.inputs.new('ArmStringSocket', 'Element')
 
-        self.outputs.new('NodeSocketBool', 'Is Visible')
+        self.outputs.new('ArmBoolSocket', 'Is Visible')

@@ -8,38 +8,38 @@
 #endif
 
 #ifdef _ShadowMap
-#ifdef _SinglePoint
-	#ifdef _Spot
-	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot[1];
-	#else
-	uniform samplerCubeShadow shadowMapPoint[1];
-	uniform vec2 lightProj;
+	#ifdef _SinglePoint
+		#ifdef _Spot
+		uniform sampler2DShadow shadowMapSpot[1];
+		uniform mat4 LWVPSpot[1];
+		#else
+		uniform samplerCubeShadow shadowMapPoint[1];
+		uniform vec2 lightProj;
+		#endif
 	#endif
-#endif
-#ifdef _Clusters
-	#ifdef _SingleAtlas
-	//!uniform sampler2DShadow shadowMapAtlas;
-	#endif
-	uniform vec2 lightProj;
-	#ifdef _ShadowMapAtlas
-	#ifndef _SingleAtlas
-	uniform sampler2DShadow shadowMapAtlasPoint;
-	#endif
-	#else
-	uniform samplerCubeShadow shadowMapPoint[4];
-	#endif
-	#ifdef _Spot
+	#ifdef _Clusters
+		#ifdef _SingleAtlas
+		//!uniform sampler2DShadow shadowMapAtlas;
+		#endif
+		uniform vec2 lightProj;
 		#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
-		uniform sampler2DShadow shadowMapAtlasSpot;
+		uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
 		#else
-		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+		uniform samplerCubeShadow shadowMapPoint[4];
 		#endif
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#ifdef _Spot
+			#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			uniform sampler2DShadow shadowMapAtlasSpot;
+			#endif
+			#else
+			uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+			#endif
+			uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#endif
 	#endif
-#endif
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
@@ -80,17 +80,13 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
 					#ifdef _ShadowMapAtlas
-						vec3 uv = lPos.xyz / lPos.w;
-						#ifdef _InvY
-						uv.y = 1.0 - uv.y; // invert Y coordinates for direct3d coordinate system
-						#endif
 						direct *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
 							#else
 							shadowMapAtlas
 							#endif
-							, uv, bias
+							, lPos.xyz / lPos.w, bias
 						);
 					#else
 							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
@@ -106,10 +102,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _ShadowMap
-	#ifndef _Spot
+
 		if (receiveShadow) {
 			#ifdef _SinglePoint
+			#ifndef _Spot
 			direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+			#endif
 			#endif
 			#ifdef _Clusters
 				#ifdef _ShadowMapAtlas
@@ -129,7 +127,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#endif
 			#endif
 		}
-	#endif
 	#endif
 
 	return direct;

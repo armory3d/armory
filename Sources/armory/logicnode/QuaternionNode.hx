@@ -11,10 +11,10 @@ class QuaternionNode extends LogicNode {
 		super(tree);
 
 		if (x != null) {
-			addInput(new FloatNode(tree, x), 0);
-			addInput(new FloatNode(tree, y), 0);
-			addInput(new FloatNode(tree, z), 0);
-			addInput(new FloatNode(tree, w), 0);
+			LogicNode.addLink(new FloatNode(tree, x), this, 0, 0);
+			LogicNode.addLink(new FloatNode(tree, y), this, 0, 1);
+			LogicNode.addLink(new FloatNode(tree, z), this, 0, 2);
+			LogicNode.addLink(new FloatNode(tree, w), this, 0, 3);
 		}
 	}
 
@@ -27,15 +27,15 @@ class QuaternionNode extends LogicNode {
 		switch (from){
 		case 0:
 			return value;
-	        case 1:
-	                var value1 = new Vec4();
+		case 1:
+			var value1 = new Vec4();
 			value1.x = value.x;
 			value1.y = value.y;
 			value1.z = value.z;
 			value1.w = 0; // use 0 to avoid this vector being translated.
 			return value1;
 		case 2:
-		        return value.w;
+			return value.w;
 		default:
 			return null;
 		}

@@ -1,11 +1,16 @@
 import bpy
+
 import arm.utils
 import arm.assets as assets
-import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
-import arm.material.mat_utils as mat_utils
-import arm.material.make_particle as make_particle
-import arm.make_state as state
+
+if arm.is_reload(__name__):
+    arm.utils = arm.reload_module(arm.utils)
+    assets = arm.reload_module(assets)
+    mat_state = arm.reload_module(mat_state)
+else:
+    arm.enable_reload(__name__)
+
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
@@ -108,7 +113,7 @@ def make_ao(context_id):
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
             vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
-        else: 
+        else:
             vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
 
         geom.add_out('vec3 voxposition')

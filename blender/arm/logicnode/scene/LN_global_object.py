@@ -7,6 +7,5 @@ class GlobalObjectNode(ArmLogicTreeNode):
     bl_label = 'Global Object'
     arm_version = 1
 
-    def init(self, context):
-        super(GlobalObjectNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketObject', 'Object')

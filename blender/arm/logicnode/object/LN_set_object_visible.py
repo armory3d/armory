@@ -9,19 +9,19 @@ class SetVisibleNode(ArmLogicTreeNode):
     arm_section = 'props'
     arm_version = 1
 
-    property0: EnumProperty(
+    property0: HaxeEnumProperty(
+        'property0',
         items = [('object', 'Object', 'All object componenets visibility'),
                  ('mesh', 'Mesh', 'Mesh visibility only'),
                  ('shadow', 'Shadow', 'Shadow visibility only'),
                  ],
         name='', default='object')
 
-    def init(self, context):
-        super(SetVisibleNode, self).init(context)
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('NodeSocketBool', 'Visible')
-        self.add_input('NodeSocketBool', 'Children', default_value=True)
+        self.add_input('ArmBoolSocket', 'Visible')
+        self.add_input('ArmBoolSocket', 'Children', default_value=True)
 
         self.add_output('ArmNodeSocketAction', 'Out')
 

@@ -4,12 +4,12 @@ def write(vert, frag):
     wrd = bpy.data.worlds['Arm']
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
+    is_single_atlas = '_SingleAtlas' in wrd.world_defs
 
     frag.add_include_front('std/clusters.glsl')
     frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
     frag.add_uniform('vec2 cameraPlane', link='_cameraPlane')
-    frag.add_uniform('vec4 lightsArray[maxLights * 2]', link='_lightsArray')
+    frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
     frag.add_uniform('sampler2D clustersData', link='_clustersData')
     if is_shadows:
         frag.add_uniform('bool receiveShadow')
@@ -17,6 +17,8 @@ def write(vert, frag):
         if is_shadows_atlas:
             if not is_single_atlas:
                 frag.add_uniform('sampler2DShadow shadowMapAtlasPoint', included=True)
+            else:
+                frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
@@ -36,9 +38,12 @@ def write(vert, frag):
         frag.write('int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);')
         frag.write('int numPoints = numLights - numSpots;')
         if is_shadows:
-            if is_shadows_atlas and not is_single_atlas:
-                frag.add_uniform(f'sampler2DShadow shadowMapAtlasSpot', included=True)
-            elif not is_shadows_atlas:
+            if is_shadows_atlas:
+                if not is_single_atlas:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlasSpot', included=True)
+                else:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
+            else:
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
             # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
             frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
@@ -51,19 +56,19 @@ def write(vert, frag):
     frag.write('    n,')
     frag.write('    vVec,')
     frag.write('    dotNV,')
-    frag.write('    lightsArray[li * 2].xyz,') # lp
-    frag.write('    lightsArray[li * 2 + 1].xyz,') # lightCol
+    frag.write('    lightsArray[li * 3].xyz,') # lp
+    frag.write('    lightsArray[li * 3 + 1].xyz,') # lightCol
     frag.write('    albedo,')
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0')
     if is_shadows:
-        frag.write('    , li, lightsArray[li * 2].w, receiveShadow') # bias
+        frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:
-        frag.write('    , lightsArray[li * 2 + 1].w != 0.0')
-        frag.write('    , lightsArray[li * 2 + 1].w') # cutoff
-        frag.write('    , lightsArraySpot[li].w') # cutoff - exponent
-        frag.write('    , lightsArraySpot[li].xyz') # spotDir
+        frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
+        frag.write('\t, lightsArray[li * 3 + 2].y') # cutoff
+        frag.write('\t, lightsArraySpot[li].w') # cutoff - exponent
+        frag.write('\t, lightsArraySpot[li].xyz') # spotDir
     if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
         frag.write('  , voxels, voxpos')
     frag.write(');')

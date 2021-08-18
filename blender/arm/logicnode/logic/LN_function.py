@@ -15,8 +15,7 @@ class FunctionNode(ArmLogicTreeNode):
         super(FunctionNode, self).__init__()
         array_nodes[str(id(self))] = self
 
-    def init(self, context):
-        super(FunctionNode, self).init(context)
+    def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     function_name: StringProperty(name="Name")
@@ -27,7 +26,7 @@ class FunctionNode(ArmLogicTreeNode):
         row = layout.row(align=True)
         op = row.operator('arm.node_add_output', text='Add Arg', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
-        op.socket_type = 'NodeSocketShader'
+        op.socket_type = 'ArmDynamicSocket'
         op.name_format = "Arg {0}"
         op.index_name_offset = 0
         op2 = row.operator('arm.node_remove_output', text='', icon='X', emboss=True)
