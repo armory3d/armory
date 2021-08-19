@@ -316,14 +316,14 @@ project.addSources('Sources');
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
+        # Allow libraries to recognize Armory
+        assets.add_khafile_def('armory')
+
         for d in assets.khafile_defs:
             khafile.write("project.addDefine('" + d + "');\n")
 
         for p in assets.khafile_params:
             khafile.write("project.addParameter('" + p + "');\n")
-
-        # Let libraries differentiate between Armory and pure Kha
-        assets.add_khafile_def('armory')
 
         if state.target.startswith('android'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
