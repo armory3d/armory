@@ -60,14 +60,12 @@ class OnSwipeNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
-        self.inputs.new('ArmFloatSocket', 'Time')
-        self.inputs[-1].default_value = 0.15
-        self.inputs.new('ArmIntSocket', 'Min Length (px)')
-        self.inputs[-1].default_value = 100
-        self.outputs.new('ArmNodeSocketAction', 'Out')
-        self.outputs.new('ArmVectorSocket', 'Direction')
-        self.outputs.new('ArmIntSocket', 'Length (px)')
-        self.outputs.new('ArmIntSocket', 'Angle (0-360)')
+        self.add_input('ArmFloatSocket', 'Time', default_value=0.15)
+        self.add_input('ArmIntSocket', 'Min Length (px)', default_value=100)
+        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmVectorSocket', 'Direction')
+        self.add_output('ArmIntSocket', 'Length (px)')
+        self.add_output('ArmIntSocket', 'Angle (0-360)')
 
     # Draw node buttons
     def draw_buttons(self, context, layout):

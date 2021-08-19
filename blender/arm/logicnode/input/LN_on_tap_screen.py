@@ -1,6 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
-# Class OnTapScreen
+
 class OnTapScreen(ArmLogicTreeNode):
     """Activates the output on tap screen event.
 
@@ -19,12 +19,9 @@ class OnTapScreen(ArmLogicTreeNode):
     arm_version = 1
 
     def arm_init(self, context):
-        self.add_input('ArmFloatSocket', 'Duration')
-        self.inputs[-1].default_value = 0.3
-        self.add_input('ArmFloatSocket', 'Interval')
-        self.inputs[-1].default_value = 0.0
-        self.add_input('ArmIntSocket', 'Repeat')
-        self.inputs[-1].default_value = 2
+        self.add_input('ArmFloatSocket', 'Duration', default_value=0.3)
+        self.add_input('ArmFloatSocket', 'Interval', default_value=0.0)
+        self.add_input('ArmIntSocket', 'Repeat', default_value=2)
 
         self.add_output('ArmNodeSocketAction', 'Done')
         self.add_output('ArmNodeSocketAction', 'Fail')

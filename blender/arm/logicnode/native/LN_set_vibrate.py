@@ -10,8 +10,7 @@ class SetVibrateNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmIntSocket', 'Milliseconds')
-        self.inputs[-1].default_value = 100
+        self.add_input('ArmIntSocket', 'Milliseconds', default_value=100)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         # Add permission for target android

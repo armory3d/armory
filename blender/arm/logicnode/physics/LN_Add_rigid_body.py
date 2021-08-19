@@ -106,7 +106,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
             self.inputs.remove(i)
 
         # Add dynamic input sockets
-        if self.property1_:
+        if self.property1:
             self.add_input('ArmBoolSocket', 'Collision Margin', False)
             self.add_input('ArmFloatSocket', 'Margin', 0.04)
             self.add_input('ArmFloatSocket', 'Linear Damping', 0.04)

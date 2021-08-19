@@ -12,6 +12,6 @@ class SetParentNode(ArmLogicTreeNode):
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
-        self.add_input('ArmNodeSocketObject', 'Parent', default_value='Parent')
+        self.add_input('ArmNodeSocketObject', 'Parent')
 
         self.add_output('ArmNodeSocketAction', 'Out')
