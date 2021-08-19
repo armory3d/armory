@@ -31,7 +31,7 @@ class SeparateRotationNode extends LogicNode {
 		switch (property0) {
 		case "EulerAngles":
 		        if (q!=this.input_cache)
-				euler_cache = Rotation.quatToEuler(q, property2);
+				euler_cache = q.toEulerOrdered(property2);
 			if (from>0)
 				return null;
 			

@@ -69,7 +69,7 @@ class RotationNode extends LogicNode {
 					vec.y *= toRAD;
 				     	vec.z *= toRAD;
 				}
-				this.value = Rotation.eulerToQuat(vec, property2);
+				this.value.fromEulerOrdered(vec, property2);
 			}
 		}
 		default: {
@@ -104,7 +104,7 @@ class RotationNode extends LogicNode {
 		}
 		case "EulerAngles": {
 			if (input_length>0){
-				var vec = Rotation.quatToEuler(value, property2);
+				var vec = value.toEulerOrdered(property2);
 				if (property1=="Deg"){
 					vec.x /= toRAD;
 					vec.y /= toRAD;
