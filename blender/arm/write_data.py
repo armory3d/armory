@@ -120,6 +120,9 @@ project.addSources('Sources');
                 if os.path.isdir('Subprojects/' + lib):
                     khafile.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
 
+        if state.target.startswith('krom'):
+            assets.add_khafile_def('js-es=6')
+
         if export_physics:
             assets.add_khafile_def('arm_physics')
             if wrd.arm_physics_engine == 'Bullet':
