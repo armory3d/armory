@@ -122,12 +122,13 @@ class ArmColorSocket(ArmCustomSocket):
         subtype='COLOR',
         min=0.0,
         max=1.0,
+        default=[0.0, 0.0, 0.0, 1.0],
         description='Input value used for unconnected socket',
         update=_on_update_socket
     )
 
     def draw(self, context, layout, node, text):
-        draw_socket_layout(self, layout)
+        draw_socket_layout_split(self, layout)
 
     def draw_color(self, context, node):
         return 0.78, 0.78, 0.161, 1
@@ -254,6 +255,7 @@ class ArmVectorSocket(ArmCustomSocket):
     default_value_raw: FloatVectorProperty(
         name='Value',
         size=3,
+        precision=3,
         description='Input value used for unconnected socket',
         update=_on_update_socket
     )
@@ -261,6 +263,7 @@ class ArmVectorSocket(ArmCustomSocket):
     def draw(self, context, layout, node, text):
         if not self.is_output and not self.is_linked:
             col = layout.column(align=True)
+            col.label(text=self.name + ":")
             col.prop(self, 'default_value_raw', text='')
         else:
             layout.label(text=self.name)
