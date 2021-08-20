@@ -418,10 +418,11 @@ class ArmNodeSearch(bpy.types.Operator):
 
 class ArmNodeCategory:
     """Represents a category (=directory) of logic nodes."""
-    def __init__(self, name: str, icon: str, description: str):
+    def __init__(self, name: str, icon: str, description: str, category_section: str):
         self.name = name
         self.icon = icon
         self.description = description
+        self.category_section = category_section
         self.node_sections: ODict[str, List[NodeItem]] = OrderedDict()
         self.deprecated_nodes: List[NodeItem] = []
 
@@ -502,7 +503,7 @@ def add_category(category: str, section: str = 'default', icon: str = 'BLANK1', 
 
     add_category_section(section)
     if not category_exists(category):
-        node_category = ArmNodeCategory(category, icon, description)
+        node_category = ArmNodeCategory(category, icon, description, section)
         category_items[section].append(node_category)
         return node_category
 

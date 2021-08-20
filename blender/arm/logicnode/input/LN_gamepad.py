@@ -61,4 +61,4 @@ class GamepadNode(ArmLogicTreeNode):
         if inp_gamepad.is_linked:
             return f'{self.bl_label}: {self.property1}'
 
-        return f'{self.bl_label} {inp_gamepad.default_value}: {self.property1}'
+        return f'{self.bl_label} {inp_gamepad.default_value_raw}: {self.property1}'

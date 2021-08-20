@@ -27,4 +27,4 @@ class TimerNode(ArmLogicTreeNode):
         if inp_duration.is_linked or inp_repeat.is_linked:
             return self.bl_label
 
-        return f'{self.bl_label}: {round(inp_duration.default_value, 3)}s ({inp_repeat.default_value} R.)'
+        return f'{self.bl_label}: {round(inp_duration.default_value_raw, 3)}s ({inp_repeat.default_value_raw} R.)'

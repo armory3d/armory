@@ -35,7 +35,7 @@ class LoopNode(ArmLogicTreeNode):
         if inp_from.is_linked and inp_to.is_linked:
             return self.bl_label
 
-        val_from = 'x' if inp_from.is_linked else inp_from.default_value
-        val_to = 'y' if inp_to.is_linked else inp_to.default_value
+        val_from = 'x' if inp_from.is_linked else inp_from.default_value_raw
+        val_to = 'y' if inp_to.is_linked else inp_to.default_value_raw
 
         return f'{self.bl_label}: {val_from}...{val_to}'
