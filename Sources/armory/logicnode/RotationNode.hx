@@ -3,7 +3,6 @@ package armory.logicnode;
 import iron.math.Vec4;
 import iron.math.Quat;
 import kha.FastFloat;
-import iron.math.Rotation;
 
 class RotationNode extends LogicNode {
 
@@ -104,7 +103,7 @@ class RotationNode extends LogicNode {
 		}
 		case "EulerAngles": {
 			if (input_length>0){
-				var vec = value.toEulerOrdered(property2);
+			  var vec:Vec4 = value.toEulerOrdered(property2);
 				if (property1=="Deg"){
 					vec.x /= toRAD;
 					vec.y /= toRAD;

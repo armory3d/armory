@@ -3,7 +3,6 @@ package armory.logicnode;
 import kha.FastFloat;
 import iron.math.Quat;
 import iron.math.Vec4;
-import iron.math.Rotation;
 
 class SeparateRotationNode extends LogicNode {
 
