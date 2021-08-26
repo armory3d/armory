@@ -9,7 +9,7 @@ class VectorToObjectOrientationNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNVectorToObjectOrientationNode'
     bl_label = 'Vector to Object Orientation'
-    arm_section = 'location'
+    arm_section = 'rotation'
     arm_version = 1
 
     def arm_init(self, context):

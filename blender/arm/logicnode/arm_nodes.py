@@ -6,6 +6,7 @@ from typing import OrderedDict as ODict  # Prevent naming conflicts
 import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
+from arm.logicnode.arm_sockets import ArmCustomSocket
 
 import arm  # we cannot import arm.livepatch here or we have a circular import
 # Pass custom property types and NodeReplacement forward to individual
@@ -169,7 +170,13 @@ class ArmLogicTreeNode(bpy.types.Node):
         socket = self.inputs.new(socket_type, socket_name)
 
         if default_value is not None:
-            socket.default_value = default_value
+            if isinstance(socket, ArmCustomSocket):
+                if socket.arm_socket_type != 'NONE':
+                    socket.default_value_raw = default_value
+                else:
+                    raise ValueError('specified a default value for an input node that doesn\'t accept one')
+            else:  # should not happen anymore?
+                socket.default_value = default_value
 
         if is_var and not socket.display_shape.endswith('_DOT'):
             socket.display_shape += '_DOT'
@@ -185,8 +192,12 @@ class ArmLogicTreeNode(bpy.types.Node):
         """
         socket = self.outputs.new(socket_type, socket_name)
 
+        # FIXME: …a default_value on an output socket? Why is that a thing?
         if default_value is not None:
-            socket.default_value = default_value
+            if socket.arm_socket_type != 'NONE':
+                socket.default_value_raw = default_value
+            else:
+                raise ValueError('specified a default value for an input node that doesn\'t accept one')
 
         if is_var and not socket.display_shape.endswith('_DOT'):
             socket.display_shape += '_DOT'
@@ -208,7 +219,14 @@ class ArmNodeAddInputButton(bpy.types.Operator):
     def execute(self, context):
         global array_nodes
         inps = array_nodes[self.node_index].inputs
-        inps.new(self.socket_type, self.name_format.format(str(len(inps) + self.index_name_offset)))
+
+        socket_types = self.socket_type.split(';')
+        name_formats = self.name_format.split(';')
+        assert len(socket_types)==len(name_formats)
+        
+        format_index = (len(inps) + self.index_name_offset) //len(socket_types)
+        for socket_type, name_format in zip(socket_types, name_formats):
+            inps.new(socket_type, name_format.format(str(format_index)))
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
@@ -238,14 +256,17 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
     bl_label = 'Remove Input'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
+    count: IntProperty(name='Number of inputs to remove', default=1, min=1)
+    min_inputs: IntProperty(name='Number of inputs to keep', default=0, min=0)
 
     def execute(self, context):
         global array_nodes
         node = array_nodes[self.node_index]
         inps = node.inputs
-        min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
-        if len(inps) > min_inps:
-            inps.remove(inps.values()[-1])
+        min_inps = self.min_inputs if not hasattr(node, 'min_inputs') else node.min_inputs
+        if len(inps) >= min_inps + self.count:
+            for _ in range(self.count):
+                inps.remove(inps.values()[-1])
         return{'FINISHED'}
 
 class ArmNodeRemoveInputValueButton(bpy.types.Operator):
@@ -254,13 +275,14 @@ class ArmNodeRemoveInputValueButton(bpy.types.Operator):
     bl_label = 'Remove Input'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
+    target_name: StringProperty(name='Name of socket to remove', default='Value')
 
     def execute(self, context):
         global array_nodes
         node = array_nodes[self.node_index]
         inps = node.inputs
         min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
-        if len(inps) > min_inps and inps[-1].name == 'Value':
+        if len(inps) > min_inps and inps[-1].name == self.target_name:
             inps.remove(inps.values()[-1])
         return{'FINISHED'}
 
@@ -278,7 +300,14 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
     def execute(self, context):
         global array_nodes
         outs = array_nodes[self.node_index].outputs
-        outs.new(self.socket_type, self.name_format.format(str(len(outs) + self.index_name_offset)))
+
+        socket_types = self.socket_type.split(';')
+        name_formats = self.name_format.split(';')
+        assert len(socket_types)==len(name_formats)
+        
+        format_index = (len(outs) + self.index_name_offset) //len(socket_types)
+        for socket_type, name_format in zip(socket_types, name_formats):
+            outs.new(socket_type, name_format.format(str(format_index)))
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
@@ -294,14 +323,16 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
     bl_label = 'Remove Output'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
+    count: IntProperty(name='Number of outputs to remove', default=1, min=1)
 
     def execute(self, context):
         global array_nodes
         node = array_nodes[self.node_index]
         outs = node.outputs
         min_outs = 0 if not hasattr(node, 'min_outputs') else node.min_outputs
-        if len(outs) > min_outs:
-            outs.remove(outs.values()[-1])
+        if len(outs) >= min_outs + self.count:
+            for _ in range(self.count):
+                outs.remove(outs.values()[-1])            
         return{'FINISHED'}
 
 class ArmNodeAddInputOutputButton(bpy.types.Operator):
@@ -322,8 +353,21 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         node = array_nodes[self.node_index]
         inps = node.inputs
         outs = node.outputs
-        inps.new(self.in_socket_type, self.in_name_format.format(str(len(inps) + self.in_index_name_offset)))
-        outs.new(self.out_socket_type, self.out_name_format.format(str(len(outs))))
+
+        in_socket_types = self.in_socket_type.split(';')
+        in_name_formats = self.in_name_format.split(';')
+        assert len(in_socket_types)==len(in_name_formats)
+
+        out_socket_types = self.out_socket_type.split(';')
+        out_name_formats = self.out_name_format.split(';')
+        assert len(out_socket_types)==len(out_name_formats)
+        
+        in_format_index = (len(outs) + self.index_name_offset) // len(in_socket_types)
+        out_format_index = len(outs) // len(out_socket_types)
+        for socket_type, name_format in zip(in_socket_types, in_name_formats):
+            inps.new(socket_type, name_format.format(str(in_format_index)))
+        for socket_type, name_format in zip(out_socket_types, out_name_formats):
+            outs.new(socket_type, name_format.format(str(out_format_index)))
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''
@@ -341,7 +385,9 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
     bl_label = 'Remove Input Output'
     bl_options = {'UNDO', 'INTERNAL'}
     node_index: StringProperty(name='Node Index', default='')
-
+    in_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
+    out_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
+    
     def execute(self, context):
         global array_nodes
         node = array_nodes[self.node_index]
@@ -349,10 +395,12 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
         outs = node.outputs
         min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
         min_outs = 0 if not hasattr(node, 'min_outputs') else node.min_outputs
-        if len(inps) > min_inps:
-            inps.remove(inps.values()[-1])
-        if len(outs) > min_outs:
-            outs.remove(outs.values()[-1])
+        if len(inps) >= min_inps + self.in_count:
+            for _ in range(self.in_count):
+                inps.remove(inps.values()[-1])
+        if len(outs) >= min_outs + self.out_count:
+            for _ in range(self.out_count):
+                outs.remove(outs.values()[-1])
         return{'FINISHED'}
 
 
@@ -547,7 +595,10 @@ def deprecated(*alternatives: str, message=""):
 
     def wrapper(cls: ArmLogicTreeNode) -> ArmLogicTreeNode:
         cls.bl_label += ' (Deprecated)'
-        cls.bl_description = f'Deprecated. {cls.bl_description}'
+        if hasattr(cls, 'bl_description'):
+            cls.bl_description = f'Deprecated. {cls.bl_description}'
+        else:
+            cls.bl_description = 'Deprecated.'
         cls.bl_icon = 'ERROR'
         cls.arm_is_obsolete = True
 

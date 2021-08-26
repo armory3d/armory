@@ -308,6 +308,8 @@ def build_default_node(inp: bpy.types.NodeSocket):
 
     if inp_type == 'VECTOR':
         return f'new armory.logicnode.VectorNode(this, {default_value})'
+    elif inp_type == 'ROTATION':  # a rotation is internally represented as a quaternion.
+        return f'new armory.logicnode.RotationNode(this, {default_value})'
     elif inp_type in ('RGB', 'RGBA'):
         return f'new armory.logicnode.ColorNode(this, {default_value})'
     elif inp_type == 'VALUE':

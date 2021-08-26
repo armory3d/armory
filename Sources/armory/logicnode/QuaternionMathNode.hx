@@ -19,7 +19,7 @@ class QuaternionMathNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		switch (property0) {
-			// 1 argument: Module, Normalize, GetEuler
+			// 1 argument: Module, Normalize
 			case "Module": {
 				var q: Quat = inputs[0].get();
 				if (q == null) return null;
@@ -32,159 +32,106 @@ class QuaternionMathNode extends LogicNode {
 				res_q.setFrom(q);
 				res_q = res_q.normalize();
 			}
-			case "GetEuler":  {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
-				res_v = res_q.getEuler();
-			}
-			// 2 arguments: FromTo, FromMat, FromRotationMat, ToAxisAngle
-			case "FromTo": {
-				var v1: Vec4 = inputs[0].get();
-				var v2: Vec4 = inputs[1].get();
-				if ((v1 == null) || (v2 == null)) return null;
-				res_q.fromTo(v1, v2);
-			}
-			case "FromMat": {
-				var q: Quat = inputs[0].get();
-				var m: Mat4 = inputs[1].get();
-				if ((q == null) || (m == null)) return null;
-				res_q.setFrom(q);
-				res_q = res_q.fromMat(m);
-			}
-			case "FromRotationMat": {
-				var q: Quat = inputs[0].get();
-				var m: Mat4 = inputs[1].get();
-				if ((q == null) || (m == null)) return null;
-				res_q.setFrom(q);
-				res_q = res_q.fromRotationMat(m);
-			}
-			case "ToAxisAngle": {
-				var q: Quat = inputs[0].get();
-				var v: Vec4 = inputs[1].get();
-				if ((q == null) || (v == null)) return null;
-				res_q.setFrom(q);
-				res_f = res_q.toAxisAngle(v);
-			}
-			// # 3 arguments: Lerp, Slerp, FromAxisAngle, FromEuler
-			case "Lerp": {
-				var from: Quat = inputs[0].get();
-				var to: Quat = inputs[1].get();
-				var f: Float = inputs[2].get();
-				if ((from == null) || (to == null)) return null;
-				res_q = res_q.lerp(from, to, f);
-			}
-			case "Slerp": {
-				var from: Quat = inputs[0].get();
-				var to: Quat = inputs[1].get();
-				var f: Float = inputs[2].get();
-				if ((from == null) || (to == null)) return null;
-				res_q = res_q.slerp(from, to, f);
-			}
-			case "FromAxisAngle": {
-				var q: Quat = inputs[0].get();
-				var axis: Vec4 = inputs[1].get();
-				var angle: Float = inputs[2].get();
-				if ((q == null) || (axis == null)) return null;
-				res_q.setFrom(q);
-				res_q = res_q.fromAxisAngle(axis, angle);
-			}
-			case "FromEuler": {
-				var x: Float = inputs[0].get();
-				var y: Float = inputs[1].get();
-				var z: Float = inputs[2].get();
-				res_q = res_q.fromEuler(x, y, z);
-			}
 			// Many arguments: Add, Subtract, DotProduct, Multiply			
 			case "Add": {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
-				var q2 = new Quat();
+				res_v = inputs[0].get();
+				res_f = inputs[1].get();
+				if (res_v == null || res_f == null) return null;
+				
+				res_q.set(res_v.x, res_v.y, res_v.z, res_f);
 				var i = 1;
-				while (i < inputs.length) {
-					q2 = inputs[i].get();
-					if (q2 == null) return null;
-					res_q.add(q2);
+				while (2*i+1 < inputs.length) {
+					res_v = inputs[2*i].get();
+					res_f = inputs[2*i+1].get();
+					if (res_v == null || res_f == null) return null;
+					res_q.x += res_v.x;
+					res_q.y += res_v.y;
+					res_q.z += res_v.z;
+					res_q.w += res_f;
 					i++;
 				}
 			}
 			case "Subtract": {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
-				var q2 = new Quat();
+				res_v = inputs[0].get();
+				res_f = inputs[1].get();
+				if (res_v == null || res_f == null) return null;
+				
+				res_q.set(res_v.x, res_v.y, res_v.z, res_f);
 				var i = 1;
-				while (i < inputs.length) {
-					q2 = inputs[i].get();
-					if (q2 == null) return null;
-					res_q.sub(q2);
+				while (2*i+1 < inputs.length) {
+					res_v = inputs[2*i].get();
+					res_f = inputs[2*i+1].get();
+					if (res_v == null || res_f == null) return null;
+					res_q.x -= res_v.x;
+					res_q.y -= res_v.y;
+					res_q.z -= res_v.z;
+					res_q.w -= res_f;
 					i++;
 				}
 			}
 			case "Multiply": {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
-				var q2 = new Quat();
+				res_v = inputs[0].get();
+				res_f = inputs[1].get();
+				if (res_v == null || res_f == null) return null;
+				
+				res_q.set(res_v.x, res_v.y, res_v.z, res_f);
 				var i = 1;
-				while (i < inputs.length) {
-					q2 = inputs[i].get();
-					if (q2 == null) return null;
-					res_q.mult(q2);
+				while (2*i+1 < inputs.length) {
+					res_v = inputs[2*i].get();
+					res_f = inputs[2*i+1].get();
+					if (res_v == null || res_f == null) return null;
+					var temp_q = new Quat(res_v.x, res_v.y, res_v.z, res_f);
+					res_q.mult(temp_q);
 					i++;
 				}
 			}
 			case "MultiplyFloats": {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
+				res_v = inputs[0].get();
+				res_f = inputs[1].get();
+				if (res_v == null || res_f == null) return null;
+				
+				res_q.set(res_v.x, res_v.y, res_v.z, res_f);
 				var f: Float = 1.0;
-				var i = 1;
+				var i = 2;
 				while (i < inputs.length) {
-					f = inputs[i].get();
-					res_q.scale(f);
+					f *= inputs[i].get();
+					if (f == null) return null;
 					i++;
 				}
+				res_q.scale(f);
 			}
-			case "DotProduct": {
-				var q: Quat = inputs[0].get();
-				if (q == null) return null;
-				res_q.setFrom(q);
-				var q2 = new Quat();
+			case "DotProduct": {  // what this does with more than 2 terms is not *remotely* intuitive. Heck, you could consider it a footgun!
+
+				res_v = inputs[0].get();
+				var temp_f = inputs[1].get();
+				if (res_v == null || temp_f == null) return null;
+				
+				res_q.set(res_v.x, res_v.y, res_v.z, temp_f);
 				var i = 1;
-				while (i < inputs.length) {
-					q2 = inputs[i].get();
-					if (q2 == null) return null;
-					res_f = res_q.dot(q2);
+				while (2*i+1 < inputs.length) {
+					res_v = inputs[2*i].get();
+					temp_f = inputs[2*i+1].get();
+					if (res_v == null || temp_f == null) return null;
+					var temp_q = new Quat(res_v.x, res_v.y, res_v.z, temp_f);
+					res_f = res_q.dot(temp_q);
 					res_q.set(res_f, res_f, res_f, res_f);
 					i++;
 				}
 			}
 		}
-		// Return and check separator
 		switch (from) {
 			case 0: {
-				if (property0 == 'GetEuler')
-					return res_v;
-				else
-					return res_q;
+				return res_q;
 			}
 			case 1: 
-				if (property1) {
-					return res_q.x;
-				} else {
+				if (property0 == "DotProduct" || property0 == "Module") {
 					return res_f;
+				} else {
+					return null;
 				}
-			case 2: 
-				if (property1) return res_q.y;
-			case 3: 
-				if (property1) return res_q.z;
-			case 4: 
-				if (property1) return res_q.w;
-			case 5: 
-				if (property1) return res_f;
+			default: {
+				return null;
+			}
 		}
-		return null;
 	}
 }
