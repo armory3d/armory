@@ -1,3 +1,4 @@
+import arm.utils
 import atexit
 import http.server
 import socketserver
@@ -6,12 +7,17 @@ import subprocess
 haxe_server = None
 
 def run_tcp():
-    Handler = http.server.SimpleHTTPRequestHandler
-    try:
-        httpd = socketserver.TCPServer(("", 8040), Handler)
-        httpd.serve_forever()
-    except:
-        print('Server already running')
+	prefs = arm.utils.get_arm_preferences()
+	port = prefs.html5_server_port
+	do_log = prefs.html5_server_log
+	class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+		def log_message(self,format,*args):
+			if do_log: print(format % args)
+	try:
+		http_server = socketserver.TCPServer(("",port), HTTPRequestHandler)
+		http_server.serve_forever()
+	except:
+		print('Server already running')
 
 def run_haxe(haxe_path, port=6000):
 	global haxe_server
