@@ -925,17 +925,19 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
-        col = layout.column(heading='Debug')
+        col = layout.column(heading='Debug', align=True)
         col.prop(wrd, 'arm_verbose_output')
         col.prop(wrd, 'arm_cache_build')
+        col.prop(wrd, 'arm_assert_level')
+        col.prop(wrd, 'arm_assert_quit')
 
-        col = layout.column(heading='Runtime')
+        col = layout.column(heading='Runtime', align=True)
         col.prop(wrd, 'arm_live_patch')
         col.prop(wrd, 'arm_stream_scene')
         col.prop(wrd, 'arm_loadscreen')
         col.prop(wrd, 'arm_write_config')
 
-        col = layout.column(heading='Renderer')
+        col = layout.column(heading='Renderer', align=True)
         col.prop(wrd, 'arm_batch_meshes')
         col.prop(wrd, 'arm_batch_materials')
         col.prop(wrd, 'arm_deinterleaved_buffers')

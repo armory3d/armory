@@ -233,6 +233,14 @@ def init_properties():
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_build = BoolProperty(name="Cache Build", description="Cache build files to speed up compilation", default=True)
+    bpy.types.World.arm_assert_level = EnumProperty(
+        items=[
+            ('Warning', 'Warning', 'Warning level, warnings don\'t throw an ArmAssertException'),
+            ('Error', 'Error', 'Error level. If assertions with this level fail, an ArmAssertException is thrown'),
+            ('NoAssertions', 'No Assertions', 'Ignore all assertions'),
+        ],
+        name="Assertion Level", description="Ignore all assertions below this level (assertions are turned off completely for published builds)", default='Warning', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_assert_quit = BoolProperty(name="Quit On Assertion Fail", description="Whether to close the game when an 'Error' level assertion fails", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_live_patch = BoolProperty(name="Live Patch", description="Live patching for Krom", default=False)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
