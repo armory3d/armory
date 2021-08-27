@@ -1,10 +1,10 @@
 // Geometric Skinning with Approximate Dual Quaternion Blending, Kavan
 // Based on https://github.com/tcoppex/aer-engine/blob/master/demos/aura/data/shaders/Skinning.glsl
-uniform vec4 skinBones[skinMaxBones * 2];
+uniform vec4 skinBones[skinMaxBones * 3];
 
-void getSkinningDualQuat(const ivec4 bone, vec4 weight, out vec4 A, inout vec4 B) {
+void getSkinningDualQuat(const ivec4 bone, vec4 weight, out vec4 A, inout vec4 B, out vec4 S) {
 	// Retrieve the real and dual part of the dual-quaternions
-	ivec4 bonei = bone * 2;
+	ivec4 bonei = bone * 3;
 	mat4 matA = mat4(
 		skinBones[bonei.x],
 		skinBones[bonei.y],
@@ -15,6 +15,13 @@ void getSkinningDualQuat(const ivec4 bone, vec4 weight, out vec4 A, inout vec4 B
 		skinBones[bonei.y + 1],
 		skinBones[bonei.z + 1],
 		skinBones[bonei.w + 1]);
+	mat4 matC = mat4(
+		skinBones[bonei.x + 2],
+		skinBones[bonei.y + 2],
+		skinBones[bonei.z + 2],
+		skinBones[bonei.w + 2]);
+	//Apply scaling first
+	S = matC * weight;
 	// Handles antipodality by sticking joints in the same neighbourhood
 	// weight.xyz *= sign(matA[3] * mat3x4(matA)).xyz;
 	weight.xyz *= sign(matA[3] * matA).xyz;
