@@ -255,6 +255,7 @@ class ArmoryExporter:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
             o['name'] = bobject_ref["structName"]
             self.export_bone_transform(armature, bone, o, action)
+            self.export_bone_layers(armature, bone, o)
 
         o['children'] = []
         for sub_bobject in bone.children:
@@ -472,6 +473,12 @@ class ArmoryExporter:
                 out_track['frames'].append(i - begin_frame)
 
             self.bone_tracks.append((out_track['values'], pose_bone))
+    
+    def export_bone_layers(self, armature: bpy.types.Object, bone: bpy.types.Bone, o):
+        layers = []
+        for layer in bone.layers:
+            layers.append(layer)
+        o['bone_layers'] = layers
 
     def use_default_material(self, bobject: bpy.types.Object, o):
         if arm.utils.export_bone_data(bobject):
