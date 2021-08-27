@@ -12,8 +12,8 @@ class Assert {
 
 	/**
 		Checks whether the given expression evaluates to true. If this is not
-		the case, an `ArmAssertionException` with additional information is
-		thrown.
+		the case, an `ArmAssertionException` is thrown or a warning is printed
+		(depending on the assertion level).
 
 		The assert level describes the severity of the assertion. If the
 		severity is lower than the level stored in the `arm_assert_level` flag,
