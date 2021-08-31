@@ -782,7 +782,7 @@ def open_editor(hx_path=None,line=None,pos=None):
             args += ['--project', subl_project_path]
             args.append('--add')
             args.append(hx_path)
-        elif editor == 'code'or ide_bin == 'code' or editor == 'kodestudio':
+        elif editor == 'code' or editor == 'kodestudio':
             args.append('--goto')
             goto = hx_path
             if line != None: goto += ":"+line
