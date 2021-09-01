@@ -159,7 +159,9 @@ project.addSources('Sources');
             if wrd.arm_asset_compression:
                 assets.add_khafile_def('arm_compress')
         else:
-            pass
+            assets.add_khafile_def(f'arm_assert_level={wrd.arm_assert_level}')
+            if wrd.arm_assert_quit:
+                assets.add_khafile_def('arm_assert_quit')
             # khafile.write("""project.addParameter("--macro include('armory.trait')");\n""")
             # khafile.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
             # if export_physics:
