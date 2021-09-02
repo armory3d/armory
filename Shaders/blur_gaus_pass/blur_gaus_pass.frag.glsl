@@ -7,7 +7,9 @@ uniform sampler2D tex;
 uniform vec2 dir;
 uniform vec2 screenSize;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp11;
+#endif
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -26,7 +28,7 @@ void main() {
 		fragColor.rgb += textureLod(tex, texCoord + s, 0.0).rgb * weight[i];
 		fragColor.rgb += textureLod(tex, texCoord - s, 0.0).rgb * weight[i];
 	}
-	
+
 	#ifdef _CPostprocess
 		fragColor.rgb *= PPComp11.x / 5;
 	#else

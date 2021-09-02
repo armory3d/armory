@@ -12,8 +12,10 @@ uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform mat4 invVP;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp11;
 uniform vec3 PPComp12;
+#endif
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -23,12 +25,12 @@ void main() {
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (depth == 1.0) { fragColor = 1.0; return; }
 
-	vec2 enc = textureLod(gbuffer0, texCoord, 0.0).rg;      
+	vec2 enc = textureLod(gbuffer0, texCoord, 0.0).rg;
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
-	
+
 	vec3 vray = normalize(viewRay);
 	vec3 currentPos = getPosNoEye(eyeLook, vray, depth, cameraProj);
 	// vec3 currentPos = getPos2NoEye(eye, invVP, depth, texCoord);
@@ -53,7 +55,7 @@ void main() {
 		vec3 pos = getPos2NoEye(eye, invVP, depth, texCoord + k) - currentPos;
 		fragColor += max(0, dot(pos, n) - currentDistanceB) / (dot(pos, pos) + 0.015);
 	}
-	
+
 	#ifdef _CPostprocess
 		fragColor *= (PPComp12.x * 0.3) / samples;
 	#else

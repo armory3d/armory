@@ -8,7 +8,8 @@
 			"links": [
 				{
 					"name": "PPComp10",
-					"link": "_PPComp10"
+					"link": "_PPComp10",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

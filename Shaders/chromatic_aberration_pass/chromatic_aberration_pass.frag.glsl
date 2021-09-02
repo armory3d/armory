@@ -3,7 +3,10 @@
 #include "compiled.inc"
 
 uniform sampler2D tex;
+
+#ifdef _CPostprocess
 uniform vec3 PPComp13;
+#endif
 
 in vec2 texCoord;
 out vec4 fragColor;
