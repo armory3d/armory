@@ -12,8 +12,10 @@ uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp9;
 uniform vec3 PPComp10;
+#endif
 
 in vec3 viewRay;
 in vec2 texCoord;

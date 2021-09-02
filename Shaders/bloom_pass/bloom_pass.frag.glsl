@@ -4,7 +4,9 @@
 
 uniform sampler2D tex;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp10;
+#endif
 
 in vec2 texCoord;
 out vec4 fragColor;

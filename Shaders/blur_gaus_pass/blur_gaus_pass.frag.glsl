@@ -7,7 +7,9 @@ uniform sampler2D tex;
 uniform vec2 dir;
 uniform vec2 screenSize;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp11;
+#endif
 
 in vec2 texCoord;
 out vec4 fragColor;

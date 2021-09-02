@@ -12,8 +12,10 @@ uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform mat4 invVP;
 
+#ifdef _CPostprocess
 uniform vec3 PPComp11;
 uniform vec3 PPComp12;
+#endif
 
 in vec2 texCoord;
 in vec3 viewRay;

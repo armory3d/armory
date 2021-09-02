@@ -24,11 +24,13 @@
 				},
 				{
 					"name": "PPComp9",
-					"link": "_PPComp9"
+					"link": "_PPComp9",
+					"ifdef": ["_CPostprocess"]
 				},
 				{
 					"name": "PPComp10",
-					"link": "_PPComp10"
+					"link": "_PPComp10",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

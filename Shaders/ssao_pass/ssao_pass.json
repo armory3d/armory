@@ -28,11 +28,13 @@
 				},
 				{
 					"name": "PPComp11",
-					"link": "_PPComp11"
+					"link": "_PPComp11",
+					"ifdef":["_CPostprocess"]
 				},
 				{
 					"name": "PPComp12",
-					"link": "_PPComp12"
+					"link": "_PPComp12",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

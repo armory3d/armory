@@ -16,7 +16,8 @@
 				},
 				{
 					"name": "PPComp11",
-					"link": "_PPComp11"
+					"link": "_PPComp11",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],
@@ -39,7 +40,8 @@
 				},
 				{
 					"name": "PPComp11",
-					"link": "_PPComp11"
+					"link": "_PPComp11",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],
@@ -65,7 +67,8 @@
 				},
 				{
 					"name": "PPComp11",
-					"link": "_PPComp11"
+					"link": "_PPComp11",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],
