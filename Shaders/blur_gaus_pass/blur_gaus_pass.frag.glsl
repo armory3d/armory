@@ -28,7 +28,7 @@ void main() {
 		fragColor.rgb += textureLod(tex, texCoord + s, 0.0).rgb * weight[i];
 		fragColor.rgb += textureLod(tex, texCoord - s, 0.0).rgb * weight[i];
 	}
-	
+
 	#ifdef _CPostprocess
 		fragColor.rgb *= PPComp11.x / 5;
 	#else

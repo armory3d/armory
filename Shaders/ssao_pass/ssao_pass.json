@@ -29,7 +29,7 @@
 				{
 					"name": "PPComp11",
 					"link": "_PPComp11",
-					"ifdef":["_CPostprocess"]
+					"ifdef": ["_CPostprocess"]
 				},
 				{
 					"name": "PPComp12",
