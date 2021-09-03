@@ -18,6 +18,7 @@ class AddTraitNode extends LogicNode {
 		var cname = Type.resolveClass(Main.projectPackage + "." + traitName);
 		if (cname == null) cname = Type.resolveClass(Main.projectPackage + ".node." + traitName);
 		assert(Error, cname != null, 'No trait with the name "$traitName" found, make sure that the trait is exported!');
+		assert(Warning, object.getTrait(cname) == null, 'Object already has the trait "$traitName" applied');
 
 		var trait = Type.createInstance(cname, []);
 		object.addTrait(trait);
