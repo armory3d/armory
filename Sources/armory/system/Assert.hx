@@ -26,7 +26,7 @@ class Assert {
 
 		@see `AssertLevel`
 	**/
-	macro public static function assert(level: ExprOf<AssertLevel>, condition: ExprOf<Bool>, message: String = ""): Expr {
+	macro public static function assert(level: ExprOf<AssertLevel>, condition: ExprOf<Bool>, ?message: ExprOf<String>): Expr {
 		final levelVal: AssertLevel = AssertLevel.fromExpr(level);
 		final assertThreshold = AssertLevel.fromString(Context.definedValue("arm_assert_level"));
 
@@ -39,7 +39,7 @@ class Assert {
 				return macro {
 					if (!$condition) {
 						@:pos(condition.pos)
-						trace(@:privateAccess armory.system.Assert.ArmAssertionException.formatMessage($v{condition.toString()}, $v{message}));
+						trace(@:privateAccess armory.system.Assert.ArmAssertionException.formatMessage($v{condition.toString()}, ${message}));
 					}
 				}
 			case Error:
@@ -48,7 +48,7 @@ class Assert {
 						#if arm_assert_quit kha.System.stop(); #end
 
 						@:pos(condition.pos)
-						@:privateAccess throwAssertionError($v{condition.toString()}, $v{message});
+						@:privateAccess throwAssertionError($v{condition.toString()}, ${message});
 					}
 				}
 			default:
@@ -74,14 +74,14 @@ class ArmAssertionException extends PosException {
 
 	/**
 		@param exprString The string representation of the failed assert condition.
-		@param message Custom error message, use an empty string to omit this.
+		@param message Custom error message, use `null` to omit this.
 	**/
-	public inline function new(exprString: String, message: String, ?previous: Exception, ?pos: Null<PosInfos>) {
+	public inline function new(exprString: String, message: Null<String>, ?previous: Exception, ?pos: Null<PosInfos>) {
 		super('\n${formatMessage(exprString, message)}', previous, pos);
 	}
 
-	static inline function formatMessage(exprString: String, message: String): String {
-		final optMsg = message != "" ? '\n\tMessage: $message' : "";
+	static inline function formatMessage(exprString: String, message: Null<String>): String {
+		final optMsg = message != null ? '\n\tMessage: $message' : "";
 
 		return 'Failed assertion:$optMsg\n\tExpression: ($exprString)';
 	}
