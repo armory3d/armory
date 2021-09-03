@@ -276,7 +276,7 @@ class DebugConsole extends Trait {
 					ui.indent();
 
 					if (selectedObject != null) {
-						if (Std.is(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
 							ui.row([1/2, 1/2]);
 						}
 
@@ -284,7 +284,7 @@ class DebugConsole extends Trait {
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
 
-						if (Std.is(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
 							if (ui.button("Set Active Camera")) {
 								iron.Scene.active.camera = cast(selectedObject, iron.object.CameraObject);
 							}
@@ -428,7 +428,7 @@ class DebugConsole extends Trait {
 								ui.text("This scene has no world data to edit.");
 							}
 						}
-						else if (Std.is(selectedObject, iron.object.LightObject)) {
+						else if (Std.isOfType(selectedObject, iron.object.LightObject)) {
 							selectedType = "(Light)";
 							var light = cast(selectedObject, iron.object.LightObject);
 							var lightHandle = Id.handle();
@@ -439,7 +439,7 @@ class DebugConsole extends Trait {
 							ui.text("shadow map size: " + light.data.raw.shadowmap_size);
 							#end
 						}
-						else if (Std.is(selectedObject, iron.object.CameraObject)) {
+						else if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";
 							var cam = cast(selectedObject, iron.object.CameraObject);
 							var fovHandle = Id.handle();
