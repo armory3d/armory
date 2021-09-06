@@ -362,7 +362,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         out_name_formats = self.out_name_format.split(';')
         assert len(out_socket_types)==len(out_name_formats)
         
-        in_format_index = (len(outs) + self.index_name_offset) // len(in_socket_types)
+        in_format_index = (len(outs) + self.in_index_name_offset) // len(in_socket_types)
         out_format_index = len(outs) // len(out_socket_types)
         for socket_type, name_format in zip(in_socket_types, in_name_formats):
             inps.new(socket_type, name_format.format(str(in_format_index)))
