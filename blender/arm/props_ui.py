@@ -742,9 +742,9 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy
 
         col = layout.column()
         col.prop(wrd, 'arm_winorient')
-        col.prop(wrd, 'arm_project_android_sdk_compile')
         col.prop(wrd, 'arm_project_android_sdk_min')
         col.prop(wrd, 'arm_project_android_sdk_target')
+        col.prop(wrd, 'arm_project_android_sdk_compile')
 
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
