@@ -10,13 +10,17 @@ class SetActionSpeedNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
-		var speed: Float = inputs[2].get();
+		var action = inputs[2].get();
+		var speed: Float = inputs[3].get();
+		
 
 		if (object == null) return;
+
 		var animation = object.animation;
+
 		if (animation == null) animation = object.getParentArmature(object.name);
 
-		animation.speed = speed;
+		animation.activeActions.get(action).speed = speed;
 
 		runOutput(0);
 	}
