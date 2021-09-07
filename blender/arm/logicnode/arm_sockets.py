@@ -471,6 +471,29 @@ class ArmFloatSocket(ArmCustomSocket):
         if socket.bl_idname == self.bl_idname:
             socket.default_value_raw = self.default_value_raw
 
+class ArmFactorSocket(ArmCustomSocket):
+    bl_idname = 'ArmFactorSocket'
+    bl_label = 'Factor Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.631, 0.631, 0.631, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+
 class ArmIntSocket(ArmCustomSocket):
     bl_idname = 'ArmIntSocket'
     bl_label = 'Integer Socket'
@@ -660,6 +683,8 @@ __REG_CLASSES = (
 
     ArmActionSocket,
     ArmAnimActionSocket,
+    ArmAnimTreeSocket,
+    ArmFactorSocket,
     ArmRotationSocket,
     ArmArraySocket,
     ArmBoolSocket,
