@@ -113,7 +113,17 @@ class ArmAnimActionSocket(ArmCustomSocket):
         if socket.bl_idname == self.bl_idname:
             socket.default_value_raw = self.default_value_raw
 
+class ArmAnimTreeSocket(ArmCustomSocket):
+    bl_idname = 'ArmNodeSocketAnimTree'
+    bl_label = 'Animation Tree Socket'
+    arm_socket_type = 'NONE'
 
+    def draw(self, context, layout, node, text):
+        layout.label(text=self.name)
+
+    def draw_color(self, context, node):
+        return 0.3, 0.1, 0.0, 1
+    
 class ArmRotationSocket(ArmCustomSocket):
     bl_idname = 'ArmRotationSocket'
     bl_label = 'Rotation Socket'
