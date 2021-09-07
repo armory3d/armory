@@ -226,10 +226,7 @@ def export_data(fp, sdk_path):
             if not os.path.exists(raw_shaders_path + '/' + ref):
                 continue
             assets.shader_passes_assets[ref] = []
-            if ref.startswith('compositor_pass'):
-                compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
-            else:
-                compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
+            compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
 
         # Workaround to also export non-material world shaders
         res['shader_datas'] += make_world.shader_datas
