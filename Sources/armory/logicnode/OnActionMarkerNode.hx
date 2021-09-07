@@ -4,6 +4,9 @@ import iron.object.Object;
 
 class OnActionMarkerNode extends LogicNode {
 
+	public var property0: String;
+	public var property1: String;
+
 	public function new(tree: LogicTree) {
 		super(tree);
 
@@ -12,12 +15,14 @@ class OnActionMarkerNode extends LogicNode {
 
 	function init() {
 		var object: Object = inputs[0].get();
-		var marker: String = inputs[1].get();
+		var actionID: String = property0;
+		var marker: String = property1;
 
 		if (object == null) return;
 		var animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
-
-		animation.notifyOnMarker(marker, function() { runOutput(0); });
+		var action = animation.activeActions.get(actionID);
+		if(action == null) return;
+		animation.notifyOnMarker(action, marker, function() { runOutput(0); });
 	}
 }
