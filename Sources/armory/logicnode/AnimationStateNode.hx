@@ -1,26 +1,37 @@
 package armory.logicnode;
 
+import iron.object.Animation;
 import iron.object.Object;
 
 class AnimationStateNode extends LogicNode {
 
+	var object: Object;
+	var animation: Animation;
+	var action: Animparams;
+	public var property0: String;
+
 	public function new(tree: LogicTree) {
 		super(tree);
+		tree.notifyOnUpdate(init);
+	}
+
+	public function init() {
+		object = inputs[0].get();
+		if (object == null) return;
+		animation = object.animation;
+		if (animation == null) animation = object.getParentArmature(object.name);
+		action = animation.activeActions.get(property0);
+		if(action == null) return;
+		action.notifyOnComplete(function (){runOutput(3);});
+		
 	}
 
 	override function get(from: Int): Dynamic {
-		var object: Object = inputs[0].get();
-
-		if (object == null) return null;
-
-		var animation = object.animation;
-
-		if (animation == null) animation = object.getParentArmature(object.name);
-
+		if(action == null) return null;
 		return switch (from) {
-			case 0: animation.action;
-			case 1: animation.currentFrame();
-			case 2: animation.paused;
+			case 0: action.action;
+			case 1: action.offset;
+			case 2: action.paused;
 			default: null;
 		}
 	}
