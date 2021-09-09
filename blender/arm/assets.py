@@ -67,7 +67,7 @@ def add(asset_file):
     for f in assets:
         f_file_base = os.path.basename(f)
         if f_file_base == asset_file_base:
-            log.warn(f'Armory Warning: Asset name "{asset_file_base}" already exists, skipping')
+            log.warn(f'Asset name "{asset_file_base}" already exists, skipping')
             return
 
     assets.append(asset_file)
@@ -75,7 +75,7 @@ def add(asset_file):
     # Reserved file name
     for f in reserved_names:
         if f in asset_file:
-            log.warn(f'Armory Warning: File "{asset_file}" contains reserved keyword, this will break C++ builds!')
+            log.warn(f'File "{asset_file}" contains reserved keyword, this will break C++ builds!')
 
 def add_khafile_def(d):
     global khafile_defs

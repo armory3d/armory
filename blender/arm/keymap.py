@@ -1,6 +1,7 @@
 import bpy
 
 import arm
+import arm.log as log
 import arm.props_ui as props_ui
 
 if arm.is_reload(__name__):
@@ -20,7 +21,7 @@ def register():
     # is printed
     if addon_keyconfig is None:
         if not bpy.app.background:
-            print("Armory warning: no keyconfig path found")
+            log.warn("No keyconfig path found")
         return
 
     km = addon_keyconfig.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
