@@ -222,9 +222,9 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
         socket_types = self.socket_type.split(';')
         name_formats = self.name_format.split(';')
-        assert len(socket_types)==len(name_formats)
-        
-        format_index = (len(inps) + self.index_name_offset) //len(socket_types)
+        assert len(socket_types) == len(name_formats)
+
+        format_index = (len(inps) + self.index_name_offset) // len(socket_types)
         for socket_type, name_format in zip(socket_types, name_formats):
             inps.new(socket_type, name_format.format(str(format_index)))
 
@@ -303,9 +303,9 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
 
         socket_types = self.socket_type.split(';')
         name_formats = self.name_format.split(';')
-        assert len(socket_types)==len(name_formats)
-        
-        format_index = (len(outs) + self.index_name_offset) //len(socket_types)
+        assert len(socket_types) == len(name_formats)
+
+        format_index = (len(outs) + self.index_name_offset) // len(socket_types)
         for socket_type, name_format in zip(socket_types, name_formats):
             outs.new(socket_type, name_format.format(str(format_index)))
 
@@ -332,7 +332,7 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
         min_outs = 0 if not hasattr(node, 'min_outputs') else node.min_outputs
         if len(outs) >= min_outs + self.count:
             for _ in range(self.count):
-                outs.remove(outs.values()[-1])            
+                outs.remove(outs.values()[-1])
         return{'FINISHED'}
 
 class ArmNodeAddInputOutputButton(bpy.types.Operator):
@@ -356,13 +356,13 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
 
         in_socket_types = self.in_socket_type.split(';')
         in_name_formats = self.in_name_format.split(';')
-        assert len(in_socket_types)==len(in_name_formats)
+        assert len(in_socket_types) == len(in_name_formats)
 
         out_socket_types = self.out_socket_type.split(';')
         out_name_formats = self.out_name_format.split(';')
-        assert len(out_socket_types)==len(out_name_formats)
-        
-        in_format_index = (len(outs) + self.index_name_offset) // len(in_socket_types)
+        assert len(out_socket_types) == len(out_name_formats)
+
+        in_format_index = (len(outs) + self.in_index_name_offset) // len(in_socket_types)
         out_format_index = len(outs) // len(out_socket_types)
         for socket_type, name_format in zip(in_socket_types, in_name_formats):
             inps.new(socket_type, name_format.format(str(in_format_index)))
@@ -387,7 +387,7 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
     node_index: StringProperty(name='Node Index', default='')
     in_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
     out_count: IntProperty(name='Number of inputs to remove', default=1, min=1)
-    
+
     def execute(self, context):
         global array_nodes
         node = array_nodes[self.node_index]
