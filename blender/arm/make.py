@@ -641,7 +641,7 @@ def build_success():
             project_path = files_path + '-build'
             print('Exported makefiles to ' + project_path)
 
-        if arm.utils.get_arm_preferences().open_build_directory:
+        if not bpy.app.background and arm.utils.get_arm_preferences().open_build_directory:
             arm.utils.open_folder(project_path)
 
         # Android build APK
