@@ -1,7 +1,26 @@
 from arm.logicnode.arm_nodes import *
 
 class TweenVectorNode( ArmLogicTreeNode):
-    '''Tween a vector value'''
+    '''Tween a vector value
+    
+    @input Start: Start tweening
+     
+    @input Stop: Stop a tweening. tweening can be re-started via the `Start`input
+
+    @input From: Tween start value
+
+    @input To: Tween final value
+
+    @input Duration: Duartion of the tween in seconds
+
+    @output Out: Executed immidiately after `Start` or `Stop` is called
+
+    @output Tick: Executed at every time step in the tween duration
+
+    @output Done: Executed when tween is successfully completed. Not executed if tweening is stopped mid-way
+
+    @output Value: Current tween value
+    '''
     bl_idname = 'LNTweenVectorNode'
     bl_label = 'Tween Vector'
     arm_version = 1
@@ -40,7 +59,7 @@ class TweenVectorNode( ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'Stop')
         self.add_input('ArmVectorSocket', 'From')
         self.add_input('ArmVectorSocket', 'To')
-        self.add_input('ArmFloatSocket', 'Time', default_value = 1.0)
+        self.add_input('ArmFloatSocket', 'Duration', default_value = 1.0)
         
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Tick')
