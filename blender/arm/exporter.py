@@ -2508,7 +2508,7 @@ Make sure the mesh only has tris/quads.""")
 
             o['constraints'].append(out_constraint)
 
-    def export_traits(self, bobject: bpy.types.Object, o):
+    def export_traits(self, bobject: Union[bpy.types.Scene, bpy.types.Object], o):
         if not hasattr(bobject, 'arm_traitlist'):
             return
 
@@ -2628,7 +2628,12 @@ Make sure the mesh only has tris/quads.""")
 
                         out_trait['props'].append(value)
 
-            o['traits'].append(out_trait)
+            if not traitlistItem.enabled_prop:
+                # If we're here, fake_user is enabled, otherwise we
+                # would have skipped this trait already
+                ArmoryExporter.import_traits.append(out_trait['class_name'])
+            else:
+                o['traits'].append(out_trait)
 
     def export_scene_traits(self) -> None:
         """Exports the traits of the scene and adds some internal traits
