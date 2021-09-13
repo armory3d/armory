@@ -42,10 +42,10 @@ class TweenFloatNode( ArmLogicTreeNode):
         self.add_input('ArmRotationSocket', 'To')
         self.add_input('ArmFloatSocket', 'Time', default_value = 1.0)
         
-        self.add_output('ArmRotationSocket', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Tick')
         self.add_output('ArmNodeSocketAction', 'Done')
+        self.add_output('ArmRotationSocket', 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

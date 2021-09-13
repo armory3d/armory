@@ -96,19 +96,19 @@ class TweenFloatNode extends LogicNode {
 			}
 		}
 
-		runOutput(1);
+		runOutput(0);
 	}
 
 	override function get(from: Int): Dynamic {
-		if(from == 0) return fromValue;
+		if(from == 3) return fromValue;
 		return null;
 	}
 
 	function update() {
-		runOutput(2);	
+		runOutput(1);	
 	}
 
 	function done() {
-		runOutput(3);		
+		runOutput(2);		
 	}	
 }
