@@ -48,7 +48,7 @@ class Assert {
 						#if arm_assert_quit kha.System.stop(); #end
 
 						@:pos(condition.pos)
-						@:privateAccess throwAssertionError($v{condition.toString()}, ${message});
+						@:privateAccess armory.system.Assert.throwAssertionError($v{condition.toString()}, ${message});
 					}
 				}
 			default:
