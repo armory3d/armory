@@ -826,6 +826,33 @@ class ArmNodeSearch(bpy.types.Operator):
         bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.item, use_transform=True)
         return {"FINISHED"}
 
+class BlendSpaceOperator(bpy.types.Operator):
+    bl_idname = "blend_space_operator"
+    bl_label = "Blend Space Op"
+    bl_description = ""
+    bl_options = {"REGISTER"}
+
+    callback: StringProperty(default = "")
+
+    def invoke(self, context, event):
+        self.window = context.window
+        context.window_manager.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        self.mousePosition = Vector((event.mouse_x, event.mouse_y))
+
+        if event.type == "LEFTMOUSE":
+            print('modal')
+        
+        if event.type in {"RIGHTMOUSE", "ESC"}:
+            return self.finish()
+
+        return {"RUNNING_MODAL"}
+
+    def finish(self):
+        return {"FINISHED"}
+
 
 class ArmNodeCategory:
     """Represents a category (=directory) of logic nodes."""
@@ -1024,6 +1051,7 @@ __REG_CLASSES = (
     ArmNodeRemoveOutputButton,
     ArmNodeAddInputOutputButton,
     ArmNodeRemoveInputOutputButton,
-    ArmNodeCallFuncButton
+    ArmNodeCallFuncButton,
+    BlendSpaceOperator
 )
 register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
