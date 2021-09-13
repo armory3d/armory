@@ -42,7 +42,7 @@ class TweenFloatNode( ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'To', default_value = 0.0)
         self.add_input('ArmFloatSocket', 'Time', default_value = 1.0)
         
-        self.add_output('ArmFloatSocket', 'Tween')
+        self.add_output('ArmFloatSocket', 'Value')
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Tick')
         self.add_output('ArmNodeSocketAction', 'Done')

@@ -24,8 +24,8 @@ class TweenRotationNode extends LogicNode {
 				Tween.stop(anim);
 			}
 
-			fromValue = inputs[2].get();
-			toValue = inputs[3].get();
+			fromValue.setFrom(inputs[2].get());
+			toValue.setFrom(inputs[3].get());
 			duration = inputs[4].get();
 			var type:Dynamic = Linear;
 
