@@ -109,9 +109,13 @@ def get_fp():
     if wrd.arm_project_root != '':
         return bpy.path.abspath(wrd.arm_project_root)
     else:
-        s = bpy.data.filepath.split(os.path.sep)
-        s.pop()
-        s = os.path.sep.join(s)
+        s = None
+        if use_local_sdk and bpy.data.filepath == '':
+            s = os.getcwd()
+        else:
+            s = bpy.data.filepath.split(os.path.sep)
+            s.pop()
+            s = os.path.sep.join(s)
         if get_os_is_windows() and len(s) == 2 and s[1] == ':':
             # If the project is located at a drive root (C:/ for example),
             # then s = "C:". If joined later with another path, no path
