@@ -270,6 +270,9 @@ project.addSources('Sources');
         if not is_publish and state.target == 'html5':
             khafile.write("project.addParameter('--debug');\n")
 
+        if arm.utils.get_pref_or_default('haxe_times', False):
+            khafile.write("project.addParameter('--times');\n")
+
         if export_ui:
             if not os.path.exists('Libraries/zui'):
                 khafile.write(add_armory_library(sdk_path, 'lib/zui', rel_path=do_relpath_sdk))
