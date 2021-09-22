@@ -270,7 +270,7 @@ project.addSources('Sources');
         if not is_publish and state.target == 'html5':
             khafile.write("project.addParameter('--debug');\n")
 
-        if wrd.arm_verbose_output:
+        if arm.utils.get_pref_or_default('haxe_times', False):
             khafile.write("project.addParameter('--times');\n")
 
         if export_ui:
