@@ -827,7 +827,7 @@ class ArmNodeSearch(bpy.types.Operator):
         return {"FINISHED"}
 
 class BlendSpaceOperator(bpy.types.Operator):
-    bl_idname = "blend_space_operator"
+    bl_idname = "arm.blend_space_operator"
     bl_label = "Blend Space Op"
     bl_description = ""
     bl_options = {"REGISTER"}
@@ -840,7 +840,7 @@ class BlendSpaceOperator(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        self.mousePosition = Vector((event.mouse_x, event.mouse_y))
+        #self.mousePosition = Vector((event.mouse_x, event.mouse_y))
 
         if event.type == "LEFTMOUSE":
             print('modal')

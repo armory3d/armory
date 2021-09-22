@@ -3,6 +3,8 @@ import gpu
 from bgl import *
 from mathutils import Vector
 from gpu_extras.batch import batch_for_shader
+from gpu_extras.presets import *
+from math import pi, cos, sin
 
 def getDpiFactor():
     return getDpi() / 72
@@ -28,6 +30,7 @@ def getNodeBottomCornerLocations(node):
 class BlendSpaceGUI:
     def __init__(self, node):
         self.boundary = RectangleWithGrid()
+        self.points = Points([])
         self.node = node
 
     def calculateBoundaries(self):
@@ -45,7 +48,10 @@ class BlendSpaceGUI:
         return self.boundary.height
 
     def draw(self):
+        self.calculateBoundaries()
         self.boundary.draw()
+        self.points.calcPoints(self.node.my_coords, self.node.my_coords_enabled, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
+        self.points.drawPointTwo()
 
 class Rectangle:
     def __init__(self, x1 = 0, y1 = 0, x2 = 0, y2 = 0):
@@ -144,10 +150,71 @@ class Rectangle:
 
     def __repr__(self):
         return "({}, {}) - ({}, {})".format(self.x1, self.y1, self.x2, self.y2)
+
+class Points:
+
+    def __init__(self, points = []):
+        self.points = points
+        self.colors = []
+        self.circle_coords = self.circle(0.0, 0.0, 5.0, 10)
+
+    def calcPoints(self, points, visible, x1, y1, width):
+        self.points = []
+
+        for i in range(len(points) // 2):
+            if(visible[i]):
+                point = []
+                point.append(x1 + width * points[i * 2])
+                point.append(y1 - width + width * points[i * 2 + 1])
+                self.points.append(point)
+
+    def reset_circle(self, point):
+        new_coords = []
+        for coord in self.circle_coords:
+            x = coord[0] + point[0]
+            y = coord[1] + point[1]
+            new_coords.append((x, y))
+        return new_coords
+
+    def drawPoints(self):
+        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        batch = batch_for_shader(shader, 'POINTS',{"pos": self.points})
+
+        shader.bind()
+        shader.uniform_float("color", (1.0, 1.0, 1.0, 1.0))
+
+        glEnable(GL_BLEND)
+        glPointSize(10.0)
+        batch.draw(shader)
+        glDisable(GL_BLEND)
+    
+    def circle(self, x, y, radius, segments):
+        coords = []
+        m = (1.0 / (segments - 1)) * (pi * 2)
+
+        for p in range(segments):
+            p1 = x + cos(m * p) * radius
+            p2 = y + sin(m * p) * radius
+            coords.append((p1, p2))
+        return coords
+    
+    def drawPointTwo(self):
+        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+
+        for p in self.points:
+            circle_co = self.reset_circle(p)
+            batch = batch_for_shader(shader, 'TRI_FAN',{"pos": circle_co})
+
+            shader.bind()
+            shader.uniform_float("color", (1.0, 1.0, 1.0, 1.0))
+
+            batch.draw(shader)
+
     
 class RectangleWithGrid:
     def __init__(self, x1 = 0, y1 = 0, x2 = 0, y2 = 0):
         self.resetPosition(x1, y1, x2, y2)
+        self.numGrids = 21
 
     @classmethod
     def fromRegionDimensions(cls, region):
@@ -165,6 +232,15 @@ class RectangleWithGrid:
     @property
     def width(self):
         return abs(self.x1 - self.x2)
+    
+    @property
+    def widthInner(self):
+        return abs(self.width - (2 * self.width/self.numGrids))
+
+    @property
+    def offsetInner(self):
+        return abs(self.width/self.numGrids)
+
 
     @property
     def height(self):
@@ -221,10 +297,10 @@ class RectangleWithGrid:
         glDisable(GL_BLEND)
 
         locations = (
-            (self.x1 + self.width/21, self.y1 - self.height/21),
-            (self.x2 - self.width/21, self.y1 - self.height/21),
-            (self.x1 + self.width/21, self.y2 + self.height/21),
-            (self.x2 - self.width/21, self.y2 + self.height/21))
+            (self.x1 + self.width/self.numGrids, self.y1 - self.height/self.numGrids),
+            (self.x2 - self.width/self.numGrids, self.y1 - self.height/self.numGrids),
+            (self.x1 + self.width/self.numGrids, self.y2 + self.height/self.numGrids),
+            (self.x2 - self.width/self.numGrids, self.y2 + self.height/self.numGrids))
         shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRI_STRIP', {"pos": locations})
 
@@ -255,7 +331,7 @@ class RectangleWithGrid:
         batch.draw(shader)
         glDisable(GL_BLEND)
 
-        offset = (self.x2 - self.x1) / 22
+        offset = (self.x2 - self.x1) / (self.numGrids + 1)
         gridPoints = []
         for l in range(21):
             p1 = (self.x1 + (offset * (l + 1)), self.y1)
