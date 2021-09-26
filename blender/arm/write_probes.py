@@ -52,7 +52,7 @@ def setup_envmap_render():
     if bpy.context.preferences.addons["cycles"].preferences.compute_device_type == "CUDA":
         scene.cycles.device = "GPU"
     else:
-        log.info('Armory: Using CPU for environment render (might be slow). Enable CUDA if possible.')
+        log.info('Using CPU for environment render (might be slow). Enable CUDA if possible.')
 
     # One sample is enough for world background only
     scene.cycles.samples = 1

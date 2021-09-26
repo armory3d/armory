@@ -2172,7 +2172,7 @@ class ArmSyncProxyButton(bpy.types.Operator):
                     arm.proxy.sync_modifiers(obj)
                 if obj.arm_proxy_sync_traits:
                     arm.proxy.sync_traits(obj)
-            print('Armory: Proxy objects synchronized')
+            print('Proxy objects synchronized')
         return{'FINISHED'}
 
 class ArmPrintTraitsButton(bpy.types.Operator):
