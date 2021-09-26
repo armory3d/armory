@@ -114,11 +114,17 @@ class CanvasScript extends Trait {
 	}
 
 	/**
-	 * Set UI scale factor.
-	 * @param factor Scale factor.
-	 */
-	 public function setUiScale(factor:Float) {
+		Set the UI scale factor.
+	**/
+	public inline function setUiScale(factor: Float) {
 		cui.setScale(factor);
+	}
+
+	/**
+		Get the UI scale factor.
+	**/
+	public inline function getUiScale(): Float {
+		return cui.ops.scaleFactor;
 	}
 
 	/**
