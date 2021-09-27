@@ -788,7 +788,10 @@ class DebugConsole extends Trait {
 						lastTraces[0] = "";
 						lastTraces.splice(1, lastTraces.length - 1);
 					}
+					final eh = ui.t.ELEMENT_H;
+					ui.t.ELEMENT_H = ui.fontSize;
 					for (t in lastTraces) ui.text(t);
+					ui.t.ELEMENT_H = eh;
 					ui.unindent();
 				}
 			}
