@@ -187,7 +187,10 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
 
     wrd = bpy.data.worlds['Arm']
     use_opencl = 'true'
-    cpu_count = multiprocessing.cpu_count()
+
+    # cmft doesn't work correctly when passing the number of logical
+    # CPUs if there are more logical than physical CPUs on a machine
+    cpu_count = arm.utils.cpu_count(physical_only=True)
 
     if arm.utils.get_os() == 'win':
         cmd = [

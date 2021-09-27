@@ -130,7 +130,7 @@ def get_fp():
 def get_fp_build():
     return os.path.join(get_fp(), build_dir())
 
-def get_os():
+def get_os() -> str:
     s = platform.system()
     if s == 'Windows':
         return 'win'
@@ -1110,6 +1110,42 @@ def get_list_installed_vs_path() -> []:
     else:
         err = 'File "'+ path_file +'" not found.'
     return items, err
+
+
+def cpu_count(*, physical_only=False) -> Optional[int]:
+    """Returns the number of logical (default) or physical CPUs.
+    The result can be `None` if `os.cpu_count()` was not able to get the
+    correct count of logical CPUs.
+    """
+    if not physical_only:
+        return os.cpu_count()
+
+    _os = get_os()
+    try:
+        if _os == 'win':
+            result = subprocess.check_output(['wmic', 'cpu', 'get', 'NumberOfCores'])
+            result = result.decode('utf-8').splitlines()
+            result = int(result[2])
+            if result > 0:
+                return result
+
+        elif _os == 'linux':
+            result = subprocess.check_output("grep -P '^core id' /proc/cpuinfo | sort -u | wc -l", shell=True)
+            result = result.decode('utf-8').splitlines()
+            result = int(result[0])
+            if result > 0:
+                return result
+
+        # macOS
+        else:
+            return int(subprocess.check_output(['sysctl', '-n', 'hw.physicalcpu']))
+    except subprocess.CalledProcessError:
+        pass
+
+    # Last resort even though it can be wrong
+    log.warn("Could not retrieve count of physical CPUs, using logical CPU count instead.")
+    return os.cpu_count()
+
 
 def register(local_sdk=False):
     global use_local_sdk
