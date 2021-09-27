@@ -779,6 +779,11 @@ class DebugConsole extends Trait {
 				#end
 				if (ui.panel(Id.handle({selected: true}), "Log")) {
 					ui.indent();
+
+					final h = Id.handle();
+					h.selected = DebugConsole.traceWithPosition;
+					DebugConsole.traceWithPosition = ui.check(h, "Print With Position");
+
 					if (ui.button("Clear")) {
 						lastTraces[0] = "";
 						lastTraces.splice(1, lastTraces.length - 1);
