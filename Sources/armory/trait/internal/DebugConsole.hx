@@ -84,7 +84,7 @@ class DebugConsole extends Trait {
 			// Set settings
 			setScale(scaleDebugConsole);
 			setVisible(visibleDebugConsole == 1);
-			switch(positionDebugConsole) {
+			switch (positionDebugConsole) {
 				case 0: setPosition(PositionStateEnum.LEFT);
 				case 1: setPosition(PositionStateEnum.CENTER);
 				case 2: setPosition(PositionStateEnum.RIGHT);
@@ -104,11 +104,11 @@ class DebugConsole extends Trait {
 				// DebugFloat
 				if (key == kha.input.KeyCode.OpenBracket) {
 					debugFloat -= 0.1;
-					trace("debugFloat = "+ debugFloat);
+					trace("debugFloat = " + debugFloat);
 				}
 				else if (key == kha.input.KeyCode.CloseBracket){
 					debugFloat += 0.1;
-					trace("debugFloat = "+ debugFloat);
+					trace("debugFloat = " + debugFloat);
 				}
 				// Shortcut - Visible
 				if (key == shortcut_visible) visible = !visible;
@@ -186,10 +186,10 @@ class DebugConsole extends Trait {
 		var wh = iron.App.h();
 		// Check position
 		switch (position_console) {
-            case PositionStateEnum.LEFT: wx = 0;
-            case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
-            case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
-        }
+			case PositionStateEnum.LEFT: wx = 0;
+			case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
+			case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
+		}
 
 		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
 		var bindG = true;
