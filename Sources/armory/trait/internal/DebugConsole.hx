@@ -783,15 +783,19 @@ class DebugConsole extends Trait {
 					final h = Id.handle();
 					h.selected = DebugConsole.traceWithPosition;
 					DebugConsole.traceWithPosition = ui.check(h, "Print With Position");
+					if (ui.isHovered) ui.tooltip("Whether to prepend the position of print/trace statements to the printed text");
 
 					if (ui.button("Clear")) {
 						lastTraces[0] = "";
 						lastTraces.splice(1, lastTraces.length - 1);
 					}
+					if (ui.isHovered) ui.tooltip("Clear the log output");
+
 					final eh = ui.t.ELEMENT_H;
 					ui.t.ELEMENT_H = ui.fontSize;
 					for (t in lastTraces) ui.text(t);
 					ui.t.ELEMENT_H = eh;
+
 					ui.unindent();
 				}
 			}
