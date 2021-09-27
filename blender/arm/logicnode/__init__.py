@@ -75,7 +75,7 @@ def init_nodes():
 
         # Only look at modules in sub packages
         elif module_name.rsplit('.', 1)[0] != __package__:
-            if 'HAS_RELOADED' not in globals():
+            if 'HAS_RELOADED' not in globals() or module_name not in sys.modules:
                 _module = importlib.import_module(module_name)
             else:
                 # Reload the module if the SDK was reloaded at least once
