@@ -25,6 +25,8 @@ class DebugConsole extends Trait {
 #else
 
 	public static var visible = true;
+	public static var traceWithPosition = true;
+
 	static var ui: Zui;
 	var scaleFactor = 1.0;
 
@@ -75,9 +77,11 @@ class DebugConsole extends Trait {
 	#end
 
 	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
-	keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket, keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
+	traceWithPosition = 1, keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket,
+	keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
 		super();
 		this.scaleFactor = scaleFactor;
+		DebugConsole.traceWithPosition = traceWithPosition == 1;
 
 		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
 			ui = new Zui({scaleFactor: scaleFactor, font: font});
@@ -170,7 +174,7 @@ class DebugConsole extends Trait {
 	static var haxeTrace: Dynamic->haxe.PosInfos->Void = null;
 	static var lastTraces: Array<String> = [""];
 	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
-		lastTraces.unshift(haxe.Log.formatOutput(v,inf));
+		lastTraces.unshift(haxe.Log.formatOutput(v, traceWithPosition ? inf : null));
 		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}

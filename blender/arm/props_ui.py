@@ -969,6 +969,7 @@ class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
         col.prop(wrd, 'arm_debug_console_position')
         col.prop(wrd, 'arm_debug_console_scale')
         col.prop(wrd, 'arm_debug_console_visible')
+        col.prop(wrd, 'arm_debug_console_trace_pos')
 
 class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"

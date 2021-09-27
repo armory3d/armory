@@ -256,6 +256,7 @@ def init_properties():
         name="Position", description="Position Debug Console", default='Right', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_debug_console_scale = FloatProperty(name="Scale Console", description="Scale Debug Console", default=1.0, min=0.3, max=10.0, subtype='FACTOR', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_debug_console_visible = BoolProperty(name="Visible", description="Setting the console visibility at application start", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_debug_console_trace_pos = BoolProperty(name="Print With Position", description="Whether to prepend the position of print/trace statements to the printed text", default=True)
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
