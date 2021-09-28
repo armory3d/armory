@@ -25,6 +25,8 @@ class DebugConsole extends Trait {
 #else
 
 	public static var visible = true;
+	public static var traceWithPosition = true;
+
 	static var ui: Zui;
 	var scaleFactor = 1.0;
 
@@ -75,16 +77,18 @@ class DebugConsole extends Trait {
 	#end
 
 	public function new(scaleFactor = 1.0, scaleDebugConsole = 1.0, positionDebugConsole = 2, visibleDebugConsole = 1,
-	keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket, keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
+	traceWithPosition = 1, keyCodeVisible = kha.input.KeyCode.Tilde, keyCodeScaleIn = kha.input.KeyCode.OpenBracket,
+	keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
 		super();
 		this.scaleFactor = scaleFactor;
+		DebugConsole.traceWithPosition = traceWithPosition == 1;
 
 		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
 			ui = new Zui({scaleFactor: scaleFactor, font: font});
 			// Set settings
 			setScale(scaleDebugConsole);
 			setVisible(visibleDebugConsole == 1);
-			switch(positionDebugConsole) {
+			switch (positionDebugConsole) {
 				case 0: setPosition(PositionStateEnum.LEFT);
 				case 1: setPosition(PositionStateEnum.CENTER);
 				case 2: setPosition(PositionStateEnum.RIGHT);
@@ -104,11 +108,11 @@ class DebugConsole extends Trait {
 				// DebugFloat
 				if (key == kha.input.KeyCode.OpenBracket) {
 					debugFloat -= 0.1;
-					trace("debugFloat = "+ debugFloat);
+					trace("debugFloat = " + debugFloat);
 				}
 				else if (key == kha.input.KeyCode.CloseBracket){
 					debugFloat += 0.1;
-					trace("debugFloat = "+ debugFloat);
+					trace("debugFloat = " + debugFloat);
 				}
 				// Shortcut - Visible
 				if (key == shortcut_visible) visible = !visible;
@@ -170,7 +174,7 @@ class DebugConsole extends Trait {
 	static var haxeTrace: Dynamic->haxe.PosInfos->Void = null;
 	static var lastTraces: Array<String> = [""];
 	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
-		lastTraces.unshift(haxe.Log.formatOutput(v,inf));
+		lastTraces.unshift(haxe.Log.formatOutput(v, traceWithPosition ? inf : null));
 		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
@@ -186,10 +190,10 @@ class DebugConsole extends Trait {
 		var wh = iron.App.h();
 		// Check position
 		switch (position_console) {
-            case PositionStateEnum.LEFT: wx = 0;
-            case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
-            case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
-        }
+			case PositionStateEnum.LEFT: wx = 0;
+			case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
+			case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
+		}
 
 		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
 		var bindG = true;
@@ -775,11 +779,23 @@ class DebugConsole extends Trait {
 				#end
 				if (ui.panel(Id.handle({selected: true}), "Log")) {
 					ui.indent();
+
+					final h = Id.handle();
+					h.selected = DebugConsole.traceWithPosition;
+					DebugConsole.traceWithPosition = ui.check(h, "Print With Position");
+					if (ui.isHovered) ui.tooltip("Whether to prepend the position of print/trace statements to the printed text");
+
 					if (ui.button("Clear")) {
 						lastTraces[0] = "";
 						lastTraces.splice(1, lastTraces.length - 1);
 					}
+					if (ui.isHovered) ui.tooltip("Clear the log output");
+
+					final eh = ui.t.ELEMENT_H;
+					ui.t.ELEMENT_H = ui.fontSize;
 					for (t in lastTraces) ui.text(t);
+					ui.t.ELEMENT_H = eh;
+
 					ui.unindent();
 				}
 			}

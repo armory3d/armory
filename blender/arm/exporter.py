@@ -2679,13 +2679,16 @@ Make sure the mesh only has tris/quads.""")
             out_trait = {
                 'type': 'Script',
                 'class_name': 'armory.trait.internal.DebugConsole',
-                'parameters': [str(arm.utils.get_ui_scale()),
-                str(wrd.arm_debug_console_scale),
-                str(debug_console_pos_type),
-                str(int(wrd.arm_debug_console_visible)),
-                str(int(arm.utils.get_debug_console_visible_sc())),
-                str(int(arm.utils.get_debug_console_scale_in_sc())),
-                str(int(arm.utils.get_debug_console_scale_out_sc()))]
+                'parameters': [
+                    str(arm.utils.get_ui_scale()),
+                    str(wrd.arm_debug_console_scale),
+                    str(debug_console_pos_type),
+                    str(int(wrd.arm_debug_console_visible)),
+                    str(int(wrd.arm_debug_console_trace_pos)),
+                    str(int(arm.utils.get_debug_console_visible_sc())),
+                    str(int(arm.utils.get_debug_console_scale_in_sc())),
+                    str(int(arm.utils.get_debug_console_scale_out_sc()))
+                ]
             }
             self.output['traits'].append(out_trait)
 
