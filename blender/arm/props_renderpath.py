@@ -1,3 +1,5 @@
+from typing import Optional
+
 import bpy
 from bpy.props import *
 
@@ -572,6 +574,16 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
+
+    @staticmethod
+    def get_by_name(name: str) -> Optional['ArmRPListItem']:
+        wrd = bpy.data.worlds['Arm']
+        # Assume unique rp names
+        for i in range(len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == name:
+                return wrd.arm_rplist[i]
+        return None
+
 
 class ARM_UL_RPList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):

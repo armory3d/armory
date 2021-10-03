@@ -247,6 +247,7 @@ def init_properties():
                ('Viewport', 'Viewport', 'Viewport')],
         name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_play_scene = PointerProperty(name="Scene", description="Scene to launch", update=assets.invalidate_compiler_cache, type=bpy.types.Scene)
+    bpy.types.World.arm_play_renderpath = StringProperty(name="Render Path", description="Default renderpath for debugging", update=assets.invalidate_compiler_cache)
     # Debug Console
     bpy.types.World.arm_debug_console = BoolProperty(name="Enable", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=arm.utils.get_debug_console_auto(), update=assets.invalidate_shader_cache)
     bpy.types.World.arm_debug_console_position = EnumProperty(
