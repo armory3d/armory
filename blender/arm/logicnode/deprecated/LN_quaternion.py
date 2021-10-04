@@ -7,6 +7,7 @@ class QuaternionNode(ArmLogicTreeNode):
     bl_idname = 'LNQuaternionNode'
     bl_label = 'Quaternion'
     bl_description = 'Create a quaternion variable (transported through a vector socket)'
+    arm_category = 'Variable'
     arm_section = 'quaternions'
     arm_version = 2  # deprecate
 

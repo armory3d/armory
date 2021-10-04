@@ -9,7 +9,6 @@ class SurfaceCoordsNode(ArmLogicTreeNode):
     bl_description = "Please use the \"Get Touch Movement\" and \"Get Touch Location\" nodes instead"
     arm_category = 'Input'
     arm_section = 'surface'
-    arm_is_obsolete = 'is_obsolete'
     arm_version = 2
 
     def arm_init(self, context):

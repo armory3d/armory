@@ -6,6 +6,7 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion (do not use: quaternions sockets have been phased out entirely)"
     bl_description = "Separate a quaternion object (transported through a vector socket) into its four compoents."
+    arm_category = 'Math'
     arm_section = 'quaternions'
     arm_version = 2  # deprecate
     
