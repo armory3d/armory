@@ -602,6 +602,13 @@ def deprecated(*alternatives: str, message=""):
         cls.bl_icon = 'ERROR'
         cls.arm_is_obsolete = True
 
+        # Deprecated nodes must use a category other than PKG_AS_CATEGORY
+        # in order to prevent an empty 'Deprecated' category showing up
+        # in the add node menu and in the generated wiki pages. The
+        # "old" category is still used to put the node into the correct
+        # category in the wiki.
+        assert cls.arm_category != PKG_AS_CATEGORY, f'Deprecated node {cls.__name__} is missing an explicit category definition!'
+
         if cls.__doc__ is None:
             cls.__doc__ = ''
 
