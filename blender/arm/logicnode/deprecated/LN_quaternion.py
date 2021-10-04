@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 from mathutils import Vector
 
+
 @deprecated(message='Do not use quaternion sockets')
 class QuaternionNode(ArmLogicTreeNode):
     """TO DO."""
@@ -21,14 +22,12 @@ class QuaternionNode(ArmLogicTreeNode):
         self.add_output('ArmVectorSocket', 'XYZ')
         self.add_output('ArmVectorSocket', 'W')
 
-
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
 
         # transition from version 1 to version 2[deprecated]
-        
-        
+
         newnodes = []
 
         rawlinks = self.outputs[0].links
@@ -37,7 +36,7 @@ class QuaternionNode(ArmLogicTreeNode):
         if len(rawlinks)>0 or len(xyzlinks)>0:
             xyzcomb = node_tree.nodes.new('LNVectorNode')
             newnodes.append(xyzcomb)
-            
+
             xyzcomb.inputs[0].default_value = self.inputs[0].default_value
             xyzcomb.inputs[1].default_value = self.inputs[1].default_value
             xyzcomb.inputs[2].default_value = self.inputs[2].default_value
@@ -72,5 +71,5 @@ class QuaternionNode(ArmLogicTreeNode):
         else:
             for link in self.outputs[2].links:
                 link.to_socket.default_value = self.inputs[3].default_value
-        
+
         return newnodes
