@@ -384,8 +384,8 @@ def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) 
 
         state.radiance_written = True
 
-    curshader.write('float cos_theta = clamp(n.z, 0.0, 1.0);')
-    curshader.write('float cos_gamma = dot(n, hosekSunDirection);')
+    curshader.write('float cos_theta = clamp(pos.z, 0.0, 1.0);')
+    curshader.write('float cos_gamma = dot(pos, hosekSunDirection);')
     curshader.write('float gamma_val = acos(cos_gamma);')
 
     return 'Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;'
@@ -420,9 +420,9 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
         # sun_size is already in radians despite being degrees in the UI
         theta = 0.5 * (math.pi - node.sun_size)
         size = math.cos(theta)
-        sun = f'* sun_disk(n, sunDir, {size}, {node.sun_intensity})'
+        sun = f'* sun_disk(pos, sunDir, {size}, {node.sun_intensity})'
 
-    return f'nishita_atmosphere(n, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}){sun}'
+    return f'nishita_atmosphere(pos, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}){sun}'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
@@ -524,7 +524,7 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
     if rpdat.arm_irradiance and rpdat.arm_radiance and not mobile_mat:
         wrd.world_defs += '_Rad'
 
-    return 'texture(envmap, envMapEquirect(n)).rgb * envmapStrength'
+    return 'texture(envmap, envMapEquirect(pos)).rgb * envmapStrength'
 
 
 def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
