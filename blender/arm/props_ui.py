@@ -603,10 +603,11 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
             row.operator("arm.stop", icon="MESH_PLANE")
         row.operator("arm.clean_menu", icon="BRUSH_DATA")
 
-        box = layout.box()
-        box.prop(wrd, 'arm_runtime')
-        box.prop(wrd, 'arm_play_camera')
-        box.prop(wrd, 'arm_play_scene')
+        col = layout.box().column()
+        col.prop(wrd, 'arm_runtime')
+        col.prop(wrd, 'arm_play_camera')
+        col.prop(wrd, 'arm_play_scene')
+        col.prop_search(wrd, 'arm_play_renderpath', wrd, 'arm_rplist', text='Render Path')
 
         if log.num_warnings > 0:
             box = layout.box()

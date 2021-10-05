@@ -165,9 +165,14 @@ def get_gapi():
         return 'webgl'
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
+
 def get_rp() -> arm.props_renderpath.ArmRPListItem:
     wrd = bpy.data.worlds['Arm']
-    return wrd.arm_rplist[wrd.arm_rplist_index]
+    if not state.is_export and wrd.arm_play_renderpath != '':
+        return arm.props_renderpath.ArmRPListItem.get_by_name(wrd.arm_play_renderpath)
+    else:
+        return wrd.arm_rplist[wrd.arm_rplist_index]
+
 
 def bundled_sdk_path():
     if get_os() == 'mac':
@@ -641,10 +646,10 @@ def get_texture_quality_percentage() -> int:
 def get_project_scene_name():
     return get_active_scene().name
 
-def get_active_scene():
+def get_active_scene() -> bpy.types.Scene:
     wrd = bpy.data.worlds['Arm']
     if not state.is_export:
-        if wrd.arm_play_scene == None:
+        if wrd.arm_play_scene is None:
             return bpy.context.scene
         return wrd.arm_play_scene
     else:
