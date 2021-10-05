@@ -159,9 +159,12 @@ def parse_geometry(node: bpy.types.ShaderNodeNewGeometry, out_socket: bpy.types.
         return 'mposition'
     # Backfacing
     elif out_socket == node.outputs[6]:
-        return '(1.0 - float(gl_FrontFacing))'
+        return '(1.0 - float(gl_FrontFacing))' if state.context == ParserContext.OBJECT else '0.0'
     # Pointiness
     elif out_socket == node.outputs[7]:
+        return '0.0'
+    # Random Per Island
+    elif out_socket == node.outputs[8]:
         return '0.0'
 
 

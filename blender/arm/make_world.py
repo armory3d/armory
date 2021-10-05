@@ -217,15 +217,31 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
     # Mark as non-opaque
     frag.write('fragColor.a = 0.0;')
 
+    finalize(frag, vert)
+
+
+def finalize(frag: Shader, vert: Shader):
+    """Checks the given fragment shader for completeness and adds
+    variable initializations if required.
+
+    TODO: Merge with make_finalize?
+    """
     if frag.contains('pos') and not frag.contains('vec3 pos'):
         frag.write_attrib('vec3 pos = -n;')
 
-    # Hack to make procedural textures work
+    if frag.contains('vVec') and not frag.contains('vec3 vVec'):
+        # For worlds, the camera seems to be always at origin in
+        # Blender, so we can just use the normals as the incoming vector
+        frag.write_attrib('vec3 vVec = n;')
+
     for var in ('bposition', 'mposition', 'wposition'):
         if (frag.contains(var) and not frag.contains(f'vec3 {var}')) or vert.contains(var):
             frag.add_in(f'vec3 {var}')
             vert.add_out(f'vec3 {var}')
             vert.write(f'{var} = pos;')
+
+    if frag.contains('wtangent') and not frag.contains('vec3 wtangent'):
+        frag.write_attrib('vec3 wtangent = vec3(0.0);')
 
     if frag.contains('texCoord') and not frag.contains('vec2 texCoord'):
         frag.add_in('vec2 texCoord')
