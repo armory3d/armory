@@ -1,14 +1,15 @@
 from arm.logicnode.arm_nodes import *
 
+
 @deprecated(message='Do not use quaternion sockets')
 class SeparateQuaternionNode(ArmLogicTreeNode):
     """Splits the given quaternion into X, Y, Z and W."""
     bl_idname = 'LNSeparateQuaternionNode'
     bl_label = "Separate Quaternion (do not use: quaternions sockets have been phased out entirely)"
     bl_description = "Separate a quaternion object (transported through a vector socket) into its four compoents."
+    arm_category = 'Math'
     arm_section = 'quaternions'
     arm_version = 2  # deprecate
-    
 
     def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Quaternion')
@@ -17,7 +18,6 @@ class SeparateQuaternionNode(ArmLogicTreeNode):
         self.add_output('ArmFloatSocket', 'Y')
         self.add_output('ArmFloatSocket', 'Z')
         self.add_output('ArmFloatSocket', 'W')
-
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
