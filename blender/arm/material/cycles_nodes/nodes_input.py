@@ -278,6 +278,8 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     elif out_socket == node.outputs[1]: # Normal
         return 'n'
     elif out_socket == node.outputs[2]: # UV
+        if state.context == ParserContext.WORLD:
+            return 'vec3(0.0)'
         state.con.add_elem('tex', 'short2norm')
         return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
     elif out_socket == node.outputs[3]: # Object
@@ -289,6 +291,8 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
         state.frag.add_uniform('vec2 screenSize', link='_screenSize')
         return f'vec3(gl_FragCoord.xy / screenSize, 0.0)'
     elif out_socket == node.outputs[6]: # Reflection
+        if state.context == ParserContext.WORLD:
+            return 'n'
         return 'vec3(0.0)'
 
 
