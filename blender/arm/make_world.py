@@ -209,7 +209,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
 
     if '_EnvClouds' in world.world_defs:
-        frag.write('if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));')
+        frag.write('if (pos.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, pos), clamp(pos.z * 5.0, 0, 1));')
 
     if '_EnvLDR' in world.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
@@ -217,20 +217,31 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
     # Mark as non-opaque
     frag.write('fragColor.a = 0.0;')
 
-    # Hack to make procedural textures work
-    frag_bpos = (frag.contains('bposition') and not frag.contains('vec3 bposition')) or vert.contains('bposition')
-    if frag_bpos:
-        frag.add_in('vec3 bposition')
-        vert.add_out('vec3 bposition')
-        # Use normals for now
-        vert.write('bposition = nor;')
+    finalize(frag, vert)
 
-    frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
-    if frag_mpos:
-        frag.add_in('vec3 mposition')
-        vert.add_out('vec3 mposition')
-        # Use normals for now
-        vert.write('mposition = nor;')
+
+def finalize(frag: Shader, vert: Shader):
+    """Checks the given fragment shader for completeness and adds
+    variable initializations if required.
+
+    TODO: Merge with make_finalize?
+    """
+    if frag.contains('pos') and not frag.contains('vec3 pos'):
+        frag.write_attrib('vec3 pos = -n;')
+
+    if frag.contains('vVec') and not frag.contains('vec3 vVec'):
+        # For worlds, the camera seems to be always at origin in
+        # Blender, so we can just use the normals as the incoming vector
+        frag.write_attrib('vec3 vVec = n;')
+
+    for var in ('bposition', 'mposition', 'wposition'):
+        if (frag.contains(var) and not frag.contains(f'vec3 {var}')) or vert.contains(var):
+            frag.add_in(f'vec3 {var}')
+            vert.add_out(f'vec3 {var}')
+            vert.write(f'{var} = pos;')
+
+    if frag.contains('wtangent') and not frag.contains('vec3 wtangent'):
+        frag.write_attrib('vec3 wtangent = vec3(0.0);')
 
     if frag.contains('texCoord') and not frag.contains('vec2 texCoord'):
         frag.add_in('vec2 texCoord')

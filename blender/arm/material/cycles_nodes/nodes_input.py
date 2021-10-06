@@ -159,9 +159,12 @@ def parse_geometry(node: bpy.types.ShaderNodeNewGeometry, out_socket: bpy.types.
         return 'mposition'
     # Backfacing
     elif out_socket == node.outputs[6]:
-        return '(1.0 - float(gl_FrontFacing))'
+        return '(1.0 - float(gl_FrontFacing))' if state.context == ParserContext.OBJECT else '0.0'
     # Pointiness
     elif out_socket == node.outputs[7]:
+        return '0.0'
+    # Random Per Island
+    elif out_socket == node.outputs[8]:
         return '0.0'
 
 
@@ -273,10 +276,10 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     if out_socket == node.outputs[0]: # Generated - bounds
         return 'bposition'
     elif out_socket == node.outputs[1]: # Normal
-        if state.context == ParserContext.WORLD:
-            return '-n'
         return 'n'
     elif out_socket == node.outputs[2]: # UV
+        if state.context == ParserContext.WORLD:
+            return 'vec3(0.0)'
         state.con.add_elem('tex', 'short2norm')
         return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
     elif out_socket == node.outputs[3]: # Object
@@ -288,6 +291,8 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
         state.frag.add_uniform('vec2 screenSize', link='_screenSize')
         return f'vec3(gl_FragCoord.xy / screenSize, 0.0)'
     elif out_socket == node.outputs[6]: # Reflection
+        if state.context == ParserContext.WORLD:
+            return 'n'
         return 'vec3(0.0)'
 
 
