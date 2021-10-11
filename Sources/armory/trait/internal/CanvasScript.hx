@@ -150,6 +150,11 @@ class CanvasScript extends Trait {
 	 */
 	public function setCanvasFontSize(fontSize: Int) {
 		cui.t.FONT_SIZE = fontSize;
+		cui.setScale(cui.ops.scaleFactor);
+	}
+
+	public function getCanvasFontSize(): Int {
+		return cui.t.FONT_SIZE;
 	}
 
 	// Contains data
