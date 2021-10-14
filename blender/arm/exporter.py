@@ -22,6 +22,8 @@ import numpy as np
 import bpy
 from mathutils import *
 
+import bmesh
+
 import arm.assets as assets
 import arm.exporter_opt as exporter_opt
 import arm.log as log
@@ -1114,6 +1116,119 @@ class ArmoryExporter:
                     if 'constraints' not in oskin:
                         oskin['constraints'] = []
                     self.add_constraints(bone, oskin, bone=True)
+    
+    def export_shape_keys(self, bobject: bpy.types.Object, export_mesh: bpy.types.Mesh, out_mesh):
+    
+        max_shape_keys = 32
+        output_dir = bpy.path.abspath('//') + "Bundled\\"
+        name = bobject.data.name        
+        vert_pos = []
+        vert_nor = []
+        names = []
+        default_values = []
+    
+        count = 0
+        for shape_key in bobject.data.shape_keys.key_blocks:
+        
+            if(count > max_shape_keys): 
+                break
+            vert_data = self.get_vertex_data_from_shape_key(shape_key)
+            vert_pos.append(vert_data['pos'])
+            vert_nor.append(vert_data['nor'])
+            names.append(shape_key.name)
+            default_values.append(shape_key.value)
+
+            count += 1
+        
+        min, max = self.bake_to_image(vert_pos, vert_nor, name, output_dir)
+
+        morph_target = {}
+        morph_target['morph_target_ref'] = names
+        morph_target['morph_target_defaults'] = default_values
+        morph_target['num_morph_targets'] = count
+        morph_target['morph_scale'] = max - min
+        morph_target['morph_offset'] = min
+
+        out_mesh['morph_target'] = morph_target
+
+        self.create_morph_uv_set(bobject)
+        return
+    
+    def get_vertex_data_from_shape_key(self, shape_key_data):
+    
+        vert_pos = shape_key_data.data.values()
+        vert_nor = shape_key_data.normals_vertex_get()
+
+        num_verts = len(vert_pos)
+
+        pos = []
+        nor = []
+
+        for i in range(num_verts):
+            pos.append(list(vert_pos[i].co))
+            temp = []
+            for j in range(3):
+                temp.append(vert_nor[j + i * 3])
+            nor.append(temp)
+
+        return {'pos': pos, 'nor': nor}
+    
+    def bake_to_image(self, vert_pos, vert_nor, name, output_dir):
+    
+        pos_array = np.array(vert_pos)
+        nor_array = np.array(vert_nor)
+        pos_max = np.amax(pos_array)
+        pos_min = np.amin(pos_array)
+
+        pos_array_scaled = np.interp(pos_array, (pos_min, pos_max), (0, 1))
+
+        self.write_output_image(pos_array_scaled, name + '_pos', output_dir)
+
+        nor_array_scaled = np.interp(nor_array, (-1, 1), (0, 1))
+
+        self.write_output_image(nor_array_scaled, name + '_nor', output_dir)
+
+        return pos_min, pos_max
+    
+    def write_output_image(self, data, name, output_dir):
+    
+        size = len(data[0]), len(data)
+
+        pixel_list = []
+
+        for y in range(size[1]):
+            for x in range(size[0]):
+                # assign RGBA
+                pixel_list.append(data[y, x, 0])
+                pixel_list.append(data[y, x, 1])
+                pixel_list.append(data[y, x, 2])
+                pixel_list.append(1.0)
+
+        image = bpy.data.images.new(name, width = size[0], height = size[1], is_data = True)
+        image.pixels = pixel_list
+        image.save_render(output_dir + name + ".png", scene= bpy.context.scene)
+        bpy.data.images.remove(image)
+    
+    def create_morph_uv_set(self, obj):
+    
+        if(obj.data.uv_layers.get('UVMap_shape_key') is None):
+            obj.data.uv_layers.new(name = 'UVMap_shape_key')
+        
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        uv_layer = bm.loops.layers.uv.get('UVMap_shape_key')
+
+        pixel_size = 1.0 / len(bm.verts)
+
+        i= 0
+        for v in bm.verts:
+            for l in v.link_loops:
+                uv_data = l[uv_layer]
+                uv_data.uv = Vector(((i + 0.5) * pixel_size, 0.0))
+            i += 1
+
+        bm.to_mesh(obj.data)
+        bm.free()
 
     def write_mesh(self, bobject: bpy.types.Object, fp, out_mesh):
         if bpy.data.worlds['Arm'].arm_single_data_file:
@@ -1142,8 +1257,15 @@ class ArmoryExporter:
         num_verts = len(loops)
         num_uv_layers = len(exportMesh.uv_layers)
         is_baked = self.has_baked_material(bobject, exportMesh.materials)
-        has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
+        self.has_shape_key = False
+        if('morph_target' in o):
+            self.has_shape_key = True
+        print(bobject.name)
+        print(self.has_shape_key)
+        has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked or self.has_shape_key
         has_tex1 = has_tex and num_uv_layers > 1
+        print(has_tex)
+        print(has_tex1)
         num_colors = len(exportMesh.vertex_colors)
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
         has_tang = self.has_tangents(bobject.data)
@@ -1410,58 +1532,34 @@ Make sure the mesh only has tris/quads.""")
         struct_flag = False
 
         # Save the morph state if necessary
-        active_shape_key_index = bobject.active_shape_key_index
-        show_only_shape_key = bobject.show_only_shape_key
-        current_morph_value = []
+        active_shape_key_index = 0
+        show_only_shape_key = False
+        current_morph_value = 0
 
         shape_keys = ArmoryExporter.get_shape_keys(mesh)
         if shape_keys:
+            active_shape_key_index = bobject.active_shape_key_index
+            show_only_shape_key = bobject.show_only_shape_key
+            current_morph_value = bobject.active_shape_key.value
+
             bobject.active_shape_key_index = 0
             bobject.show_only_shape_key = True
-
-            base_index = 0
-            relative = shape_keys.use_relative
-            if relative:
-                morph_count = 0
-                base_name = shape_keys.reference_key.name
-                for block in shape_keys.key_blocks:
-                    if block.name == base_name:
-                        base_index = morph_count
-                        break
-                    morph_count += 1
-
-            morph_count = 0
-            for block in shape_keys.key_blocks:
-                current_morph_value.append(block.value)
-                block.value = 0.0
-
-                if block.name != "":
-                    # self.IndentWrite(B"Morph (index = ", 0, struct_flag)
-                    # self.WriteInt(morph_count)
-
-                    # if (relative) and (morph_count != base_index):
-                    #   self.Write(B", base = ")
-                    #   self.WriteInt(base_index)
-
-                    # self.Write(B")\n")
-                    # self.IndentWrite(B"{\n")
-                    # self.IndentWrite(B"Name {string {\"", 1)
-                    # self.Write(bytes(block.name, "UTF-8"))
-                    # self.Write(B"\"}}\n")
-                    # self.IndentWrite(B"}\n")
-                    # TODO
-                    struct_flag = True
-
-                morph_count += 1
-
-            shape_keys.key_blocks[0].value = 1.0
-            mesh.update()
+            self.depsgraph.update()
 
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
         bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
         export_mesh = bobject_eval.to_mesh()
+
+        if shape_keys:
+            if(len(bobject.data.uv_layers) > 2):
+                if(bobject.data.uv_layers.get('UVMap_shape_key') is not None):
+                    self.export_shape_keys(bobject, export_mesh, out_mesh)
+                else:
+                    log.warn(oid + ' has 2 or more UV Maps. Shape keys are not supported for objects with 2 or more UV maps')
+            else:
+                self.export_shape_keys(bobject, export_mesh, out_mesh)
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
@@ -1487,9 +1585,8 @@ Make sure the mesh only has tris/quads.""")
         if shape_keys:
             bobject.active_shape_key_index = active_shape_key_index
             bobject.show_only_shape_key = show_only_shape_key
-
-            for m in range(len(current_morph_value)):
-                shape_keys.key_blocks[m].value = current_morph_value[m]
+            bobject.active_shape_key.value = current_morph_value
+            self.depsgraph.update()
 
             mesh.update()
 
