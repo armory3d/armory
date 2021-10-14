@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import stat
+import html
 from typing import List
 
 import bpy
@@ -512,7 +513,7 @@ def write_indexhtml(w, h, is_publish):
     </style>
 """)
         f.write("""
-    <title>Armory</title>
+    <title>"""+html.escape( wrd.arm_project_name)+"""</title>
 </head>
 <body style="margin: 0; padding: 0;">
 """)
