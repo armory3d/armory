@@ -207,7 +207,7 @@ class PhysicsWorld extends Trait {
 	/**
 	   Used to get intersecting rigid bodies with the passed in RigidBody as reference. Often used when checking for object collisions.
 	   @param	body The passed in RigidBody to be checked for intersecting rigid bodies.
-	   @return Array<RigidBody> or null.
+	   @return `Array<RigidBody>`
 	**/
 	public function getContacts(body: RigidBody): Array<RigidBody> {
 		if (contacts.length == 0) return null;
