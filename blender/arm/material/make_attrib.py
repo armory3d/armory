@@ -6,6 +6,7 @@ import arm.material.make_skin as make_skin
 import arm.material.make_particle as make_particle
 import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
+import arm.material.make_morph_target as make_morph_target
 from arm.material.shader import Shader, ShaderContext
 import arm.utils
 
@@ -16,6 +17,7 @@ if arm.is_reload(__name__):
     make_particle = arm.reload_module(make_particle)
     make_inst = arm.reload_module(make_inst)
     make_tess = arm.reload_module(make_tess)
+    make_morph_target = arm.reload_module(make_morph_target)
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import Shader, ShaderContext
     arm.utils = arm.reload_module(arm.utils)
@@ -50,13 +52,19 @@ def write_vertpos(vert):
 
 
 def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor=True):
+    print('writing nor pos')
     is_bone = con_mesh.is_elem('bone')
+    is_morph = con_mesh.is_elem('morph')
+    if is_morph:
+        make_morph_target.morph_pos(vert)
     if is_bone:
         make_skin.skin_pos(vert)
     if write_nor:
         prep = 'vec3 ' if declare else ''
+        if is_morph:
+            make_morph_target.morph_nor(vert, is_bone, prep)
         if is_bone:
-            make_skin.skin_nor(vert, prep)
+            make_skin.skin_nor(vert, is_morph, prep)
         else:
             vert.write_attrib(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
     if con_mesh.is_elem('ipos'):
