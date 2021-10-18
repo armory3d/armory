@@ -770,6 +770,20 @@ def export_bone_data(bobject: bpy.types.Object) -> bool:
     """Returns whether the bone data of the given object should be exported."""
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
+def export_morph_targets(bobject: bpy.types.Object) -> bool:
+    if not hasattr(bobject.data, 'shape_keys'):
+            return False
+
+    shape_keys = bobject.data.shape_keys
+    if shape_keys and len(shape_keys.key_blocks) > 1:
+        return shape_keys
+    return None
+
+def export_vcols(bobject: bpy.types.Object) -> bool:
+    for material in bobject.data.materials:
+        if material is not None and material.export_vcols:
+            return True
+    return False
 
 def open_editor(hx_path=None):
     ide_bin = get_ide_bin()
