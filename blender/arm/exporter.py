@@ -207,6 +207,14 @@ class ArmoryExporter:
             return shape_keys
         return None
 
+    @staticmethod
+    def get_morph_uv_index(mesh):
+        i = 0
+        for uv_layer in mesh.uv_layers:
+            if uv_layer.name == 'UVMap_shape_key':
+                return i
+            i +=1
+
     def find_bone(self, name: str) -> Optional[Tuple[bpy.types.Bone, Dict]]:
         """Finds the bone reference (a tuple containing the bone object
         and its data) by the given name and returns it."""
@@ -1125,24 +1133,27 @@ class ArmoryExporter:
         vert_pos = []
         vert_nor = []
         names = []
-        default_values = []
+        default_values = [0] * max_shape_keys
+
+        shape_key_base = bobject.data.shape_keys.key_blocks[0]
     
         count = 0
-        for shape_key in bobject.data.shape_keys.key_blocks:
+        for shape_key in bobject.data.shape_keys.key_blocks[1:]:
         
             if(count > max_shape_keys): 
                 break
-            vert_data = self.get_vertex_data_from_shape_key(shape_key)
+            vert_data = self.get_vertex_data_from_shape_key(shape_key_base, shape_key)
             vert_pos.append(vert_data['pos'])
             vert_nor.append(vert_data['nor'])
             names.append(shape_key.name)
-            default_values.append(shape_key.value)
+            default_values[count] = shape_key.value
 
             count += 1
         
         min, max = self.bake_to_image(vert_pos, vert_nor, name, output_dir)
 
         morph_target = {}
+        morph_target['morph_target_data_file'] = name
         morph_target['morph_target_ref'] = names
         morph_target['morph_target_defaults'] = default_values
         morph_target['num_morph_targets'] = count
@@ -1150,14 +1161,14 @@ class ArmoryExporter:
         morph_target['morph_offset'] = min
 
         out_mesh['morph_target'] = morph_target
-
-        self.create_morph_uv_set(bobject)
         return
     
-    def get_vertex_data_from_shape_key(self, shape_key_data):
+    def get_vertex_data_from_shape_key(self, shape_key_base, shape_key_data):
     
+        base_vert_pos = shape_key_base.data.values()
+        base_vert_nor = shape_key_base.normals_split_get()
         vert_pos = shape_key_data.data.values()
-        vert_nor = shape_key_data.normals_vertex_get()
+        vert_nor = shape_key_data.normals_split_get()
 
         num_verts = len(vert_pos)
 
@@ -1165,10 +1176,10 @@ class ArmoryExporter:
         nor = []
 
         for i in range(num_verts):
-            pos.append(list(vert_pos[i].co))
+            pos.append(list(vert_pos[i].co - base_vert_pos[i].co))
             temp = []
             for j in range(3):
-                temp.append(vert_nor[j + i * 3])
+                temp.append(vert_nor[j + i * 3] - base_vert_nor[j + i * 3])
             nor.append(temp)
 
         return {'pos': pos, 'nor': nor}
@@ -1257,50 +1268,59 @@ class ArmoryExporter:
         num_verts = len(loops)
         num_uv_layers = len(exportMesh.uv_layers)
         is_baked = self.has_baked_material(bobject, exportMesh.materials)
-        self.has_shape_key = False
-        if('morph_target' in o):
-            self.has_shape_key = True
-        print(bobject.name)
-        print(self.has_shape_key)
-        has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked or self.has_shape_key
-        has_tex1 = has_tex and num_uv_layers > 1
-        print(has_tex)
-        print(has_tex1)
         num_colors = len(exportMesh.vertex_colors)
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
+        # Check if shape keys were exported
+        has_morph_target = self.get_shape_keys(bobject.data) and not has_col
+        if(has_morph_target):
+            num_uv_layers -= 1
+            morph_uv_index = self.get_morph_uv_index(bobject.data)
+        has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
+        has_tex1 = has_tex and num_uv_layers > 1
         has_tang = self.has_tangents(bobject.data)
 
         pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
         ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
-        if has_tex:
-            t0map = 0 # Get active uvmap
-            t0data = np.empty(num_verts * 2, dtype='<f4')
+        if has_tex or has_morph_target:
             uv_layers = exportMesh.uv_layers
-            if uv_layers is not None:
-                if 'UVMap_baked' in uv_layers:
-                    for i in range(0, len(uv_layers)):
-                        if uv_layers[i].name == 'UVMap_baked':
-                            t0map = i
-                            break
-                else:
-                    for i in range(0, len(uv_layers)):
-                        if uv_layers[i].active_render:
-                            t0map = i
-                            break
-            if has_tex1:
-                t1map = 1 if t0map == 0 else 0
-                t1data = np.empty(num_verts * 2, dtype='<f4')
-            # Scale for packed coords
             maxdim = 1.0
-            lay0 = uv_layers[t0map]
-            for v in lay0.data:
-                if abs(v.uv[0]) > maxdim:
-                    maxdim = abs(v.uv[0])
-                if abs(v.uv[1]) > maxdim:
-                    maxdim = abs(v.uv[1])
-            if has_tex1:
-                lay1 = uv_layers[t1map]
-                for v in lay1.data:
+            if has_tex:
+                t0map = 0 # Get active uvmap
+                t0data = np.empty(num_verts * 2, dtype='<f4')
+                if uv_layers is not None:
+                    if 'UVMap_baked' in uv_layers:
+                        for i in range(0, len(uv_layers)):
+                            if uv_layers[i].name == 'UVMap_baked':
+                                t0map = i
+                                break
+                    else:
+                        for i in range(0, len(uv_layers)):
+                            if uv_layers[i].active_render and uv_layers[i].name is not 'UVMap_shape_key':
+                                t0map = i
+                                break
+                if has_tex1:
+                    for i in range(0, len(uv_layers)):
+                        if i is not t0map and uv_layers.name is not 'UVMap_shape_key':
+                            t1map = i
+                    t1data = np.empty(num_verts * 2, dtype='<f4')                    
+                # Scale for packed coords
+                lay0 = uv_layers[t0map]
+                for v in lay0.data:
+                    if abs(v.uv[0]) > maxdim:
+                        maxdim = abs(v.uv[0])
+                    if abs(v.uv[1]) > maxdim:
+                        maxdim = abs(v.uv[1])
+                if has_tex1:
+                    lay1 = uv_layers[t1map]
+                    for v in lay1.data:
+                        if abs(v.uv[0]) > maxdim:
+                            maxdim = abs(v.uv[0])
+                        if abs(v.uv[1]) > maxdim:
+                            maxdim = abs(v.uv[1])
+            if has_morph_target:
+                morph_data = np.empty(num_verts * 2, dtype='<f4')
+                lay2 = uv_layers[morph_uv_index]
+                for v in lay2.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
                     if abs(v.uv[1]) > maxdim:
@@ -1342,6 +1362,8 @@ Make sure the mesh only has tris/quads.""")
             lay0 = exportMesh.uv_layers[t0map]
             if has_tex1:
                 lay1 = exportMesh.uv_layers[t1map]
+        if has_morph_target:
+            lay2 = exportMesh.uv_layers[morph_uv_index]
         if has_col:
             vcol0 = exportMesh.vertex_colors[0].data
 
@@ -1372,6 +1394,10 @@ Make sure the mesh only has tris/quads.""")
                     tangdata[i3    ] = tang[0]
                     tangdata[i3 + 1] = tang[1]
                     tangdata[i3 + 2] = tang[2]
+            if has_morph_target:
+                uv = lay2.data[loop.index].uv
+                morph_data[i2    ] = uv[0]
+                morph_data[i2 + 1] = 1.0 - uv[1]
             if has_col:
                 col = vcol0[loop.index].color
                 i3 = i * 3
@@ -1432,6 +1458,9 @@ Make sure the mesh only has tris/quads.""")
             if has_tex1:
                 t1data *= invscale_tex
                 t1data = np.array(t1data, dtype='<i2')
+        if has_morph_target:
+            morph_data *= invscale_tex
+            morph_data = np.array(morph_data, dtype='<i2')
         if has_col:
             cdata *= 32767
             cdata = np.array(cdata, dtype='<i2')
@@ -1447,6 +1476,8 @@ Make sure the mesh only has tris/quads.""")
             o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
             if has_tex1:
                 o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
+        if has_morph_target:
+            o['vertex_arrays'].append({ 'attrib': 'morph', 'values': morph_data, 'data': 'short2norm' })
         if has_col:
             o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
         if has_tang:
@@ -1538,12 +1569,18 @@ Make sure the mesh only has tris/quads.""")
 
         shape_keys = ArmoryExporter.get_shape_keys(mesh)
         if shape_keys:
+            # Save the morph state
             active_shape_key_index = bobject.active_shape_key_index
             show_only_shape_key = bobject.show_only_shape_key
             current_morph_value = bobject.active_shape_key.value
-
+            # Reset morph state to base for mesh export
             bobject.active_shape_key_index = 0
             bobject.show_only_shape_key = True
+            if self.get_export_vcols(bobject.data):
+                log.warn(oid + ' has vertex colors. Shape keys are not supported for objects with vertex colors')
+                shape_keys = False
+            else:
+                self.create_morph_uv_set(bobject)
             self.depsgraph.update()
 
         armature = bobject.find_armature()
@@ -1553,13 +1590,7 @@ Make sure the mesh only has tris/quads.""")
         export_mesh = bobject_eval.to_mesh()
 
         if shape_keys:
-            if(len(bobject.data.uv_layers) > 2):
-                if(bobject.data.uv_layers.get('UVMap_shape_key') is not None):
-                    self.export_shape_keys(bobject, export_mesh, out_mesh)
-                else:
-                    log.warn(oid + ' has 2 or more UV Maps. Shape keys are not supported for objects with 2 or more UV maps')
-            else:
-                self.export_shape_keys(bobject, export_mesh, out_mesh)
+            self.export_shape_keys(bobject, export_mesh, out_mesh)
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
