@@ -5,6 +5,8 @@ def remove_extra_inputs(self, context):
     if not any(p == self.property0 for p in ['Or', 'And']):
         while len(self.inputs) > self.min_inputs:
             self.inputs.remove(self.inputs[-1])
+    if self.property0 == 'Between':
+        self.add_input('ArmDynamicSocket', 'Input 3')
 
 class GateNode(ArmLogicTreeNode):
     """Logic nodes way to do "if" statements. When activated, it
@@ -28,6 +30,7 @@ class GateNode(ArmLogicTreeNode):
                  ('Greater Equal', 'Greater Equal', 'Greater Equal'),
                  ('Less', 'Less', 'Less'),
                  ('Less Equal', 'Less Equal', 'Less Equal'),
+                 ('Between', 'Between', 'Input 1 Between Input 2 and Input 3 inclusive'),
                  ('Or', 'Or', 'Or'),
                  ('And', 'And', 'And')],
         name='', default='Equal',
