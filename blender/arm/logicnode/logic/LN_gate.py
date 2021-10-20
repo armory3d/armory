@@ -11,7 +11,7 @@ def remove_extra_inputs(self, context):
 class GateNode(ArmLogicTreeNode):
     """Logic nodes way to do "if" statements. When activated, it
     compares if its two inputs are being Equal, Greater Equal,
-    Less Equal, or Not Equal, regardless of variable type, and passes
+    Less Equal, Not Equal or Between regardless of variable type, and passes
     through its active input to the output that matches the result of
     the comparison.
 
@@ -19,7 +19,7 @@ class GateNode(ArmLogicTreeNode):
     the input when both booleans are true (And) or at least one (Or)."""
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
-    arm_version = 1
+    arm_version = 2
 
     min_inputs = 3
     property0: HaxeEnumProperty(
@@ -62,3 +62,12 @@ class GateNode(ArmLogicTreeNode):
             op.socket_type = 'ArmDynamicSocket'
             op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op2.node_index = str(id(self))
+     
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement(
+            'LNGateNode', self.arm_version, 'LNGateNode', 2,
+            in_socket_mapping={0:0, 1:1, 2:2}, out_socket_mapping={0:0, 1:1}
+        )
