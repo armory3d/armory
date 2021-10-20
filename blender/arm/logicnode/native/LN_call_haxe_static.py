@@ -10,7 +10,7 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
     bl_idname = 'LNCallHaxeStaticNode'
     bl_label = 'Call Haxe Static'
     arm_section = 'haxe'
-    arm_version = 1
+    arm_version = 2
 
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -31,3 +31,12 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         op.index_name_offset = -2
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
+        
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement(
+            'LNCallHaxeStaticNode', self.arm_version, 'LNCallHaxeStaticNode', 2,
+            in_socket_mapping={0:0, 1:1}, out_socket_mapping={0:0, 1:1}
+        )
