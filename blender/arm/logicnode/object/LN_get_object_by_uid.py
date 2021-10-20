@@ -4,7 +4,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class GetObjectByUidNode(ArmLogicTreeNode):
-    """Searches for a object that with this uid in the current active scene and returns it."""
+    """Searches for a object with this uid in the current active scene and returns it."""
 
     bl_idname = 'LNGetObjectByUidNode'
     bl_label = 'Get Object By Uid'
