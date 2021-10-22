@@ -29,6 +29,9 @@ class GateNode extends LogicNode {
 			cond = v1 < v2;
 		case "Less Equal":
 			cond = v1 <= v2;
+		case "Between":
+			var v3: Dynamic = inputs[3].get();
+			cond = v2 <= v1 && v1 <= v3;
 		case "Or":
 			for (i in 1...inputs.length) {
 				if (inputs[i].get()) {

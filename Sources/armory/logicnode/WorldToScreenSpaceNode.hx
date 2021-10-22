@@ -1,6 +1,8 @@
 package armory.logicnode;
 
 import iron.math.Vec4;
+import iron.math.Vec2;
+import iron.App;
 
 class WorldToScreenSpaceNode extends LogicNode {
 
@@ -19,7 +21,10 @@ class WorldToScreenSpaceNode extends LogicNode {
 		v.setFrom(v1);
 		v.applyproj(cam.V);
 		v.applyproj(cam.P);
+		
+		var w = App.w();
+		var h = App.h();
 
-		return v;
+		return new Vec2((v.x + 1) * 0.5 * w, (-v.y + 1) * 0.5 * h);
 	}
 }
