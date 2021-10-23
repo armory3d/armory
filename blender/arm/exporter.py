@@ -1573,7 +1573,7 @@ Make sure the mesh only has tris/quads.""")
 
         self.output['probe_datas'].append(o)
 
-    def export_collection(self, collection):
+    def export_collection(self, collection: bpy.types.Collection):
         """Exports a single collection."""
         scene_objects = self.scene.collection.all_objects
 
@@ -1584,10 +1584,13 @@ Make sure the mesh only has tris/quads.""")
         }
 
         for bobject in collection.objects:
+            if not bobject.arm_export:
+                continue
 
-            # Add unparented objects only, then instantiate full object
-            # child tree
-            if bobject.parent is None and bobject.arm_export:
+            # Only add unparented objects or objects with their parent
+            # outside the collection, then instantiate the full object
+            # child tree if the collection gets spawned as a whole
+            if bobject.parent is None or bobject.parent.name not in collection.objects:
 
                 # This object is controlled by proxy
                 has_proxy_user = False
