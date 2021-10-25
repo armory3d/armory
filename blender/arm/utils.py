@@ -104,7 +104,8 @@ def blend_name():
 def build_dir():
     return 'build_' + safestr(blend_name())
 
-def get_fp():
+
+def get_fp() -> str:
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_project_root != '':
         return bpy.path.abspath(wrd.arm_project_root)
@@ -127,8 +128,21 @@ def get_fp():
             s += os.path.sep
         return s
 
+
 def get_fp_build():
     return os.path.join(get_fp(), build_dir())
+
+
+def to_absolute_path(path: str, from_library: Optional[bpy.types.Library] = None) -> str:
+    """Convert the given absolute or relative path into an absolute path.
+
+    - If `from_library` is not set (default), a given relative path will be
+      interpreted as relative to the project directory.
+    - If `from_library` is set, a given relative path will be interpreted as
+      relative to the filepath of the specified library.
+    """
+    return os.path.normpath(bpy.path.abspath(path, start=get_fp(), library=from_library))
+
 
 def get_os() -> str:
     s = platform.system()
