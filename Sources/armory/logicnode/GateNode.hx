@@ -19,6 +19,8 @@ class GateNode extends LogicNode {
 		switch (property0) {
 		case "Equal":
 			cond = Std.isOfType(v1, Vec4) ? v1.equals(v2) : v1 == v2;
+		case "Not Equal":
+			cond = Std.isOfType(v1, Vec4) ? !v1.equals(v2) : v1 != v2;
 		case "Almost Equal":
 			cond = Std.isOfType(v1, Vec4) ? v1.almostEquals(v2, property1) : Math.abs(v1 - v2) < property1;
 		case "Greater":
