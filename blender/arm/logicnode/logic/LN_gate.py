@@ -6,12 +6,12 @@ def remove_extra_inputs(self, context):
         while len(self.inputs) > self.min_inputs:
             self.inputs.remove(self.inputs[-1])
     if self.property0 == 'Between':
-        self.add_input('ArmDynamicSocket', 'Input 3')
+            self.add_input('ArmDynamicSocket', 'Input 3')
 
 class GateNode(ArmLogicTreeNode):
     """Logic nodes way to do "if" statements. When activated, it
     compares if its two inputs are being Equal, Greater Equal,
-    Less Equal, Not Equal or Between regardless of variable type, and passes
+    Less Equal, Not Equal, or Between, regardless of variable type, and passes
     through its active input to the output that matches the result of
     the comparison.
 
@@ -25,6 +25,7 @@ class GateNode(ArmLogicTreeNode):
     property0: HaxeEnumProperty(
         'property0',
         items = [('Equal', 'Equal', 'Equal'),
+                 ('Not Equal', 'Not Equal', 'Not Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
                  ('Greater Equal', 'Greater Equal', 'Greater Equal'),
@@ -62,7 +63,7 @@ class GateNode(ArmLogicTreeNode):
             op.socket_type = 'ArmDynamicSocket'
             op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op2.node_index = str(id(self))
-     
+
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
