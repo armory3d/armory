@@ -1149,8 +1149,24 @@ class ArmoryExporter:
             default_values[count] = shape_key.value
 
             count += 1
+
+        pos_array = np.array(vert_pos)
+        nor_array = np.array(vert_nor)
+        max = np.amax(pos_array)
+        min = np.amin(pos_array)
+
+        array_size = len(pos_array[0]), len(pos_array)
+
+        img_size, extra_zeros, block_size = self.get_best_image_size(array_size)
+
+        if(img_size < 1):
+            log.error(f"""object {bobject.name} contains too many vertices or shape keys to support shape keys export""")
+            self.remove_morph_uv_set(bobject)
+            return
         
-        min, max = self.bake_to_image(vert_pos, vert_nor, name, output_dir)
+        self.bake_to_image(pos_array, nor_array, max, min, extra_zeros, img_size, name, output_dir)
+
+        self.create_morph_uv_set(bobject, img_size)
 
         morph_target = {}
         morph_target['morph_target_data_file'] = name
@@ -1159,6 +1175,8 @@ class ArmoryExporter:
         morph_target['num_morph_targets'] = count
         morph_target['morph_scale'] = max - min
         morph_target['morph_offset'] = min
+        morph_target['morph_img_size'] = img_size
+        morph_target['morph_block_size'] = block_size
 
         out_mesh['morph_target'] = morph_target
         return
@@ -1184,44 +1202,67 @@ class ArmoryExporter:
 
         return {'pos': pos, 'nor': nor}
     
-    def bake_to_image(self, vert_pos, vert_nor, name, output_dir):
-    
-        pos_array = np.array(vert_pos)
-        nor_array = np.array(vert_nor)
-        pos_max = np.amax(pos_array)
-        pos_min = np.amin(pos_array)
+    def bake_to_image(self, pos_array, nor_array, pos_max, pos_min, extra_x, img_size, name, output_dir):
 
         pos_array_scaled = np.interp(pos_array, (pos_min, pos_max), (0, 1))
 
-        self.write_output_image(pos_array_scaled, name + '_pos', output_dir)
+        self.write_output_image(pos_array_scaled, extra_x, img_size, name + '_morph_pos', output_dir)
 
         nor_array_scaled = np.interp(nor_array, (-1, 1), (0, 1))
 
-        self.write_output_image(nor_array_scaled, name + '_nor', output_dir)
-
-        return pos_min, pos_max
+        self.write_output_image(nor_array_scaled, extra_x, img_size, name + '_morph_nor', output_dir)
     
-    def write_output_image(self, data, name, output_dir):
+    def write_output_image(self, data, extra_x, img_size, name, output_dir):
     
         size = len(data[0]), len(data)
 
+        print("size 0 =")
+        print(size[0])
+        print("size 1 =")
+        print(size[1])
+        print(len(data))
+        print(len(data[0]))
+        print(len(data[0][0]))
+        data = np.pad(data, ((0, 0), (0, extra_x), (0, 0)), 'minimum')
+        print(len(data))
+        print(len(data[0]))
+        print(len(data[0][0]))
+
+        print("img_size = ")
+
         pixel_list = []
 
-        for y in range(size[1]):
-            for x in range(size[0]):
+        for y in range(len(data)):
+            for x in range(len(data[0])):
                 # assign RGBA
                 pixel_list.append(data[y, x, 0])
                 pixel_list.append(data[y, x, 1])
                 pixel_list.append(data[y, x, 2])
                 pixel_list.append(1.0)
 
-        image = bpy.data.images.new(name, width = size[0], height = size[1], is_data = True)
+        image = bpy.data.images.new(name, width = img_size, height = img_size, is_data = True)
         image.pixels = pixel_list
         image.save_render(output_dir + name + ".png", scene= bpy.context.scene)
         bpy.data.images.remove(image)
+
+    def get_best_image_size(self, size):
+
+        for i in range(1, 12):
+            block_len = pow(2, i)
+            block_height = np.ceil(size[0]/block_len)
+            if(block_height * size[1] <= block_len):
+                extra_zeros_x = block_height * block_len - size[0]
+                return pow(2,i), round(extra_zeros_x), block_height
+
+        return 0, 0, 0        
     
-    def create_morph_uv_set(self, obj):
-    
+    def remove_morph_uv_set(self, obj):
+        layer = obj.data.uv_layers.get('UVMap_shape_key')
+        if(layer is not None):
+            obj.data.uv_layers.remove(layer)
+
+    def create_morph_uv_set(self, obj, img_size):
+
         if(obj.data.uv_layers.get('UVMap_shape_key') is None):
             obj.data.uv_layers.new(name = 'UVMap_shape_key')
         
@@ -1229,14 +1270,18 @@ class ArmoryExporter:
         bm.from_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.get('UVMap_shape_key')
 
-        pixel_size = 1.0 / len(bm.verts)
+        pixel_size = 1.0 / img_size
 
-        i= 0
+        i = 0
+        j = 0
         for v in bm.verts:
             for l in v.link_loops:
                 uv_data = l[uv_layer]
-                uv_data.uv = Vector(((i + 0.5) * pixel_size, 0.0))
+                uv_data.uv = Vector(((i + 0.5) * pixel_size, (j + 0.5) * pixel_size))
             i += 1
+            if(i > img_size - 1):
+                j += 1
+                i = 0
 
         bm.to_mesh(obj.data)
         bm.free()
@@ -1295,12 +1340,12 @@ class ArmoryExporter:
                                 break
                     else:
                         for i in range(0, len(uv_layers)):
-                            if uv_layers[i].active_render and uv_layers[i].name is not 'UVMap_shape_key':
+                            if uv_layers[i].active_render and uv_layers[i].name != 'UVMap_shape_key':
                                 t0map = i
                                 break
                 if has_tex1:
                     for i in range(0, len(uv_layers)):
-                        if i is not t0map and uv_layers.name is not 'UVMap_shape_key':
+                        if i != t0map and uv_layers.name != 'UVMap_shape_key':
                             t1map = i
                     t1data = np.empty(num_verts * 2, dtype='<f4')                    
                 # Scale for packed coords
@@ -1569,6 +1614,9 @@ Make sure the mesh only has tris/quads.""")
 
         shape_keys = ArmoryExporter.get_shape_keys(mesh)
         if shape_keys:
+            if self.get_export_vcols(bobject.data):
+                log.warn(oid + ' has vertex colors. Shape keys are not supported for objects with vertex colors')
+                shape_keys = False
             # Save the morph state
             active_shape_key_index = bobject.active_shape_key_index
             show_only_shape_key = bobject.show_only_shape_key
@@ -1576,11 +1624,6 @@ Make sure the mesh only has tris/quads.""")
             # Reset morph state to base for mesh export
             bobject.active_shape_key_index = 0
             bobject.show_only_shape_key = True
-            if self.get_export_vcols(bobject.data):
-                log.warn(oid + ' has vertex colors. Shape keys are not supported for objects with vertex colors')
-                shape_keys = False
-            else:
-                self.create_morph_uv_set(bobject)
             self.depsgraph.update()
 
         armature = bobject.find_armature()
@@ -1591,6 +1634,9 @@ Make sure the mesh only has tris/quads.""")
 
         if shape_keys:
             self.export_shape_keys(bobject, export_mesh, out_mesh)
+            self.depsgraph.update()
+            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
+            export_mesh = bobject_eval.to_mesh()
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
