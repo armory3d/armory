@@ -1127,21 +1127,25 @@ class ArmoryExporter:
     
     def export_shape_keys(self, bobject: bpy.types.Object, export_mesh: bpy.types.Mesh, out_mesh):
     
+        # Max shape keys supported
         max_shape_keys = 32
+        # Path to store shape key textures
         output_dir = bpy.path.abspath('//') + "Bundled\\"
         name = bobject.data.name        
         vert_pos = []
         vert_nor = []
         names = []
         default_values = [0] * max_shape_keys
-
+        # Shape key base mesh
         shape_key_base = bobject.data.shape_keys.key_blocks[0]
     
         count = 0
+        # Loop through all shape keys
         for shape_key in bobject.data.shape_keys.key_blocks[1:]:
         
             if(count > max_shape_keys): 
                 break
+            # get vertex data from shape key
             vert_data = self.get_vertex_data_from_shape_key(shape_key_base, shape_key)
             vert_pos.append(vert_data['pos'])
             vert_nor.append(vert_data['nor'])
@@ -1150,24 +1154,32 @@ class ArmoryExporter:
 
             count += 1
 
+        # Convert to array for easy manipulation
         pos_array = np.array(vert_pos)
         nor_array = np.array(vert_nor)
+
+        # Min and Max values of shape key displacements
         max = np.amax(pos_array)
         min = np.amin(pos_array)
 
         array_size = len(pos_array[0]), len(pos_array)
 
+        # Get best 2^n image size to fit shape key data (min = 2 X 2, max = 4096 X 4096)
         img_size, extra_zeros, block_size = self.get_best_image_size(array_size)
 
+        # Image size required is too large. Skip export
         if(img_size < 1):
             log.error(f"""object {bobject.name} contains too many vertices or shape keys to support shape keys export""")
             self.remove_morph_uv_set(bobject)
             return
         
+        # Write data to image
         self.bake_to_image(pos_array, nor_array, max, min, extra_zeros, img_size, name, output_dir)
 
+        # Create a new UV set for shape keys
         self.create_morph_uv_set(bobject, img_size)
 
+        # Export Shape Key names, defaults, etc..
         morph_target = {}
         morph_target['morph_target_data_file'] = name
         morph_target['morph_target_ref'] = names
@@ -1193,27 +1205,31 @@ class ArmoryExporter:
         pos = []
         nor = []
 
+        # Loop through all vertices
         for i in range(num_verts):
+            # Vertex position relative to base vertex
             pos.append(list(vert_pos[i].co - base_vert_pos[i].co))
             temp = []
             for j in range(3):
+                # Vertex normal relative to base vertex
                 temp.append(vert_nor[j + i * 3] - base_vert_nor[j + i * 3])
             nor.append(temp)
 
         return {'pos': pos, 'nor': nor}
     
     def bake_to_image(self, pos_array, nor_array, pos_max, pos_min, extra_x, img_size, name, output_dir):
-
+        # Scale position data between [0, 1] to bake to image
         pos_array_scaled = np.interp(pos_array, (pos_min, pos_max), (0, 1))
-
+        # Write positions to image
         self.write_output_image(pos_array_scaled, extra_x, img_size, name + '_morph_pos', output_dir)
-
+        # Scale normal data between [0, 1] to bake to image
         nor_array_scaled = np.interp(nor_array, (-1, 1), (0, 1))
-
+        # Write normals to image
         self.write_output_image(nor_array_scaled, extra_x, img_size, name + '_morph_nor', output_dir)
     
     def write_output_image(self, data, extra_x, img_size, name, output_dir):
-    
+        
+        # Pad data with zeros to make up for required number of pixels of 2^n format
         data = np.pad(data, ((0, 0), (0, extra_x), (0, 0)), 'minimum')
         pixel_list = []
 
@@ -1247,7 +1263,7 @@ class ArmoryExporter:
             obj.data.uv_layers.remove(layer)
 
     def create_morph_uv_set(self, obj, img_size):
-
+        # Get/ create morph UV set
         if(obj.data.uv_layers.get('UVMap_shape_key') is None):
             obj.data.uv_layers.new(name = 'UVMap_shape_key')
         
@@ -1259,6 +1275,7 @@ class ArmoryExporter:
 
         i = 0
         j = 0
+        # Arrange UVs to match exported image pixels
         for v in bm.verts:
             for l in v.link_loops:
                 uv_data = l[uv_layer]
@@ -1303,6 +1320,7 @@ class ArmoryExporter:
         # Check if shape keys were exported
         has_morph_target = self.get_shape_keys(bobject.data)
         if(has_morph_target):
+            # Shape keys UV are exported separately, so reduce UV count by 1
             num_uv_layers -= 1
             morph_uv_index = self.get_morph_uv_index(bobject.data)
         has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
@@ -1614,8 +1632,10 @@ Make sure the mesh only has tris/quads.""")
         bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
         export_mesh = bobject_eval.to_mesh()
 
+        # Export shape keys here
         if shape_keys:
             self.export_shape_keys(bobject, export_mesh, out_mesh)
+            # Update dependancy after new UV layer was added
             self.depsgraph.update()
             bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
             export_mesh = bobject_eval.to_mesh()
@@ -1640,7 +1660,7 @@ Make sure the mesh only has tris/quads.""")
             if armature:
                 self.export_skin(bobject, armature, export_mesh, out_mesh)
 
-        # Restore the morph state
+        # Restore the morph state after mesh export
         if shape_keys:
             bobject.active_shape_key_index = active_shape_key_index
             bobject.show_only_shape_key = show_only_shape_key
