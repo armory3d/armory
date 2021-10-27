@@ -15,8 +15,11 @@ def morph_pos(vert):
     vert.add_uniform('vec2 morphScaleOffset', link='_morphScaleOffset', included=True)
     vert.add_uniform('vec2 morphDataDim', link='_morphDataDim', included=True)
     vert.add_uniform('float texUnpack', link='_texUnpack')
+    vert.add_uniform('float posUnpack', link='_posUnpack')
     vert.write_attrib('vec2 texCoordMorph = morph * texUnpack;')
+    vert.write_attrib('spos.xyz *= posUnpack;')
     vert.write_attrib('getMorphedVertex(texCoordMorph, spos.xyz);')
+    vert.write_attrib('spos.xyz /= posUnpack;')
 
 def morph_nor(vert, is_bone, prep):
     vert.write_attrib('vec3 morphNor;')
