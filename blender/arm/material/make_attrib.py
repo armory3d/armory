@@ -52,11 +52,9 @@ def write_vertpos(vert):
 
 
 def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor=True):
-    print('writing nor pos')
     is_bone = con_mesh.is_elem('bone')
     is_morph = con_mesh.is_elem('morph')
     if is_morph:
-        print('is_morph')
         make_morph_target.morph_pos(vert)
     if is_bone:
         make_skin.skin_pos(vert)

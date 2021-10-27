@@ -1214,22 +1214,7 @@ class ArmoryExporter:
     
     def write_output_image(self, data, extra_x, img_size, name, output_dir):
     
-        size = len(data[0]), len(data)
-
-        print("size 0 =")
-        print(size[0])
-        print("size 1 =")
-        print(size[1])
-        print(len(data))
-        print(len(data[0]))
-        print(len(data[0][0]))
         data = np.pad(data, ((0, 0), (0, extra_x), (0, 0)), 'minimum')
-        print(len(data))
-        print(len(data[0]))
-        print(len(data[0][0]))
-
-        print("img_size = ")
-
         pixel_list = []
 
         for y in range(len(data)):

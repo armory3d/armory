@@ -772,22 +772,17 @@ def export_bone_data(bobject: bpy.types.Object) -> bool:
 
 def export_morph_targets(bobject: bpy.types.Object) -> bool:
     if not hasattr(bobject.data, 'shape_keys'):
-            print('A')
             return False
 
     shape_keys = bobject.data.shape_keys
     if shape_keys and len(shape_keys.key_blocks) > 1:
-        print('B')
         return True
-    print('C')
     return False
 
 def export_vcols(bobject: bpy.types.Object) -> bool:
     for material in bobject.data.materials:
         if material is not None and material.export_vcols:
-            print('D')
             return True
-    print('E')
     return False
 
 def open_editor(hx_path=None):
