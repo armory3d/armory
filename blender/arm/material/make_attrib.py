@@ -56,6 +56,7 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
     is_bone = con_mesh.is_elem('bone')
     is_morph = con_mesh.is_elem('morph')
     if is_morph:
+        print('is_morph')
         make_morph_target.morph_pos(vert)
     if is_bone:
         make_skin.skin_pos(vert)
@@ -63,7 +64,7 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
         prep = 'vec3 ' if declare else ''
         if is_morph:
             make_morph_target.morph_nor(vert, is_bone, prep)
-        if is_bone:
+        elif is_bone:
             make_skin.skin_nor(vert, is_morph, prep)
         else:
             vert.write_attrib(prep + 'wnormal = normalize(N * vec3(nor.xy, pos.w));')
