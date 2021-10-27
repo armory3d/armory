@@ -188,8 +188,7 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
         for bo in mat_users[mat]:
             if mat.arm_custom_material == '':
                 # Morph Targets
-                if arm.utils.export_morph_targets(bo) and not arm.utils.export_vcols(bo):
-                    print("sk and no vcol")
+                if arm.utils.export_morph_targets(bo):
                     global_elems.append({'name': 'morph', 'data': 'short2norm'})
                 # GPU Skinning
                 if arm.utils.export_bone_data(bo):

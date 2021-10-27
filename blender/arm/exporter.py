@@ -1316,7 +1316,7 @@ class ArmoryExporter:
         num_colors = len(exportMesh.vertex_colors)
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
         # Check if shape keys were exported
-        has_morph_target = self.get_shape_keys(bobject.data) and not has_col
+        has_morph_target = self.get_shape_keys(bobject.data)
         if(has_morph_target):
             num_uv_layers -= 1
             morph_uv_index = self.get_morph_uv_index(bobject.data)
@@ -1614,9 +1614,6 @@ Make sure the mesh only has tris/quads.""")
 
         shape_keys = ArmoryExporter.get_shape_keys(mesh)
         if shape_keys:
-            if self.get_export_vcols(bobject.data):
-                log.warn(oid + ' has vertex colors. Shape keys are not supported for objects with vertex colors')
-                shape_keys = False
             # Save the morph state
             active_shape_key_index = bobject.active_shape_key_index
             show_only_shape_key = bobject.show_only_shape_key
