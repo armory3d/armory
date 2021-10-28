@@ -1350,7 +1350,7 @@ class ArmoryExporter:
                                 break
                 if has_tex1:
                     for i in range(0, len(uv_layers)):
-                        if i != t0map and uv_layers.name != 'UVMap_shape_key':
+                        if i != t0map and uv_layers[i].name != 'UVMap_shape_key':
                             t1map = i
                     t1data = np.empty(num_verts * 2, dtype='<f4')                    
                 # Scale for packed coords
