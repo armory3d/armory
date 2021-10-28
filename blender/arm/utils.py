@@ -775,8 +775,13 @@ def export_morph_targets(bobject: bpy.types.Object) -> bool:
             return False
 
     shape_keys = bobject.data.shape_keys
-    if shape_keys and len(shape_keys.key_blocks) > 1:
-        return True
+    if not shape_keys:
+        return False
+    if len(shape_keys.key_blocks) < 2:
+        return False
+    for shape_key in shape_keys.key_blocks[1:]:
+            if(not shape_key.mute):
+                return True
     return False
 
 def export_vcols(bobject: bpy.types.Object) -> bool:

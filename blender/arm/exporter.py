@@ -203,8 +203,13 @@ class ArmoryExporter:
             return None
 
         shape_keys = mesh.shape_keys
-        if shape_keys and len(shape_keys.key_blocks) > 1:
-            return shape_keys
+        if not shape_keys:
+            return None
+        if len(shape_keys.key_blocks) < 2:
+            return None
+        for shape_key in shape_keys.key_blocks[1:]:
+            if(not shape_key.mute):
+                return shape_keys
         return None
 
     @staticmethod
@@ -1156,6 +1161,10 @@ class ArmoryExporter:
 
             count += 1
 
+        # No shape keys present or all shape keys are muted
+        if (count < 1): 
+            return
+        
         # Convert to array for easy manipulation
         pos_array = np.array(vert_pos)
         nor_array = np.array(vert_nor)
