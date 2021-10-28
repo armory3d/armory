@@ -87,6 +87,12 @@ project.addSources('Sources');
             for file in glob.glob("Bundled/**", recursive=True):
                 if os.path.isfile(file):
                     assets.add(file)
+        
+        # Auto-add shape key textures if exists
+        if os.path.exists('MorphTargets'):
+            for file in glob.glob("MorphTargets/**", recursive=True):
+                if os.path.isfile(file):
+                    assets.add(file)
 
         # Add project shaders
         if os.path.exists('Shaders'):

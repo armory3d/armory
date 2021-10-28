@@ -1130,7 +1130,7 @@ class ArmoryExporter:
         # Max shape keys supported
         max_shape_keys = 32
         # Path to store shape key textures
-        output_dir = bpy.path.abspath('//') + "Bundled\\"
+        output_dir = bpy.path.abspath('//') + "MorphTargets\\"
         name = bobject.data.name        
         vert_pos = []
         vert_nor = []
