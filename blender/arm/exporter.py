@@ -1146,6 +1146,8 @@ class ArmoryExporter:
             if(count > max_shape_keys): 
                 break
             # get vertex data from shape key
+            if shape_key.mute:
+                continue
             vert_data = self.get_vertex_data_from_shape_key(shape_key_base, shape_key)
             vert_pos.append(vert_data['pos'])
             vert_nor.append(vert_data['nor'])
