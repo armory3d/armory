@@ -40,16 +40,28 @@ class UniformsManager extends Trait{
 	}
 
 	function init() {
-		if(object.raw.type != 'mesh_object') return;
-		var materials = cast(object, MeshObject).materials;
+		if(Std.isOfType(object, MeshObject)){
+			var materials = cast(object, MeshObject).materials;
 
-		for (material in materials){
+			for (material in materials){
+
+				var exists = registerShaderUniforms(material);
+				if(exists) {
+					uniformExists = true;
+				}
+			}
+		}
+		#if rp_decals
+		if(Std.isOfType(object, DecalObject)){
+			var material = cast(object, DecalObject).material;
 
 			var exists = registerShaderUniforms(material);
 			if(exists) {
 				uniformExists = true;
 			}
+			
 		}
+		#end
 	}
 
 	static function removeScene() {
