@@ -1,5 +1,6 @@
 package armory.trait.internal;
 
+import iron.object.DecalObject;
 import iron.object.MeshObject;
 import iron.Trait;
 import kha.Image;
@@ -39,6 +40,7 @@ class UniformsManager extends Trait{
 	}
 
 	function init() {
+		if(object.raw.type != 'mesh_object') return;
 		var materials = cast(object, MeshObject).materials;
 
 		for (material in materials){
