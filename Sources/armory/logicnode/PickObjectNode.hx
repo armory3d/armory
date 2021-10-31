@@ -4,8 +4,6 @@ import iron.math.Vec4;
 
 class PickObjectNode extends LogicNode {
 
-	var v = new Vec4();
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
@@ -24,8 +22,13 @@ class PickObjectNode extends LogicNode {
 		if (from == 0) { // Object
 			return rb.object;
 		}
-		else { // Hit
+		else if(from == 1){ // Hit
+			var v = new Vec4();
 			return v.set(physics.hitPointWorld.x, physics.hitPointWorld.y, physics.hitPointWorld.z);
+		}
+		else { // Normal
+			var v = new Vec4();
+			return v.set(physics.hitNormalWorld.x, physics.hitNormalWorld.y, physics.hitNormalWorld.z, 0);
 		}
 #end
 		return null;
