@@ -1148,7 +1148,7 @@ class ArmoryExporter:
         # Loop through all shape keys
         for shape_key in bobject.data.shape_keys.key_blocks[1:]:
         
-            if(count > max_shape_keys): 
+            if(count > max_shape_keys - 1): 
                 break
             # get vertex data from shape key
             if shape_key.mute:
@@ -1251,6 +1251,8 @@ class ArmoryExporter:
                 pixel_list.append(data[y, x, 1])
                 pixel_list.append(data[y, x, 2])
                 pixel_list.append(1.0)
+        
+        pixel_list = (pixel_list + [0] * (img_size * img_size * 4 - len(pixel_list)))
 
         image = bpy.data.images.new(name, width = img_size, height = img_size, is_data = True)
         image.pixels = pixel_list
