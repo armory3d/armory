@@ -737,7 +737,9 @@ def node_name(s: str) -> str:
 
 ##
 
+
 def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matname: str = None) -> Optional[Dict[str, Any]]:
+    """Creates a texture reference for the export data for a given texture node."""
     tex = {'name': tex_name}
 
     if matname is None:
@@ -768,6 +770,8 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
         else:
             log.warn(matname + '/' + image.name + ' - invalid file path')
             return None
+    else:
+        filepath = arm.utils.to_absolute_path(filepath, image.library)
 
     # Reference image name
     texpath = arm.utils.asset_path(filepath)
