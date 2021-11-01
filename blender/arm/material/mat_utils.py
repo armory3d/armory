@@ -110,6 +110,6 @@ def is_emmisive_traverse(node):
 def is_emmisive_type(node):
     if node.type == 'EMISSION' or \
        (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[6].is_linked or node.inputs[6].default_value != 0.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0)):
+       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[20].is_linked or node.inputs[20] != 0.0)):
        return True
     return False
