@@ -76,28 +76,22 @@ class UniformsManager extends Trait{
 
 	// Helper method to register float, vec3 and texture getter functions
 	static function register(type: UniformType){
-
 		switch (type){
-            case Float:{
+            case Float:
                 if(! floatsRegistered){
                     floatsRegistered = true;
                     Uniforms.externalFloatLinks.push(floatLink);
                 }
-            }
-
-            case Vector:{
+            case Vector:
                 if(! vectorsRegistered){
                     vectorsRegistered = true;
                     Uniforms.externalVec3Links.push(vec3Link);
                 }
-            }
-
-            case Texture:{
+            case Texture:
                 if(! texturesRegistered){
                     texturesRegistered = true;
                     Uniforms.externalTextureLinks.push(textureLink);
                 }
-            }
         }
 	}
 
