@@ -1,5 +1,6 @@
 package armory.trait.internal;
 
+import iron.object.DecalObject;
 import iron.object.MeshObject;
 import iron.Trait;
 import kha.Image;
@@ -39,15 +40,28 @@ class UniformsManager extends Trait{
 	}
 
 	function init() {
-		var materials = cast(object, MeshObject).materials;
+		if(Std.isOfType(object, MeshObject)){
+			var materials = cast(object, MeshObject).materials;
 
-		for (material in materials){
+			for (material in materials){
+
+				var exists = registerShaderUniforms(material);
+				if(exists) {
+					uniformExists = true;
+				}
+			}
+		}
+		#if rp_decals
+		if(Std.isOfType(object, DecalObject)){
+			var material = cast(object, DecalObject).material;
 
 			var exists = registerShaderUniforms(material);
 			if(exists) {
 				uniformExists = true;
 			}
+			
 		}
+		#end
 	}
 
 	static function removeScene() {
