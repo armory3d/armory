@@ -1343,6 +1343,12 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         row.enabled = not rpdat.arm_skin_max_bones_auto
         row.prop(rpdat, 'arm_skin_max_bones')
         layout.separator(factor=0.1)
+        
+        col = layout.column()
+        col.prop(rpdat, 'arm_morph_target')
+        col = col.column()
+        col.enabled = rpdat.arm_morph_target == 'On'
+        layout.separator(factor=0.1)
 
         col = layout.column()
         col.prop(rpdat, "rp_hdr")
