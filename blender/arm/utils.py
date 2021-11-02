@@ -771,8 +771,11 @@ def export_bone_data(bobject: bpy.types.Object) -> bool:
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
 def export_morph_targets(bobject: bpy.types.Object) -> bool:
+    if get_rp().arm_morph_target != 'On':
+        return False
+        
     if not hasattr(bobject.data, 'shape_keys'):
-            return False
+        return False
 
     shape_keys = bobject.data.shape_keys
     if not shape_keys:

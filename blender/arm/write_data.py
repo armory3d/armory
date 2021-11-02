@@ -303,6 +303,9 @@ project.addSources('Sources');
         rpdat = arm.utils.get_rp()
         if rpdat.arm_skin != 'Off':
             assets.add_khafile_def('arm_skin')
+        
+        if rpdat.arm_morph_target != 'Off':
+            assets.add_khafile_def('arm_morph_target')
 
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
