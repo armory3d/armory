@@ -198,19 +198,22 @@ class ArmoryExporter:
 
     @staticmethod
     def get_shape_keys(mesh):
+        rpdat = arm.utils.get_rp()
+        if(rpdat.arm_morph_target != 'On'):
+            return False
         # Metaball
         if not hasattr(mesh, 'shape_keys'):
-            return None
+            return False
 
         shape_keys = mesh.shape_keys
         if not shape_keys:
-            return None
+            return False
         if len(shape_keys.key_blocks) < 2:
-            return None
+            return False
         for shape_key in shape_keys.key_blocks[1:]:
             if(not shape_key.mute):
-                return shape_keys
-        return None
+                return True
+        return False
 
     @staticmethod
     def get_morph_uv_index(mesh):
@@ -1332,7 +1335,7 @@ class ArmoryExporter:
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
         # Check if shape keys were exported
         has_morph_target = self.get_shape_keys(bobject.data)
-        if(has_morph_target):
+        if has_morph_target:
             # Shape keys UV are exported separately, so reduce UV count by 1
             num_uv_layers -= 1
             morph_uv_index = self.get_morph_uv_index(bobject.data)
@@ -1361,7 +1364,12 @@ class ArmoryExporter:
                                 break
                 if has_tex1:
                     for i in range(0, len(uv_layers)):
-                        if i != t0map and uv_layers[i].name != 'UVMap_shape_key':
+                        # Not UVMap 0
+                        if i != t0map:
+                            # Not Shape Key UVMap
+                            if has_morph_target and uv_layers[i].name == 'UVMap_shape_key':
+                                continue
+                            # Neither UVMap 0 Nor Shape Key Map
                             t1map = i
                     t1data = np.empty(num_verts * 2, dtype='<f4')                    
                 # Scale for packed coords
