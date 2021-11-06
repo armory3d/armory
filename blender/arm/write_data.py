@@ -87,6 +87,12 @@ project.addSources('Sources');
             for file in glob.glob("Bundled/**", recursive=True):
                 if os.path.isfile(file):
                     assets.add(file)
+        
+        # Auto-add shape key textures if exists
+        if os.path.exists('MorphTargets'):
+            for file in glob.glob("MorphTargets/**", recursive=True):
+                if os.path.isfile(file):
+                    assets.add(file)
 
         # Add project shaders
         if os.path.exists('Shaders'):
@@ -297,6 +303,9 @@ project.addSources('Sources');
         rpdat = arm.utils.get_rp()
         if rpdat.arm_skin != 'Off':
             assets.add_khafile_def('arm_skin')
+        
+        if rpdat.arm_morph_target != 'Off':
+            assets.add_khafile_def('arm_morph_target')
 
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')

@@ -900,6 +900,10 @@ def clean():
         shutil.rmtree('Sources/' + pkg_dir, onerror=remove_readonly)
         if os.path.exists('Sources') and os.listdir('Sources') == []:
             shutil.rmtree('Sources/', onerror=remove_readonly)
+    
+    # Remove Shape key Textures
+    if os.path.exists('MorphTargets/'):
+        shutil.rmtree('MorphTargets/', onerror=remove_readonly)
 
     # To recache signatures for batched materials
     for mat in bpy.data.materials:

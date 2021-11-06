@@ -92,7 +92,7 @@ class ShaderContext:
 
     def sort_vs(self):
         vs = []
-        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
+        ar = ['pos', 'nor', 'tex', 'tex1', 'morph', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
         for ename in ar:
             elem = self.get_elem(ename)
             if elem != None:

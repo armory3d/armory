@@ -8,6 +8,7 @@ import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
 import arm.material.make_finalize as make_finalize
+import arm.material.make_morph_target as make_morph_target
 import arm.assets as assets
 import arm.utils
 
@@ -50,6 +51,9 @@ def make(context_id, rpasses, shadowmap=False):
 
     if parse_opacity:
         frag.write('float opacity;')
+    
+    if(con_depth).is_elem('morph'):
+        make_morph_target.morph_pos(vert)
 
     if con_depth.is_elem('bone'):
         make_skin.skin_pos(vert)
