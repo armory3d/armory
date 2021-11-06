@@ -34,6 +34,14 @@ class Uniforms {
 				return armory.data.ConstData.ltcMagTex;
 			}
 			#end
+			#if arm_morph_target
+			case "_morphDataPos": {
+				return cast(object, iron.object.MeshObject).morphTarget.morphDataPos;
+			}
+			case "_morphDataNor": {
+				return cast(object, iron.object.MeshObject).morphTarget.morphDataNor;
+			}
+			#end
 		}
 
 		var target = iron.RenderPath.active.renderTargets.get(link.endsWith("_depth") ? link.substr(0, link.length - 6) : link);
