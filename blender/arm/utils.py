@@ -1167,7 +1167,8 @@ def cpu_count(*, physical_only=False) -> Optional[int]:
     _os = get_os()
     try:
         if _os == 'win':
-            command = [f'{os.environ.get("SYSTEMROOT")}\\System32\\wbem\\wmic.exe', 'cpu', 'get', 'NumberOfCores']
+            sysroot = os.environ.get("SYSTEMROOT", default="C:\\WINDOWS")
+            command = [f'{sysroot}\\System32\\wbem\\wmic.exe', 'cpu', 'get', 'NumberOfCores']
             result = subprocess.check_output(command)
             result = result.decode('utf-8').splitlines()
             result = int(result[2])
