@@ -20,6 +20,11 @@ else:
     arm.enable_reload(__name__)
 
 
+# The format used for rendering the environment. Choose HDR or JPEG.
+ENVMAP_FORMAT = 'JPEG'
+ENVMAP_EXT = 'hdr' if ENVMAP_FORMAT == 'HDR' else 'jpg'
+
+
 def add_irr_assets(output_file_irr):
     assets.add(output_file_irr + '.arm')
 
@@ -43,7 +48,10 @@ def setup_envmap_render():
     # is already taken
     scene = bpy.data.scenes.new("_arm_envmap_render")
     scene.render.engine = "CYCLES"
-    scene.render.image_settings.file_format = "JPEG"
+    # HDR will be exported in linear space, JPG in sRGB
+    scene.render.image_settings.file_format = ENVMAP_FORMAT
+    if ENVMAP_FORMAT == 'HDR':
+        scene.render.image_settings.color_depth = '32'
     scene.render.image_settings.quality = 100
     scene.render.resolution_x = radiance_size
     scene.render.resolution_y = radiance_size // 2
@@ -76,16 +84,21 @@ def setup_envmap_render():
         bpy.data.scenes.remove(scene)
 
 
-def render_envmap(target_dir: str, world: bpy.types.World):
-    """Renders an environment texture for the given world into the
-    target_dir. Use in combination with setup_envmap_render()."""
-    scene = bpy.data.scenes["_arm_envmap_render"]
+def render_envmap(target_dir: str, world: bpy.types.World) -> str:
+    """Render an environment texture for the given world into the
+    target_dir and return the filename of the rendered image. Use in
+    combination with setup_envmap_render().
+    """
+    scene = bpy.data.scenes['_arm_envmap_render']
     scene.world = world
 
-    render_path = os.path.join(target_dir, f"env_{arm.utils.safesrc(world.name)}.jpg")
+    image_name = f'env_{arm.utils.safesrc(world.name)}.{ENVMAP_EXT}'
+    render_path = os.path.join(target_dir, image_name)
     scene.render.filepath = render_path
 
     bpy.ops.render.render(write_still=True, scene=scene.name)
+
+    return image_name
 
 
 def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, arm_radiance=True) -> int:
