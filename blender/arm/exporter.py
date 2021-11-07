@@ -985,7 +985,7 @@ class ArmoryExporter:
                             for _o in sel:
                                 _o.select_set(False)
                             skelobj.select_set(True)
-                            bpy.ops.nla.bake(frame_start=action.frame_range[0], frame_end=action.frame_range[1], step=1, only_selected=False, visual_keying=True)
+                            bpy.ops.nla.bake(frame_start=int(action.frame_range[0]), frame_end=int(action.frame_range[1]), step=1, only_selected=False, visual_keying=True)
                             action = skelobj.animation_data.action
                             skelobj.select_set(False)
                             for _o in sel:
@@ -1132,26 +1132,26 @@ class ArmoryExporter:
                     if 'constraints' not in oskin:
                         oskin['constraints'] = []
                     self.add_constraints(bone, oskin, bone=True)
-    
+
     def export_shape_keys(self, bobject: bpy.types.Object, export_mesh: bpy.types.Mesh, out_mesh):
-    
+
         # Max shape keys supported
         max_shape_keys = 32
         # Path to store shape key textures
-        output_dir = bpy.path.abspath('//') + "MorphTargets\\"
-        name = bobject.data.name        
+        output_dir = bpy.path.abspath('//') + "MorphTargets"
+        name = bobject.data.name
         vert_pos = []
         vert_nor = []
         names = []
         default_values = [0] * max_shape_keys
         # Shape key base mesh
         shape_key_base = bobject.data.shape_keys.key_blocks[0]
-    
+
         count = 0
         # Loop through all shape keys
         for shape_key in bobject.data.shape_keys.key_blocks[1:]:
-        
-            if(count > max_shape_keys - 1): 
+
+            if(count > max_shape_keys - 1):
                 break
             # get vertex data from shape key
             if shape_key.mute:
@@ -1165,9 +1165,9 @@ class ArmoryExporter:
             count += 1
 
         # No shape keys present or all shape keys are muted
-        if (count < 1): 
+        if (count < 1):
             return
-        
+
         # Convert to array for easy manipulation
         pos_array = np.array(vert_pos)
         nor_array = np.array(vert_nor)
@@ -1186,7 +1186,7 @@ class ArmoryExporter:
             log.error(f"""object {bobject.name} contains too many vertices or shape keys to support shape keys export""")
             self.remove_morph_uv_set(bobject)
             return
-        
+
         # Write data to image
         self.bake_to_image(pos_array, nor_array, max, min, extra_zeros, img_size, name, output_dir)
 
@@ -1206,9 +1206,9 @@ class ArmoryExporter:
 
         out_mesh['morph_target'] = morph_target
         return
-    
+
     def get_vertex_data_from_shape_key(self, shape_key_base, shape_key_data):
-    
+
         base_vert_pos = shape_key_base.data.values()
         base_vert_nor = shape_key_base.normals_split_get()
         vert_pos = shape_key_data.data.values()
@@ -1230,7 +1230,7 @@ class ArmoryExporter:
             nor.append(temp)
 
         return {'pos': pos, 'nor': nor}
-    
+
     def bake_to_image(self, pos_array, nor_array, pos_max, pos_min, extra_x, img_size, name, output_dir):
         # Scale position data between [0, 1] to bake to image
         pos_array_scaled = np.interp(pos_array, (pos_min, pos_max), (0, 1))
@@ -1240,9 +1240,9 @@ class ArmoryExporter:
         nor_array_scaled = np.interp(nor_array, (-1, 1), (0, 1))
         # Write normals to image
         self.write_output_image(nor_array_scaled, extra_x, img_size, name + '_morph_nor', output_dir)
-    
+
     def write_output_image(self, data, extra_x, img_size, name, output_dir):
-        
+
         # Pad data with zeros to make up for required number of pixels of 2^n format
         data = np.pad(data, ((0, 0), (0, extra_x), (0, 0)), 'minimum')
         pixel_list = []
@@ -1254,12 +1254,13 @@ class ArmoryExporter:
                 pixel_list.append(data[y, x, 1])
                 pixel_list.append(data[y, x, 2])
                 pixel_list.append(1.0)
-        
+
         pixel_list = (pixel_list + [0] * (img_size * img_size * 4 - len(pixel_list)))
 
         image = bpy.data.images.new(name, width = img_size, height = img_size, is_data = True)
         image.pixels = pixel_list
-        image.save_render(output_dir + name + ".png", scene= bpy.context.scene)
+        output_path = os.path.join(output_dir,  name + ".png")
+        image.save_render(output_path, scene= bpy.context.scene)
         bpy.data.images.remove(image)
 
     def get_best_image_size(self, size):
@@ -1271,8 +1272,8 @@ class ArmoryExporter:
                 extra_zeros_x = block_height * block_len - size[0]
                 return pow(2,i), round(extra_zeros_x), block_height
 
-        return 0, 0, 0        
-    
+        return 0, 0, 0
+
     def remove_morph_uv_set(self, obj):
         layer = obj.data.uv_layers.get('UVMap_shape_key')
         if(layer is not None):
@@ -1282,7 +1283,7 @@ class ArmoryExporter:
         # Get/ create morph UV set
         if(obj.data.uv_layers.get('UVMap_shape_key') is None):
             obj.data.uv_layers.new(name = 'UVMap_shape_key')
-        
+
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         uv_layer = bm.loops.layers.uv.get('UVMap_shape_key')
@@ -1371,7 +1372,7 @@ class ArmoryExporter:
                                 continue
                             # Neither UVMap 0 Nor Shape Key Map
                             t1map = i
-                    t1data = np.empty(num_verts * 2, dtype='<f4')                    
+                    t1data = np.empty(num_verts * 2, dtype='<f4')
                 # Scale for packed coords
                 lay0 = uv_layers[t0map]
                 for v in lay0.data:
