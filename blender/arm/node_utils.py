@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 from typing import Any, Generator, Type, Union
 
 import bpy
@@ -149,7 +149,7 @@ def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:
     elif isinstance(socket_val, str):
         socket_val = '"{:s}"'.format(socket_val.replace('"', '\\"'))
 
-    elif isinstance(socket_val, (collections.Sequence, bpy.types.bpy_prop_array, mathutils.Color, mathutils.Euler, mathutils.Vector)):
+    elif isinstance(socket_val, (collections.abc.Sequence, bpy.types.bpy_prop_array, mathutils.Color, mathutils.Euler, mathutils.Vector)):
         socket_val = ','.join(haxe_format_socket_val(v, array_outer_brackets=True) for v in socket_val)
         if array_outer_brackets:
             socket_val = f'[{socket_val}]'
