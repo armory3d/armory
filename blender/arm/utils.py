@@ -773,7 +773,7 @@ def export_bone_data(bobject: bpy.types.Object) -> bool:
 def export_morph_targets(bobject: bpy.types.Object) -> bool:
     if get_rp().arm_morph_target != 'On':
         return False
-        
+
     if not hasattr(bobject.data, 'shape_keys'):
         return False
 
@@ -1161,17 +1161,23 @@ def cpu_count(*, physical_only=False) -> Optional[int]:
     if not physical_only:
         return os.cpu_count()
 
+    err_reason = ''
+    command = []
+
     _os = get_os()
     try:
         if _os == 'win':
-            result = subprocess.check_output(['wmic', 'cpu', 'get', 'NumberOfCores'])
+            sysroot = os.environ.get("SYSTEMROOT", default="C:\\WINDOWS")
+            command = [f'{sysroot}\\System32\\wbem\\wmic.exe', 'cpu', 'get', 'NumberOfCores']
+            result = subprocess.check_output(command)
             result = result.decode('utf-8').splitlines()
             result = int(result[2])
             if result > 0:
                 return result
 
         elif _os == 'linux':
-            result = subprocess.check_output("grep -P '^core id' /proc/cpuinfo | sort -u | wc -l", shell=True)
+            command = ["grep -P '^core id' /proc/cpuinfo | sort -u | wc -l"]
+            result = subprocess.check_output(command[0], shell=True)
             result = result.decode('utf-8').splitlines()
             result = int(result[0])
             if result > 0:
@@ -1179,12 +1185,16 @@ def cpu_count(*, physical_only=False) -> Optional[int]:
 
         # macOS
         else:
-            return int(subprocess.check_output(['sysctl', '-n', 'hw.physicalcpu']))
-    except subprocess.CalledProcessError:
-        pass
+            command = ['sysctl', '-n', 'hw.physicalcpu']
+            return int(subprocess.check_output(command))
+
+    except subprocess.CalledProcessError as e:
+        err_reason = f'Reason: command {command} exited with code {e.returncode}.'
+    except FileNotFoundError as e:
+        err_reason = f'Reason: couldn\'t open file from command {command} ({e.errno=}).'
 
     # Last resort even though it can be wrong
-    log.warn("Could not retrieve count of physical CPUs, using logical CPU count instead.")
+    log.warn("Could not retrieve count of physical CPUs, using logical CPU count instead.\n\t" + err_reason)
     return os.cpu_count()
 
 
