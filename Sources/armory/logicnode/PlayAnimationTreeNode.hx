@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.object.Object;
+import iron.object.ObjectAnimation;
 import iron.Scene;
 
 class PlayAnimationTreeNode extends LogicNode {
@@ -14,12 +15,23 @@ class PlayAnimationTreeNode extends LogicNode {
 		var action: Dynamic = inputs[2].get();
 
 		if (object == null) return;
-		var animation = object.getParentArmature(object.name);
+		if (object.animation == null){
+			var animation = object.getParentArmature(object.name);
 
-		animation.animationLoop(function f(mats) {
-			action(mats);
-			
-		});
+			animation.animationLoop(function f(mats) {
+				action(mats);
+
+			});
+		}
+		else {
+			trace("obj play anim tree");
+			var animation = cast(object.animation, ObjectAnimation);
+
+			animation.animationLoop(function (farray){
+				action(farray);
+			});
+
+		}
 
 		runOutput(0);
 	}

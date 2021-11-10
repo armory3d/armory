@@ -1,5 +1,7 @@
 package armory.logicnode;
 
+import kha.arrays.Float32Array;
+import iron.object.ObjectAnimation;
 import iron.object.Object;
 import iron.object.Animation;
 import iron.object.BoneAnimation;
@@ -26,13 +28,25 @@ class AnimActionNode extends LogicNode {
 		if (object == null) return;
 		animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
+		else animation = cast(animation, ObjectAnimation);
 		animation.registerAction(property0, actionParam);
 
 	}
 
 	override function get(from: Int): Dynamic {
-		return function (animMats: Array<Mat4>){ animation.sampleAction(actionParam, animMats);};
-		
+		if(Std.isOfType(animation, BoneAnimation)){
+			var animationB = cast(animation, BoneAnimation);
+			return function (animMats: Array<Mat4>){ animationB.sampleAction(actionParam, animMats);};
+		}
+		else{
+			trace("object mode get");
+			var animationO = cast(animation, ObjectAnimation);
+			return function (animT: Float32Array) { 
+				trace("in sample func");
+				animationO.sampleAction(actionParam, animT);
+			};
+		}
+		return null;
 	}
 
 	/* override function set(value: Dynamic) {
