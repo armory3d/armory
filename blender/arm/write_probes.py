@@ -138,10 +138,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
         kraffiti_path = '"' + kha_path + '/Kinc/Tools/kraffiti/kraffiti-linux64"'
 
-    output_gama_numerator = '2.2' if disable_hdr else '1.0'
     input_file = arm.utils.asset_path(image_filepath)
 
-    # Scale map
+    # Scale map, ensure 2:1 ratio (required by cmft)
     rpdat = arm.utils.get_rp()
     target_w = int(rpdat.arm_radiance_size)
     target_h = int(target_w / 2)
@@ -164,6 +163,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             + ' width=' + str(target_w)
             + ' height=' + str(target_h)], shell=True)
 
+    # Convert sRGB colors into linear color space first (approximate)
+    input_gamma_numerator = '2.2' if disable_hdr else '1.0'
+
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':
         subprocess.call([
@@ -171,14 +173,24 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             '--input', scaled_file,
             '--filter', 'shcoeffs',
             '--outputNum', '1',
-            '--output0', output_file_irr])
+            '--output0', output_file_irr,
+            '--inputGammaNumerator', input_gamma_numerator,
+            '--inputGammaDenominator', '1.0',
+            '--outputGammaNumerator', '1.0',
+            '--outputGammaDenominator', '1.0'
+        ])
     else:
         subprocess.call([
             cmft_path
             + ' --input ' + '"' + scaled_file + '"'
             + ' --filter shcoeffs'
             + ' --outputNum 1'
-            + ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
+            + ' --output0 ' + '"' + output_file_irr + '"'
+            + ' --inputGammaNumerator' + input_gamma_numerator
+            + ' --inputGammaDenominator' + '1.0'
+            + ' --outputGammaNumerator' + '1.0'
+            + ' --outputGammaDenominator' + '1.0'
+        ], shell=True)
 
     sh_to_json(output_file_irr)
     add_irr_assets(output_file_irr)
@@ -224,7 +236,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             '--deviceType', 'gpu',
             '--deviceIndex', '0',
             '--generateMipChain', 'true',
-            '--inputGammaNumerator', output_gama_numerator,
+            '--inputGammaNumerator', input_gamma_numerator,
             '--inputGammaDenominator', '1.0',
             '--outputGammaNumerator', '1.0',
             '--outputGammaDenominator', '1.0',
@@ -254,7 +266,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             ' --deviceType gpu' + \
             ' --deviceIndex 0' + \
             ' --generateMipChain true' + \
-            ' --inputGammaNumerator ' + output_gama_numerator + \
+            ' --inputGammaNumerator ' + input_gamma_numerator + \
             ' --inputGammaDenominator 1.0' + \
             ' --outputGammaNumerator 1.0' + \
             ' --outputGammaDenominator 1.0' + \
@@ -340,6 +352,8 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
+
+    # Lower exposure to adjust to Eevee and Cycles
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 
