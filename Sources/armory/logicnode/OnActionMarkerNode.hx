@@ -18,7 +18,7 @@ class OnActionMarkerNode extends LogicNode {
 		var actionID: String = property0;
 		var marker: String = property1;
 
-		if (object == null) return;
+		assert(Error, object != null, "Object input cannot be null");
 		var animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
 		var action = animation.activeActions.get(actionID);

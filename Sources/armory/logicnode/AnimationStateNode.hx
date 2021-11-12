@@ -17,7 +17,7 @@ class AnimationStateNode extends LogicNode {
 
 	public function init() {
 		object = inputs[0].get();
-		if (object == null) return;
+		assert(Error, object != null, "Object input cannot be null");
 		animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
 		action = animation.activeActions.get(property0);

@@ -12,12 +12,11 @@ class RestartActionNode extends LogicNode {
 		var object: Object = inputs[1].get();
 		var action = inputs[2].get();		
 
-		if (object == null) return;
-
+		assert(Error, object != null, "Object input cannot be null");
 		var animation = object.animation;
 
 		if (animation == null) animation = object.getParentArmature(object.name);
-
+		if(animation.activeActions == null) return;
 		animation.activeActions.get(action).restartAction();
 
 		runOutput(0);

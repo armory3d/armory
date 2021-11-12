@@ -11,10 +11,10 @@ class ResumeActionNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 
-		if (object == null) return;
+		assert(Error, object != null, "Object input cannot be null");
 		var animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
-
+		
 		animation.resume();
 
 		runOutput(0);
