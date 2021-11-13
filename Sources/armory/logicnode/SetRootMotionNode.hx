@@ -18,5 +18,7 @@ class SetRootMotionNode extends LogicNode {
         assert(Error, bone != null, "Bone does not exist");
         animation.setRootMotion(bone);
 
+        runOutput(0);
+
     }
 }

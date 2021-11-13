@@ -23,6 +23,7 @@ class AnimationStateNode extends LogicNode {
 		action = animation.activeActions.get(property0);
 		if(action == null) return;
 		action.notifyOnComplete(function (){runOutput(3);});
+		tree.removeUpdate(init);
 		
 	}
 

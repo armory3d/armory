@@ -10,7 +10,7 @@ class OnActionMarkerNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		tree.notifyOnInit(init);
+		tree.notifyOnUpdate(init);
 	}
 
 	function init() {
@@ -24,5 +24,6 @@ class OnActionMarkerNode extends LogicNode {
 		var action = animation.activeActions.get(actionID);
 		if(action == null) return;
 		animation.notifyOnMarker(action, marker, function() { runOutput(0); });
+		tree.removeUpdate(init);
 	}
 }
