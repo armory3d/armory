@@ -48,10 +48,17 @@ def setup_envmap_render():
     # is already taken
     scene = bpy.data.scenes.new("_arm_envmap_render")
     scene.render.engine = "CYCLES"
-    # HDR will be exported in linear space, JPG in sRGB
     scene.render.image_settings.file_format = ENVMAP_FORMAT
     if ENVMAP_FORMAT == 'HDR':
         scene.render.image_settings.color_depth = '32'
+
+    # Export in linear space and with default color management settings
+    scene.display_settings.display_device = "None"
+    scene.view_settings.view_transform = "Standard"
+    scene.view_settings.look = "None"
+    scene.view_settings.exposure = 0
+    scene.view_settings.gamma = 1
+
     scene.render.image_settings.quality = 100
     scene.render.resolution_x = radiance_size
     scene.render.resolution_y = radiance_size // 2
@@ -101,8 +108,8 @@ def render_envmap(target_dir: str, world: bpy.types.World) -> str:
     return image_name
 
 
-def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, arm_radiance=True) -> int:
-    """Generate probes from environment map and returns the mipmap count"""
+def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached_num_mips: int, arm_radiance=True) -> int:
+    """Generate probes from environment map and return the mipmap count."""
     envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
 
     if not os.path.exists(envpath):
@@ -163,8 +170,8 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             + ' width=' + str(target_w)
             + ' height=' + str(target_h)], shell=True)
 
-    # Convert sRGB colors into linear color space first (approximate)
-    input_gamma_numerator = '2.2' if disable_hdr else '1.0'
+    # Convert sRGB colors into linear color space first (approximately)
+    input_gamma_numerator = '2.2' if from_srgb else '1.0'
 
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':

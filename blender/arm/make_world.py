@@ -76,7 +76,7 @@ def build():
                         world.arm_envtex_irr_name = os.path.basename(image_filepath).rsplit('.', 1)[0]
 
                         write_radiance = rpdat.arm_radiance and not mobile_mat
-                        mip_count = write_probes.write_probes(image_filepath, write_probes.ENVMAP_FORMAT == 'JPEG', world.arm_envtex_num_mips, write_radiance)
+                        mip_count = write_probes.write_probes(image_filepath, write_probes.ENVMAP_FORMAT == 'JPEG', False, world.arm_envtex_num_mips, write_radiance)
                         world.arm_envtex_num_mips = mip_count
 
                         if write_radiance:
