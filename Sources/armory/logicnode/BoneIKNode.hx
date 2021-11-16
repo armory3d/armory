@@ -3,60 +3,82 @@ package armory.logicnode;
 import iron.object.Object;
 import iron.object.BoneAnimation;
 import iron.math.Vec4;
+import iron.math.Mat4;
 
 class BoneIKNode extends LogicNode {
 
+	public var property0: String; //2 Bone or FABRIK
+	var object: Object;
+	var boneName: String;
+	var animMats: Array<Mat4>;
 	var goal: Vec4;
 	var pole: Vec4;
 	var poleEnabled: Bool;
+	var rollAngle: Float;
+	var influence: Float;
+	var layerMask: Null<Int>;
 	var chainLength: Int;
 	var maxIterartions: Int;
 	var precision: Float;
-	var rollAngle: Float;
 
-	var notified = false;
+	#if arm_skin
+	var animation: BoneAnimation;
+	#end
+	
+
+	var ready = false;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from: Int) {
+	public function init(){
 		#if arm_skin
 
-		var object: Object = inputs[1].get();
-		var boneName: String = inputs[2].get();
-		goal = inputs[3].get();
-		poleEnabled = inputs[4].get();
-		pole = inputs[5].get();
-		chainLength = inputs[6].get();
-		maxIterartions = inputs[7].get();
-		precision = inputs[8].get();
-		rollAngle = inputs[9].get();
+		object = inputs[0].get();
+		assert(Error, object != null, "The object input not be null");
+		animation = object.getParentArmature(object.name);
+		assert(Error, animation != null, "The object does not have armatureanimation");
+		ready = true;
 
-		if (object == null || goal == null) return;
-		var anim = object.animation != null ? cast(object.animation, BoneAnimation) : null;
-		if (anim == null) anim = object.getParentArmature(object.name);
+		#end
+	}
 
-		var bone = anim.getBone(boneName);
+	override function get(from: Int): Dynamic {
+		#if arm_skin
 
-		if(! poleEnabled) pole = null;
+		return function (animMats: Array<Mat4>) {
 
-		function solveBone() {
-			//Solve IK
-			anim.solveIK(bone, goal, precision, maxIterartions, chainLength, pole, rollAngle);
+			if(! ready) init();
 
-			//Remove this method from animation loop after IK
-			anim.removeUpdate(solveBone);
-			notified = false;
+			inputs[1].get()(animMats);
+			boneName = inputs[2].get();
+			goal = inputs[3].get();
+			poleEnabled = inputs[4].get();
+			pole = inputs[5].get();
+			rollAngle = inputs[6].get();
+			influence = inputs[7].get();
+			layerMask = inputs[8].get();
+
+			var bone = animation.getBone(boneName);
+
+			if(! poleEnabled) pole = null;
+
+			switch (property0) {
+				case "2 Bone":
+					trace("2 bone");
+					animation.solveTwoBoneIKBlend(animMats, bone, goal, pole, 
+												  rollAngle, influence, layerMask);
+				case "FABRIK":
+					trace("FABRIK");
+					chainLength = inputs[9].get();
+					maxIterartions = inputs[10].get();
+					precision = inputs[11].get();
+					animation.solveIKBlend(animMats, bone, goal, precision, maxIterartions, 
+							               chainLength, pole, rollAngle, influence, layerMask);
+					
+			}
 		}
-
-		if (!notified) {
-			anim.notifyOnUpdate(solveBone);
-			notified = true;
-		}
-
-		runOutput(0);
-
 		#end
 	}
 }

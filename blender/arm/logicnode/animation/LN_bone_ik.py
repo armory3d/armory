@@ -23,28 +23,50 @@ class BoneIKNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNBoneIKNode'
     bl_label = 'Bone IK'
-    arm_version = 2
+    arm_version = 3
     arm_section = 'armature'
 
+    NUM_STATIC_INS = 9
+
+    def update_advanced(self, context):
+        self.update_sockets(context)
+
+    property0: HaxeEnumProperty(
+        'property0',
+        items = [('2 Bone', '2 Bone', '2 Bone'),
+                 ('FABRIK', 'FABRIK', 'FABRIK')],
+        name='', default='2 Bone', update=update_advanced)
+
     def arm_init(self, context):
-        self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketAnimTree', 'Action')
         self.add_input('ArmStringSocket', 'Bone')
         self.add_input('ArmVectorSocket', 'Goal Position')
         self.add_input('ArmBoolSocket', 'Enable Pole')
         self.add_input('ArmVectorSocket', 'Pole Position')
-        self.add_input('ArmIntSocket', 'Chain Length')
-        self.add_input('ArmIntSocket', 'Max Iterations', 10)
-        self.add_input('ArmFloatSocket', 'Precision', 0.01)
         self.add_input('ArmFloatSocket', 'Roll Angle')
+        self.add_input('ArmFactorSocket', 'Influence', default_value = 1.0)
+        self.add_input('ArmIntSocket', 'Bone Group', default_value = 0)
 
-        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAnimTree', 'Result')
+
+        self.update_sockets(context)
+    
+    def update_sockets(self, context):
+        remove_list = []
+        for i in range(BoneIKNode.NUM_STATIC_INS, len(self.inputs)):
+            remove_list.append(self.inputs[i])
+        for i in remove_list:
+            self.inputs.remove(i)
+        
+        if self.property0 == 'FABRIK':
+            self.add_input('ArmIntSocket', 'Chain Length')
+            self.add_input('ArmIntSocket', 'Max Iterations', 10)
+            self.add_input('ArmFloatSocket', 'Precision', 0.01)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 1, 2):
             raise LookupError()
-        
-        return NodeReplacement(
-            'LNBoneIKNode', self.arm_version, 'LNBoneIKNode', 2,
-            in_socket_mapping={0:0, 1:1, 2:2, 3:3}, out_socket_mapping={0:0}
-        )
