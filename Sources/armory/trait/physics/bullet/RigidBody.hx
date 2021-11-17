@@ -338,6 +338,12 @@ class RigidBody extends iron.Trait {
 				transform.loc.z -= ptransform.worldz();
 			}
 			transform.buildMatrix();
+
+			#if hl
+			p.delete();
+			q.delete();
+			trans.delete();
+			#end
 		}
 
 		if (onContact != null) {
