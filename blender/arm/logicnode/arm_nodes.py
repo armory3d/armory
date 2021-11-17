@@ -102,6 +102,14 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def get_tree(self) -> bpy.types.NodeTree:
         return self.id_data
+    
+    def getViewLocation(self):
+        node = self
+        location = node.location.copy()
+        while node.parent:
+            node = node.parent
+            location += node.location
+        return location
 
     def clear_tree_cache(self):
         self.get_tree().arm_cached = False
