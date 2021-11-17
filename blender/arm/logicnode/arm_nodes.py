@@ -841,17 +841,22 @@ class BlendSpaceOperator(bpy.types.Operator):
     bl_options = {"REGISTER"}
 
     callback: StringProperty(default = "")
+    node_index: StringProperty(name='Node Index', default='')
 
     def invoke(self, context, event):
+        self.node = array_nodes[self.node_index]
         self.window = context.window
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        #self.mousePosition = Vector((event.mouse_x, event.mouse_y))
+        self.node = array_nodes[self.node_index]
+        self.mousePosition = (event.mouse_x, event.mouse_y)
 
         if event.type == "LEFTMOUSE":
             print('modal')
+            print(self.mousePosition)
+            print(self.node.my_coords_blend[0])
         
         if event.type in {"RIGHTMOUSE", "ESC"}:
             return self.finish()

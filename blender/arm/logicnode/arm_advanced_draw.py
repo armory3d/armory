@@ -17,7 +17,7 @@ def getDpi():
 def getNodeBottomCornerLocations(node):
     region = bpy.context.region
     dpiFactor = getDpiFactor()
-    location = node.viewLocation * dpiFactor
+    location = node.getViewLocation() * dpiFactor
     dimensions = node.dimensions
     x = location.x
     y = location.y - dimensions.y
@@ -35,7 +35,7 @@ class BlendSpaceGUI:
 
     def calculateBoundaries(self):
         dpiFactor = getDpiFactor()
-        location = self.node.viewLocation * dpiFactor
+        location = self.node.getViewLocation() * dpiFactor
         dimensions = self.node.dimensions
         x1 = location.x
         x2 = x1 + dimensions.x
@@ -46,11 +46,15 @@ class BlendSpaceGUI:
 
     def getHeight(self):
         return self.boundary.height
+    
+    def setBlendPoints(self):
+        print(self.points.get_points_list())
 
     def draw(self):
         self.calculateBoundaries()
         self.boundary.draw()
         self.points.calcPoints(self.node.my_coords, self.node.my_coords_enabled, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
+        self.setBlendPoints()
         self.points.drawPointTwo()
 
 class Rectangle:
@@ -157,6 +161,14 @@ class Points:
         self.points = points
         self.colors = []
         self.circle_coords = self.circle(0.0, 0.0, 5.0, 10)
+    
+    def get_points_list(self):
+        p = []
+        for p1 in self.points:
+            for p2 in p1:
+                p.append(p2)
+        
+        return p
 
     def calcPoints(self, points, visible, x1, y1, width):
         self.points = []

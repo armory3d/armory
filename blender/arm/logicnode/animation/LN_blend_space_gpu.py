@@ -46,6 +46,17 @@ class BlendSpaceNode(ArmLogicTreeNode):
         size = 10
     )
 
+    my_coords_blend: FloatVectorProperty(
+        name = "Point Coordionates Blend",
+        description="",
+        default = (0.0, 0.0, 
+                   0.0, 1.0,
+                   1.0, 1.0,
+                   1.0, 0.0,
+                   0.5, 0.5),
+        size = 10
+    )
+
     my_coords_enabled: BoolVectorProperty(
         name = "Point enabled for view",
         description = "",
@@ -59,7 +70,16 @@ class BlendSpaceNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
     
     def create_blend_space(self):
+        print('Printing viewLocation')
+        #print(self.viewLocation)
         self.blend_space = BlendSpaceGUI(self)
+    
+    def free(self):
+        self.remove_advanced_draw()
+    
+    def get_blend_space_points(self):
+        if bpy.context.space_data.edit_tree == self.get_tree():
+            return self.blend_space.points
     
     def draw_advanced(self):
         if bpy.context.space_data.edit_tree == self.get_tree():
@@ -102,3 +122,4 @@ class BlendSpaceNode(ArmLogicTreeNode):
         op.node_index = str(id(self))
         op.callback_name = 'remove_advanced_draw'
         op = layout.operator('arm.blend_space_operator', text = 'run modal', icon = 'PLUS', emboss = True)
+        op.node_index = str(id(self))
