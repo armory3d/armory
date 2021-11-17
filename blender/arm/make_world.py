@@ -69,17 +69,14 @@ def build():
                     # Render world to envmap for (ir)radiance, if no
                     # other probes are exported
                     elif world.arm_envtex_name == '':
-                        write_probes.render_envmap(envpath, world)
-
-                        filename = f'env_{arm.utils.safesrc(world.name)}'
-                        image_file = f'{filename}.jpg'
+                        image_file = write_probes.render_envmap(envpath, world)
                         image_filepath = os.path.join(envpath, image_file)
 
                         world.arm_envtex_name = image_file
                         world.arm_envtex_irr_name = os.path.basename(image_filepath).rsplit('.', 1)[0]
 
                         write_radiance = rpdat.arm_radiance and not mobile_mat
-                        mip_count = write_probes.write_probes(image_filepath, True, world.arm_envtex_num_mips, write_radiance)
+                        mip_count = write_probes.write_probes(image_filepath, write_probes.ENVMAP_FORMAT == 'JPEG', False, world.arm_envtex_num_mips, write_radiance)
                         world.arm_envtex_num_mips = mip_count
 
                         if write_radiance:

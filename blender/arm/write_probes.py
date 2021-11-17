@@ -20,6 +20,11 @@ else:
     arm.enable_reload(__name__)
 
 
+# The format used for rendering the environment. Choose HDR or JPEG.
+ENVMAP_FORMAT = 'JPEG'
+ENVMAP_EXT = 'hdr' if ENVMAP_FORMAT == 'HDR' else 'jpg'
+
+
 def add_irr_assets(output_file_irr):
     assets.add(output_file_irr + '.arm')
 
@@ -43,7 +48,17 @@ def setup_envmap_render():
     # is already taken
     scene = bpy.data.scenes.new("_arm_envmap_render")
     scene.render.engine = "CYCLES"
-    scene.render.image_settings.file_format = "JPEG"
+    scene.render.image_settings.file_format = ENVMAP_FORMAT
+    if ENVMAP_FORMAT == 'HDR':
+        scene.render.image_settings.color_depth = '32'
+
+    # Export in linear space and with default color management settings
+    scene.display_settings.display_device = "None"
+    scene.view_settings.view_transform = "Standard"
+    scene.view_settings.look = "None"
+    scene.view_settings.exposure = 0
+    scene.view_settings.gamma = 1
+
     scene.render.image_settings.quality = 100
     scene.render.resolution_x = radiance_size
     scene.render.resolution_y = radiance_size // 2
@@ -76,20 +91,25 @@ def setup_envmap_render():
         bpy.data.scenes.remove(scene)
 
 
-def render_envmap(target_dir: str, world: bpy.types.World):
-    """Renders an environment texture for the given world into the
-    target_dir. Use in combination with setup_envmap_render()."""
-    scene = bpy.data.scenes["_arm_envmap_render"]
+def render_envmap(target_dir: str, world: bpy.types.World) -> str:
+    """Render an environment texture for the given world into the
+    target_dir and return the filename of the rendered image. Use in
+    combination with setup_envmap_render().
+    """
+    scene = bpy.data.scenes['_arm_envmap_render']
     scene.world = world
 
-    render_path = os.path.join(target_dir, f"env_{arm.utils.safesrc(world.name)}.jpg")
+    image_name = f'env_{arm.utils.safesrc(world.name)}.{ENVMAP_EXT}'
+    render_path = os.path.join(target_dir, image_name)
     scene.render.filepath = render_path
 
     bpy.ops.render.render(write_still=True, scene=scene.name)
 
+    return image_name
 
-def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, arm_radiance=True) -> int:
-    """Generate probes from environment map and returns the mipmap count"""
+
+def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached_num_mips: int, arm_radiance=True) -> int:
+    """Generate probes from environment map and return the mipmap count."""
     envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
 
     if not os.path.exists(envpath):
@@ -125,10 +145,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
         kraffiti_path = '"' + kha_path + '/Kinc/Tools/kraffiti/kraffiti-linux64"'
 
-    output_gama_numerator = '2.2' if disable_hdr else '1.0'
     input_file = arm.utils.asset_path(image_filepath)
 
-    # Scale map
+    # Scale map, ensure 2:1 ratio (required by cmft)
     rpdat = arm.utils.get_rp()
     target_w = int(rpdat.arm_radiance_size)
     target_h = int(target_w / 2)
@@ -151,6 +170,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             + ' width=' + str(target_w)
             + ' height=' + str(target_h)], shell=True)
 
+    # Convert sRGB colors into linear color space first (approximately)
+    input_gamma_numerator = '2.2' if from_srgb else '1.0'
+
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':
         subprocess.call([
@@ -158,14 +180,24 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             '--input', scaled_file,
             '--filter', 'shcoeffs',
             '--outputNum', '1',
-            '--output0', output_file_irr])
+            '--output0', output_file_irr,
+            '--inputGammaNumerator', input_gamma_numerator,
+            '--inputGammaDenominator', '1.0',
+            '--outputGammaNumerator', '1.0',
+            '--outputGammaDenominator', '1.0'
+        ])
     else:
         subprocess.call([
             cmft_path
             + ' --input ' + '"' + scaled_file + '"'
             + ' --filter shcoeffs'
             + ' --outputNum 1'
-            + ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
+            + ' --output0 ' + '"' + output_file_irr + '"'
+            + ' --inputGammaNumerator' + input_gamma_numerator
+            + ' --inputGammaDenominator' + '1.0'
+            + ' --outputGammaNumerator' + '1.0'
+            + ' --outputGammaDenominator' + '1.0'
+        ], shell=True)
 
     sh_to_json(output_file_irr)
     add_irr_assets(output_file_irr)
@@ -211,7 +243,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             '--deviceType', 'gpu',
             '--deviceIndex', '0',
             '--generateMipChain', 'true',
-            '--inputGammaNumerator', output_gama_numerator,
+            '--inputGammaNumerator', input_gamma_numerator,
             '--inputGammaDenominator', '1.0',
             '--outputGammaNumerator', '1.0',
             '--outputGammaDenominator', '1.0',
@@ -241,7 +273,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, cached_num_mips: int, a
             ' --deviceType gpu' + \
             ' --deviceIndex 0' + \
             ' --generateMipChain true' + \
-            ' --inputGammaNumerator ' + output_gama_numerator + \
+            ' --inputGammaNumerator ' + input_gamma_numerator + \
             ' --inputGammaDenominator 1.0' + \
             ' --outputGammaNumerator 1.0' + \
             ' --outputGammaDenominator 1.0' + \
@@ -327,6 +359,8 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
+
+    # Lower exposure to adjust to Eevee and Cycles
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 

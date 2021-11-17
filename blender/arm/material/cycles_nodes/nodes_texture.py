@@ -214,10 +214,11 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
         world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
 
         disable_hdr = target_format == 'JPEG'
+        from_srgb = image.colorspace_settings.name == "sRGB"
 
         rpdat = arm.utils.get_rp()
         mip_count = world.arm_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
+        mip_count = write_probes.write_probes(filepath, disable_hdr, from_srgb, mip_count, arm_radiance=rpdat.arm_radiance)
 
         world.arm_envtex_num_mips = mip_count
 
@@ -505,9 +506,10 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
         world.arm_envtex_name = tex_file
         world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
         disable_hdr = target_format == 'JPEG'
+        from_srgb = image.colorspace_settings.name == "sRGB"
 
         mip_count = world.arm_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
+        mip_count = write_probes.write_probes(filepath, disable_hdr, from_srgb, mip_count, arm_radiance=rpdat.arm_radiance)
 
         world.arm_envtex_num_mips = mip_count
 
