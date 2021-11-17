@@ -300,13 +300,14 @@ class PhysicsWorld extends Trait {
 			#end
 
 			var numContacts = contactManifold.getNumContacts();
-			var pt: bullet.Bt.ManifoldPoint = null;
-			var posA: bullet.Bt.Vector3 = null;
-			var posB: bullet.Bt.Vector3 = null;
-			var nor: bullet.Bt.Vector3 = null;
-			var cp: ContactPair = null;
 			for (j in 0...numContacts) {
-				pt = contactManifold.getContactPoint(j);
+
+				var pt = contactManifold.getContactPoint(j);
+				var posA: bullet.Bt.Vector3 = null;
+				var posB: bullet.Bt.Vector3 = null;
+				var nor: bullet.Bt.Vector3 = null;
+				var cp: ContactPair = null;
+
 				#if js
 				posA = pt.get_m_positionWorldOnA();
 				posB = pt.get_m_positionWorldOnB();
@@ -318,12 +319,20 @@ class PhysicsWorld extends Trait {
 				nor = pt.m_normalWorldOnB;
 				cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
 				#end
+
 				cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
 				cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
 				cp.normOnB = new Vec4(nor.x(), nor.y(), nor.z());
 				cp.impulse = pt.getAppliedImpulse();
 				cp.distance = pt.getDistance();
 				contacts.push(cp);
+
+				#if hl
+				pt.delete();
+				posA.delete();
+				posB.delete();
+				nor.delete();
+				#end
 			}
 		}
 	}
