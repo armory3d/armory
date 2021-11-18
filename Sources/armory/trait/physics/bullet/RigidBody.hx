@@ -325,15 +325,12 @@ class RigidBody extends iron.Trait {
 			syncTransform();
 		}
 		else {
-			var bodyColl: bullet.Bt.CollisionObject = body;
-			var trans = bodyColl.getWorldTransform();
-
+			var trans = body.getWorldTransform();
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
-			var qw: bullet.Bt.QuadWord = q;
 
 			transform.loc.set(p.x(), p.y(), p.z());
-			transform.rot.set(qw.x(), qw.y(), qw.z(), qw.w());
+			transform.rot.set(q.x(), q.y(), q.z(), q.w());
 			if (object.parent != null) {
 				var ptransform = object.parent.transform;
 				transform.loc.x -= ptransform.worldx();
@@ -341,6 +338,12 @@ class RigidBody extends iron.Trait {
 				transform.loc.z -= ptransform.worldz();
 			}
 			transform.buildMatrix();
+
+			#if hl
+			p.delete();
+			q.delete();
+			trans.delete();
+			#end
 		}
 
 		if (onContact != null) {
