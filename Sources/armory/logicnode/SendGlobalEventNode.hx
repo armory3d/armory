@@ -9,11 +9,12 @@ class SendGlobalEventNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var name: String = inputs[1].get();
+		final name: String = inputs[1].get();
+		final entries = Event.get(name);
 
-		var entries = Event.get(name);
-		if (entries == null) return; // Event does not exist
-		for (e in entries) e.onEvent();
+		if (entries != null) {
+			for (e in entries) e.onEvent();
+		}
 
 		runOutput(0);
 	}
