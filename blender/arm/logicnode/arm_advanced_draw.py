@@ -47,15 +47,19 @@ class BlendSpaceGUI:
     def getHeight(self):
         return self.boundary.height
     
-    def setBlendPoints(self):
-        print(self.points.get_points_list())
+    def setPointSize(self):
+        self.node.point_size = self.points.point_size
+    
+    def setGUIBounds(self):
+        self.node.gui_bounds = [self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner]
 
     def draw(self):
         self.calculateBoundaries()
         self.boundary.draw()
         self.points.calcPoints(self.node.my_coords, self.node.my_coords_enabled, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
-        self.setBlendPoints()
-        self.points.drawPointTwo()
+        self.setGUIBounds()
+        self.setPointSize()
+        self.points.drawPointCirc()
 
 class Rectangle:
     def __init__(self, x1 = 0, y1 = 0, x2 = 0, y2 = 0):
@@ -159,8 +163,22 @@ class Points:
 
     def __init__(self, points = []):
         self.points = points
-        self.colors = []
-        self.circle_coords = self.circle(0.0, 0.0, 5.0, 10)
+        self.point_size = 0.025
+        self.width = 0.0
+        self.colors = [ (0.4, 0.5, 0.9, 0.4),
+                        (1.0, 0.0, 1.0, 0.4),
+                        (0.0, 1.0, 1.0, 0.4),
+                        (1.0, 1.0, 0.0, 0.4),
+                        (0.0, 0.0, 1.0, 0.4),
+                        (0.0, 1.0, 0.0, 0.4),
+                        (1.0, 0.0, 0.0, 0.4),
+                        (0.8, 0.6, 1.0, 0.4),
+                        (0.6, 0.8, 1.0, 0.4),
+                        (1.0, 0.6, 0.8, 0.4), 
+                        (1.0, 1.0, 1.0, 1.0)]
+        self.circle_coords = self.circle(0.0, 0.0, self.point_size, 4)
+        self.square_coord = self.circle(0.0, 0.0, self.point_size, 5)
+        self.visible = []
     
     def get_points_list(self):
         p = []
@@ -171,34 +189,31 @@ class Points:
         return p
 
     def calcPoints(self, points, visible, x1, y1, width):
+        self.width = width
         self.points = []
+        self.visible = visible
 
         for i in range(len(points) // 2):
-            if(visible[i]):
-                point = []
-                point.append(x1 + width * points[i * 2])
-                point.append(y1 - width + width * points[i * 2 + 1])
-                self.points.append(point)
+            point = []
+            point.append(x1 + width * points[i * 2])
+            point.append(y1 - width + width * points[i * 2 + 1])
+            self.points.append(point)
 
     def reset_circle(self, point):
         new_coords = []
         for coord in self.circle_coords:
-            x = coord[0] + point[0]
-            y = coord[1] + point[1]
+            x = coord[0] * self.width + point[0]
+            y = coord[1] * self.width + point[1]
             new_coords.append((x, y))
         return new_coords
-
-    def drawPoints(self):
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
-        batch = batch_for_shader(shader, 'POINTS',{"pos": self.points})
-
-        shader.bind()
-        shader.uniform_float("color", (1.0, 1.0, 1.0, 1.0))
-
-        glEnable(GL_BLEND)
-        glPointSize(10.0)
-        batch.draw(shader)
-        glDisable(GL_BLEND)
+    
+    def reset_square(self, point):
+        new_coords = []
+        for coord in self.square_coord:
+            x = coord[0] * self.width + point[0]
+            y = coord[1] * self.width + point[1]
+            new_coords.append((x, y))
+        return new_coords
     
     def circle(self, x, y, radius, segments):
         coords = []
@@ -210,17 +225,21 @@ class Points:
             coords.append((p1, p2))
         return coords
     
-    def drawPointTwo(self):
+    def drawPointCirc(self):
         shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
-
-        for p in self.points:
-            circle_co = self.reset_circle(p)
-            batch = batch_for_shader(shader, 'TRI_FAN',{"pos": circle_co})
-
-            shader.bind()
-            shader.uniform_float("color", (1.0, 1.0, 1.0, 1.0))
-
-            batch.draw(shader)
+        for i in range(len(self.points) - 1):
+            if(self.visible[i]):
+                circle_co = self.reset_circle(self.points[i])
+                batch = batch_for_shader(shader, 'TRI_FAN',{"pos": circle_co})
+                shader.bind()
+                shader.uniform_float("color", self.colors[i])
+                batch.draw(shader)
+        square_co = self.reset_square(self.points[len(self.points) - 1])
+        batch = batch_for_shader(shader, 'TRI_FAN',{"pos": square_co})
+        shader.bind()
+        shader.uniform_float("color", self.colors[len(self.points) - 1])
+        batch.draw(shader)
+        
 
     
 class RectangleWithGrid:
