@@ -8,16 +8,27 @@ class BlendSpaceNode(ArmLogicTreeNode):
 
     @seeNode Send Event to Object
     @seeNode Send Event"""
-    bl_idname = 'LNBlendSpace'
+    bl_idname = 'LNBlendSpaceNode'
     bl_label = 'Blend Space'
     arm_version = 1
     arm_section = 'custom'
 
-    my_bool: BoolProperty(
+    modal_run: BoolProperty(
         name="Enable or Disable",
         description="A bool property",
         default = False
     )
+
+    advanced_draw_run: BoolProperty(
+        name = "Advance draw enabled",
+        description="",
+        default = False
+    )
+
+
+    def stop_modal(self):
+        print("Setting False")
+        self.modal_run = False
 
     def get_floats(self):
         print("get_called")
@@ -42,36 +53,53 @@ class BlendSpaceNode(ArmLogicTreeNode):
                    0.0, 1.0,
                    1.0, 1.0,
                    1.0, 0.0,
+                   0.0, 0.0,
+                   0.0, 0.0,
+                   0.0, 0.0, 
+                   0.0, 0.0, 
+                   0.0, 0.0, 
+                   0.0, 0.0,
                    0.5, 0.5),
-        size = 10
+        size = 22
     )
 
-    my_coords_blend: FloatVectorProperty(
-        name = "Point Coordionates Blend",
-        description="",
-        default = (0.0, 0.0, 
-                   0.0, 1.0,
-                   1.0, 1.0,
-                   1.0, 0.0,
-                   0.5, 0.5),
-        size = 10
+    active_point_index: IntProperty(
+        default = -1
+    )
+
+    active_point_index_ref: IntProperty(
+        default = 0
+    )
+
+    gui_bounds: FloatVectorProperty(
+        name = "GUI bounds",
+        description = "",
+        default = (0.0, 0.0, 0.0),
+        size = 3
+    )
+
+    point_size: FloatProperty(
+        name = "Point Size",
+        description = "",
+        default = 0.015
     )
 
     my_coords_enabled: BoolVectorProperty(
         name = "Point enabled for view",
         description = "",
-        default = (True,True,True,True, True),
-        size = 5
+        default = (True,True,True,True, False, False, False, False, False, False, True),
+        size = 11
     )
 
     draw_handler_dict = {}
+    modal_handler_dict = {}
 
     def __init__(self):
         array_nodes[str(id(self))] = self
+        if self.advanced_draw_run:
+            self.add_advanced_draw()
     
     def create_blend_space(self):
-        print('Printing viewLocation')
-        #print(self.viewLocation)
         self.blend_space = BlendSpaceGUI(self)
     
     def free(self):
@@ -86,9 +114,12 @@ class BlendSpaceNode(ArmLogicTreeNode):
             self.blend_space.draw()
 
     def arm_init(self, context):
-        self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_output('ArmNodeSocketAnimTree', 'Out')
 
     def add_advanced_draw(self):
+        pass
+        self.advanced_draw_run = True
         print(self.my_coords_enabled[0])
         print(len(self.my_coords))
         print('Adding')
@@ -99,9 +130,13 @@ class BlendSpaceNode(ArmLogicTreeNode):
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             handler = editor.draw_handler_add(self.draw_advanced, (), 'WINDOW', 'POST_VIEW')
             self.draw_handler_dict[str(self.as_pointer())] = handler
-            print(self.draw_handler_dict)
+            print(self.draw_handler_dict)      
+            self.modal_run = False  
+
 
     def remove_advanced_draw(self):
+        pass
+        self.advanced_draw_run = False
         print('Removing')
         print(str(self.as_pointer()))
         print(self.draw_handler_dict)
