@@ -110,16 +110,53 @@ class BlendSpaceNode(ArmLogicTreeNode):
             print('Handler existing')
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             editor.draw_handler_remove(handler, 'WINDOW')
-            self.draw_handler_dict.pop(str(self.as_pointer()))        
+            self.draw_handler_dict.pop(str(self.as_pointer()))
+
+    def add_point(self):
+        for i in range(len(self.my_coords_enabled)):
+            if not self.my_coords_enabled[i]:
+                self.my_coords_enabled[i] = True
+                self.my_coords[i * 2] = 0.5
+                self.my_coords[i * 2 + 1] = 0.5
+                break  
+    
+    def remove_point(self):
+        if self.active_point_index_ref < 10:
+            self.my_coords_enabled[self.active_point_index_ref] = False
+            self.active_point_index_ref = 10
 
         
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'my_bool')
-        op = layout.operator('arm.node_call_func', text='Show', icon='PLUS', emboss=True)
+        pass
+        row = layout.row(align=True)
+        row.alignment = 'EXPAND'
+        op = row.operator('arm.node_call_func', text='Show', icon='FULLSCREEN_ENTER', emboss=True, depress = self.advanced_draw_run)
         op.node_index = str(id(self))
         op.callback_name = 'add_advanced_draw'
-        op = layout.operator('arm.node_call_func', text='Hide', icon='X', emboss=True)
+        op = row.operator('arm.node_call_func', text='Hide', icon='FULLSCREEN_EXIT', emboss=True, depress = not self.advanced_draw_run)
         op.node_index = str(id(self))
         op.callback_name = 'remove_advanced_draw'
-        op = layout.operator('arm.blend_space_operator', text = 'run modal', icon = 'PLUS', emboss = True)
-        op.node_index = str(id(self))
+        if self.advanced_draw_run:
+            col = layout.column()
+            row = col.row(align=True)
+            op = row.operator('arm.blend_space_operator', text = 'Edit', icon = 'EDITMODE_HLT', emboss = True, depress = self.modal_run)
+            op.node_index = str(id(self))
+            op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.modal_run)
+            op.node_index = str(id(self))
+            op.callback_name = 'stop_modal'
+            if self.modal_run:
+                col = layout.column()
+                row = col.row(align=True)
+                op = row.operator('arm.node_call_func', text = 'Add Point', icon = 'PLUS', emboss = True)
+                op.node_index = str(id(self))
+                op.callback_name = 'add_point'
+                op = row.operator('arm.node_call_func', text = 'Remove Point', icon = 'X', emboss = True)
+                op.node_index = str(id(self))
+                op.callback_name = 'remove_point'
+                cl =layout.column()
+                actie_point = self.active_point_index_ref
+                pos = ", Pos = " + str(round(self.my_coords[actie_point * 2], 2)) + ", " + str(round(self.my_coords[actie_point * 2 + 1], 2))
+                if actie_point > 9:
+                    cl.label(text = "Selected: Cursor" + pos)
+                else:
+                    cl.label(text = "Selected: " + str(self.active_point_index_ref + 1) + pos)
