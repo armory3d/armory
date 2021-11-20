@@ -10,14 +10,16 @@ class SendEventNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var name: String = inputs[1].get();
-		var object: Object = inputs.length > 2 ? inputs[2].get() : tree.object;
+		final name: String = inputs[1].get();
+		final object: Object = inputs.length > 2 ? inputs[2].get() : tree.object;
 
-		if (object == null) return;
+		if (object != null) {
+			final entries = Event.get(name);
 
-		var entries = Event.get(name);
-		if (entries == null) return;
-		for (e in entries) if (e.mask == object.uid) e.onEvent();
+			if (entries != null) {
+				for (e in entries) if (e.mask == object.uid) e.onEvent();
+			}
+		}
 
 		runOutput(0);
 	}
