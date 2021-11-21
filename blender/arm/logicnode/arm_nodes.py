@@ -888,7 +888,7 @@ class BlendSpaceOperator(bpy.types.Operator):
             if(visible[i]):
                 px = points[i * 2]
                 py = points[i * 2 + 1]
-                dist = sqrt((locX - px) * (locX - px) + (locY - py) * (locY - py))
+                dist = math.sqrt((locX - px) * (locX - px) + (locY - py) * (locY - py))
                 if(dist < self.node.point_size):
                     return i
         return -1
