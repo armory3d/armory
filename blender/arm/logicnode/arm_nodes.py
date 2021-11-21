@@ -882,8 +882,8 @@ class BlendSpaceOperator(bpy.types.Operator):
         return self.modal_start
     
     def get_active_point(self, locX, locY):
-        points = self.node.my_coords
-        visible = self.node.my_coords_enabled
+        points = self.node.property0
+        visible = self.node.property1
         for i in range(len(points) // 2):
             if(visible[i]):
                 px = points[i * 2]
@@ -900,8 +900,8 @@ class BlendSpaceOperator(bpy.types.Operator):
         return False
     
     def set_point_coord(self, index, x, y):
-        self.node.my_coords[index * 2] = x
-        self.node.my_coords[index * 2 + 1] = y
+        self.node.property0[index * 2] = x
+        self.node.property0[index * 2 + 1] = y
 
 
     def modal(self, context, event):

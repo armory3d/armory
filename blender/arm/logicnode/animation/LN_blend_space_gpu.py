@@ -30,23 +30,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
         print("Setting False")
         self.modal_run = False
 
-    def get_floats(self):
-        print("get_called")
-        return self.get("my_coords", 0)
-    
-    def set_floats(self, value):
-        print("set called")
-        self["my_coords"] = value
-    
-    def get_bools(self):
-        print("get_called")
-        return self.get("my_coords_enabled", 0)
-    
-    def set_bools(self, value):
-        print("set called")
-        self["my_coords_enabled"] = value
-
-    my_coords: FloatVectorProperty(
+    property0: FloatVectorProperty(
         name = "Point Coordionates",
         description="",
         default = (0.0, 0.0, 
@@ -84,7 +68,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
         default = 0.015
     )
 
-    my_coords_enabled: BoolVectorProperty(
+    property1: BoolVectorProperty(
         name = "Point enabled for view",
         description = "",
         default = (True,True,True,True, False, False, False, False, False, False, True),
@@ -120,8 +104,8 @@ class BlendSpaceNode(ArmLogicTreeNode):
     def add_advanced_draw(self):
         pass
         self.advanced_draw_run = True
-        print(self.my_coords_enabled[0])
-        print(len(self.my_coords))
+        print(self.property1[0])
+        print(len(self.property0))
         print('Adding')
         print(str(self.as_pointer()))
         handler = self.draw_handler_dict.get(str(self.as_pointer()))
@@ -148,16 +132,16 @@ class BlendSpaceNode(ArmLogicTreeNode):
             self.draw_handler_dict.pop(str(self.as_pointer()))
 
     def add_point(self):
-        for i in range(len(self.my_coords_enabled)):
-            if not self.my_coords_enabled[i]:
-                self.my_coords_enabled[i] = True
-                self.my_coords[i * 2] = 0.5
-                self.my_coords[i * 2 + 1] = 0.5
+        for i in range(len(self.property1)):
+            if not self.property1[i]:
+                self.property1[i] = True
+                self.property0[i * 2] = 0.5
+                self.property0[i * 2 + 1] = 0.5
                 break  
     
     def remove_point(self):
         if self.active_point_index_ref < 10:
-            self.my_coords_enabled[self.active_point_index_ref] = False
+            self.property1[self.active_point_index_ref] = False
             self.active_point_index_ref = 10
 
         
@@ -190,7 +174,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
                 op.callback_name = 'remove_point'
                 cl =layout.column()
                 actie_point = self.active_point_index_ref
-                pos = ", Pos = " + str(round(self.my_coords[actie_point * 2], 2)) + ", " + str(round(self.my_coords[actie_point * 2 + 1], 2))
+                pos = ", Pos = " + str(round(self.property0[actie_point * 2], 2)) + ", " + str(round(self.property0[actie_point * 2 + 1], 2))
                 if actie_point > 9:
                     cl.label(text = "Selected: Cursor" + pos)
                 else:

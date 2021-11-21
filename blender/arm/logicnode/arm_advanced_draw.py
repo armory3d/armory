@@ -56,7 +56,7 @@ class BlendSpaceGUI:
     def draw(self):
         self.calculateBoundaries()
         self.boundary.draw()
-        self.points.calcPoints(self.node.my_coords, self.node.my_coords_enabled, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
+        self.points.calcPoints(self.node.property0, self.node.property1, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
         self.setGUIBounds()
         self.setPointSize()
         self.points.drawPointCirc()
