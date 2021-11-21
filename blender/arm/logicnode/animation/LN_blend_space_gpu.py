@@ -13,7 +13,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'custom'
 
-    modal_run: BoolProperty(
+    property3: BoolProperty(
         name="Enable or Disable",
         description="A bool property",
         default = False
@@ -27,8 +27,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
 
 
     def stop_modal(self):
-        print("Setting False")
-        self.modal_run = False
+        self.property3 = False
 
     property0: FloatVectorProperty(
         name = "Point Coordionates",
@@ -102,31 +101,20 @@ class BlendSpaceNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAnimTree', 'Out')
 
     def add_advanced_draw(self):
-        pass
         self.advanced_draw_run = True
-        print(self.property1[0])
-        print(len(self.property0))
-        print('Adding')
-        print(str(self.as_pointer()))
         handler = self.draw_handler_dict.get(str(self.as_pointer()))
         if handler is None:
             self.create_blend_space()
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             handler = editor.draw_handler_add(self.draw_advanced, (), 'WINDOW', 'POST_VIEW')
             self.draw_handler_dict[str(self.as_pointer())] = handler
-            print(self.draw_handler_dict)      
-            self.modal_run = False  
+            self.property3 = False  
 
 
     def remove_advanced_draw(self):
-        pass
         self.advanced_draw_run = False
-        print('Removing')
-        print(str(self.as_pointer()))
-        print(self.draw_handler_dict)
         handler = self.draw_handler_dict.get(str(self.as_pointer()))
         if handler is not None:
-            print('Handler existing')
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             editor.draw_handler_remove(handler, 'WINDOW')
             self.draw_handler_dict.pop(str(self.as_pointer()))
@@ -146,7 +134,6 @@ class BlendSpaceNode(ArmLogicTreeNode):
 
         
     def draw_buttons(self, context, layout):
-        pass
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         op = row.operator('arm.node_call_func', text='Show', icon='FULLSCREEN_ENTER', emboss=True, depress = self.advanced_draw_run)
@@ -158,12 +145,12 @@ class BlendSpaceNode(ArmLogicTreeNode):
         if self.advanced_draw_run:
             col = layout.column()
             row = col.row(align=True)
-            op = row.operator('arm.blend_space_operator', text = 'Edit', icon = 'EDITMODE_HLT', emboss = True, depress = self.modal_run)
+            op = row.operator('arm.blend_space_operator', text = 'Edit', icon = 'EDITMODE_HLT', emboss = True, depress = self.property3)
             op.node_index = str(id(self))
-            op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.modal_run)
+            op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.property3)
             op.node_index = str(id(self))
             op.callback_name = 'stop_modal'
-            if self.modal_run:
+            if self.property3:
                 col = layout.column()
                 row = col.row(align=True)
                 op = row.operator('arm.node_call_func', text = 'Add Point', icon = 'PLUS', emboss = True)

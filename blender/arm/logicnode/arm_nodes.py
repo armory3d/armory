@@ -848,7 +848,7 @@ class BlendSpaceOperator(bpy.types.Operator):
     def invoke(self, context, event):
         self.node = array_nodes[self.node_index]
         self.window = context.window
-        self.node.modal_run = True
+        self.node.property3 = True
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
     
@@ -911,34 +911,23 @@ class BlendSpaceOperator(bpy.types.Operator):
             return{"PASS_THROUGH"}
         context.area.tag_redraw()
 
-        if not self.node.modal_run or not self.node.advanced_draw_run:
-            self.node.modal_run = False
+        if not self.node.property3 or not self.node.advanced_draw_run:
+            self.node.property3 = False
             return {"FINISHED"}
 
         if event.type == "LEFTMOUSE":
-            print("LEFT EVENT")
             if event.value == "PRESS":
-                print("PRESS")
                 region = context.region.view2d
                 x, y = region.region_to_view(event.mouse_region_x, event.mouse_region_y)
                 locX, locY = self.convert_back(x, y)
                 if self.get_cursor_in_region(locX, locY):
-                    print("IN REGION")
-                    print('modal')
                     self.set_modal()
                     self.node.active_point_index = self.get_active_point(locX, locY)
-                    print("__________________")
-                    print(self.node.active_point_index)
                     if self.node.active_point_index != -1:
-                        self.node.active_point_index_ref = self.node.active_point_index
-                else:
-                    print("OUT REGION")
-            
+                        self.node.active_point_index_ref = self.node.active_point_index            
             if event.value == "RELEASE":
-                print("RELEASE")
                 self.node.active_point_index = -1
                 if self.get_modal_running():
-                    print("Stopping")
                     context.window.cursor_modal_restore()
                     self.unset_modal()
                 
@@ -956,9 +945,7 @@ class BlendSpaceOperator(bpy.types.Operator):
                         self.set_point_coord(active_point, newX, newY)
                     else:
                         self.set_point_coord(active_point, locX, locY)
-                    print("Not Warping")
                 else:
-                    print("Warping")
                     context.window.cursor_warp(event.mouse_prev_x, event.mouse_prev_y)
         
         if self.get_modal_running():
