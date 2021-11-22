@@ -260,8 +260,7 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    enable_dce = state.is_publish and wrd.arm_dce
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -900,7 +899,7 @@ def clean():
         shutil.rmtree('Sources/' + pkg_dir, onerror=remove_readonly)
         if os.path.exists('Sources') and os.listdir('Sources') == []:
             shutil.rmtree('Sources/', onerror=remove_readonly)
-    
+
     # Remove Shape key Textures
     if os.path.exists('MorphTargets/'):
         shutil.rmtree('MorphTargets/', onerror=remove_readonly)

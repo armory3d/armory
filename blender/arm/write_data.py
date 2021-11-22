@@ -63,7 +63,7 @@ def remove_readonly(func, path, excinfo):
 
 
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
-                    enable_dce: bool, import_traits: List[str]) -> None:
+                    import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
 
     sdk_path = arm.utils.get_sdk_path()
@@ -163,10 +163,13 @@ project.addSources('Sources');
 
         if is_publish:
             assets.add_khafile_def('arm_published')
-            if wrd.arm_asset_compression:
-                assets.add_khafile_def('arm_compress')
+            if wrd.arm_dce:
+                khafile.write("project.addParameter('-dce full');\n")
             if wrd.arm_no_traces:
                 khafile.write("project.addParameter('--no-traces');\n")
+            if wrd.arm_asset_compression:
+                assets.add_khafile_def('arm_compress')
+
         else:
             assets.add_khafile_def(f'arm_assert_level={wrd.arm_assert_level}')
             if wrd.arm_assert_quit:
@@ -184,9 +187,6 @@ project.addSources('Sources');
 
         if not wrd.arm_compiler_inline:
             khafile.write("project.addParameter('--no-inline');\n")
-
-        if enable_dce:
-            khafile.write("project.addParameter('-dce full');\n")
 
         use_live_patch = arm.utils.is_livepatch_enabled()
         if wrd.arm_debug_console or use_live_patch:
