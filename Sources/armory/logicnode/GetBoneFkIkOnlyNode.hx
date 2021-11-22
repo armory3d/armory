@@ -1,13 +1,16 @@
 package armory.logicnode;
 
 import iron.object.Object;
+#if arm_skin
 import iron.object.BoneAnimation;
+#end
 
 class GetBoneFkIkOnlyNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
+
 
 	override function get(from: Int): Bool {
 		#if arm_skin

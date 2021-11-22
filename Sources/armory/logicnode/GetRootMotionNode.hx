@@ -9,6 +9,7 @@ class GetRootMotionNode extends LogicNode {
 		super(tree);
 	}
 
+    #if arm_skin
     override function get(from:Int):Dynamic {
         var object: Object = inputs[0].get();
         assert(Error, object != null, "Object input must not be null");
@@ -22,4 +23,5 @@ class GetRootMotionNode extends LogicNode {
         return null;
 
     }
+    #end
 }

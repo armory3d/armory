@@ -1,7 +1,9 @@
 package armory.logicnode;
 
 import iron.object.Object;
+#if arm_skin
 import iron.object.BoneAnimation;
+#end
 import iron.math.Mat4;
 
 class GetBoneTransformNode extends LogicNode {
@@ -9,6 +11,7 @@ class GetBoneTransformNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
+
 
 	override function get(from: Int): Mat4 {
 		#if arm_skin

@@ -3,7 +3,9 @@ package armory.logicnode;
 import iron.math.Quat;
 import iron.math.Vec4;
 import iron.object.Object;
+#if arm_skin
 import iron.object.BoneAnimation;
+#end
 
 class SetBoneFkIkOnlyNode extends LogicNode {
 

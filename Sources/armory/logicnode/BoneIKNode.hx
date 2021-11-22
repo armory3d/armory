@@ -7,6 +7,7 @@ import iron.math.Mat4;
 
 class BoneIKNode extends LogicNode {
 
+	#if arm_skin
 	public var property0: String; //2 Bone or FABRIK
 	var object: Object;
 	var boneName: String;
@@ -20,20 +21,17 @@ class BoneIKNode extends LogicNode {
 	var chainLength: Int;
 	var maxIterartions: Int;
 	var precision: Float;
-
-	#if arm_skin
 	var animation: BoneAnimation;
+	var ready = false;
 	#end
 	
-
-	var ready = false;
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
+	#if arm_skin
+
 	public function init(){
-		#if arm_skin
 
 		object = inputs[0].get();
 		assert(Error, object != null, "The object input not be null");
@@ -41,11 +39,9 @@ class BoneIKNode extends LogicNode {
 		assert(Error, animation != null, "The object does not have armatureanimation");
 		ready = true;
 
-		#end
 	}
 
 	override function get(from: Int): Dynamic {
-		#if arm_skin
 
 		return function (animMats: Array<Mat4>) {
 
@@ -79,6 +75,6 @@ class BoneIKNode extends LogicNode {
 					
 			}
 		}
-		#end
 	}
+	#end
 }

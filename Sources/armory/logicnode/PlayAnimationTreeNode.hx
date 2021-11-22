@@ -2,7 +2,9 @@ package armory.logicnode;
 
 import iron.object.Object;
 import iron.object.ObjectAnimation;
+#if arm_skin
 import iron.object.BoneAnimation;
+#end
 import iron.Scene;
 
 class PlayAnimationTreeNode extends LogicNode {
@@ -18,10 +20,12 @@ class PlayAnimationTreeNode extends LogicNode {
 		assert(Error, object != null, "The object input not be null");
 		var animation = object.animation;
 		if(animation == null) {
+			#if arm_skin
 			animation = object.getParentArmature(object.name);
 			cast(animation, BoneAnimation).animationLoop(function f(mats) {
 				action(mats);
 			});
+			#end
 		}
 		else{
 			cast(animation, ObjectAnimation).animationLoop(function f(mats) {

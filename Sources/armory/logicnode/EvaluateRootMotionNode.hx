@@ -6,14 +6,18 @@ import iron.math.Mat4;
 
 class EvaluateRootMotionNode extends LogicNode {
 
+    #if arm_skin
     var object: Object;
     var animation: BoneAnimation;
     var ready = false;
+    #end
+
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
+    #if arm_skin
     public function init(){
 		object = inputs[1].get();
 		assert(Error, object != null, "The object input not be null");
@@ -41,4 +45,6 @@ class EvaluateRootMotionNode extends LogicNode {
             animation.evaluateRootMotion(boneName, inputs[2].get()(animMats));
         };
     }
+
+    #end
 }
