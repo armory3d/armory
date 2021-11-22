@@ -848,7 +848,7 @@ class BlendSpaceOperator(bpy.types.Operator):
     def invoke(self, context, event):
         self.node = array_nodes[self.node_index]
         self.window = context.window
-        self.node.property3 = True
+        self.node.property2 = True
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
     
@@ -911,8 +911,8 @@ class BlendSpaceOperator(bpy.types.Operator):
             return{"PASS_THROUGH"}
         context.area.tag_redraw()
 
-        if not self.node.property3 or not self.node.advanced_draw_run:
-            self.node.property3 = False
+        if not self.node.property2 or not self.node.advanced_draw_run:
+            self.node.property2 = False
             return {"FINISHED"}
 
         if event.type == "LEFTMOUSE":

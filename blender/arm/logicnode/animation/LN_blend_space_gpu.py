@@ -13,7 +13,8 @@ class BlendSpaceNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'custom'
 
-    property3: BoolProperty(
+    property2: HaxeBoolProperty(
+        'property2',
         name="Enable or Disable",
         description="A bool property",
         default = False
@@ -25,11 +26,11 @@ class BlendSpaceNode(ArmLogicTreeNode):
         default = False
     )
 
-
     def stop_modal(self):
-        self.property3 = False
+        self.property2 = False
 
-    property0: FloatVectorProperty(
+    property0: HaxeFloatVectorProperty(
+        'property0',
         name = "Point Coordionates",
         description="",
         default = (0.0, 0.0, 
@@ -67,7 +68,8 @@ class BlendSpaceNode(ArmLogicTreeNode):
         default = 0.015
     )
 
-    property1: BoolVectorProperty(
+    property1: HaxeBoolVectorProperty(
+        'property1',
         name = "Point enabled for view",
         description = "",
         default = (True,True,True,True, False, False, False, False, False, False, True),
@@ -108,7 +110,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             handler = editor.draw_handler_add(self.draw_advanced, (), 'WINDOW', 'POST_VIEW')
             self.draw_handler_dict[str(self.as_pointer())] = handler
-            self.property3 = False  
+            self.property2 = False  
 
 
     def remove_advanced_draw(self):
@@ -145,12 +147,12 @@ class BlendSpaceNode(ArmLogicTreeNode):
         if self.advanced_draw_run:
             col = layout.column()
             row = col.row(align=True)
-            op = row.operator('arm.blend_space_operator', text = 'Edit', icon = 'EDITMODE_HLT', emboss = True, depress = self.property3)
+            op = row.operator('arm.blend_space_operator', text = 'Edit', icon = 'EDITMODE_HLT', emboss = True, depress = self.property2)
             op.node_index = str(id(self))
-            op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.property3)
+            op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.property2)
             op.node_index = str(id(self))
             op.callback_name = 'stop_modal'
-            if self.property3:
+            if self.property2:
                 col = layout.column()
                 row = col.row(align=True)
                 op = row.operator('arm.node_call_func', text = 'Add Point', icon = 'PLUS', emboss = True)
