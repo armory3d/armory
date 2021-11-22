@@ -165,6 +165,8 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_published')
             if wrd.arm_asset_compression:
                 assets.add_khafile_def('arm_compress')
+            if wrd.arm_no_traces:
+                khafile.write("project.addParameter('--no-traces');\n")
         else:
             assets.add_khafile_def(f'arm_assert_level={wrd.arm_assert_level}')
             if wrd.arm_assert_quit:

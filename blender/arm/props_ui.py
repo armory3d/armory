@@ -694,12 +694,13 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col = layout.column()
         col.prop(wrd, 'arm_project_icon')
 
-        col = layout.column(heading='Code Output')
+        col = layout.column(heading='Code Output', align=True)
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_minify_js')
+        col.prop(wrd, 'arm_no_traces')
 
-        col = layout.column(heading='Data')
+        col = layout.column(heading='Data', align=True)
         col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
