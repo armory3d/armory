@@ -7,8 +7,8 @@ import iron.math.Mat4;
 
 class BoneIKNode extends LogicNode {
 
-	#if arm_skin
 	public var property0: String; //2 Bone or FABRIK
+	#if arm_skin
 	var object: Object;
 	var boneName: String;
 	var animMats: Array<Mat4>;
