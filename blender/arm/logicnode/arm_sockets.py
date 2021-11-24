@@ -494,6 +494,32 @@ class ArmFactorSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+class ArmBlendSpaceSocket(ArmCustomSocket):
+    bl_idname = 'ArmBlendSpaceSocket'
+    bl_label = 'Blend Space Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return 0.631, 0.631, 0.631, 1
+
+    def get_default_value(self):
+        return self.default_value_raw
+    
+    def set_default_value(self, value):
+        self.default_value_raw = value
+
 class ArmIntSocket(ArmCustomSocket):
     bl_idname = 'ArmIntSocket'
     bl_label = 'Integer Socket'
