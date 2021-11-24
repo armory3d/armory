@@ -12,6 +12,7 @@ for parity with the Blender API.
 """
 from typing import Any, Callable, Sequence, Union
 
+import sys
 import bpy
 from bpy.props import *
 
@@ -164,10 +165,10 @@ def HaxeFloatVectorProperty(
         name: str = "",
         description: str = "",
         default: list = (0.0, 0.0, 0.0),
-        min: float = 'sys.float_info.min',
-        max: float = 'sys.float_info.max',
-        soft_min: float = 'sys.float_info.min',
-        soft_max: float = 'sys.float_info.max',
+        min: float = sys.float_info.min,
+        max: float = sys.float_info.max,
+        soft_min: float = sys.float_info.min,
+        soft_max: float = sys.float_info.max,
         step: int = 3,
         precision: int = 2,
         options: set = {'ANIMATABLE'},

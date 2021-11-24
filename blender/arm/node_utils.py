@@ -161,6 +161,21 @@ def haxe_format_socket_val(socket_val: Any, array_outer_brackets=True) -> str:
     return str(socket_val)
 
 
+def haxe_format_val(prop) -> str:
+    """Formats a basic value to be valid Haxe syntax."""
+    if isinstance(prop, str):
+        res = '"' + str(prop) + '"'
+    elif isinstance(prop, bool):
+        res = str(prop).lower()
+    else:
+        if prop is None:
+            res = 'null'
+        else:
+            res = str(prop)
+
+    return str(res)
+
+
 def haxe_format_prop_value(node: bpy.types.Node, prop_name: str) -> str:
     """Formats a property value to be valid Haxe syntax."""
     prop_value = getattr(node, prop_name)
@@ -170,6 +185,8 @@ def haxe_format_prop_value(node: bpy.types.Node, prop_name: str) -> str:
         prop_value = str(prop_value).lower()
     elif hasattr(prop_value, 'name'):  # PointerProperty
         prop_value = '"' + str(prop_value.name) + '"'
+    elif isinstance(prop_value, bpy.types.bpy_prop_array):
+        prop_value = '[' + ','.join(haxe_format_val(prop) for prop in prop_value) + ']'
     else:
         if prop_value is None:
             prop_value = 'null'
