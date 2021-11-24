@@ -1,40 +1,126 @@
 package armory.logicnode;
-
+#if arm_skin
+import kha.FastFloat;
+import iron.math.Mat4;
+import iron.math.Vec3;
 import iron.math.Vec2;
-import haxe.ds.Vector;
+import iron.object.Object;
+import iron.object.Animation;
+import iron.object.BoneAnimation;
+#end
 
 class BlendSpaceNode extends LogicNode {
 
+	
 	public var property0: Array<Float>;
+	public var property1: Array<Bool>;
+	public var property2: Bool;
+	#if arm_skin
 	var value: Dynamic;
-	var index: Int;
+	var object: Object;
+	
+	var animationBone: BoneAnimation;
+	var tempMats: Array<Mat4>;
+	var tempMats2: Array<Mat4>;
+	var ready = false;
+	var func: Dynamic = null;
+
+	var vecSorted = [];
+	var sortIndex = [];
+
+	static var totalAnims = 10;
+	static var maxAnims = 3;
+
+	#end
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from: Int): Dynamic {
+	#if arm_skin
+	public function init(){
+		object = inputs[0].get();
+		assert(Error, object != null, "The object input not be null");
+		animationBone = object.getParentArmature(object.name);
+		tempMats = animationBone.initMatsEmpty();
+		tempMats2 = animationBone.initMatsEmpty();
+		func = blendBones;
+		ready = true;
+	}
+
+	public function getBlendWeights(): Vec3 {
 
 		var dist = [];
 		var vecs = [];
-		for(i in 0...property0.length % 2){
+		var weightIndex: Array<WeightIndex> = [];
+		var sampleVec = new Vec2();
 
-			vecs.push(new Vec2(property0[i * 2], property0[i * 2 + 1]));
+		for(i in 0...totalAnims){
+
+			if(property1[i]) vecs.push(new Vec2(property0[i * 2], property0[i * 2 + 1]));
 		}
 
-		for (i in 0...vecs.length - 1){
-			dist.push(Vec2.distance(vecs[i], vecs[vecs.length]));
+		if(property2) {
+			sampleVec.set(property0[2 * totalAnims], property0[2 * totalAnims + 1]);
+		}
+		else {
+			sampleVec.set(inputs[2].get(), inputs[3].get());
 		}
 
-		var distSort = dist.copy();
-		distSort.sort((a, b) -> b - a);
+		var i = 0;
+		for (vec in vecs){
+			weightIndex.push({weight: Vec2.distance(vec, sampleVec), index: i} );
+			i++;
+		}
 
-		var index1 = distSort.indexOf(distSort[0]);
-		var index2 = distSort.indexOf(distSort[1]);
-		var index3 = distSort.indexOf(distSort[2]);
+		weightIndex.sort(sortCompare);
 
-		trace("1 : " + Std.string(index1) + " , " + Std.string(index2) + " , " + Std.string(index3));
+		vecSorted = [];
+		sortIndex = [];
+		for (i in 0...maxAnims) {
+			var index = weightIndex[i].index;
+			sortIndex.push(index);
+			vecSorted.push(vecs[index]);
+		}
+		
 
-		return 0;
+		return Animation.getBlend2DWeights(vecSorted, sampleVec);
+
 	}
+
+	public function sortCompare(a: WeightIndex, b: WeightIndex): Int {
+		return Reflect.compare(a.weight, b.weight);
+	}
+
+	public function blendBones(animMats: Array<Mat4>) {
+	
+		var anims = inputs[1].get();
+		var weights = getBlendWeights();
+
+		var factor1 = weights.y / (weights.x + weights.y);
+		var factor2 = (weights.x + weights.y) / (weights.x + weights.y + weights.z);
+
+		anims[sortIndex[0]](tempMats);
+		anims[sortIndex[1]](tempMats2);
+		anims[sortIndex[2]](animMats);
+
+		animationBone.blendAction(tempMats, tempMats2, tempMats, factor1);
+		animationBone.blendAction(animMats, tempMats, animMats, factor2);
+	
+	}
+
+	override function get(from: Int): Dynamic {
+
+		if(!ready) init();
+
+		return blendBones;
+	}
+	#end
 }
+
+#if arm_skin
+typedef WeightIndex = {
+	var weight: FastFloat;
+	var index: Int;
+} 
+#end
