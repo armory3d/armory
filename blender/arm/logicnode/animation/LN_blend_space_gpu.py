@@ -28,6 +28,10 @@ class BlendSpaceNode(ArmLogicTreeNode):
 
     def stop_modal(self):
         self.property2 = False
+    
+    def my_float_update(self, context):
+        if self.property2:
+            self.set_x_y_socket()
 
     property0: HaxeFloatVectorProperty(
         'property0',
@@ -44,7 +48,8 @@ class BlendSpaceNode(ArmLogicTreeNode):
                    0.0, 0.0, 
                    0.0, 0.0,
                    0.5, 0.5),
-        size = 22
+        size = 22,
+        update = my_float_update
     )
 
     active_point_index: IntProperty(
@@ -99,7 +104,10 @@ class BlendSpaceNode(ArmLogicTreeNode):
             self.blend_space.draw()
 
     def arm_init(self, context):
-        self.add_input('ArmNodeSocketArray', 'Array')
+        self.add_input('ArmNodeSocketObject', 'Object')
+        self.add_input('ArmNodeSocketArray', 'Actions')
+        self.add_input('ArmBlendSpaceSocket', 'Cursor X')
+        self.add_input('ArmBlendSpaceSocket', 'Cursor Y')
         self.add_output('ArmNodeSocketAnimTree', 'Out')
 
     def add_advanced_draw(self):
@@ -110,7 +118,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
             editor = getattr(bpy.types, 'SpaceNodeEditor')
             handler = editor.draw_handler_add(self.draw_advanced, (), 'WINDOW', 'POST_VIEW')
             self.draw_handler_dict[str(self.as_pointer())] = handler
-            self.property2 = False  
+            self.property2 = False
 
 
     def remove_advanced_draw(self):
@@ -121,6 +129,15 @@ class BlendSpaceNode(ArmLogicTreeNode):
             editor.draw_handler_remove(handler, 'WINDOW')
             self.draw_handler_dict.pop(str(self.as_pointer()))
 
+    def set_x_y_cursor(self):
+        self.property0[20] = self.inputs[2].get_default_value()
+        self.property0[21] = self.inputs[3].get_default_value()
+    
+    def set_x_y_socket(self):
+        self.inputs[2].set_default_value(self.property0[20])
+        self.inputs[3].set_default_value(self.property0[21])
+
+
     def add_point(self):
         for i in range(len(self.property1)):
             if not self.property1[i]:
@@ -130,7 +147,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
                 break  
     
     def remove_point(self):
-        if self.active_point_index_ref < 10:
+        if 2 < self.active_point_index_ref < 10:
             self.property1[self.active_point_index_ref] = False
             self.active_point_index_ref = 10
 
@@ -168,3 +185,5 @@ class BlendSpaceNode(ArmLogicTreeNode):
                     cl.label(text = "Selected: Cursor" + pos)
                 else:
                     cl.label(text = "Selected: " + str(self.active_point_index_ref + 1) + pos)
+            else:
+                self.set_x_y_cursor()
