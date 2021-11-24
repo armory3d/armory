@@ -884,7 +884,8 @@ class BlendSpaceOperator(bpy.types.Operator):
     def get_active_point(self, locX, locY):
         points = self.node.property0
         visible = self.node.property1
-        for i in range(len(points) // 2):
+        for i in range((len(points) // 2) - 1, -1, -1):
+            
             if(visible[i]):
                 px = points[i * 2]
                 py = points[i * 2 + 1]
