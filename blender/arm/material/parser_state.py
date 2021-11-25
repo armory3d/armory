@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum, unique
 from typing import List, Set, Tuple, Union, Optional
 
 import bpy
@@ -12,13 +12,13 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
-
-class ParserContext(Enum):
-    """Describes which kind of node tree is parsed."""
-    OBJECT = 0
-    # Texture node trees are not supported yet
-    # TEXTURE = 1
-    WORLD = 2
+    @unique
+    class ParserContext(IntEnum):
+        """Describes which kind of node tree is parsed."""
+        OBJECT = 0
+        # Texture node trees are not supported yet
+        # TEXTURE = 1
+        WORLD = 2
 
 
 class ParserState:
