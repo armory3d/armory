@@ -22,6 +22,7 @@ class GetRootMotionNode extends LogicNode {
             case 1:
                 var vel = animation.getRootMoptionVelocity();
                 if(vel != null) return new Vec4().setFrom(vel);
+                else return new Vec4();
         }
         return null;
 

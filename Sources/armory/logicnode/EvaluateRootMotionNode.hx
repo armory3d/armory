@@ -42,7 +42,8 @@ class EvaluateRootMotionNode extends LogicNode {
 
         return function (animMats: Array<Mat4>) {
             var boneName: String = inputs[3].get();
-            animation.evaluateRootMotion(boneName, inputs[2].get()(animMats));
+            inputs[2].get()(animMats);
+            animation.evaluateRootMotion(animMats);
         };
     }
 
