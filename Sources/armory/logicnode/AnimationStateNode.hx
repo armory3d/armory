@@ -9,10 +9,10 @@ class AnimationStateNode extends LogicNode {
 	var animation: Animation;
 	var action: Animparams;
 	public var property0: String;
-	public var ready = false;
 
 	public function new(tree: LogicTree) {
 		super(tree);
+		tree.notifyOnUpdate(init);
 	}
 
 	public function init() {
@@ -24,11 +24,11 @@ class AnimationStateNode extends LogicNode {
 		action = animation.activeActions.get(property0);
 		if(action == null) return;
 		action.notifyOnComplete(function (){runOutput(3);});
+		tree.removeUpdate(init);
 		
 	}
 
 	override function get(from: Int): Dynamic {
-		if(! ready) init();
 		if(action == null) return null;
 		return switch (from) {
 			case 0: action.action;
