@@ -15,10 +15,11 @@ class GetRootMotionNode extends LogicNode {
         assert(Error, object != null, "Object input must not be null");
         var animation = object.getParentArmature(object.name);
         if(animation == null) return null;
-        assert(Error, animation.getRootMotionBone() != null, "Armature does not have root motion");
+        var rootMotion = animation.getRootMotionBone();
+        if(rootMotion == null) return null;
         switch (from) {
             case 0: 
-                return animation.getRootMotionBone().name;
+                return rootMotion.name;
             case 1:
                 var vel = animation.getRootMoptionVelocity();
                 if(vel != null) return new Vec4().setFrom(vel);
