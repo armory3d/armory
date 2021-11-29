@@ -62,7 +62,6 @@ class BoneIKNode extends LogicNode {
 
 			switch (property0) {
 				case "2 Bone":
-					trace("2 bone");
 					animation.solveTwoBoneIKBlend(animMats, bone, goal, pole, 
 												  rollAngle, influence, layerMask);
 				case "FABRIK":
