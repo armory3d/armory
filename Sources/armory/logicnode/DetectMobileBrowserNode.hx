@@ -10,7 +10,7 @@ class DetectMobileBrowserNode extends LogicNode {
 		super(tree);
 	}
 
-	override function get(from: Int) {
+	override function get(from: Int): Dynamic {
 		if (from == 0) {
 			#if kha_html5
 			return kha.SystemImpl.mobile;
