@@ -19,8 +19,14 @@ class CallGroupNode extends LogicNode {
 			callTree.add();
 		}
 
-		if (callTree._init != null) callTree._init[0]();
-
+		var args = [];
+		args.push(from);
+		var func = Reflect.field(callTree, "runGroupInput");
+		Reflect.callMethod(callTree, func, args);
 		runOutput(0);
+	}
+
+	override function get(from:Int):Dynamic {
+		return inputs[from].get();
 	}
 }
