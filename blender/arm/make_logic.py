@@ -21,6 +21,9 @@ parsed_nodes = []
 parsed_ids = dict() # Sharing node data
 function_nodes = dict()
 function_node_outputs = dict()
+group_input_nodes = dict()
+group_output_nodes = dict()
+call_group_nodes = dict()
 group_name = ''
 
 
@@ -51,11 +54,17 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     global parsed_ids
     global function_nodes
     global function_node_outputs
+    global group_input_nodes
+    global group_output_nodes
+    global call_group_nodes
     global group_name
     parsed_nodes = []
     parsed_ids = dict()
     function_nodes = dict()
     function_node_outputs = dict()
+    group_input_nodes = dict()
+    group_output_nodes = dict()
+    call_group_nodes = dict()
     root_nodes = get_root_nodes(node_group)
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
@@ -81,12 +90,16 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tvar functionNodes:Map<String, armory.logicnode.FunctionNode>;\n\n')
         f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
+        f.write('\tvar groupInputNodes:Map<String, armory.logicnode.GroupInputNode>;\n\n')
+        f.write('\tvar callGroupNodes:Map<String, armory.logicnode.CallGroupNode>;\n\n')
         f.write('\tpublic function new() {\n')
         f.write('\t\tsuper();\n')
         if wrd.arm_debug_console:
             f.write('\t\tname = "' + group_name + '";\n')
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
+        f.write('\t\tthis.groupInputNodes = new Map();\n')
+        f.write('\t\tthis.callGroupNodes = new Map();\n')
         if arm.utils.is_livepatch_enabled():
             # Store a reference to this trait instance in Logictree.nodeTrees
             f.write('\t\tvar nodeTrees = armory.logicnode.LogicTree.nodeTrees;\n')
@@ -120,6 +133,27 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
             if function_node_outputs.get(function_name) != None:
                 f.write('\t\treturn this.functionOutputNodes["' + function_node_outputs[function_name] + '"].result;\n')
             f.write('\t}\n\n')
+
+        # Create node functions
+        for node_name in group_input_nodes:
+            node = group_input_nodes[node_name]
+            f.write('\n\tpublic function runGroupInput (')
+            f.write('args: Dynamic')
+            f.write(') {\n')
+            f.write('\t\tvar inputNode = this.groupInputNodes["' + node_name + '"];\n')
+            f.write('\t\tinputNode.run(args);\n')
+            f.write('\t}\n\n')
+
+        # Create node functions
+        for node_name in call_group_nodes:
+            node = call_group_nodes[node_name]
+            f.write('\n\tpublic function getGroupInput_' + node_name + '(')
+            f.write('args: Dynamic')
+            f.write(') {\n')
+            f.write('\t\tvar inputNode = this.callGroupNodes["' + node_name + '"];\n')
+            f.write('\t\tinputNode.get(args);\n')
+            f.write('\t}\n\n')
+
         f.write('}')
     node_group.arm_cached = True
 
@@ -164,6 +198,12 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
         # Index function output name by corresponding function name
         function_node_outputs[node.function_name] = name
+    elif node_type == 'GroupInputNode':
+        f.write('\t\tthis.groupInputNodes.set("' + name + '", ' + name + ');\n')
+        group_input_nodes[name] = node
+    elif node_type == 'CallGroupNode':
+        f.write('\t\tthis.callGroupNodes.set("' + name + '", ' + name + ');\n')
+        call_group_nodes[name] = node
 
     wrd = bpy.data.worlds['Arm']
 
