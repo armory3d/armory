@@ -9,4 +9,8 @@ class GroupOutputNode extends LogicNode {
 	override function run(from: Int) {
 		runOutput(0);
 	}
+
+	override function get(from: Int): Dynamic {
+		return inputs[from].get();
+	}
 }
