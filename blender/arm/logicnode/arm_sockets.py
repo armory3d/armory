@@ -11,6 +11,22 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
+socket_colors = {
+    'ArmNodeSocketAction': (0.8, 0.3, 0.3, 1),
+    'ArmNodeSocketAnimAction': (0.8, 0.8, 0.8, 1),
+    'ArmRotationSocket': (0.68, 0.22, 0.62, 1),
+    'ArmNodeSocketArray': (0.8, 0.4, 0.0, 1),
+    'ArmBoolSocket': (0.8, 0.651, 0.839, 1),
+    'ArmColorSocket': (0.78, 0.78, 0.161, 1),
+    'ArmDynamicSocket': (0.388, 0.78, 0.388, 1),
+    'ArmFloatSocket': (0.631, 0.631, 0.631, 1),
+    'ArmIntSocket': (0.059, 0.522, 0.149, 1),
+    'ArmNodeSocketObject': (0.15, 0.55, 0.75, 1),
+    'ArmStringSocket': (0.439, 0.698, 1, 1),
+    'ArmVectorSocket': (0.388, 0.388, 0.78, 1),
+    'ArmAnySocket': (0.9, 0.9, 0.9, 1)
+
+}
 
 def _on_update_socket(self, context):
     self.node.on_socket_val_update(context, self)
@@ -43,7 +59,7 @@ class ArmActionSocket(ArmCustomSocket):
         layout.label(text=self.name)
 
     def draw_color(self, context, node):
-        return 0.8, 0.3, 0.3, 1
+        return socket_colors[self.bl_idname]
 
 
 class ArmAnimActionSocket(ArmCustomSocket):
@@ -77,7 +93,7 @@ class ArmAnimActionSocket(ArmCustomSocket):
             layout.prop_search(self, 'default_value_raw', bpy.data, 'actions', icon='NONE', text='')
 
     def draw_color(self, context, node):
-        return 0.8, 0.8, 0.8, 1
+        return socket_colors[self.bl_idname]
 
     
 class ArmRotationSocket(ArmCustomSocket):
@@ -227,7 +243,7 @@ class ArmRotationSocket(ArmCustomSocket):
                 coll.prop(self, 'default_value_s3', text='Angle')            
 
     def draw_color(self, context, node):
-        return 0.68, 0.22, 0.62, 1
+        return socket_colors[self.bl_idname]
 
     default_value_mode: EnumProperty(
         items=[('EulerAngles', 'Euler Angles', 'Euler Angles'),
@@ -273,7 +289,7 @@ class ArmArraySocket(ArmCustomSocket):
         layout.label(text=self.name)
 
     def draw_color(self, context, node):
-        return 0.8, 0.4, 0.0, 1
+        return socket_colors[self.bl_idname]
 
 
 class ArmBoolSocket(ArmCustomSocket):
@@ -291,7 +307,7 @@ class ArmBoolSocket(ArmCustomSocket):
         draw_socket_layout(self, layout)
 
     def draw_color(self, context, node):
-        return 0.8, 0.651, 0.839, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -317,7 +333,7 @@ class ArmColorSocket(ArmCustomSocket):
         draw_socket_layout_split(self, layout)
 
     def draw_color(self, context, node):
-        return 0.78, 0.78, 0.161, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -332,7 +348,27 @@ class ArmDynamicSocket(ArmCustomSocket):
         layout.label(text=self.name)
 
     def draw_color(self, context, node):
-        return 0.388, 0.78, 0.388, 1
+        return socket_colors[self.bl_idname]
+    
+
+class ArmAnySocket(ArmCustomSocket):
+    bl_idname = 'ArmAnySocket'
+    bl_label = 'Any Socket'
+    arm_socket_type = 'NONE'
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked:
+            if self.is_output:
+                layout.label(text=self.links[0].to_socket.name)
+            else:
+                layout.label(text=self.links[0].from_socket.name)
+
+    def draw_color(self, context, node):
+        if self.is_linked:
+            if self.is_output:
+                return socket_colors[self.links[0].to_socket.bl_idname]
+            return socket_colors[self.links[0].from_socket.bl_idname]
+        return socket_colors[self.bl_idname]
 
 
 class ArmFloatSocket(ArmCustomSocket):
@@ -351,7 +387,7 @@ class ArmFloatSocket(ArmCustomSocket):
         draw_socket_layout(self, layout)
 
     def draw_color(self, context, node):
-        return 0.631, 0.631, 0.631, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -372,7 +408,7 @@ class ArmIntSocket(ArmCustomSocket):
         draw_socket_layout(self, layout)
 
     def draw_color(self, context, node):
-        return 0.059, 0.522, 0.149, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -409,7 +445,7 @@ class ArmObjectSocket(ArmCustomSocket):
             row.prop_search(self, 'default_value_raw', context.scene, 'objects', icon='NONE', text=self.name)
 
     def draw_color(self, context, node):
-        return 0.15, 0.55, 0.75, 1
+        return socket_colors[self.bl_idname]
 
 
 
@@ -428,7 +464,7 @@ class ArmStringSocket(ArmCustomSocket):
         draw_socket_layout_split(self, layout)
 
     def draw_color(self, context, node):
-        return 0.439, 0.698, 1, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -456,7 +492,7 @@ class ArmVectorSocket(ArmCustomSocket):
             layout.label(text=self.name)
 
     def draw_color(self, context, node):
-        return 0.388, 0.388, 0.78, 1
+        return socket_colors[self.bl_idname]
 
     def get_default_value(self):
         return self.default_value_raw
@@ -492,5 +528,6 @@ REG_CLASSES = (
     ArmObjectSocket,
     ArmStringSocket,
     ArmVectorSocket,
+    ArmAnySocket,
 )
 register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
