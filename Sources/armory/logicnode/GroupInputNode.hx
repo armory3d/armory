@@ -6,8 +6,8 @@ class GroupInputNode extends LogicNode {
 		super(tree);
 	}
 
-	@:allow(armory.logicnode.LogicTree)
 	override function run(from: Int) {
+		trace("inp called");
 		runOutput(from);
 	}
 

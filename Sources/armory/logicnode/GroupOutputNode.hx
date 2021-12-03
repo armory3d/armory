@@ -7,7 +7,8 @@ class GroupOutputNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		runOutput(0);
+		trace("output called");
+		runOutput(from);
 	}
 
 	override function get(from: Int): Dynamic {
