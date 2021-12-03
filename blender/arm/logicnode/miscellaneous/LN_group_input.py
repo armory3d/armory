@@ -13,6 +13,28 @@ class GroupInputNode(ArmLogicTreeNode):
 
     def __init__(self):
         array_nodes[str(id(self))] = self
+    
+    def init(self, context):
+        tree = bpy.context.space_data.edit_tree
+        nodeCount = 0
+        for node in tree.nodes:
+            if (node.bl_idname == 'LNGroupInputNode'):
+                nodeCount += 1
+        if(nodeCount > 1):
+            print("Too many nodes")
+            tree.nodes.remove(self)
+        else:
+            self.arm_init(context)
+    
+    def copy(self, node):
+        tree = bpy.context.space_data.edit_tree
+        nodeCount = 0
+        for node in tree.nodes:
+            if (node.bl_idname == 'LNGroupInputNode'):
+                nodeCount += 1
+        if(nodeCount > 1):
+            print("Too many nodes")
+            tree.nodes.remove(self)
 
     def arm_init(self, context):
         self.add_output('ArmAnySocket', '')
