@@ -7,7 +7,6 @@ class GroupInputNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		trace("inp called");
 		runOutput(from);
 	}
 
