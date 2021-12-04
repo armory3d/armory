@@ -15,19 +15,19 @@ class CallGroupNode(ArmLogicTreeNode):
     def property0(self):
         return arm.utils.safesrc(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(self.property0_.name)
 
-    @property
-    def property1(self):
-        return arm.utils.safesrc(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(self.property1_.name)
-
     def update_inputs(self, node, context):
         for output in node.outputs:
-            if(output.is_linked):
+            if output.is_linked:
                 self.add_input(output.links[0].to_socket.bl_idname, output.links[0].to_socket.name)
+            else:
+                self.add_input('ArmAnySocket', '')
 
     def update_outputs(self, node, context):
         for input in node.inputs:
-            if(input.is_linked):
+            if input.is_linked:
                 self.add_output(input.links[0].from_socket.bl_idname, input.links[0].from_socket.name)
+            else:
+                self.add_output('ArmAnySocket', '')
 
     def update_sockets(self, context):
         for input in self.inputs:
