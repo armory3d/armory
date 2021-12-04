@@ -15,14 +15,12 @@ class ClearParentNode extends LogicNode {
 
 		if (object == null || object.parent == null) return;
 
-		object.parent.removeChild(object, keepTransform);
+		object.setParent(iron.Scene.active.root, false, keepTransform);
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
 		if (rigidBody != null) rigidBody.syncTransform();
 		#end
-		
-		iron.Scene.active.root.addChild(object, false);
 
 		runOutput(0);
 	}

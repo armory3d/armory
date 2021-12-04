@@ -17,10 +17,7 @@ class SetParentBoneNode extends LogicNode {
 
 		if (object == null || parent == null) return;
 
-		if (object.parent != parent) {
-			object.parent.removeChild(object, false); // keepTransform
-			parent.addChild(object, false); // applyInverse
-		}
+		object.setParent(parent, false, false);
 
 		var banim = object.getParentArmature(object.parent.name);
 		banim.addBoneChild(bone, object);
