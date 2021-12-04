@@ -155,9 +155,9 @@ def build_node_group_tree(node_group: 'arm.nodes_logic.ArmLogicTree', f: TextIO,
     group_output_name = ""
 
     for node in node_group.nodes:
-        if node.bl_idname == 'LNGroupInputNode':
+        if node.bl_idname == 'LNGroupInputsNode':
             group_input_name = group_node_name + arm.node_utils.get_export_node_name(node)
-        if node.bl_idname == 'LNGroupOutputNode':
+        if node.bl_idname == 'LNGroupOutputsNode':
             group_output_name = group_node_name + arm.node_utils.get_export_node_name(node)
 
     for node in root_nodes:

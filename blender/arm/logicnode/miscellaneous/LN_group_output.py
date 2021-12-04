@@ -4,9 +4,9 @@ import arm.utils
 from arm.logicnode.arm_nodes import *
 
 
-class GroupOutputNode(ArmLogicTreeNode):
+class GroupOutputsNode(ArmLogicTreeNode):
     """Output for a given a node tree."""
-    bl_idname = 'LNGroupOutputNode'
+    bl_idname = 'LNGroupOutputsNode'
     bl_label = 'Group Output Node'
     arm_section = 'group'
     arm_version = 2
@@ -18,7 +18,7 @@ class GroupOutputNode(ArmLogicTreeNode):
         tree = bpy.context.space_data.edit_tree
         nodeCount = 0
         for node in tree.nodes:
-            if node.bl_idname == 'LNGroupOutputNode':
+            if node.bl_idname == 'LNGroupOutputsNode':
                 nodeCount += 1
         if nodeCount > 1:
             arm.log.warn("Only one group output node per node tree is allowed")
@@ -30,7 +30,7 @@ class GroupOutputNode(ArmLogicTreeNode):
         tree = bpy.context.space_data.edit_tree
         nodeCount = 0
         for node in tree.nodes:
-            if node.bl_idname == 'LNGroupOutputNode':
+            if node.bl_idname == 'LNGroupOutputsNode':
                 nodeCount += 1
         if nodeCount > 1:
             arm.log.warn("Only one group output node per node tree is allowed")

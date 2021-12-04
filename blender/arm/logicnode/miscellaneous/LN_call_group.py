@@ -36,11 +36,11 @@ class CallGroupNode(ArmLogicTreeNode):
             self.outputs.remove(output)
         if self.property0_ is not None:
             for node in self.property0_.nodes:
-                if (node.bl_idname == 'LNGroupInputNode'):
+                if (node.bl_idname == 'LNGroupInputsNode'):
                     self.update_inputs(node, context)
                     break
             for node in self.property0_.nodes:
-                if (node.bl_idname == 'LNGroupOutputNode'):
+                if (node.bl_idname == 'LNGroupOutputsNode'):
                     self.update_outputs(node, context)
                     break
 

@@ -5,9 +5,9 @@ import arm.utils
 from arm.logicnode.arm_nodes import *
 
 
-class GroupInputNode(ArmLogicTreeNode):
+class GroupInputsNode(ArmLogicTreeNode):
     """Input for a given a node tree."""
-    bl_idname = 'LNGroupInputNode'
+    bl_idname = 'LNGroupInputsNode'
     bl_label = 'Group Input Node'
     arm_section = 'group'
     arm_version = 1
@@ -19,7 +19,7 @@ class GroupInputNode(ArmLogicTreeNode):
         tree = bpy.context.space_data.edit_tree
         nodeCount = 0
         for node in tree.nodes:
-            if node.bl_idname == 'LNGroupInputNode':
+            if node.bl_idname == 'LNGroupInputsNode':
                 nodeCount += 1
         if nodeCount > 1:
             arm.log.warn("Only one group input node per node tree is allowed")
@@ -31,7 +31,7 @@ class GroupInputNode(ArmLogicTreeNode):
         tree = bpy.context.space_data.edit_tree
         nodeCount = 0
         for node in tree.nodes:
-            if node.bl_idname == 'LNGroupInputNode':
+            if node.bl_idname == 'LNGroupInputsNode':
                 nodeCount += 1
         if nodeCount > 1:
             arm.log.warn("Only one group input node per node tree is allowed")
