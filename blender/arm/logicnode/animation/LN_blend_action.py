@@ -11,6 +11,6 @@ class BlendActionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAnimTree', 'Action 1')
         self.add_input('ArmNodeSocketAnimTree', 'Action 2')
         self.add_input('ArmFactorSocket', 'Factor', default_value = 0.5)
-        self.add_input('ArmIntSocket', 'Bone Group', default_value = 0)
+        self.add_input('ArmIntSocket', 'Bone Group', default_value = -1)
 
         self.add_output('ArmNodeSocketAnimTree', 'Result')

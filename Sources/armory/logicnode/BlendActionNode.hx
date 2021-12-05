@@ -51,9 +51,25 @@ class BlendActionNode extends LogicNode {
 
 	#if arm_skin
 	public function blendBones(animMats: Array<Mat4>) {
+		var boneLayer = inputs[4].get();
+		var factor = inputs[3].get();
+		if(boneLayer < 0){
+			boneLayer = null;
+			if(factor < 0.05) {
+
+				inputs[1].get()(animMats);
+				return;
+			}
+			if(factor > 0.95) {
+
+				inputs[2].get()(animMats);
+				return;
+			}
+		}
+		
 		inputs[1].get()(animMats);
 		inputs[2].get()(tempMats);
-		animationBone.blendAction(animMats, tempMats, animMats, inputs[3].get(), inputs[4].get());
+		animationBone.blendAction(animMats, tempMats, animMats, factor, boneLayer);
 	
 	}
 	#end
