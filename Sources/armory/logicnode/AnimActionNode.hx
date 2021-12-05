@@ -25,6 +25,7 @@ class AnimActionNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 
+		tree.notifyOnUpdate(init);
 	}
 
 	function init(){
@@ -45,6 +46,7 @@ class AnimActionNode extends LogicNode {
 		}
 		
 		ready = true;
+		tree.removeUpdate(init);
 	}
 
 	#if arm_skin
