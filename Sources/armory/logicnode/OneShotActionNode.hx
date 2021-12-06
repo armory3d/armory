@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import iron.Scene;
 import iron.system.Tween;
 import kha.FastFloat;
 import iron.object.ObjectAnimation;
@@ -23,68 +24,67 @@ class OneShotActionNode extends LogicNode {
 	var ready = false;
 	var func: Dynamic = null;
 	var factor = 0.0;
-	var tweenDone = true;
+	var oneShotDone = true;
 	var anim: TAnim;
 	var totalFrames = 0;
+	var frameTime = 1.0 / 60;
+	var blendOutFrame = 0;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		tree.notifyOnUpdate(tweenOut);
-
 	}
 
 	public function init(){
-		actionParam = new Animparams(inputs[1].get(), 1.0, inputs[2].get());
-		actionParam.paused = true;
-		object = inputs[0].get();
+
+		object = inputs[2].get();
 		assert(Error, object != null, "The object input not be null");
 		if(object.animation == null) {
 			#if arm_skin
 			animationBone = object.getParentArmature(object.name);
-			animationBone.registerAction(property0, actionParam);
 			tempMats = animationBone.initMatsEmpty();
 			func = blendBones;
 			#end
 		}
 		else{
 			animationObject = cast(object.animation, ObjectAnimation);
-			animationObject.registerAction(property0, actionParam);
+			tempMats = animationObject.initTransformMap();
 			func = blendObject;
 		}
+		frameTime = Scene.active.raw.frame_time;
 		ready = true;
+		resetAction();
 	}
 
-	public function registerAction() {
+	public function resetAction() {
 		
 		if(!ready) init();
-
 		if( animationObject == null){
+			#if arm_skin
 			animationBone.deRegisterAction(property0);
-			actionParam = new Animparams(inputs[1].get(), 1.0, inputs[2].get());
-			actionParam.paused = true;
+			actionParam = new Animparams(inputs[4].get(), 1.0, false);
 			animationBone.registerAction(property0, actionParam);
-			totalFrames = animationBone.totalFrames(actionParam);
+			totalFrames = animationBone.getTotalFrames(actionParam) - 1;
+			#end
 		}
 		else {
 			animationObject.deRegisterAction(property0);
-			actionParam = new Animparams(inputs[1].get(), 1.0, inputs[2].get());
-			actionParam.paused = true;
+			actionParam = new Animparams(inputs[4].get(), 1.0, false);
 			animationObject.registerAction(property0, actionParam);
-			totalFrames = animationObject.totalFrames(actionParam);
+			totalFrames = animationObject.getTotalFrames(actionParam) - 1;
 		}
 	}
 
 	public function blendObject(animMats: Map<String, FastFloat>) {
-		inputs[3].get()(animMats);
-		animationObject.sampleAction(actionParam, tempMats)
-		animationObject.blendActionObject(animMats, tempMats, animMats, factor);
 
+		inputs[3].get()(animMats);
+		animationObject.sampleAction(actionParam, tempMats);
+		animationObject.blendActionObject(animMats, tempMats, animMats, factor);
 	}
 
 	#if arm_skin
 	public function blendBones(animMats: Array<Mat4>) {
-		var boneLayer = inputs[7].get();
+		var boneLayer = inputs[8].get();
 		if(boneLayer < 0){
 			boneLayer = null;
 			if(factor < 0.05) {
@@ -94,13 +94,12 @@ class OneShotActionNode extends LogicNode {
 			}
 			if(factor > 0.95) {
 
-				animationBone.sampleAction(actionParam, tempMats)
+				animationBone.sampleAction(actionParam, animMats);
 				return;
 			}
 		}
-		
 		inputs[3].get()(animMats);
-		animationBone.sampleAction(actionParam, tempMats)
+		animationBone.sampleAction(actionParam, tempMats);
 		animationBone.blendAction(animMats, tempMats, animMats, factor, boneLayer);
 	
 	}
@@ -114,47 +113,77 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-
-		registerAction();
-
 		var restart = inputs[5].get();
-		var blendIn = inputs[6].get();
 		var blendOut = inputs[7].get();
+		blendOutFrame = totalFrames - Std.int(blendOut / frameTime);
+
+		if(blendOutFrame < 1) return;
 
 		if(from == 0) {
-
-			if(anim != null){
-				if(! restart && ! tweenDone) {
-
-					return;
-				}
-				Tween.stop(anim);
+			if(! restart && ! oneShotDone) {
+				return;
 			}
-			tweenDone = false;
-			anim = Tween.to({
-				target: this,
-				props: { factor: 1.0 },
-				duration: blendIn,
-				ease: Ease.Linear,
-				done: done
-			});
+			resetAction();
+			tweenIn();
 		}
 
 		if(from == 1){
+			stopTween();
+		}
 
+		runOutput(0);
+	}
+
+	function tweenIn() {
+		var blendIn = inputs[6].get();
+		if(anim != null){
+			Tween.stop(anim);
+			
+		}
+		oneShotDone = false;
+		anim = Tween.to({
+			target: this,
+			props: { factor: 1.0 },
+			duration: blendIn,
+			ease: Ease.Linear
+		});
+		tree.removeUpdate(tweenOut);
+		tree.notifyOnUpdate(tweenOut);
+	}
+
+	function tweenOut() {
+		if(actionParam.offset >= totalFrames){
+			done();
+		}
+		var blendOut = inputs[7].get();
+		if(actionParam.offset >= blendOutFrame){
 			if(anim != null){
 				Tween.stop(anim);
 			}
-			factor = 0.0;
+			anim = Tween.to({
+				target: this,
+				props: { factor: 0.0 },
+				duration: blendOut,
+				ease: Ease.Linear,
+				done: done
+			});
+			tree.removeUpdate(tweenOut);
 		}
 	}
 
-	public function tweenOut() {
-		
+	function stopTween() {
+		tree.removeUpdate(tweenOut);
+		if(anim != null){
+			Tween.stop(anim);
+		}
+		oneShotDone = true;
+		actionParam.setFrameOffset(0);
+		actionParam.paused = true;
+		factor = 0.0;
 	}
 
 	function done() {
-		tweenDone = true;
-		runOutput(0);
+		stopTween();
+		runOutput(1);
 	}
 }

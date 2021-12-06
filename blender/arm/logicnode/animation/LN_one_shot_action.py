@@ -19,6 +19,7 @@ class OneShotActionNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Blend Out Time', default_value = 1.0)
         self.add_input('ArmIntSocket', 'Bone Group', default_value = -1)
 
+        self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
         self.add_output('ArmNodeSocketAnimTree', 'Result')
         
