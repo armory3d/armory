@@ -21,7 +21,7 @@ class SwitchActionNode extends LogicNode {
 	var ready = false;
 	var func: Dynamic = null;
 	var factor = 0.0;
-
+	var tweenDone = true;
 	var anim: TAnim;
 
 	public function new(tree: LogicTree) {
@@ -92,13 +92,13 @@ class SwitchActionNode extends LogicNode {
 		if(from == 0){
 
 			if(anim != null){
-				if(! restart) {
+				if(! restart && ! tweenDone) {
 
 					return;
 				}
 				Tween.stop(anim);
 			}
-
+			tweenDone = false;
 			anim = Tween.to({
 				target: this,
 				props: { factor: 0.0 },
@@ -109,13 +109,13 @@ class SwitchActionNode extends LogicNode {
 		}
 		if(from == 1){
 			if(anim != null){
-				if(! restart) {
+				if(! restart && ! tweenDone) {
 
 					return;
 				}
 				Tween.stop(anim);
 			}
-			
+			tweenDone = false;
 			anim = Tween.to({
 				target: this,
 				props: { factor: 1.0 },
@@ -127,6 +127,7 @@ class SwitchActionNode extends LogicNode {
 	}
 
 	function done() {
+		tweenDone = true;
 		runOutput(0);
 	}
 }
