@@ -113,7 +113,7 @@ class RigidBody extends iron.Trait {
 		 */
 
 		if (flags == null) flags = [false, false, false, false, true];
-		/**	
+		/**
 		 * flags:[ is animated
 		 * 		   is trigger
 		 * 		   continuous collision detection
@@ -366,6 +366,10 @@ class RigidBody extends iron.Trait {
 		if (physics != null) physics.removeRigidBody(this);
 	}
 
+	public function isActive() : Bool {
+		return body.isActive();
+	}
+
 	public function activate() {
 		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.activate(false);
@@ -405,7 +409,7 @@ class RigidBody extends iron.Trait {
 	public function isTriggerObject(isTrigger: Bool) {
 		this.trigger = isTrigger;
 	}
-	
+
 	public function applyForce(force: Vec4, loc: Vec4 = null) {
 		activate();
 		vec1.setValue(force.x, force.y, force.z);
@@ -623,7 +627,7 @@ class RigidBody extends iron.Trait {
 				else
 				{
 					triangleMeshCache.remove(data);
-					if(meshInterface != null) 
+					if(meshInterface != null)
 					{
 						#if js
 						bullet.Bt.Ammo.destroy(meshInterface);
