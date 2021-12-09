@@ -63,6 +63,7 @@ class OneShotActionNode extends LogicNode {
 			animationBone.deRegisterAction(property0);
 			actionParam = new Animparams(inputs[4].get(), 1.0, false);
 			animationBone.registerAction(property0, actionParam);
+			actionParam.paused = true;
 			totalFrames = animationBone.getTotalFrames(actionParam) - 1;
 			#end
 		}
@@ -70,6 +71,7 @@ class OneShotActionNode extends LogicNode {
 			animationObject.deRegisterAction(property0);
 			actionParam = new Animparams(inputs[4].get(), 1.0, false);
 			animationObject.registerAction(property0, actionParam);
+			actionParam.paused = true;
 			totalFrames = animationObject.getTotalFrames(actionParam) - 1;
 		}
 	}
