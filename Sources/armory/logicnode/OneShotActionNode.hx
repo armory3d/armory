@@ -58,7 +58,6 @@ class OneShotActionNode extends LogicNode {
 
 	public function resetAction() {
 		
-		if(!ready) init();
 		if( animationObject == null){
 			#if arm_skin
 			animationBone.deRegisterAction(property0);
@@ -113,6 +112,7 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+		if(!ready) init();
 		var restart = inputs[5].get();
 		var blendOut = inputs[7].get();
 		blendOutFrame = totalFrames - Std.int(blendOut / frameTime);
@@ -123,7 +123,7 @@ class OneShotActionNode extends LogicNode {
 			if(! restart && ! oneShotDone) {
 				return;
 			}
-			resetAction();
+			actionParam.restartAction();
 			tweenIn();
 		}
 
@@ -154,6 +154,7 @@ class OneShotActionNode extends LogicNode {
 	function tweenOut() {
 		if(actionParam.offset >= totalFrames){
 			done();
+			return;
 		}
 		var blendOut = inputs[7].get();
 		if(actionParam.offset >= blendOutFrame){
