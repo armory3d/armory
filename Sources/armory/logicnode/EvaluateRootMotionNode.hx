@@ -12,6 +12,7 @@ class EvaluateRootMotionNode extends LogicNode {
     var ready = false;
     #end
 
+    public var property0: String;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -32,7 +33,16 @@ class EvaluateRootMotionNode extends LogicNode {
         var boneName: String = inputs[3].get();
         var bone = animation.getBone(boneName);
         assert(Error, bone != null, "Bone does not exist");
-        animation.setRootMotion(bone);
+        var lockX = false;
+        var lockY = false;
+        var lockZ = false;
+
+        switch (property0){
+            case "X" : lockX = true;
+            case "Y" : lockY = true;
+            case "Z" : lockZ = true;
+        }
+        animation.setRootMotion(bone, lockX, lockY, lockZ);
     }
 
     override function get(from:Int):Dynamic {

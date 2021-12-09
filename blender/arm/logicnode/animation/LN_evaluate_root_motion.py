@@ -6,6 +6,13 @@ class EvaluateRootMotionNode(ArmLogicTreeNode):
     bl_label = 'Evaluate Root Motion'
     arm_version = 1
 
+    property0: HaxeEnumProperty(
+            'property0',
+            items = [('X', 'X', 'X'),
+                     ('Y', 'Y', 'Y'),
+                     ('Z', 'Z', 'Z')],
+            name='Root Motion Lock axis', default='Z')
+
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Reset')
         self.add_input('ArmNodeSocketObject', 'Object')
@@ -14,3 +21,6 @@ class EvaluateRootMotionNode(ArmLogicTreeNode):
         self.add_input('ArmStringSocket', 'Bone')
 
         self.add_output('ArmNodeSocketAnimTree', 'Result')
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
