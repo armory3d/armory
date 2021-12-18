@@ -21,9 +21,6 @@ parsed_nodes = []
 parsed_ids = dict() # Sharing node data
 function_nodes = dict()
 function_node_outputs = dict()
-group_input_nodes = dict()
-group_output_nodes = dict()
-call_group_nodes = dict()
 group_name = ''
 
 
@@ -54,17 +51,11 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     global parsed_ids
     global function_nodes
     global function_node_outputs
-    global group_input_nodes
-    global group_output_nodes
-    global call_group_nodes
     global group_name
     parsed_nodes = []
     parsed_ids = dict()
     function_nodes = dict()
     function_node_outputs = dict()
-    group_input_nodes = dict()
-    group_output_nodes = dict()
-    call_group_nodes = dict()
     root_nodes = get_root_nodes(node_group)
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
@@ -134,34 +125,23 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
 
 
 def build_node_group_tree(node_group: 'arm.nodes_logic.ArmLogicTree', f: TextIO, group_node_name: str):
-    global parsed_nodes
-    global parsed_ids
-    global function_nodes
-    global function_node_outputs
-    global group_input_nodes
-    global group_output_nodes
-    global call_group_nodes
-    global group_name
-    parsed_nodes = []
-    parsed_ids = dict()
-    function_nodes = dict()
-    function_node_outputs = dict()
-    group_input_nodes = dict()
-    group_output_nodes = dict()
-    call_group_nodes = dict()
+    """Builds the given node tree as a node group"""
+
     root_nodes = get_root_nodes(node_group)
 
     group_input_name = ""
     group_output_name = ""
+    tree_name = arm.node_utils.get_export_tree_name(node_group)
 
+    # Get names of group input and out nodes if they exist
     for node in node_group.nodes:
         if node.bl_idname == 'LNGroupInputsNode':
-            group_input_name = group_node_name + arm.node_utils.get_export_node_name(node)
+            group_input_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
         if node.bl_idname == 'LNGroupOutputsNode':
-            group_output_name = group_node_name + arm.node_utils.get_export_node_name(node)
+            group_output_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
 
     for node in root_nodes:
-        build_node(node, f, group_node_name)
+        build_node(node, f, tree_name + group_node_name)
     node_group.arm_cached = True
     return group_input_name, group_output_name
 
@@ -181,10 +161,11 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         else:
             return None
 
+    # Check and parse group nodes if they exist
     if node.bl_idname == 'LNCallGroupNode':
-            prop =node.property0_
-            group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
-            link_group = True
+        prop =node.property0_
+        group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
+        link_group = True
     
     # Get node name
     name = arm.node_utils.get_export_node_name(node)
@@ -193,13 +174,20 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
 
     # Link nodes using IDs
     if node.arm_logic_id != '':
-        if node.arm_logic_id in parsed_ids:
-            return parsed_ids[node.arm_logic_id]
-        parsed_ids[node.arm_logic_id] = name
+        parse_id = node.arm_logic_id
+        if name_prefix is not None:
+            parse_id = name_prefix + parse_id
+        if parse_id in parsed_ids:
+            return parsed_ids[parse_id]
+        parsed_ids[parse_id] = name
 
     # Check if node already exists
     if name in parsed_nodes:
-        return name    
+        # Check if node groups were parsed
+        if not link_group:
+            return name
+        else:
+            return group_output_name
 
     parsed_nodes.append(name)
 
@@ -208,11 +196,11 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         node_type = node.bl_idname[2:]  # Discard 'LN' prefix
         f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
-        # Handle Function Nodes
-        if node_type == 'FunctionNode':
+        # Handle Function Nodes if no node groups exist
+        if node_type == 'FunctionNode' and name_prefix is None:
                 f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
                 function_nodes[name] = node
-        elif node_type == 'FunctionOutputNode':
+        elif node_type == 'FunctionOutputNode' and name_prefix is None:
                 f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
                 # Index function output name by corresponding function name
                 function_node_outputs[node.function_name] = name
@@ -238,6 +226,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
 
     # Create inputs
     if(link_group):
+        # Replace Call Node Group Node name with Group Input Node name
         name = group_input_name
     for idx, inp in enumerate(node.inputs):
         # True if the input is connected to a unlinked reroute
@@ -258,9 +247,11 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
                 socket = n.inputs[0].links[0].from_socket
                 n = n.inputs[0].links[0].from_node
             if not unconnected:
-                if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
-                        (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
-                    arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
+                # Ignore warnings if "Any" socket type is used
+                if(inp.bl_idname != 'ArmAnySocket' and socket.bl_idname != 'ArmAnySocket'):
+                    if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
+                            (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
+                        arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
 
                 inp_name = build_node(n, f, name_prefix)
                 for i in range(0, len(n.outputs)):
@@ -291,6 +282,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
 
     # Create outputs
     if(link_group):
+        # Replace Call Node Group Node name with Group Output Node name
         name = group_output_name
     for idx, out in enumerate(node.outputs):
         # Linked outputs are already handled after iterating over inputs
