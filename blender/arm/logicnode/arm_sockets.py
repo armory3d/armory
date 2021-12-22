@@ -31,6 +31,9 @@ socket_colors = {
     'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
     'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
     'ArmAnySocket': (0.9, 0.9, 0.9, 1)
+    'ArmNodeSocketAnimTree': (0.3, 0.1, 0.0, 1),
+    'ArmFactorSocket': (0.631, 0.631, 0.631, 1),
+    'ArmBlendSpaceSocket': (0.631, 0.631, 0.631, 1)
 }
 
 
@@ -636,6 +639,66 @@ class ArmVectorSocket(ArmCustomSocket):
         if socket.bl_idname == self.bl_idname:
             socket.default_value_raw = self.default_value_raw
 
+class ArmAnimTreeSocket(ArmCustomSocket):
+    bl_idname = 'ArmNodeSocketAnimTree'
+    bl_label = 'Animation Tree Socket'
+    arm_socket_type = 'NONE'
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=self.name)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+class ArmFactorSocket(ArmCustomSocket):
+    bl_idname = 'ArmFactorSocket'
+    bl_label = 'Factor Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+class ArmBlendSpaceSocket(ArmCustomSocket):
+    bl_idname = 'ArmBlendSpaceSocket'
+    bl_label = 'Blend Space Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+    def set_default_value(self, value):
+        self.default_value_raw = value
+
 def draw_socket_layout(socket: bpy.types.NodeSocket, layout: bpy.types.UILayout, prop_name='default_value_raw'):
     if not socket.is_output and not socket.is_linked:
         layout.prop(socket, prop_name, text=socket.name)
@@ -722,5 +785,6 @@ __REG_CLASSES = (
     ArmStringSocket,
     ArmVectorSocket,
     ArmAnySocket,
+    ArmBlendSpaceSocket,
 )
 register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
