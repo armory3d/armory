@@ -59,7 +59,8 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
                 layout.separator()
 
                 for category in category_section:
-                    layout.menu(f'ARM_MT_{category.name.lower()}_menu', text=category.name, icon=category.icon)
+                    safe_category_name = arm.utils.safesrc(category.name.lower())
+                    layout.menu(f'ARM_MT_{safe_category_name}_menu', text=category.name, icon=category.icon)
 
         else:
             ARM_MT_NodeAddOverride.overridden_draw(self, context)
@@ -136,9 +137,10 @@ def register_nodes():
     for category_section in arm_nodes.category_items.values():
         for category in category_section:
             category.sort_nodes()
-            menu_class = type(f'ARM_MT_{category.name}Menu', (bpy.types.Menu, ), {
+            safe_category_name = arm.utils.safesrc(category.name.lower())
+            menu_class = type(f'ARM_MT_{safe_category_name}Menu', (bpy.types.Menu, ), {
                 'bl_space_type': 'NODE_EDITOR',
-                'bl_idname': f'ARM_MT_{category.name.lower()}_menu',
+                'bl_idname': f'ARM_MT_{safe_category_name}_menu',
                 'bl_label': category.name,
                 'bl_description': category.description,
                 'draw': get_category_draw_func(category)
