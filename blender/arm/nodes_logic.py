@@ -120,7 +120,7 @@ def register_nodes():
     if len(registered_nodes) > 0 or len(registered_categories) > 0:
         unregister_nodes()
 
-    arm.logicnode.init_nodes()
+    arm.logicnode.init_nodes(subpackages_only=True)
 
     for node_type in arm_nodes.nodes:
         # Don't register internal nodes, they are already registered
