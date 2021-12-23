@@ -124,12 +124,36 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     node_group.arm_cached = True
 
 
-def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
+def build_node_group_tree(node_group: 'arm.nodes_logic.ArmLogicTree', f: TextIO, group_node_name: str):
+    """Builds the given node tree as a node group"""
+
+    root_nodes = get_root_nodes(node_group)
+
+    group_input_name = ""
+    group_output_name = ""
+    tree_name = arm.node_utils.get_export_tree_name(node_group)
+
+    # Get names of group input and out nodes if they exist
+    for node in node_group.nodes:
+        if node.bl_idname == 'LNGroupInputsNode':
+            group_input_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+        if node.bl_idname == 'LNGroupOutputsNode':
+            group_output_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+
+    for node in root_nodes:
+        build_node(node, f, tree_name + group_node_name)
+    node_group.arm_cached = True
+    return group_input_name, group_output_name
+
+
+def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Optional[str]:
     """Builds the given node and returns its name. f is an opened file object."""
     global parsed_nodes
     global parsed_ids
 
     use_live_patch = arm.utils.is_livepatch_enabled()
+
+    link_group = False
 
     if node.type == 'REROUTE':
         if len(node.inputs) > 0 and len(node.inputs[0].links) > 0:
@@ -137,55 +161,73 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
         else:
             return None
 
+    # Check and parse group nodes if they exist
+    if node.bl_idname == 'LNCallGroupNode':
+        prop =node.property0_
+        group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
+        link_group = True
+    
     # Get node name
     name = arm.node_utils.get_export_node_name(node)
+    if name_prefix is not None:
+        name = name_prefix + name
 
     # Link nodes using IDs
     if node.arm_logic_id != '':
-        if node.arm_logic_id in parsed_ids:
-            return parsed_ids[node.arm_logic_id]
-        parsed_ids[node.arm_logic_id] = name
+        parse_id = node.arm_logic_id
+        if name_prefix is not None:
+            parse_id = name_prefix + parse_id
+        if parse_id in parsed_ids:
+            return parsed_ids[parse_id]
+        parsed_ids[parse_id] = name
 
     # Check if node already exists
     if name in parsed_nodes:
-        return name
+        # Check if node groups were parsed
+        if not link_group:
+            return name
+        else:
+            return group_output_name
 
     parsed_nodes.append(name)
 
-    # Create node
-    node_type = node.bl_idname[2:]  # Discard 'LN' prefix
-    f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
+    if not link_group:
+        # Create node
+        node_type = node.bl_idname[2:]  # Discard 'LN' prefix
+        f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
-    # Handle Function Nodes
-    if node_type == 'FunctionNode':
-        f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
-        function_nodes[name] = node
-    elif node_type == 'FunctionOutputNode':
-        f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
-        # Index function output name by corresponding function name
-        function_node_outputs[node.function_name] = name
+        # Handle Function Nodes if no node groups exist
+        if node_type == 'FunctionNode' and name_prefix is None:
+                f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
+                function_nodes[name] = node
+        elif node_type == 'FunctionOutputNode' and name_prefix is None:
+                f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
+                # Index function output name by corresponding function name
+                function_node_outputs[node.function_name] = name
+        wrd = bpy.data.worlds['Arm']
 
-    wrd = bpy.data.worlds['Arm']
+        # Watch in debug console
+        if node.arm_watch and wrd.arm_debug_console:
+                f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+                f.write('\t\t' + name + '.watch(true);\n')
 
-    # Watch in debug console
-    if node.arm_watch and wrd.arm_debug_console:
-        f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
-        f.write('\t\t' + name + '.watch(true);\n')
+        elif use_live_patch:
+                f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+                f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
 
-    elif use_live_patch:
-        f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
-        f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
+        # Properties
+        for prop_py_name, prop_hx_name in arm.node_utils.get_haxe_property_names(node):
+                prop = arm.node_utils.haxe_format_prop_value(node, prop_py_name)
+                f.write('\t\t' + name + '.' + prop_hx_name + ' = ' + prop + ';\n')
 
-    # Properties
-    for prop_py_name, prop_hx_name in arm.node_utils.get_haxe_property_names(node):
-        prop = arm.node_utils.haxe_format_prop_value(node, prop_py_name)
-        f.write('\t\t' + name + '.' + prop_hx_name + ' = ' + prop + ';\n')
-
-    # Avoid unnecessary input/output array resizes
-    f.write(f'\t\t{name}.preallocInputs({len(node.inputs)});\n')
-    f.write(f'\t\t{name}.preallocOutputs({len(node.outputs)});\n')
+        # Avoid unnecessary input/output array resizes
+        f.write(f'\t\t{name}.preallocInputs({len(node.inputs)});\n')
+        f.write(f'\t\t{name}.preallocOutputs({len(node.outputs)});\n')
 
     # Create inputs
+    if(link_group):
+        # Replace Call Node Group Node name with Group Input Node name
+        name = group_input_name
     for idx, inp in enumerate(node.inputs):
         # True if the input is connected to a unlinked reroute
         # somewhere down the reroute line
@@ -204,13 +246,14 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
 
                 socket = n.inputs[0].links[0].from_socket
                 n = n.inputs[0].links[0].from_node
-
             if not unconnected:
-                if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
-                        (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
-                    arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
+                # Ignore warnings if "Any" socket type is used
+                if(inp.bl_idname != 'ArmAnySocket' and socket.bl_idname != 'ArmAnySocket'):
+                    if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
+                            (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
+                        arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
 
-                inp_name = build_node(n, f)
+                inp_name = build_node(n, f, name_prefix)
                 for i in range(0, len(n.outputs)):
                     if n.outputs[i] == socket:
                         inp_from = i
@@ -238,6 +281,9 @@ def build_node(node: bpy.types.Node, f: TextIO) -> Optional[str]:
             f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
 
     # Create outputs
+    if(link_group):
+        # Replace Call Node Group Node name with Group Output Node name
+        name = group_output_name
     for idx, out in enumerate(node.outputs):
         # Linked outputs are already handled after iterating over inputs
         # above, so only unconnected outputs are handled here
