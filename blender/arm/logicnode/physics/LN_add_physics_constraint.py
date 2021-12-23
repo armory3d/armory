@@ -47,7 +47,7 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
 
     bl_idname = 'LNAddPhysicsConstraintNode'
     bl_label = 'Add Physics Constraint'
-    arm_sction = 'add'
+    arm_section = 'add'
     arm_version = 1
 
     @staticmethod
