@@ -15,7 +15,8 @@ class FloatDeltaInterpolateNode extends LogicNode {
 		var deltaTime = inputs[2].get();
 		var rate = inputs[3].get();
 		
-		var value = fromValue + deltaTime * rate;
+		var sign = toValue > fromValue ? 1.0 : -1.0;
+		var value = fromValue + deltaTime * rate * sign;
 		var min = Math.min(fromValue, toValue);
 		var max = Math.max(fromValue, toValue);
 		return value < min ? min : value > max ? max : value;
