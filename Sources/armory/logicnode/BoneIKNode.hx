@@ -65,7 +65,6 @@ class BoneIKNode extends LogicNode {
 					animation.solveTwoBoneIKBlend(animMats, bone, goal, pole, 
 												  rollAngle, influence, layerMask);
 				case "FABRIK":
-					trace("FABRIK");
 					chainLength = inputs[9].get();
 					maxIterartions = inputs[10].get();
 					precision = inputs[11].get();

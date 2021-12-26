@@ -8,57 +8,45 @@ import iron.math.Mat4;
 
 class BoneFKNode extends LogicNode {
 
-	var notified = false;
-	var m: Mat4 = null;
-	var w: Mat4 = null;
-	var iw = Mat4.identity();
+	#if arm_skin
+	var object: Object;
+	var animMats: Array<Mat4>;
+	var animation: BoneAnimation;
+	var ready = false;
+	#end
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function run(from: Int) {
-		#if arm_skin
+	#if arm_skin
+	public function init(){
 
-		var object: Object = inputs[1].get();
-		var boneName: String = inputs[2].get();
-		var transform: Mat4 = inputs[3].get();
+		object = inputs[0].get();
+		assert(Error, object != null, "The object input not be null");
+		animation = object.getParentArmature(object.name);
+		assert(Error, animation != null, "The object does not have armatureanimation");
+		ready = true;
 
-		if (object == null) return;
-		var anim = object.animation != null ? cast(object.animation, BoneAnimation) : null;
-		if (anim == null) anim = object.getParentArmature(object.name);
+	}
 
-		// Get bone in armature
-		var bone = anim.getBone(boneName);
+	override function get(from: Int): Dynamic {
 
-		function moveBone() {
-			
-			var t2 = Mat4.identity();
-			var loc= new Vec4();
-			var rot = new Quat();
-			var scl = new Vec4();
+		return function (animMats: Array<Mat4>) {
 
-			//Set scale to Armature scale. Bone scaling not yet implemented
-			t2.setFrom(transform);
-			t2.decompose(loc, rot, scl);
-			scl = object.transform.world.getScale();
-			t2.compose(loc, rot, scl);
+			if(! ready) init();
+
+			inputs[1].get()(animMats);
+			var boneName: String = inputs[2].get();
+			var transform = Mat4.identity().setFrom(inputs[3].get());
+
+			// Get bone in armature
+			var bone = animation.getBone(boneName);
 
 			//Set the bone local transform from world transform
-			anim.setBoneMatFromWorldMat(t2, bone);
-
-			//Remove this method from animation loop after FK
-			anim.removeUpdate(moveBone);
-			notified = false;
+			animation.setBoneMatFromWorldMat(transform, bone, animMats);
 		}
 
-		if (!notified) {
-			anim.notifyOnUpdate(moveBone);
-			notified = true;
-		}
-
-		runOutput(0);
-
-		#end
 	}
+	#end
 }
