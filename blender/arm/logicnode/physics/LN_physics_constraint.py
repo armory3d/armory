@@ -21,7 +21,7 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
 
     bl_idname = 'LNPhysicsConstraintNode'
     bl_label = 'Physics Constraint'
-    arm_sction = 'add'
+    arm_section = 'add'
     arm_version = 1
 
     def update_spring(self, context):

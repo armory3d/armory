@@ -64,17 +64,25 @@ def init_categories():
     arm_nodes.add_category_section('default')
 
 
-def init_nodes():
-    """Calls the on_register() method on all logic nodes in order
-    to initialize them and to register them to Armory."""
-    for loader, module_name, is_pkg in pkgutil.walk_packages(__path__, __package__ + '.'):
+def init_nodes(base_path=__path__, base_package=__package__, subpackages_only=False):
+    """Calls the `on_register()` method on all logic nodes in a given
+    `base_package` and all its sub-packages relative to the given
+    `base_path`, in order to initialize them and to register them to Armory.
+
+    Be aware that calling this function will import all modules in the
+    given package, so module-level code will be executed.
+
+    If `subpackages_only` is true, modules directly inside the root of
+    the base package are not searched and imported.
+    """
+    for loader, module_name, is_pkg in pkgutil.walk_packages(base_path, base_package + '.'):
         if is_pkg:
             # The package must be loaded as well so that the modules from that package can be accessed (see the
             # pkgutil.walk_packages documentation for more information on this)
             loader.find_module(module_name).load_module(module_name)
 
-        # Only look at modules in sub packages
-        elif module_name.rsplit('.', 1)[0] != __package__:
+        # Only look at modules in sub packages if specified
+        elif not subpackages_only or module_name.rsplit('.', 1)[0] != base_package:
             if 'HAS_RELOADED' not in globals() or module_name not in sys.modules:
                 _module = importlib.import_module(module_name)
             else:
