@@ -66,10 +66,10 @@ class OnCanvasElementNode extends LogicNode {
 		if (isEvent)
 		{
 			var canvasElem = canvas.getElement(element);
-			var left = canvasElem.x;
-			var top = canvasElem.y;
-			var right = left + canvasElem.width;
-			var bottom = top + canvasElem.height;
+			var left = canvasElem.x*canvas.getUiScale();
+			var top = canvasElem.y*canvas.getUiScale();
+			var right = left + canvasElem.width*canvas.getUiScale();
+			var bottom = top + canvasElem.height*canvas.getUiScale();
 
 			var anchor = canvasElem.anchor;
 			var cx = canvas.getCanvas().width;
