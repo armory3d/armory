@@ -16,13 +16,13 @@ class SetRotationNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		if (object == null) return;
-		var q: Quat = inputs[2].get();
-		if (q == null) return;
+		var _q: Quat = inputs[2].get();
+		if (_q == null) return;
 
-		q.normalize();
-		object.transform.rot = q;
+		final q = new Quat(_q.x, _q.y, _q.z, _q.w).normalize();
+		object.transform.rot.setFrom(q);
 		object.transform.buildMatrix();
-		
+
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
 		if (rigidBody != null) {
