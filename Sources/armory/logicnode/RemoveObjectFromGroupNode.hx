@@ -12,7 +12,7 @@ class RemoveObjectFromGroupNode extends LogicNode {
 		var groupName: String = inputs[1].get();
 		var object: Object = inputs[2].get();
 
-		iron.Scene.active.RemoveObjectFromGroup(groupName, object);
+		iron.Scene.active.getGroup(groupName).remove(object);
 		
 		runOutput(0);
 
