@@ -4,7 +4,7 @@ class MathNode(ArmLogicTreeNode):
     """Mathematical operations on values."""
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
-    arm_version = 1
+    arm_version = 2
 
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
@@ -25,7 +25,7 @@ class MathNode(ArmLogicTreeNode):
             'Arccosine': 1,
             'Arctangent': 1,
             'Logarithm': 1,
-            'Round': 1,
+            'Round': 2,
             'Floor': 1,
             'Ceil': 1,
             'Square Root': 1,
@@ -63,6 +63,9 @@ class MathNode(ArmLogicTreeNode):
                 while (len(self.inputs) > 1):
                     self.inputs.remove(self.inputs.values()[-1])
         self['property0'] = value
+        if (self.property0 == 'Round'):
+            self.inputs[1].name = 'Precision'
+        else: self.inputs[1].name = 'Value 1'
 
     property0: HaxeEnumProperty(
         'property0',
@@ -81,7 +84,7 @@ class MathNode(ArmLogicTreeNode):
                  ('Arctangent', 'Arctangent', 'Arctangent'),
                  ('Power', 'Power', 'Power'),
                  ('Logarithm', 'Logarithm', 'Logarithm'),
-                 ('Round', 'Round', 'Round'),
+                 ('Round', 'Round', 'Round (Value 1 precision of decimal places)'),
                  ('Less Than', 'Less Than', 'Less Than'),
                  ('Greater Than', 'Greater Than', 'Greater Than'),
                  ('Modulo', 'Modulo', 'Modulo'),
