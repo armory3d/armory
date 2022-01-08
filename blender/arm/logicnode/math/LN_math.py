@@ -65,7 +65,7 @@ class MathNode(ArmLogicTreeNode):
         self['property0'] = value
         if (self.property0 == 'Round'):
             self.inputs[1].name = 'Precision'
-        else: self.inputs[1].name = 'Value 1'
+        elif (len(self.inputs) > 1): self.inputs[1].name = 'Value 1'
 
     property0: HaxeEnumProperty(
         'property0',
