@@ -1,9 +1,9 @@
 from arm.logicnode.arm_nodes import *
 
 class RetainValueNode(ArmLogicTreeNode):
-    """Sets the value of the given variable.
+    """Retains the input value
 
-    @input Retain: Retains the value when exeuted
+    @input Retain: Retains the value when exeuted.
     @input Value: The value that should be retained.
     """
     bl_idname = 'LNRetainValueNode'

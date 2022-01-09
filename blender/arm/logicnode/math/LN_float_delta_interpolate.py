@@ -2,10 +2,10 @@ from arm.logicnode.arm_nodes import *
 
 class FloatDeltaInterpolateNode(ArmLogicTreeNode):
     """Linearly interpolate to a new value with specified interpolation `Rate`.
-    @input From: Value to interpolate from
-    @input To: Value to interpolate to
-    @input Delta Time: Delta Time
-    @input Rate: Rate of interpolation 
+    @input From: Value to interpolate from.
+    @input To: Value to interpolate to.
+    @input Delta Time: Delta Time.
+    @input Rate: Rate of interpolation.
     """
     bl_idname = 'LNFloatDeltaInterpolateNode'
     bl_label = 'Float Delta Interpolate'
