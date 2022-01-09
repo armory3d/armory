@@ -41,5 +41,7 @@ class SimpleFootIKNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Foot Offset Threshold')
         self.add_input('ArmFloatSocket', 'Interp Speed', default_value = 0.1)
         self.add_input('ArmIntSocket', 'Bone Group', default_value = 0)
+        self.add_input('ArmVectorSocket', 'Left Pole')
+        self.add_input('ArmVectorSocket', 'Right Pole')
 
         self.add_output('ArmNodeSocketAnimTree', 'Result')

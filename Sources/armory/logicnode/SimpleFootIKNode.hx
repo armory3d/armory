@@ -21,8 +21,9 @@ class SimpleFootIKNode extends LogicNode {
 	var footOffsetThreshold: Float; //8
 	var interpSpeed: Float; //9
 	var layerMask: Null<Int>; //10
-	var currentLeftZ: Null<Float> = null;
-	var currentRightZ: Null<Float> = null;
+	var leftPole: Vec4 = null; 
+	var rightPole: Vec4 = null;
+	var oldInfluence: Float = null;
 
 	var animation: BoneAnimation;
 	var ready = false;
@@ -58,6 +59,8 @@ class SimpleFootIKNode extends LogicNode {
 			footOffsetThreshold = inputs[8].get();
 			interpSpeed = inputs[9].get();
 			layerMask = inputs[10].get();
+			leftPole = inputs[11].get();
+			rightPole = inputs[12].get();
 
 			var leftBone = animation.getBone(leftBoneName);
 			var rightBone = animation.getBone(rightBoneName);
@@ -67,13 +70,8 @@ class SimpleFootIKNode extends LogicNode {
 			var rightLoc = animation.getAbsWorldMat(rightBone, animMats).getLoc();
 
 			// get lowest hit point
-			var hitPoint = 0.0;
-			if(leftHitPoint == null || rightHitPoint == null) {
-				currentLeftZ = null;
-				currentRightZ = null;
-				return;
-			}
-			hitPoint = Math.min(rightHitPoint, leftHitPoint);
+			if(leftHitPoint == null || rightHitPoint == null) return;
+			var hitPoint = Math.min(rightHitPoint, leftHitPoint);
 
 			// get current armature height
 			var currentPos = new Vec4().setFrom(object.transform.world.getLoc());
@@ -84,27 +82,25 @@ class SimpleFootIKNode extends LogicNode {
 
 			// set new armature height
 			setWorldLocation(currentPos);
-			
-			var deltaFeetDistance = Math.abs(leftLoc.z - rightLoc.z);
-			if(deltaFeetDistance > footOffsetThreshold) {
-				currentLeftZ = null;
-				currentRightZ = null;
+
+			var influence = 1 - Math.abs(leftLoc.z - rightLoc.z) * footOffsetThreshold;
+			influence = influence < 0.0 ? 0.0 : (influence > 1.0 ? 1.0 : influence);
+
+			if(oldInfluence != null && Math.abs(oldInfluence - influence) > 0.5){
+				oldInfluence = influence;
 				return;
-			}
+			} 
+			oldInfluence = influence;
 
 			//Perform IK on left leg
-			if(currentLeftZ == null) currentLeftZ = leftLoc.z;
-			currentLeftZ = deltaInterpolate(currentLeftZ, leftHitPoint, interpSpeed);
-			leftLoc.z = currentLeftZ /* + footOffset */;
-			animation.solveTwoBoneIKBlend(animMats, leftBone.parent, leftLoc, null, 
-										  0.0, 1.0, layerMask, 0.1);
+			leftLoc.z = leftHitPoint + footOffset;
+			animation.solveTwoBoneIKBlend(animMats, leftBone.parent, leftLoc, leftPole, 
+										  0.0, influence, layerMask, 0.1);
 
 			//Perform IK on right leg
-			if(currentRightZ == null) currentRightZ = rightLoc.z;
-			currentRightZ = deltaInterpolate(currentRightZ, rightHitPoint, interpSpeed);
-			rightLoc.z = currentRightZ /* + footOffset */;
-			animation.solveTwoBoneIKBlend(animMats, rightBone.parent, rightLoc, null, 
-										  0.0, 1.0, layerMask, 0.1);
+			rightLoc.z = rightHitPoint + footOffset;
+			animation.solveTwoBoneIKBlend(animMats, rightBone.parent, rightLoc, rightPole, 
+										  0.0, influence, layerMask, 0.1);
 		}
 	}
 
