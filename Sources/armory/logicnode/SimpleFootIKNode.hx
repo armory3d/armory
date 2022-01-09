@@ -25,6 +25,8 @@ class SimpleFootIKNode extends LogicNode {
 	var rightPole: Vec4 = null;
 	var oldInfluence: Float = null;
 
+	static final EPSILON = 0.01;
+
 	var animation: BoneAnimation;
 	var ready = false;
 	#end
@@ -83,13 +85,14 @@ class SimpleFootIKNode extends LogicNode {
 			// set new armature height
 			setWorldLocation(currentPos);
 
-			var influence = 1 - Math.abs(leftLoc.z - rightLoc.z) * footOffsetThreshold;
+			if(footOffsetThreshold < EPSILON) footOffsetThreshold = EPSILON;
+			var influence = 1 - Math.abs(leftLoc.z - rightLoc.z) / footOffsetThreshold;
 			influence = influence < 0.0 ? 0.0 : (influence > 1.0 ? 1.0 : influence);
 
-			if(oldInfluence != null && Math.abs(oldInfluence - influence) > 0.5){
+			if(oldInfluence != null && Math.abs(oldInfluence - influence) > 0.5) {
 				oldInfluence = influence;
 				return;
-			} 
+			}
 			oldInfluence = influence;
 
 			//Perform IK on left leg
@@ -104,7 +107,7 @@ class SimpleFootIKNode extends LogicNode {
 		}
 	}
 
-	function deltaInterpolate(from: Float, to: Float, interpSpeed: Float): Float{
+	function deltaInterpolate(from: Float, to: Float, interpSpeed: Float): Float {
 
 		var sign = to > from ? 1.0 : -1.0;
 		var value = from + interpSpeed * sign;
@@ -113,9 +116,10 @@ class SimpleFootIKNode extends LogicNode {
 		return value < min ? min : value > max ? max : value;
 	}
 
-	function setWorldLocation(currentPos: Vec4){
+	function setWorldLocation(currentPos: Vec4) {
 		var loc = new Vec4().setFrom(currentPos);
-		loc.sub(object.parent.transform.world.getLoc()); // Remove parent location influence
+		// Remove parent location influence
+		loc.sub(object.parent.transform.world.getLoc());
 		// Convert vec to parent local space
 		var dotX = loc.dot(object.parent.transform.right());
 		var dotY = loc.dot(object.parent.transform.look());
