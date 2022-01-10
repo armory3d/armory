@@ -8,6 +8,12 @@ class MathNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
+	
+	public static function round(number:Float, ?precision=2): Float{
+		precision = Math.round(Math.abs(precision));
+		number *= Math.pow(10, precision);
+		return Math.round(number) / Math.pow(10, precision);
+	}
 
 	override function get(from: Int): Dynamic {
 		var r = 0.0;
@@ -29,7 +35,7 @@ class MathNode extends LogicNode {
 			case "Logarithm":
 				r = Math.log(inputs[0].get());
 			case "Round":
-				r = Math.round(inputs[0].get());
+				r = round(inputs[0].get(), inputs[1].get());
 			case "Floor":
 				r = Math.floor(inputs[0].get());
 			case "Ceil":
