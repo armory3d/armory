@@ -1922,12 +1922,16 @@ Make sure the mesh only has tris/quads.""")
         else:
             o['sound'] = ''
         o['muted'] = objref.muted
-        o['loop'] = objref.arm_loop
-        o['stream'] = objref.arm_stream
         o['volume'] = objref.volume
         o['pitch'] = objref.pitch
+        o['volume_min'] = objref.volume_min
+        o['volume_max'] = objref.volume_max
         o['attenuation'] = objref.attenuation
+        o['distance_max'] = objref.distance_max
+        o['distance_reference'] = objref.distance_reference
         o['play_on_start'] = objref.arm_play_on_start
+        o['loop'] = objref.arm_loop
+        o['stream'] = objref.arm_stream
         self.output['speaker_datas'].append(o)
 
     def make_default_mat(self, mat_name, mat_objs, is_particle=False):
