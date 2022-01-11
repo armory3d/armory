@@ -11,7 +11,7 @@ class GetGamepadStartedNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var g = Input.getGamepad(inputs[0].get());
+		var g = Input.getGamepad(inputs[1].get());
 
 		buttonStarted = null;
 
