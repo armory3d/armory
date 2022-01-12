@@ -77,15 +77,12 @@ def is_transluc_traverse(node):
                 return True
     return False
 
-def is_transluc_type(node):
-    if node.type == 'BSDF_GLASS' or \
-       node.type == 'BSDF_TRANSPARENT' or \
-       node.type == 'BSDF_TRANSLUCENT' or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[18].is_linked or node.inputs[18].default_value != 1.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 21 and (node.inputs[19].is_linked or node.inputs[19].default_value != 1.0)):
-       return True
-    return False
+
+def is_transluc_type(node: bpy.types.ShaderNode) -> bool:
+    return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT') \
+        or (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs['Opacity'].is_linked or node.inputs['Opacity'].default_value != 1.0)) \
+        or (node.type == 'BSDF_PRINCIPLED' and (node.inputs['Alpha'].is_linked or node.inputs['Alpha'].default_value != 1.0))
+
 
 def is_emmisive(material):
     nodes = material.node_tree.nodes
