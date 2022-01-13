@@ -91,6 +91,8 @@ def postpack():
 
             packer[atlas.name] = newPacker(PackingMode.Offline, PackingBin.BFF, rotation=False)
 
+            bpy.app.driver_namespace["logman"].append("Postpacking: " + str(atlas.name))
+
             if scene.TLM_EngineProperties.tlm_setting_supersample == "2x":
                 supersampling_scale = 2
             elif scene.TLM_EngineProperties.tlm_setting_supersample == "4x":
@@ -115,8 +117,12 @@ def postpack():
 
                             rect.append((res, res, obj.name))
 
+            #Add rect to bin
             for r in rect:
                 packer[atlas.name].add_rect(*r)
+
+            print("Rects: " + str(rect))
+            print("Bins:" + str(packer[atlas.name]))
 
             packedAtlas[atlas.name] = np.zeros((atlas_resolution,atlas_resolution, 3), dtype="float32")
 
@@ -140,6 +146,8 @@ def postpack():
 
             for idy, rect in enumerate(packer[atlas.name].rect_list()):
 
+                print("Packing atlas at: " + str(rect))
+
                 aob = rect[5]
 
                 src = cv2.imread(os.path.join(lightmap_directory, aob + end + formatEnc), image_channel_depth) #"_baked.hdr"
@@ -148,8 +156,11 @@ def postpack():
 
                 x,y,w,h = rect[1],rect[2],rect[3],rect[4]
 
-                print(src.shape)
-                print(packedAtlas[atlas.name].shape)
+                print("Obj Shape: " + str(src.shape))
+                print("Atlas shape: " + str(packedAtlas[atlas.name].shape))
+
+                print("Bin Pos: ",x,y,w,h)
+                
 
                 packedAtlas[atlas.name][y:h+y, x:w+x] = src
                 
@@ -167,34 +178,64 @@ def postpack():
 
                         print("UVLayer set to: " + str(obj.data.uv_layers.active_index))
 
+                atlasRes = atlas_resolution
+                texRes = rect[3] #Any dimension w/h (square)
+                ratio = texRes/atlasRes
+                scaleUV(obj.data.uv_layers.active, (ratio, ratio), (0,1))
+                print(rect)
+                
+                #Postpack error here...
                 for uv_verts in obj.data.uv_layers.active.data:
+                    #For each vert
+
+                    #NOTES! => X FUNKER
+                    #TODO => Y
+
+                    #[0] = bin index
+                    #[1] = x
+                    #[2] = y (? + 1)
+                    #[3] = w
+                    #[4] = h
+
+                    vertex_x = uv_verts.uv[0] + (rect[1]/atlasRes) #WORKING!
+                    vertex_y = uv_verts.uv[1] - (rect[2]/atlasRes) # + ((rect[2]-rect[4])/atlasRes) #            #         + (1-((rect[1]-rect[4])/atlasRes))
+                    #tr = "X: {0} + ({1}/{2})".format(uv_verts.uv[0],rect[1],atlasRes)
+                    #print(tr)
+                    #vertex_y = 1 - (uv_verts.uv[1]) uv_verts.uv[1] + (rect[1]/atlasRes)
 
                     #SET UV LAYER TO 
 
-                    atlasRes = atlas_resolution
-                    texRes = rect[3]
-                    x,y,w,z = x,y,texRes,texRes
+                    # atlasRes = atlas_resolution
+                    # texRes = rect[3] #Any dimension w/h (square)
+                    # print(texRes)
+                    # #texRes = 0.0,0.0
+                    # #x,y,w,z = x,y,texRes,texRes
+                    # x,y,w,z = x,y,0,0
                     
-                    ratio = atlasRes/texRes
+                    # ratio = atlasRes/texRes
                     
-                    if x == 0:
-                        x_offset = 0
-                    else:
-                        x_offset = 1/(atlasRes/x)
+                    # if x == 0:
+                    #     x_offset = 0
+                    # else:
+                    #     x_offset = 1/(atlasRes/x)
 
-                    if y == 0:
-                        y_offset = 0
-                    else:
-                        y_offset = 1/(atlasRes/y)
+                    # if y == 0:
+                    #     y_offset = 0
+                    # else:
+                    #     y_offset = 1/(atlasRes/y)
                     
-                    vertex_x = (uv_verts.uv[0] * 1/(ratio)) + x_offset
-                    vertex_y = (1 - ((uv_verts.uv[1] * 1/(ratio)) + y_offset))
+                    # vertex_x = (uv_verts.uv[0] * 1/(ratio)) + x_offset
+                    # vertex_y = (1 - ((uv_verts.uv[1] * 1/(ratio)) + y_offset))
+
+                    #TO FIX:
+                    #SELECT ALL
+                    #Scale Y => -1
                     
                     uv_verts.uv[0] = vertex_x
                     uv_verts.uv[1] = vertex_y
 
-                scaleUV(obj.data.uv_layers.active, (1, -1), getBoundsCenter(obj.data.uv_layers.active))
-                print(getCenter(obj.data.uv_layers.active))
+                #scaleUV(obj.data.uv_layers.active, (1, -1), getBoundsCenter(obj.data.uv_layers.active))
+                #print(getCenter(obj.data.uv_layers.active))
 
             cv2.imwrite(os.path.join(lightmap_directory, atlas.name + end + formatEnc), packedAtlas[atlas.name])
             print("Written: " + str(os.path.join(lightmap_directory, atlas.name + end + formatEnc)))
@@ -221,8 +262,12 @@ def postpack():
 
                                         node.image = atlasImage
 
-                                        os.remove(os.path.join(lightmap_directory, obj.name + end + formatEnc))
-                                        existing_image.user_clear()
+                                        #print("Seeking for: " + atlasImage.filepath_raw)
+                                        #print(x)
+
+                                        if(os.path.exists(os.path.join(lightmap_directory, obj.name + end + formatEnc))):
+                                            os.remove(os.path.join(lightmap_directory, obj.name + end + formatEnc))
+                                            existing_image.user_clear()
 
             #Add dilation map here...
             for obj in bpy.context.scene.objects:

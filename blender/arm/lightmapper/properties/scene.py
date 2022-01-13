@@ -45,6 +45,16 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Keep cache files (non-filtered and non-denoised)", 
         default=True)
 
+    tlm_keep_baked_files : BoolProperty(
+        name="Keep bake files", 
+        description="Keep the baked lightmap files when cleaning", 
+        default=False)
+
+    tlm_repartition_on_clean : BoolProperty(
+        name="Repartition on clean", 
+        description="Repartition material names on clean", 
+        default=False)
+
     tlm_setting_renderer : EnumProperty(
         items = [('CPU', 'CPU', 'Bake using the processor'),
                 ('GPU', 'GPU', 'Bake using the graphics card')],
@@ -101,6 +111,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     tlm_apply_on_unwrap : BoolProperty(
         name="Apply scale", 
+        description="TODO", 
+        default=False)
+        
+    tlm_save_preprocess_lightmaps : BoolProperty(
+        name="Save preprocessed lightmaps", 
         description="TODO", 
         default=False)
 
@@ -179,7 +194,7 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         max=100)
 
     tlm_filtering_bilateral_coordinate_deviation : IntProperty(
-        name="Color deviation", 
+        name="Coordinate deviation", 
         default=75, 
         min=1, 
         max=100)
@@ -233,7 +248,7 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
     tlm_encoding_mode_b : EnumProperty(
         items = encoding_modes_2,
                 name = "Encoding Mode", 
-                description="TODO", 
+                description="RGBE 32-bit Radiance HDR File", 
                 default='HDR')
 
     tlm_encoding_range : IntProperty(
@@ -245,7 +260,12 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
 
     tlm_decoder_setup : BoolProperty(
         name="Use decoder", 
-        description="TODO", 
+        description="Apply a node for decoding.", 
+        default=False)
+
+    tlm_split_premultiplied : BoolProperty(
+        name="Split for premultiplied", 
+        description="Some game engines doesn't support non-premultiplied files. This splits the alpha channel to a separate file.", 
         default=False)
 
     tlm_encoding_colorspace : EnumProperty(
@@ -385,6 +405,16 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Remove existing UV maps for lightmaps.", 
         default=False)
 
+    tlm_apply_modifiers : BoolProperty(
+        name="Apply modifiers", 
+        description="Apply all modifiers to objects.", 
+        default=True)
+
+    tlm_batch_mode : BoolProperty(
+        name="Batch mode", 
+        description="Batch collections.", 
+        default=False)
+
     tlm_network_render : BoolProperty(
         name="Enable network rendering", 
         description="Enable network rendering (Unstable).", 
@@ -453,6 +483,11 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
         description="Load existing lightmaps from folder",
         subtype="DIR_PATH")
 
+    tlm_load_atlas : BoolProperty(
+        name="Load lightmaps based on atlas sets", 
+        description="Use the current Atlas list.", 
+        default=False)
+
     tlm_utility_set : EnumProperty(
         items = [('Scene', 'Scene', 'Set for all objects in the scene.'),
                  ('Selection', 'Selection', 'Set for selected objects.'),
@@ -495,3 +530,56 @@ class TLM_SceneProperties(bpy.types.PropertyGroup):
                 name = "Maximum resolution", 
                 description="Maximum distributed resolution", 
                 default='256')
+
+    tlm_remove_met_spec_link : BoolProperty(
+        name="Remove image link", 
+        description="Removes the connected node on metallic or specularity set disable", 
+        default=False)
+
+    tlm_utility_context : EnumProperty(
+        items = [('SetBatching', 'Set Batching', 'Set batching options. Allows to set lightmap options for multiple objects.'),
+                 ('EnvironmentProbes', 'Environment Probes', 'Options for rendering environment probes. Cubemaps and panoramic HDRs for external engines'),
+                 ('LoadLightmaps', 'Load Lightmaps', 'Options for loading pre-built lightmaps.'),
+                 ('NetworkRender', 'Network Rendering', 'Distribute lightmap building across multiple machines.'),
+                 ('MaterialAdjustment', 'Material Adjustment', 'Allows adjustment of multiple materials at once.'),
+                 ('TexelDensity', 'Texel Density', 'Allows setting texel densities of the UV.'),
+                 ('GLTFUtil', 'GLTF Utilities', 'GLTF related material utilities.')],
+                name = "Utility Context", 
+                description="Set Utility Context", 
+                default='SetBatching')
+
+    tlm_addon_uimode : EnumProperty(
+        items = [('Simple', 'Simple', 'TODO'),
+                 ('Advanced', 'Advanced', 'TODO')],
+                name = "UI Mode", 
+                description="TODO", 
+                default='Simple')
+
+class TLM_GroupListItem(bpy.types.PropertyGroup):
+    obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
+
+class TLM_UL_GroupList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        custom_icon = 'OBJECT_DATAMODE'
+
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+
+            amount = 0
+
+            for obj in bpy.context.scene.objects:
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+                    if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+                        if obj.TLM_ObjectProperties.tlm_atlas_pointer == item.name:
+                            amount = amount + 1
+
+            row = layout.row()
+            row.prop(item, "name", text="", emboss=False, icon=custom_icon)
+            col = row.column()
+            col.label(text=item.tlm_atlas_lightmap_resolution)
+            col = row.column()
+            col.alignment = 'RIGHT'
+            col.label(text=str(amount))
+
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon = custom_icon)

@@ -51,7 +51,8 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
 
     unwrap_modes = [('Lightmap', 'Lightmap', 'TODO'),
                 ('SmartProject', 'Smart Project', 'TODO'),
-                ('AtlasGroupA', 'Atlas Group (Prepack)', 'Attaches the object to a prepack Atlas group. Will overwrite UV map on build.')]
+                ('AtlasGroupA', 'Atlas Group (Prepack)', 'Attaches the object to a prepack Atlas group. Will overwrite UV map on build.'),
+                 ('Copy', 'Copy existing', 'Use the existing UV channel')]
 
     tlm_postpack_object : BoolProperty( #CHECK INSTEAD OF ATLASGROUPB
         name="Postpack object", 
@@ -155,3 +156,27 @@ class TLM_ObjectProperties(bpy.types.PropertyGroup):
             name = "UV Channel",
             description = "Use any custom UV Channel for the lightmap",
             default = "UVMap")
+
+    tlm_use_uv_packer : BoolProperty(
+        name="Use UV Packer", 
+        description="UV Packer will be utilized after initial UV mapping for optimized packing.", 
+        default=False)
+
+    tlm_uv_packer_padding : FloatProperty(
+        name="Padding", 
+        default=2.0, 
+        min=0.0, 
+        max=100.0, 
+        subtype='FACTOR')
+
+    tlm_uv_packer_packing_engine : EnumProperty(
+        items = [('OP0', 'Efficient', 'Best compromise for speed and space usage.'),
+                ('OP1', 'High Quality', 'Slowest, but maximum space usage.')],
+                name = "Packing Engine", 
+                description="Which UV Packer engine to use.", 
+                default='OP0')
+
+    #Padding
+    #Type
+    #Rescale
+    #Pre-rotate

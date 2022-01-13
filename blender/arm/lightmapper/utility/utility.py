@@ -664,7 +664,10 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
 def transfer_assets(copy, source, destination):
     for filename in glob.glob(os.path.join(source, '*.*')):
-        shutil.copy(filename, destination)
+        try:
+            shutil.copy(filename, destination)
+        except shutil.SameFileError:
+            pass
 
 def transfer_load():
     load_folder = bpy.path.abspath(os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_SceneProperties.tlm_load_folder))

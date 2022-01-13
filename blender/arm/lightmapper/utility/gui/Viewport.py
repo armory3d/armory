@@ -7,7 +7,7 @@ class ViewportDraw:
 
         bakefile = "TLM_Overlay.png"
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        bakefile_path = os.path.abspath(os.path.join(scriptDir, '..', '..', 'assets/' + bakefile))
+        bakefile_path = os.path.abspath(os.path.join(scriptDir, '..', '..', 'assets', bakefile))
 
         image_name = "TLM_Overlay.png"
 
@@ -15,7 +15,13 @@ class ViewportDraw:
 
         print("Self path: " + bakefile_path)
 
-        image = bpy.data.images[image_name]
+        for img in bpy.data.images:
+            if img.filepath.endswith(image_name):
+                image = img
+                break
+
+        if not image:
+            image = bpy.data.images[image_name]
 
         x = 15
         y = 15
@@ -51,7 +57,11 @@ class ViewportDraw:
         if self.image:
             bgl.glEnable(bgl.GL_BLEND)
             bgl.glActiveTexture(bgl.GL_TEXTURE0)
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.image.bindcode)
+
+            try:
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.image.bindcode)
+            except:
+                bpy.types.SpaceView3D.draw_handler_remove(self.handle2, 'WINDOW')
 
             self.shader.bind()
             self.shader.uniform_int("image", 0)

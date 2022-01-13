@@ -93,6 +93,14 @@ class TLM_PT_ObjectMenu(bpy.types.Panel):
                         row = layout.row(align=True)
                         row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
 
+                #If UV Packer installed
+                if "UV-Packer" in bpy.context.preferences.addons.keys():
+                    row.prop(obj.TLM_ObjectProperties, "tlm_use_uv_packer")
+                    if obj.TLM_ObjectProperties.tlm_use_uv_packer:
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_padding")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_packing_engine")
 
 class TLM_PT_MaterialMenu(bpy.types.Panel):
     bl_label = "The Lightmapper"

@@ -1,10 +1,43 @@
-import bpy, math, os, gpu, bgl
+import bpy, math, os, gpu, bgl, importlib
 import numpy as np
 from . import utility
 from fractions import Fraction
 from gpu_extras.batch import batch_for_shader
 
+def splitLogLuvAlphaAtlas(imageIn, outDir, quality):
+    pass
+
+def splitLogLuvAlpha(imageIn, outDir, quality):
+    
+    bpy.app.driver_namespace["logman"].append("Starting LogLuv split for: " + str(imageIn))
+
+    cv2 = importlib.util.find_spec("cv2")
+
+    if cv2 is None:
+        print("CV2 not found - Ignoring filtering")
+        return 0
+    else:
+        cv2 = importlib.__import__("cv2")
+
+    print(imageIn)
+    image = cv2.imread(imageIn, cv2.IMREAD_UNCHANGED)
+    #cv2.imshow('image', image)
+    split = cv2.split(image)
+    merged = cv2.merge([split[0], split[1], split[2]])
+    alpha = split[3]
+    #b,g,r = cv2.split(image)
+    #merged = cv2.merge([b, g, r])
+    #alpha = cv2.merge([a,a,a])
+    image_name = os.path.basename(imageIn)[:-4]
+    #os.path.join(outDir, image_name+"_XYZ.png")
+
+    cv2.imwrite(os.path.join(outDir, image_name+"_XYZ.png"), merged)
+    cv2.imwrite(os.path.join(outDir, image_name+"_W.png"), alpha)
+
 def encodeLogLuvGPU(image, outDir, quality):
+
+    bpy.app.driver_namespace["logman"].append("Starting LogLuv encode for: " + str(image.name))
+
     input_image = bpy.data.images[image.name]
     image_name = input_image.name
 
@@ -139,9 +172,6 @@ def encodeLogLuvGPU(image, outDir, quality):
     bpy.context.scene.render.image_settings.quality = quality
     #input_image.save_render(filepath = input_image.filepath_raw, scene = bpy.context.scene)
     input_image.save()
-    
-    #Todo - Find a way to save
-    #bpy.ops.image.save_all_modified()
 
 def encodeImageRGBDGPU(image, maxRange, outDir, quality):
     input_image = bpy.data.images[image.name]

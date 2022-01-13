@@ -1,4 +1,4 @@
-import bpy, math
+import bpy, math, time
 
 from . import cache
 from .. utility import *
@@ -23,6 +23,18 @@ def init(self, prev_container):
 
     configure_meshes(self)
 
+    print("Config mesh catch omitted: REMEMBER TO SET IT BACK NAXELA")
+    # try:
+    #     configure_meshes(self)
+    # except Exception as e:
+
+    #     print("An error occured during mesh configuration. See error below:")
+
+    #     print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+    #     if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+    #         print("Turn on verbose mode to get more detail.")
+
 def configure_world():
     pass
 
@@ -32,13 +44,17 @@ def configure_lights():
 def configure_meshes(self):
 
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-        print("Configuring meshes")
+        print("Configuring meshes: Start")
 
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print("Configuring meshes: Material restore")
     for obj in bpy.context.scene.objects:
         if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                 cache.backup_material_restore(obj)
 
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print("Configuring meshes: Material rename check")
     for obj in bpy.context.scene.objects:
         if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
@@ -62,9 +78,61 @@ def configure_meshes(self):
 
     scene = bpy.context.scene
 
+    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        print("Object: Setting UV, converting modifiers and prepare channels")
+
+    #OBJECT: Set UV, CONVERT AND PREPARE
     for obj in bpy.context.scene.objects:
         if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
-            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+            hidden = False
+
+            #We check if the object is hidden
+            if obj.hide_get():
+                hidden = True
+            if obj.hide_viewport:
+                hidden = True
+            if obj.hide_render:
+                hidden = True
+
+            #We check if the object's collection is hidden
+            collections = obj.users_collection
+
+            for collection in collections:
+
+                if collection.hide_viewport:
+                    hidden = True
+                if collection.hide_render:
+                    hidden = True
+                    
+                try:
+                    if collection.name in bpy.context.scene.view_layers[0].layer_collection.children:
+                        if bpy.context.scene.view_layers[0].layer_collection.children[collection.name].hide_viewport:
+                            hidden = True
+                except:
+                    print("Error: Could not find collection: " + collection.name)
+
+
+            #Additional check for zero poly meshes
+            mesh = obj.data
+            if (len(mesh.polygons)) < 1:
+                print("Found an object with zero polygons. Skipping object: " + obj.name)
+                obj.TLM_ObjectProperties.tlm_mesh_lightmap_use = False
+
+            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use and not hidden:
+                
+                print("Preparing: UV initiation for object: " + obj.name)
+
+                if len(obj.data.vertex_colors) < 1:
+                    obj.data.vertex_colors.new(name="TLM")
+
+                if scene.TLM_SceneProperties.tlm_reset_uv:
+
+                    uv_layers = obj.data.uv_layers
+                    uv_channel = "UVMap_Lightmap"
+                    for uvlayer in uv_layers:
+                        if uvlayer.name == uv_channel:
+                            uv_layers.remove(uvlayer)
 
                 if scene.TLM_SceneProperties.tlm_apply_on_unwrap:
                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
@@ -73,6 +141,17 @@ def configure_meshes(self):
                     obj.select_set(True)
                     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
+                if scene.TLM_SceneProperties.tlm_apply_modifiers:
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print("Applying modifiers to: " + obj.name)
+                    bpy.context.view_layer.objects.active = obj
+                    obj.select_set(True)
+                    bpy.ops.object.convert(target='MESH')
+
+                for slot in obj.material_slots:
+                    material = slot.material
+                    skipIncompatibleMaterials(material)
+
                 obj.hide_select = False #Remember to toggle this back
                 for slot in obj.material_slots:
                     if "." + slot.name + '_Original' in bpy.data.materials:
@@ -80,96 +159,204 @@ def configure_meshes(self):
                             print("The material: " + slot.name + " shifted to " + "." + slot.name + '_Original')
                         slot.material = bpy.data.materials["." + slot.name + '_Original']
 
-
-    #ATLAS
+    #ATLAS UV PROJECTING
+    print("PREPARE: ATLAS")
     for atlasgroup in scene.TLM_AtlasList:
+
+        print("Adding UV Projection for Atlas group: " + atlasgroup.name)
 
         atlas = atlasgroup.name
         atlas_items = []
 
         bpy.ops.object.select_all(action='DESELECT')
-
+        
+        #Atlas: Set UV, CONVERT AND PREPARE
         for obj in bpy.context.scene.objects:
 
-            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+            if obj.TLM_ObjectProperties.tlm_atlas_pointer == atlasgroup.name:
 
-                uv_layers = obj.data.uv_layers
+                hidden = False
 
-                if not obj.TLM_ObjectProperties.tlm_use_default_channel:
-                    uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
-                else:
-                    uv_channel = "UVMap_Lightmap"
+                #We check if the object is hidden
+                if obj.hide_get():
+                    hidden = True
+                if obj.hide_viewport:
+                    hidden = True
+                if obj.hide_render:
+                    hidden = True
 
-                if not uv_channel in uv_layers:
+                #We check if the object's collection is hidden
+                collections = obj.users_collection
+
+                for collection in collections:
+
+                    if collection.hide_viewport:
+                        hidden = True
+                    if collection.hide_render:
+                        hidden = True
+                        
+                    try:
+                        if collection.name in bpy.context.scene.view_layers[0].layer_collection.children:
+                            if bpy.context.scene.view_layers[0].layer_collection.children[collection.name].hide_viewport:
+                                hidden = True
+                    except:
+                        print("Error: Could not find collection: " + collection.name)
+
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA" and not hidden:
+
+                    uv_layers = obj.data.uv_layers
+
+                    if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+                        uv_channel = obj.TLM_ObjectProperties.tlm_uv_channel
+                    else:
+                        uv_channel = "UVMap_Lightmap"
+
+                    if not uv_channel in uv_layers:
+                        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                            print("UV map created for object: " + obj.name)
+                        uvmap = uv_layers.new(name=uv_channel)
+                        uv_layers.active_index = len(uv_layers) - 1
+                    else:
+                        print("Existing UV map found for object: " + obj.name)
+                        for i in range(0, len(uv_layers)):
+                            if uv_layers[i].name == 'UVMap_Lightmap':
+                                uv_layers.active_index = i
+                                break
+
+                    atlas_items.append(obj)
+                    obj.select_set(True)
+
+                if atlasgroup.tlm_atlas_lightmap_unwrap_mode == "SmartProject":
                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                        print("UV map created for object: " + obj.name)
-                    uvmap = uv_layers.new(name=uv_channel)
-                    uv_layers.active_index = len(uv_layers) - 1
+                        print("Atlasgroup Smart Project for: " + str(atlas_items))
+                    for obj in atlas_items:
+                        print("Applying Smart Project to: ")
+                        print(obj.name + ": Active UV: " + obj.data.uv_layers[obj.data.uv_layers.active_index].name)
+
+
+                    if len(atlas_items) > 0:
+                        bpy.context.view_layer.objects.active = atlas_items[0]
+
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='SELECT')
+                    #API changes in 2.91 causes errors:
+                    if (2, 91, 0) > bpy.app.version:
+                        bpy.ops.uv.smart_project(angle_limit=45.0, island_margin=obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin, user_area_weight=1.0, use_aspect=True, stretch_to_bounds=False)
+                    else:
+                        angle = math.radians(45.0)
+                        bpy.ops.uv.smart_project(angle_limit=angle, island_margin=obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin, area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                    print("Smart project done.")
+                elif atlasgroup.tlm_atlas_lightmap_unwrap_mode == "Lightmap":
+
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES', PREF_MARGIN_DIV=atlasgroup.tlm_atlas_unwrap_margin)
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    bpy.ops.object.mode_set(mode='OBJECT')
+
+                elif atlasgroup.tlm_atlas_lightmap_unwrap_mode == "Xatlas":
+
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print("Using Xatlas on Atlas Group: " + atlas)
+
+                    for obj in atlas_items:
+                        obj.select_set(True)
+                    if len(atlas_items) > 0:
+                        bpy.context.view_layer.objects.active = atlas_items[0]
+
+                    bpy.ops.object.mode_set(mode='EDIT')
+
+                    Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj)
+
+                    bpy.ops.object.mode_set(mode='OBJECT')
+
                 else:
-                    print("Existing UV map found for object: " + obj.name)
-                    for i in range(0, len(uv_layers)):
-                        if uv_layers[i].name == 'UVMap_Lightmap':
-                            uv_layers.active_index = i
-                            break
+                    if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                        print("Copied Existing UV Map for Atlas Group: " + atlas)
 
-                atlas_items.append(obj)
-                obj.select_set(True)
+                if atlasgroup.tlm_use_uv_packer:
+                    bpy.ops.object.select_all(action='DESELECT')
+                    for obj in atlas_items:
+                        obj.select_set(True)
+                    if len(atlas_items) > 0:
+                        bpy.context.view_layer.objects.active = atlas_items[0]
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='SELECT')
 
-        if atlasgroup.tlm_atlas_lightmap_unwrap_mode == "SmartProject":
-            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                print("Atlasgroup Smart Project for: " + str(atlas_items))
-            for obj in atlas_items:
-                print(obj.name + ": Active UV: " + obj.data.uv_layers[obj.data.uv_layers.active_index].name)
+                    bpy.context.scene.UVPackerProps.uvp_padding = atlasgroup.tlm_uv_packer_padding
+                    bpy.context.scene.UVPackerProps.uvp_engine = atlasgroup.tlm_uv_packer_packing_engine
 
-            if len(atlas_items) > 0:
-                bpy.context.view_layer.objects.active = atlas_items[0]
+                    #print(x)
 
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
-            #API changes in 2.91 causes errors:
-            if (2, 91, 0) > bpy.app.version:
-                bpy.ops.uv.smart_project(angle_limit=45.0, island_margin=obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin, user_area_weight=1.0, use_aspect=True, stretch_to_bounds=False)
-            else:
-                angle = math.radians(45.0)
-                bpy.ops.uv.smart_project(angle_limit=angle, island_margin=obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin, area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.mode_set(mode='OBJECT')
-        elif atlasgroup.tlm_atlas_lightmap_unwrap_mode == "Lightmap":
+                    print("!!!!!!!!!!!!!!!!!!!!! Using UV Packer on: " + obj.name)
 
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES', PREF_MARGIN_DIV=atlasgroup.tlm_atlas_unwrap_margin)
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.mode_set(mode='OBJECT')
+                    if uv_layers.active == "UVMap_Lightmap":
+                        print("YES")
+                    else:
+                        print("NO")
+                        uv_layers.active_index = len(uv_layers) - 1
 
-        elif atlasgroup.tlm_atlas_lightmap_unwrap_mode == "Xatlas":
+                    if uv_layers.active == "UVMap_Lightmap":
+                        print("YES")
+                    else:
+                        print("NO")
+                        uv_layers.active_index = len(uv_layers) - 1
 
-            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                print("Using Xatlas on Atlas Group: " + atlas)
+                    bpy.ops.uvpackeroperator.packbtn()
 
-            for obj in atlas_items:
-                obj.select_set(True)
-            if len(atlas_items) > 0:
-                bpy.context.view_layer.objects.active = atlas_items[0]
+                    # if bpy.context.scene.UVPackerProps.uvp_engine == "OP0":
+                    #     time.sleep(1)
+                    # else:
+                    #     time.sleep(2)
+                    time.sleep(2)
 
-            bpy.ops.object.mode_set(mode='EDIT')
+                    #FIX THIS! MAKE A SEPARATE CALL. THIS IS A THREADED ASYNC
 
-            Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj)
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    bpy.ops.object.mode_set(mode='OBJECT')
 
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-        else:
-            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                print("Copied Existing UV Map for Atlas Group: " + atlas)
+                    #print(x)
 
     for obj in bpy.context.scene.objects:
         if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
                 iterNum = iterNum + 1
 
+    #OBJECT UV PROJECTING
+    print("PREPARE: OBJECTS")
     for obj in bpy.context.scene.objects:
         if obj.name in bpy.context.view_layer.objects: #Possible fix for view layer error
             if obj.type == 'MESH' and obj.name in bpy.context.view_layer.objects:
-                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                hidden = False
+
+                #We check if the object is hidden
+                if obj.hide_get():
+                    hidden = True
+                if obj.hide_viewport:
+                    hidden = True
+                if obj.hide_render:
+                    hidden = True
+
+                #We check if the object's collection is hidden
+                collections = obj.users_collection
+
+                for collection in collections:
+
+                    if collection.hide_viewport:
+                        hidden = True
+                    if collection.hide_render:
+                        hidden = True
+                        
+                    try:
+                        if collection.name in bpy.context.scene.view_layers[0].layer_collection.children:
+                            if bpy.context.scene.view_layers[0].layer_collection.children[collection.name].hide_viewport:
+                                hidden = True
+                    except:
+                        print("Error: Could not find collection: " + collection.name)
+
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use and not hidden:
 
                     objWasHidden = False
 
@@ -189,10 +376,14 @@ def configure_meshes(self):
                     active = obs.active
 
                     #Provide material if none exists
+                    print("Preprocessing material for: " + obj.name)
                     preprocess_material(obj, scene)
 
                     #UV Layer management here
                     if not obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+
+                        print("Managing layer for Obj: " + obj.name)
+
                         uv_layers = obj.data.uv_layers
 
                         if not obj.TLM_ObjectProperties.tlm_use_default_channel:
@@ -225,6 +416,7 @@ def configure_meshes(self):
                                 else:
                                     angle = math.radians(45.0)
                                     bpy.ops.uv.smart_project(angle_limit=angle, island_margin=obj.TLM_ObjectProperties.tlm_mesh_unwrap_margin, area_weight=1.0, correct_aspect=True, scale_to_bounds=False)
+
                                 bpy.ops.mesh.select_all(action='DESELECT')
                                 bpy.ops.object.mode_set(mode='OBJECT')
                             
@@ -241,6 +433,46 @@ def configure_meshes(self):
 
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("Copied Existing UV Map for object: " + obj.name)
+
+                        if obj.TLM_ObjectProperties.tlm_use_uv_packer:
+                            bpy.ops.object.select_all(action='DESELECT')
+                            obj.select_set(True)
+                            bpy.context.view_layer.objects.active = obj
+                            bpy.ops.object.mode_set(mode='EDIT')
+                            bpy.ops.mesh.select_all(action='SELECT')
+
+                            bpy.context.scene.UVPackerProps.uvp_padding = obj.TLM_ObjectProperties.tlm_uv_packer_padding
+                            bpy.context.scene.UVPackerProps.uvp_engine = obj.TLM_ObjectProperties.tlm_uv_packer_packing_engine
+
+                            #print(x)
+
+                            print("!!!!!!!!!!!!!!!!!!!!! Using UV Packer on: " + obj.name)
+
+                            if uv_layers.active == "UVMap_Lightmap":
+                                print("YES")
+                            else:
+                                print("NO")
+                                uv_layers.active_index = len(uv_layers) - 1
+
+                            if uv_layers.active == "UVMap_Lightmap":
+                                print("YES")
+                            else:
+                                print("NO")
+                                uv_layers.active_index = len(uv_layers) - 1
+
+                            bpy.ops.uvpackeroperator.packbtn()
+
+                            if bpy.context.scene.UVPackerProps.uvp_engine == "OP0":
+                                time.sleep(1)
+                            else:
+                                time.sleep(2)
+
+                            #FIX THIS! MAKE A SEPARATE CALL. THIS IS A THREADED ASYNC
+
+                            bpy.ops.mesh.select_all(action='DESELECT')
+                            bpy.ops.object.mode_set(mode='OBJECT')
+
+                            #print(x)
 
                         else:
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
@@ -286,6 +518,13 @@ def configure_meshes(self):
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("The material group is not supported!")
 
+                        if (mainNode.type == "ShaderNodeMixRGB"):
+                            if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+                                print("Mix shader found")
+
+                            #Skip for now
+                            slot.material.TLM_ignore = True
+
                         if (mainNode.type == "BSDF_PRINCIPLED"):
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                 print("BSDF_Principled")
@@ -301,6 +540,7 @@ def configure_meshes(self):
 
                             #Clamp metallic
                             if bpy.context.scene.TLM_SceneProperties.tlm_metallic_clamp == "limit":
+
                                 MainMetNodeSocket = mainNode.inputs[4]
                                 if not len(MainMetNodeSocket.links) == 0:
                                     nodes = nodetree.nodes
@@ -308,14 +548,19 @@ def configure_meshes(self):
                                     MetClampNode.location = (-200,150)
                                     MetClampNode.inputs[2].default_value = 0.9
                                     minput = mainNode.inputs[4].links[0] #Metal input socket
-                                    moutput = mainNode.inputs[4].links[0].from_node #Metal output node
-                                    nodetree.links.remove(moutput.outputs[0].links[0]) #Works
-                                    nodetree.links.new(moutput.outputs[0], MetClampNode.inputs[0]) #minput node to clamp node
-                                    nodetree.links.new(MetClampNode.outputs[0],MainMetNodeSocket) #clamp node to metinput
+                                    moutput = mainNode.inputs[4].links[0].from_socket #Output socket
+                                    
+                                    nodetree.links.remove(minput)
+
+                                    nodetree.links.new(moutput, MetClampNode.inputs[0]) #minput node to clamp node
+                                    nodetree.links.new(MetClampNode.outputs[0], MainMetNodeSocket) #clamp node to metinput
+
                                 else:
+
                                     if mainNode.inputs[4].default_value > 0.9:
                                         mainNode.inputs[4].default_value = 0.9
                             elif bpy.context.scene.TLM_SceneProperties.tlm_metallic_clamp == "zero":
+
                                 MainMetNodeSocket = mainNode.inputs[4]
                                 if not len(MainMetNodeSocket.links) == 0:
                                     nodes = nodetree.nodes
@@ -323,12 +568,17 @@ def configure_meshes(self):
                                     MetClampNode.location = (-200,150)
                                     MetClampNode.inputs[2].default_value = 0.0
                                     minput = mainNode.inputs[4].links[0] #Metal input socket
-                                    moutput = mainNode.inputs[4].links[0].from_node #Metal output node
-                                    nodetree.links.remove(moutput.outputs[0].links[0]) #Works
-                                    nodetree.links.new(moutput.outputs[0], MetClampNode.inputs[0]) #minput node to clamp node
-                                    nodetree.links.new(MetClampNode.outputs[0],MainMetNodeSocket) #clamp node to metinput
+                                    moutput = mainNode.inputs[4].links[0].from_socket #Output socket
+
+                                    nodetree.links.remove(minput)
+
+                                    nodetree.links.new(moutput, MetClampNode.inputs[0]) #minput node to clamp node
+                                    nodetree.links.new(MetClampNode.outputs[0], MainMetNodeSocket) #clamp node to metinput
                                 else:
                                     mainNode.inputs[4].default_value = 0.0
+
+                            else: #Skip
+                                pass
 
                         if (mainNode.type == "BSDF_DIFFUSE"):
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
@@ -526,13 +776,22 @@ def set_settings():
     sceneProperties = scene.TLM_SceneProperties
     engineProperties = scene.TLM_EngineProperties
     cycles.device = scene.TLM_EngineProperties.tlm_mode
-
-    if cycles.device == "GPU":
-        scene.render.tile_x = 256
-        scene.render.tile_y = 256
-    else:
-        scene.render.tile_x = 32
-        scene.render.tile_y = 32
+    
+    print(bpy.app.version)
+    
+    if (3, 0, 0) >= bpy.app.version:
+    
+        if cycles.device == "GPU":
+            scene.cycles.tile_size = 256
+        else:
+            scene.cycles.tile_size = 32
+    else:    
+        if cycles.device == "GPU":
+            scene.render.tile_x = 256
+            scene.render.tile_y = 256
+        else:
+            scene.render.tile_x = 32
+            scene.render.tile_y = 32
     
     if engineProperties.tlm_quality == "0":
         cycles.samples = 32
@@ -614,3 +873,44 @@ def store_existing(prev_container):
         selected,
         [scene.render.resolution_x, scene.render.resolution_y]
     ]
+
+def skipIncompatibleMaterials(material):
+    node_tree = material.node_tree
+    nodes = material.node_tree.nodes
+
+    #ADD OR MIX SHADER? CUSTOM/GROUP?
+    #IF Principled has emissive or transparency?
+
+    SkipMatList = ["EMISSION",
+                    "BSDF_TRANSPARENT",
+                    "BACKGROUND", 
+                    "BSDF_HAIR",
+                    "BSDF_HAIR_PRINCIPLED",
+                    "HOLDOUT",
+                    "PRINCIPLED_VOLUME",
+                    "BSDF_REFRACTION",
+                    "EEVEE_SPECULAR",
+                    "BSDF_TRANSLUCENT",
+                    "VOLUME_ABSORPTION",
+                    "VOLUME_SCATTER"]
+
+    #Find output node
+    outputNode = nodes[0]
+    if(outputNode.type != "OUTPUT_MATERIAL"):
+        for node in node_tree.nodes:
+            if node.type == "OUTPUT_MATERIAL":
+                outputNode = node
+                break
+
+    #Find mainnode
+    mainNode = outputNode.inputs[0].links[0].from_node
+
+    if mainNode.type in SkipMatList:
+        material.TLM_ignore = True
+        print("Ignored material: " + material.name)
+
+def packUVPack():
+
+
+
+    pass
