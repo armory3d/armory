@@ -29,7 +29,7 @@ class TLM_Install_OpenCV(bpy.types.Operator):
         if platform.system() == "Windows":
             pythonlibpath = os.path.join(os.path.dirname(os.path.dirname(pythonbinpath)), "lib")
         else:
-            pythonlibpath = os.path.join(os.path.dirname(os.path.dirname(pythonbinpath)), "lib", os.path.basename(pythonbinpath)[:-1])
+            pythonlibpath = os.path.join(os.path.dirname(os.path.dirname(pythonbinpath)), "lib", os.path.basename(pythonbinpath))
 
         ensurepippath = os.path.join(pythonlibpath, "ensurepip")
 

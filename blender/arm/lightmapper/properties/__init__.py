@@ -16,7 +16,9 @@ classes = [
     atlas.TLM_UL_AtlasList,
     atlas.TLM_PostAtlasListItem,
     atlas.TLM_UL_PostAtlasList,
-    image.TLM_ImageProperties
+    image.TLM_ImageProperties,
+    scene.TLM_UL_GroupList,
+    scene.TLM_GroupListItem
 ]
 
 def register():
@@ -35,6 +37,8 @@ def register():
     bpy.types.Scene.TLM_PostAtlasListItem = bpy.props.IntProperty(name="Index for my_list", default=0)
     bpy.types.Scene.TLM_PostAtlasList = bpy.props.CollectionProperty(type=atlas.TLM_PostAtlasListItem)
     bpy.types.Image.TLM_ImageProperties = bpy.props.PointerProperty(type=image.TLM_ImageProperties)
+    bpy.types.Scene.TLM_GroupListItem = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.TLM_GroupList = bpy.props.CollectionProperty(type=scene.TLM_GroupListItem)
 
     bpy.types.Material.TLM_ignore = bpy.props.BoolProperty(name="Skip material", description="Ignore material for lightmapped object", default=False)
 
@@ -54,3 +58,5 @@ def unregister():
     del bpy.types.Scene.TLM_PostAtlasListItem
     del bpy.types.Scene.TLM_PostAtlasList
     del bpy.types.Image.TLM_ImageProperties
+    del bpy.types.Scene.TLM_GroupListItem
+    del bpy.types.Scene.TLM_GroupList

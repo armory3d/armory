@@ -85,9 +85,6 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         # Lightmapping props
         if obj.type == "MESH":
             row = layout.row(align=True)
-            scene = bpy.context.scene
-            if scene == None:
-                return
             row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_use")
 
             if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
@@ -121,6 +118,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
                     row = layout.row()
                     row.prop(obj.TLM_ObjectProperties, "tlm_postpack_object")
                     row = layout.row()
+
 
                 if obj.TLM_ObjectProperties.tlm_postpack_object and obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
                     if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
@@ -161,6 +159,15 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
                         row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_median_kernel", expand=True)
                         row = layout.row(align=True)
                         row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+
+                #If UV Packer installed
+                if "UV-Packer" in bpy.context.preferences.addons.keys():
+                    row.prop(obj.TLM_ObjectProperties, "tlm_use_uv_packer")
+                    if obj.TLM_ObjectProperties.tlm_use_uv_packer:
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_padding")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_packing_engine")
 
 class ARM_PT_ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

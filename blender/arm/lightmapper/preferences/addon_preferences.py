@@ -1,12 +1,19 @@
 import bpy, platform
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
+from bpy.props import *
 from .. operators import installopencv
+from . import addon_preferences
 import importlib
 
 class TLM_AddonPreferences(AddonPreferences):
 
-    bl_idname = "thelightmapper"
+    bl_idname = __name__.split(".")[0]
+
+    tlm_ui_mode: EnumProperty(
+        items=[('simple', 'Simple', 'Simple UI'),
+               ('advanced', 'Advanced', 'Advanced UI')],
+        name='UI mode', default='simple', description='Choose UI mode')
 
     def draw(self, context):
 
@@ -14,6 +21,15 @@ class TLM_AddonPreferences(AddonPreferences):
 
         box = layout.box()
         row = box.row()
+
+        row.label(text="UI Mode")
+        row.prop(self, "tlm_ui_mode")
+        row = box.row()
+        row.label(text="Simple: Only the basic setup for Blender/Eevee baking with non-experimental features.")
+        row = box.row()
+        row.label(text="Full set of options available.")
+        row = box.row()
+
         row.label(text="OpenCV")
 
         cv2 = importlib.util.find_spec("cv2")
@@ -47,6 +63,21 @@ class TLM_AddonPreferences(AddonPreferences):
         row = box.row()
         row.label(text="UVPackmaster")
         row.label(text="Coming soon")
+
+        uvpacker_addon = False
+        for addon in bpy.context.preferences.addons.keys():
+            if addon.startswith("UV-Packer"):
+                uvpacker_addon = True
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="UV Packer")
+        if uvpacker_addon:
+            row.label(text="UV Packer installed and available")
+        else:
+            row.label(text="UV Packer not installed", icon_value=2)
+        row = box.row()
+        row.label(text="Github: https://www.uv-packer.com/blender/")
 
         texel_density_addon = False
         for addon in bpy.context.preferences.addons.keys():

@@ -74,7 +74,7 @@ class TLM_OIDN_Denoise:
                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                     print("Loaded image: " + str(loaded_image))
 
-                verbose = bpy.context.scene.TLM_SceneProperties.tlm_verbose
+                verbose = self.oidnProperties.tlm_oidn_verbose
                 affinity = self.oidnProperties.tlm_oidn_affinity
 
                 if verbose:

@@ -23,8 +23,21 @@ classes = [
     tlm.TLM_CleanBuildEnvironmentProbes,
     tlm.TLM_PrepareUVMaps,
     tlm.TLM_LoadLightmaps,
+    tlm.TLM_DisableSpecularity,
+    tlm.TLM_DisableMetallic,
+    tlm.TLM_RemoveEmptyImages,
+    tlm.TLM_AddCollectionsPost,
+    tlm.TLM_AddSelectedCollectionsPost,
+    tlm.TLM_PostAtlasSpecialsMenu,
+    tlm.TLM_AddCollections,
+    tlm.TLM_AddSelectedCollections,
+    tlm.TLM_AtlasSpecialsMenu,
+    tlm.TLM_Reset,
+    tlm.TLM_CalcTexDex,
     imagetools.TLM_ImageUpscale,
-    imagetools.TLM_ImageDownscale
+    imagetools.TLM_ImageDownscale,
+    tlm.TLM_AddGLTFNode,
+    tlm.TLM_ShiftMultiplyLinks
 
 ]
 

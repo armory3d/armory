@@ -35,10 +35,16 @@ class TLM_PostAtlasListItem(bpy.types.PropertyGroup):
         subtype='FACTOR')
 
     unwrap_modes = [('Lightmap', 'Lightmap', 'Use Blender Lightmap Pack algorithm'),
-                 ('SmartProject', 'Smart Project', 'Use Blender Smart Project algorithm')]
+                 ('SmartProject', 'Smart Project', 'Use Blender Smart Project algorithm'),
+                 ('Copy', 'Copy existing', 'Use the existing UV channel')]
 
     if "blender_xatlas" in bpy.context.preferences.addons.keys():
         unwrap_modes.append(('Xatlas', 'Xatlas', 'Use Xatlas addon packing algorithm'))
+
+    tlm_atlas_merge_samemat : BoolProperty(
+        name="Merge materials", 
+        description="Merge objects with same materials.", 
+        default=True)
 
     tlm_postatlas_lightmap_unwrap_mode : EnumProperty(
         items = unwrap_modes,
@@ -108,6 +114,30 @@ class TLM_AtlasListItem(bpy.types.PropertyGroup):
                 name = "Unwrap Mode", 
                 description="Atlas unwrapping method", 
                 default='SmartProject')
+
+    tlm_atlas_merge_samemat : BoolProperty(
+        name="Merge materials", 
+        description="Merge objects with same materials.", 
+        default=True)
+
+    tlm_use_uv_packer : BoolProperty(
+        name="Use UV Packer", 
+        description="UV Packer will be utilized after initial UV mapping for optimized packing.", 
+        default=False)
+
+    tlm_uv_packer_padding : FloatProperty(
+        name="Padding", 
+        default=2.0, 
+        min=0.0, 
+        max=100.0, 
+        subtype='FACTOR')
+
+    tlm_uv_packer_packing_engine : EnumProperty(
+        items = [('OP0', 'Efficient', 'Best compromise for speed and space usage.'),
+                ('OP1', 'High Quality', 'Slowest, but maximum space usage.')],
+                name = "Packing Engine", 
+                description="Which UV Packer engine to use.", 
+                default='OP0')
 
 class TLM_UL_AtlasList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
