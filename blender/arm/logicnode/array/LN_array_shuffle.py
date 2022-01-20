@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayShuffleNode(ArmLogicTreeNode):
-    """to do
+    """Shuffle the items in the array and return a new array
     """
     bl_idname = 'LNArrayShuffleNode'
     bl_label = 'Array Shuffle'
