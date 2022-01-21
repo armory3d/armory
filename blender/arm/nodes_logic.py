@@ -91,7 +91,7 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
         if nodetype.__doc__ is None:
             return ""
 
-        return nodetype.__doc__.split('.')[0]
+        return nodetype.__doc__.split('.')[0].strip()
 
     @classmethod
     def poll(cls, context):

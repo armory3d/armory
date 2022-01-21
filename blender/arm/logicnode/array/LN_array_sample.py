@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySampleNode(ArmLogicTreeNode):
-    """take a sample of n items from an array (boolean option to remove those items from original array)
+    """Take a sample of n items from an array (boolean option to remove those items from original array)
     """
     bl_idname = 'LNArraySampleNode'
     bl_label = 'Array Sample'
