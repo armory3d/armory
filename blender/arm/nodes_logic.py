@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 import webbrowser
 
 import bpy
@@ -244,9 +244,7 @@ class ArmOpenNodeWikiEntry(bpy.types.Operator):
                 if node.bl_idname.startswith('LN') and node.arm_version is not None:
                     wiki_id = ArmOpenNodeWikiEntry.to_wiki_id(node.__module__.rsplit('.', 2).pop())
 
-                    category = node.arm_category
-                    if category == arm_nodes.PKG_AS_CATEGORY:
-                        category = node.__module__.rsplit('.', 2)[-2].capitalize()
+                    category = arm_nodes.eval_node_category(node)
                     category_section = arm_nodes.get_category(category).category_section
                     webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{wiki_id}')
         return{'FINISHED'}
@@ -281,6 +279,47 @@ class ARM_PT_Variables(bpy.types.Panel):
             getN.ntype = ID
             setN = row.operator('arm.add_setvar_node')
             setN.ntype = ID
+
+
+class ARM_PT_NodeDevelopment(bpy.types.Panel):
+    """Sidebar panel to ease development of logic nodes."""
+    bl_label = 'Node Development'
+    bl_idname = 'ARM_PT_NodeDevelopment'
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        node = context.active_node
+        if node is not None and node.bl_idname.startswith('LN'):
+            box = layout.box()
+            box.label(text='Selected Node')
+            col = box.column(align=True)
+
+            self._draw_row(col, 'bl_idname', node.bl_idname)
+            self._draw_row(col, 'Category', arm_nodes.eval_node_category(node))
+            self._draw_row(col, 'Section', node.arm_section)
+            self._draw_row(col, 'Specific Version', node.arm_version)
+            self._draw_row(col, 'Class Version', node.__class__.arm_version)
+            self._draw_row(col, 'Is Deprecated', node.arm_is_obsolete)
+
+            layout.separator()
+            layout.operator('arm.node_replace_all')
+
+    @staticmethod
+    def _draw_row(col: bpy.types.UILayout, text: str, val: Any):
+        split = col.split(factor=0.4)
+        split.label(text=text)
+        split.label(text=str(val))
+
 
 class ARMAddVarNode(bpy.types.Operator):
     """Add a linked node of that Variable"""
@@ -367,11 +406,11 @@ class ARMAddSetVarNode(bpy.types.Operator):
         return({'FINISHED'})
 
 
-class ReplaceNodesOperator(bpy.types.Operator):
-    """Automatically replaces deprecated nodes."""
-    bl_idname = "node.replace"
+class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
+    bl_idname = "arm.node_replace_all"
     bl_label = "Replace Nodes"
     bl_description = "Replace deprecated nodes"
+    bl_options = {'REGISTER'}
 
     def execute(self, context):
         arm.logicnode.replacement.replace_all()
@@ -391,10 +430,11 @@ def register():
     bpy.utils.register_class(ArmOpenNodeHaxeSource)
     bpy.utils.register_class(ArmOpenNodePythonSource)
     bpy.utils.register_class(ArmOpenNodeWikiEntry)
-    bpy.utils.register_class(ReplaceNodesOperator)
+    bpy.utils.register_class(ARM_OT_ReplaceNodesOperator)
     bpy.utils.register_class(ARM_PT_Variables)
     bpy.utils.register_class(ARMAddVarNode)
     bpy.utils.register_class(ARMAddSetVarNode)
+    bpy.utils.register_class(ARM_PT_NodeDevelopment)
     ARM_MT_NodeAddOverride.overridden_menu = bpy.types.NODE_MT_add
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
@@ -410,7 +450,8 @@ def unregister():
     # Ensure that globals are reset if the addon is enabled again in the same Blender session
     arm_nodes.reset_globals()
 
-    bpy.utils.unregister_class(ReplaceNodesOperator)
+    bpy.utils.unregister_class(ARM_PT_NodeDevelopment)
+    bpy.utils.unregister_class(ARM_OT_ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeHaxeSource)
