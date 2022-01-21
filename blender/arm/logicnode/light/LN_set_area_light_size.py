@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SetAreaLightSizeNode(ArmLogicTreeNode):
-    """Sets the size of the given Area light."""
+    """Sets the size of the given area light."""
     bl_idname = 'LNSetAreaLightSizeNode'
     bl_label = 'Set Area Light Size'
     arm_version = 1

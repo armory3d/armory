@@ -1,8 +1,8 @@
 from arm.logicnode.arm_nodes import *
 
-class SetLightSizeNode(ArmLogicTreeNode):
-    """Sets the size of the given light."""
-    bl_idname = 'LNSetLightSizeNode'
+class SetSpotLightSizeNode(ArmLogicTreeNode):
+    """Sets the size of the given spot light."""
+    bl_idname = 'LNSetSpotLightSizeNode'
     bl_label = 'Set Spot Light Size'
     arm_version = 1
 
