@@ -408,8 +408,8 @@ class ARMAddSetVarNode(bpy.types.Operator):
 
 class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
     bl_idname = "arm.node_replace_all"
-    bl_label = "Replace Nodes"
-    bl_description = "Replace deprecated nodes"
+    bl_label = "Replace Deprecated Nodes"
+    bl_description = "Replace all deprecated nodes in the active node tree"
     bl_options = {'REGISTER'}
 
     def execute(self, context):
