@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import itertools
-from typing import Any, Generator, List, Optional, Type
+from typing import Any, Generator, List, Optional, Type, Union
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -567,8 +567,7 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
     """
     global nodes
 
-    if category == PKG_AS_CATEGORY:
-        category = node_type.__module__.rsplit('.', 2)[-2].capitalize()
+    category = eval_node_category(node_type, category)
 
     nodes.append(node_type)
     node_category = get_category(category)
@@ -586,6 +585,18 @@ def add_node(node_type: Type[bpy.types.Node], category: str, section: str = 'def
 
     node_category.register_node(node_type, section)
     node_type.bl_icon = node_category.icon
+
+
+def eval_node_category(node: Union[ArmLogicTreeNode, Type[ArmLogicTreeNode]], category='') -> str:
+    """Return the effective category name, that is the category name of
+    the given node with resolved `PKG_AS_CATEGORY`.
+    """
+    if category == '':
+        category = node.arm_category
+
+    if category == PKG_AS_CATEGORY:
+        return node.__module__.rsplit('.', 2)[-2].capitalize()
+    return category
 
 
 def deprecated(*alternatives: str, message=""):
