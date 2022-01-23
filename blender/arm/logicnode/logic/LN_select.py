@@ -16,11 +16,9 @@ class SelectNode(ArmLogicTreeNode):
 
     @option Execution Mode: Specifies the condition that determines
         what value to choose.
-
         - `From Index`: Select the value at the given index. If there is
             no value at that index, the value plugged in to the
             `Default` input is used instead (`null` if unconnected).
-
         - `From Input`: This mode uses input pairs of one action socket
             and one value socket. Depending on which action socket is
             activated, the associated value socket (the value with the

@@ -12,10 +12,8 @@ class MergeNode(ArmLogicTreeNode):
 
     @option Execution Mode: The node's behaviour if multiple inputs are
         active on the same frame.
-
         - `Once Per Input`: If multiple inputs are active on one frame, activate
             the output for each active input individually (simple forwarding).
-
         - `Once Per Frame`: If multiple inputs are active on one frame,
             trigger the output only once.
 
