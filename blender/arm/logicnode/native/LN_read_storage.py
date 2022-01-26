@@ -1,9 +1,15 @@
 from arm.logicnode.arm_nodes import *
 
-class ReadStorageNode(ArmLogicTreeNode):
-    """Reads a stored content.
 
-    @seeNode Write Storage"""
+class ReadStorageNode(ArmLogicTreeNode):
+    """Reads a value from the application's default storage file. Each
+    value is uniquely identified by a key.
+
+    For a detailed explanation of the storage system, please read the
+    documentation for the [`Write Storage`](#write-storage) node.
+
+    @seeNode Write Storage
+    """
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
     arm_section = 'file'
