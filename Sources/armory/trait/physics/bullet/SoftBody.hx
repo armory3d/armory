@@ -174,12 +174,12 @@ class SoftBody extends Trait {
 		var geom = mo.data.geom;
 
 		#if arm_deinterleaved
-		var v = Geometry.lockVB(geom.vertexBuffers[0]);
-		var n = Geometry.lockVB(geom.vertexBuffers[1]);
+		var v = geom.vertexBuffers[0].lock();
+		var n = geom.vertexBuffers[1].lock();
 		#else
-		var v = Geometry.lockVB(geom.vertexBuffer);
+		var v = geom.vertexBuffer.lock();
 		var vbPos = geom.vertexBufferMap.get("pos");
-		var v2 = vbPos != null ? Geometry.lockVB(vbPos) : null; // For shadows
+		var v2 = vbPos != null ? vbPos.lock() : null; // For shadows
 		var l = geom.structLength;
 		#end
 		var numVerts = Std.int(v.length / l);
