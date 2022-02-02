@@ -24,6 +24,7 @@ class SimpleFootIKNode extends LogicNode {
 	var leftPole: Vec4 = null; 
 	var rightPole: Vec4 = null;
 	var oldInfluence: Float = null;
+	var influenceMatch: Bool = false;
 
 	static final EPSILON = 0.01;
 
@@ -89,21 +90,25 @@ class SimpleFootIKNode extends LogicNode {
 			var influence = 1 - Math.abs(leftLoc.z - rightLoc.z) / footOffsetThreshold;
 			influence = influence < 0.0 ? 0.0 : (influence > 1.0 ? 1.0 : influence);
 
+			influenceMatch = true;
 			if(oldInfluence != null && Math.abs(oldInfluence - influence) > 0.5) {
-				oldInfluence = influence;
-				return;
+				influenceMatch = false;
 			}
 			oldInfluence = influence;
 
 			//Perform IK on left leg
-			leftLoc.z = leftHitPoint + footOffset;
-			animation.solveTwoBoneIKBlend(animMats, leftBone.parent, leftLoc, leftPole, 
-										  0.0, influence, layerMask, 0.1);
+			if(influenceMatch || (leftLoc.z < (leftHitPoint + footOffset))) {
+				leftLoc.z = leftHitPoint + footOffset;
+				animation.solveTwoBoneIKBlend(animMats, leftBone.parent, leftLoc, leftPole, 
+											  0.0, influence, layerMask, 0.1);
+			}
 
 			//Perform IK on right leg
-			rightLoc.z = rightHitPoint + footOffset;
-			animation.solveTwoBoneIKBlend(animMats, rightBone.parent, rightLoc, rightPole, 
-										  0.0, influence, layerMask, 0.1);
+			if(influenceMatch || (rightLoc.z < (rightHitPoint + footOffset))) {
+				rightLoc.z = rightHitPoint + footOffset;
+				animation.solveTwoBoneIKBlend(animMats, rightBone.parent, rightLoc, rightPole, 
+											  0.0, influence, layerMask, 0.1);
+			}
 		}
 	}
 
