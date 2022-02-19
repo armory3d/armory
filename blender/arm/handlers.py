@@ -106,9 +106,9 @@ def send_operator(op):
 
 def always() -> float:
     # Force ui redraw
-    if state.redraw_ui and context_screen is not None:
-        for area in context_screen.areas:
-            if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+    if state.redraw_ui:
+        for area in bpy.context.screen.areas:
+            if area.type in ('NODE_EDITOR', 'PROPERTIES', 'VIEW_3D'):
                 area.tag_redraw()
         state.redraw_ui = False
     # TODO: depsgraph.updates only triggers material trees
