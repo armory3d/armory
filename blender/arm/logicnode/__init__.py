@@ -90,7 +90,7 @@ def init_nodes(base_path=__path__, base_package=__package__, subpackages_only=Fa
                 _module = importlib.reload(sys.modules[module_name])
 
             for name, obj in inspect.getmembers(_module, inspect.isclass):
-                if name == "ArmLogicTreeNode":
+                if name in ("ArmLogicTreeNode", "ArmLogicVariableNodeMixin"):
                     continue
                 if issubclass(obj, arm_nodes.ArmLogicTreeNode):
                     obj.on_register()

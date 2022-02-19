@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class ObjectNode(ArmLogicTreeNode):
+
+class ObjectNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores the given object as a variable."""
     bl_idname = 'LNObjectNode'
     bl_label = 'Object'
@@ -21,3 +22,6 @@ class ObjectNode(ArmLogicTreeNode):
             obj_name = '_self'
 
         return f'{self.bl_label}: {obj_name}'
+
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        self.inputs[0].default_value_raw = master_node.inputs[0].default_value_raw

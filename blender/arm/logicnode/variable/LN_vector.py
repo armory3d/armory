@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class VectorNode(ArmLogicTreeNode):
+
+class VectorNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores the given 3D vector as a variable."""
     bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
@@ -12,3 +13,7 @@ class VectorNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Z')
 
         self.add_output('ArmVectorSocket', 'Vector', is_var=True)
+
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        for i in range(len(self.inputs)):
+            self.inputs[i].default_value_raw = master_node.inputs[i].get_default_value()
