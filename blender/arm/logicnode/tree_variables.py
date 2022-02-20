@@ -70,7 +70,6 @@ class ARM_PT_Variables(bpy.types.Panel):
         if len(tree.arm_treevariableslist) > 0:
             selected_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
 
-            layout.separator()
             box = layout.box()
             box.label(text="Selected Variable:")
             master_node = arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.get_master_node(tree, selected_item.name)
