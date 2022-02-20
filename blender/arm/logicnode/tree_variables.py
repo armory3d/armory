@@ -3,18 +3,18 @@ from bpy.props import *
 
 import arm.log
 import arm.make_state
+import arm.node_utils
 import arm.props_traits_props
 import arm.utils
 import arm.logicnode.arm_nodes
-import arm.logicnode.replacement
 
 if arm.is_reload(__name__):
     arm.log = arm.reload_module(arm.log)
     arm.make_state = arm.reload_module(arm.make_state)
+    arm.node_utils = arm.reload_module(arm.node_utils)
     arm.props_traits_props = arm.reload_module(arm.props_traits_props)
     arm.utils = arm.reload_module(arm.utils)
     arm.logicnode.arm_nodes = arm.reload_module(arm.logicnode.arm_nodes)
-    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
 else:
     arm.enable_reload(__name__)
 
@@ -453,7 +453,7 @@ def node_compat_sdk2203():
                 for node in tv_nodes[logic_id]:
                     if node.bl_idname != var_type:
                         newnode = tree.nodes.new(var_type)
-                        arm.logicnode.replacement.copy_basic_node_props(from_node=node, to_node=newnode)
+                        arm.node_utils.copy_basic_node_props(from_node=node, to_node=newnode)
 
                         # Connect outputs as good as possible
                         for i in range(min(len(node.outputs), len(newnode.outputs))):
