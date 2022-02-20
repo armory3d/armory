@@ -35,19 +35,19 @@ class ARM_PT_Variables(bpy.types.Panel):
 
         tree: bpy.types.NodeTree = context.space_data.node_tree
 
-        num_prop_rows = max(len(tree.arm_treevariableslist), 6)
+        node = context.active_node
+        if node is None or node.arm_logic_id == '':
+            layout.operator('arm.variable_promote_node', icon='PLUS')
+        else:
+            layout.operator('arm.variable_node_make_local', icon='TRIA_DOWN_BAR')
+
         row = layout.row(align=True)
         col = row.column(align=True)
 
+        num_prop_rows = max(len(tree.arm_treevariableslist), 6)
         col.template_list('ARM_UL_TreeVarList', '', tree, 'arm_treevariableslist', tree, 'arm_treevariableslist_index', rows=num_prop_rows)
 
-        node = context.active_node
-        if node is not None and node.bl_idname.startswith('LN'):
-            if node.arm_logic_id == '':
-                col.operator('arm.variable_promote_node', icon='PLUS')
-            else:
-                col.operator('arm.variable_node_make_local', icon='TRIA_DOWN_BAR')
-            col.operator('arm.variable_assign_to_node', icon='NODE')
+        col.operator('arm.variable_assign_to_node', icon='NODE')
 
         if len(tree.arm_treevariableslist) > 0:
             selected_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
@@ -168,7 +168,7 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
     bl_label = "Assign To Node"
     bl_description = (
             'Assign the selected tree variable to the active variable node. '
-            'The variable node must have the same type as the variable.'
+            'The variable node must have the same type as the variable'
     )
 
     @classmethod
@@ -230,7 +230,7 @@ class ARM_OT_TreeVariableListMoveItem(bpy.types.Operator):
 
 
 class ARM_OT_AddVarGetterNode(bpy.types.Operator):
-    """Add a node to get the value of this variable"""
+    """Add a node to get the value of the selected tree variable"""
     bl_idname = 'arm.add_var_node'
     bl_label = 'Add Getter'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
@@ -278,7 +278,7 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
 
 class ARM_OT_AddVarSetterNode(bpy.types.Operator):
-    """Add a node to set the value of this variable"""
+    """Add a node to set the value of the selected tree variable"""
     bl_idname = 'arm.add_setvar_node'
     bl_label = 'Add Setter'
     bl_options = {'GRAB_CURSOR', 'BLOCKING'}
