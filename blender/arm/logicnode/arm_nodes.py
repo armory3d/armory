@@ -307,11 +307,10 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
 
         if self.arm_logic_id != '':
             target_tree = self.get_tree()
+            lst = target_tree.arm_treevariableslist
 
             self.is_master_node = False  # Ignore this node in get_master_node below
             if self.__class__.get_master_node(target_tree, self.arm_logic_id) is None:
-                lst = target_tree.arm_treevariableslist
-
                 var_item = lst.add()
                 var_item['_name'] = arm.utils.unique_str_for_list(
                     items=lst, name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
@@ -323,6 +322,11 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                 arm.make_state.redraw_ui = True
 
                 self.is_master_node = True
+            else:
+                for item in lst:
+                    if item.name == self.arm_logic_id:
+                        self.color = item.color
+                        break
 
         super().copy(src_node)
 
