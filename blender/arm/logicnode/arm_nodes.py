@@ -375,6 +375,12 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                 row.label(text=line)
                 row.scale_y = 0.4
 
+    def draw_label(self) -> str:
+        if self.arm_logic_id == '':
+            return self.bl_label
+        else:
+            return f'TV: {self.arm_logic_id}'
+
     @staticmethod
     def choose_new_master_node(tree: bpy.types.NodeTree, logic_id: str) -> bool:
         """Choose a new master node from the remaining replica nodes.

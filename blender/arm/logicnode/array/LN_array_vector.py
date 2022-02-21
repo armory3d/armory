@@ -27,9 +27,9 @@ class VectorArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
 
     def draw_label(self) -> str:
         if len(self.inputs) == 0:
-            return self.bl_label
+            return super().draw_label()
 
-        return f'{self.bl_label}: [{len(self.inputs)}]'
+        return f'{super().draw_label()} [{len(self.inputs)}]'
 
     def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
         self.inputs.clear()
