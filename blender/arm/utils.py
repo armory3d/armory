@@ -4,6 +4,7 @@ import json
 import locale
 import os
 import platform
+import random
 import re
 import shlex
 import subprocess
@@ -88,6 +89,11 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
+
+
+def get_random_color_rgb() -> list[float]:
+    """Return a random RGB color with values in range [0, 1]."""
+    return [random.random(), random.random(), random.random()]
 
 
 def is_livepatch_enabled():

@@ -15,6 +15,7 @@ import arm  # we cannot import arm.livepatch here or we have a circular import
 from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
+import arm.utils
 
 if arm.is_reload(__name__):
     arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
@@ -22,6 +23,7 @@ if arm.is_reload(__name__):
     arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
     from arm.logicnode.replacement import NodeReplacement
     arm.node_utils = arm.reload_module(arm.node_utils)
+    arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
 
@@ -315,6 +317,7 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                     items=lst, name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
                 )
                 var_item.type = self.bl_idname
+                var_item.color = arm.utils.get_random_color_rgb()
 
                 target_tree.arm_treevariableslist_index = len(lst) - 1
                 arm.make_state.redraw_ui = True

@@ -118,6 +118,8 @@ class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
 
         node.is_master_node = True
         node.arm_logic_id = var_item.name
+        node.use_custom_color = True
+        node.color = var_item.color
 
         arm.make_state.redraw_ui = True
 
@@ -158,6 +160,8 @@ class ARM_OT_TreeVariableMakeLocalNode(bpy.types.Operator):
     def execute(self, context):
         node: arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin = context.active_node
         node.make_local()
+        node.color = [0.608, 0.608, 0.608]  # default color
+        node.use_custom_color = False
 
         return {'FINISHED'}
 
@@ -192,7 +196,11 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
     def execute(self, context):
         node: arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin = context.active_node
         tree: bpy.types.NodeTree = context.space_data.node_tree
-        node.arm_logic_id = tree.arm_treevariableslist[tree.arm_treevariableslist_index].name
+
+        var_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
+        node.arm_logic_id = var_item.name
+        node.use_custom_color = True
+        node.color = var_item.color
 
         return {'FINISHED'}
 
@@ -264,14 +272,14 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     @staticmethod
     def create_getter_node(context, node_type: str, node_id: str) -> arm.logicnode.arm_nodes.ArmLogicTreeNode:
+        tree: bpy.types.NodeTree = context.space_data.node_tree
         nodes = context.space_data.node_tree.nodes
 
         node = nodes.new(node_type)
         node.location = context.space_data.cursor_location
         node.arm_logic_id = node_id
-        node.label = "GET " + node_id
         node.use_custom_color = True
-        node.color = (0.22, 0.89, 0.5)
+        node.color = tree.arm_treevariableslist[tree.arm_treevariableslist_index].color
 
         return node
 
@@ -300,8 +308,8 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
     def modal(self, context, event):
         if event.type == 'MOUSEMOVE':
             self.setNodeRef.location = context.space_data.cursor_location
-            self.nodeRef.location[0] = context.space_data.cursor_location[0]+10
-            self.nodeRef.location[1] = context.space_data.cursor_location[1]-10
+            self.nodeRef.location[0] = context.space_data.cursor_location[0]
+            self.nodeRef.location[1] = context.space_data.cursor_location[1] - self.setNodeRef.height - 17
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
@@ -310,17 +318,13 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
         nodes = context.space_data.node_tree.nodes
 
         node = ARM_OT_AddVarGetterNode.create_getter_node(context, self.node_type, self.node_id)
-        node.bl_width_min = 3
-        node.width = 5
-        node.bl_width_min = 100
 
         setter_node = nodes.new("LNSetVariableNode")
-        setter_node.label = "SET " + self.node_id
         setter_node.location = context.space_data.cursor_location
-        setter_node.use_custom_color = True
-        setter_node.color = (0.49, 0.2, 1.0)
+
         links = context.space_data.node_tree.links
         links.new(node.outputs[0], setter_node.inputs[1])
+
         global nodeRef
         self.nodeRef = node
         global setNodeRef
@@ -350,6 +354,17 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
     def _get_name(self) -> str:
         return self.get('_name', 'Untitled')
 
+    def _update_color(self, context):
+        space = context.space_data
+
+        # Can be None if color is set before tree is initialized (upon
+        # updating old files to newer SDK for example)
+        if space is not None:
+            for node in space.node_tree.nodes:
+                if node.arm_logic_id == self.name:
+                    node.use_custom_color = True
+                    node.color = self.color
+
     name: StringProperty(
         name="Name",
         description="The name of this variable",
@@ -364,6 +379,17 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
         default="Int"
     )
 
+    color: FloatVectorProperty(
+        name="Color",
+        description="The color of the nodes that link to this tree variable",
+        subtype="COLOR",
+        default=[1.0, 1.0, 1.0],
+        update=_update_color,
+        size=3,
+        min=0,
+        max=1
+    )
+
     @classmethod
     def create_new(cls, tree: bpy.types.NodeTree, item_name: str, item_type: str) -> 'ARM_PG_TreeVarListItem':
         lst = tree.arm_treevariableslist
@@ -373,6 +399,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
             items=lst, name_attr='name', wanted_name=item_name, ignore_item=var_item
         )
         var_item.type = item_type
+        var_item.color = arm.utils.get_random_color_rgb()
 
         tree.arm_treevariableslist_index = len(lst) - 1
         arm.make_state.redraw_ui = True
@@ -384,7 +411,10 @@ class ARM_UL_TreeVarList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item: ARM_PG_TreeVarListItem, icon, active_data, active_propname, index):
         node_type = arm.utils.type_name_to_type(item.type).bl_label
 
-        row = layout.row()
+        row = layout.row(align=True)
+        _row = row.row()
+        _row.ui_units_x = 1.0
+        _row.prop(item, 'color', text='')
         row.prop(item, 'name', text='', emboss=False)
         row.label(text=node_type)
 
@@ -448,7 +478,7 @@ def node_compat_sdk2203():
             for logic_id in tv_nodes.keys():
                 var_type = tv_types[logic_id]
 
-                ARM_PG_TreeVarListItem.create_new(tree, logic_id, var_type)
+                var_item = ARM_PG_TreeVarListItem.create_new(tree, logic_id, var_type)
 
                 for node in tv_nodes[logic_id]:
                     if node.bl_idname != var_type:
@@ -466,6 +496,9 @@ def node_compat_sdk2203():
 
                     # Hide sockets
                     node.on_logic_id_change()
+
+                    node.use_custom_color = True
+                    node.color = var_item.color
 
                 arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.choose_new_master_node(tree, logic_id)
 
