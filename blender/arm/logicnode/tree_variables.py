@@ -57,10 +57,10 @@ class ARM_PT_Variables(bpy.types.Panel):
             sub_row.alignment = 'EXPAND'
             op = sub_row.operator('arm.add_var_node')
             op.node_id = selected_item.name
-            op.node_type = selected_item.type
+            op.node_type = selected_item.node_type
             op = sub_row.operator('arm.add_setvar_node')
             op.node_id = selected_item.name
-            op.node_type = selected_item.type
+            op.node_type = selected_item.node_type
 
         col = row.column(align=True)
         col.enabled = len(tree.arm_treevariableslist) > 1
@@ -71,7 +71,7 @@ class ARM_PT_Variables(bpy.types.Panel):
             selected_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
 
             box = layout.box()
-            box.label(text="Selected Variable:")
+            box.label(text='Selected Variable:')
             master_node = arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.get_master_node(tree, selected_item.name)
             master_node.draw_content(context, box)
             for inp in master_node.inputs:
@@ -81,13 +81,13 @@ class ARM_PT_Variables(bpy.types.Panel):
 
 class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
     bl_idname = 'arm.variable_promote_node'
-    bl_label = "New Var From Node"
+    bl_label = 'New Var From Node'
     bl_description = 'Create a tree variable from the active node and promote it to a tree variable node'
 
     var_name: StringProperty(
-        name="Name",
-        description="Name of the new tree variable",
-        default="Untitled"
+        name='Name',
+        description='Name of the new tree variable',
+        default='Untitled'
     )
 
     @classmethod
@@ -130,12 +130,12 @@ class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
         row = layout.row()
         row.scale_y = 1.3
         row.activate_init = True
-        row.prop(self, "var_name")
+        row.prop(self, 'var_name')
 
 
 class ARM_OT_TreeVariableMakeLocalNode(bpy.types.Operator):
     bl_idname = 'arm.variable_node_make_local'
-    bl_label = "Make Node Local"
+    bl_label = 'Make Node Local'
     bl_description = (
         'Remove the reference to the tree variable from the active node. '
         'If the active node is the only node that links to the selected '
@@ -168,7 +168,7 @@ class ARM_OT_TreeVariableMakeLocalNode(bpy.types.Operator):
 
 class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
     bl_idname = 'arm.variable_assign_to_node'
-    bl_label = "Assign To Node"
+    bl_label = 'Assign To Node'
     bl_description = (
             'Assign the selected tree variable to the active variable node. '
             'The variable node must have the same type as the variable'
@@ -188,7 +188,7 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
             return False
 
         # Only assign variables to nodes of the correct type
-        if node.bl_idname != tree.arm_treevariableslist[tree.arm_treevariableslist_index].type:
+        if node.bl_idname != tree.arm_treevariableslist[tree.arm_treevariableslist_index].node_type:
             return False
 
         return True
@@ -206,14 +206,14 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
 
 
 class ARM_OT_TreeVariableListMoveItem(bpy.types.Operator):
-    bl_idname = "arm_treevariableslist.move_item"
-    bl_label = "Move"
-    bl_description = "Move an item in the list"
+    bl_idname = 'arm_treevariableslist.move_item'
+    bl_label = 'Move'
+    bl_description = 'Move an item in the list'
 
     direction: EnumProperty(
         items=(
-            ('UP', 'Up', ""),
-            ('DOWN', 'Down', "")
+            ('UP', 'Up', ''),
+            ('DOWN', 'Down', '')
         )
     )
 
@@ -244,7 +244,7 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     node_id: StringProperty()
     node_type: StringProperty()
-    nodeRef = None
+    getter_node_ref = None
 
     @classmethod
     def poll(cls, context):
@@ -258,16 +258,13 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     def modal(self, context, event):
         if event.type == 'MOUSEMOVE':
-            self.nodeRef.location = context.space_data.cursor_location
+            self.getter_node_ref.location = context.space_data.cursor_location
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        node = self.create_getter_node(context, self.node_type, self.node_id)
-
-        global nodeRef
-        self.nodeRef = node
+        self.getter_node_ref = self.create_getter_node(context, self.node_type, self.node_id)
         return {'FINISHED'}
 
     @staticmethod
@@ -292,8 +289,8 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
 
     node_id: StringProperty()
     node_type: StringProperty()
-    nodeRef = None
-    setNodeRef = None
+    getter_node_ref = None
+    setter_node_ref = None
 
     @classmethod
     def poll(cls, context):
@@ -307,9 +304,9 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
 
     def modal(self, context, event):
         if event.type == 'MOUSEMOVE':
-            self.setNodeRef.location = context.space_data.cursor_location
-            self.nodeRef.location[0] = context.space_data.cursor_location[0]
-            self.nodeRef.location[1] = context.space_data.cursor_location[1] - self.setNodeRef.height - 17
+            self.setter_node_ref.location = context.space_data.cursor_location
+            self.getter_node_ref.location[0] = context.space_data.cursor_location[0]
+            self.getter_node_ref.location[1] = context.space_data.cursor_location[1] - self.setter_node_ref.height - 17
         elif event.type == 'LEFTMOUSE':  # Confirm
             return {'FINISHED'}
         return {'RUNNING_MODAL'}
@@ -319,16 +316,14 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
 
         node = ARM_OT_AddVarGetterNode.create_getter_node(context, self.node_type, self.node_id)
 
-        setter_node = nodes.new("LNSetVariableNode")
+        setter_node = nodes.new('LNSetVariableNode')
         setter_node.location = context.space_data.cursor_location
 
         links = context.space_data.node_tree.links
         links.new(node.outputs[0], setter_node.inputs[1])
 
-        global nodeRef
-        self.nodeRef = node
-        global setNodeRef
-        self.setNodeRef = setter_node
+        self.getter_node_ref = node
+        self.setter_node_ref = setter_node
         return {'FINISHED'}
 
 
@@ -366,23 +361,23 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
                     node.color = self.color
 
     name: StringProperty(
-        name="Name",
-        description="The name of this variable",
-        default="Untitled",
+        name='Name',
+        description='The name of this variable',
+        default='Untitled',
         get=_get_name,
         set=_set_name
     )
 
-    type: StringProperty(
-        name="Display Type",
-        description="The displayed type of this property",
-        default="Int"
+    node_type: StringProperty(
+        name='Type',
+        description='The type of this variable/the bl_idname of the node\'s that may use this variable',
+        default='LNIntegerNode'
     )
 
     color: FloatVectorProperty(
-        name="Color",
-        description="The color of the nodes that link to this tree variable",
-        subtype="COLOR",
+        name='Color',
+        description='The color of the nodes that link to this tree variable',
+        subtype='COLOR',
         default=[1.0, 1.0, 1.0],
         update=_update_color,
         size=3,
@@ -398,7 +393,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
         var_item['_name'] = arm.utils.unique_str_for_list(
             items=lst, name_attr='name', wanted_name=item_name, ignore_item=var_item
         )
-        var_item.type = item_type
+        var_item.node_type = item_type
         var_item.color = arm.utils.get_random_color_rgb()
 
         tree.arm_treevariableslist_index = len(lst) - 1
@@ -409,7 +404,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
 
 class ARM_UL_TreeVarList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item: ARM_PG_TreeVarListItem, icon, active_data, active_propname, index):
-        node_type = arm.utils.type_name_to_type(item.type).bl_label
+        node_type = arm.utils.type_name_to_type(item.node_type).bl_label
 
         row = layout.row(align=True)
         _row = row.row()
@@ -426,7 +421,7 @@ def on_update_node_logic_id(node: arm.logicnode.arm_nodes.ArmLogicTreeNode, cont
 def node_compat_sdk2203():
     """Replace old arm_logic_id system with tree variable system."""
     for tree in bpy.data.node_groups:
-        if tree.bl_idname == "ArmLogicTreeType":
+        if tree.bl_idname == 'ArmLogicTreeType':
             # All tree variable nodes
             tv_nodes: dict[str, list[arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin]] = {}
 
@@ -521,14 +516,14 @@ def register():
     register_classes()
 
     bpy.types.Node.arm_logic_id = StringProperty(
-        name="ID",
-        description="Nodes with equal identifier share data",
+        name='ID',
+        description='Nodes with equal identifier share data',
         default='',
         update=on_update_node_logic_id
     )
 
     bpy.types.NodeTree.arm_treevariableslist = CollectionProperty(type=ARM_PG_TreeVarListItem)
-    bpy.types.NodeTree.arm_treevariableslist_index = IntProperty(name="Index for arm_variableslist", default=0)
+    bpy.types.NodeTree.arm_treevariableslist_index = IntProperty(name='Index for arm_variableslist', default=0)
 
 
 def unregister():

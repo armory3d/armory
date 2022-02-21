@@ -316,7 +316,7 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                 var_item['_name'] = arm.utils.unique_str_for_list(
                     items=lst, name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
                 )
-                var_item.type = self.bl_idname
+                var_item.node_type = self.bl_idname
                 var_item.color = arm.utils.get_random_color_rgb()
 
                 target_tree.arm_treevariableslist_index = len(lst) - 1
