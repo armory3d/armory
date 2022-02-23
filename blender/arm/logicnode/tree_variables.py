@@ -75,8 +75,8 @@ class ARM_PT_Variables(bpy.types.Panel):
             master_node = arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.get_master_node(tree, selected_item.name)
             master_node.draw_content(context, box)
             for inp in master_node.inputs:
-                if hasattr(inp, 'default_value_raw'):
-                    box.prop(inp, 'default_value_raw', text=inp.name)
+                if hasattr(inp, 'draw'):
+                    inp.draw(context, box, master_node, inp.label if inp.label is not None else inp.name)
 
 
 class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
