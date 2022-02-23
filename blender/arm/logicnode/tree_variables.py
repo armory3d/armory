@@ -197,11 +197,13 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
         node: arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin = context.active_node
         tree: bpy.types.NodeTree = context.space_data.node_tree
 
+        var_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
+
         # Make node local first to ensure the old tree variable (if
         # linked) is notified that the node is no longer linked
-        node.make_local()
+        if node.arm_logic_id != var_item.name:
+            node.make_local()
 
-        var_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
         node.arm_logic_id = var_item.name
         node.use_custom_color = True
         node.color = var_item.color

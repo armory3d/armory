@@ -288,6 +288,10 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                     tree.arm_treevariableslist.remove(idx)
                     break
 
+            max_index = len(tree.arm_treevariableslist) - 1
+            if tree.arm_treevariableslist_index > max_index:
+                tree.arm_treevariableslist_index = max_index
+
         self.arm_logic_id = ''
 
     def free(self):
