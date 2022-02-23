@@ -207,6 +207,8 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
         node.arm_logic_id = var_item.name
         node.use_custom_color = True
         node.color = var_item.color
+        master_node = arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.get_master_node(tree, node.arm_logic_id)
+        master_node._synchronize_to_replicas(master_node)
 
         return {'FINISHED'}
 
