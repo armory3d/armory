@@ -14,7 +14,7 @@ import iron.object.Object;
 class OneShotActionNode extends LogicNode {
 
 	public var property0: String;
-	public var actionParam: Animparams;
+	public var sampler: ActionSampler;
 	var object: Object;
 	#if arm_skin
 	var animationBone: BoneAnimation;
@@ -61,25 +61,25 @@ class OneShotActionNode extends LogicNode {
 		if( animationObject == null){
 			#if arm_skin
 			animationBone.deRegisterAction(property0);
-			actionParam = new Animparams(inputs[4].get(), 1.0, false);
-			animationBone.registerAction(property0, actionParam);
-			actionParam.paused = true;
-			totalFrames = animationBone.getTotalFrames(actionParam) - 1;
+			sampler = new ActionSampler(inputs[4].get(), 1.0, false);
+			animationBone.registerAction(property0, sampler);
+			sampler.paused = true;
+			totalFrames = animationBone.getTotalFrames(sampler) - 1;
 			#end
 		}
 		else {
 			animationObject.deRegisterAction(property0);
-			actionParam = new Animparams(inputs[4].get(), 1.0, false);
-			animationObject.registerAction(property0, actionParam);
-			actionParam.paused = true;
-			totalFrames = animationObject.getTotalFrames(actionParam) - 1;
+			sampler = new ActionSampler(inputs[4].get(), 1.0, false);
+			animationObject.registerAction(property0, sampler);
+			sampler.paused = true;
+			totalFrames = animationObject.getTotalFrames(sampler) - 1;
 		}
 	}
 
 	public function blendObject(animMats: Map<String, FastFloat>) {
 
 		inputs[3].get()(animMats);
-		animationObject.sampleAction(actionParam, tempMats);
+		animationObject.sampleAction(sampler, tempMats);
 		animationObject.blendActionObject(animMats, tempMats, animMats, factor);
 	}
 
@@ -95,12 +95,12 @@ class OneShotActionNode extends LogicNode {
 			}
 			if(factor > 0.95) {
 
-				animationBone.sampleAction(actionParam, animMats);
+				animationBone.sampleAction(sampler, animMats);
 				return;
 			}
 		}
 		inputs[3].get()(animMats);
-		animationBone.sampleAction(actionParam, tempMats);
+		animationBone.sampleAction(sampler, tempMats);
 		animationBone.blendAction(animMats, tempMats, animMats, factor, boneLayer);
 	
 	}
@@ -125,7 +125,7 @@ class OneShotActionNode extends LogicNode {
 			if(! restart && ! oneShotDone) {
 				return;
 			}
-			actionParam.restartAction();
+			sampler.restartAction();
 			tweenIn();
 		}
 
@@ -154,12 +154,12 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	function tweenOut() {
-		if(actionParam.offset >= totalFrames){
+		if(sampler.offset >= totalFrames){
 			done();
 			return;
 		}
 		var blendOut = inputs[7].get();
-		if(actionParam.offset >= blendOutFrame){
+		if(sampler.offset >= blendOutFrame){
 			if(anim != null){
 				Tween.stop(anim);
 			}
@@ -180,8 +180,8 @@ class OneShotActionNode extends LogicNode {
 			Tween.stop(anim);
 		}
 		oneShotDone = true;
-		actionParam.setFrameOffset(0);
-		actionParam.paused = true;
+		sampler.setFrameOffset(0);
+		sampler.paused = true;
 		factor = 0.0;
 	}
 

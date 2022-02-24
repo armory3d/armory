@@ -13,7 +13,7 @@ import iron.math.Mat4;
 class AnimActionNode extends LogicNode {
 
 	public var property0: String;
-	public var actionParam: Animparams;
+	public var sampler: ActionSampler;
 	var object: Object;
 	#if arm_skin
 	var animationBone: BoneAnimation;
@@ -29,19 +29,19 @@ class AnimActionNode extends LogicNode {
 	}
 
 	function init(){
-		actionParam = new Animparams(inputs[1].get(), 1.0, inputs[2].get());
+		sampler = new ActionSampler(inputs[1].get(), 1.0, inputs[2].get());
 		object = inputs[0].get();
 		assert(Error, object != null, "The object input not be null");
 		if(object.animation == null) {
 			#if arm_skin
 			animationBone = object.getParentArmature(object.name);
-			animationBone.registerAction(property0, actionParam);
+			animationBone.registerAction(property0, sampler);
 			func = sampleBonaAction;
 			#end
 		}
 		else{
 			animationObject = cast(object.animation, ObjectAnimation);
-			animationObject.registerAction(property0, actionParam);
+			animationObject.registerAction(property0, sampler);
 			func = sampleObjectAction;
 		}
 		
@@ -51,12 +51,12 @@ class AnimActionNode extends LogicNode {
 
 	#if arm_skin
 	public function sampleBonaAction(animMats: Array<Mat4>){
-		animationBone.sampleAction(actionParam, animMats);
+		animationBone.sampleAction(sampler, animMats);
 	}
 	#end
 
 	public function sampleObjectAction(animMats: Map<String, FastFloat>) {
-		animationObject.sampleAction(actionParam, animMats);
+		animationObject.sampleAction(sampler, animMats);
 	}
 
 	override function get(from: Int): Dynamic {

@@ -7,7 +7,7 @@ class AnimationStateNode extends LogicNode {
 
 	var object: Object;
 	var animation: Animation;
-	var action: Animparams;
+	var sampler: ActionSampler;
 	public var property0: String;
 
 	public function new(tree: LogicTree) {
@@ -21,9 +21,9 @@ class AnimationStateNode extends LogicNode {
 		animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
 		assert(Error, animation != null, "Object does not have animations");
-		action = animation.activeActions.get(property0);
-		if(action == null) return;
-		action.notifyOnComplete(function (){runOutput(3);});
+		sampler = animation.activeActions.get(property0);
+		if(sampler == null) return;
+		sampler.notifyOnComplete(function (){runOutput(3);});
 		tree.removeUpdate(init);
 		
 	}
