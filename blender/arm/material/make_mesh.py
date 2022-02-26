@@ -384,7 +384,8 @@ def make_forward_mobile(con_mesh):
         frag.add_uniform('vec3 pointCol', '_pointColor')
         if '_Spot' in wrd.world_defs:
             frag.add_uniform('vec3 spotDir', link='_spotDirection')
-            frag.add_uniform('vec2 spotData', link='_spotData')
+            frag.add_uniform('vec3 spotRight', link='_spotRight')
+            frag.add_uniform('vec4 spotData', link='_spotData')
         frag.write('float visibility = 1.0;')
         frag.write('vec3 ld = pointPos - wposition;')
         frag.write('vec3 l = normalize(ld);')
@@ -693,7 +694,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec3 pointCol', link='_pointColor')
         if '_Spot' in wrd.world_defs:
             frag.add_uniform('vec3 spotDir', link='_spotDirection')
-            frag.add_uniform('vec2 spotData', link='_spotData')
+            frag.add_uniform('vec3 spotRight', link='_spotRight')
+            frag.add_uniform('vec4 spotData', link='_spotData')
         if is_shadows:
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
@@ -709,7 +711,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
-            frag.write('  , true, spotData.x, spotData.y, spotDir')
+            frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         frag.write(');')

@@ -7,6 +7,9 @@
 #ifdef _Clusters
 #include "std/clusters.glsl"
 #endif
+#ifdef _Spot
+#include "std/light_common.glsl"
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D snoise;
@@ -14,7 +17,7 @@ uniform sampler2D snoise;
 #ifdef _Clusters
 uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
-	uniform vec4 lightsArraySpot[maxLights];
+	uniform vec4 lightsArraySpot[maxLights * 2];
 	#endif
 uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
@@ -70,7 +73,8 @@ uniform vec3 pointCol;
 	#endif
 	#ifdef _Spot
 	uniform vec3 spotDir;
-	uniform vec2 spotData;
+	uniform vec3 spotRight;
+	uniform vec4 spotData;
 	#endif
 #endif
 
@@ -120,10 +124,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	#ifdef _Spot
 	vec4 lPos = LWVPSpot[0] * vec4(curPos, 1.0);
 	visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
-	float spotEffect = dot(spotDir, normalize(pointPos - curPos)); // lightDir
-	if (spotEffect < spotData.x) { // x - cutoff, y - cutoff - exponent
-		visibility *= smoothstep(spotData.y, spotData.x, spotEffect);
-	}
+	visibility *= spotlightMask(normalize(pointPos - curPos), spotDir, spotRight, spotData.zw, spotData.x, spotData.y);
 	#else
 	vec3 ld = pointPos - curPos;
 	visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));

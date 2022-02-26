@@ -39,7 +39,7 @@ uniform vec3 eyeLook;
 #ifdef _Clusters
 uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
-	uniform vec4 lightsArraySpot[maxLights];
+	uniform vec4 lightsArraySpot[maxLights * 2];
 	#endif
 uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
@@ -109,7 +109,8 @@ uniform vec3 pointCol;
 uniform float pointBias;
 	#ifdef _Spot
 	uniform vec3 spotDir;
-	uniform vec2 spotData;
+	uniform vec3 spotRight;
+	uniform vec4 spotData;
 	#endif
 #endif
 
@@ -232,7 +233,7 @@ void main() {
 			, 0, pointBias, true
 		#endif
 		#ifdef _Spot
-		, true, spotData.x, spotData.y, spotDir
+		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight  // TODO: Test!
 		#endif
 	);
 #endif
@@ -271,8 +272,10 @@ void main() {
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
 			, lightsArray[li * 3 + 2].y // cutoff
-			, lightsArraySpot[li].w // cutoff - exponent
+			, lightsArraySpot[li].w // exponent
 			, lightsArraySpot[li].xyz // spotDir
+			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
+			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 		);
 	}
