@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class MaskNode(ArmLogicTreeNode):
+
+class MaskNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """TO DO."""
     bl_idname = 'LNMaskNode'
     bl_label = 'Mask'
@@ -12,3 +13,7 @@ class MaskNode(ArmLogicTreeNode):
             self.inputs.new('ArmBoolSocket', label)
 
         self.add_output('ArmIntSocket', 'Mask', is_var=True)
+
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        for i in range(len(self.inputs)):
+            self.inputs[i].default_value_raw = master_node.inputs[i].get_default_value()

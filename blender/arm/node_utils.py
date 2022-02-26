@@ -203,3 +203,13 @@ def nodetype_to_nodeitem(node_type: Type[bpy.types.Node]) -> NodeItem:
         return NodeItem(node_type.__name__)
 
     return NodeItem(node_type.bl_idname)
+
+
+def copy_basic_node_props(from_node: bpy.types.Node, to_node: bpy.types.Node):
+    """Copy non-node-specific properties to a different node."""
+    to_node.parent = from_node.parent
+    to_node.location = from_node.location
+    to_node.select = from_node.select
+
+    to_node.arm_logic_id = from_node.arm_logic_id
+    to_node.arm_watch = from_node.arm_watch

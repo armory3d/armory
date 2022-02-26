@@ -4,6 +4,7 @@ import json
 import locale
 import os
 import platform
+import random
 import re
 import shlex
 import subprocess
@@ -88,6 +89,11 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
+
+
+def get_random_color_rgb() -> list[float]:
+    """Return a random RGB color with values in range [0, 1]."""
+    return [random.random(), random.random(), random.random()]
 
 
 def is_livepatch_enabled():
@@ -619,6 +625,49 @@ def to_hex(val):
 
 def color_to_int(val):
     return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
+
+
+def unique_str_for_list(items: list, name_attr: str, wanted_name: str, ignore_item: Optional[Any] = None) -> str:
+    """Creates a unique name that no item in the given list already has.
+    The format follows Blender's behaviour when handling duplicate
+    object names.
+
+    @param items The list of items (any type).
+    @param name_attr The attribute of the items that holds the name.
+    @param wanted_name The name that should be preferably returned, if
+        no name collision occurs.
+    @param ignore_item (Optional) Ignore this item in the list when
+        comparing names.
+    """
+    def _has_collision(name: str) -> bool:
+        for item in items:
+            if item == ignore_item:
+                continue
+            if getattr(item, name_attr) == name:
+                return True
+        return False
+
+    # Check this once at the beginning to make sure the user can use
+    # a wanted name like "XY.001" if they want, even if "XY" alone does
+    # not collide
+    if not _has_collision(wanted_name):
+        return wanted_name
+
+    # Get base name without numeric suffix
+    base_name = wanted_name
+    dot_pos = base_name.rfind('.')
+    if dot_pos != -1:
+        if base_name[dot_pos + 1:].isdecimal():
+            base_name = base_name[:dot_pos]
+
+    num_collisions = 0
+    out_name = base_name
+    while _has_collision(out_name):
+        num_collisions += 1
+        out_name = f'{base_name}.{num_collisions:03d}'
+
+    return out_name
+
 
 def safesrc(s):
     s = safestr(s).replace('.', '_').replace('-', '_').replace(' ', '')

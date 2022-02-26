@@ -6,6 +6,7 @@ from bpy.props import BoolProperty, StringProperty
 
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
+import arm.logicnode.tree_variables
 import arm.logicnode
 import arm.props_traits
 import arm.ui_icons as ui_icons
@@ -14,6 +15,7 @@ import arm.utils
 if arm.is_reload(__name__):
     arm_nodes = arm.reload_module(arm_nodes)
     arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.logicnode.tree_variables = arm.reload_module(arm.logicnode.tree_variables)
     arm.logicnode = arm.reload_module(arm.logicnode)
     arm.props_traits = arm.reload_module(arm.props_traits)
     ui_icons = arm.reload_module(ui_icons)
@@ -180,7 +182,6 @@ class ARM_PT_LogicNodePanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
-            layout.prop(context.active_node, 'arm_logic_id')
             layout.prop(context.active_node, 'arm_watch')
 
             layout.separator()
@@ -250,37 +251,6 @@ class ArmOpenNodeWikiEntry(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class ARM_PT_Variables(bpy.types.Panel):
-    bl_label = 'Armory Node Variables'
-    bl_idname = 'ARM_PT_Variables'
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_category = 'Armory'
-
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
-
-    def draw(self, context):
-        layout = self.layout
-
-        nodes = list(filter(lambda node: node.arm_logic_id != "", list(context.space_data.node_tree.nodes)))
-
-        IDs = []
-        for n in nodes:
-             if not n.arm_logic_id in IDs:
-                IDs.append(n.arm_logic_id)
-
-        for ID in IDs:
-            row = layout.row(align=True)
-            row.alignment = 'EXPAND'
-            row.label(text = ID)
-            getN = row.operator(operator = 'arm.add_var_node')
-            getN.ntype = ID
-            setN = row.operator('arm.add_setvar_node')
-            setN.ntype = ID
-
-
 class ARM_PT_NodeDevelopment(bpy.types.Panel):
     """Sidebar panel to ease development of logic nodes."""
     bl_label = 'Node Development'
@@ -311,6 +281,12 @@ class ARM_PT_NodeDevelopment(bpy.types.Panel):
             self._draw_row(col, 'Class Version', node.__class__.arm_version)
             self._draw_row(col, 'Is Deprecated', node.arm_is_obsolete)
 
+            is_var_node = isinstance(node, arm_nodes.ArmLogicVariableNodeMixin)
+            self._draw_row(col, 'Is Variable Node', is_var_node)
+            self._draw_row(col, 'Logic ID', node.arm_logic_id)
+            if is_var_node:
+                self._draw_row(col, 'Is Master Node', node.is_master_node)
+
             layout.separator()
             layout.operator('arm.node_replace_all')
 
@@ -319,91 +295,6 @@ class ARM_PT_NodeDevelopment(bpy.types.Panel):
         split = col.split(factor=0.4)
         split.label(text=text)
         split.label(text=str(val))
-
-
-class ARMAddVarNode(bpy.types.Operator):
-    """Add a linked node of that Variable"""
-    bl_idname = 'arm.add_var_node'
-    bl_label = 'Add Get'
-    bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-
-    ntype: bpy.props.StringProperty()
-    nodeRef = None
-
-    def invoke(self, context, event):
-        context.window_manager.modal_handler_add(self)
-        self.execute(context)
-        return {'RUNNING_MODAL'}
-
-    def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':
-            self.nodeRef.location = context.space_data.cursor_location
-        elif event.type == 'LEFTMOUSE':  # Confirm
-            return {'FINISHED'}
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
-        nodes = context.space_data.node_tree.nodes
-        node = nodes.new("LNDynamicNode")
-        print(context.space_data.backdrop_offset[0])
-        node.location = context.space_data.cursor_location
-        node.arm_logic_id = self.ntype
-        node.label = "GET " + self.ntype
-        node.use_custom_color = True
-        node.color = (0.22, 0.89, 0.5)
-        #node.width = 5
-        global nodeRef
-        self.nodeRef = node
-        return({'FINISHED'})
-
-class ARMAddSetVarNode(bpy.types.Operator):
-    """Add a node to set this Variable"""
-    bl_idname = 'arm.add_setvar_node'
-    bl_label = 'Add Set'
-    bl_options = {'GRAB_CURSOR', 'BLOCKING'}
-
-    ntype: bpy.props.StringProperty()
-    nodeRef = None
-    setNodeRef = None
-
-    def invoke(self, context, event):
-        context.window_manager.modal_handler_add(self)
-        self.execute(context)
-        return {'RUNNING_MODAL'}
-
-    def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':
-            self.setNodeRef.location = context.space_data.cursor_location
-            self.nodeRef.location[0] = context.space_data.cursor_location[0]+10
-            self.nodeRef.location[1] = context.space_data.cursor_location[1]-10
-        elif event.type == 'LEFTMOUSE':  # Confirm
-            return {'FINISHED'}
-        return {'RUNNING_MODAL'}
-
-    def execute(self, context):
-        nodes = context.space_data.node_tree.nodes
-        node = nodes.new("LNDynamicNode")
-        print(context.space_data.backdrop_offset[0])
-        node.location = context.space_data.cursor_location
-        node.arm_logic_id = self.ntype
-        node.label = "GET " + self.ntype
-        node.use_custom_color = True
-        node.color = (0.32, 0.65, 0.89)
-        node.bl_width_min = 3
-        node.width = 5
-        node.bl_width_min = 100
-        setNode = nodes.new("LNSetVariableNode")
-        setNode.label = "SET " + self.ntype
-        setNode.location = context.space_data.cursor_location
-        setNode.use_custom_color = True
-        setNode.color = (0.49, 0.2, 1.0)
-        links = context.space_data.node_tree.links
-        links.new(node.outputs[0], setNode.inputs[1])
-        global nodeRef
-        self.nodeRef = node
-        global setNodeRef
-        self.setNodeRef = setNode
-        return({'FINISHED'})
 
 
 class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
@@ -426,19 +317,19 @@ def register():
     arm.logicnode.arm_sockets.register()
 
     bpy.utils.register_class(ArmLogicTree)
-    bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeHaxeSource)
     bpy.utils.register_class(ArmOpenNodePythonSource)
     bpy.utils.register_class(ArmOpenNodeWikiEntry)
     bpy.utils.register_class(ARM_OT_ReplaceNodesOperator)
-    bpy.utils.register_class(ARM_PT_Variables)
-    bpy.utils.register_class(ARMAddVarNode)
-    bpy.utils.register_class(ARMAddSetVarNode)
-    bpy.utils.register_class(ARM_PT_NodeDevelopment)
     ARM_MT_NodeAddOverride.overridden_menu = bpy.types.NODE_MT_add
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
+
+    # Register panels in correct order
+    bpy.utils.register_class(ARM_PT_LogicNodePanel)
+    arm.logicnode.tree_variables.register()
+    bpy.utils.register_class(ARM_PT_NodeDevelopment)
 
     arm.logicnode.init_categories()
     register_nodes()
@@ -451,15 +342,14 @@ def unregister():
     arm_nodes.reset_globals()
 
     bpy.utils.unregister_class(ARM_PT_NodeDevelopment)
+    arm.logicnode.tree_variables.unregister()
+    bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
+
     bpy.utils.unregister_class(ARM_OT_ReplaceNodesOperator)
     bpy.utils.unregister_class(ArmLogicTree)
-    bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeHaxeSource)
     bpy.utils.unregister_class(ArmOpenNodePythonSource)
     bpy.utils.unregister_class(ArmOpenNodeWikiEntry)
-    bpy.utils.unregister_class(ARM_PT_Variables)
-    bpy.utils.unregister_class(ARMAddVarNode)
-    bpy.utils.unregister_class(ARMAddSetVarNode)
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)

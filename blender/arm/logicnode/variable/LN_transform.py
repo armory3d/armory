@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class TransformNode(ArmLogicTreeNode):
+
+class TransformNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores the location, rotation and scale values as a transform."""
     bl_idname = 'LNTransformNode'
     bl_label = 'Transform'
@@ -12,12 +13,23 @@ class TransformNode(ArmLogicTreeNode):
         self.add_input('ArmVectorSocket', 'Scale', default_value=[1.0, 1.0, 1.0])
         self.add_output('ArmDynamicSocket', 'Transform', is_var=True)
 
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        self.inputs[0].default_value_raw = master_node.inputs[0].get_default_value()
+        self.inputs[2].default_value_raw = master_node.inputs[2].get_default_value()
+
+        self.inputs[1].default_value_mode = master_node.inputs[1].default_value_mode
+        self.inputs[1].default_value_unit = master_node.inputs[1].default_value_unit
+        self.inputs[1].default_value_order = master_node.inputs[1].default_value_order
+        self.inputs[1].default_value_s0 = master_node.inputs[1].default_value_s0
+        self.inputs[1].default_value_s1 = master_node.inputs[1].default_value_s1
+        self.inputs[1].default_value_s2 = master_node.inputs[1].default_value_s2
+        self.inputs[1].default_value_s3 = master_node.inputs[1].default_value_s3
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
 
-        
+
         # transition from version 1 to version 2: make rotations their own sockets
         # this transition is a mess, I know.
         newself = self.id_data.nodes.new('LNTransformNode')

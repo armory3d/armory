@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class TraitNode(ArmLogicTreeNode):
+
+class TraitNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores the given trait as a variable. If the trait was not found or
     was not exported, an error is thrown ([more information](https://github.com/armory3d/armory/wiki/troubleshooting#trait-not-exported)).
     """
@@ -13,5 +14,8 @@ class TraitNode(ArmLogicTreeNode):
     def arm_init(self, context):
         self.add_output('ArmDynamicSocket', 'Trait', is_var=True)
 
-    def draw_buttons(self, context, layout):
+    def draw_content(self, context, layout):
         layout.prop(self, 'property0')
+
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        self.property0 = master_node.property0

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import itertools
-from typing import Any, Generator, List, Optional, Type, Union
+import textwrap
+from typing import Any, final, Generator, List, Optional, Type, Union
 from typing import OrderedDict as ODict  # Prevent naming conflicts
 
 import bpy.types
@@ -14,6 +15,7 @@ import arm  # we cannot import arm.livepatch here or we have a circular import
 from arm.logicnode.arm_props import *
 from arm.logicnode.replacement import NodeReplacement
 import arm.node_utils
+import arm.utils
 
 if arm.is_reload(__name__):
     arm.logicnode.arm_props = arm.reload_module(arm.logicnode.arm_props)
@@ -21,6 +23,7 @@ if arm.is_reload(__name__):
     arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
     from arm.logicnode.replacement import NodeReplacement
     arm.node_utils = arm.reload_module(arm.node_utils)
+    arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
 
@@ -32,7 +35,7 @@ PKG_AS_CATEGORY = "__pkgcat__"
 nodes = []
 category_items: ODict[str, List['ArmNodeCategory']] = OrderedDict()
 
-array_nodes = dict()
+array_nodes: dict[str, 'ArmLogicTreeNode'] = dict()
 
 # See ArmLogicTreeNode.update()
 # format: [tree pointer => (num inputs, num input links, num outputs, num output links)]
@@ -59,6 +62,15 @@ class ArmLogicTreeNode(bpy.types.Node):
 
         arm.live_patch.send_event('ln_create', self)
 
+    def register_id(self):
+        """Registers a node ID so that the ID can be used by operators
+        to target this node (nodes can't be stored in pointer properties).
+        """
+        array_nodes[self.get_id_str()] = self
+
+    def get_id_str(self) -> str:
+        return str(self.as_pointer())
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
@@ -73,7 +85,7 @@ class ArmLogicTreeNode(bpy.types.Node):
     def on_unregister(cls):
         pass
 
-    def get_tree(self):
+    def get_tree(self) -> bpy.types.NodeTree:
         return self.id_data
 
     def update(self):
@@ -107,18 +119,19 @@ class ArmLogicTreeNode(bpy.types.Node):
             last_node_state[self_id] = current_state
 
         if last_node_state[self_id] != current_state:
-            arm.live_patch.send_event('ln_update_sockets', self)
+            self.on_socket_state_change()
             last_node_state[self_id] = current_state
 
     def free(self):
         """Called before the node is deleted."""
         arm.live_patch.send_event('ln_delete', self)
 
-    def copy(self, node):
-        """Called if the node was copied. `self` holds the copied node,
-        `node` the original one.
+    def copy(self, src_node):
+        """Called upon node duplication or upon pasting a copied node.
+        `self` holds the copied node and `src_node` a temporal copy of
+        the original node at the time of copying).
         """
-        arm.live_patch.send_event('ln_copy', (self, node))
+        arm.live_patch.send_event('ln_copy', (self, src_node))
 
     def on_prop_update(self, context: bpy.types.Context, prop_name: str):
         """Called if a property created with a function from the
@@ -129,6 +142,16 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
         arm.live_patch.send_event('ln_socket_val', (self, socket))
+
+    def on_socket_state_change(self):
+        """Called if the state (amount, connection state) of the node's
+        socket changes (see ArmLogicTreeNode.update())
+        """
+        arm.live_patch.send_event('ln_update_sockets', self)
+
+    def on_logic_id_change(self):
+        """Called if the node's arm_logic_id value changes."""
+        arm.live_patch.patch_export()
 
     def insert_link(self, link: bpy.types.NodeLink):
         """Called on *both* nodes when a link between two nodes is created."""
@@ -205,6 +228,201 @@ class ArmLogicTreeNode(bpy.types.Node):
         return socket
 
 
+class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
+    """A mixin class for variable nodes. This class adds functionality
+    that allows variable nodes to
+        1) be identified as such and
+        2) to be promoted to nodes that are linked to a tree variable.
+
+    If a variable node is promoted to a tree variable node and the
+    tree variable does not exist yet, it is created. Each tree variable
+    only exists as long as there are variable nodes that are linked to
+    it. A variable node's links to a tree variables can be removed by
+    calling `make_local()`. If a tree variable node is copied to a
+    different tree where the variable doesn't exist, it is created.
+
+    Tree variable nodes come in two states: master and replica nodes.
+    In order to not having to find memory-intensive and complicated ways
+    for storing every possible variable node data in the tree variable
+    UI list entries themselves (Blender doesn't support dynamically
+    typed properties), we store the data in one of the variable nodes,
+    called the master node. The other nodes are synchronized with the
+    master node and must implement a routine to copy the data from the
+    master node.
+
+    The user doesn't need to know about the master/replica concept, the
+    master node gets chosen automatically and it is made sure that there
+    can be only one master node, even after copying.
+    """
+    is_master_node: BoolProperty(default=False)
+
+    _text_wrapper = textwrap.TextWrapper()
+
+    def synchronize_from_master(self, master_node: 'ArmLogicVariableNodeMixin'):
+        """Called if the node should synchronize its data from the passed
+        master_node. Override this in variable nodes to react to updates
+        made to the master node.
+        """
+        pass
+
+    def _synchronize_to_replicas(self, master_node: 'ArmLogicVariableNodeMixin'):
+        for replica_node in self.get_replica_nodes(self.get_tree(), self.arm_logic_id):
+            replica_node.synchronize_from_master(master_node)
+
+    def make_local(self):
+        """Demotes this node to a local variable node that is not linked
+        to any tree variable.
+        """
+        has_replicas = True
+        if self.is_master_node:
+            self._synchronize_to_replicas(self)
+            has_replicas = self.choose_new_master_node(self.get_tree(), self.arm_logic_id)
+            self.is_master_node = False
+
+        # Remove the tree variable if there are no more nodes that link
+        # to it
+        if not has_replicas:
+            tree = self.get_tree()
+            for idx, item in enumerate(tree.arm_treevariableslist):
+                if item.name == self.arm_logic_id:
+                    tree.arm_treevariableslist.remove(idx)
+                    break
+
+            max_index = len(tree.arm_treevariableslist) - 1
+            if tree.arm_treevariableslist_index > max_index:
+                tree.arm_treevariableslist_index = max_index
+
+        self.arm_logic_id = ''
+
+    def free(self):
+        self.make_local()
+        super().free()
+
+    def copy(self, src_node: 'ArmLogicVariableNodeMixin'):
+        # Because the `copy()` callback is actually called upon pasting
+        # the node, `src_node` is a temporal copy of the copied node
+        # that retains the state of the node upon copying. This however
+        # means that we can't reliably use the master state of the
+        # pasted node because it might have changed in between, also
+        # `src_node.get_tree()` will return `None`. So if the pasted
+        # node is linked to a tree var, we simply check if the tree of
+        # the pasted node has the tree variable and depending on that we
+        # set `is_master_node`.
+
+        if self.arm_logic_id != '':
+            target_tree = self.get_tree()
+            lst = target_tree.arm_treevariableslist
+
+            self.is_master_node = False  # Ignore this node in get_master_node below
+            if self.__class__.get_master_node(target_tree, self.arm_logic_id) is None:
+                var_item = lst.add()
+                var_item['_name'] = arm.utils.unique_str_for_list(
+                    items=lst, name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
+                )
+                var_item.node_type = self.bl_idname
+                var_item.color = arm.utils.get_random_color_rgb()
+
+                target_tree.arm_treevariableslist_index = len(lst) - 1
+                arm.make_state.redraw_ui = True
+
+                self.is_master_node = True
+            else:
+                for item in lst:
+                    if item.name == self.arm_logic_id:
+                        self.color = item.color
+                        break
+
+        super().copy(src_node)
+
+    def on_socket_state_change(self):
+        if self.is_master_node:
+            self._synchronize_to_replicas(self)
+        super().on_socket_state_change()
+
+    def on_logic_id_change(self):
+        tree = self.get_tree()
+        is_linked = self.arm_logic_id != ''
+        for inp in self.inputs:
+            if is_linked:
+                for link in inp.links:
+                    tree.links.remove(link)
+
+            inp.hide = is_linked
+            inp.enabled = not is_linked  # Hide in sidebar, see Blender's space_node.py
+        super().on_logic_id_change()
+
+    def on_prop_update(self, context: bpy.types.Context, prop_name: str):
+        if self.is_master_node:
+            self._synchronize_to_replicas(self)
+        super().on_prop_update(context, prop_name)
+
+    def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
+        if self.is_master_node:
+            self._synchronize_to_replicas(self)
+        super().on_socket_val_update(context, socket)
+
+    def draw_content(self, context, layout):
+        """Override in variable nodes as replacement for draw_buttons()"""
+        pass
+
+    @final
+    def draw_buttons(self, context, layout):
+        if self.arm_logic_id == '':
+            self.draw_content(context, layout)
+        else:
+            txt_wrapper = self.__class__._text_wrapper
+            # Roughly estimate how much text fits in the node's width
+            txt_wrapper.width = self.width / 6
+
+            msg = f'Value linked to tree variable "{self.arm_logic_id}"'
+            lines = txt_wrapper.wrap(msg)
+
+            for line in lines:
+                row = layout.row(align=True)
+                row.alignment = 'EXPAND'
+                row.label(text=line)
+                row.scale_y = 0.4
+
+    def draw_label(self) -> str:
+        if self.arm_logic_id == '':
+            return self.bl_label
+        else:
+            return f'TV: {self.arm_logic_id}'
+
+    @staticmethod
+    def choose_new_master_node(tree: bpy.types.NodeTree, logic_id: str) -> bool:
+        """Choose a new master node from the remaining replica nodes.
+
+        Return `True` if a new master node was found, otherwise return
+        `False`.
+        """
+        try:
+            node = next(ArmLogicVariableNodeMixin.get_replica_nodes(tree, logic_id))
+        except StopIteration:
+            return False  # No replica node found
+
+        node.is_master_node = True
+        return True
+
+    @staticmethod
+    def get_master_node(tree: bpy.types.NodeTree, logic_id: str) -> Optional['ArmLogicVariableNodeMixin']:
+        for node in tree.nodes:
+            if node.arm_logic_id == logic_id and isinstance(node, ArmLogicVariableNodeMixin):
+                if node.is_master_node:
+                    return node
+        return None
+
+    @staticmethod
+    def get_replica_nodes(tree: bpy.types.NodeTree, logic_id: str) -> Generator['ArmLogicVariableNodeMixin', None, None]:
+        """A generator that iterates over all variable nodes for a given
+        ID that are not the master node.
+        """
+        for node in tree.nodes:
+            if node.arm_logic_id == logic_id and isinstance(node, ArmLogicVariableNodeMixin):
+                if not node.is_master_node:
+                    yield node
+
+
 class ArmNodeAddInputButton(bpy.types.Operator):
     """Add a new input socket to the node set by node_index."""
     bl_idname = 'arm.node_add_input'
@@ -218,7 +436,8 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        inps = array_nodes[self.node_index].inputs
+        node = array_nodes[self.node_index]
+        inps = node.inputs
 
         socket_types = self.socket_type.split(';')
         name_formats = self.name_format.split(';')
@@ -226,7 +445,10 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
         format_index = (len(inps) + self.index_name_offset) // len(socket_types)
         for socket_type, name_format in zip(socket_types, name_formats):
-            inps.new(socket_type, name_format.format(str(format_index)))
+            inp = inps.new(socket_type, name_format.format(str(format_index)))
+            # Make sure inputs don't show up if the node links to a tree variable
+            inp.hide = node.arm_logic_id != ''
+            inp.enabled = node.arm_logic_id == ''
 
         # Reset to default again for subsequent calls of this operator
         self.node_index = ''

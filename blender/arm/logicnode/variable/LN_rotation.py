@@ -1,6 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
-class RotationNode(ArmLogicTreeNode):
+
+class RotationNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """A rotation, created from one of its possible mathematical representations"""
     bl_idname = 'LNRotationNode'
     bl_label = 'Rotation'
@@ -11,7 +12,7 @@ class RotationNode(ArmLogicTreeNode):
     def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Euler Angles / Vector XYZ')
         self.add_input('ArmFloatSocket', 'Angle / W')
-        
+
         self.add_output('ArmRotationSocket', 'Out', is_var=True)
 
     def on_property_update(self, context):
@@ -28,7 +29,7 @@ class RotationNode(ArmLogicTreeNode):
         else:
             raise ValueError('No nodesocket labels for current input mode: check self-consistancy of LN_rotation.py')
 
-    def draw_buttons(self, context, layout):
+    def draw_content(self, context, layout):
         coll = layout.column(align=True)
         coll.prop(self, 'property0')
         if self.property0 in ('EulerAngles','AxisAngle'):
@@ -59,3 +60,11 @@ class RotationNode(ArmLogicTreeNode):
                ('ZYX','ZYX','ZYX')],
         name='', default='XYZ'
     )
+
+    def synchronize_from_master(self, master_node: ArmLogicVariableNodeMixin):
+        self.property0 = master_node.property0
+        self.property1 = master_node.property1
+        self.property2 = master_node.property2
+
+        for i in range(len(self.inputs)):
+            self.inputs[i].default_value_raw = master_node.inputs[i].get_default_value()

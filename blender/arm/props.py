@@ -5,6 +5,7 @@ import multiprocessing
 
 import arm.assets as assets
 import arm.logicnode.replacement
+import arm.logicnode.tree_variables
 import arm.make
 import arm.nodes_logic
 import arm.proxy
@@ -13,6 +14,7 @@ import arm.utils
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.logicnode.tree_variables = arm.reload_module(arm.logicnode.tree_variables)
     arm.make = arm.reload_module(arm.make)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
     arm.proxy = arm.reload_module(arm.proxy)
@@ -486,7 +488,6 @@ def init_properties():
     bpy.types.Material.signature = StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
     bpy.types.Material.arm_cached = BoolProperty(name="Material Cached", description="No need to reexport material data", default=False)
     bpy.types.Node.arm_material_param = BoolProperty(name="Parameter", description="Control this node from script", default=False)
-    bpy.types.Node.arm_logic_id = StringProperty(name="ID", description="Nodes with equal identifier will share data", default='')
     bpy.types.Node.arm_watch = BoolProperty(name="Watch", description="Watch value of this node in debug console", default=False)
     bpy.types.Node.arm_version = IntProperty(name="Node Version", description="The version of an instanced node", default=0)
     # Particles
@@ -525,10 +526,12 @@ def update_armory_world():
                 rp.rp_gi = 'Off'
                 rp.rp_voxelao = True
 
+        # For some breaking changes we need to use a special update
+        # routine first before regularly replacing nodes
         if file_version < (2021, 8):
-            # There were breaking changes in SDK 2021.08, use a special
-            # update routine first before regularly replacing nodes
             arm.logicnode.replacement.node_compat_sdk2108()
+        if file_version < (2022, 3):
+            arm.logicnode.tree_variables.node_compat_sdk2203()
 
         arm.logicnode.replacement.replace_all()
 
