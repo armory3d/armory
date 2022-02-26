@@ -87,7 +87,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, int index, float bias, bool receiveShadow
 	#endif
 	#ifdef _Spot
-		, bool isSpot, float spotA, float spotB, vec3 spotDir, vec2 scale, vec3 right
+		, bool isSpot, float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
@@ -174,7 +174,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _Spot
 	if (isSpot) {
-		direct *= spotlightMask(l, spotDir, right, scale, spotA, spotB);
+		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
 
 		#ifdef _ShadowMap
 			if (receiveShadow) {

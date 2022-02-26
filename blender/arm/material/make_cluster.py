@@ -66,8 +66,8 @@ def write(vert, frag):
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:
         frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
-        frag.write('\t, lightsArray[li * 3 + 2].y') # cutoff
-        frag.write('\t, lightsArraySpot[li].w') # exponent
+        frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
+        frag.write('\t, lightsArraySpot[li].w') # spot blend (exponent)
         frag.write('\t, lightsArraySpot[li].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right

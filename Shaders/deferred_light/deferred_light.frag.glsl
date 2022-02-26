@@ -475,8 +475,8 @@ void main() {
 			#endif
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
-			, lightsArray[li * 3 + 2].y // cutoff
-			, lightsArraySpot[li * 2].w // exponent
+			, lightsArray[li * 3 + 2].y // spot size (cutoff)
+			, lightsArraySpot[li * 2].w // spot blend (exponent)
 			, lightsArraySpot[li * 2].xyz // spotDir
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
