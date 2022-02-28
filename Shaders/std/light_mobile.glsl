@@ -6,6 +6,9 @@
 #ifdef _ShadowMap
 #include "std/shadows.glsl"
 #endif
+#ifdef _Spot
+#include "std/light_common.glsl"
+#endif
 
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
@@ -48,7 +51,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, int index, float bias, bool receiveShadow
 	#endif
 	#ifdef _Spot
-		, bool isSpot, float spotA, float spotB, vec3 spotDir
+		, bool isSpot, float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	) {
 	vec3 ld = lp - p;
@@ -66,11 +69,8 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _Spot
 	if (isSpot) {
-		float spotEffect = dot(spotDir, l); // lightDir
-		// x - cutoff, y - cutoff - exponent
-		if (spotEffect < spotA) {
-			direct *= smoothstep(spotB, spotA, spotEffect);
-		}
+		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+
 		#ifdef _ShadowMap
 			if (receiveShadow) {
 				#ifdef _SinglePoint

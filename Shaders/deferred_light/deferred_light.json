@@ -199,6 +199,11 @@
 					"ifdef": ["_SinglePoint", "_Spot"]
 				},
 				{
+					"name": "spotRight",
+					"link": "_spotRight",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
 					"name": "LWVPSpotArray",
 					"link": "_biasLightWorldViewProjectionMatrixSpotArray",
 					"ifdef": ["_Clusters", "_ShadowMap", "_Spot"]

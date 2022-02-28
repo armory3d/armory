@@ -34,7 +34,7 @@ def write(vert, frag):
     frag.write('#endif')
 
     if '_Spot' in wrd.world_defs:
-        frag.add_uniform('vec4 lightsArraySpot[maxLights]', link='_lightsArraySpot')
+        frag.add_uniform('vec4 lightsArraySpot[maxLights * 2]', link='_lightsArraySpot')
         frag.write('int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);')
         frag.write('int numPoints = numLights - numSpots;')
         if is_shadows:
@@ -66,9 +66,11 @@ def write(vert, frag):
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:
         frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
-        frag.write('\t, lightsArray[li * 3 + 2].y') # cutoff
-        frag.write('\t, lightsArraySpot[li].w') # cutoff - exponent
+        frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
+        frag.write('\t, lightsArraySpot[li].w') # spot blend (exponent)
         frag.write('\t, lightsArraySpot[li].xyz') # spotDir
+        frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
+        frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
         frag.write('  , voxels, voxpos')
     frag.write(');')
