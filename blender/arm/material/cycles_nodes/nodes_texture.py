@@ -115,10 +115,10 @@ def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.ty
 
 
 def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    if state.context == ParserContext.OBJECT:
-        # Color or Alpha output
-        use_color_out = out_socket == node.outputs[0]
+    # Color or Alpha output
+    use_color_out = out_socket == node.outputs[0]
 
+    if state.context == ParserContext.OBJECT:
         # Already fetched
         if c.is_parsed(c.store_var_name(node)):
             if use_color_out:
@@ -182,6 +182,10 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
         state.curshader.add_uniform('vec2 screenSize', link='_screenSize')
 
         image = node.image
+        if image is None:
+            log.warn(f'World "{world.name}": image texture node "{node.name}" is empty')
+            return 'vec3(0.0, 0.0, 0.0)' if use_color_out else '0.0'
+
         filepath = image.filepath
 
         if image.packed_file is not None:
