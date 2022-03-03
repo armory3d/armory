@@ -691,7 +691,7 @@ def build_success():
             # Print message
             project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
             if int(wrd.arm_project_win_build) == 1:
-                print('\nOpen in Visual Studio ' + os.path.join(project_path, project_name + '.sln"'))
+                print('\nOpen in Visual Studio: ' + os.path.join(project_path, project_name + '.sln"'))
             if int(wrd.arm_project_win_build) == 2:
                 print('\nCompile project ' + os.path.join(project_path, project_name + '.vcxproj'))
             if int(wrd.arm_project_win_build) == 3:

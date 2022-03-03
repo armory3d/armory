@@ -2469,9 +2469,9 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
-    '''Updating the list installed Visual Studio for the Windows platform'''
+    """Update the list of installed Visual Studio versions for the Windows platform"""
     bl_idname = 'arm.update_list_installed_vs'
-    bl_label = 'Update List Installed Visual Studio'
+    bl_label = 'Update List of Installed Visual Studio Versions'
 
     def execute(self, context):
         if not arm.utils.check_saved(self):
@@ -2493,7 +2493,8 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
                           ('12', '2013', 'Visual Studio 2013 (version 12)'),
                           ('14', '2015', 'Visual Studio 2015 (version 14)'),
                           ('15', '2017', 'Visual Studio 2017 (version 15)'),
-                          ('16', '2019', 'Visual Studio 2019 (version 16)')]
+                          ('16', '2019', 'Visual Studio 2019 (version 16)'),
+                          ('17', '2022', 'Visual Studio 2022 (version 17)')]
             prev_select = wrd.arm_project_win_list_vs
             res_items_enum = []
             for vs in items_enum:

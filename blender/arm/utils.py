@@ -1097,7 +1097,8 @@ def get_visual_studio_from_version(version: str) -> str:
           ('12', '2013', 'Visual Studio 2013 (version 12)', 'vs2013'),
           ('14', '2015', 'Visual Studio 2015 (version 14)', 'vs2015'),
           ('15', '2017', 'Visual Studio 2017 (version 15)', 'vs2017'),
-          ('16', '2019', 'Visual Studio 2019 (version 16)', 'vs2019')]
+          ('16', '2019', 'Visual Studio 2019 (version 16)', 'vs2019'),
+          ('17', '2022', 'Visual Studio 2022 (version 17)', 'vs2022')]
     for item in vs:
         if item[0] == version.strip():
             return item[0], item[1], item[2], item[3]
