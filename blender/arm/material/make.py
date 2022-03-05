@@ -78,19 +78,8 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
                     wrd.world_defs += '_Hair'
 
             elif rpdat.rp_sss_state != 'Off':
-                sss = False
-                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
-                if sss_node is not None and sss_node.outputs[0].is_linked: # Check linked node
-                    sss = True
-                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
-                if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
-                    sss = True
-                sss_node = arm.node_utils.get_node_armorypbr(material.node_tree)
-                if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
-                    sss = True
-
                 const = {'name': 'materialID'}
-                if sss:
+                if material_needs_sss(material):
                     const['int'] = 2
                     sss_used = True
                 else:
@@ -129,3 +118,20 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         mat_data['shader'] = shader_data_name + ext + '/' + shader_data_name
 
     return sd, rpasses, sss_used
+
+
+def material_needs_sss(material: Material) -> bool:
+    """Check whether the given material requires SSS."""
+    for sss_node in arm.node_utils.iter_nodes_by_type(material.node_tree, 'SUBSURFACE_SCATTERING'):
+        if sss_node is not None and sss_node.outputs[0].is_linked:
+            return True
+
+    for sss_node in arm.node_utils.iter_nodes_by_type(material.node_tree, 'BSDF_PRINCIPLED'):
+        if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
+            return True
+
+    for sss_node in arm.node_utils.iter_nodes_armorypbr(material.node_tree):
+        if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
+            return True
+
+    return False
