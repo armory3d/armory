@@ -712,10 +712,8 @@ const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 10
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 """)
 
-        if rpdat.rp_sss_state == 'On':
-            f.write(
-"""const float sssWidth = """ + str(rpdat.arm_sss_width / 10.0) + """;
-""")
+        if rpdat.rp_sss:
+            f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")
 
         # Skinning
         if rpdat.arm_skin == 'On':

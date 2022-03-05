@@ -2009,7 +2009,7 @@ Make sure the mesh only has tris/quads.""")
         overlays_used = False
         blending_used = False
         decals_used = False
-        # sss_used = False
+        sss_used = False
 
         for material in self.material_array:
             # If the material is unlinked, material becomes None
@@ -2044,7 +2044,8 @@ Make sure the mesh only has tris/quads.""")
 
             mat_users = self.material_to_object_dict
             mat_armusers = self.material_to_arm_object_dict
-            sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
+            sd, rpasses, needs_sss = make_material.parse(material, o, mat_users, mat_armusers)
+            sss_used |= needs_sss
 
             # Attach MovieTexture
             for con in o['contexts']:
@@ -2102,7 +2103,7 @@ Make sure the mesh only has tris/quads.""")
             self.output['material_datas'].append(o)
             material.arm_cached = True
 
-        # Auto-enable render-path featues
+        # Auto-enable render-path features
         rebuild_rp = False
         rpdat = arm.utils.get_rp()
         if rpdat.rp_translucency_state == 'Auto' and rpdat.rp_translucency != transluc_used:
@@ -2117,9 +2118,9 @@ Make sure the mesh only has tris/quads.""")
         if rpdat.rp_decals_state == 'Auto' and rpdat.rp_decals != decals_used:
             rpdat.rp_decals = decals_used
             rebuild_rp = True
-        # if rpdat.rp_sss_state == 'Auto' and rpdat.rp_sss != sss_used:
-            # rpdat.rp_sss = sss_used
-            # rebuild_rp = True
+        if rpdat.rp_sss_state == 'Auto' and rpdat.rp_sss != sss_used:
+            rpdat.rp_sss = sss_used
+            rebuild_rp = True
         if rebuild_rp:
             make_renderpath.build()
 
