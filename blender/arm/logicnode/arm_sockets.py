@@ -366,8 +366,16 @@ class ArmAnySocket(ArmCustomSocket):
     def draw_color(self, context, node):
         if self.is_linked:
             if self.is_output:
-                return socket_colors[self.links[0].to_socket.bl_idname]
-            return socket_colors[self.links[0].from_socket.bl_idname]
+                to_type = self.links[0].to_socket.bl_idname
+                if to_type == 'NodeSocketColor':  # Reroute
+                    to_type = 'ArmColorSocket'
+                return socket_colors[to_type]
+
+            from_type = self.links[0].from_socket.bl_idname
+            if from_type == 'NodeSocketColor':
+                from_type = 'ArmColorSocket'
+            return socket_colors[from_type]
+
         return socket_colors[self.bl_idname]
 
 
