@@ -10,10 +10,10 @@ class ArraySpliceNode extends LogicNode {
 		var ar: Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
-        var i = inputs[2].get();
-        var len = inputs[3].get();
+		var i = inputs[2].get();
+		var len = inputs[3].get();
 
-        ar.splice(i, len);
+		ar.splice(i, len);
 
 		runOutput(0);
 	}
