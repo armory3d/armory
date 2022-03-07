@@ -19,7 +19,7 @@ class SetParentBoneNode extends LogicNode {
 
 		object.setParent(parent, false, false);
 
-		var banim = object.getParentArmature(object.parent.name);
+		var banim = object.getBoneAnimation(object.parent.uid);
 		banim.addBoneChild(bone, object);
 
 		runOutput(0);

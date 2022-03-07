@@ -29,7 +29,7 @@ class BlendActionNode extends LogicNode {
 		assert(Error, object != null, "The object input not be null");
 		if(object.animation == null) {
 			#if arm_skin
-			animationBone = object.getParentArmature(object.name);
+			animationBone = object.getBoneAnimation(object.uid);
 			tempMats = animationBone.initMatsEmpty();
 			func = blendBones;
 			#end

@@ -41,7 +41,7 @@ class SimpleFootIKNode extends LogicNode {
 
 		object = inputs[0].get();
 		assert(Error, object != null, "The object input not be null");
-		animation = object.getParentArmature(object.name);
+		animation = object.getBoneAnimation(object.uid);
 		assert(Error, animation != null, "The object does not have armatureanimation");
 		ready = true;
 

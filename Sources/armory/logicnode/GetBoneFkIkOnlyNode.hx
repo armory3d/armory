@@ -20,7 +20,7 @@ class GetBoneFkIkOnlyNode extends LogicNode {
 
 		if (object == null) return null;
 		var anim = object.animation != null ? cast(object.animation, BoneAnimation) : null;
-		if (anim == null) anim = object.getParentArmature(object.name);
+		if (anim == null) anim = object.getBoneAnimation(object.uid);
 
 		// Get bone in armature
 		var bone = anim.getBone(boneName);

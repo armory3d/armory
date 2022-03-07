@@ -13,7 +13,7 @@ class ResumeActionNode extends LogicNode {
 
 		assert(Error, object != null, "Object input cannot be null");
 		var animation = object.animation;
-		if (animation == null) animation = object.getParentArmature(object.name);
+		if (animation == null) animation = object.getBoneAnimation(object.uid);
 		
 		animation.resume();
 

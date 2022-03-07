@@ -41,7 +41,7 @@ class BlendSpaceNode extends LogicNode {
 	public function init(){
 		object = inputs[0].get();
 		assert(Error, object != null, "The object input not be null");
-		animationBone = object.getParentArmature(object.name);
+		animationBone = object.getBoneAnimation(object.uid);
 		tempMats = animationBone.initMatsEmpty();
 		tempMats2 = animationBone.initMatsEmpty();
 		func = blendBones;

@@ -34,7 +34,7 @@ class AnimActionNode extends LogicNode {
 		assert(Error, object != null, "The object input not be null");
 		if(object.animation == null) {
 			#if arm_skin
-			animationBone = object.getParentArmature(object.name);
+			animationBone = object.getBoneAnimation(object.uid);
 			animationBone.registerAction(property0, sampler);
 			func = sampleBonaAction;
 			#end

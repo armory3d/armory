@@ -19,7 +19,7 @@ class AnimationStateNode extends LogicNode {
 		object = inputs[0].get();
 		assert(Error, object != null, "Object input cannot be null");
 		animation = object.animation;
-		if (animation == null) animation = object.getParentArmature(object.name);
+		if (animation == null) animation = object.getBoneAnimation(object.uid);
 		assert(Error, animation != null, "Object does not have animations");
 		sampler = animation.activeActions.get(property0);
 		if(sampler == null) return;
@@ -29,11 +29,11 @@ class AnimationStateNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-		if(action == null) return null;
+		if(sampler == null) return null;
 		return switch (from) {
-			case 0: action.action;
-			case 1: action.offset;
-			case 2: action.paused;
+			case 0: sampler.action;
+			case 1: sampler.offset;
+			case 2: sampler.paused;
 			default: null;
 		}
 	}

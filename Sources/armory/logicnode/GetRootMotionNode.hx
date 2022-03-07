@@ -13,7 +13,7 @@ class GetRootMotionNode extends LogicNode {
     override function get(from:Int):Dynamic {
         var object: Object = inputs[0].get();
         assert(Error, object != null, "Object input must not be null");
-        var animation = object.getParentArmature(object.name);
+        var animation = object.getBoneAnimation(object.uid);
         if(animation == null) return null;
         var rootMotion = animation.getRootMotionBone();
         if(rootMotion == null) return null;

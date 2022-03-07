@@ -22,7 +22,7 @@ class EvaluateRootMotionNode extends LogicNode {
     public function init(){
 		object = inputs[1].get();
 		assert(Error, object != null, "The object input not be null");
-		animation = object.getParentArmature(object.name);
+		animation = object.getBoneAnimation(object.uid);
         assert(Error, animation != null, "The object does not have an Armature action");
 		ready = true;
 	}
