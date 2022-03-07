@@ -194,30 +194,12 @@ def get_rp() -> arm.props_renderpath.ArmRPListItem:
         return wrd.arm_rplist[wrd.arm_rplist_index]
 
 
-def bundled_sdk_path():
-    if get_os() == 'mac':
-        # SDK on MacOS is located in .app folder due to security
-        p = bpy.app.binary_path
-        if p.endswith('Contents/MacOS/blender'):
-            return p[:-len('Contents/MacOS/blender')] + '/armsdk/'
-        else:
-            return p[:-len('Contents/MacOS/./blender')] + '/armsdk/'
-    elif get_os() == 'linux':
-        # /blender
-        return bpy.app.binary_path.rsplit('/', 1)[0] + '/armsdk/'
-    else:
-        # /blender.exe
-        return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
-
 # Passed by load_post handler when armsdk is found in project folder
 use_local_sdk = False
 def get_sdk_path():
     addon_prefs = get_arm_preferences()
-    p = bundled_sdk_path()
     if use_local_sdk:
         return os.path.normpath(get_fp() + '/armsdk/')
-    elif os.path.exists(p) and addon_prefs.sdk_bundled:
-        return os.path.normpath(p)
     else:
         return os.path.normpath(addon_prefs.sdk_path)
 
