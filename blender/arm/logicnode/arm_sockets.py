@@ -95,12 +95,12 @@ class ArmAnimActionSocket(ArmCustomSocket):
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
 
-    
+
 class ArmRotationSocket(ArmCustomSocket):
     bl_idname = 'ArmRotationSocket'
     bl_label = 'Rotation Socket'
     arm_socket_type = 'ROTATION'  # the internal representation is a quaternion, AKA a '4D vector' (using mathutils.Vector((x,y,z,w)))
-    
+
     def get_default_value(self):
         if self.default_value_raw is None:
             return mathutils.Vector((0.0,0.0,0.0,1.0))
@@ -119,8 +119,7 @@ class ArmRotationSocket(ArmCustomSocket):
             self.default_value_s1 *= fac
             self.default_value_s2 *= fac
         self.do_update_raw(context)
-        
-            
+
     def on_mode_update(self, context):
         if self.default_value_mode == 'Quaternion':
             summ = abs(self.default_value_s0)
@@ -157,7 +156,7 @@ class ArmRotationSocket(ArmCustomSocket):
                 qz /= ql
                 qw /= ql
             return mathutils.Vector((qx,qy,qz,qw))
-        
+
         elif param1 == 'AxisAngle':
             if param2 == 'Deg':
                 angle = part2 * pi/180
@@ -195,7 +194,7 @@ class ArmRotationSocket(ArmCustomSocket):
                 qz = qz*qwi +qw*qzi +qx*qyi -qy*qxi
             return mathutils.Vector((qx,qy,qz,qw))
 
-        
+
     def do_update_raw(self, context):
         part1 = mathutils.Vector((
             self.default_value_s0,
@@ -211,8 +210,8 @@ class ArmRotationSocket(ArmCustomSocket):
             self.default_value_unit,
             self.default_value_order
         )
-            
-        
+
+
     def draw(self, context, layout, node, text):
         if (self.is_output or self.is_linked):
             layout.label(text=self.name)
@@ -224,7 +223,7 @@ class ArmRotationSocket(ArmCustomSocket):
             coll.prop(self, 'default_value_mode')
             if self.default_value_mode in ('EulerAngles', 'AxisAngle'):
                 coll.prop(self, 'default_value_unit')
-                
+
             if self.default_value_mode == 'EulerAngles':
                 coll.prop(self, 'default_value_order')
                 coll.prop(self, 'default_value_s0', text='X')
@@ -240,7 +239,7 @@ class ArmRotationSocket(ArmCustomSocket):
                 coll.prop(self, 'default_value_s1', text='Y')
                 coll.prop(self, 'default_value_s2', text='Z')
                 coll.separator()
-                coll.prop(self, 'default_value_s3', text='Angle')            
+                coll.prop(self, 'default_value_s3', text='Angle')
 
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
@@ -349,7 +348,7 @@ class ArmDynamicSocket(ArmCustomSocket):
 
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
-    
+
 
 class ArmAnySocket(ArmCustomSocket):
     bl_idname = 'ArmAnySocket'
@@ -366,8 +365,16 @@ class ArmAnySocket(ArmCustomSocket):
     def draw_color(self, context, node):
         if self.is_linked:
             if self.is_output:
-                return socket_colors[self.links[0].to_socket.bl_idname]
-            return socket_colors[self.links[0].from_socket.bl_idname]
+                to_type = self.links[0].to_socket.bl_idname
+                if to_type == 'NodeSocketColor':  # Reroute
+                    to_type = 'ArmColorSocket'
+                return socket_colors[to_type]
+
+            from_type = self.links[0].from_socket.bl_idname
+            if from_type == 'NodeSocketColor':
+                from_type = 'ArmColorSocket'
+            return socket_colors[from_type]
+
         return socket_colors[self.bl_idname]
 
 
