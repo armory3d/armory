@@ -34,6 +34,11 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
+    needs_sss = material_needs_sss(material)
+    if needs_sss and rpdat.rp_sss_state != 'Off' and '_SSS' not in wrd.world_defs:
+        # Must be set before calling make_shader.build()
+        wrd.world_defs += '_SSS'
+
     # No batch - shader data per material
     if material.arm_custom_material != '':
         rpasses = ['mesh']
@@ -79,7 +84,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
 
             elif rpdat.rp_sss_state != 'Off':
                 const = {'name': 'materialID'}
-                if material_needs_sss(material):
+                if needs_sss:
                     const['int'] = 2
                     sss_used = True
                 else:
