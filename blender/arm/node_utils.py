@@ -35,15 +35,30 @@ def find_link(node_group, to_node, inp):
         if link.to_node == to_node and link.to_socket == inp:
             return link
 
-def get_node_by_type(node_group, ntype):
+
+def get_node_by_type(node_group: bpy.types.NodeTree, ntype: str) -> bpy.types.Node:
     for node in node_group.nodes:
         if node.type == ntype:
             return node
 
-def get_node_armorypbr(node_group):
+
+def iter_nodes_by_type(node_group: bpy.types.NodeTree, ntype: str) -> Generator[bpy.types.Node, None, None]:
+    for node in node_group.nodes:
+        if node.type == ntype:
+            yield node
+
+
+def get_node_armorypbr(node_group: bpy.types.NodeTree) -> bpy.types.Node:
     for node in node_group.nodes:
         if node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR'):
             return node
+
+
+def iter_nodes_armorypbr(node_group: bpy.types.NodeTree) -> Generator[bpy.types.Node, None, None]:
+    for node in node_group.nodes:
+        if node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR'):
+            yield node
+
 
 def get_input_node(node_group, to_node, input_index):
     for link in node_group.links:

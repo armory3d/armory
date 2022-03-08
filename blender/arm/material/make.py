@@ -30,9 +30,14 @@ def glsl_value(val):
         return val
 
 
-def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]], mat_armusers):
+def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]], mat_armusers) -> tuple:
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
+
+    needs_sss = material_needs_sss(material)
+    if needs_sss and rpdat.rp_sss_state != 'Off' and '_SSS' not in wrd.world_defs:
+        # Must be set before calling make_shader.build()
+        wrd.world_defs += '_SSS'
 
     # No batch - shader data per material
     if material.arm_custom_material != '':
@@ -57,6 +62,8 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = mat_batch.get(material)
         sd = shader_data.sd
 
+    sss_used = False
+
     # Material
     for rp in rpasses:
         c = {
@@ -75,21 +82,11 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
                 if material.arm_material_id == 2:
                     wrd.world_defs += '_Hair'
 
-            elif rpdat.rp_sss_state == 'On':
-                sss = False
-                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
-                if sss_node is not None and sss_node.outputs[0].is_linked: # Check linked node
-                    sss = True
-                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
-                if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
-                    sss = True
-                sss_node = arm.node_utils.get_node_armorypbr(material.node_tree)
-                if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
-                    sss = True
-
+            elif rpdat.rp_sss_state != 'Off':
                 const = {'name': 'materialID'}
-                if sss:
+                if needs_sss:
                     const['int'] = 2
+                    sss_used = True
                 else:
                     const['int'] = 0
                 c['bind_constants'].append(const)
@@ -125,4 +122,21 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         ext = '' if wrd.arm_minimize and material.arm_custom_material == "" else '.json'
         mat_data['shader'] = shader_data_name + ext + '/' + shader_data_name
 
-    return sd, rpasses
+    return sd, rpasses, sss_used
+
+
+def material_needs_sss(material: Material) -> bool:
+    """Check whether the given material requires SSS."""
+    for sss_node in arm.node_utils.iter_nodes_by_type(material.node_tree, 'SUBSURFACE_SCATTERING'):
+        if sss_node is not None and sss_node.outputs[0].is_linked:
+            return True
+
+    for sss_node in arm.node_utils.iter_nodes_by_type(material.node_tree, 'BSDF_PRINCIPLED'):
+        if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
+            return True
+
+    for sss_node in arm.node_utils.iter_nodes_armorypbr(material.node_tree):
+        if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
+            return True
+
+    return False
