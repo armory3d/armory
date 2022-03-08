@@ -100,12 +100,13 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
 	float visibility = 0.0;
+	vec4 lPos;
 
 #ifdef _Sun
 	#ifdef _CSM
 	mat4 LWVP = mat4(casData[4], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
 	#endif
-	vec4 lPos = LWVP * vec4(curPos, 1.0);
+	lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
 	visibility = texture(
 		#ifdef _ShadowMapAtlas
@@ -122,7 +123,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 
 #ifdef _SinglePoint
 	#ifdef _Spot
-	vec4 lPos = LWVPSpot[0] * vec4(curPos, 1.0);
+	lPos = LWVPSpot[0] * vec4(curPos, 1.0);
 	visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
 	visibility *= spotlightMask(normalize(pointPos - curPos), spotDir, spotRight, spotData.zw, spotData.x, spotData.y);
 	#else
