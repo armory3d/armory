@@ -595,7 +595,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_v
         else:
             uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
-        uv_name = 'texCoord'
+        uv_name = 'vec3(texCoord.xy, 0.0)' if triplanar else 'texCoord'
     if triplanar:
         if not curshader.has_include('std/mapping.glsl'):
             curshader.add_include('std/mapping.glsl')
