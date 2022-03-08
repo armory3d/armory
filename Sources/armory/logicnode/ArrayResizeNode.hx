@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArraySpliceNode extends LogicNode {
+class ArrayResizeNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -10,10 +10,9 @@ class ArraySpliceNode extends LogicNode {
 		var ar: Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
-		var i = inputs[2].get();
-		var len = inputs[3].get();
+		var len = inputs[2].get();
 
-		ar.splice(i, len);
+		ar.resize(len);
 
 		runOutput(0);
 	}
