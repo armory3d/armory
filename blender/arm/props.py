@@ -166,7 +166,7 @@ def init_properties():
                ('15', '2017', 'Visual Studio 2017 (version 15)'),
                ('16', '2019', 'Visual Studio 2019 (version 16)'),
                ('17', '2022', 'Visual Studio 2022 (version 17)')],
-        name="Visual Studio Version", default='16', update=assets.invalidate_compiler_cache)
+        name="Visual Studio Version", default='17', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_win_build = EnumProperty(
         items=[('0', 'Nothing', 'Nothing'),
                ('1', 'Open in Visual Studio', 'Open in Visual Studio'),
