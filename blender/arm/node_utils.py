@@ -99,21 +99,6 @@ def output_get_connected_node(output_socket: bpy.types.NodeSocket) -> tuple[Opti
     return to_node, link.to_socket
 
 
-def get_input_node(node_group, to_node, input_index):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == to_node.inputs[input_index]:
-            if link.from_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return find_node_by_link(node_group, link.from_node, link.from_node.inputs[0])
-            return link.from_node
-
-def get_output_node(node_group, from_node, output_index):
-    for link in node_group.links:
-        if link.from_node == from_node and link.from_socket == from_node.outputs[output_index]:
-            if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
-            return link.to_node
-
-
 def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket) -> int:
     """Find the socket index in the given node input or output
     collection, return -1 if not found.
