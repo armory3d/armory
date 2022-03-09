@@ -17,15 +17,17 @@ class CallGroupNode(ArmLogicTreeNode):
 
     def update_inputs(self, node, context):
         for output in node.outputs:
-            if output.is_linked:
-                self.add_input(output.links[0].to_socket.bl_idname, output.links[0].to_socket.name)
+            _, c_socket = arm.node_utils.output_get_connected_node(output)
+            if c_socket is not None:
+                self.add_input(c_socket.bl_idname, c_socket.name)
             else:
                 self.add_input('ArmAnySocket', '')
 
     def update_outputs(self, node, context):
         for input in node.inputs:
-            if input.is_linked:
-                self.add_output(input.links[0].from_socket.bl_idname, input.links[0].from_socket.name)
+            _, c_socket = arm.node_utils.input_get_connected_node(input)
+            if c_socket is not None:
+                self.add_output(c_socket.bl_idname, c_socket.name)
             else:
                 self.add_output('ArmAnySocket', '')
 
@@ -51,3 +53,14 @@ class CallGroupNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'node_groups', icon='NONE', text='')
+
+    @classmethod
+    def update_all(cls):
+        """Called by group input and group output nodes when all call
+        node inputs should update their sockets.
+        """
+        for tree in bpy.data.node_groups:
+            if tree.bl_idname == "ArmLogicTreeType":
+                for node in tree.nodes:
+                    if isinstance(node, cls):
+                        node.update_sockets(bpy.context)

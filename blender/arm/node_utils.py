@@ -68,7 +68,9 @@ def input_get_connected_node(input_socket: bpy.types.NodeSocket) -> tuple[Option
     connection route ends without a connected node, `(None, None)` is
     returned.
     """
-    if not input_socket.is_linked:
+    # If this method is called while a socket is being unconnected, it
+    # can happen that is_linked is true but there are no links
+    if not input_socket.is_linked or len(input_socket.links) == 0:
         return None, None
 
     link: bpy.types.NodeLink = input_socket.links[0]
@@ -87,7 +89,7 @@ def output_get_connected_node(output_socket: bpy.types.NodeSocket) -> tuple[Opti
     connection route ends without a connected node, `(None, None)` is
     returned.
     """
-    if not output_socket.is_linked:
+    if not output_socket.is_linked or len(output_socket.links) == 0:
         return None, None
 
     link: bpy.types.NodeLink = output_socket.links[0]
