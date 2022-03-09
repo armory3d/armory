@@ -1,6 +1,5 @@
 import bpy
 
-import arm
 import arm.utils
 from arm.logicnode.arm_nodes import *
 import arm.logicnode.miscellaneous.LN_call_group as LN_call_group
@@ -15,26 +14,26 @@ class GroupInputsNode(ArmLogicTreeNode):
 
     def __init__(self):
         array_nodes[str(id(self))] = self
-    
+
     def init(self, context):
         tree = bpy.context.space_data.edit_tree
-        nodeCount = 0
+        node_count = 0
         for node in tree.nodes:
             if node.bl_idname == 'LNGroupInputsNode':
-                nodeCount += 1
-        if nodeCount > 1:
+                node_count += 1
+        if node_count > 1:
             arm.log.warn("Only one group input node per node tree is allowed")
             tree.nodes.remove(self)
         else:
             self.arm_init(context)
-    
+
     def copy(self, node):
         tree = bpy.context.space_data.edit_tree
-        nodeCount = 0
+        node_count = 0
         for node in tree.nodes:
             if node.bl_idname == 'LNGroupInputsNode':
-                nodeCount += 1
-        if nodeCount > 1:
+                node_count += 1
+        if node_count > 1:
             arm.log.warn("Only one group input node per node tree is allowed")
             tree.nodes.remove(self)
 
@@ -44,7 +43,7 @@ class GroupInputsNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_output('ArmAnySocket', '')
-    
+
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
 

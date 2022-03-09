@@ -24,30 +24,30 @@ class CallGroupNode(ArmLogicTreeNode):
                 self.add_input('ArmAnySocket', '')
 
     def update_outputs(self, node, context):
-        for input in node.inputs:
-            _, c_socket = arm.node_utils.input_get_connected_node(input)
+        for inp in node.inputs:
+            _, c_socket = arm.node_utils.input_get_connected_node(inp)
             if c_socket is not None:
                 self.add_output(c_socket.bl_idname, c_socket.name)
             else:
                 self.add_output('ArmAnySocket', '')
 
     def update_sockets(self, context):
-        for input in self.inputs:
-            self.inputs.remove(input)
+        for inp in self.inputs:
+            self.inputs.remove(inp)
         for output in self.outputs:
             self.outputs.remove(output)
         if self.property0_ is not None:
             for node in self.property0_.nodes:
-                if (node.bl_idname == 'LNGroupInputsNode'):
+                if node.bl_idname == 'LNGroupInputsNode':
                     self.update_inputs(node, context)
                     break
             for node in self.property0_.nodes:
-                if (node.bl_idname == 'LNGroupOutputsNode'):
+                if node.bl_idname == 'LNGroupOutputsNode':
                     self.update_outputs(node, context)
                     break
 
     property0_: HaxePointerProperty('property0', name='Group', type=bpy.types.NodeTree, update=update_sockets)
-    
+
     def arm_init(self, context):
         pass
 
