@@ -122,6 +122,11 @@ class ArmLogicTreeNode(bpy.types.Node):
             self.on_socket_state_change()
             last_node_state[self_id] = current_state
 
+        # Notify sockets
+        for socket in itertools.chain(self.inputs, self.outputs):
+            if isinstance(socket, ArmCustomSocket):
+                socket.on_node_update()
+
     def free(self):
         """Called before the node is deleted."""
         arm.live_patch.send_event('ln_delete', self)
