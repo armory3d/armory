@@ -4,9 +4,11 @@ from bpy.props import *
 from bpy.types import NodeSocket
 import mathutils
 
+import arm.node_utils
 import arm.utils
 
 if arm.is_reload(__name__):
+    arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
@@ -48,6 +50,10 @@ class ArmCustomSocket(NodeSocket):
     def get_default_value(self):
         """Override this for values of unconnected input sockets."""
         return None
+
+    def on_node_update(self):
+        """Called when the update() method of the corresponding node is called."""
+        pass
 
 
 class ArmActionSocket(ArmCustomSocket):
@@ -355,27 +361,38 @@ class ArmAnySocket(ArmCustomSocket):
     bl_label = 'Any Socket'
     arm_socket_type = 'NONE'
 
+    display_label: StringProperty()
+
+    display_color: FloatVectorProperty(
+        name='Color',
+        size=4,
+        subtype='COLOR',
+        min=0.0,
+        max=1.0,
+        default=socket_colors['ArmAnySocket']
+    )
+
     def draw(self, context, layout, node, text):
-        if self.is_linked:
-            if self.is_output:
-                layout.label(text=self.links[0].to_socket.name)
-            else:
-                layout.label(text=self.links[0].from_socket.name)
+        layout.label(text=self.display_label)
 
     def draw_color(self, context, node):
-        if self.is_linked:
-            if self.is_output:
-                to_type = self.links[0].to_socket.bl_idname
-                if to_type == 'NodeSocketColor':  # Reroute
-                    to_type = 'ArmColorSocket'
-                return socket_colors[to_type]
+        return self.display_color
 
-            from_type = self.links[0].from_socket.bl_idname
-            if from_type == 'NodeSocketColor':
-                from_type = 'ArmColorSocket'
-            return socket_colors[from_type]
+    def on_node_update(self):
+        super().on_node_update()
 
-        return socket_colors[self.bl_idname]
+        # Cache name and color of connected socket
+        if self.is_output:
+            c_node, c_socket = arm.node_utils.output_get_connected_node(self)
+        else:
+            c_node, c_socket = arm.node_utils.input_get_connected_node(self)
+
+        if c_node is None:
+            self.display_label = ''
+            self.display_color = socket_colors[self.__class__.bl_idname]
+        else:
+            self.display_label = c_socket.name
+            self.display_color = c_socket.draw_color(bpy.context, c_node)
 
 
 class ArmFloatSocket(ArmCustomSocket):

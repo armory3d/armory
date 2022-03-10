@@ -1,5 +1,5 @@
 import collections.abc
-from typing import Any, Generator, Type, Union
+from typing import Any, Generator, Optional, Type, Union
 
 import bpy
 import mathutils
@@ -24,6 +24,7 @@ def find_node_by_link(node_group, to_node, inp):
             if link.from_node.bl_idname == 'NodeReroute': # Step through reroutes
                 return find_node_by_link(node_group, link.from_node, link.from_node.inputs[0])
             return link.from_node
+
 
 def find_node_by_link_from(node_group, from_node, outp):
     for link in node_group.links:
@@ -60,19 +61,44 @@ def iter_nodes_armorypbr(node_group: bpy.types.NodeTree) -> Generator[bpy.types.
             yield node
 
 
-def get_input_node(node_group, to_node, input_index):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == to_node.inputs[input_index]:
-            if link.from_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return find_node_by_link(node_group, link.from_node, link.from_node.inputs[0])
-            return link.from_node
+def input_get_connected_node(input_socket: bpy.types.NodeSocket) -> tuple[Optional[bpy.types.Node], Optional[bpy.types.NodeSocket]]:
+    """Get the node and the output socket of that node that is connected
+    to the given input, while following reroutes. If the input has
+    multiple incoming connections, the first one is followed. If the
+    connection route ends without a connected node, `(None, None)` is
+    returned.
+    """
+    # If this method is called while a socket is being unconnected, it
+    # can happen that is_linked is true but there are no links
+    if not input_socket.is_linked or len(input_socket.links) == 0:
+        return None, None
 
-def get_output_node(node_group, from_node, output_index):
-    for link in node_group.links:
-        if link.from_node == from_node and link.from_socket == from_node.outputs[output_index]:
-            if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
-            return link.to_node
+    link: bpy.types.NodeLink = input_socket.links[0]
+    from_node = link.from_node
+
+    if from_node.type == 'REROUTE':
+        return input_get_connected_node(from_node.inputs[0])
+
+    return from_node, link.from_socket
+
+
+def output_get_connected_node(output_socket: bpy.types.NodeSocket) -> tuple[Optional[bpy.types.Node], Optional[bpy.types.NodeSocket]]:
+    """Get the node and the input socket of that node that is connected
+    to the given output, while following reroutes. If the output has
+    multiple outgoing connections, the first one is followed. If the
+    connection route ends without a connected node, `(None, None)` is
+    returned.
+    """
+    if not output_socket.is_linked or len(output_socket.links) == 0:
+        return None, None
+
+    link: bpy.types.NodeLink = output_socket.links[0]
+    to_node = link.to_node
+
+    if to_node.type == 'REROUTE':
+        return output_get_connected_node(to_node.outputs[0])
+
+    return to_node, link.to_socket
 
 
 def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket) -> int:
