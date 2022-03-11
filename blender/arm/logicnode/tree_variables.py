@@ -223,6 +223,7 @@ class ARM_OT_TreeVariableListMoveItem(bpy.types.Operator):
     bl_idname = 'arm_treevariableslist.move_item'
     bl_label = 'Move'
     bl_description = 'Move an item in the list'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     direction: EnumProperty(
         items=(
