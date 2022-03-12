@@ -46,11 +46,11 @@ class Starter {
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g: kha.graphics2.Graphics) {
-	                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(load);
-	                    else drawLoading(g, iron.data.Data.assetsLoaded, numAssets);
-	                }
-	                iron.App.notifyOnRender2D(load);
-	                #end
+						if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(load);
+						else drawLoading(g, iron.data.Data.assetsLoaded, numAssets);
+					}
+					iron.App.notifyOnRender2D(load);
+					#end
 					iron.Scene.setActive(scene, function(object: iron.object.Object) {
 						iron.RenderPath.setActive(getRenderPath());
 						#if arm_patch
