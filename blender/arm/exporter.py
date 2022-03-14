@@ -2137,9 +2137,9 @@ Make sure the mesh only has tris/quads.""")
                 continue
 
             emit_from = 0  # VERT
-            if psettings.emit_from == 'VOLUME':
+            if psettings.emit_from == 'FACE':
                 emit_from = 1
-            elif psettings.emit_from == 'FACE':
+            elif psettings.emit_from == 'VOLUME':
                 emit_from = 2
 
             out_particlesys = {
