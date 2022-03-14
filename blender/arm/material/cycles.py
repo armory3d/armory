@@ -852,9 +852,6 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
     elif texfilter == 'Point':
         interpolation = 'Closest'
 
-    # TODO: Blender seems to load full images on size request, cache size instead
-    powimage = is_pow(image.size[0]) and is_pow(image.size[1])
-
     if interpolation == 'Cubic': # Mipmap linear
         tex['mipmap_filter'] = 'linear'
         tex['generate_mipmaps'] = True
