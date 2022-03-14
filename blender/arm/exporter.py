@@ -2136,6 +2136,12 @@ Make sure the mesh only has tris/quads.""")
             if psettings.instance_object is None or psettings.render_type != 'OBJECT':
                 continue
 
+            emit_from = 0  # VERT
+            if psettings.emit_from == 'FACE':
+                emit_from = 1
+            elif psettings.emit_from == 'VOLUME':
+                emit_from = 2
+
             out_particlesys = {
                 'name': particleRef[1]["structName"],
                 'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
@@ -2146,7 +2152,7 @@ Make sure the mesh only has tris/quads.""")
                 'frame_end': int(psettings.frame_end),
                 'lifetime': psettings.lifetime,
                 'lifetime_random': psettings.lifetime_random,
-                'emit_from': 1 if psettings.emit_from == 'VOLUME' else 0, # VERT, FACE
+                'emit_from': emit_from,
                 # Velocity
                 # 'normal_factor': psettings.normal_factor,
                 # 'tangent_factor': psettings.tangent_factor,
