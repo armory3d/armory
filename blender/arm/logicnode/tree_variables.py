@@ -92,6 +92,8 @@ class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+            return False
         tree: bpy.types.NodeTree = context.space_data.node_tree
         if tree is None:
             return False
@@ -144,6 +146,8 @@ class ARM_OT_TreeVariableMakeLocalNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+            return False
         tree: bpy.types.NodeTree = context.space_data.node_tree
         if tree is None:
             return False
@@ -176,6 +180,8 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+            return False
         tree: bpy.types.NodeTree = context.space_data.node_tree
         if tree is None or len(tree.arm_treevariableslist) == 0:
             return False
@@ -217,6 +223,7 @@ class ARM_OT_TreeVariableListMoveItem(bpy.types.Operator):
     bl_idname = 'arm_treevariableslist.move_item'
     bl_label = 'Move'
     bl_description = 'Move an item in the list'
+    bl_options = {'UNDO', 'INTERNAL'}
 
     direction: EnumProperty(
         items=(
@@ -256,6 +263,8 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+            return False
         tree: bpy.types.NodeTree = context.space_data.node_tree
         return tree is not None and len(tree.arm_treevariableslist) > 0
 
@@ -302,6 +311,8 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+            return False
         tree: bpy.types.NodeTree = context.space_data.node_tree
         return tree is not None and len(tree.arm_treevariableslist) > 0
 
