@@ -2,24 +2,36 @@ package armory.logicnode;
 
 class ValueChangedNode extends LogicNode {
 
-	var initial: Dynamic;
-	var value: Dynamic;
+	var initialized = false;
+	var initialValue: Dynamic;
+	var lastValue: Dynamic;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
 	override function run(from: Int) {
-		if (initial == null) {
-			initial = inputs[1].get();
-			value = initial;
+		var currentValue = inputs[1].get();
+
+		if (!initialized) {
+			initialValue = currentValue;
+			lastValue = initialValue;
+			initialized = true;
+			runOutput(0);
+			runOutput(2);
+			return;
 		}
 
-		else if (value != inputs[1].get()) {
-			value = inputs[1].get();
-			value != initial ? runOutput(0) : runOutput(1);
+		if (currentValue == lastValue) {
+			runOutput(1);
+		}
+		else {
+			lastValue = currentValue;
+			runOutput(0);
 		}
 
+		if (currentValue == initialValue) {
+			runOutput(2);
+		}
 	}
-
 }
