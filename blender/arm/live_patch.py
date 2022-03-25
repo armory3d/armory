@@ -230,6 +230,8 @@ def send_event(event_id: str, opt_data: Any = None):
                 value = f'new iron.Vec4({arm.node_utils.haxe_format_socket_val(value, array_outer_brackets=False)}, 1.0)'
             elif inp_type == 'RGBA':
                 value = f'new iron.Vec4({arm.node_utils.haxe_format_socket_val(value, array_outer_brackets=False)})'
+            elif inp_type == 'ROTATION':
+                value = f'new iron.Quat({arm.node_utils.haxe_format_socket_val(value, array_outer_brackets=False)})'
             elif inp_type == 'OBJECT':
                 value = f'iron.Scene.active.getChild("{value}")' if value != '' else 'null'
             else:
