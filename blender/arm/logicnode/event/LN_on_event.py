@@ -29,13 +29,13 @@ class OnEventNode(ArmLogicTreeNode):
     property1: HaxeEnumProperty(
         'property1',
         items=[
-            ('init', 'Init', 'Check for an Event once'),
-            ('update', 'Update', 'Check for an Event continuously'),
+            ('init', 'Init', 'Assigns an Event listener at runtime'),
+            ('update', 'Update', 'Assigns an Event listener continuously'),
             None,
-            ('custom', 'Custom', 'Checks for an Event on input'),
+            ('custom', 'Custom', 'Assigns an Event listener everytime input is detected'),
         ],
         name='',
-        description='Run method for the Event',
+        description='Chosen method for assigning an Event listener',
         default='init',
         update=set_mode
     )
