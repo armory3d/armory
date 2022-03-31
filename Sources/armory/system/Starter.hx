@@ -78,7 +78,7 @@ class Starter {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				js.Syntax.code("(1,eval)({0})", b.toString());
 				#if kha_krom
-				js.Syntax.code("Ammo({print:function(s){haxe.Log.trace(s);},instantiateWasm:function(imports,successCallback) {
+				js.Syntax.code("Ammo({print:function(s){iron.log(s);},instantiateWasm:function(imports,successCallback) {
 					var wasmbin = Krom.loadBlob('ammo.wasm.wasm');
 					var module = new WebAssembly.Module(wasmbin);
 					var inst = new WebAssembly.Instance(module,imports);
@@ -86,7 +86,7 @@ class Starter {
 					return inst.exports;
 				}}).then(function(){ tasks--; start();})");
 				#else
-				js.Syntax.code("Ammo({print:function(s){haxe.Log.trace(s);}}).then(function(){ tasks--; start();})");
+				js.Syntax.code("Ammo({print:function(s){iron.log(s);}}).then(function(){ tasks--; start();})");
 				#end
 			});
 		}
