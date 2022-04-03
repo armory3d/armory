@@ -2008,6 +2008,7 @@ Make sure the mesh only has tris/quads.""")
         transluc_used = False
         overlays_used = False
         blending_used = False
+        depthtex_used = False
         decals_used = False
         sss_used = False
 
@@ -2063,8 +2064,11 @@ Make sure the mesh only has tris/quads.""")
                 transluc_used = True
             if 'overlay' in rpasses:
                 overlays_used = True
-            if 'mesh' in rpasses and material.arm_blending:
-                blending_used = True
+            if 'mesh' in rpasses:
+                if material.arm_blending:
+                    blending_used = True
+                if material.arm_depth_read:
+                    depthtex_used = True
             if 'decal' in rpasses:
                 decals_used = True
 
@@ -2114,6 +2118,9 @@ Make sure the mesh only has tris/quads.""")
             rebuild_rp = True
         if rpdat.rp_blending_state == 'Auto' and rpdat.rp_blending != blending_used:
             rpdat.rp_blending = blending_used
+            rebuild_rp = True
+        if rpdat.rp_depth_texture_state == 'Auto' and rpdat.rp_depth_texture != depthtex_used:
+            rpdat.rp_depth_texture = depthtex_used
             rebuild_rp = True
         if rpdat.rp_decals_state == 'Auto' and rpdat.rp_decals != decals_used:
             rpdat.rp_decals = decals_used

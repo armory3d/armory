@@ -132,6 +132,19 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_depth_texture
+		{
+			var t = new RenderTargetRaw();
+			t.name = "depthtex";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
 		#if rp_material_solid
 		path.loadShader("shader_datas/deferred_light_solid/deferred_light");
 		#elseif rp_material_mobile
@@ -255,6 +268,12 @@ class RenderPathDeferred {
 		#if rp_water
 		{
 			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if rp_depth_texture
+		{
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
@@ -950,6 +969,27 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
 		#end
+	}
+
+	public static function setupDepthTexture() {
+		#if (!kha_opengl)
+		path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+		path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+		#end
+
+		// Copy the depth buffer to the depth texture
+		path.setTarget("depthtex");
+		path.bindTarget("_main", "tex");
+		path.drawShader("shader_datas/copy_pass/copy_pass");
+
+		#if (!kha_opengl)
+		path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+		path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+		#end
+
+		// Prepare to draw meshes
+		setTargetMeshes();
+		path.bindTarget("depthtex", "depthtex");
 	}
 	#end
 }

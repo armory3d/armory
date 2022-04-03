@@ -74,6 +74,19 @@ class RenderPathForward {
 		}
 		#end
 
+		#if rp_depth_texture
+		{
+			var t = new RenderTargetRaw();
+			t.name = "depthtex";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
 		#if rp_render_to_texture
 		{
 			path.createDepthBuffer("main", "DEPTH24");
@@ -111,7 +124,7 @@ class RenderPathForward {
 			}
 			#end
 
-			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
+			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_depth_texture))
 			{
 				var t = new RenderTargetRaw();
 				t.name = "buf";
@@ -145,7 +158,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water))
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water) || (rp_depth_texture))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -211,6 +224,12 @@ class RenderPathForward {
 		#if rp_water
 		{
 			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if rp_depth_texture
+		{
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
@@ -594,6 +613,30 @@ class RenderPathForward {
 			path.drawMeshes("overlay");
 		}
 		#end
+	}
+
+	public static function setupDepthTexture() {
+		// When render to texture is off, lbuffer0 does not exist, so for
+		// now do nothing then and pass an empty uniform to the shader
+		#if rp_render_to_texture
+			#if (!kha_opengl)
+			path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
+			path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
+			#end
+
+			// Copy the depth buffer to the depth texture
+			path.setTarget("depthtex");
+			path.bindTarget("_main", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+
+			#if (!kha_opengl)
+			path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
+			path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
+			#end
+		#end // rp_render_to_texture
+
+		setTargetMeshes();
+		path.bindTarget("depthtex", "depthtex");
 	}
 	#end
 }

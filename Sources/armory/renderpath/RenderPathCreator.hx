@@ -34,23 +34,25 @@ class RenderPathCreator {
 		#end
 
 		#if (rp_renderer == "Forward")
-		RenderPathForward.init(path);
-		path.commands = function() {
-			RenderPathForward.commands();
-			commands();
-		}
+			RenderPathForward.init(path);
+			path.commands = function() {
+				RenderPathForward.commands();
+				commands();
+			}
+			path.setupDepthTexture = RenderPathForward.setupDepthTexture;
 		#elseif (rp_renderer == "Deferred")
-		RenderPathDeferred.init(path);
-		path.commands = function() {
-			RenderPathDeferred.commands();
-			commands();
-		}
+			RenderPathDeferred.init(path);
+			path.commands = function() {
+				RenderPathDeferred.commands();
+				commands();
+			}
+			path.setupDepthTexture = RenderPathDeferred.setupDepthTexture;
 		#elseif (rp_renderer == "Raytracer")
-		RenderPathRaytracer.init(path);
-		path.commands = function() {
-			RenderPathRaytracer.commands();
-			commands();
-		}
+			RenderPathRaytracer.init(path);
+			path.commands = function() {
+				RenderPathRaytracer.commands();
+				commands();
+			}
 		#end
 		return path;
 	}
