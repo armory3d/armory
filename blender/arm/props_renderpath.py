@@ -57,6 +57,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -92,6 +93,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
@@ -125,6 +127,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -165,6 +168,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Off'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
