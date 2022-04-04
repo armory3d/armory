@@ -547,10 +547,10 @@ def build_success():
         if wrd.arm_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
-            t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp)
-            t.daemon = True
+            prefs = arm.utils.get_arm_preferences()
+            t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
             t.start()
-            html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
+            html5_app_path = 'http://localhost:{}/{}/debug/html5'.format(prefs.html5_server_port, arm.utils.build_dir())
             webbrowser.open(html5_app_path)
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:

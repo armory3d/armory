@@ -1,4 +1,3 @@
-import arm.utils
 import atexit
 import http.server
 import socketserver
@@ -6,10 +5,7 @@ import subprocess
 
 haxe_server = None
 
-def run_tcp():
-	prefs = arm.utils.get_arm_preferences()
-	port = prefs.html5_server_port
-	do_log = prefs.html5_server_log
+def run_tcp(port:int, do_log:bool):
 	class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 		def log_message(self,format,*args):
 			if do_log: print(format % args)
