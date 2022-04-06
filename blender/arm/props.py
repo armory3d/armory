@@ -360,6 +360,7 @@ def init_properties():
     bpy.types.World.arm_nishita_density = FloatVectorProperty(name="Nishita Density", size=3, default=[1, 1, 1])
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
+    bpy.types.Material.arm_depth_read = BoolProperty(name="Read Depth", description="Allow this material to read from a depth texture which is copied from the depth buffer. The meshes using this material will be drawn after all meshes that don't read from the depth texture", default=False)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)
     bpy.types.Material.arm_decal = BoolProperty(name="Decal", default=False)
     bpy.types.Material.arm_two_sided = BoolProperty(name="Two-Sided", description="Flip normal when drawing back-face", default=False)

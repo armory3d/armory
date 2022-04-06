@@ -505,6 +505,7 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
         layout.prop(mat, 'arm_material_id')
+        layout.prop(mat, 'arm_depth_read')
         layout.prop(mat, 'arm_overlay')
         layout.prop(mat, 'arm_decal')
         layout.prop(mat, 'arm_discard')
@@ -1323,6 +1324,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, 'rp_overlays_state')
         layout.prop(rpdat, 'rp_decals_state')
         layout.prop(rpdat, 'rp_blending_state')
+        layout.prop(rpdat, 'rp_depth_texture_state')
         layout.prop(rpdat, 'rp_draw_order')
         layout.prop(rpdat, 'arm_samples_per_pixel')
         layout.prop(rpdat, 'arm_texture_filter')

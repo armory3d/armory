@@ -57,6 +57,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -92,6 +93,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
@@ -125,6 +127,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -165,6 +168,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Off'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
@@ -190,7 +194,7 @@ def update_preset(self, context):
     update_renderpath(self, context)
 
 def update_renderpath(self, context):
-    if assets.invalidate_enabled == False:
+    if not assets.invalidate_enabled:
         return
     assets.invalidate_shader_cache(self, context)
     bpy.data.worlds['Arm'].arm_recompile = True
@@ -238,6 +242,17 @@ def update_blending_state(self, context):
     else: # Auto - updates rp at build time if blending mat is used
         return
     update_renderpath(self, context)
+
+
+def update_depth_texture_state(self, context):
+    if self.rp_depth_texture_state == 'On':
+        self.rp_depth_texture = True
+    elif self.rp_depth_texture_state == 'Off':
+        self.rp_depth_texture = False
+    else: # Auto - updates rp at build time if depth texture mat is used
+        return
+    update_renderpath(self, context)
+
 
 def update_sss_state(self, context):
     if self.rp_sss_state == 'On':
@@ -405,6 +420,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Distance', 'Distance', 'Distance'),
                ('Shader', 'Shader', 'Shader')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
+    rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
+    rp_depth_texture_state: EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'),
+               ('Auto', 'Auto', 'Auto')],
+        name='Depth Texture', description='Whether materials can read from a depth texture', default='Auto', update=update_depth_texture_state)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)

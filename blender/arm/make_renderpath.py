@@ -346,6 +346,10 @@ def build():
     if rpdat.rp_blending:
         assets.add_khafile_def('rp_blending')
 
+    if rpdat.rp_depth_texture:
+        assets.add_khafile_def('rp_depth_texture')
+        assets.add_shader_pass('copy_pass')
+
     if rpdat.rp_sss:
         assets.add_khafile_def('rp_sss')
         wrd.world_defs += '_SSS'

@@ -40,7 +40,7 @@ def make(context_id, rpasses):
     # Blend context
     mat = mat_state.material
     blend = mat.arm_blending
-    particle = mat_state.material.arm_particle_flag
+    particle = mat.arm_particle_flag
     dprepass = rid == 'Forward' and rpdat.rp_depthprepass
     if blend:
         con['name'] = 'blend'
@@ -54,7 +54,9 @@ def make(context_id, rpasses):
         con['compare_mode'] = 'less'
     elif particle:
         pass
-    elif dprepass: # Depth prepass was performed
+    # Depth prepass was performed, exclude mat with depth read that
+    # isn't part of depth prepass
+    elif dprepass and not (rpdat.rp_depth_texture and mat.arm_depth_read):
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
 

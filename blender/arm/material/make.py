@@ -70,6 +70,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
             'name': rp,
             'bind_constants': [] + bind_constants[rp],
             'bind_textures': [] + bind_textures[rp],
+            'depth_read': material.arm_depth_read,
         }
         mat_data['contexts'].append(c)
 
