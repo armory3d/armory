@@ -294,8 +294,8 @@ def compile(assets_only=False):
             for s in item.arm_project_khamake.split(' '):
                 cmd.append(s)
 
-    ffmpeg_path = arm.utils.get_ffmpeg_path() # Path to binary
-    if ffmpeg_path != '':
+    ffmpeg_path = arm.utils.get_ffmpeg_path()
+    if ffmpeg_path != None and ffmpeg_path != '':
         cmd.append('--ffmpeg')
         cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 

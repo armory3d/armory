@@ -7,6 +7,7 @@ import platform
 import random
 import re
 import shlex
+import shutil
 import subprocess
 from typing import Any, Dict, List, Optional, Tuple
 import webbrowser
@@ -224,7 +225,9 @@ def get_ide_bin():
     return '' if not hasattr(addon_prefs, 'ide_bin') else addon_prefs.ide_bin
 
 def get_ffmpeg_path():
-    return get_arm_preferences().ffmpeg_path
+    path = get_arm_preferences().ffmpeg_path
+    if path == "": path = shutil.which("ffmpeg")
+    return path
 
 def get_renderdoc_path():
     p = get_arm_preferences().renderdoc_path
