@@ -111,6 +111,13 @@ def get_socket_index(sockets: Union[NodeInputs, NodeOutputs], socket: NodeSocket
     return -1
 
 
+def get_socket_type(socket: NodeSocket) -> str:
+    if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
+        return socket.arm_socket_type
+    else:
+        return socket.type
+
+
 def get_socket_default(socket: NodeSocket) -> Any:
     """Get the socket's default value, or `None` if it doesn't exist."""
     if isinstance(socket, arm.logicnode.arm_sockets.ArmCustomSocket):
