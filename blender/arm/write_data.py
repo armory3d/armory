@@ -517,11 +517,6 @@ def write_indexhtml(w, h, is_publish):
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <style>
-    body {
-        margin: 0;
-    }
-    </style>
 """)
         f.write("""
     <title>"""+html.escape( wrd.arm_project_name)+"""</title>
