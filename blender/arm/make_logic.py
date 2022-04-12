@@ -166,7 +166,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         prop =node.property0_
         group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
         link_group = True
-    
+
     # Get node name
     name = arm.node_utils.get_export_node_name(node)
     if name_prefix is not None:
@@ -257,25 +257,25 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
                 for i in range(0, len(n.outputs)):
                     if n.outputs[i] == socket:
                         inp_from = i
-                        from_type = socket.arm_socket_type
+                        from_type = arm.node_utils.get_socket_type(socket)
                         break
 
         # Not linked -> create node with default values
         else:
             inp_name = build_default_node(inp)
             inp_from = 0
-            from_type = inp.arm_socket_type
+            from_type = arm.node_utils.get_socket_type(inp)
 
         # The input is linked to a reroute, but the reroute is unlinked
         if unconnected:
             inp_name = build_default_node(inp)
             inp_from = 0
-            from_type = inp.arm_socket_type
+            from_type = arm.node_utils.get_socket_type(socket)
 
         # Add input
         f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
         if use_live_patch:
-            to_type = inp.arm_socket_type
+            to_type = arm.node_utils.get_socket_type(socket)
             f.write(f'\t\t__link.fromType = "{from_type}";\n')
             f.write(f'\t\t__link.toType = "{to_type}";\n')
             f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
@@ -290,7 +290,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         if not out.is_linked:
             f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
             if use_live_patch:
-                out_type = out.arm_socket_type
+                out_type = arm.node_utils.get_socket_type(out)
                 f.write(f'\t\t__link.fromType = "{out_type}";\n')
                 f.write(f'\t\t__link.toType = "{out_type}";\n')
                 f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(out.get_default_value())};\n')
@@ -342,15 +342,15 @@ def build_default_node(inp: bpy.types.NodeSocket):
     if is_custom_socket:
         # ArmCustomSockets need to implement get_default_value()
         default_value = inp.get_default_value()
-        inp_type = inp.arm_socket_type  # any custom socket's `type` is "VALUE". might as well have valuable type information for custom nodes as well.
     else:
         if hasattr(inp, 'default_value'):
             default_value = inp.default_value
         else:
             default_value = None
-        inp_type = inp.type
 
     default_value = arm.node_utils.haxe_format_socket_val(default_value, array_outer_brackets=False)
+
+    inp_type = arm.node_utils.get_socket_type(inp)
 
     if inp_type == 'VECTOR':
         return f'new armory.logicnode.VectorNode(this, {default_value})'
