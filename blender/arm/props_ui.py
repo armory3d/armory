@@ -480,6 +480,80 @@ class ARM_OT_NewCustomMaterial(bpy.types.Operator):
         return{'FINISHED'}
 
 
+class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
+    uniform_name: StringProperty(
+        name='Uniform Name',
+        description='The name of the sampler uniform as used in the shader',
+        default='ImageTexture',
+    )
+
+    image: PointerProperty(
+        name='Image',
+        type=bpy.types.Image,
+        description='The image to attach to the texture unit',
+    )
+
+
+class ARM_UL_BindTexturesList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item: ARM_PG_BindTexturesListItem, icon, active_data, active_propname, index):
+        row = layout.row(align=True)
+
+        if item.image is not None:
+            row.label(text=item.uniform_name, icon_value=item.image.preview.icon_id)
+        else:
+            row.label(text='<empty>', icon='ERROR')
+
+
+class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
+    bl_idname = "arm_bind_textures_list.new_item"
+    bl_label = "Add Texture Binding"
+    bl_description = "Add a new texture binding to the list"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+        return True
+
+    def execute(self, context):
+        mat = context.material
+        mat.arm_bind_textures_list.add()
+        mat.arm_bind_textures_list_index = len(mat.arm_bind_textures_list) - 1
+        return{'FINISHED'}
+
+
+class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
+    bl_idname = "arm_bind_textures_list.delete_item"
+    bl_label = "Remove Texture Binding"
+    bl_description = "Delete the selected texture binding from the list"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+        return len(mat.arm_bind_textures_list) > 0
+
+    def execute(self, context):
+        mat = context.material
+        lst = mat.arm_bind_textures_list
+        index = mat.arm_bind_textures_list_index
+
+        if len(lst) <= index:
+            return{'FINISHED'}
+
+        lst.remove(index)
+
+        if index > 0:
+            index = index - 1
+        mat.arm_bind_textures_list_index = index
+
+        return{'FINISHED'}
+
+
 class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
@@ -521,6 +595,52 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_billboard')
 
         layout.operator("arm.invalidate_material_cache")
+
+
+class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
+    bl_label = "Bind Textures"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_MaterialPropsPanel"
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+
+        return mat.arm_custom_material != ''
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        mat = bpy.context.material
+        if mat is None:
+            return
+
+        row = layout.row(align=True)
+        col = row.column(align=True)
+        col.template_list('ARM_UL_BindTexturesList', '', mat, 'arm_bind_textures_list', mat, 'arm_bind_textures_list_index')
+
+        if mat.arm_bind_textures_list_index >= 0 and len(mat.arm_bind_textures_list) > 0:
+            item = mat.arm_bind_textures_list[mat.arm_bind_textures_list_index]
+            box = col.box()
+
+            if item.image is None:
+                _row = box.row()
+                _row.alert = True
+                _row.alignment = 'RIGHT'
+                _row.label(text="No image selected, skipping export")
+
+            box.prop(item, 'uniform_name')
+            box.prop(item, 'image')
+
+        col = row.column(align=True)
+        col.operator("arm_bind_textures_list.new_item", icon='ADD', text="")
+        col.operator("arm_bind_textures_list.delete_item", icon='REMOVE', text="")
 
 
 class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
@@ -2556,7 +2676,12 @@ def register():
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
     bpy.utils.register_class(ARM_OT_NewCustomMaterial)
+    bpy.utils.register_class(ARM_PG_BindTexturesListItem)
+    bpy.utils.register_class(ARM_UL_BindTexturesList)
+    bpy.utils.register_class(ARM_OT_BindTexturesListNewItem)
+    bpy.utils.register_class(ARM_OT_BindTexturesListDeleteItem)
     bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.register_class(ARM_PT_BindTexturesPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
@@ -2621,6 +2746,9 @@ def register():
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
     bpy.types.NODE_MT_context_menu.append(draw_custom_node_menu)
 
+    bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
+    bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
+
 
 def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
@@ -2646,7 +2774,12 @@ def unregister():
     bpy.utils.unregister_class(ARM_OT_NewCustomMaterial)
     bpy.utils.unregister_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_BindTexturesPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.unregister_class(ARM_OT_BindTexturesListDeleteItem)
+    bpy.utils.unregister_class(ARM_OT_BindTexturesListNewItem)
+    bpy.utils.unregister_class(ARM_UL_BindTexturesList)
+    bpy.utils.unregister_class(ARM_PG_BindTexturesListItem)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)

@@ -738,16 +738,20 @@ def node_name(s: str) -> str:
 ##
 
 
-def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matname: str = None) -> Optional[Dict[str, Any]]:
-    """Creates a texture reference for the export data for a given texture node."""
+def make_texture(
+        image: bpy.types.Image, tex_name: str, matname: str,
+        interpolation: str, extension: str,
+) -> Optional[Dict[str, Any]]:
+    """Creates a texture binding entry for the scene's export data
+    ('bind_textures') for a given texture image.
+    """
     tex = {'name': tex_name}
+
+    if image is None:
+        return None
 
     if matname is None:
         matname = mat_state.material.name
-
-    image = image_node.image
-    if image is None:
-        return None
 
     # Get filepath
     filepath = image.filepath
@@ -838,11 +842,9 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
             else:
                 arm.assets.add(arm.utils.asset_path(filepath))
 
-
     # if image_format != 'RGBA32':
         # tex['format'] = image_format
 
-    interpolation = image_node.interpolation
     rpdat = arm.utils.get_rp()
     texfilter = rpdat.arm_texture_filter
     if texfilter == 'Anisotropic':
@@ -864,7 +866,7 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
         tex['mag_filter'] = 'point'
     # else defaults to linear
 
-    if image_node.extension != 'REPEAT': # Extend or clip
+    if extension != 'REPEAT': # Extend or clip
         tex['u_addressing'] = 'clamp'
         tex['v_addressing'] = 'clamp'
 
@@ -876,6 +878,14 @@ def make_texture(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matnam
         tex['generate_mipmaps'] = False
 
     return tex
+
+
+def make_texture_from_image_node(image_node: bpy.types.ShaderNodeTexImage, tex_name: str, matname: str = None) -> Optional[Dict[str, Any]]:
+    if matname is None:
+        matname = mat_state.material.name
+
+    return make_texture(image_node.image, tex_name, matname, image_node.interpolation, image_node.extension)
+
 
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0

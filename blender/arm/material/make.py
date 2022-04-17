@@ -4,6 +4,7 @@ import bpy
 from bpy.types import Material
 from bpy.types import Object
 
+import arm.log as log
 import arm.material.cycles as cycles
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
@@ -11,6 +12,7 @@ import arm.node_utils
 import arm.utils
 
 if arm.is_reload(__name__):
+    log = arm.reload_module(log)
     cycles = arm.reload_module(cycles)
     make_shader = arm.reload_module(make_shader)
     mat_batch = arm.reload_module(mat_batch)
@@ -55,6 +57,20 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         bind_textures = {'mesh': []}
 
         make_shader.make_instancing_and_skinning(material, mat_users)
+
+        for idx, item in enumerate(material.arm_bind_textures_list):
+            if item.uniform_name == '':
+                log.warn(f'Material "{material.name}": skipping export of bind texture at slot {idx + 1} with empty uniform name')
+                continue
+
+            if item.image is not None:
+                tex = cycles.make_texture(item.image, item.uniform_name, material.name, 'Linear', 'REPEAT')
+                if tex is None:
+                    continue
+                bind_textures['mesh'].append(tex)
+            else:
+                log.warn(f'Material "{material.name}": skipping export of bind texture at slot {idx + 1} ("{item.uniform_name}") with no image selected')
+
     elif not wrd.arm_batch_materials or material.name.startswith('armdefault'):
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers)
         sd = shader_data.sd
@@ -100,7 +116,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
                     for node in material.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':
                             tex_name = arm.utils.safesrc(node.name)
-                            tex = cycles.make_texture(node, tex_name)
+                            tex = cycles.make_texture_from_image_node(node, tex_name)
                             # Empty texture
                             if tex is None:
                                 tex = {'name': tex_name, 'file': ''}
