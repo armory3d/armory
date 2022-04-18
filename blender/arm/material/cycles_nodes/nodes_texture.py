@@ -127,7 +127,7 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
                 return f'{c.store_var_name(node)}.a'
 
         tex_name = c.node_name(node.name)
-        tex = c.make_texture(node, tex_name)
+        tex = c.make_texture_from_image_node(node, tex_name)
         tex_link = None
         tex_default_file = None
         is_arm_mat_param = None
