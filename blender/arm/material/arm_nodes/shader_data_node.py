@@ -79,7 +79,7 @@ class ShaderDataNode(Node):
 
             if self.variable_type == "sampler2D":
                 frag.add_uniform('vec2 screenSize', link='_screenSize')
-                return f'texture({self.variable_name}, gl_FragCoord.xy / screenSize).rgb'
+                return f'textureLod({self.variable_name}, gl_FragCoord.xy / screenSize, 0.0).rgb'
 
             return self.variable_name
 
