@@ -56,7 +56,7 @@ class SwitchActionNode extends LogicNode {
 
 	#if arm_skin
 	public function blendBones(animMats: Array<Mat4>) {
-		var boneLayer = inputs[7].get();
+		var boneLayer: Null<Int> = inputs[7].get();
 		if(boneLayer < 0){
 			boneLayer = null;
 			if(factor < 0.05) {
@@ -87,7 +87,7 @@ class SwitchActionNode extends LogicNode {
 
 	override function run(from:Int) {
 		var restart = inputs[5].get();
-		var duration = inputs[6].get();
+		var duration: FastFloat = inputs[6].get();
 
 		if(from == 0){
 

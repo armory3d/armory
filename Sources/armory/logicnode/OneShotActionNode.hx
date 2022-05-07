@@ -27,7 +27,7 @@ class OneShotActionNode extends LogicNode {
 	var oneShotDone = true;
 	var anim: TAnim;
 	var totalFrames = 0;
-	var frameTime = 1.0 / 60;
+	var frameTime: Null<Float> = 1.0 / 60;
 	var blendOutFrame = 0;
 
 	public function new(tree: LogicTree) {
@@ -85,7 +85,7 @@ class OneShotActionNode extends LogicNode {
 
 	#if arm_skin
 	public function blendBones(animMats: Array<Mat4>) {
-		var boneLayer = inputs[8].get();
+		var boneLayer: Null<Int> = inputs[8].get();
 		if(boneLayer < 0){
 			boneLayer = null;
 			if(factor < 0.05) {

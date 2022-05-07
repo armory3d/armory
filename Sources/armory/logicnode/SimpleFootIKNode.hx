@@ -17,13 +17,13 @@ class SimpleFootIKNode extends LogicNode {
 	var leftHitPoint: Null<Float>; //4
 	var rightHitPoint: Null<Float>; //5
 	var hipHeight: Float; //6
-	var footOffset: Float; //7
+	var footOffset: Null<Float>; //7
 	var footOffsetThreshold: Float; //8
 	var interpSpeed: Float; //9
 	var layerMask: Null<Int>; //10
 	var leftPole: Vec4 = null; 
 	var rightPole: Vec4 = null;
-	var oldInfluence: Float = null;
+	var oldInfluence: Null<Float> = null;
 	var influenceMatch: Bool = false;
 
 	static final EPSILON = 0.01;
