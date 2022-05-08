@@ -163,7 +163,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
 
     # Check and parse group nodes if they exist
     if node.bl_idname == 'LNCallGroupNode':
-        prop =node.property0_
+        prop = node.property0_
         group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
         link_group = True
 
@@ -225,7 +225,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         f.write(f'\t\t{name}.preallocOutputs({len(node.outputs)});\n')
 
     # Create inputs
-    if(link_group):
+    if link_group:
         # Replace Call Node Group Node name with Group Input Node name
         name = group_input_name
     for idx, inp in enumerate(node.inputs):
@@ -248,7 +248,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
                 n = n.inputs[0].links[0].from_node
             if not unconnected:
                 # Ignore warnings if "Any" socket type is used
-                if(inp.bl_idname != 'ArmAnySocket' and socket.bl_idname != 'ArmAnySocket'):
+                if inp.bl_idname != 'ArmAnySocket' and socket.bl_idname != 'ArmAnySocket':
                     if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
                             (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
                         arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
@@ -281,7 +281,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
             f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
 
     # Create outputs
-    if(link_group):
+    if link_group:
         # Replace Call Node Group Node name with Group Output Node name
         name = group_output_name
     for idx, out in enumerate(node.outputs):
