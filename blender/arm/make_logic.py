@@ -270,12 +270,12 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         if unconnected:
             inp_name = build_default_node(inp)
             inp_from = 0
-            from_type = arm.node_utils.get_socket_type(socket)
+            from_type = arm.node_utils.get_socket_type(inp)
 
         # Add input
         f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
         if use_live_patch:
-            to_type = arm.node_utils.get_socket_type(socket)
+            to_type = arm.node_utils.get_socket_type(inp)
             f.write(f'\t\t__link.fromType = "{from_type}";\n')
             f.write(f'\t\t__link.toType = "{to_type}";\n')
             f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
