@@ -74,13 +74,14 @@ def label_multiline(text: str, context: bpy.types.Context, parent: bpy.types.UIL
             parent.label(text=text_line)
 
 
-from enum import Enum
-class WarningSeverityLevels(Enum): # Unfortunately this cant go inside EditorTimeWarnings as Python wont then let me reference it for default values in function parameters within EditorTimeWarnings.
-    ""
-    LOW = -1
-    NORMAL = 0
-    HIGH = 1
-    SEVERE = 2
+class WarningSeverityLevels(): # Unfortunately this cant go inside EditorTimeWarnings as Python wont then let me reference it for default values in function parameters within EditorTimeWarnings.
+    """Do not instanciate me. Used inside of EditorTimeWarnings. Should be treated like an ENUM, I advice against typing severity levels as raw strings, 
+    
+    instead when passing severity levels to say a constructor or as function arguments, type something like: funcImCalling(WarningSeverityLevels.LOW)"""
+    LOW = "LOW"
+    NORMAL = "NORMAL"
+    HIGH = "HIGH"
+    SEVERE = "SEVERE"
 class EditorTimeWarnings():
     "Do not instanciate me. Im responsible for keeping track of warnings that will later be displayed under the Armory Player panel."
     class EditorTimeWarning():
@@ -1529,23 +1530,11 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_pcfsize')
         layout.separator()
 
-        def label_multiline(text: str, context: bpy.types.Context, parent):
-            textListSplitByNewLines = text.split('\n')
-            import textwrap
-            for text in textListSplitByNewLines:
-                chars = int(context.region.width / 7)   # 7 pix on 1 character
-                wrapper = textwrap.TextWrapper(width=chars)
-                text_lines = wrapper.wrap(text=text)
-                for text_line in text_lines:
-                    parent.label(text=text_line)
         layout.prop(rpdat, 'rp_shadowmap_atlas')
         if (not rpdat.rp_shadowmap_atlas) and os.name == 'nt':
-            EditorTimeWarnings.registerWarning("Armory Render Path > Shadows > Shadow Map Atlasing", "Known to prevent Armory from starting on Windows when there are more than 2 scene lights.", True, context, layout)
+            EditorTimeWarnings.registerWarning("Armory Render Path > Shadows > Shadow Map Atlasing", "Having this setting DISABLED is known to prevent Armory from starting on Windows when there are more than 2 scene lights.", True, context, layout)
         else:
             EditorTimeWarnings.unregisterWarning("Armory Render Path > Shadows > Shadow Map Atlasing")
-            # warningColumn = layout.column()
-            # warningColumn.alert = True
-            # label_multiline("Warning! Having Shadow Map Atlasing (rp_shadowmap_atlas) disabled is known to break things on Windows devices when having more than 2 scene lights.", context, warningColumn)
 
         colatlas = layout.column()
         colatlas.enabled = rpdat.rp_shadowmap_atlas
