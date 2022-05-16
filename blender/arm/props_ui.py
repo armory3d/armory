@@ -1539,7 +1539,7 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
                 for text_line in text_lines:
                     parent.label(text=text_line)
         layout.prop(rpdat, 'rp_shadowmap_atlas')
-        if not rpdat.rp_shadowmap_atlas:
+        if (not rpdat.rp_shadowmap_atlas) and os.name == 'nt':
             EditorTimeWarnings.registerWarning("Armory Render Path > Shadows > Shadow Map Atlasing", "Known to prevent Armory from starting on Windows when there are more than 2 scene lights.", True, context, layout)
         else:
             EditorTimeWarnings.unregisterWarning("Armory Render Path > Shadows > Shadow Map Atlasing")
