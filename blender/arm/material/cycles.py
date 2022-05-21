@@ -58,7 +58,7 @@ def parse(nodes, con: ShaderContext,
           parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     global state
 
-    state = ParserState(ParserContext.OBJECT)
+    state = ParserState(ParserContext.OBJECT, mat_state.material.name)
 
     state.parse_surface = parse_surface
     state.parse_opacity = parse_opacity
@@ -186,18 +186,18 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
         link = inp.links[0]
         if link.from_node.type == 'REROUTE':
             return parse_shader_input(link.from_node.inputs[0])
+
+        if link.from_socket.type != 'SHADER':
+            log.warn(f'Node tree "{tree_name()}": socket "{link.from_socket.name}" of node "{link.from_node.name}" cannot be connected to a shader socket')
+            state.reset_outs()
+            return state.get_outs()
+
         return parse_shader(link.from_node, link.from_socket)
 
-    # Use direct socket value
     else:
-        out_basecol = 'vec3(0.8)'
-        out_roughness = '0.0'
-        out_metallic = '0.0'
-        out_occlusion = '1.0'
-        out_specular = '1.0'
-        out_opacity = '1.0'
-        out_emission = '0.0'
-        return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission
+        # Return default shader values
+        state.reset_outs()
+        return state.get_outs()
 
 
 def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[str, ...]:
@@ -231,7 +231,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
             if state.parse_surface:
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 state.out_basecol = parse_vector_input(node.inputs[0])
@@ -258,8 +258,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
             return node.parse(state.frag, state.vert)
 
     else:
-        # TODO: Print node tree name (save in ParserState)
-        log.warn(f'Material node type {node.type} not supported')
+        log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
 
     return state.get_outs()
 
@@ -285,8 +284,11 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
         st = link.from_socket.type
         if st in ('RGB', 'RGBA', 'VECTOR'):
             return res_var
-        else:  # VALUE
+        elif st in ('VALUE', 'INT'):
             return f'vec3({res_var})'
+        else:
+            log.warn(f'Node tree "{tree_name()}": socket "{link.from_socket.name}" of node "{link.from_node.name}" cannot be connected to a vector-like socket')
+            return to_vec3([0.0, 0.0, 0.0])
 
     # Unlinked reroute
     elif inp.type == 'VALUE':
@@ -366,7 +368,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    log.warn(f'Material node type {node.type} not supported')
+    log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return "vec3(0, 0, 0)"
 
 
@@ -408,9 +410,11 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
         if socket_type in ('RGB', 'RGBA', 'VECTOR'):
             # RGB to BW
             return rgb_to_bw(res_var)
-        # VALUE
-        else:
+        elif socket_type in ('VALUE', 'INT'):
             return res_var
+        else:
+            log.warn(f'Node tree "{tree_name()}": socket "{link.from_socket.name}" of node "{link.from_node.name}" cannot be connected to a scalar value socket')
+            return '0.0'
 
     # Use value from socket
     else:
@@ -476,7 +480,7 @@ def parse_value(node, socket):
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    log.warn(f'Material node type {node.type} not supported')
+    log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return '0.0'
 
 
@@ -910,8 +914,8 @@ def assets_add(path):
 def assets_add_embedded_data(path):
     arm.assets.add_embedded_data(path)
 
-def mat_name():
-    return mat_state.material.name
+def tree_name() -> str:
+    return state.tree_name
 
 def mat_batch():
     return mat_state.batch

@@ -163,7 +163,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         frag.write('fragColor.rgb = backgroundCol;')
         return
 
-    parser_state = ParserState(ParserContext.WORLD, world)
+    parser_state = ParserState(ParserContext.WORLD, world.name, world)
     parser_state.con = con
     parser_state.curshader = frag
     parser_state.frag = frag
