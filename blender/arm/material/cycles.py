@@ -58,7 +58,7 @@ def parse(nodes, con: ShaderContext,
           parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     global state
 
-    state = ParserState(ParserContext.OBJECT)
+    state = ParserState(ParserContext.OBJECT, mat_state.material.name)
 
     state.parse_surface = parse_surface
     state.parse_opacity = parse_opacity
@@ -231,7 +231,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
             if state.parse_surface:
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    log.warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 state.out_basecol = parse_vector_input(node.inputs[0])
@@ -258,8 +258,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
             return node.parse(state.frag, state.vert)
 
     else:
-        # TODO: Print node tree name (save in ParserState)
-        log.warn(f'Material node type {node.type} not supported')
+        log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
 
     return state.get_outs()
 
@@ -366,7 +365,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    log.warn(f'Material node type {node.type} not supported')
+    log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return "vec3(0, 0, 0)"
 
 
@@ -476,7 +475,7 @@ def parse_value(node, socket):
         if node.bl_idname == 'ArmShaderDataNode':
             return node.parse(state.frag, state.vert)
 
-    log.warn(f'Material node type {node.type} not supported')
+    log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return '0.0'
 
 
@@ -910,8 +909,8 @@ def assets_add(path):
 def assets_add_embedded_data(path):
     arm.assets.add_embedded_data(path)
 
-def mat_name():
-    return mat_state.material.name
+def tree_name() -> str:
+    return state.tree_name
 
 def mat_batch():
     return mat_state.batch

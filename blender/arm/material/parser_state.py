@@ -23,8 +23,9 @@ else:
 
 class ParserState:
     """Dataclass to keep track of the current state while parsing a shader tree."""
-    def __init__(self, context: ParserContext, world: Optional[bpy.types.World] = None):
+    def __init__(self, context: ParserContext, tree_name: str, world: Optional[bpy.types.World] = None):
         self.context = context
+        self.tree_name = tree_name
 
         # The current world, if parsing a world node tree
         self.world = world
