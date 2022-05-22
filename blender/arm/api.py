@@ -37,3 +37,7 @@ def add_driver(driver_name: str,
         'draw_props': draw_props,
         'draw_mat_props': draw_mat_props
     }
+
+
+def remove_drivers():
+    drivers.clear()

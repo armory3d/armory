@@ -168,7 +168,7 @@ def on_load_post(context):
 
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
-    arm.api.drivers = dict()
+    arm.api.remove_drivers()
 
     load_py_libraries()
 
@@ -226,7 +226,7 @@ def unload_py_libraries():
 
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')
-    if armory_pbr == None:
+    if armory_pbr is None:
         load_library('Armory PBR')
 
 
