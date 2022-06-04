@@ -9,7 +9,7 @@ class DrawImageNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmBoolSocket', 'Activated/Desativated', default_value = True)
+        self.add_input('ArmBoolSocket', 'Activated/Deactivated', default_value = True)
         self.add_input('ArmStringSocket', 'Image File')
         self.add_input('ArmColorSocket', 'Color In', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_input('ArmIntSocket', 'X')

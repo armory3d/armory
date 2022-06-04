@@ -9,7 +9,7 @@ class DrawCircleNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmBoolSocket', 'Activated/Desativated', default_value = True)
+        self.add_input('ArmBoolSocket', 'Activated/Deactivated', default_value = True)
         self.add_input('ArmBoolSocket', 'Filled', default_value = False)
         self.add_input('ArmColorSocket', 'Color In', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_input('ArmFloatSocket', 'Strength')

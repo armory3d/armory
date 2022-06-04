@@ -9,7 +9,7 @@ class DrawCameraTextureNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmBoolSocket', 'Activated/Desativated', default_value = True)
+        self.add_input('ArmBoolSocket', 'Activated/Deactivated', default_value = True)
         self.add_input('ArmNodeSocketObject', 'Camera')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmIntSocket', 'Material Slot')   

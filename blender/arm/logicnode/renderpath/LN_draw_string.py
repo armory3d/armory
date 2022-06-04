@@ -9,7 +9,7 @@ class DrawStringNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmBoolSocket', 'Activated/Desativated', default_value = True)
+        self.add_input('ArmBoolSocket', 'Activated/Deactivated', default_value = True)
         self.add_input('ArmStringSocket', 'String')
         self.add_input('ArmStringSocket', 'Font File')
         self.add_input('ArmIntSocket', 'Font Size')

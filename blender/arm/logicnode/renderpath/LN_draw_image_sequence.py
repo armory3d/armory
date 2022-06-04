@@ -9,7 +9,7 @@ class DrawImageSequenceNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
-        self.add_input('ArmBoolSocket', 'Activated/Desativated', default_value = True)
+        self.add_input('ArmBoolSocket', 'Activated/Deactivated', default_value = True)
         self.add_input('ArmStringSocket', 'Image File Prefix')
         self.add_input('ArmStringSocket', 'Image File Extension')
         self.add_input('ArmIntSocket', 'From')
