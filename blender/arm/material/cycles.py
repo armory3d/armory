@@ -709,7 +709,9 @@ def cast_value(val: str, from_type: str, to_type: str) -> str:
 
 
 def rgb_to_bw(res_var: vec3str) -> floatstr:
-    return f'((({res_var}.r * 0.3 + {res_var}.g * 0.59 + {res_var}.b * 0.11) / 3.0) * 2.5)'
+    # Blender uses the default OpenColorIO luma coefficients which
+    # originally come from the Rec. 709 standard (see ITU-R BT.709-6 Item 3.3)
+    return f'dot({res_var}, vec3(0.2126, 0.7152, 0.0722))'
 
 
 def node_by_type(nodes, ntype: str) -> bpy.types.Node:
