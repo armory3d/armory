@@ -114,10 +114,7 @@ def always() -> float:
             if area.type in ('NODE_EDITOR', 'PROPERTIES', 'VIEW_3D'):
                 area.tag_redraw()
         state.redraw_ui = False
-    # TODO: depsgraph.updates only triggers material trees
-    space = arm.utils.logic_editor_space(context_screen)
-    if space is not None:
-        space.node_tree.arm_cached = False
+
     return 0.5
 
 

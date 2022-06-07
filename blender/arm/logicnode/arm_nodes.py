@@ -60,6 +60,7 @@ class ArmLogicTreeNode(bpy.types.Node):
         else:
             self.arm_init(context)
 
+        self.clear_tree_cache()
         arm.live_patch.send_event('ln_create', self)
 
     def register_id(self):
@@ -87,6 +88,9 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def get_tree(self) -> bpy.types.NodeTree:
         return self.id_data
+
+    def clear_tree_cache(self):
+        self.get_tree().arm_cached = False
 
     def update(self):
         """Called if the node was updated in some way, for example
@@ -127,8 +131,11 @@ class ArmLogicTreeNode(bpy.types.Node):
             if isinstance(socket, ArmCustomSocket):
                 socket.on_node_update()
 
+        self.clear_tree_cache()
+
     def free(self):
         """Called before the node is deleted."""
+        self.clear_tree_cache()
         arm.live_patch.send_event('ln_delete', self)
 
     def copy(self, src_node):
@@ -136,6 +143,7 @@ class ArmLogicTreeNode(bpy.types.Node):
         `self` holds the copied node and `src_node` a temporal copy of
         the original node at the time of copying).
         """
+        self.clear_tree_cache()
         arm.live_patch.send_event('ln_copy', (self, src_node))
 
     def on_prop_update(self, context: bpy.types.Context, prop_name: str):
@@ -143,9 +151,11 @@ class ArmLogicTreeNode(bpy.types.Node):
         arm_props module is changed. If the property has a custom update
         function, it is called before `on_prop_update()`.
         """
+        self.clear_tree_cache()
         arm.live_patch.send_event('ln_update_prop', (self, prop_name))
 
     def on_socket_val_update(self, context: bpy.types.Context, socket: bpy.types.NodeSocket):
+        self.clear_tree_cache()
         arm.live_patch.send_event('ln_socket_val', (self, socket))
 
     def on_socket_state_change(self):
@@ -156,6 +166,7 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def on_logic_id_change(self):
         """Called if the node's arm_logic_id value changes."""
+        self.clear_tree_cache()
         arm.live_patch.patch_export()
 
     def insert_link(self, link: bpy.types.NodeLink):
@@ -273,6 +284,7 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
     def _synchronize_to_replicas(self, master_node: 'ArmLogicVariableNodeMixin'):
         for replica_node in self.get_replica_nodes(self.get_tree(), self.arm_logic_id):
             replica_node.synchronize_from_master(master_node)
+        self.clear_tree_cache()
 
     def make_local(self):
         """Demotes this node to a local variable node that is not linked
@@ -298,6 +310,7 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
                 tree.arm_treevariableslist_index = max_index
 
         self.arm_logic_id = ''
+        self.clear_tree_cache()
 
     def free(self):
         self.make_local()
