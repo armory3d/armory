@@ -6,6 +6,7 @@ import mathutils
 import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
+import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
@@ -14,6 +15,7 @@ if arm.is_reload(__name__):
     log = arm.reload_module(log)
     c = arm.reload_module(c)
     c_functions = arm.reload_module(c_functions)
+    mat_state = arm.reload_module(mat_state)
     arm.material.parser_state = arm.reload_module(arm.material.parser_state)
     from arm.material.parser_state import ParserState, ParserContext
     arm.material.shader = arm.reload_module(arm.material.shader)
@@ -219,6 +221,14 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
     elif out_socket == node.outputs[4]:
         if state.context == ParserContext.WORLD:
             return '0.0'
+
+        # Use random value per instance
+        if mat_state.uses_instancing:
+            state.vert.add_out(f'flat float irand')
+            state.frag.add_in(f'flat float irand')
+            state.vert.write(f'irand = fract(sin(gl_InstanceID) * 43758.5453);')
+            return 'irand'
+
         state.curshader.add_uniform('float objectInfoRandom', link='_objectInfoRandom')
         return 'objectInfoRandom'
 

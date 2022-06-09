@@ -184,6 +184,7 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
     if mat_users is not None and mat in mat_users:
         # Whether there are both an instanced object and a not instanced object with this material
         instancing_usage = [False, False]
+        mat_state.uses_instancing = False
 
         for bo in mat_users[mat]:
             if mat.arm_custom_material == '':
@@ -199,6 +200,7 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
             inst = bo.arm_instanced
             if inst != 'Off' or mat.arm_particle_flag:
                 instancing_usage[0] = True
+                mat_state.uses_instancing = True
 
                 if mat.arm_custom_material == '':
                     global_elems.append({'name': 'ipos', 'data': 'float3'})
