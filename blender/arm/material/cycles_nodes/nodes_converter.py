@@ -123,8 +123,12 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
         state.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
 
         # Mix color
-        # float f = (pos - start) * (1.0 / (finish - start))
-        return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
+        prev_stop_fac = f'{facs_var}[{index_var}]'
+        next_stop_fac = f'{facs_var}[{index_var} + 1]'
+        prev_stop_col = f'{cols_var}[{index_var}]'
+        next_stop_col = f'{cols_var}[{index_var} + 1]'
+        rel_pos = f'({fac_var} - {prev_stop_fac}) * (1.0 / ({next_stop_fac} - {prev_stop_fac}))'
+        return f'mix({prev_stop_col}, {next_stop_col}, max({rel_pos}, 0.0))'
 
 
 def parse_combhsv(node: bpy.types.ShaderNodeCombineHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
