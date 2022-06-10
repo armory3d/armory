@@ -288,12 +288,14 @@ def init_properties():
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True, update=assets.invalidate_compiler_cache)
     # For object
     bpy.types.Object.arm_instanced = EnumProperty(
-        items = [('Off', 'Off', 'Off'),
-                 ('Loc', 'Loc', 'Loc'),
-                 ('Loc + Rot', 'Loc + Rot', 'Loc + Rot'),
-                 ('Loc + Scale', 'Loc + Scale', 'Loc + Scale'),
-                 ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Loc + Rot + Scale')],
-        name="Instanced Children", default='Off', description='Use instacing to draw children', update=assets.invalidate_instance_cache)
+        items = [('Off', 'Off', 'No instancing of children'),
+                 ('Loc', 'Loc', 'Instances use their unique position (ipos)'),
+                 ('Loc + Rot', 'Loc + Rot', 'Instances use their unique position and rotation (ipos and irot)'),
+                 ('Loc + Scale', 'Loc + Scale', 'Instances use their unique position and scale (ipos and iscl)'),
+                 ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Instances use their unique position, rotation and scale (ipos, irot, iscl)')],
+        name="Instanced Children", default='Off',
+        description='Whether to use instancing to draw the children of this object. If enabled, this option defines what attributes may vary between the instances',
+        update=assets.invalidate_instance_cache)
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True)
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False)
