@@ -14,3 +14,12 @@ class BlendActionNode(ArmLogicTreeNode):
         self.add_input('ArmIntSocket', 'Bone Group', default_value = -1)
 
         self.add_output('ArmNodeSocketAnimTree', 'Result')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            'LNBlendActionNode', self.arm_version, 'LNBlendActionNode', 2,
+            in_socket_mapping={}, out_socket_mapping={}
+        )

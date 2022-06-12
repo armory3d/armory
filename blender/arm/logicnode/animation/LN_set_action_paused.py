@@ -13,3 +13,12 @@ class SetActionPausedNode(ArmLogicTreeNode):
         self.add_input('ArmBoolSocket', 'Paused')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            'LNSetActionPausedNode', self.arm_version, 'LNSetActionPausedNode', 2,
+            in_socket_mapping={}, out_socket_mapping={}
+        )

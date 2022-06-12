@@ -51,7 +51,7 @@ class BoneIKNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAnimTree', 'Result')
 
         self.update_sockets(context)
-    
+
     def update_sockets(self, context):
         remove_list = []
         for i in range(BoneIKNode.NUM_STATIC_INS, len(self.inputs)):
@@ -70,3 +70,8 @@ class BoneIKNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1, 2):
             raise LookupError()
+
+        return NodeReplacement(
+            'LNBoneIKNode', self.arm_version, 'LNBoneIKNode', 3,
+            in_socket_mapping={}, out_socket_mapping={}
+        )

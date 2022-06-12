@@ -13,3 +13,12 @@ class SetActionSpeedNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Speed', default_value=1.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            'LNSetActionSpeedNode', self.arm_version, 'LNSetActionSpeedNode', 2,
+            in_socket_mapping={}, out_socket_mapping={}
+        )

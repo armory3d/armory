@@ -20,3 +20,12 @@ class AnimActionNode(ArmLogicTreeNode):
     
     def draw_label(self) -> str:
         return f'{self.bl_label}: {self.property0}'
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            'LNAnimActionNode', self.arm_version, 'LNAnimActionNode', 2,
+            in_socket_mapping={}, out_socket_mapping={}
+        )

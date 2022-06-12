@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from arm.logicnode.arm_nodes import *
 
 class OnActionMarkerNode(ArmLogicTreeNode):
@@ -17,3 +18,12 @@ class OnActionMarkerNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            'LNOnActionMarkerNode', self.arm_version, 'LNOnActionMarkerNode', 2,
+            in_socket_mapping={}, out_socket_mapping={}
+        )
