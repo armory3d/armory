@@ -137,13 +137,13 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
 
     if arm.utils.get_os() == 'win':
         cmft_path = sdk_path + '/lib/armory_tools/cmft/cmft.exe'
-        kraffiti_path = kha_path + '/Kinc/Tools/kraffiti/kraffiti.exe'
+        kraffiti_path = kha_path + '/Kinc/Tools/windows_x64/kraffiti.exe'
     elif arm.utils.get_os() == 'mac':
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-osx"'
-        kraffiti_path = '"' + kha_path + '/Kinc/Tools/kraffiti/kraffiti-osx"'
+        kraffiti_path = '"' + kha_path + '/Kinc/Tools/macos/kraffiti"'
     else:
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
-        kraffiti_path = '"' + kha_path + '/Kinc/Tools/kraffiti/kraffiti-linux64"'
+        kraffiti_path = '"' + kha_path + '/Kinc/Tools/linux_x64/kraffiti"'
 
     input_file = arm.utils.asset_path(image_filepath)
 

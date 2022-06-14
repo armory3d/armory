@@ -306,11 +306,11 @@ def get_kha_path():
 
 def get_haxe_path():
     if get_os() == 'win':
-        return get_kha_path() + '/Tools/haxe/haxe.exe'
+        return get_kha_path() + '/Tools/windows_x64/haxe.exe'
     elif get_os() == 'mac':
-        return get_kha_path() + '/Tools/haxe/haxe-osx'
+        return get_kha_path() + '/Tools/macos/haxe'
     else:
-        return get_kha_path() + '/Tools/haxe/haxe-linux64'
+        return get_kha_path() + '/Tools/linux_x64/haxe'
 
 def get_khamake_path():
     return get_kha_path() + '/make'
