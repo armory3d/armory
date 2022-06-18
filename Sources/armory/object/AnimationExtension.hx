@@ -219,3 +219,97 @@ class OneShotOperator {
 		stopTween();
 	}
 }
+
+class SwitchActionOperator {
+
+	var boneAnimation: BoneAnimation;
+	var objectAnimation: ObjectAnimation;
+	var isArmature: Bool;
+	var restart: Bool;
+	var blendTime: Float;
+	var frameTime: Float;
+	var boneLayer: Null<Int>;
+	var done: Null<Void -> Void> = null;
+	// Internal
+	var isDone: Bool = true;
+	var totalFrames: Int;
+	var blendFactor: Float;
+	var tween: TAnim = null;
+	var blendOutFrame : Int;
+	
+	public function new(animation: Animation) {
+		
+		if(Std.isOfType(animation, BoneAnimation)) {
+			boneAnimation = cast animation;
+			this.isArmature = true;
+		}
+		else {
+			objectAnimation = cast animation;
+			this.isArmature = false;
+		}
+	}
+
+	public function update(action1: Dynamic, action2: Dynamic, result: Dynamic) {
+		#if  arm_skin
+		if(isArmature){
+
+			boneAnimation.blendAction(action1, action2, result, blendFactor, boneLayer);
+			return;
+		}
+		#end
+		objectAnimation.blendActionObject(action1, action2, result, blendFactor);
+
+	}
+
+	public function switchAction(toAction: SelectAction, duration: Float, restrat: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
+
+		this.done = done;
+		this.boneLayer = boneLayer;
+
+		switch(toAction){
+			case action1:
+				if(tween != null){
+					if(! restart && ! isDone) {
+	
+						return;
+					}
+					Tween.stop(tween);
+				}
+				isDone = false;
+				tween = Tween.to({
+					target: this,
+					props: { blendFactor: 0.0 },
+					duration: blendFactor * duration,
+					ease: Ease.Linear,
+					done: doneSwitch
+				});
+			
+			case action2:
+				if(tween != null){
+					if(! restart && ! isDone) {
+	
+						return;
+					}
+					Tween.stop(tween);
+				}
+				isDone = false;
+				tween = Tween.to({
+					target: this,
+					props: { blendFactor: 1.0 },
+					duration: (1.0 - blendFactor) * duration,
+					ease: Ease.Linear,
+					done: doneSwitch
+				});
+		}
+	}
+
+	function doneSwitch() {
+		isDone = true;
+		if(done != null) done();
+	}
+}
+
+@:enum abstract SelectAction(Int) from Int to Int {
+	var action1 = 0;
+	var action2 = 1;
+}
