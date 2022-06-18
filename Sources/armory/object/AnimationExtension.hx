@@ -1,10 +1,15 @@
 package armory.object;
 
 import iron.Scene;
+import iron.data.SceneFormat;
 import iron.App;
 import iron.system.Tween;
 import kha.FastFloat;
 import iron.math.Mat4;
+import iron.math.Vec4;
+import iron.math.Vec3;
+import iron.math.Vec2;
+import haxe.ds.Vector;
 import iron.object.Animation;
 import iron.object.BoneAnimation;
 import iron.object.ObjectAnimation;
@@ -30,7 +35,7 @@ class AnimationExtension {
 		var matsBlend = boneAnimation.initMatsEmpty();
 
 		var i = 0;
-		for (mat in matsFastBlend){
+		for (mat in matsBlend){
 			mat.setFrom(actionMats[i]);
 			i++;
 		}
@@ -85,24 +90,24 @@ class OneShotOperator {
 	var doneOneShot: Null<Void -> Void> = null;
 	var tempMats: Dynamic;
 	// Internal
-	var _isDone: Bool = false;
-	var _totalFrames: Int;
-	var _blendFactor: Float;
-	var _tween: TAnim = null;
-	var _blendOutFrame : Int;
+	var isDone: Bool = true;
+	var totalFrames: Int;
+	var blendFactor: Float;
+	var tween: TAnim = null;
+	var blendOutFrame : Int;
 
 	public function new(animation: Animation, oneShotAction: ActionSampler) {
 
-		this.animation = animation;
+		var animation = animation;
 		this.oneShotAction = oneShotAction;
 		if(Std.isOfType(animation, BoneAnimation)) {
-			boneAnimation = cast(animation, BoneAnimation);
+			boneAnimation = cast animation;
 			tempMats = boneAnimation.initMatsEmpty();
 			this.isArmature = true;
 		}
 		else {
-			objectAnimation = cast(animation, ObjectAnimation);
-			tempMats =objectAnimation.initTransformMap();
+			objectAnimation = cast animation;
+			tempMats = objectAnimation.initTransformMap();
 			this.isArmature = false;
 		}
 		initOneShot();
@@ -110,23 +115,25 @@ class OneShotOperator {
 	}
 
 	function initOneShot() {
-
-		_totalFrames = animation.getTotalFrames(oneShotAction) - 1;
-		_blendFactor = 0.0;
-		var _frameTime = Scene.active.raw.frame_time;
-		_blendOutFrame = _totalFrames - Std.int(blendOutTime / _frameTime);
+		if(isArmature) {
+			totalFrames = boneAnimation.getTotalFrames(oneShotAction) - 1;
+		}
+		else {
+			totalFrames = objectAnimation.getTotalFrames(oneShotAction) - 1;
+		}
+		blendFactor = 0.0;
+		blendOutFrame = getBlendOutFrame(blendOutTime);
 	}
 
 	function tweenIn() {
-		
-		if(_tween != null){
-			Tween.stop(_tween);
+		if(tween != null){
+			Tween.stop(tween);
 			
 		}
-		_isDone = false;
-		_tween = Tween.to({
+		isDone = false;
+		tween = Tween.to({
 			target: this,
-			props: { _blendFactor: 1.0 },
+			props: { blendFactor: 1.0 },
 			duration: blendInTime,
 			ease: Ease.Linear
 		});
@@ -136,19 +143,18 @@ class OneShotOperator {
 	}
 
 	function tweenOut() {
-		
-		if(oneShotAction.offset >= _totalFrames){
+		if(oneShotAction.offset >= totalFrames){
 			done();
 			return;
 		}
 		
-		if(oneShotAction.offset >= _blendOutFrame){
-			if(_tween != null){
-				Tween.stop(_tween);
+		if(oneShotAction.offset >= blendOutFrame){
+			if(tween != null){
+				Tween.stop(tween);
 			}
-			_tween = Tween.to({
+			tween = Tween.to({
 				target: this,
-				props: { _blendfactor: 0.0 },
+				props: { blendFactor: 0.0 },
 				duration: blendOutTime,
 				ease: Ease.Linear,
 				done: done
@@ -159,13 +165,13 @@ class OneShotOperator {
 
 	function stopTween() {
 		App.removeUpdate(tweenOut);
-		if(_tween != null){
-			Tween.stop(_tween);
+		if(tween != null){
+			Tween.stop(tween);
 		}
-		_isDone = true;
+		isDone = true;
 		oneShotAction.setFrameOffset(0);
 		oneShotAction.paused = true;
-		_blendFactor = 0.0;
+		blendFactor = 0.0;
 		
 	}
 
@@ -174,33 +180,37 @@ class OneShotOperator {
 		if(doneOneShot != null) doneOneShot();
 	}
 
+	inline function getBlendOutFrame(blendOutTime: Float): Int {
+		var frameTime = Scene.active.raw.frame_time;
+		return totalFrames - Std.int(blendOutTime / frameTime);
+	}
+
 	public function update(mainMats: Dynamic) {
 		#if  arm_skin
 		if(isArmature){
 
 			boneAnimation.sampleAction(oneShotAction, tempMats);
-			boneAnimation.blendAction(mainMats, tempMats, mainMats, _blendFactor, boneLayer);
+			boneAnimation.blendAction(mainMats, tempMats, mainMats, blendFactor, boneLayer);
 			return;
 		}
 		#end
 		objectAnimation.sampleAction(oneShotAction, tempMats);
-		objectAnimation.blendActionObject(mainMats, tempMats, mainMats, _blendFactor);
+		objectAnimation.blendActionObject(mainMats, tempMats, mainMats, blendFactor);
 
 	}
 
-	public function startOneShotAction(blendInTime: Float, blendOutTime: Float, restart: Bool, boneLayer: Null<Int>, done: Null<Void -> Void>) {
+	public function startOneShotAction(blendInTime: Float, blendOutTime: Float, restart: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
+		if(getBlendOutFrame(blendOutTime) < 1) return;
+		
+		if(! restart && ! isDone) {
+			return;
+		}
 		
 		this.restart = restart;
 		this.blendInTime = blendInTime;
 		this.blendOutTime = blendOutTime;
 		this.boneLayer = boneLayer;
-
 		initOneShot();
-		if(_blendOutFrame < 1) return;
-		
-		if(! restart && ! _isDone) {
-			return;
-		}
 		oneShotAction.restartAction();
 		tweenIn();
 	}
