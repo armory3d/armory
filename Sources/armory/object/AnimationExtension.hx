@@ -44,34 +44,67 @@ class AnimationExtension {
 		boneAnimation.blendAction(matsBlend, actionMats, actionMats, influence, layerMask, threshold);
 	}
 
-	public static function getBlend2DWeights(actionCoords: Array<Vec2>, sampleCoords: Vec2): Vec3 {
+	static inline function sortWeights(vecs: Array<Vec2>, sampleVec: Vec2): Map<Int, Vec2> {
+		var weightIndex: Array<WeightIndex> = [];
+		var i = 0;
+		for (vec in vecs){
+			weightIndex.push({weight: Vec2.distance(vec, sampleVec), index: i} );
+			i++;
+		}
+
+		weightIndex.sort(sortCompare);
+
+		var weightsSorted = new Map<Int, Vec2>();
+		for (i in 0...3) {
+			var index = weightIndex[i].index;
+			weightsSorted.set(index, vecs[index]);
+		}
+
+		return weightsSorted;
+	}
+
+	static inline function sortCompare(a: WeightIndex, b: WeightIndex): Int {
+		return Reflect.compare(a.weight, b.weight);
+	}
+
+	public static function getBlend2DWeights(actionCoords: Array<Vec2>, sampleCoords: Vec2): Map<Int, Float> {
+		
+		var weightsMap = sortWeights(actionCoords, sampleCoords);
+		
 		var weights = new Vector<Float>(3);
 		var tempWeights = new Vector<Float>(2);
 
 		// Gradient Band Interpolation
-		for (i in 0...3){
-
-			var v1 = new Vec2().setFrom(sampleCoords).sub(actionCoords[i]);
+		var keys1 = weightsMap.keys();
+		var i = 0;
+		for (key1 in keys1){
+			var v1 = new Vec2().setFrom(sampleCoords).sub(weightsMap[key1]);
 			var k = 0;
-			for (j in 0...3){
-				if (i == j) continue;
-				var v2 = new Vec2().setFrom(actionCoords[j]).sub(actionCoords[i]);
+			var keys2 = weightsMap.keys();
+			for (key2 in keys2){
+				if (key1 == key2) continue;
+				var v2 = new Vec2().setFrom(weightsMap[key2]).sub(weightsMap[key1]);
 				var len = new Vec2().setFrom(v2).dot(v2);
 				var w = 1.0 - ((new Vec2().setFrom(v1).dot(v2)) / len);
 
 				w = w < 0 ? 0 : w > 1.0 ? 1.0 : w;
 				tempWeights.set(k, w);
-				k++;		
+				k++;
 			}
-
 			weights.set(i, Math.min(tempWeights.get(0), tempWeights.get(1)));
+			i++;
 		}
 
 		var res = new Vec3(weights.get(0), weights.get(1), weights.get(2));
-
 		res.mult(1.0 / (res.x + res.y + res.z));
+		
+		var resultMap = new Map<Int, Float>();
+		var keys = weightsMap.keys();
+		resultMap.set(keys.next(), res.x );
+		resultMap.set(keys.next(), res.y );
+		resultMap.set(keys.next(), res.z );
 
-		return res;
+		return resultMap;
 	}
 
 }
@@ -88,7 +121,8 @@ class OneShotOperator {
 	var frameTime: Float;
 	var boneLayer: Null<Int>;
 	var doneOneShot: Null<Void -> Void> = null;
-	var tempMats: Dynamic;
+	var tempMatsBone: Array<Mat4>;
+	var tempMatsObject: Map<String, FastFloat>;
 	// Internal
 	var isDone: Bool = true;
 	var totalFrames: Int;
@@ -102,16 +136,15 @@ class OneShotOperator {
 		this.oneShotAction = oneShotAction;
 		if(Std.isOfType(animation, BoneAnimation)) {
 			boneAnimation = cast animation;
-			tempMats = boneAnimation.initMatsEmpty();
+			tempMatsBone = boneAnimation.initMatsEmpty();
 			this.isArmature = true;
 		}
 		else {
 			objectAnimation = cast animation;
-			tempMats = objectAnimation.initTransformMap();
+			tempMatsObject = objectAnimation.initTransformMap();
 			this.isArmature = false;
 		}
 		initOneShot();
-		
 	}
 
 	function initOneShot() {
@@ -185,18 +218,17 @@ class OneShotOperator {
 		return totalFrames - Std.int(blendOutTime / frameTime);
 	}
 
-	public function update(mainMats: Dynamic) {
-		#if  arm_skin
-		if(isArmature){
+	public overload extern inline function update(mainMats: Array<Mat4>, resultMats: Array<Mat4>) {
+	#if arm_skin
+		boneAnimation.sampleAction(oneShotAction, tempMatsBone);
+		boneAnimation.blendAction(mainMats, tempMatsBone, resultMats, blendFactor, boneLayer);
+	#end
+	}
 
-			boneAnimation.sampleAction(oneShotAction, tempMats);
-			boneAnimation.blendAction(mainMats, tempMats, mainMats, blendFactor, boneLayer);
-			return;
-		}
-		#end
-		objectAnimation.sampleAction(oneShotAction, tempMats);
-		objectAnimation.blendActionObject(mainMats, tempMats, mainMats, blendFactor);
+	public overload extern inline function update(mainMats: Map<String, FastFloat>, resultMats: Map<String, FastFloat>) {
 
+		objectAnimation.sampleAction(oneShotAction, tempMatsObject);
+		objectAnimation.blendActionObject(mainMats, tempMatsObject, resultMats, blendFactor);
 	}
 
 	public function startOneShotAction(blendInTime: Float, blendOutTime: Float, restart: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
@@ -210,6 +242,7 @@ class OneShotOperator {
 		this.blendInTime = blendInTime;
 		this.blendOutTime = blendOutTime;
 		this.boneLayer = boneLayer;
+		this.doneOneShot = done;
 		initOneShot();
 		oneShotAction.restartAction();
 		tweenIn();
@@ -233,7 +266,7 @@ class SwitchActionOperator {
 	// Internal
 	var isDone: Bool = true;
 	var totalFrames: Int;
-	var blendFactor: Float;
+	var blendFactor: Float = 0;
 	var tween: TAnim = null;
 	var blendOutFrame : Int;
 	
@@ -249,16 +282,15 @@ class SwitchActionOperator {
 		}
 	}
 
-	public function update(action1: Dynamic, action2: Dynamic, result: Dynamic) {
-		#if  arm_skin
-		if(isArmature){
-
-			boneAnimation.blendAction(action1, action2, result, blendFactor, boneLayer);
-			return;
-		}
+	public overload extern inline function update(action1: Array<Mat4>, action2: Array<Mat4>, resultMats: Array<Mat4>) {
+		#if arm_skin
+		boneAnimation.blendAction(action1, action2, resultMats, blendFactor, boneLayer);
 		#end
-		objectAnimation.blendActionObject(action1, action2, result, blendFactor);
-
+	}
+	
+	public overload extern inline function update(action1: Map<String, FastFloat>, action2: Map<String, FastFloat>, resultMats: Map<String, FastFloat>) {
+	
+		objectAnimation.blendActionObject(action1, action2, resultMats, blendFactor);
 	}
 
 	public function switchAction(toAction: SelectAction, duration: Float, restrat: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
@@ -312,4 +344,9 @@ class SwitchActionOperator {
 @:enum abstract SelectAction(Int) from Int to Int {
 	var action1 = 0;
 	var action2 = 1;
+}
+
+typedef WeightIndex = {
+	var weight: FastFloat;
+	var index: Int;
 }
