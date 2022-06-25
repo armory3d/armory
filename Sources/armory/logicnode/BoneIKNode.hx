@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import armory.object.AnimationExtension;
 import iron.object.Object;
 import iron.object.BoneAnimation;
 import iron.math.Vec4;
@@ -62,13 +63,13 @@ class BoneIKNode extends LogicNode {
 
 			switch (property0) {
 				case "2 Bone":
-					animation.solveTwoBoneIKBlend(animMats, bone, goal, pole, 
+					AnimationExtension.solveTwoBoneIKBlend(animMats, bone, goal, pole, 
 												  rollAngle, influence, layerMask);
 				case "FABRIK":
 					chainLength = inputs[9].get();
 					maxIterartions = inputs[10].get();
 					precision = inputs[11].get();
-					animation.solveIKBlend(animMats, bone, goal, precision, maxIterartions, 
+					AnimationExtension.solveIKBlend(animMats, bone, goal, precision, maxIterartions, 
 							               chainLength, pole, rollAngle, influence, layerMask);
 					
 			}
