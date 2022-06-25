@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import armory.object.AnimationExtension;
 import haxe.display.Protocol.InitializeParams;
 import kha.FastFloat;
 import iron.object.Object;
@@ -99,14 +100,14 @@ class SimpleFootIKNode extends LogicNode {
 			//Perform IK on left leg
 			if(influenceMatch || (leftLoc.z < (leftHitPoint + footOffset))) {
 				leftLoc.z = leftHitPoint + footOffset;
-				animation.solveTwoBoneIKBlend(animMats, leftBone.parent, leftLoc, leftPole, 
+				AnimationExtension.solveTwoBoneIKBlend(animation, animMats, leftBone.parent, leftLoc, leftPole, 
 											  0.0, influence, layerMask, 0.1);
 			}
 
 			//Perform IK on right leg
 			if(influenceMatch || (rightLoc.z < (rightHitPoint + footOffset))) {
 				rightLoc.z = rightHitPoint + footOffset;
-				animation.solveTwoBoneIKBlend(animMats, rightBone.parent, rightLoc, rightPole, 
+				AnimationExtension.solveTwoBoneIKBlend(animation, animMats, rightBone.parent, rightLoc, rightPole, 
 											  0.0, influence, layerMask, 0.1);
 			}
 		}
