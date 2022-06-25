@@ -5,6 +5,7 @@ import iron.system.Tween;
 import kha.FastFloat;
 import iron.object.ObjectAnimation;
 import iron.object.Animation;
+import armory.object.AnimationExtension;
 #if arm_skin
 import iron.object.BoneAnimation;
 #end
@@ -20,15 +21,12 @@ class OneShotActionNode extends LogicNode {
 	var animationBone: BoneAnimation;
 	#end
 	var animationObject: ObjectAnimation;
-	var tempMats: Dynamic;
+	var tempMatsObject: Map<String, FastFloat>;
+	var tempMatsBone: Array<Mat4>;
 	var ready = false;
-	var func: Dynamic = null;
-	var factor = 0.0;
-	var oneShotDone = true;
-	var anim: TAnim;
-	var totalFrames = 0;
-	var frameTime: Null<Float> = 1.0 / 60;
-	var blendOutFrame = 0;
+	var result: Dynamic;
+
+	var oneShotOp: OneShotOperator;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -42,151 +40,73 @@ class OneShotActionNode extends LogicNode {
 		if(object.animation == null) {
 			#if arm_skin
 			animationBone = object.getBoneAnimation(object.uid);
-			tempMats = animationBone.initMatsEmpty();
-			func = blendBones;
+			tempMatsBone = animationBone.initMatsEmpty();
 			#end
 		}
 		else{
 			animationObject = cast(object.animation, ObjectAnimation);
-			tempMats = animationObject.initTransformMap();
-			func = blendObject;
+			tempMatsObject = animationObject.initTransformMap();
 		}
-		frameTime = Scene.active.raw.frame_time;
 		ready = true;
-		resetAction();
+		initOneShot();
 	}
 
-	public function resetAction() {
+	public function initOneShot() {
 		
 		if( animationObject == null){
 			#if arm_skin
 			animationBone.deRegisterAction(property0);
-			sampler = new ActionSampler(inputs[4].get(), 1.0, false);
+			sampler = new ActionSampler(inputs[4].get(), 1.0, false, true);
 			animationBone.registerAction(property0, sampler);
-			sampler.paused = true;
-			totalFrames = animationBone.getTotalFrames(sampler) - 1;
+			oneShotOp = new OneShotOperator(animationBone, sampler);
+			result = resultBone;
 			#end
 		}
 		else {
 			animationObject.deRegisterAction(property0);
-			sampler = new ActionSampler(inputs[4].get(), 1.0, false);
+			sampler = new ActionSampler(inputs[4].get(), 1.0, false, true);
 			animationObject.registerAction(property0, sampler);
-			sampler.paused = true;
-			totalFrames = animationObject.getTotalFrames(sampler) - 1;
+			oneShotOp = new OneShotOperator(animationObject, sampler);
+			result = resultObject;
 		}
 	}
 
-	public function blendObject(animMats: Map<String, FastFloat>) {
+	public function resultBone(resultMats: Array<Mat4>) {
 
-		inputs[3].get()(animMats);
-		animationObject.sampleAction(sampler, tempMats);
-		animationObject.blendActionObject(animMats, tempMats, animMats, factor);
+		inputs[3].get()(tempMatsBone);
+		oneShotOp.update(tempMatsBone, resultMats);
 	}
 
-	#if arm_skin
-	public function blendBones(animMats: Array<Mat4>) {
-		var boneLayer: Null<Int> = inputs[8].get();
-		if(boneLayer < 0){
-			boneLayer = null;
-			if(factor < 0.05) {
+	public function resultObject(resultMats: Map<String, FastFloat>) {
 
-				inputs[3].get()(animMats);
-				return;
-			}
-			if(factor > 0.95) {
-
-				animationBone.sampleAction(sampler, animMats);
-				return;
-			}
-		}
-		inputs[3].get()(animMats);
-		animationBone.sampleAction(sampler, tempMats);
-		animationBone.blendAction(animMats, tempMats, animMats, factor, boneLayer);
-	
+		inputs[3].get()(tempMatsObject);
+		oneShotOp.update(tempMatsObject, resultMats);
 	}
-	#end
 
 	override function get(from: Int): Dynamic {
 		if(!ready) init();
-
-		return func;
-		
+		return result;
 	}
 
 	override function run(from:Int) {
 		if(!ready) init();
 		var restart = inputs[5].get();
 		var blendOut = inputs[7].get();
-		blendOutFrame = totalFrames - Std.int(blendOut / frameTime);
-
-		if(blendOutFrame < 1) return;
+		var blendIn = inputs[6].get();
+		var boneLayer: Null<Int> = inputs[8].get();
 
 		if(from == 0) {
-			if(! restart && ! oneShotDone) {
-				return;
-			}
-			sampler.restartAction();
-			tweenIn();
+			oneShotOp.startOneShotAction(blendIn, blendOut, restart, done, boneLayer);
 		}
 
 		if(from == 1){
-			stopTween();
+			oneShotOp.stopOneShotAction();
 		}
 
 		runOutput(0);
 	}
 
-	function tweenIn() {
-		var blendIn = inputs[6].get();
-		if(anim != null){
-			Tween.stop(anim);
-			
-		}
-		oneShotDone = false;
-		anim = Tween.to({
-			target: this,
-			props: { factor: 1.0 },
-			duration: blendIn,
-			ease: Ease.Linear
-		});
-		tree.removeUpdate(tweenOut);
-		tree.notifyOnUpdate(tweenOut);
-	}
-
-	function tweenOut() {
-		if(sampler.offset >= totalFrames){
-			done();
-			return;
-		}
-		var blendOut = inputs[7].get();
-		if(sampler.offset >= blendOutFrame){
-			if(anim != null){
-				Tween.stop(anim);
-			}
-			anim = Tween.to({
-				target: this,
-				props: { factor: 0.0 },
-				duration: blendOut,
-				ease: Ease.Linear,
-				done: done
-			});
-			tree.removeUpdate(tweenOut);
-		}
-	}
-
-	function stopTween() {
-		tree.removeUpdate(tweenOut);
-		if(anim != null){
-			Tween.stop(anim);
-		}
-		oneShotDone = true;
-		sampler.setFrameOffset(0);
-		sampler.paused = true;
-		factor = 0.0;
-	}
-
 	function done() {
-		stopTween();
 		runOutput(1);
 	}
 }

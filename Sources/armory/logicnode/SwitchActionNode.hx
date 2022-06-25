@@ -7,6 +7,7 @@ import iron.object.Animation;
 #if arm_skin
 import iron.object.BoneAnimation;
 #end
+import armory.object.AnimationExtension;
 import iron.math.Mat4;
 import iron.object.Object;
 
@@ -17,12 +18,13 @@ class SwitchActionNode extends LogicNode {
 	var animationBone: BoneAnimation;
 	#end
 	var animationObject: ObjectAnimation;
-	var tempMats: Dynamic;
+	var switchActionOp: SwitchActionOperator;
+	var tempMatsObject: Map<String, FastFloat>;
+	var tempMatsBone: Array<Mat4>;
+	var animMatsObject: Map<String, FastFloat>;
+	var animMatsBone: Array<Mat4>;
 	var ready = false;
-	var func: Dynamic = null;
-	var factor = 0.0;
-	var tweenDone = true;
-	var anim: TAnim;
+	var result: Dynamic = null;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -35,99 +37,69 @@ class SwitchActionNode extends LogicNode {
 		if(object.animation == null) {
 			#if arm_skin
 			animationBone = object.getBoneAnimation(object.uid);
-			tempMats = animationBone.initMatsEmpty();
-			func = blendBones;
+			tempMatsBone = animationBone.initMatsEmpty();
+			animMatsBone = animationBone.initMatsEmpty();
+			result = resultBone;
 			#end
 		}
 		else {
 			animationObject = cast(object.animation, ObjectAnimation);
-			tempMats = animationObject.initTransformMap();
-			func = blendObject;
+			tempMatsObject = animationObject.initTransformMap();
+			animMatsObject = animationObject.initTransformMap();
+			result = resultObject;
 		}
 		ready = true;
+		initSwitchAction();
 	}
 
-	public function blendObject(animMats: Map<String, FastFloat>) {
-		inputs[3].get()(animMats);
-		inputs[4].get()(tempMats);
-		animationObject.blendActionObject(animMats, tempMats, animMats, factor);
-
-	}
-
-	#if arm_skin
-	public function blendBones(animMats: Array<Mat4>) {
-		var boneLayer: Null<Int> = inputs[7].get();
-		if(boneLayer < 0){
-			boneLayer = null;
-			if(factor < 0.05) {
-
-				inputs[3].get()(animMats);
-				return;
-			}
-			if(factor > 0.95) {
-
-				inputs[4].get()(animMats);
-				return;
-			}
+	public function initSwitchAction(){
+		if( animationObject == null){
+			#if arm_skin
+			switchActionOp = new SwitchActionOperator(animationBone);
+			#end
 		}
-		
-		inputs[3].get()(animMats);
-		inputs[4].get()(tempMats);
-		animationBone.blendAction(animMats, tempMats, animMats, factor, boneLayer);
-	
+		else {
+			switchActionOp = new SwitchActionOperator(animationObject);
+		}
 	}
-	#end
+
+	public function resultBone(resultMats: Array<Mat4>){
+
+		inputs[3].get()(animMatsBone);
+		inputs[4].get()(tempMatsBone);
+		switchActionOp.update(animMatsBone, tempMatsBone, resultMats);
+	}
+
+	public function resultObject(resultMats: Map<String, FastFloat>){
+
+		inputs[3].get()(animMatsObject);
+		inputs[4].get()(tempMatsObject);
+		switchActionOp.update(animMatsObject, tempMatsObject, resultMats);
+	}
 
 	override function get(from: Int): Dynamic {
 		if(!ready) init();
 
-		return func;
+		return result;
 		
 	}
 
 	override function run(from:Int) {
 		var restart = inputs[5].get();
 		var duration: FastFloat = inputs[6].get();
+		var boneLayer: Null<Int> = inputs[7].get();
 
 		if(from == 0){
 
-			if(anim != null){
-				if(! restart && ! tweenDone) {
-
-					return;
-				}
-				Tween.stop(anim);
-			}
-			tweenDone = false;
-			anim = Tween.to({
-				target: this,
-				props: { factor: 0.0 },
-				duration: factor * duration,
-				ease: Ease.Linear,
-				done: done
-			});
+			switchActionOp.switchAction(action1, duration, restart, done, boneLayer);
 		}
 		if(from == 1){
-			if(anim != null){
-				if(! restart && ! tweenDone) {
-
-					return;
-				}
-				Tween.stop(anim);
-			}
-			tweenDone = false;
-			anim = Tween.to({
-				target: this,
-				props: { factor: 1.0 },
-				duration: (1.0 - factor) * duration,
-				ease: Ease.Linear,
-				done: done
-			});
+			
+			switchActionOp.switchAction(action2, duration, restart, done, boneLayer);
 		}
 	}
 
 	function done() {
-		tweenDone = true;
 		runOutput(0);
 	}
 }
