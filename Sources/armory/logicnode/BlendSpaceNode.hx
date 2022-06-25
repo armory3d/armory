@@ -1,5 +1,7 @@
 package armory.logicnode;
+
 #if arm_skin
+import armory.object.AnimationExtension;
 import kha.FastFloat;
 import iron.math.Mat4;
 import iron.math.Vec3;
@@ -18,19 +20,12 @@ class BlendSpaceNode extends LogicNode {
 	#if arm_skin
 	var value: Dynamic;
 	var object: Object;
-	
 	var animationBone: BoneAnimation;
 	var tempMats: Array<Mat4>;
 	var tempMats2: Array<Mat4>;
 	var ready = false;
 	var func: Dynamic = null;
-
-	var vecSorted = [];
-	var sortIndex = [];
-
 	static var totalAnims = 10;
-	static var maxAnims = 3;
-
 	#end
 
 	public function new(tree: LogicTree) {
@@ -48,11 +43,8 @@ class BlendSpaceNode extends LogicNode {
 		ready = true;
 	}
 
-	public function getBlendWeights(): Vec3 {
-
-		var dist = [];
+	public function getBlendWeights(): Map<Int, Float> {
 		var vecs = [];
-		var weightIndex: Array<WeightIndex> = [];
 		var sampleVec = new Vec2();
 
 		for(i in 0...totalAnims){
@@ -67,42 +59,28 @@ class BlendSpaceNode extends LogicNode {
 			sampleVec.set(inputs[2].get(), inputs[3].get());
 		}
 
-		var i = 0;
-		for (vec in vecs){
-			weightIndex.push({weight: Vec2.distance(vec, sampleVec), index: i} );
-			i++;
-		}
+		return AnimationExtension.getBlend2DWeights(vecs, sampleVec);
 
-		weightIndex.sort(sortCompare);
-
-		vecSorted = [];
-		sortIndex = [];
-		for (i in 0...maxAnims) {
-			var index = weightIndex[i].index;
-			sortIndex.push(index);
-			vecSorted.push(vecs[index]);
-		}
-		
-
-		return Animation.getBlend2DWeights(vecSorted, sampleVec);
-
-	}
-
-	public function sortCompare(a: WeightIndex, b: WeightIndex): Int {
-		return Reflect.compare(a.weight, b.weight);
 	}
 
 	public function blendBones(animMats: Array<Mat4>) {
-	
 		var anims = inputs[1].get();
-		var weights = getBlendWeights();
+		var weightsIndex = getBlendWeights();
 
-		var factor1 = weights.y / (weights.x + weights.y);
-		var factor2 = (weights.x + weights.y) / (weights.x + weights.y + weights.z);
+		var indices: Array<Int> = [];
+		var weights: Array<Float> = [];
+		
+		for(key in weightsIndex.keys()){
+			indices.push(key);
+			weights.push(weightsIndex.get(key));
+		}
 
-		anims[sortIndex[0]](tempMats);
-		anims[sortIndex[1]](tempMats2);
-		anims[sortIndex[2]](animMats);
+		var factor1 = weights[1] / (weights[0] + weights[1]);
+		var factor2 = (weights[0] + weights[1]) / (weights[0] + weights[1] + weights[2]);
+
+		anims[indices[0]](tempMats);
+		anims[indices[1]](tempMats2);
+		anims[indices[2]](animMats);
 
 		animationBone.blendAction(tempMats, tempMats2, tempMats, factor1);
 		animationBone.blendAction(animMats, tempMats, animMats, factor2);
@@ -110,17 +88,9 @@ class BlendSpaceNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-
 		if(!ready) init();
 
 		return blendBones;
 	}
 	#end
 }
-
-#if arm_skin
-typedef WeightIndex = {
-	var weight: FastFloat;
-	var index: Int;
-} 
-#end
