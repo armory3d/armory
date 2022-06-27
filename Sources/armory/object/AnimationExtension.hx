@@ -10,6 +10,7 @@ import iron.math.Vec4;
 import iron.math.Vec3;
 import iron.math.Vec2;
 import haxe.ds.Vector;
+import iron.object.Object;
 import iron.object.Animation;
 import iron.object.BoneAnimation;
 import iron.object.ObjectAnimation;
@@ -339,6 +340,57 @@ class SwitchActionOperator {
 		isDone = true;
 		if(done != null) done();
 	}
+}
+
+class simpleBiPedalIK {
+
+	var armatureObject: Object;
+	var boneAnimation: BoneAnimation;
+	var animMats: Array<Mat4>; //1
+	var leftBone: TObj; //2
+	var rightBone: TObj; //3
+	var leftHitPoint: Null<Float>; //4
+	var rightHitPoint: Null<Float>; //5
+	var hipHeight: Float; //6
+	var footOffset: Null<Float>; //7
+	var footOffsetThreshold: Float; //8
+	var interpSpeed: Float; //9
+	var layerMask: Null<Int>; //10
+	var leftPole: Vec4 = null; 
+	var rightPole: Vec4 = null;
+	var oldInfluence: Null<Float> = null;
+	var influenceMatch: Bool = false;
+
+	public function new(armatureObject: Object, boneAnimation: BoneAnimation, leftBoneName: Sting, rightBoneName: String) {
+		this.armatureObject = armatureObject;
+		this.boneAnimation = boneAnimation;
+		this.leftBone = boneAnimation.getBone(leftBoneName);
+		this.rightBone = boneAnimation.getBone(rightBoneName);
+		
+	}
+
+	inline function deltaInterpolate(from: Float, to: Float, interpSpeed: Float): Float {
+
+		var sign = to > from ? 1.0 : -1.0;
+		var value = from + interpSpeed * sign;
+		var min = Math.min(to, from);
+		var max = Math.max(to, from);
+		return value < min ? min : value > max ? max : value;
+	}
+
+	inline function setWorldLocation(currentPos: Vec4) {
+		var loc = new Vec4().setFrom(currentPos);
+		// Remove parent location influence
+		loc.sub(object.parent.transform.world.getLoc());
+		// Convert vec to parent local space
+		var dotX = loc.dot(object.parent.transform.right());
+		var dotY = loc.dot(object.parent.transform.look());
+		var dotZ = loc.dot(object.parent.transform.up());
+		var vec = new Vec4(dotX, dotY, dotZ);
+		object.transform.loc.setFrom(vec);
+		object.transform.buildMatrix();
+	}
+
 }
 
 @:enum abstract SelectAction(Int) from Int to Int {
