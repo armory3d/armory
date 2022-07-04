@@ -68,6 +68,7 @@ class FirstPersonController extends CameraController {
 		if (moveLeft) dir.add(transform.right().mult(-1));
 		if (moveRight) dir.add(transform.right());
 
+        var dirN = dir.normalize();
 		// Push down
 		var btvec = body.getLinearVelocity();
 		body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
@@ -75,7 +76,7 @@ class FirstPersonController extends CameraController {
 		if (moveForward || moveBackward || moveLeft || moveRight) {
 			dir.mult(6);
 			body.activate();
-			body.setLinearVelocity(dir.x, dir.y, btvec.z - 1.0);
+			body.setLinearVelocity(dirN.x, dirN.y, btvec.z - 1.0);
 		}
 
 		// Keep vertical
