@@ -68,12 +68,12 @@ class AnimationExtension {
 		return Reflect.compare(a.weight, b.weight);
 	}
 
-	public static function getBlend2DWeights(actionCoords: Array<Vec2>, sampleCoords: Vec2): Map<Int, Float> {
+	public static function getBlend2DWeights(actionCoords: Array<Vec2>, sampleCoords: Vec2): Map<Int, FastFloat> {
 		
 		var weightsMap = sortWeights(actionCoords, sampleCoords);
 		
-		var weights = new Vector<Float>(3);
-		var tempWeights = new Vector<Float>(2);
+		var weights = new Vector<FastFloat>(3);
+		var tempWeights = new Vector<FastFloat>(2);
 
 		// Gradient Band Interpolation
 		var keys1 = weightsMap.keys();
@@ -99,7 +99,7 @@ class AnimationExtension {
 		var res = new Vec3(weights.get(0), weights.get(1), weights.get(2));
 		res.mult(1.0 / (res.x + res.y + res.z));
 		
-		var resultMap = new Map<Int, Float>();
+		var resultMap = new Map<Int, FastFloat>();
 		var keys = weightsMap.keys();
 		resultMap.set(keys.next(), res.x );
 		resultMap.set(keys.next(), res.y );
@@ -117,9 +117,9 @@ class OneShotOperator {
 	var isArmature: Bool;
 	var oneShotAction: ActionSampler;
 	var restart: Bool;
-	var blendInTime: Float;
-	var blendOutTime: Float;
-	var frameTime: Float;
+	var blendInTime: FastFloat;
+	var blendOutTime: FastFloat;
+	var frameTime: FastFloat;
 	var boneLayer: Null<Int>;
 	var doneOneShot: Null<Void -> Void> = null;
 	var tempMatsBone: Array<Mat4>;
@@ -127,7 +127,7 @@ class OneShotOperator {
 	// Internal
 	var isDone: Bool = true;
 	var totalFrames: Int;
-	var blendFactor: Float;
+	var blendFactor: FastFloat;
 	var tween: TAnim = null;
 	var blendOutFrame : Int;
 
@@ -214,7 +214,7 @@ class OneShotOperator {
 		if(doneOneShot != null) doneOneShot();
 	}
 
-	inline function getBlendOutFrame(blendOutTime: Float): Int {
+	inline function getBlendOutFrame(blendOutTime: FastFloat): Int {
 		var frameTime = Scene.active.raw.frame_time;
 		return totalFrames - Std.int(blendOutTime / frameTime);
 	}
@@ -232,7 +232,7 @@ class OneShotOperator {
 		objectAnimation.blendActionObject(mainMats, tempMatsObject, resultMats, blendFactor);
 	}
 
-	public function startOneShotAction(blendInTime: Float, blendOutTime: Float, restart: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
+	public function startOneShotAction(blendInTime: FastFloat, blendOutTime: FastFloat, restart: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
 		if(getBlendOutFrame(blendOutTime) < 1) return;
 		
 		if(! restart && ! isDone) {
@@ -260,14 +260,14 @@ class SwitchActionOperator {
 	var objectAnimation: ObjectAnimation;
 	var isArmature: Bool;
 	var restart: Bool;
-	var blendTime: Float;
-	var frameTime: Float;
+	var blendTime: FastFloat;
+	var frameTime: FastFloat;
 	var boneLayer: Null<Int>;
 	var done: Null<Void -> Void> = null;
 	// Internal
 	var isDone: Bool = true;
 	var totalFrames: Int;
-	var blendFactor: Float = 0;
+	var blendFactor: FastFloat = 0;
 	var tween: TAnim = null;
 	var blendOutFrame : Int;
 	
@@ -294,7 +294,7 @@ class SwitchActionOperator {
 		objectAnimation.blendActionObject(action1, action2, resultMats, blendFactor);
 	}
 
-	public function switchAction(toAction: SelectAction, duration: Float, restrat: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
+	public function switchAction(toAction: SelectAction, duration: FastFloat, restrat: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
 
 		this.done = done;
 		this.boneLayer = boneLayer;
