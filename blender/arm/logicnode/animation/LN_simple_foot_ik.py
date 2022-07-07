@@ -48,7 +48,5 @@ class SimpleFootIKNode(ArmLogicTreeNode):
         self.add_input('ArmBoolSocket', 'Use Pole Targets', default_value = False)
         self.add_input('ArmBoolSocket', 'Rotate Foot', default_value = False)
         self.add_input('ArmNodeSocketArray', 'Pole And Direction Array')
-        self.add_input('ArmVectorSocket', 'Left Pole')
-        self.add_input('ArmVectorSocket', 'Right Pole')
 
         self.add_output('ArmNodeSocketAnimTree', 'Result')

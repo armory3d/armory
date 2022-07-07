@@ -12,16 +12,18 @@ import iron.math.Mat4;
 class SimpleFootIKNode extends LogicNode {
 
 	#if arm_skin
-	var object: Object; //0
-	var leftBoneName: String; //2
-	var rightBoneName: String; //3
-	var leftHitPoint: Null<Float>; //4
-	var rightHitPoint: Null<Float>; //5
-	var heightOffset: Float; //6
-	var footOffset: Null<Float>; //7
-	var offsetThreshold: Float; //8
-	var interpSpeed: Float; //9
-	var layerMask: Null<Int>; //10
+	var object: Object;
+	var leftBoneName: String;
+	var rightBoneName: String;
+	var leftHitPoint: Null<Vec4>;
+	var rightHitPoint: Null<Vec4>;
+	var leftNormal: Null<Vec4>;
+	var rightNormal: Null<Vec4>;
+	var heightOffset: FastFloat;
+	var footOffset: FastFloat;
+	var offsetThreshold: FastFloat;
+	var interpSpeed: FastFloat;
+	var layerMask: Null<Int>;
 	var influence: FastFloat;
 	var leftPole: Vec4 = null; 
 	var rightPole: Vec4 = null;
@@ -93,38 +95,40 @@ class SimpleFootIKNode extends LogicNode {
 				leftFootDir = vecArray[2];
 				rightFootDir = vecArray[3];
 			}
-			/* leftPole = inputs[14].get();
-			rightPole = inputs[15].get(); */
-			
-			
 
 			var leftBoneLoc = animation.getAbsWorldMat(leftBone, animMats).getLoc();
 			var rightBoneLoc = animation.getAbsWorldMat(rightBone, animMats).getLoc();
 
 			var physics = armory.trait.physics.PhysicsWorld.active;
+
 			var top = new Vec4().setFrom(leftBoneLoc).add(new Vec4(0, 0, scanHeight));
 			var bottom = new Vec4().setFrom(leftBoneLoc).sub(new Vec4(0, 0, scanDepth));
 			var rayLeft = physics.rayCast(top, bottom, collisionMask);
-			if(rayLeft == null) return;
-			var leftPos = new Vec4().setFrom(rayLeft.pos);
-			var leftNorm = new Vec4().setFrom(rayLeft.normal);
+			if(rayLeft == null) {
+				leftHitPoint = null;
+				leftNormal = null;
+			}
+			else {
+				leftHitPoint = new Vec4().setFrom(rayLeft.pos);
+				leftNormal = new Vec4().setFrom(rayLeft.normal);
+			}
 
 			top = new Vec4().setFrom(rightBoneLoc).add(new Vec4(0, 0, scanHeight));
 			bottom = new Vec4().setFrom(rightBoneLoc).sub(new Vec4(0, 0, scanDepth));
 			var rayRight = physics.rayCast(top, bottom, collisionMask);
-			if(rayRight == null) return;
-			var rightPos =  new Vec4().setFrom(rayRight.pos);
-			var rightNorm = new Vec4().setFrom(rayRight.normal);
-
-			trace("Left Pole = " + leftPole.toString());
-			trace("Right Pole = " + rightPole.toString());
+			if(rayRight == null) {
+				rightHitPoint = null;
+				rightNormal = null;
+			}
+			else {
+				rightHitPoint = new Vec4().setFrom(rayRight.pos);
+				rightNormal = new Vec4().setFrom(rayRight.normal);
+			}
 			
-			footIK.updatePosition(animMats, heightOffset, footOffset, leftPos, rightPos, offsetThreshold, interpSpeed, leftPole, rightPole, influence, layerMask);
+			footIK.updatePosition(animMats, heightOffset, footOffset, leftHitPoint, rightHitPoint, offsetThreshold, interpSpeed, leftPole, rightPole, influence, layerMask);
 
 			if(! rotateFoot) return;
-			trace("left norm =" + leftNorm.toString());
-			trace("Right norm =" + rightNorm.toString());
-			footIK.updateRotation(animMats, leftFootDir, rightFootDir, leftNorm, rightNorm);
+			footIK.updateRotation(animMats, leftFootDir, rightFootDir, leftNormal, rightNormal);
 			
 		}
 		#end

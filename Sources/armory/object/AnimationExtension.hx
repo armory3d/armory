@@ -347,22 +347,10 @@ class SimpleBiPedalIK {
 
 	var object: Object;
 	var boneAnimation: BoneAnimation;
-	var animMats: Array<Mat4>; //1
 	var leftBone: TObj; //2
 	var rightBone: TObj; //3
 	var leftBoneParent: TObj;
 	var rightBoneParent: TObj;
-	var leftHitPoint: Null<FastFloat>; //4
-	var rightHitPoint: Null<FastFloat>; //5
-	var hipHeight: FastFloat; //6
-	var footOffset: Null<FastFloat>; //7
-	var footOffsetThreshold: FastFloat; //8
-	var interpSpeed: FastFloat; //9
-	var layerMask: Null<Int>; //10
-	var leftPole: Vec4 = null; 
-	var rightPole: Vec4 = null;
-	var oldInfluence: Null<FastFloat> = null;
-	var influenceMatch: Bool = false;
 
 	public function new(armatureObject: Object, boneAnimation: BoneAnimation, leftBoneName: String, rightBoneName: String) {
 		this.object = armatureObject;
@@ -374,62 +362,73 @@ class SimpleBiPedalIK {
 		
 	}
 
-	public function updatePosition(animMats: Array<Mat4>, heightOffset: FastFloat, footOffset: FastFloat, hitPointLeft: Vec4, hitPointRight: Vec4, offsetThreshold: FastFloat, interpSpeed: FastFloat, poleLeft: Vec4 = null, poleRight: Vec4 = null, influence : FastFloat = 1.0, layerMask: Int = -1){
+	public function resetArmaturePosition(heightOffset: FastFloat, interpSpeed: FastFloat) {
+		var currentZ = object.transform.loc.z;
+		var res = deltaInterpolate(currentZ, heightOffset, interpSpeed);
+		object.transform.loc.set(0, 0, res);
+	}
 
-		if(hitPointRight == null || hitPointLeft == null) return;
-		var currentLoc = object.transform.world.getLoc();
+	public function updatePosition(animMats: Array<Mat4>, heightOffset: FastFloat, footOffset: FastFloat, hitPointLeft: Null<Vec4>, hitPointRight: Null<Vec4>, offsetThreshold: FastFloat, interpSpeed: FastFloat, poleLeft: Null<Vec4> = null, poleRight: Null<Vec4> = null, influence : FastFloat = 1.0, layerMask: Int = -1){
 
-		// Lower the armature to ground
-		var rightZ = hitPointRight.z;
-		var leftZ = hitPointLeft.z;
-		if(Math.abs(rightZ - leftZ) > offsetThreshold) return;
-		var minZ = Math.min(rightZ, leftZ);
-		var interp = deltaInterpolate(currentLoc.z, minZ + heightOffset, interpSpeed);
-		var newLoc = new Vec4(currentLoc.x, currentLoc.y, interp);
-		setWorldLocation(newLoc);
+		if(hitPointRight == null || hitPointLeft == null) {
+			resetArmaturePosition(heightOffset, interpSpeed);
+		}
+		else {
+			var currentLoc = object.transform.world.getLoc();
 
-		var leftFootLoc = boneAnimation.getAbsWorldMat(leftBone, animMats).getLoc();
-		var rightFootLoc = boneAnimation.getAbsWorldMat(rightBone, animMats).getLoc();
-
-		if(leftFootLoc.z + footOffset < leftZ){
-			var goal = new Vec4(leftFootLoc.x, leftFootLoc.y, leftZ - footOffset);
-			AnimationExtension.solveTwoBoneIKBlend(boneAnimation, animMats, leftBoneParent, goal, poleLeft, 0.0, influence, layerMask);
+			// Lower the armature to ground
+			var rightZ = hitPointRight.z;
+			var leftZ = hitPointLeft.z;
+			if(Math.abs(rightZ - leftZ) > offsetThreshold) return;
+			var minZ = Math.min(rightZ, leftZ);
+			var interp = deltaInterpolate(currentLoc.z, minZ + heightOffset, interpSpeed);
+			var newLoc = new Vec4(currentLoc.x, currentLoc.y, interp);
+			setWorldLocation(newLoc);
 		}
 
-		if(rightFootLoc.z + footOffset < rightZ){
-			var goal = new Vec4(rightFootLoc.x, rightFootLoc.y, rightZ - footOffset);
-			AnimationExtension.solveTwoBoneIKBlend(boneAnimation, animMats, rightBoneParent, goal, poleRight, 0.0, influence, layerMask);
+		if(hitPointLeft != null){
+			var leftFootLoc = boneAnimation.getAbsWorldMat(leftBone, animMats).getLoc();
+			var leftZ = hitPointLeft.z;
+			if(leftFootLoc.z - footOffset < leftZ){
+				var goal = new Vec4(leftFootLoc.x, leftFootLoc.y, leftZ + footOffset);
+				AnimationExtension.solveTwoBoneIKBlend(boneAnimation, animMats, leftBoneParent, goal, poleLeft, 0.0, influence, layerMask);
+			}
+		}
+
+		if(hitPointRight != null){
+			var rightFootLoc = boneAnimation.getAbsWorldMat(rightBone, animMats).getLoc();
+			var rightZ = hitPointRight.z;
+			if(rightFootLoc.z - footOffset < rightZ){
+				var goal = new Vec4(rightFootLoc.x, rightFootLoc.y, rightZ + footOffset);
+				AnimationExtension.solveTwoBoneIKBlend(boneAnimation, animMats, rightBoneParent, goal, poleRight, 0.0, influence, layerMask);
+			}
 		}
 
 	}
 
-	public function updateRotation(animMats: Array<Mat4>, defaultFootVecLeft: Vec4, defaultFootVecRight: Vec4, groundNormalLeft: Vec4, groundNormalRight: Vec4){
-		var m = boneAnimation.getAbsWorldMat(leftBone, animMats);
-		var leftMat = Mat4.identity().setFrom(m);
-		m = boneAnimation.getAbsWorldMat(rightBone, animMats);
-		var rightMat = Mat4.identity().setFrom(m);
-
-		var currentLeftLook = leftMat.look().normalize();
-		var currentRightLook = rightMat.look().normalize();
-
-		var quatDefaultLeft = new Quat().fromTo(new Vec4(0, 0, 1), defaultFootVecLeft.normalize()).normalize();
-		var quatDefautltRight = new Quat().fromTo(new Vec4(0, 0, 1), defaultFootVecRight.normalize()).normalize();
-
-		var requiredVecLeft = groundNormalLeft.applyQuat(quatDefaultLeft).normalize();
-		var requiredVecRight = groundNormalRight.applyQuat(quatDefautltRight).normalize();
-
-		var requiredQuatLeft = new Quat().fromTo(currentLeftLook, requiredVecLeft).normalize();
-		var requiredQuatRight = new Quat().fromTo(currentRightLook, requiredVecRight).normalize();
-
-		trace("Left required = " + requiredVecLeft.toString());
-		trace("Right required = " + requiredVecRight.toString());
-
-		applyScaledQuat(leftMat, requiredQuatLeft);
-		applyScaledQuat(rightMat, requiredQuatRight);
-
-		boneAnimation.setBoneMatFromWorldMat(rightMat, rightBone, animMats);
-		boneAnimation.setBoneMatFromWorldMat(leftMat, leftBone, animMats);
+	public function updateRotation(animMats: Array<Mat4>, defaultFootVecLeft: Vec4, defaultFootVecRight: Vec4, groundNormalLeft: Null<Vec4>, groundNormalRight: Null<Vec4>){
 		
+		if(groundNormalLeft != null){
+			var m = boneAnimation.getAbsWorldMat(leftBone, animMats);
+			var leftMat = Mat4.identity().setFrom(m);
+			var currentLeftLook = leftMat.look().normalize();
+			var quatLeft = new Quat().fromTo(new Vec4(0, 0, 1), groundNormalLeft.normalize()).normalize();
+			var requiredVecLeft = defaultFootVecLeft.applyQuat(quatLeft).normalize();
+			var requiredQuatLeft = new Quat().fromTo(currentLeftLook, requiredVecLeft).normalize();
+			applyScaledQuat(leftMat, requiredQuatLeft);
+			boneAnimation.setBoneMatFromWorldMat(leftMat, leftBone, animMats);
+		}
+
+		if(groundNormalRight != null){
+			var m = boneAnimation.getAbsWorldMat(rightBone, animMats);
+			var rightMat = Mat4.identity().setFrom(m);
+			var currentRightLook = rightMat.look().normalize();
+			var quatRight = new Quat().fromTo(new Vec4(0, 0, 1), groundNormalRight.normalize()).normalize();
+			var requiredVecRight = defaultFootVecRight.applyQuat(quatRight).normalize();
+			var requiredQuatRight = new Quat().fromTo(currentRightLook, requiredVecRight).normalize();
+			applyScaledQuat(rightMat, requiredQuatRight);
+			boneAnimation.setBoneMatFromWorldMat(rightMat, rightBone, animMats);
+		}
 		
 	}
 
@@ -441,7 +440,7 @@ class SimpleBiPedalIK {
 
 		mat.decompose(loc, rot, scl);
 		quat.mult(rot);
-		mat.compose(loc, quat, scl);
+		mat.compose(loc, quat.normalize(), scl);
 		
 	}
 
