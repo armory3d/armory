@@ -20,6 +20,7 @@ class NavAgent extends Trait {
 
 	public function new() {
 		super();
+		notifyOnRemove(stopTween);
 	}
 
 	public function setPath(path: Array<Vec4>) {
