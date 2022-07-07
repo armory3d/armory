@@ -26,21 +26,28 @@ class SimpleFootIKNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'armature'
 
-    def update_advanced(self, context):
-        self.update_sockets(context)
+    property0: HaxeStringProperty('property0', name = 'Left Foot Name', default = '')
+    property1: HaxeStringProperty('property1', name = 'Right Foot Name', default = '')
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
+        layout.prop(self, 'property1')
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketAnimTree', 'Action')
-        self.add_input('ArmStringSocket', 'Left Bone')
-        self.add_input('ArmStringSocket', 'Right Bone')
-        self.add_input('ArmFloatSocket', 'Left Hit Point')
-        self.add_input('ArmFloatSocket', 'Right Hit Point')
-        self.add_input('ArmFloatSocket', 'Hip Height')
+        self.add_input('ArmFloatSocket', 'Scan Height')
+        self.add_input('ArmFloatSocket', 'Scan Depth')
+        self.add_input('ArmIntSocket', 'Collision Mask', default_value = 0)
+        self.add_input('ArmFloatSocket', 'Height Offset')
         self.add_input('ArmFloatSocket', 'Foot Offset')
-        self.add_input('ArmFloatSocket', 'Foot Offset Threshold')
+        self.add_input('ArmFloatSocket', 'Offset Threshold')
         self.add_input('ArmFloatSocket', 'Interp Speed', default_value = 0.1)
         self.add_input('ArmIntSocket', 'Bone Group', default_value = 0)
+        self.add_input('ArmFloatSocket', 'Influence', default_value = 1.0)
+        self.add_input('ArmBoolSocket', 'Use Pole Targets', default_value = False)
+        self.add_input('ArmBoolSocket', 'Rotate Foot', default_value = False)
+        self.add_input('ArmNodeSocketArray', 'Pole And Direction Array')
         self.add_input('ArmVectorSocket', 'Left Pole')
         self.add_input('ArmVectorSocket', 'Right Pole')
 

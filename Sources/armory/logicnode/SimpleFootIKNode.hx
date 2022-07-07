@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import iron.data.SceneFormat.TObj;
 import armory.object.AnimationExtension;
 import haxe.display.Protocol.InitializeParams;
 import kha.FastFloat;
@@ -12,22 +13,29 @@ class SimpleFootIKNode extends LogicNode {
 
 	#if arm_skin
 	var object: Object; //0
-	var animMats: Array<Mat4>; //1
 	var leftBoneName: String; //2
 	var rightBoneName: String; //3
 	var leftHitPoint: Null<Float>; //4
 	var rightHitPoint: Null<Float>; //5
-	var hipHeight: Float; //6
+	var heightOffset: Float; //6
 	var footOffset: Null<Float>; //7
-	var footOffsetThreshold: Float; //8
+	var offsetThreshold: Float; //8
 	var interpSpeed: Float; //9
 	var layerMask: Null<Int>; //10
+	var influence: FastFloat;
 	var leftPole: Vec4 = null; 
 	var rightPole: Vec4 = null;
-	var oldInfluence: Null<Float> = null;
-	var influenceMatch: Bool = false;
+	var leftFootDir: Vec4;
+	var rightFootDir: Vec4;
+	var scanHeight: FastFloat;
+	var scanDepth: FastFloat;
+	var collisionMask: Int;
+	var footIK: SimpleBiPedalIK;
+	var leftBone: TObj;
+	var rightBone: TObj;
 
-	static final EPSILON = 0.01;
+	public var property0: String;
+	public var property1: String;
 
 	var animation: BoneAnimation;
 	var ready = false;
@@ -44,95 +52,81 @@ class SimpleFootIKNode extends LogicNode {
 		assert(Error, object != null, "The object input not be null");
 		animation = object.getBoneAnimation(object.uid);
 		assert(Error, animation != null, "The object does not have armatureanimation");
+		leftBoneName = property0;
+		rightBoneName = property1;
+		leftBone = animation.getBone(leftBoneName);
+		rightBone = animation.getBone(rightBoneName);
+		footIK = new SimpleBiPedalIK(object, animation, leftBoneName, rightBoneName);
 		ready = true;
 
 	}
+	#end
 
 	override function get(from: Int): Dynamic {
 
+		#if arm_skin
 		return function (animMats: Array<Mat4>) {
 			if(! ready) init();
 
 			inputs[1].get()(animMats);
-			leftBoneName = inputs[2].get();
-			rightBoneName = inputs[3].get();
-			leftHitPoint = inputs[4].get();
-			rightHitPoint = inputs[5].get();
-			hipHeight = inputs[6].get();
-			footOffset = inputs[7].get();
-			footOffsetThreshold = inputs[8].get();
-			interpSpeed = inputs[9].get();
-			layerMask = inputs[10].get();
-			leftPole = inputs[11].get();
-			rightPole = inputs[12].get();
-
-			var leftBone = animation.getBone(leftBoneName);
-			var rightBone = animation.getBone(rightBoneName);
-  
-			// get bone world location
-			var leftLoc = animation.getAbsWorldMat(leftBone, animMats).getLoc();
-			var rightLoc = animation.getAbsWorldMat(rightBone, animMats).getLoc();
-
-			// get lowest hit point
-			if(leftHitPoint == null || rightHitPoint == null) return;
-			var hitPoint = Math.min(rightHitPoint, leftHitPoint);
-
-			// get current armature height
-			var currentPos = new Vec4().setFrom(object.transform.world.getLoc());
-			var currentHeight = currentPos.z;
-
-			// interpolate z movement
-			currentPos.z = deltaInterpolate(currentHeight, hitPoint + hipHeight, interpSpeed);
-
-			// set new armature height
-			setWorldLocation(currentPos);
-
-			if(footOffsetThreshold < EPSILON) footOffsetThreshold = EPSILON;
-			var influence = 1 - Math.abs(leftLoc.z - rightLoc.z) / footOffsetThreshold;
-			influence = influence < 0.0 ? 0.0 : (influence > 1.0 ? 1.0 : influence);
-
-			influenceMatch = true;
-			if(oldInfluence != null && Math.abs(oldInfluence - influence) > 0.5) {
-				influenceMatch = false;
+			scanHeight = inputs[2].get();
+			scanDepth = inputs[3].get();
+			collisionMask = inputs[4].get();
+			heightOffset = inputs[5].get();
+			footOffset = inputs[6].get();
+			offsetThreshold = inputs[7].get();
+			interpSpeed = inputs[8].get();
+			layerMask = inputs[9].get();
+			influence = inputs[10].get();
+			var usePoles = inputs[11].get();
+			var rotateFoot = inputs[12].get();
+			var vecArray: Array<Vec4> = inputs[13].get();
+			if(usePoles) {
+				leftPole = new Vec4().setFrom(vecArray[0]);
+				rightPole =  new Vec4().setFrom(vecArray[1]);
 			}
-			oldInfluence = influence;
-
-			//Perform IK on left leg
-			if(influenceMatch || (leftLoc.z < (leftHitPoint + footOffset))) {
-				leftLoc.z = leftHitPoint + footOffset;
-				AnimationExtension.solveTwoBoneIKBlend(animation, animMats, leftBone.parent, leftLoc, leftPole, 
-											  0.0, influence, layerMask, 0.1);
+			else {
+				leftPole = null;
+				rightPole = null;
 			}
-
-			//Perform IK on right leg
-			if(influenceMatch || (rightLoc.z < (rightHitPoint + footOffset))) {
-				rightLoc.z = rightHitPoint + footOffset;
-				AnimationExtension.solveTwoBoneIKBlend(animation, animMats, rightBone.parent, rightLoc, rightPole, 
-											  0.0, influence, layerMask, 0.1);
+			if(rotateFoot){
+				leftFootDir = vecArray[2];
+				rightFootDir = vecArray[3];
 			}
+			/* leftPole = inputs[14].get();
+			rightPole = inputs[15].get(); */
+			
+			
+
+			var leftBoneLoc = animation.getAbsWorldMat(leftBone, animMats).getLoc();
+			var rightBoneLoc = animation.getAbsWorldMat(rightBone, animMats).getLoc();
+
+			var physics = armory.trait.physics.PhysicsWorld.active;
+			var top = new Vec4().setFrom(leftBoneLoc).add(new Vec4(0, 0, scanHeight));
+			var bottom = new Vec4().setFrom(leftBoneLoc).sub(new Vec4(0, 0, scanDepth));
+			var rayLeft = physics.rayCast(top, bottom, collisionMask);
+			if(rayLeft == null) return;
+			var leftPos = new Vec4().setFrom(rayLeft.pos);
+			var leftNorm = new Vec4().setFrom(rayLeft.normal);
+
+			top = new Vec4().setFrom(rightBoneLoc).add(new Vec4(0, 0, scanHeight));
+			bottom = new Vec4().setFrom(rightBoneLoc).sub(new Vec4(0, 0, scanDepth));
+			var rayRight = physics.rayCast(top, bottom, collisionMask);
+			if(rayRight == null) return;
+			var rightPos =  new Vec4().setFrom(rayRight.pos);
+			var rightNorm = new Vec4().setFrom(rayRight.normal);
+
+			trace("Left Pole = " + leftPole.toString());
+			trace("Right Pole = " + rightPole.toString());
+			
+			footIK.updatePosition(animMats, heightOffset, footOffset, leftPos, rightPos, offsetThreshold, interpSpeed, leftPole, rightPole, influence, layerMask);
+
+			if(! rotateFoot) return;
+			trace("left norm =" + leftNorm.toString());
+			trace("Right norm =" + rightNorm.toString());
+			footIK.updateRotation(animMats, leftFootDir, rightFootDir, leftNorm, rightNorm);
+			
 		}
+		#end
 	}
-
-	function deltaInterpolate(from: Float, to: Float, interpSpeed: Float): Float {
-
-		var sign = to > from ? 1.0 : -1.0;
-		var value = from + interpSpeed * sign;
-		var min = Math.min(to, from);
-		var max = Math.max(to, from);
-		return value < min ? min : value > max ? max : value;
-	}
-
-	function setWorldLocation(currentPos: Vec4) {
-		var loc = new Vec4().setFrom(currentPos);
-		// Remove parent location influence
-		loc.sub(object.parent.transform.world.getLoc());
-		// Convert vec to parent local space
-		var dotX = loc.dot(object.parent.transform.right());
-		var dotY = loc.dot(object.parent.transform.look());
-		var dotZ = loc.dot(object.parent.transform.up());
-		var vec = new Vec4(dotX, dotY, dotZ);
-		object.transform.loc.setFrom(vec);
-		object.transform.buildMatrix();
-	}
-	#end
 }
