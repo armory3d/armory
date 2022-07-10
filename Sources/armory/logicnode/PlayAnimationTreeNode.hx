@@ -22,7 +22,7 @@ class PlayAnimationTreeNode extends LogicNode {
 		if(animation == null) {
 			#if arm_skin
 			animation = object.getBoneAnimation(object.uid);
-			cast(animation, BoneAnimation).animationLoop(function f(mats) {
+			cast(animation, BoneAnimation).setAnimationLoop(function f(mats) {
 				action(mats);
 			});
 			#end
