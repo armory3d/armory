@@ -20,7 +20,6 @@ class PulseNode extends LogicNode {
 			if (!running) {
 				tree.notifyOnUpdate(update);
 				running = true;
-				trace("Updating");
 			}
 		}
 		else if (from == 1) {
@@ -28,8 +27,6 @@ class PulseNode extends LogicNode {
 			if (running) {
 				tree.removeUpdate(update);
 				running = false;
-				trace("remved");
-
 			}
 		}
 	}
