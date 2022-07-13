@@ -4,6 +4,8 @@ import iron.system.Time;
 
 class PulseNode extends LogicNode {
 
+	var running = false;
+	var interval: Float;
 	var lastTick: Null<Float>;
 
 	public function new(tree: LogicTree) {
@@ -11,25 +13,33 @@ class PulseNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var tick = Time.time();
-		var interval: Float = inputs[2].get();
-
 		if (from == 0) {
-			// In
-			if (lastTick != null && tick - lastTick < interval) {
-				// Failed
-				runOutput(1);
+			// Start
+			interval = inputs[2].get();
 
-			}
-			else {
-				// Out
-				lastTick = tick;
-				runOutput(0);
+			if (!running) {
+				tree.notifyOnUpdate(update);
+				running = true;
+				trace("Updating");
 			}
 		}
 		else if (from == 1) {
-			// Reset
-			lastTick = null;
+			// Stop
+			if (running) {
+				tree.removeUpdate(update);
+				running = false;
+				trace("remved");
+
+			}
+		}
+	}
+
+	function update() {
+		var tick = Time.time();
+
+		if (lastTick == null || tick - lastTick > interval) {
+			runOutput(0);
+			lastTick = tick;
 		}
 	}
 }
