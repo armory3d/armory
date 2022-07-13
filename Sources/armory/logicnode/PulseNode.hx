@@ -29,7 +29,7 @@ class PulseNode extends LogicNode {
 		}
 		else if (from == 1) {
 			// Reset
-			lastTick = tick;
+			lastTick = null;
 		}
 	}
 }
