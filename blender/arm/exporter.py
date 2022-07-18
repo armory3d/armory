@@ -1008,6 +1008,9 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
+                
+                # Use relative bone constraints
+                out_object['arm_relative_bone_constraints'] = bdata.arm_relative_bone_constraints
 
                 # Restore settings
                 skelobj.animation_data.action = orig_action

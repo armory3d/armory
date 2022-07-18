@@ -276,6 +276,7 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'arm_autobake')
+            layout.prop(obj.data, 'arm_relative_bone_constraints')
             pass
 
 class ARM_PT_WorldPropsPanel(bpy.types.Panel):
