@@ -1,7 +1,27 @@
 from arm.logicnode.arm_nodes import *
 
+
 class TimerNode(ArmLogicTreeNode):
-    """Creates a timer."""
+    """Runs a timer with a specified amount of repetitions.
+
+    @input Start: Start the timer or continue if paused. In both cases,
+        the values of `Duration` and `Repeat` are (re-)evaluated.
+    @input Pause: Pause the timer.
+    @input Stop: Stop and reset the timer. This does not activate any outputs.
+    @input Duration: The time in seconds that the timer runs.
+    @input Repeat: The number of times the timer will repeat, or 0 for infinite repetition.
+
+    @output Out: Activated after each repetition.
+    @output Done: Activated after the last repetition (never activated if `Repeat` is 0).
+    @output Running: Whether the timer is currently running.
+    @output Time Passed: The time in seconds that has passed since the
+        current repetition started, excluding pauses.
+    @output Time Left: The time left in seconds until the timer is done
+        or the next repetition starts.
+    @output Progress: Percentage of the timer's progress of the current
+        repetition (`Time Passed/Duration`).
+    @output Repetitions: The index of the current repetition, starting at 0.
+    """
     bl_idname = 'LNTimerNode'
     bl_label = 'Timer'
     arm_version = 1
