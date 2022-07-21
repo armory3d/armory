@@ -1,58 +1,106 @@
 package armory.logicnode;
 
-import kha.Image;
 import kha.Color;
+import kha.Image;
+import kha.Scheduler;
 
 class DrawImageSequenceNode extends LogicNode {
 
-	var img: Array<Image> = [];
-	var w: Int;
-	var h: Int;
-	var timer: haxe.Timer;
-	var t = 0;
-	
+	var images: Array<Image> = [];
+	var currentImgIdx = 0;
+	var timetaskID = -1;
+
 	public function new(tree: LogicTree) {
 		super(tree);
-
 	}
 
 	override function run(from: Int) {
-	
-		w = iron.App.w();
-		h = iron.App.h();
-		
-		timer = new haxe.Timer(inputs[6].get());				
-			
-		for(i in inputs[4].get()...inputs[5].get()+1){
-		//trace(inputs[2].get()+i+'.png');
-			iron.data.Data.getImage(inputs[2].get()+i+'.'+inputs[3].get(), function(image:kha.Image) { img.push(image); });
+		switch (from) {
+			case 0: // Start
+				if (timetaskID != -1) {
+					// Do nothing if already running
+					return;
+				} else {
+					// We could still be rendering the last image, reset in this case
+					tree.removeRender2D(render2D);
+					currentImgIdx = 0;
+				}
+
+				final startIndex = inputs[9].get();
+				final endIndex = inputs[10].get();
+				assert(Error, startIndex >= 0, "Start Index must not be negative!");
+				assert(Error, endIndex >= 0, "End Index must not be negative!");
+				assert(Error, startIndex <= endIndex, "Start Index must not be larger than End Index!");
+
+				final numImages = endIndex + 1 - startIndex;
+				images.resize(numImages);
+
+				final imagePrefix = inputs[2].get();
+				final imageExtension = inputs[3].get();
+
+				final waitForLoad = inputs[13].get();
+				var numLoaded = 0;
+				for (i in startIndex...endIndex + 1) {
+					iron.data.Data.getImage(imagePrefix + i + '.' + imageExtension, (image: Image) -> {
+						images[i - startIndex] = image;
+						numLoaded++;
+
+						if (waitForLoad && numLoaded == numImages) {
+							startTimetask();
+							runOutput(0);
+						}
+					});
+				}
+
+				if (!waitForLoad) {
+					startTimetask();
+					runOutput(0);
+				}
+
+				tree.notifyOnRender2D(render2D);
+
+			case 1: // Stop
+				tree.removeRender2D(render2D);
+				currentImgIdx = 0;
+				stopTimetask();
+				runOutput(1);
 		}
-		
-		tree.notifyOnRender2D(render2D);
-
-		runOutput(0);
-
 	}
-	
-	function render2D(g:kha.graphics2.Graphics) {
-		
-		if(inputs[1].get()){
-		
-			var sw = iron.App.w()/w;
-			var sh = iron.App.h()/h;
-			
-			g.color = Color.fromFloats(inputs[8].get().x, inputs[8].get().y, inputs[8].get().z, inputs[8].get().w);	
-			
-			timer.run = function(){
-				++t;
-			if(t == img.length)
-				if(inputs[7].get()) t = 0; else { timer.stop();	t = img.length-1; }		
+
+	inline function startTimetask() {
+		final rate = inputs[11].get();
+		timetaskID = Scheduler.addTimeTask(() -> {
+			currentImgIdx++;
+			if (currentImgIdx == images.length) {
+				final loop = inputs[12].get();
+				if (loop) {
+					currentImgIdx = 0;
+				} else {
+					currentImgIdx--;
+					stopTimetask();
+					runOutput(1);
+				}
 			}
-			
-			g.drawScaledImage(img[t], inputs[9].get()*sw, inputs[10].get()*sh, inputs[11].get()*sw, inputs[12].get()*sh);
+		}, rate, rate); // Rate is also first offset so that we start at array index 0
+	}
 
+	inline function stopTimetask() {
+		if (timetaskID != -1) {
+			Scheduler.removeTimeTask(timetaskID);
+			timetaskID = -1;
+		}
+	}
+
+	function render2D(g:kha.graphics2.Graphics) {
+		if (images[currentImgIdx] == null) {
+			return;
 		}
 
+		final colorVec = inputs[4].get();
+		g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+
+		trace(currentImgIdx);
+
+		g.drawScaledImage(images[currentImgIdx], inputs[5].get(), inputs[6].get(), inputs[7].get(), inputs[8].get());
 	}
-		
 }

@@ -7,6 +7,8 @@ using kha.graphics2.GraphicsExtension;
 @:access(zui.Zui)
 class Canvas {
 
+	public static inline var defaultFontName = "font_default.ttf";
+
 	public static var assetMap = new Map<Int, Dynamic>(); // kha.Image | kha.Font
 	public static var themes = new Array<zui.Themes.TTheme>();
 	static var events:Array<String> = [];

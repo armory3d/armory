@@ -3,48 +3,46 @@ package armory.logicnode;
 import kha.Color;
 import kha.math.Vector2;
 
-class DrawPolygonNode extends LogicNode {
+using kha.graphics2.GraphicsExtension;
 
-	var w: Int;
-	var h: Int;
-	
+class DrawPolygonNode extends LogicNode {
+	static inline var numStaticInputs = 6;
+
+	var vertices: Array<Vector2>;
+
 	public function new(tree: LogicTree) {
 		super(tree);
-
 	}
 
 	override function run(from: Int) {
-	
-		w = iron.App.w();
-		h = iron.App.h();
-					
-		tree.notifyOnRender2D(render2D);
-		
-		runOutput(0);
+		OnRender2DNode.ensure2DContext("DrawPolygonNode");
 
-	}
-	
-	function render2D(g:kha.graphics2.Graphics) {
-		
-		if(inputs[1].get()){
-		
-			var sw = iron.App.w()/w;
-			var sh = iron.App.h()/h;
-			
-			var vertices: Array<Vector2> = [];
-			
-			for(v in 0...Std.int((inputs.length-6)/2))
-				vertices.push({x: inputs[(6+(v*2+1))].get()*sw, y: inputs[(6+(v*2+2))].get()*sh});
-			
-			g.color = Color.fromFloats(inputs[3].get().x, inputs[3].get().y, inputs[3].get().z, inputs[3].get().w);
-			
-			if(inputs[2].get())
-				kha.graphics2.GraphicsExtension.fillPolygon(g, inputs[5].get()*sw, inputs[6].get()*sh, vertices);
-			else
-				kha.graphics2.GraphicsExtension.drawPolygon(g, inputs[5].get()*sw, inputs[6].get()*sh, vertices, inputs[4].get()*(sw+sh)/2);
-		
+		if (vertices == null) {
+			final numDynamicInputs = inputs.length - numStaticInputs;
+			final numPoints = numDynamicInputs >>> 1;
+
+			// Preallocate
+			vertices = [];
+			vertices.resize(numPoints);
+			for (i in 0...vertices.length) {
+				vertices[i] = new Vector2();
+			}
 		}
 
+		for (i in 0...vertices.length) {
+			vertices[i].x = inputs[numStaticInputs + i * 2 + 0].get();
+			vertices[i].y = inputs[numStaticInputs + i * 2 + 1].get();
+		}
+
+		final colorVec = inputs[1].get();
+		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+
+		if (inputs[2].get()) {
+			OnRender2DNode.g.fillPolygon(inputs[4].get(), inputs[5].get(), vertices);
+		} else {
+			OnRender2DNode.g.drawPolygon(inputs[4].get(), inputs[5].get(), vertices, inputs[3].get());
+		}
+
+		runOutput(0);
 	}
-		
 }
