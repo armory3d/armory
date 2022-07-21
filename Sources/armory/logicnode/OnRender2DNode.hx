@@ -1,7 +1,5 @@
 package armory.logicnode;
 
-import armory.trait.physics.PhysicsWorld;
-
 class OnRender2DNode extends LogicNode {
 	/**
 		The current kha g2 object if the executed code is called inside the
