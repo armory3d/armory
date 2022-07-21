@@ -340,6 +340,7 @@ def init_properties():
     # For armature
     bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     bpy.types.Armature.arm_autobake = BoolProperty(name="Auto Bake", description="Bake constraints automatically", default=True)
+    bpy.types.Armature.arm_relative_bone_constraints = BoolProperty(name="Relative Bone Constraints", description="Constraint are applied relative to Armature's parent", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
 
