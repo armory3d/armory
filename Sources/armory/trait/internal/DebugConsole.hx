@@ -3,6 +3,7 @@ package armory.trait.internal;
 import iron.Trait;
 #if arm_debug
 import kha.Scheduler;
+import armory.ui.Canvas;
 import iron.object.CameraObject;
 import iron.object.MeshObject;
 import zui.Zui;
@@ -83,7 +84,7 @@ class DebugConsole extends Trait {
 		this.scaleFactor = scaleFactor;
 		DebugConsole.traceWithPosition = traceWithPosition == 1;
 
-		iron.data.Data.getFont("font_default.ttf", function(font: kha.Font) {
+		iron.data.Data.getFont(Canvas.defaultFontName, function(font: kha.Font) {
 			ui = new Zui({scaleFactor: scaleFactor, font: font});
 			// Set settings
 			setScale(scaleDebugConsole);

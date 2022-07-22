@@ -22,7 +22,7 @@ class CanvasScript extends Trait {
 	 * @param canvasName Name of the canvas
 	 * @param font font file (Optional)
 	 */
-	public function new(canvasName: String, font: String = "font_default.ttf") {
+	public function new(canvasName: String, font: String = Canvas.defaultFontName) {
 		super();
 		cnvName = canvasName;
 
