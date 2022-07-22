@@ -651,28 +651,9 @@ class RenderPathDeferred {
 			path.setTarget("tex");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("buf", "tex");
+			path.bindTarget("gbuffer0", "gbuffer0");
+			path.bindTarget("gbuffer1", "gbuffer1");	
 			path.drawShader("shader_datas/water_pass/water_pass");
-		}
-		#end
-
-		#if rp_volumetriclight
-		{
-			path.setTarget("singlea");
-			path.bindTarget("_main", "gbufferD");
-						#if arm_shadowmap_atlas
-			Inc.bindShadowMapAtlas();
-			#else
-			Inc.bindShadowMap();
-			#end
-			path.drawShader("shader_datas/volumetric_light/volumetric_light");
-
-			path.setTarget("singleb");
-			path.bindTarget("singlea", "tex");
-			path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
-
-			path.setTarget("tex");
-			path.bindTarget("singleb", "tex");
-			path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 		}
 		#end
 
@@ -699,6 +680,27 @@ class RenderPathDeferred {
 		#if rp_translucency
 		{
 			Inc.drawTranslucency("tex");
+		}
+		#end
+
+		#if rp_volumetriclight
+		{
+			path.setTarget("singlea");
+			path.bindTarget("_main", "gbufferD");
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
+			Inc.bindShadowMap();
+			#end
+			path.drawShader("shader_datas/volumetric_light/volumetric_light");
+
+			path.setTarget("singleb");
+			path.bindTarget("singlea", "tex");
+			path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
+
+			path.setTarget("tex");
+			path.bindTarget("singleb", "tex");
+			path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 		}
 		#end
 
@@ -993,3 +995,4 @@ class RenderPathDeferred {
 	}
 	#end
 }
+
