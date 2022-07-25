@@ -590,7 +590,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
-
     sh = tese if tese is not None else vert
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
@@ -708,6 +707,21 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
+        if '_MicroShadowing' in wrd.world_defs:
+            frag.add_include('std/gbuffer.glsl')
+            frag.add_uniform('sampler2D gbuffer1')
+            frag.add_uniform('sampler2D gbufferD')
+            frag.add_uniform('vec3 eyeLook')
+            frag.add_uniform('vec2 cameraProj')
+            frag.add_in('vec2 texCoord')
+            frag.add_in('vec3 viewRay')
+            frag.write('vec4 g1 = textureLod(gbuffer1, texCoord, 0.0);')
+            frag.write('vec2 occspec = unpackFloat2(g1.a);')
+            frag.write('float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
+            frag.write('vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);')
+            frag.write('vec3 v = normalize(eye - p);')
+            frag.write('occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel')
+
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
@@ -717,12 +731,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         if '_MicroShadowing' in wrd.world_defs:
-            frag.add_uniform('float occ')
-            frag.write(' , occ')
+            frag.write(' , occspec.x')
         if '_SSRS' in wrd.world_defs:
-            frag.add_include('std/ssrs.glsl')
+       	    frag.add_include('std/ssrs.glsl')
+            frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP')
-            frag.add_uniform('sampler2D gbufferD') 
        	    frag.write(' , gbufferD, invVP, eye')
         frag.write(');')
 
