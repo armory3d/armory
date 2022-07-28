@@ -92,7 +92,7 @@ def make_base(con_mesh, parse_opacity):
     global write_material_attribs_post
     global write_vertex_attribs
     wrd = bpy.data.worlds['Arm']
-
+    con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float4'}, {'name': 'nor', 'data': 'float3'}, {'name': 'tex', 'data': 'float2'}]
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
     geom = None
@@ -148,7 +148,6 @@ def make_base(con_mesh, parse_opacity):
 
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
-
     make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
@@ -395,7 +394,6 @@ def make_forward_mobile(con_mesh):
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             frag.add_include('std/shadows.glsl')
-
             frag.write('if (receiveShadow) {')
             if '_Spot' in wrd.world_defs:
                 vert.add_out('vec4 spotPosition')
@@ -490,7 +488,7 @@ def make_forward_solid(con_mesh):
             vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
         else:
             vert.write('texCoord = tex * texUnpack;')
-
+	
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col.rgb;')
@@ -579,7 +577,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
-
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
@@ -592,7 +589,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
-    sh = tese if tese is not None else vert
+    if tese:
+        sh = tese
+    else:
+        sh = vert
+    sh.add_out('vec3 viewRay')#for microshadowing
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
     sh.write('eyeDir = eye - wposition;')
@@ -710,13 +711,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         if '_MicroShadowing' in wrd.world_defs:
-            vert.add_out('vec2 texCoord')
             frag.add_include('std/gbuffer.glsl')
-            frag.add_uniform('sampler2D gbuffer1')
             frag.add_uniform('sampler2D gbuffer0')
+            frag.add_uniform('sampler2D gbuffer1')
             frag.add_uniform('sampler2D gbufferD')
-            frag.write('vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, matid')
-            frag.write('vec3 n2');
+            frag.add_uniform('vec3 eyeLook', link='_cameraLook')
+            frag.write('vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);')
+            frag.write('vec3 n2;')
             frag.write('n2.z = 1.0 - abs(g0.x) - abs(g0.y);')
             frag.write('n2.xy = n2.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);')
             frag.write('n2 = normalize(n2);')
@@ -729,11 +730,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('occspec.x = mix(1.0, occspec.x, dotNV2); // AO Fresnel')
 
         frag.write('direct += sampleLight(')
-        frag.write('  wposition, n, vVec, ') 
         if '_Microshadowing' in wrd.world_defs:
-        	frag.write('dotNV2, ') 
+        	frag.write('wposition, n2, vVec, dotNV2, ') 
         else:
-        	frag.write('dotNV, ')
+        	frag.write('wposition, n, vVec, dotNV, ')
         
         frag.write('pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
@@ -745,7 +745,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(' , occspec.x')
         if '_SSRS' in wrd.world_defs:
-            frag.add_uniform('sampler2D gbufferD')
+            if not '_Microshadowing' in wrd.world_defs:
+                frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP')
        	    frag.write(' , gbufferD, invVP, eye')
         frag.write(');')
