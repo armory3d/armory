@@ -15,13 +15,8 @@ void getSkinningDualQuat(const ivec4 bone, vec4 weight, out vec4 A, inout vec4 B
 		skinBones[bonei.y + 1],
 		skinBones[bonei.z + 1],
 		skinBones[bonei.w + 1]);
-	mat4 matC = mat4(
-		skinBones[bonei.x + 2],
-		skinBones[bonei.y + 2],
-		skinBones[bonei.z + 2],
-		skinBones[bonei.w + 2]);
 	//Apply scaling first
-	S = matC * weight;
+	S = skinBones[bonei.x + 2];
 	// Handles antipodality by sticking joints in the same neighbourhood
 	// weight.xyz *= sign(matA[3] * mat3x4(matA)).xyz;
 	weight.xyz *= sign(matA[3] * matA).xyz;
