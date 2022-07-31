@@ -379,6 +379,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
         return
 
     state.normal_parsed = True
+    frag.write_normal += 1
     if not get_arm_export_tangents() or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.write('texn.y = -texn.y;')
@@ -393,7 +394,8 @@ def parse_normal_map_color_input(inp, strength_input=None):
                 frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         state.con.add_elem('tang', 'short4norm')
-    
+    frag.write_normal -= 1
+
 def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
     # Follow input
     if inp.is_linked:

@@ -681,7 +681,7 @@ class RenderPathDeferred {
 			Inc.drawTranslucency("tex");
 		}
 		#end
-		
+
 		#if rp_volumetriclight
 		{
 			path.setTarget("singlea");
