@@ -124,7 +124,8 @@ def make_base(con_mesh, parse_opacity):
             vattr_written = write_vertex_attribs(vert)
 
     frag.add_include('compiled.inc')
-
+    make_attrib.write_norpos(con_mesh, vert)
+    
     written = False
     if write_material_attribs != None:
         written = write_material_attribs(con_mesh, frag)
@@ -143,7 +144,6 @@ def make_base(con_mesh, parse_opacity):
         write_material_attribs_post(con_mesh, frag)
 
     vert.add_out('vec3 wnormal')
-    make_attrib.write_norpos(con_mesh, vert)
     frag.write_attrib('vec3 n = normalize(wnormal);')
 
     if not is_displacement and not vattr_written:
