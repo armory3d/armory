@@ -229,12 +229,12 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
     elif node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             if state.parse_surface:
-                # Normal
-                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Base color
                 state.out_basecol = parse_vector_input(node.inputs[0])
+                # Normal
+                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
+                    log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 # Occlusion
                 state.out_occlusion = parse_value_input(node.inputs[2])
                 # Roughness
@@ -378,6 +378,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
     if state.basecol_only or not inp.is_linked or state.normal_parsed:
         return
 
+    state.normal_parsed = True
     if not get_arm_export_tangents() or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.write('texn.y = -texn.y;')
@@ -392,9 +393,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
                 frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         state.con.add_elem('tang', 'short4norm')
-    state.normal_parsed = True
-
-
+    
 def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
     # Follow input
     if inp.is_linked:
