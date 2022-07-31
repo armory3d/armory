@@ -2,7 +2,6 @@ package armory.logicnode;
 
 import iron.data.SceneFormat.TObj;
 import armory.object.AnimationExtension;
-import haxe.display.Protocol.InitializeParams;
 import kha.FastFloat;
 import iron.object.Object;
 import iron.object.BoneAnimation;
@@ -11,7 +10,7 @@ import iron.math.Mat4;
 
 class SimpleFootIKNode extends LogicNode {
 
-	#if arm_skin
+	#if (arm_skin && arm_physics)
 	var object: Object;
 	var leftBoneName: String;
 	var rightBoneName: String;
@@ -47,7 +46,7 @@ class SimpleFootIKNode extends LogicNode {
 		super(tree);
 	}
 
-	#if arm_skin
+	#if (arm_skin && arm_physics)
 	public function init(){
 
 		object = inputs[0].get();
@@ -62,11 +61,10 @@ class SimpleFootIKNode extends LogicNode {
 		ready = true;
 
 	}
-	#end
 
 	override function get(from: Int): Dynamic {
 
-		#if arm_skin
+		
 		return function (animMats: Array<Mat4>) {
 			if(! ready) init();
 
@@ -131,6 +129,7 @@ class SimpleFootIKNode extends LogicNode {
 			footIK.updateRotation(animMats, leftFootDir, rightFootDir, leftNormal, rightNormal);
 			
 		}
-		#end
+		
 	}
+	#end
 }
