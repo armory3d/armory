@@ -2,7 +2,7 @@
 	"contexts": [
 		{
 			"name": "water_pass",
-			"depth_write": true,
+			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"blend_source": "source_alpha",
