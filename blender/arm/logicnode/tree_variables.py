@@ -213,8 +213,7 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
         node.arm_logic_id = var_item.name
         node.use_custom_color = True
         node.color = var_item.color
-        master_node = arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.get_master_node(tree, node.arm_logic_id)
-        master_node._synchronize_to_replicas(master_node)
+        arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.synchronize(tree, node.arm_logic_id)
 
         return {'FINISHED'}
 
@@ -294,6 +293,8 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
         node.arm_logic_id = node_id
         node.use_custom_color = True
         node.color = tree.arm_treevariableslist[tree.arm_treevariableslist_index].color
+
+        arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.synchronize(tree, node.arm_logic_id)
 
         return node
 
@@ -515,6 +516,14 @@ def node_compat_sdk2203():
                     node.color = var_item.color
 
                 arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.choose_new_master_node(tree, logic_id)
+
+
+def node_compat_sdk2209():
+    # See https://github.com/armory3d/armory/pull/2538
+    for tree in bpy.data.node_groups:
+        if tree.bl_idname == "ArmLogicTreeType":
+            for item in tree.arm_treevariableslist:
+                arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.synchronize(tree, item.name)
 
 
 REG_CLASSES = (

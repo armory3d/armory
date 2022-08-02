@@ -407,6 +407,14 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
         else:
             return f'TV: {self.arm_logic_id}'
 
+    @classmethod
+    def synchronize(cls, tree: bpy.types.NodeTree, logic_id: str):
+        """Synchronizes the value of the master node of the given
+        `logic_id` to all replica nodes.
+        """
+        master_node = cls.get_master_node(tree, logic_id)
+        master_node._synchronize_to_replicas(master_node)
+
     @staticmethod
     def choose_new_master_node(tree: bpy.types.NodeTree, logic_id: str) -> bool:
         """Choose a new master node from the remaining replica nodes.
