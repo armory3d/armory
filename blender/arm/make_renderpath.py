@@ -24,11 +24,9 @@ def add_world_defs():
     # Screen-space ray-traced shadows
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
-        assets.add_khafile_def('rp_ssrs')
 
     if rpdat.arm_micro_shadowing:
         wrd.world_defs += '_MicroShadowing'
-        assets.add_khafile_def('rp_microshadowing')
 
     if rpdat.arm_two_sided_area_light:
         wrd.world_defs += '_TwoSidedAreaLight'

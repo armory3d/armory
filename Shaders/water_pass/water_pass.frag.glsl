@@ -5,12 +5,21 @@
 #include "std/math.glsl"
 
 uniform sampler2D gbufferD;
+uniform sampler2D gbuffer0; // Normal, roughness
+uniform sampler2D gbuffer1; // basecol, spec
 uniform sampler2D tex;
 uniform sampler2D sbase;
 uniform sampler2D sdetail;
 uniform sampler2D sfoam;
+uniform mat4 P;
+uniform mat3 V3;
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
+#endif
+
+#ifdef _CPostprocess
+uniform vec3 PPComp9;
+uniform vec3 PPComp10;
 #endif
 
 uniform float time;
@@ -24,13 +33,67 @@ in vec2 texCoord;
 in vec3 viewRay;
 out vec4 fragColor;
 
+vec3 hitCoord;
+float depth;
+
+const int numBinarySearchSteps = 16;
+const int maxSteps = 16;
+
+vec2 getProjectedCoord(const vec3 hit) {
+	vec4 projectedCoord = P * vec4(hit, 1.0);
+	projectedCoord.xy /= projectedCoord.w;
+	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
+	#ifdef _InvY
+	projectedCoord.y = 1.0 - projectedCoord.y;
+	#endif
+	return projectedCoord.xy;
+}
+
+float getDeltaDepth(const vec3 hit) {
+	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	return viewPos.z - hit.z;
+}
+
+vec4 binarySearch(vec3 dir) {
+	float ddepth;
+	vec3 start = hitCoord;
+	for (int i = 0; i < numBinarySearchSteps; i++) 
+	{
+		dir *= 0.5;
+		start -= dir;
+		ddepth = getDeltaDepth(start);
+		if (ddepth < 0.0) hitCoord += dir;
+	}
+	// Ugly discard of hits too far away
+	#ifdef _CPostprocess
+	if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	#else
+	if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	#endif
+	return vec4(getProjectedCoord(start), 0.0, 1.0);
+}
+
+vec4 rayCast(vec3 dir) {
+	#ifdef _CPostprocess
+	dir *= PPComp9.x;
+	#else
+	dir *= ssrRayStep;
+	#endif
+	for (int i = 0; i < maxSteps; i++) 
+	{
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+	}
+	return vec4(0.0);
+}
+
 void main() {
 	float gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (gdepth == 1.0) {
 		fragColor = vec4(0.0);
 		return;
 	}
-
 	// Eye below water
 	if (eye.z < waterLevel) {
 		fragColor = vec4(0.0);
@@ -71,47 +134,57 @@ void main() {
 	fresnel = pow(fresnel, 30.0) * 0.45;
 	vec3 r = reflect(-v, n2);
 	#ifdef _Rad
-	vec3 reflected =  textureLod(senvmapRadiance, envMapEquirect(r), 0).rgb;
+	vec3 reflectedEnv =  textureLod(senvmapRadiance, envMapEquirect(r), 0).rgb;
 	#else
-	const vec3 reflected = vec3(0.5);
+	const vec3 reflectedEnv = vec3(0.5);
 	#endif
 	vec3 refracted = textureLod(tex, tc, 0.0).rgb;
-
-	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
-	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 	
-	vec2 enc = g0.rg;
-	vec3 n;
-	n.z = 1.0 - abs(enc.x) - abs(enc.y);
-	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(n);
+	if(ssr == 1) {
+		vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
+		float roughness = 0.1;//unpackFloat(g0.b).y;
+		//if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
-	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
-	vec3 reflected = normalize(reflect(viewPos, viewNormal));
-	hitCoord = viewPos;
+		float spec = 0.9;//fract(textureLod(gbuffer1, texCoord, 0.0).a);
+		//if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+		
+		vec2 enc = g0.rg;
+		vec3 n;
+		n.z = 1.0 - abs(enc.x) - abs(enc.y);
+		n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+		n = normalize(n);
 
-	#ifdef _CPostprocess
-		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
-	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
-	#endif
+		vec3 viewnormal = V3 * n;
+		vec3 viewNormal = normalize(((n + n2) / 2.0) * 2.0 - 1.0);
+		vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
+		vec3 reflected = normalize(reflect(viewPos, viewNormal));
+		hitCoord = viewPos;
 
-	// * max(ssrMinRayStep, -viewPos.z)
-	vec4 coords = rayCast(dir);
+		#ifdef _CPostprocess
+			vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+		#else
+			vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+		#endif
 
-	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+		// * max(ssrMinRayStep, -viewPos.z)
+		vec4 coords = rayCast(dir);
 
-	float reflectivity = 1.0 - roughness;
-	#ifdef _CPostprocess
+		vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+		float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+
+		float reflectivity = 1.0 - roughness;
+		#ifdef _CPostprocess
 		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
-	#else
-		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
-	#endif
-	intensity = clamp(intensity, 0.0, 1.0);
-	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
-	fragColor.rgb = mix(refracted, reflCol, waterReflect);
+		#else
+		float intensity = pow(reflectivity, ssrFalloffExp)*screenEdgeFactor*clamp(-reflected.z, 0.0, 1.0)*clamp((ssrSearchDist - length(viewPos - hitCoord))*(1.0 / ssrSearchDist), 0.0, 1.0)*coords.w;
+		#endif
+		intensity = clamp(intensity, 0.0, 1.0);
+		vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
+		fragColor.rgb = mix(refracted, reflCol * intensity * 0.5, 0.5 * waterReflect * fresnel);
+	}
+	else
+		fragColor.rgb = mix(refracted, reflectedEnv, waterReflect * fresnel);
+
 	fragColor.rgb *= waterColor;
 	fragColor.rgb += clamp(pow(max(dot(r, ld), 0.0), 200.0) * (200.0 + 8.0) / (PI * 8.0), 0.0, 2.0);
 	fragColor.rgb *= 1.0 - (clamp(-(p.z - waterLevel) * waterDensity, 0.0, 0.9));
