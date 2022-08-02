@@ -9,8 +9,6 @@ uniform sampler2D tex;
 uniform sampler2D sbase;
 uniform sampler2D sdetail;
 uniform sampler2D sfoam;
-uniform mat4 P;
-uniform mat3 V3;
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
 #endif
@@ -25,9 +23,6 @@ uniform float envmapStrength;
 in vec2 texCoord;
 in vec3 viewRay;
 out vec4 fragColor;
-
-vec3 hitCoord;
-float depth;
 
 void main() {
 	float gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
@@ -75,13 +70,13 @@ void main() {
 	fresnel = pow(fresnel, 30.0) * 0.45;
 	vec3 r = reflect(-v, n2);
 	#ifdef _Rad
-	vec3 reflectedEnv =  textureLod(senvmapRadiance, envMapEquirect(r), 0).rgb;
+	vec3 reflected =  textureLod(senvmapRadiance, envMapEquirect(r), 0).rgb;
 	#else
-	const vec3 reflectedEnv = vec3(0.5);
+	const vec3 reflected = vec3(0.5);
 	#endif
 	vec3 refracted = textureLod(tex, tc, 0.0).rgb;
 	
-	fragColor.rgb = mix(refracted, reflectedEnv, waterReflect * fresnel);
+	fragColor.rgb = mix(refracted, reflected, waterReflect * fresnel);
 	fragColor.rgb *= waterColor;
 	fragColor.rgb += clamp(pow(max(dot(r, ld), 0.0), 200.0) * (200.0 + 8.0) / (PI * 8.0), 0.0, 2.0);
 	fragColor.rgb *= 1.0 - (clamp(-(p.z - waterLevel) * waterDensity, 0.0, 0.9));

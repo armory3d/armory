@@ -403,7 +403,6 @@ class Inc {
 		}
 		#end
 
-		path.bindTarget("_main", "gbufferD");
 		path.drawMeshes("translucent");
 		#if rp_render_to_texture
 		{
