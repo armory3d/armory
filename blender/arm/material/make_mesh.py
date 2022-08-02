@@ -714,14 +714,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
-        if '_MicroShadowing' in wrd.world_defs:
-            frag.add_uniform('float occ')
-            frag.write(' , occ')
-        if '_SSRS' in wrd.world_defs:
-            frag.add_include('std/ssrs.glsl')
-            frag.add_uniform('mat4 invVP')
-            frag.add_uniform('sampler2D gbufferD') 
-       	    frag.write(' , gbufferD, invVP, eye')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:
