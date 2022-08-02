@@ -571,8 +571,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-            if tese != None:
-                make_tess.interpolate(tese, 'wvpposition' , 4, declare_out=True)
 
         else:
             opac = '0.9999' # 1.0 - eps
@@ -734,7 +732,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         	frag.write('wposition, n2, vVec, dotNV2, ') 
         else:
         	frag.write('wposition, n, vVec, dotNV, ')
-        
+
         frag.write('pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')

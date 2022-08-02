@@ -92,7 +92,7 @@ def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: 
 
         if tese is not None:
             tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord', 2, declare_out=True)
+            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
             tese.write_pre = False
 
     if con_mesh.is_elem('tex1'):
