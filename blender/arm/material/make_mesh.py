@@ -147,6 +147,7 @@ def make_base(con_mesh, parse_opacity):
 
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
+
     make_attrib.write_tex_coords(con_mesh, vert, frag, tese)
 
     if con_mesh.is_elem('col'):
@@ -393,6 +394,7 @@ def make_forward_mobile(con_mesh):
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             frag.add_include('std/shadows.glsl')
+
             frag.write('if (receiveShadow) {')
             if '_Spot' in wrd.world_defs:
                 vert.add_out('vec4 spotPosition')
@@ -572,7 +574,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity == 1.0) discard;')
         else:
             opac = '0.9999' # 1.0 - eps
-            frag.write('if (opacity < {0}) discard;'.format(opac))
+            frag.write('if (opacity < {0}) discard;'.format(opac)
+
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:

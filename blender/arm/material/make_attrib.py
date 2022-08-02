@@ -6,7 +6,6 @@ import arm.material.make_skin as make_skin
 import arm.material.make_particle as make_particle
 import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
-import arm.material.mat_utils as mat_utils
 import arm.material.make_morph_target as make_morph_target
 from arm.material.shader import Shader, ShaderContext
 import arm.utils
@@ -73,10 +72,6 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
 
 def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: Optional[Shader]):
     rpdat = arm.utils.get_rp()
-    rpasses = mat_utils.get_rpasses(con_mesh.material)
-    for rp in rpasses:
-        if rp == 'translucent':
-        	is_transluc = True
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')

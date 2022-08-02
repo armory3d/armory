@@ -22,8 +22,8 @@ def write(vert, frag):
                 frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
-            frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
-
+            frag.add_uniform('samplerCubeShado shadowMapPoint[4]', included=True)
+           
     vert.add_out('vec4 wvpposition')
 
     vert.write('wvpposition = gl_Position;')
