@@ -53,14 +53,6 @@ def write(vert, frag):
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
 
-    if '_MicroShadowing' in wrd.world_defs:
-        frag.add_include('std/gbuffer.glsl')
-        frag.add_uniform('sampler2D gbuffer1')
-        frag.add_in('vec2 texCoord')
-        frag.write('vec4 g1 = textureLod(gbuffer1, texCoord, 0.0);')
-        frag.write('vec2 occspec = unpackFloat2(g1.a);')
-        frag.write('occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel')
-
     frag.write('direct += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
@@ -83,12 +75,6 @@ def write(vert, frag):
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
         frag.write('  , voxels, voxpos')
-    if '_MicroShadowing' in wrd.world_defs:
-        frag.write(' , occspec.x')
-    if '_SSRS' in wrd.world_defs:
-        frag.add_uniform('sampler2D gbufferD')
-        frag.add_uniform('mat4 invVP')
-       	frag.write(' , gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights
