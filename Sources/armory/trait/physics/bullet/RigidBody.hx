@@ -260,9 +260,6 @@ class RigidBody extends iron.Trait {
 		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(friction);
 		// body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
-		if (shape == Shape.Sphere || shape == Shape.Cylinder || shape == Shape.Cone || shape == Shape.Capsule) {
-			angularDamping += friction;
-		}
 		bodyColl.setRestitution(restitution);
 
 		if ( useDeactivation) {
