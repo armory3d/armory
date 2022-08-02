@@ -48,9 +48,9 @@ vec4 binarySearch(vec3 dir) {
 	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
-		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
+		start -= dir;
+		ddepth = getDeltaDepth(start);
+		if (ddepth < 0.0) start += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
