@@ -573,6 +573,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
+
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
