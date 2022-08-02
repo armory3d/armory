@@ -1,5 +1,4 @@
 #version 450
-
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
 #include "std/math.glsl"

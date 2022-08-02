@@ -78,7 +78,7 @@ def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: 
         if rp == 'translucent':
         	is_transluc = True
 
-    if con_mesh.is_elem('tex') or is_transluc:
+    if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:

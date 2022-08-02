@@ -92,7 +92,6 @@ def make_base(con_mesh, parse_opacity):
     global write_material_attribs_post
     global write_vertex_attribs
     wrd = bpy.data.worlds['Arm']
-    con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float4'}, {'name': 'nor', 'data': 'float3'}, {'name': 'tex', 'data': 'float2'}]
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
     geom = None
@@ -488,7 +487,7 @@ def make_forward_solid(con_mesh):
             vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
         else:
             vert.write('texCoord = tex * texUnpack;')
-	
+
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col.rgb;')
@@ -571,7 +570,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -587,11 +585,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
-    if tese:
-        sh = tese
-    else:
-        sh = vert
-    sh.add_out('vec3 viewRay')#for microshadowing
+    sh = tese if tese is not None else vert
+
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
     sh.write('eyeDir = eye - wposition;')

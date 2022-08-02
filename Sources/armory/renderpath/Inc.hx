@@ -402,10 +402,8 @@ class Inc {
 			#end
 		}
 		#end
-		
+
 		path.bindTarget("_main", "gbufferD");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("gbuffer1", "gbuffer1");
 		path.drawMeshes("translucent");
 		#if rp_render_to_texture
 		{
@@ -416,6 +414,7 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
