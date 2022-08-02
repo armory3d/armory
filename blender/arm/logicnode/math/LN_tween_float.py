@@ -54,7 +54,7 @@ class TweenFloatNode( ArmLogicTreeNode):
                 ('BackInOut', 'BackInOut', 'BackInOut')],
         name='', default='Linear')
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Start')
         self.add_input('ArmNodeSocketAction', 'Stop')
         self.add_input('ArmFloatSocket', 'From', default_value = 0.0)

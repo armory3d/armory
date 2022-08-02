@@ -47,6 +47,7 @@ class ArmLogicTreeNode(bpy.types.Node):
     arm_section = 'default'
     arm_is_obsolete = False
 
+    @final
     def init(self, context):
         # make sure a given node knows the version of the NodeClass from when it was created
         if isinstance(type(self).arm_version, int):
