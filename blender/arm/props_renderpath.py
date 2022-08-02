@@ -518,6 +518,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_density: FloatProperty(name="Density", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_refract: FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_ssr: BoolProperty(name="Ssr", default=1, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
