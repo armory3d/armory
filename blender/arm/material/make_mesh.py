@@ -214,6 +214,7 @@ def make_deferred(con_mesh, rpasses):
                 else:
                     vert.write('prevwvpposition = prevWVP * spos;')
             else:
+                tese.add_out('vec4 wvpposition')
                 tese.add_out('vec4 prevwvpposition')
                 tese.write('wvpposition = gl_Position;')
                 if is_displacement:
