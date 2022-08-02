@@ -177,7 +177,7 @@ void main() {
 	#endif
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
-	fragColor.rgb = mix(refracted, reflectedEnv * reflCol, fresnel * waterReflect);
+	fragColor.rgb = coords.rgb;//mix(refracted, reflCol, waterReflect);
 	fragColor.rgb *= waterColor;
 	fragColor.rgb += clamp(pow(max(dot(r, ld), 0.0), 200.0) * (200.0 + 8.0) / (PI * 8.0), 0.0, 2.0);
 	fragColor.rgb *= 1.0 - (clamp(-(p.z - waterLevel) * waterDensity, 0.0, 0.9));
