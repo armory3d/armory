@@ -577,6 +577,7 @@ const vec3 waterColor = vec3(""" + str(round(rpdat.arm_water_color[0] * 100) / 1
 const float waterDensity = """ + str(round(rpdat.arm_water_density * 100) / 100) + """;
 const float waterRefract = """ + str(round(rpdat.arm_water_refract * 100) / 100) + """;
 const float waterReflect = """ + str(round(rpdat.arm_water_reflect * 100) / 100) + """;
+const int ssr = """ + "1" if rpdat.arm_water_ssr else "0" + """;
 """)
         if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(

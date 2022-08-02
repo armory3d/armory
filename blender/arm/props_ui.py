@@ -1727,6 +1727,7 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_water_refract')
         col.prop(rpdat, 'arm_water_reflect')
         col.prop(rpdat, 'arm_water_color')
+        col.prop(rpdat, 'arm_water_ssr')
 
 class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
     bl_label = "Post Process"
