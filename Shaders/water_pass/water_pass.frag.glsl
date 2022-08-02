@@ -114,7 +114,7 @@ void main() {
 	vec3 hit = eye + t * v;
 	hit.xy *= waterFreq;
 	hit.z += waterLevel;
-	
+
 	// Sample normal maps
 	vec2 tcnor0 = hit.xy / 3.0;
 	vec3 n0 = textureLod(sdetail, tcnor0 + vec2(speed / 60.0, speed / 120.0), 0.0).rgb;
