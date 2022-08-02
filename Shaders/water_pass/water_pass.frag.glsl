@@ -63,7 +63,7 @@ vec4 binarySearch(vec3 dir) {
 		dir *= 0.5;
 		start -= dir;
 		ddepth = getDeltaDepth(start);
-		if (ddepth < 0.0) start += dir;
+		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
@@ -154,7 +154,8 @@ void main() {
 		n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 		n = normalize(n);
 
-		vec3 viewNormal = V3 * n;
+		vec3 viewnormal = V3 * n;
+		vec3 viewNormal = normalize(((n + n2) / 2.0) * 2.0 - 1.0);
 		vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
 		vec3 reflected = normalize(reflect(viewPos, viewNormal));
 		hitCoord = viewPos;
@@ -173,13 +174,13 @@ void main() {
 
 		float reflectivity = 1.0 - roughness;
 		#ifdef _CPostprocess
-			float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 		#else
-			float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+		float intensity = pow(reflectivity, ssrFalloffExp)*screenEdgeFactor*clamp(-reflected.z, 0.0, 1.0)*clamp((ssrSearchDist - length(viewPos - hitCoord))*(1.0 / ssrSearchDist), 0.0, 1.0)*coords.w;
 		#endif
 		intensity = clamp(intensity, 0.0, 1.0);
 		vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
-		fragColor.rgb = mix(refracted, reflCol * reflectedEnv, waterReflect * fresnel);
+		fragColor.rgb = mix(refracted, reflCol * intensity * 0.5, 0.5 * waterReflect * fresnel);
 	}
 	else
 		fragColor.rgb = mix(refracted, reflectedEnv, waterReflect * fresnel);
