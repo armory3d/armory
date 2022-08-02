@@ -149,6 +149,15 @@ context_screen = None
 
 
 @persistent
+def on_save_pre(context):
+    # Ensure that files are saved with the correct version number
+    # (e.g. startup files with an "Arm" world may have old version numbers)
+    wrd = bpy.data.worlds['Arm']
+    wrd.arm_version = props.arm_version
+    wrd.arm_commit = props.arm_commit
+
+
+@persistent
 def on_load_pre(context):
     unload_py_libraries()
 
@@ -244,6 +253,7 @@ def load_library(asset_name):
 
 
 def register():
+    bpy.app.handlers.save_pre.append(on_save_pre)
     bpy.app.handlers.load_pre.append(on_load_pre)
     bpy.app.handlers.load_post.append(on_load_post)
     bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
@@ -272,5 +282,6 @@ def unregister():
 
     bpy.app.handlers.load_post.remove(on_load_post)
     bpy.app.handlers.load_pre.remove(on_load_pre)
+    bpy.app.handlers.save_pre.remove(on_save_pre)
     bpy.app.handlers.depsgraph_update_post.remove(on_depsgraph_update_post)
     # bpy.app.handlers.undo_post.remove(on_undo_post)
