@@ -74,11 +74,8 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
 def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: Optional[Shader]):
     rpdat = arm.utils.get_rp()
     rpasses = mat_utils.get_rpasses(con_mesh.material)
-    for rp in rpasses:
-        if rp == 'translucent':
-        	is_transluc = True
 
-    if con_mesh.is_elem('tex') or is_transluc:
+    if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:

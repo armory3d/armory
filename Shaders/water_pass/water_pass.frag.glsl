@@ -77,7 +77,41 @@ void main() {
 	#endif
 	vec3 refracted = textureLod(tex, tc, 0.0).rgb;
 
-	fragColor.rgb = mix(refracted, reflected, fresnel * waterReflect);
+	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
+	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+	
+	vec2 enc = g0.rg;
+	vec3 n;
+	n.z = 1.0 - abs(enc.x) - abs(enc.y);
+	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	n = normalize(n);
+
+	vec3 viewNormal = V3 * n;
+	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
+	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	hitCoord = viewPos;
+
+	#ifdef _CPostprocess
+		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+	#else
+		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	#endif
+
+	// * max(ssrMinRayStep, -viewPos.z)
+	vec4 coords = rayCast(dir);
+
+	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+
+	float reflectivity = 1.0 - roughness;
+	#ifdef _CPostprocess
+		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	#else
+		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	#endif
+	intensity = clamp(intensity, 0.0, 1.0);
+	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
+	fragColor.rgb = mix(refracted, reflCol, waterReflect);
 	fragColor.rgb *= waterColor;
 	fragColor.rgb += clamp(pow(max(dot(r, ld), 0.0), 200.0) * (200.0 + 8.0) / (PI * 8.0), 0.0, 2.0);
 	fragColor.rgb *= 1.0 - (clamp(-(p.z - waterLevel) * waterDensity, 0.0, 0.9));
