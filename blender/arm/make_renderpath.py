@@ -1,9 +1,19 @@
 import bpy
+
+import arm.api
 import arm.assets as assets
-import arm.utils
 import arm.log as log
 import arm.make_state as state
-import arm.api
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    log = arm.reload_module(log)
+    state = arm.reload_module(state)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
 
 callback = None
 
@@ -43,6 +53,22 @@ def add_world_defs():
         if rpdat.rp_shadowmap_cascades != '1':
             wrd.world_defs += '_CSM'
             assets.add_khafile_def('arm_csm')
+        if rpdat.rp_shadowmap_atlas:
+            assets.add_khafile_def('arm_shadowmap_atlas')
+            wrd.world_defs += '_ShadowMapAtlas'
+            if rpdat.rp_shadowmap_atlas_single_map:
+                assets.add_khafile_def('arm_shadowmap_atlas_single_map')
+                wrd.world_defs += '_SingleAtlas'
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_point={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_point)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_spot={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_spot)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size_sun={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size_sun)))
+            assets.add_khafile_def('rp_shadowmap_atlas_max_size={0}'.format(int(rpdat.rp_shadowmap_atlas_max_size)))
+
+            assets.add_khafile_def('rp_max_lights_cluster={0}'.format(int(rpdat.rp_max_lights_cluster)))
+            assets.add_khafile_def('rp_max_lights={0}'.format(int(rpdat.rp_max_lights)))
+            if rpdat.rp_shadowmap_atlas_lod:
+                assets.add_khafile_def('arm_shadowmap_atlas_lod')
+                assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
     # SS
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
@@ -75,7 +101,7 @@ def add_world_defs():
     # Light defines
     point_lights = 0
     for bo in bpy.data.objects: # TODO: temp
-        if bo.type == 'LIGHT':
+        if bo.arm_export and bo.type == 'LIGHT':
             light = bo.data
             if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
                 point_lights += 1
@@ -89,9 +115,14 @@ def add_world_defs():
                     wrd.world_defs += '_Spot'
                     assets.add_khafile_def('arm_spot')
 
-    if point_lights == 1:
-        wrd.world_defs += '_SinglePoint'
-    elif point_lights > 1:
+    if not rpdat.rp_shadowmap_atlas:
+        if point_lights == 1:
+            wrd.world_defs += '_SinglePoint'
+        elif point_lights > 1:
+            wrd.world_defs += '_Clusters'
+            assets.add_khafile_def('arm_clusters')
+    else:
+        wrd.world_defs += '_SMSizeUniform'
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
@@ -106,6 +137,8 @@ def build():
 
     assets_path = arm.utils.get_sdk_path() + '/armory/Assets/'
     wrd = bpy.data.worlds['Arm']
+
+    wrd.compo_defs = ''
 
     add_world_defs()
 
@@ -127,9 +160,13 @@ def build():
         assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(arm.utils.get_cascade_size(rpdat)))
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
+    if arm.utils.get_gapi() == 'metal':
+        assets.add_shader_pass('clear_color_depth_pass')
+        assets.add_shader_pass('clear_color_pass')
+        assets.add_shader_pass('clear_depth_pass')
+
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':
-        assets.add_shader_pass('world_pass')
         if '_EnvClouds' in wrd.world_defs:
             assets.add(assets_path + 'clouds_base.raw')
             assets.add_embedded_data('clouds_base.raw')
@@ -138,7 +175,7 @@ def build():
             assets.add(assets_path + 'clouds_map.png')
             assets.add_embedded_data('clouds_map.png')
 
-    if rpdat.rp_renderer == 'Deferred' and not rpdat.rp_compositornodes:
+    if rpdat.rp_renderer == 'Deferred':
         assets.add_shader_pass('copy_pass')
 
     if rpdat.rp_render_to_texture:
@@ -221,7 +258,7 @@ def build():
             if rpdat.rp_antialiasing == 'TAA':
                 assets.add_khafile_def('arm_taa')
 
-        assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))        
+        assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))
         if rpdat.rp_supersampling == '4':
             assets.add_shader_pass('supersample_resolve')
 
@@ -276,7 +313,7 @@ def build():
         else: # mobile, solid
             assets.add_shader_pass('deferred_light_' + rpdat.arm_material_model.lower())
             assets.add_khafile_def('rp_material_' + rpdat.arm_material_model.lower())
-    
+
     if len(bpy.data.lightprobes) > 0:
         wrd.world_defs += '_Probes'
         assets.add_khafile_def('rp_probes')
@@ -309,6 +346,10 @@ def build():
     if rpdat.rp_blending:
         assets.add_khafile_def('rp_blending')
 
+    if rpdat.rp_depth_texture:
+        assets.add_khafile_def('rp_depth_texture')
+        assets.add_shader_pass('copy_pass')
+
     if rpdat.rp_sss:
         assets.add_khafile_def('rp_sss')
         wrd.world_defs += '_SSS'
@@ -340,7 +381,21 @@ def build():
         assets.add_khafile_def('rp_chromatic_aberration')
         assets.add_shader_pass('chromatic_aberration_pass')
 
-    gbuffer2 = '_Veloc' in wrd.world_defs
+    ignoreIrr = False
+
+    for obj in bpy.data.objects:
+        if obj.type == "MESH":
+            for slot in obj.material_slots:
+                mat = slot.material
+
+                if mat: #Check if not NoneType
+
+                    if mat.arm_ignore_irradiance:
+                        ignoreIrr = True
+
+    if ignoreIrr:
+        wrd.world_defs += '_IgnoreIrr'
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'

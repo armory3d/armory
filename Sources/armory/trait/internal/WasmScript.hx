@@ -10,11 +10,13 @@ import iron.system.Time;
 class WasmScript extends iron.Trait {
 
 	var wasm: Wasm;
+	public var wasmName: String;
 
 	var objectMap: Map<Int, iron.object.Object> = new Map();
 
 	public function new(handle: String) {
 		super();
+		wasmName = handle;
 
 		// Armory API exposed to WebAssembly
 		// TODO: static

@@ -1,13 +1,22 @@
 import os
 import shutil
-import arm.assets as assets
-import arm.utils
-import bpy
 import stat
 import subprocess
 import webbrowser
+
+import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+
+import arm.assets as assets
+import arm.utils
+
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -122,6 +131,32 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('webgl', 'WebGL2', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
+class ArmExporterAndroidPermissionListItem(bpy.types.PropertyGroup):
+    arm_android_permissions: EnumProperty(
+        items = [('ACCESS_COARSE_LOCATION ', 'Access Coarse Location', 'Allows an app to access approximate location'),
+                 ('ACCESS_NETWORK_STATE', 'Access Network State', 'Allows applications to access information about networks'),
+                 ('ACCESS_FINE_LOCATION', 'Access Fine Location', 'Allows an app to access precise location'),
+                 ('ACCESS_WIFI_STATE', 'Access Wi-Fi State', 'Allows applications to access information about Wi-Fi networks'),
+                 ('BLUETOOTH', 'Bluetooth', 'Allows applications to connect to paired bluetooth devices'),
+                 ('BLUETOOTH_ADMIN', 'Bluetooth Admin', 'Allows applications to discover and pair bluetooth devices'),
+                 ('CAMERA', 'Camera', 'Required to be able to access the camera device'),
+                 ('EXPAND_STATUS_BAR', 'Expand Status Bar', 'Allows an application to expand or collapse the status bar'),
+                 ('FOREGROUND_SERVICE', 'Foreground Service', 'Allows a regular application to use Service.startForeground'),
+                 ('GET_ACCOUNTS', 'Get Accounts', 'Allows access to the list of accounts in the Accounts Service'),
+                 ('INTERNET', 'Internet', 'Allows applications to open network sockets'),
+                 ('READ_EXTERNAL_STORAGE', 'Read External Storage', 'Allows an application to read from external storage.'),
+                 ('VIBRATE', 'Vibrate', 'Allows access to the vibrator'),
+                 ('WRITE_EXTERNAL_STORAGE', 'Write External Storage', 'Allows an application to write to external storage')],
+        name="Permission", default='VIBRATE', description='Android Permission')
+
+class ArmExporterAndroidAbiListItem(bpy.types.PropertyGroup):
+    arm_android_abi: EnumProperty(
+        items = [('arm64-v8a', 'arm64-v8a', 'This ABI is for ARMv8-A based CPUs, which support the 64-bit AArch64 architecture'),
+                 ('armeabi-v7a', 'armeabi-v7a', 'This ABI is for 32-bit ARM-based CPUs'),
+                 ('x86', 'x86', 'This ABI is for CPUs supporting the instruction set commonly known as x86, i386, or IA-32'),
+                 ('x86_64', 'x86_64', 'This ABI is for CPUs supporting the instruction set commonly referred to as x86-64')],
+        name="Android ABI", default='arm64-v8a', description='Android ABI')
+
 class ARM_UL_ExporterList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
@@ -134,6 +169,40 @@ class ARM_UL_ExporterList(bpy.types.UIList):
             col = row.column()
             col.alignment = 'RIGHT'
             col.label(text=item.arm_project_target)
+
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon = custom_icon)
+
+class ARM_UL_Exporter_AndroidPermissionList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # We could write some code to decide which icon to use here...
+        custom_icon = 'DOT'
+
+        # Make sure your code supports all 3 layout types
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            row = layout.row()
+            row.prop(item, "name", text="", emboss=False, icon=custom_icon)
+            col = row.column()
+            col.alignment = 'RIGHT'
+            col.label(text=item.arm_android_permissions)
+
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon = custom_icon)
+
+class ARM_UL_Exporter_AndroidAbiList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # We could write some code to decide which icon to use here...
+        custom_icon = 'DOT'
+
+        # Make sure your code supports all 3 layout types
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            row = layout.row()
+            row.prop(item, "name", text="", emboss=False, icon=custom_icon)
+            col = row.column()
+            col.alignment = 'RIGHT'
+            col.label(text=item.arm_android_abi)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
@@ -218,6 +287,76 @@ class ArmExporterListMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
+class ArmExporter_AndroidPermissionListNewItem(bpy.types.Operator):
+    # Add a new item to the list
+    bl_idname = "arm_exporter_android_permission_list.new_item"
+    bl_label = "Add a new item"
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        mdata.arm_exporter_android_permission_list.add()
+        mdata.arm_exporter_android_permission_list_index = len(mdata.arm_exporter_android_permission_list) - 1
+        return{'FINISHED'}
+
+class ArmExporter_AndroidPermissionListDeleteItem(bpy.types.Operator):
+    # Delete the selected item from the list
+    bl_idname = "arm_exporter_android_permission_list.delete_item"
+    bl_label = "Deletes an item"
+
+    @classmethod
+    def poll(self, context):
+        """ Enable if there's something in the list """
+        mdata = bpy.data.worlds['Arm']
+        return len(mdata.arm_exporter_android_permission_list) > 0
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        list = mdata.arm_exporter_android_permission_list
+        index = mdata.arm_exporter_android_permission_list_index
+
+        list.remove(index)
+
+        if index > 0:
+            index = index - 1
+
+        mdata.arm_exporter_android_permission_list_index = index
+        return{'FINISHED'}
+
+class ArmExporter_AndroidAbiListNewItem(bpy.types.Operator):
+    # Add a new item to the list
+    bl_idname = "arm_exporter_android_abi_list.new_item"
+    bl_label = "Add a new item"
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        mdata.arm_exporter_android_abi_list.add()
+        mdata.arm_exporter_android_abi_list_index = len(mdata.arm_exporter_android_abi_list) - 1
+        return{'FINISHED'}
+
+class ArmExporter_AndroidAbiListDeleteItem(bpy.types.Operator):
+    # Delete the selected item from the list
+    bl_idname = "arm_exporter_android_abi_list.delete_item"
+    bl_label = "Deletes an item"
+
+    @classmethod
+    def poll(self, context):
+        """ Enable if there's something in the list """
+        mdata = bpy.data.worlds['Arm']
+        return len(mdata.arm_exporter_android_abi_list) > 0
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        list = mdata.arm_exporter_android_abi_list
+        index = mdata.arm_exporter_android_abi_list_index
+
+        list.remove(index)
+
+        if index > 0:
+            index = index - 1
+
+        mdata.arm_exporter_android_abi_list_index = index
+        return{'FINISHED'}
+
 class ArmExporterSpecialsMenu(bpy.types.Menu):
     bl_label = "More"
     bl_idname = "ARM_MT_ExporterListSpecials"
@@ -228,7 +367,7 @@ class ArmExporterSpecialsMenu(bpy.types.Menu):
         layout.operator("arm.exporter_gpuprofile")
 
 class ArmoryExporterOpenFolderButton(bpy.types.Operator):
-    '''Open published folder'''
+    """Open published folder"""
     bl_idname = 'arm.exporter_open_folder'
     bl_label = 'Open Folder'
 
@@ -268,23 +407,43 @@ class ArmExporterGpuProfileButton(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ArmExporterListItem)
+    bpy.utils.register_class(ArmExporterAndroidPermissionListItem)
+    bpy.utils.register_class(ArmExporterAndroidAbiListItem)
     bpy.utils.register_class(ARM_UL_ExporterList)
+    bpy.utils.register_class(ARM_UL_Exporter_AndroidPermissionList)
+    bpy.utils.register_class(ARM_UL_Exporter_AndroidAbiList)
     bpy.utils.register_class(ArmExporterListNewItem)
     bpy.utils.register_class(ArmExporterListDeleteItem)
     bpy.utils.register_class(ArmExporterListMoveItem)
+    bpy.utils.register_class(ArmExporter_AndroidPermissionListNewItem)
+    bpy.utils.register_class(ArmExporter_AndroidPermissionListDeleteItem)
+    bpy.utils.register_class(ArmExporter_AndroidAbiListNewItem)
+    bpy.utils.register_class(ArmExporter_AndroidAbiListDeleteItem)
     bpy.utils.register_class(ArmExporterSpecialsMenu)
     bpy.utils.register_class(ArmExporterGpuProfileButton)
     bpy.utils.register_class(ArmoryExporterOpenFolderButton)
 
     bpy.types.World.arm_exporterlist = CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.World.arm_exporter_android_permission_list = CollectionProperty(type=ArmExporterAndroidPermissionListItem)
+    bpy.types.World.arm_exporter_android_permission_list_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.World.arm_exporter_android_abi_list = CollectionProperty(type=ArmExporterAndroidAbiListItem)
+    bpy.types.World.arm_exporter_android_abi_list_index = IntProperty(name="Index for my_list", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmExporterListItem)
+    bpy.utils.unregister_class(ArmExporterAndroidPermissionListItem)
+    bpy.utils.unregister_class(ArmExporterAndroidAbiListItem)
     bpy.utils.unregister_class(ARM_UL_ExporterList)
+    bpy.utils.unregister_class(ARM_UL_Exporter_AndroidPermissionList)
+    bpy.utils.unregister_class(ARM_UL_Exporter_AndroidAbiList)
     bpy.utils.unregister_class(ArmExporterListNewItem)
     bpy.utils.unregister_class(ArmExporterListDeleteItem)
     bpy.utils.unregister_class(ArmExporterListMoveItem)
+    bpy.utils.unregister_class(ArmExporter_AndroidPermissionListNewItem)
+    bpy.utils.unregister_class(ArmExporter_AndroidPermissionListDeleteItem)
+    bpy.utils.unregister_class(ArmExporter_AndroidAbiListNewItem)
+    bpy.utils.unregister_class(ArmExporter_AndroidAbiListDeleteItem)
     bpy.utils.unregister_class(ArmExporterSpecialsMenu)
     bpy.utils.unregister_class(ArmExporterGpuProfileButton)
     bpy.utils.unregister_class(ArmoryExporterOpenFolderButton)

@@ -10,13 +10,14 @@ class VectorNode extends LogicNode {
 		super(tree);
 
 		if (x != null) {
-			addInput(new FloatNode(tree, x), 0);
-			addInput(new FloatNode(tree, y), 0);
-			addInput(new FloatNode(tree, z), 0);
+			LogicNode.addLink(new FloatNode(tree, x), this, 0, 0);
+			LogicNode.addLink(new FloatNode(tree, y), this, 0, 1);
+			LogicNode.addLink(new FloatNode(tree, z), this, 0, 2);
 		}
 	}
 
 	override function get(from: Int): Dynamic {
+		value = new Vec4();
 		value.x = inputs[0].get();
 		value.y = inputs[1].get();
 		value.z = inputs[2].get();

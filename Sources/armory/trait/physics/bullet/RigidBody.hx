@@ -30,6 +30,7 @@ class RigidBody extends iron.Trait {
 	public var destroyed = false;
 	var linearFactors: Array<Float>;
 	var angularFactors: Array<Float>;
+	var useDeactivation: Bool;
 	var deactivationParams: Array<Float>;
 	var ccd = false; // Continuous collision detection
 	public var group = 1;
@@ -96,7 +97,29 @@ class RigidBody extends iron.Trait {
 		this.mask = mask;
 
 		if (params == null) params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-		if (flags == null) flags = [false, false, false, false];
+		/**
+		 * params:[ linear damping
+		 * 		    angular damping
+		 * 			linear factor X
+		 * 			linear factor Y
+		 * 			linear factor Z
+		 * 			angular factor X
+		 * 			angular factor Y
+		 * 			angular factor Z
+		 * 			collision margin
+		 * 			linear deactivation threshold
+		 * 			angular deactivation thrshold
+		 * 			deactivation time(Not used)]
+		 */
+
+		if (flags == null) flags = [false, false, false, false, true];
+		/**
+		 * flags:[ is animated
+		 * 		   is trigger
+		 * 		   continuous collision detection
+		 * 		   is static
+		 * 		   use deactivation]
+		 */
 
 		this.linearDamping = params[0];
 		this.angularDamping = params[1];
@@ -108,12 +131,13 @@ class RigidBody extends iron.Trait {
 		this.trigger = flags[1];
 		this.ccd = flags[2];
 		this.staticObj = flags[3];
+		this.useDeactivation = flags[4];
 
 		notifyOnAdd(init);
 	}
 
 	inline function withMargin(f: Float) {
-		return f - f * collisionMargin;
+		return f + f * collisionMargin;
 	}
 
 	public function notifyOnReady(f: Void->Void) {
@@ -125,7 +149,7 @@ class RigidBody extends iron.Trait {
 		if (ready) return;
 		ready = true;
 
-		if (!Std.is(object, MeshObject)) return; // No mesh data
+		if (!Std.isOfType(object, MeshObject)) return; // No mesh data
 
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
@@ -241,11 +265,11 @@ class RigidBody extends iron.Trait {
 		}
 		bodyColl.setRestitution(restitution);
 
-		if (deactivationParams != null) {
+		if ( useDeactivation) {
 			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
 		}
 		else {
-			setActivationState(ActivationState.NoDeactivation);
+			setActivationState(bullet.Bt.CollisionObjectActivationState.DISABLE_DEACTIVATION);
 		}
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
@@ -301,15 +325,12 @@ class RigidBody extends iron.Trait {
 			syncTransform();
 		}
 		else {
-			var bodyColl: bullet.Bt.CollisionObject = body;
-			var trans = bodyColl.getWorldTransform();
-
+			var trans = body.getWorldTransform();
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
-			var qw: bullet.Bt.QuadWord = q;
 
 			transform.loc.set(p.x(), p.y(), p.z());
-			transform.rot.set(qw.x(), qw.y(), qw.z(), qw.w());
+			transform.rot.set(q.x(), q.y(), q.z(), q.w());
 			if (object.parent != null) {
 				var ptransform = object.parent.transform;
 				transform.loc.x -= ptransform.worldx();
@@ -317,6 +338,12 @@ class RigidBody extends iron.Trait {
 				transform.loc.z -= ptransform.worldz();
 			}
 			transform.buildMatrix();
+
+			#if hl
+			p.delete();
+			q.delete();
+			trans.delete();
+			#end
 		}
 
 		if (onContact != null) {
@@ -325,8 +352,22 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
+	public function disableCollision() {
+		var bodyColl: bullet.Bt.CollisionObject = body;
+		bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
+	}
+
+	public function enableCollision() {
+		var bodyColl: bullet.Bt.CollisionObject = body;
+		bodyColl.setCollisionFlags(~bodyColl.getCollisionFlags() & CF_NO_CONTACT_RESPONSE);
+	}
+
 	public function removeFromWorld() {
 		if (physics != null) physics.removeRigidBody(this);
+	}
+
+	public function isActive() : Bool {
+		return body.isActive();
 	}
 
 	public function activate() {
@@ -356,6 +397,17 @@ class RigidBody extends iron.Trait {
 	public function setDeactivationParams(linearThreshold: Float, angularThreshold: Float, time: Float) {
 		body.setSleepingThresholds(linearThreshold, angularThreshold);
 		// body.setDeactivationTime(time); // not available in ammo
+	}
+
+	public function setUpDeactivation(useDeactivation: Bool, linearThreshold: Float, angularThreshold: Float, time: Float) {
+		this.useDeactivation = useDeactivation;
+		this.deactivationParams[0] = linearThreshold;
+		this.deactivationParams[1] = angularThreshold;
+		this.deactivationParams[2] = time;
+	}
+
+	public function isTriggerObject(isTrigger: Bool) {
+		this.trigger = isTrigger;
 	}
 
 	public function applyForce(force: Vec4, loc: Vec4 = null) {
@@ -575,7 +627,14 @@ class RigidBody extends iron.Trait {
 				else
 				{
 					triangleMeshCache.remove(data);
-					if(meshInterface != null) bullet.Bt.Ammo.destroy(meshInterface);
+					if(meshInterface != null)
+					{
+						#if js
+						bullet.Bt.Ammo.destroy(meshInterface);
+						#else
+						meshInterface.delete();
+						#end
+					}
 				}
 			}
 		}
@@ -600,12 +659,6 @@ class RigidBody extends iron.Trait {
 	var Cylinder = 5;
 	var Capsule = 6;
 	var Terrain = 7;
-}
-
-@:enum abstract ActivationState(Int) from Int to Int {
-	var Active = 1;
-	var NoDeactivation = 4;
-	var NoSimulation = 5;
 }
 
 #end

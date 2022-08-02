@@ -7,26 +7,17 @@ class CameraGetNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-        if(from == 0) {
-            return armory.renderpath.Postprocess.camera_uniforms[0];
-        } else if (from == 1) {
-            return armory.renderpath.Postprocess.camera_uniforms[1];
-        }  else if (from == 2) {
-            return armory.renderpath.Postprocess.camera_uniforms[2];
-        }  else if (from == 3) {
-            return armory.renderpath.Postprocess.camera_uniforms[3];
-        }  else if (from == 4) {
-            return armory.renderpath.Postprocess.camera_uniforms[4];
-        }  else if (from == 5) {
-            return armory.renderpath.Postprocess.camera_uniforms[5];
-        }  else if (from == 6) {
-            return armory.renderpath.Postprocess.camera_uniforms[6];
-        }  else if (from == 7) {
-            return armory.renderpath.Postprocess.camera_uniforms[7];
-        }  else if (from == 8) {
-            return armory.renderpath.Postprocess.camera_uniforms[8];
-        } else {
-            return 0.0;
-        }
-    }
+		return switch (from) {
+			case 0: armory.renderpath.Postprocess.camera_uniforms[0];
+			case 1: armory.renderpath.Postprocess.camera_uniforms[1];
+			case 2: armory.renderpath.Postprocess.camera_uniforms[2];
+			case 3: armory.renderpath.Postprocess.camera_uniforms[3];
+			case 4: armory.renderpath.Postprocess.camera_uniforms[4];
+			case 5: armory.renderpath.Postprocess.camera_uniforms[5];
+			case 6: armory.renderpath.Postprocess.camera_uniforms[6];
+			case 7: armory.renderpath.Postprocess.camera_uniforms[7];
+			case 8: armory.renderpath.Postprocess.camera_uniforms[8];
+			default: 0.0;
+		}
+	}
 }

@@ -8,9 +8,9 @@ import iron.system.Tween;
 class NavAgent extends Trait {
 
 	@prop
-	var speed: Float = 5;
+	public var speed: Float = 5;
 	@prop
-	var turnDuration: Float = 0.4;
+	public var turnDuration: Float = 0.4;
 
 	var path: Array<Vec4> = null;
 	var index = 0;
@@ -20,6 +20,7 @@ class NavAgent extends Trait {
 
 	public function new() {
 		super();
+		notifyOnRemove(stopTween);
 	}
 
 	public function setPath(path: Array<Vec4>) {

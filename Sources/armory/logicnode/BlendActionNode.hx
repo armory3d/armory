@@ -14,7 +14,7 @@ class BlendActionNode extends LogicNode {
 		var action2: String = inputs[3].get();
 		var blendFactor: Float = inputs[4].get();
 
-		if (object == null) return;
+		if (object == null || action1 == "" || action2 == "") return;
 		var animation = object.animation;
 		if (animation == null) animation = object.getParentArmature(object.name);
 

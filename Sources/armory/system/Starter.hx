@@ -4,14 +4,14 @@ import kha.WindowOptions;
 
 class Starter {
 
-	static var tasks: Int;
-
 	#if arm_loadscreen
 	public static var drawLoading: kha.graphics2.Graphics->Int->Int->Void = null;
 	public static var numAssets: Int;
 	#end
 
 	public static function main(scene: String, mode: Int, resize: Bool, min: Bool, max: Bool, w: Int, h: Int, msaa: Int, vsync: Bool, getRenderPath: Void->iron.RenderPath) {
+
+		var tasks = 0;
 
 		function start() {
 			if (tasks > 0) return;
@@ -46,11 +46,11 @@ class Starter {
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g: kha.graphics2.Graphics) {
-	                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(load);
-	                    else drawLoading(g, iron.data.Data.assetsLoaded, numAssets);
-	                }
-	                iron.App.notifyOnRender2D(load);
-	                #end
+						if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(load);
+						else drawLoading(g, iron.data.Data.assetsLoaded, numAssets);
+					}
+					iron.App.notifyOnRender2D(load);
+					#end
 					iron.Scene.setActive(scene, function(object: iron.object.Object) {
 						iron.RenderPath.setActive(getRenderPath());
 						#if arm_patch
@@ -76,20 +76,17 @@ class Starter {
 		#if (js && arm_bullet)
 		function loadLibAmmo(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
-				var print = function(s:String) { trace(s); };
-				var loaded = function() { tasks--; start(); };
-				untyped __js__("(1, eval)({0})", b.toString());
+				js.Syntax.code("(1,eval)({0})", b.toString());
 				#if kha_krom
-				var instantiateWasm = function(imports, successCallback) {
-					var wasmbin = Krom.loadBlob("ammo.wasm.wasm");
-					var module = new js.lib.webassembly.Module(wasmbin);
-					var inst = new js.lib.webassembly.Instance(module, imports);
+				js.Syntax.code("Ammo({print:function(s){iron.log(s);},instantiateWasm:function(imports,successCallback) {
+					var wasmbin = Krom.loadBlob('ammo.wasm.wasm');
+					var module = new WebAssembly.Module(wasmbin);
+					var inst = new WebAssembly.Instance(module,imports);
 					successCallback(inst);
 					return inst.exports;
-				};
-				untyped __js__("Ammo({print:print, instantiateWasm:instantiateWasm}).then(loaded)");
+				}}).then(function(){ tasks--; start();})");
 				#else
-				untyped __js__("Ammo({print:print}).then(loaded)");
+				js.Syntax.code("Ammo({print:function(s){iron.log(s);}}).then(function(){ tasks--; start();})");
 				#end
 			});
 		}
@@ -98,7 +95,7 @@ class Starter {
 		#if (js && arm_navigation)
 		function loadLib(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
-				untyped __js__("(1, eval)({0})", b.toString());
+				js.Syntax.code("(1, eval)({0})", b.toString());
 				tasks--;
 				start();
 			});

@@ -1,8 +1,21 @@
 import os
+from typing import Optional, TextIO
+
 import bpy
-import arm.utils
-import arm.log
+
 from arm.exporter import ArmoryExporter
+import arm.log
+import arm.node_utils
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    arm.log = arm.reload_module(arm.log)
+    arm.node_utils = arm.reload_module(arm.node_utils)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
 
 parsed_nodes = []
 parsed_ids = dict() # Sharing node data
@@ -10,13 +23,15 @@ function_nodes = dict()
 function_node_outputs = dict()
 group_name = ''
 
-def get_logic_trees():
+
+def get_logic_trees() -> list['arm.nodes_logic.ArmLogicTree']:
     ar = []
     for node_group in bpy.data.node_groups:
         if node_group.bl_idname == 'ArmLogicTreeType':
-            node_group.use_fake_user = True # Keep fake references for now
+            node_group.use_fake_user = True  # Keep fake references for now
             ar.append(node_group)
     return ar
+
 
 # Generating node sources
 def build():
@@ -31,7 +46,7 @@ def build():
         for tree in trees:
             build_node_tree(tree)
 
-def build_node_tree(node_group):
+def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     global parsed_nodes
     global parsed_ids
     global function_nodes
@@ -45,12 +60,8 @@ def build_node_tree(node_group):
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
-    group_name = arm.utils.safesrc(node_group.name[0].upper() + node_group.name[1:])
 
-    if group_name != node_group.name:
-        arm.log.warn('Logic node tree and generated trait names differ! Node'
-                     f' tree: "{node_group.name}", trait: "{group_name}"')
-
+    group_name = arm.node_utils.get_export_tree_name(node_group, do_warn=True)
     file = path + group_name + '.hx'
 
     # Import referenced node group
@@ -62,17 +73,29 @@ def build_node_tree(node_group):
     if node_group.arm_cached and os.path.isfile(file):
         return
 
-    with open(file, 'w') as f:
+    wrd = bpy.data.worlds['Arm']
+
+    with open(file, 'w', encoding="utf-8") as f:
         f.write('package ' + pack_path + '.node;\n\n')
+        f.write('@:access(armory.logicnode.LogicNode)')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tvar functionNodes:Map<String, armory.logicnode.FunctionNode>;\n\n')
         f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
         f.write('\tpublic function new() {\n')
         f.write('\t\tsuper();\n')
-        if bpy.data.worlds['Arm'].arm_debug_console:
+        if wrd.arm_debug_console:
             f.write('\t\tname = "' + group_name + '";\n')
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
+        if arm.utils.is_livepatch_enabled():
+            # Store a reference to this trait instance in Logictree.nodeTrees
+            f.write('\t\tvar nodeTrees = armory.logicnode.LogicTree.nodeTrees;\n')
+            f.write(f'\t\tif (nodeTrees.exists("{group_name}")) ' + '{\n')
+            f.write(f'\t\t\tnodeTrees["{group_name}"].push(this);\n')
+            f.write('\t\t} else {\n')
+            f.write(f'\t\t\tnodeTrees["{group_name}"] = cast [this];\n')
+            f.write('\t\t}\n')
+            f.write('\t\tnotifyOnRemove(() -> { nodeTrees.remove("' + group_name + '"); });\n')
         f.write('\t\tnotifyOnAdd(add);\n')
         f.write('\t}\n\n')
         f.write('\toverride public function add() {\n')
@@ -100,9 +123,37 @@ def build_node_tree(node_group):
         f.write('}')
     node_group.arm_cached = True
 
-def build_node(node, f):
+
+def build_node_group_tree(node_group: 'arm.nodes_logic.ArmLogicTree', f: TextIO, group_node_name: str):
+    """Builds the given node tree as a node group"""
+
+    root_nodes = get_root_nodes(node_group)
+
+    group_input_name = ""
+    group_output_name = ""
+    tree_name = arm.node_utils.get_export_tree_name(node_group)
+
+    # Get names of group input and out nodes if they exist
+    for node in node_group.nodes:
+        if node.bl_idname == 'LNGroupInputsNode':
+            group_input_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+        if node.bl_idname == 'LNGroupOutputsNode':
+            group_output_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+
+    for node in root_nodes:
+        build_node(node, f, tree_name + group_node_name)
+    node_group.arm_cached = True
+    return group_input_name, group_output_name
+
+
+def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Optional[str]:
+    """Builds the given node and returns its name. f is an opened file object."""
     global parsed_nodes
     global parsed_ids
+
+    use_live_patch = arm.utils.is_livepatch_enabled()
+
+    link_group = False
 
     if node.type == 'REROUTE':
         if len(node.inputs) > 0 and len(node.inputs[0].links) > 0:
@@ -110,94 +161,139 @@ def build_node(node, f):
         else:
             return None
 
+    # Check and parse group nodes if they exist
+    if node.bl_idname == 'LNCallGroupNode':
+        prop = node.property0_
+        group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
+        link_group = True
+
     # Get node name
-    name = '_' + arm.utils.safesrc(node.name)
+    name = arm.node_utils.get_export_node_name(node)
+    if name_prefix is not None:
+        name = name_prefix + name
 
     # Link nodes using IDs
     if node.arm_logic_id != '':
-        if node.arm_logic_id in parsed_ids:
-            return parsed_ids[node.arm_logic_id]
-        parsed_ids[node.arm_logic_id] = name
+        parse_id = node.arm_logic_id
+        if name_prefix is not None:
+            parse_id = name_prefix + parse_id
+        if parse_id in parsed_ids:
+            return parsed_ids[parse_id]
+        parsed_ids[parse_id] = name
 
     # Check if node already exists
     if name in parsed_nodes:
-        return name
+        # Check if node groups were parsed
+        if not link_group:
+            return name
+        else:
+            return group_output_name
 
     parsed_nodes.append(name)
 
-    # Create node
-    node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
-    f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
+    if not link_group:
+        # Create node
+        node_type = node.bl_idname[2:]  # Discard 'LN' prefix
+        f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
-    # Handle Function Nodes
-    if node_type == 'FunctionNode':
-        f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
-        function_nodes[name] = node
-    elif node_type == 'FunctionOutputNode':
-        f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
-        # Index function output name by corresponding function name
-        function_node_outputs[node.function_name] = name
+        # Handle Function Nodes if no node groups exist
+        if node_type == 'FunctionNode' and name_prefix is None:
+                f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
+                function_nodes[name] = node
+        elif node_type == 'FunctionOutputNode' and name_prefix is None:
+                f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
+                # Index function output name by corresponding function name
+                function_node_outputs[node.function_name] = name
+        wrd = bpy.data.worlds['Arm']
 
-    # Watch in debug console
-    if node.arm_watch and bpy.data.worlds['Arm'].arm_debug_console:
-        f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
-        f.write('\t\t' + name + '.watch(true);\n')
+        # Watch in debug console
+        if node.arm_watch and wrd.arm_debug_console:
+                f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+                f.write('\t\t' + name + '.watch(true);\n')
 
-    # Properties
-    for i in range(0, 5):
-        prop_name = 'property' + str(i) + '_get'
-        prop_found = hasattr(node, prop_name)
-        if not prop_found:
-            prop_name = 'property' + str(i)
-            prop_found = hasattr(node, prop_name)
-        if prop_found:
-            prop = getattr(node, prop_name)
-            if isinstance(prop, str):
-                prop = '"' + str(prop) + '"'
-            elif hasattr(prop, 'name'): # PointerProperty
-                prop = '"' + str(prop.name) + '"'
-            else:
-                prop = str(prop)
-            f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
+        elif use_live_patch:
+                f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+                f.write(f'\t\tthis.nodes["{name[1:]}"] = {name};\n')
+
+        # Properties
+        for prop_py_name, prop_hx_name in arm.node_utils.get_haxe_property_names(node):
+                prop = arm.node_utils.haxe_format_prop_value(node, prop_py_name)
+                f.write('\t\t' + name + '.' + prop_hx_name + ' = ' + prop + ';\n')
+
+        # Avoid unnecessary input/output array resizes
+        f.write(f'\t\t{name}.preallocInputs({len(node.inputs)});\n')
+        f.write(f'\t\t{name}.preallocOutputs({len(node.outputs)});\n')
 
     # Create inputs
-    for inp in node.inputs:
-        # Is linked - find node
+    if link_group:
+        # Replace Call Node Group Node name with Group Input Node name
+        name = group_input_name
+    for idx, inp in enumerate(node.inputs):
+        # True if the input is connected to a unlinked reroute
+        # somewhere down the reroute line
+        unconnected = False
+
+        # Is linked -> find the connected node
         if inp.is_linked:
             n = inp.links[0].from_node
             socket = inp.links[0].from_socket
-            if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
-                (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
-                print('Armory Error: Sockets do not match in logic node tree "{0}" - node "{1}" - socket "{2}"'.format(group_name, node.name, inp.name))
-            inp_name = build_node(n, f)
-            for i in range(0, len(n.outputs)):
-                if n.outputs[i] == socket:
-                    inp_from = i
+
+            # Follow reroutes first
+            while n.type == "REROUTE":
+                if len(n.inputs) == 0 or not n.inputs[0].is_linked:
+                    unconnected = True
                     break
-        # Not linked - create node with default values
+
+                socket = n.inputs[0].links[0].from_socket
+                n = n.inputs[0].links[0].from_node
+            if not unconnected:
+                # Ignore warnings if "Any" socket type is used
+                if inp.bl_idname != 'ArmAnySocket' and socket.bl_idname != 'ArmAnySocket':
+                    if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
+                            (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
+                        arm.log.warn(f'Sockets do not match in logic node tree "{group_name}": node "{node.name}", socket "{inp.name}"')
+
+                inp_name = build_node(n, f, name_prefix)
+                for i in range(0, len(n.outputs)):
+                    if n.outputs[i] == socket:
+                        inp_from = i
+                        from_type = arm.node_utils.get_socket_type(socket)
+                        break
+
+        # Not linked -> create node with default values
         else:
             inp_name = build_default_node(inp)
             inp_from = 0
+            from_type = arm.node_utils.get_socket_type(inp)
+
         # The input is linked to a reroute, but the reroute is unlinked
-        if inp_name == None:
+        if unconnected:
             inp_name = build_default_node(inp)
             inp_from = 0
+            from_type = arm.node_utils.get_socket_type(inp)
+
         # Add input
-        f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
+        f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({inp_name}, {name}, {inp_from}, {idx});\n')
+        if use_live_patch:
+            to_type = arm.node_utils.get_socket_type(inp)
+            f.write(f'\t\t__link.fromType = "{from_type}";\n')
+            f.write(f'\t\t__link.toType = "{to_type}";\n')
+            f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(inp.get_default_value())};\n')
 
     # Create outputs
-    for out in node.outputs:
-        if out.is_linked:
-            out_name = ''
-            for node in collect_nodes_from_output(out, f):
-                out_name += '[' if len(out_name) == 0 else ', '
-                out_name += node
-            out_name += ']'
-        # Not linked - create node with default values
-        else:
-            out_name = '[' + build_default_node(out) + ']'
-        # Add outputs
-        f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
+    if link_group:
+        # Replace Call Node Group Node name with Group Output Node name
+        name = group_output_name
+    for idx, out in enumerate(node.outputs):
+        # Linked outputs are already handled after iterating over inputs
+        # above, so only unconnected outputs are handled here
+        if not out.is_linked:
+            f.write(f'\t\t{"var __link = " if use_live_patch else ""}armory.logicnode.LogicNode.addLink({name}, {build_default_node(out)}, {idx}, 0);\n')
+            if use_live_patch:
+                out_type = arm.node_utils.get_socket_type(out)
+                f.write(f'\t\t__link.fromType = "{out_type}";\n')
+                f.write(f'\t\t__link.toType = "{out_type}";\n')
+                f.write(f'\t\t__link.toValue = {arm.node_utils.haxe_format_socket_val(out.get_default_value())};\n')
 
     return name
 
@@ -239,28 +335,42 @@ def get_root_nodes(node_group):
             roots.append(node)
     return roots
 
-def build_default_node(inp):
-    inp_name = 'new armory.logicnode.NullNode(this)'
-    if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
-        return inp_name
-    if inp.bl_idname == 'ArmNodeSocketObject':
-        inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.get_default_value()) + '")'
-        return inp_name
-    if inp.bl_idname == 'ArmNodeSocketAnimAction':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.get_default_value()) + '")'
-        return inp_name
-    if inp.type == 'VECTOR':
-        inp_name = 'new armory.logicnode.VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
-    elif inp.type == 'RGBA':
-        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'
-    elif inp.type == 'RGB':
-        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
-    elif inp.type == 'VALUE':
-        inp_name = 'new armory.logicnode.FloatNode(this, ' + str(inp.default_value) + ')'
-    elif inp.type == 'INT':
-        inp_name = 'new armory.logicnode.IntegerNode(this, ' + str(inp.default_value) + ')'
-    elif inp.type == 'BOOLEAN':
-        inp_name = 'new armory.logicnode.BooleanNode(this, ' + str(inp.default_value).lower() + ')'
-    elif inp.type == 'STRING':
-        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value) + '")'
-    return inp_name
+def build_default_node(inp: bpy.types.NodeSocket):
+    """Creates a new node to give a not connected input socket a value"""
+    is_custom_socket = isinstance(inp, arm.logicnode.arm_sockets.ArmCustomSocket)
+
+    if is_custom_socket:
+        # ArmCustomSockets need to implement get_default_value()
+        default_value = inp.get_default_value()
+    else:
+        if hasattr(inp, 'default_value'):
+            default_value = inp.default_value
+        else:
+            default_value = None
+
+    default_value = arm.node_utils.haxe_format_socket_val(default_value, array_outer_brackets=False)
+
+    inp_type = arm.node_utils.get_socket_type(inp)
+
+    if inp_type == 'VECTOR':
+        return f'new armory.logicnode.VectorNode(this, {default_value})'
+    elif inp_type == 'ROTATION':  # a rotation is internally represented as a quaternion.
+        return f'new armory.logicnode.RotationNode(this, {default_value})'
+    elif inp_type in ('RGB', 'RGBA'):
+        return f'new armory.logicnode.ColorNode(this, {default_value})'
+    elif inp_type == 'VALUE':
+        return f'new armory.logicnode.FloatNode(this, {default_value})'
+    elif inp_type == 'INT':
+        return f'new armory.logicnode.IntegerNode(this, {default_value})'
+    elif inp_type == 'BOOLEAN':
+        return f'new armory.logicnode.BooleanNode(this, {default_value})'
+    elif inp_type == 'STRING':
+        return f'new armory.logicnode.StringNode(this, {default_value})'
+    elif inp_type == 'NONE':
+        return 'new armory.logicnode.NullNode(this)'
+    elif inp_type == 'OBJECT':
+        return f'new armory.logicnode.ObjectNode(this, {default_value})'
+    elif is_custom_socket:
+        return f'new armory.logicnode.DynamicNode(this, {default_value})'
+    else:
+        return 'new armory.logicnode.NullNode(this)'

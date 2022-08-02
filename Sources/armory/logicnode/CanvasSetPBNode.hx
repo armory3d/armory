@@ -19,9 +19,11 @@ class CanvasSetPBNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).progress_at = newAt;
-        canvas.getElement(element).progress_total = newMax;
-
+		var e = canvas.getElement(element);
+		if (e != null) {
+			e.progress_at = newAt;
+			e.progress_total = newMax;
+		}
 		runOutput(0);
 	}
 

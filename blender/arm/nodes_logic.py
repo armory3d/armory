@@ -1,185 +1,358 @@
-import bpy
-from bpy.types import NodeTree
-from bpy.props import *
-import nodeitems_utils
-from nodeitems_utils import NodeCategory
-from arm.logicnode import *
+from typing import Any, Callable
 import webbrowser
 
-registered_nodes = []
+import bpy
+from bpy.props import BoolProperty, StringProperty
 
-class ArmLogicTree(NodeTree):
-    '''Logic nodes'''
+import arm.logicnode.arm_nodes as arm_nodes
+import arm.logicnode.replacement
+import arm.logicnode.tree_variables
+import arm.logicnode
+import arm.props_traits
+import arm.ui_icons as ui_icons
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm_nodes = arm.reload_module(arm_nodes)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    arm.logicnode.tree_variables = arm.reload_module(arm.logicnode.tree_variables)
+    arm.logicnode = arm.reload_module(arm.logicnode)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+registered_nodes = []
+registered_categories = []
+
+
+class ArmLogicTree(bpy.types.NodeTree):
+    """Logic nodes"""
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
 
-class LogicNodeCategory(NodeCategory):
+
+class ARM_MT_NodeAddOverride(bpy.types.Menu):
+    """
+    Overrides the `Add node` menu. If called from the logic node
+    editor, the custom menu is drawn, otherwise the default one is drawn.
+
+    TODO: Find a better solution to custom menus, this will conflict
+     with other add-ons overriding this menu.
+    """
+    bl_idname = "NODE_MT_add"
+    bl_label = "Add"
+    bl_translation_context = bpy.app.translations.contexts.operator_default
+
+    overridden_menu: bpy.types.Menu = None
+    overridden_draw: Callable = None
+
+    def draw(self, context):
+        if context.space_data.tree_type == 'ArmLogicTreeType':
+            layout = self.layout
+
+            # Invoke the search
+            layout.operator_context = "INVOKE_DEFAULT"
+            layout.operator('arm.node_search', icon="VIEWZOOM")
+
+            for category_section in arm_nodes.category_items.values():
+                layout.separator()
+
+                for category in category_section:
+                    safe_category_name = arm.utils.safesrc(category.name.lower())
+                    layout.menu(f'ARM_MT_{safe_category_name}_menu', text=category.name, icon=category.icon)
+
+        else:
+            ARM_MT_NodeAddOverride.overridden_draw(self, context)
+
+
+class ARM_OT_AddNodeOverride(bpy.types.Operator):
+    bl_idname = "arm.add_node_override"
+    bl_label = "Add Node"
+    bl_property = "type"
+    bl_options = {'INTERNAL'}
+
+    type: StringProperty(name="NodeItem type")
+    use_transform: BoolProperty(name="Use Transform")
+
+    def invoke(self, context, event):
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
+        return {'FINISHED'}
+
+    @classmethod
+    def description(cls, context, properties):
+        """Show the node's bl_description attribute as a tooltip or, if
+        it doesn't exist, its docstring."""
+        nodetype = arm.utils.type_name_to_type(properties.type)
+
+        if hasattr(nodetype, 'bl_description'):
+            return nodetype.bl_description.split('.')[0]
+
+        if nodetype.__doc__ is None:
+            return ""
+
+        return nodetype.__doc__.split('.')[0].strip()
+
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == 'ArmLogicTreeType'
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
+
+def get_category_draw_func(category: arm_nodes.ArmNodeCategory):
+    def draw_category_menu(self, context):
+        layout = self.layout
+
+        for index, node_section in enumerate(category.node_sections.values()):
+            if index != 0:
+                layout.separator()
+
+            for node_item in node_section:
+                op = layout.operator("arm.add_node_override", text=node_item.label)
+                op.type = node_item.nodetype
+                op.use_transform = True
+
+    return draw_category_menu
+
 
 def register_nodes():
     global registered_nodes
 
     # Re-register all nodes for now..
-    if len(registered_nodes) > 0:
+    if len(registered_nodes) > 0 or len(registered_categories) > 0:
         unregister_nodes()
 
-    for n in arm_nodes.nodes:
-        registered_nodes.append(n)
-        bpy.utils.register_class(n)
+    arm.logicnode.init_nodes(subpackages_only=True)
 
-    node_categories = []
+    for node_type in arm_nodes.nodes:
+        # Don't register internal nodes, they are already registered
+        if not issubclass(node_type, bpy.types.NodeInternal):
+            registered_nodes.append(node_type)
+            bpy.utils.register_class(node_type)
 
-    for category in sorted(arm_nodes.category_items):
-        sorted_items=sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
-        node_categories.append(
-            LogicNodeCategory('Logic' + category + 'Nodes', category, items=sorted_items)
-        )
+    # Also add Blender's layout nodes
+    arm_nodes.add_node(bpy.types.NodeReroute, 'Layout')
+    arm_nodes.add_node(bpy.types.NodeFrame, 'Layout')
 
-    nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
+    # Generate and register category menus
+    for category_section in arm_nodes.category_items.values():
+        for category in category_section:
+            category.sort_nodes()
+            safe_category_name = arm.utils.safesrc(category.name.lower())
+            menu_class = type(f'ARM_MT_{safe_category_name}Menu', (bpy.types.Menu, ), {
+                'bl_space_type': 'NODE_EDITOR',
+                'bl_idname': f'ARM_MT_{safe_category_name}_menu',
+                'bl_label': category.name,
+                'bl_description': category.description,
+                'draw': get_category_draw_func(category)
+            })
+            registered_categories.append(menu_class)
+
+            bpy.utils.register_class(menu_class)
+
 
 def unregister_nodes():
-    global registered_nodes
+    global registered_nodes, registered_categories
+
     for n in registered_nodes:
+        if issubclass(n, arm_nodes.ArmLogicTreeNode):
+            n.on_unregister()
         bpy.utils.unregister_class(n)
+    for c in registered_categories:
+        bpy.utils.unregister_class(c)
+
     registered_nodes = []
-    nodeitems_utils.unregister_node_categories('ArmLogicNodes')
+    registered_categories = []
+
 
 class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_label = 'Armory Logic Node'
     bl_idname = 'ARM_PT_LogicNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
-            layout.prop(context.active_node, 'arm_logic_id')
+        if context.active_node is not None and context.active_node.bl_idname.startswith('LN'):
             layout.prop(context.active_node, 'arm_watch')
-            layout.operator('arm.open_node_source')
 
-class ArmOpenNodeSource(bpy.types.Operator):
-    '''Expose Haxe source'''
-    bl_idname = 'arm.open_node_source'
-    bl_label = 'Open Node Source'
- 
+            layout.separator()
+            layout.operator('arm.open_node_documentation', icon='HELP')
+            column = layout.column(align=True)
+            column.operator('arm.open_node_python_source', icon='FILE_SCRIPT')
+            column.operator('arm.open_node_haxe_source', icon_value=ui_icons.get_id("haxe"))
+
+
+class ArmOpenNodeHaxeSource(bpy.types.Operator):
+    """Expose Haxe source"""
+    bl_idname = 'arm.open_node_haxe_source'
+    bl_label = 'Open Node Haxe Source'
+
     def execute(self, context):
-        if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
-            name = context.active_node.bl_idname[2:]
-            webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
+        if context.selected_nodes is not None:
+            if len(context.selected_nodes) == 1:
+                if context.selected_nodes[0].bl_idname.startswith('LN'):
+                    name = context.selected_nodes[0].bl_idname[2:]
+                    version = arm.utils.get_last_commit()
+                    if version == '':
+                        version = 'master'
+                    webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/Sources/armory/logicnode/{name}.hx')
         return{'FINISHED'}
 
-# node replacement code
-replacements = {}
 
-def add_replacement(item):
-    replacements[item.from_node] = item
-    
-def get_replaced_nodes():
-    return replacements.keys()
-
-def get_replacement_for_node(node):
-    return replacements[node.bl_idname]
-
-class Replacement:
-    # represents a single replacement rule, this can replace exactly one node with another
-    #
-    # from_node: the node type to be removed
-    # to_node: the node type which takes from_node's place
-    # *SocketMapping: a map which defines how the sockets of the old node shall be connected to the new node
-    # {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
-    def __init__(self, from_node, to_node, in_socket_mapping, out_socket_mapping, property_mapping):
-        self.from_node = from_node
-        self.to_node = to_node
-        self.in_socket_mapping = in_socket_mapping
-        self.out_socket_mapping = out_socket_mapping
-        self.property_mapping = property_mapping
-
-# actual replacement code
-def replace(tree, node):
-    replacement = get_replacement_for_node(node)
-    newnode = tree.nodes.new(replacement.to_node)
-    newnode.location = node.location
-    newnode.parent = node.parent
-
-    parent = node.parent
-    while parent is not None:
-        newnode.location[0] += parent.location[0]
-        newnode.location[1] += parent.location[1]
-        parent = parent.parent
-    
-    
-    # map properties
-    for prop in replacement.property_mapping.keys():
-        setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
-    
-    # map unconnected inputs
-    for in_socket in replacement.in_socket_mapping.keys():
-        if not node.inputs[in_socket].is_linked:
-            newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
-    
-    # map connected inputs
-    for link in tree.links:
-        if link.from_node == node:
-            # this is an output link
-            for i in range(0, len(node.outputs)):
-                # check the outputs
-                # i represents the socket index
-                # do we want to remap it & is it the one referenced in the current link
-                if i in replacement.out_socket_mapping.keys() and node.outputs[i] == link.from_socket:
-                    tree.links.new(newnode.outputs[replacement.out_socket_mapping.get(i)], link.to_socket)
-        
-        if link.to_node == node:
-            # this is an input link
-            for i in range(0, len(node.inputs)):
-                # check the inputs
-                # i represents the socket index
-                # do we want to remap it & is it the one referenced socket in the current link
-                if i in replacement.in_socket_mapping.keys() and node.inputs[i] == link.to_socket:
-                    tree.links.new(newnode.inputs[replacement.in_socket_mapping.get(i)], link.from_socket)
-    tree.nodes.remove(node)
-
-def replaceAll():
-    for tree in bpy.data.node_groups:
-        if tree.bl_idname == "ArmLogicTreeType":
-            for node in tree.nodes:
-                if node.bl_idname in get_replaced_nodes():
-                    print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
-                    replace(tree, node)
-        
-    
-class ReplaceNodesOperator(bpy.types.Operator):
-    '''Automatically replaces deprecated nodes.'''
-    bl_idname = "node.replace"
-    bl_label = "Replace Nodes"
+class ArmOpenNodePythonSource(bpy.types.Operator):
+    """Expose Python source"""
+    bl_idname = 'arm.open_node_python_source'
+    bl_label = 'Open Node Python Source'
 
     def execute(self, context):
-        replaceAll()
+        if context.selected_nodes is not None:
+            if len(context.selected_nodes) == 1:
+                node = context.selected_nodes[0]
+                if node.bl_idname.startswith('LN') and node.arm_version is not None:
+                    version = arm.utils.get_last_commit()
+                    if version == '':
+                        version = 'master'
+                    rel_path = node.__module__.replace('.', '/')
+                    webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/blender/{rel_path}.py')
+        return{'FINISHED'}
+
+
+class ArmOpenNodeWikiEntry(bpy.types.Operator):
+    """Open the node's documentation in the wiki"""
+    bl_idname = 'arm.open_node_documentation'
+    bl_label = 'Open Node Documentation'
+
+    @staticmethod
+    def to_wiki_id(node_name):
+        """Convert from the conventional node name to its wiki counterpart's anchor or id.
+        Expected node_name format: LN_[a-z_]+
+        """
+        return node_name.replace('_', '-')[3:]
+
+    def execute(self, context):
+        if context.selected_nodes is not None:
+            if len(context.selected_nodes) == 1:
+                node = context.selected_nodes[0]
+                if node.bl_idname.startswith('LN') and node.arm_version is not None:
+                    wiki_id = ArmOpenNodeWikiEntry.to_wiki_id(node.__module__.rsplit('.', 2).pop())
+
+                    category = arm_nodes.eval_node_category(node)
+                    category_section = arm_nodes.get_category(category).category_section
+                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{wiki_id}')
+        return{'FINISHED'}
+
+
+class ARM_PT_NodeDevelopment(bpy.types.Panel):
+    """Sidebar panel to ease development of logic nodes."""
+    bl_label = 'Node Development'
+    bl_idname = 'ARM_PT_NodeDevelopment'
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        node = context.active_node
+        if node is not None and node.bl_idname.startswith('LN'):
+            box = layout.box()
+            box.label(text='Selected Node')
+            col = box.column(align=True)
+
+            self._draw_row(col, 'bl_idname', node.bl_idname)
+            self._draw_row(col, 'Category', arm_nodes.eval_node_category(node))
+            self._draw_row(col, 'Section', node.arm_section)
+            self._draw_row(col, 'Specific Version', node.arm_version)
+            self._draw_row(col, 'Class Version', node.__class__.arm_version)
+            self._draw_row(col, 'Is Deprecated', node.arm_is_obsolete)
+
+            is_var_node = isinstance(node, arm_nodes.ArmLogicVariableNodeMixin)
+            self._draw_row(col, 'Is Variable Node', is_var_node)
+            self._draw_row(col, 'Logic ID', node.arm_logic_id)
+            if is_var_node:
+                self._draw_row(col, 'Is Master Node', node.is_master_node)
+
+            layout.separator()
+            layout.operator('arm.node_replace_all')
+
+    @staticmethod
+    def _draw_row(col: bpy.types.UILayout, text: str, val: Any):
+        split = col.split(factor=0.4)
+        split.label(text=text)
+        split.label(text=str(val))
+
+
+class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
+    bl_idname = "arm.node_replace_all"
+    bl_label = "Replace Deprecated Nodes"
+    bl_description = "Replace all deprecated nodes in the active node tree"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        arm.logicnode.replacement.replace_all()
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
+        return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
-# TODO: deprecated
-# Input Replacement Rules
-# add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
+    arm.logicnode.arm_nodes.register()
+    arm.logicnode.arm_sockets.register()
+
     bpy.utils.register_class(ArmLogicTree)
+    bpy.utils.register_class(ArmOpenNodeHaxeSource)
+    bpy.utils.register_class(ArmOpenNodePythonSource)
+    bpy.utils.register_class(ArmOpenNodeWikiEntry)
+    bpy.utils.register_class(ARM_OT_ReplaceNodesOperator)
+    ARM_MT_NodeAddOverride.overridden_menu = bpy.types.NODE_MT_add
+    ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
+    bpy.utils.register_class(ARM_MT_NodeAddOverride)
+    bpy.utils.register_class(ARM_OT_AddNodeOverride)
+
+    # Register panels in correct order
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
-    bpy.utils.register_class(ArmOpenNodeSource)
-    bpy.utils.register_class(ReplaceNodesOperator)
+    arm.logicnode.tree_variables.register()
+    bpy.utils.register_class(ARM_PT_NodeDevelopment)
+
+    arm.logicnode.init_categories()
     register_nodes()
 
+
 def unregister():
-    bpy.utils.unregister_class(ReplaceNodesOperator)
     unregister_nodes()
-    bpy.utils.unregister_class(ArmLogicTree)
+
+    # Ensure that globals are reset if the addon is enabled again in the same Blender session
+    arm_nodes.reset_globals()
+
+    bpy.utils.unregister_class(ARM_PT_NodeDevelopment)
+    arm.logicnode.tree_variables.unregister()
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
-    bpy.utils.unregister_class(ArmOpenNodeSource)
+
+    bpy.utils.unregister_class(ARM_OT_ReplaceNodesOperator)
+    bpy.utils.unregister_class(ArmLogicTree)
+    bpy.utils.unregister_class(ArmOpenNodeHaxeSource)
+    bpy.utils.unregister_class(ArmOpenNodePythonSource)
+    bpy.utils.unregister_class(ArmOpenNodeWikiEntry)
+    bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
+    bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+    bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
+
+    arm.logicnode.arm_sockets.unregister()
+    arm.logicnode.arm_nodes.unregister()

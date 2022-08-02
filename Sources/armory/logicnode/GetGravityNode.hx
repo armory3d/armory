@@ -9,8 +9,9 @@ class GetGravityNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 
 #if arm_physics
-        var physics = armory.trait.physics.PhysicsWorld.active;
-		return physics.world.getGravity();
+		var physics = armory.trait.physics.PhysicsWorld.active;
+
+		return physics.getGravity();
 #end
 
 		return null;

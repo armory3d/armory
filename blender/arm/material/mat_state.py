@@ -7,3 +7,4 @@ bind_textures = None # Merged with mat_context bind textures
 batch = False
 texture_grad = False # Sample textures using textureGrad()
 con_mesh = None # Mesh context
+uses_instancing = False  # Whether the current material has at least one user with instancing enabled

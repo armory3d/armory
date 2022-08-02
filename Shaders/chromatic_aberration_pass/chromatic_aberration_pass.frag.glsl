@@ -3,7 +3,10 @@
 #include "compiled.inc"
 
 uniform sampler2D tex;
+
+#ifdef _CPostprocess
 uniform vec3 PPComp13;
+#endif
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -45,13 +48,14 @@ void main() {
 		int num_iter = compoChromaticSamples;
 	#endif
 
-	float reci_num_iter_f = 1.0 / float(num_iter);
-
+	// Spectral
 	if (compoChromaticType == 1) {
+		float reci_num_iter_f = 1.0 / float(num_iter);
+
 		vec2 resolution = vec2(1,1);
 		vec2 uv = (texCoord.xy/resolution.xy);
 		vec4 sumcol = vec4(0.0);
-		vec4 sumw = vec4(0.0);	
+		vec4 sumw = vec4(0.0);
 		for (int i=0; i < num_iter; ++i)
 		{
 			float t = float(i) * reci_num_iter_f;
@@ -59,17 +63,16 @@ void main() {
 			sumw += w;
 			sumcol += w * texture(tex, barrelDistortion(uv, 0.6 * max_distort * t));
 		}
-			
-		fragColor = sumcol / sumw;
-		
-	} else {
 
+		fragColor = sumcol / sumw;
+	}
+
+	// Simple
+	else {
 		vec3 col = vec3(0.0);
 		col.x = texture(tex, texCoord + ((vec2(0.0, 1.0) * max_distort) / vec2(1000.0))).x;
 		col.y = texture(tex, texCoord + ((vec2(-0.85, -0.5) * max_distort) / vec2(1000.0))).y;
 		col.z = texture(tex, texCoord + ((vec2(0.85, -0.5) * max_distort) / vec2(1000.0))).z;
 		fragColor = vec4(col.x, col.y, col.z, fragColor.w);
-
 	}
-
 }

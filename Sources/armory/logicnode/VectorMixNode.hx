@@ -7,7 +7,7 @@ class VectorMixNode extends LogicNode {
 
 	public var property0: String; // Type
 	public var property1: String; // Ease
-	public var property2: String; // Clamp
+	public var property2: Bool; // Clamp
 
 	var v = new Vec4();
 
@@ -37,6 +37,10 @@ class VectorMixNode extends LogicNode {
 				ease = property1 == "In" ? Tween.easeCircIn : (property1 == "Out" ? Tween.easeCircOut : Tween.easeCircInOut);
 			case "Back":
 				ease = property1 == "In" ? Tween.easeBackIn : (property1 == "Out" ? Tween.easeBackOut : Tween.easeBackInOut);
+			case "Bounce":
+				ease = property1 == "In" ? Tween.easeBounceIn : (property1 == "Out" ? Tween.easeBounceOut : Tween.easeBounceInOut);
+			case "Elastic":
+				ease = property1 == "In" ? Tween.easeElasticIn : (property1 == "Out" ? Tween.easeElasticOut : Tween.easeElasticInOut);
 			default:
 				ease = Tween.easeLinear;
 		}
@@ -53,7 +57,7 @@ class VectorMixNode extends LogicNode {
 		v.y = v1.y + (v2.y - v1.y) * f;
 		v.z = v1.z + (v2.z - v1.z) * f;
 
-		if (property2 == "true") v.clamp(0, 1);
+		if (property2) v.clamp(0, 1);
 		return v;
 	}
 }

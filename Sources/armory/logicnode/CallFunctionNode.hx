@@ -11,7 +11,7 @@ class CallFunctionNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		var object: Object = inputs[1].get();
+		var object: Dynamic = inputs[1].get();
 		if (object == null) return;
 
 		var funName: String = inputs[2].get();

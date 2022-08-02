@@ -6,6 +6,7 @@ import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
 import iron.object.MeshObject;
+import iron.data.Geometry;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
 #if arm_physics_soft
@@ -173,12 +174,12 @@ class SoftBody extends Trait {
 		var geom = mo.data.geom;
 
 		#if arm_deinterleaved
-		var v = geom.vertexBuffers[0].lockInt16();
-		var n = geom.vertexBuffers[1].lockInt16();
+		var v = geom.vertexBuffers[0].lock();
+		var n = geom.vertexBuffers[1].lock();
 		#else
-		var v = geom.vertexBuffer.lockInt16();
+		var v = geom.vertexBuffer.lock();
 		var vbPos = geom.vertexBufferMap.get("pos");
-		var v2 = vbPos != null ? vbPos.lockInt16() : null; // For shadows
+		var v2 = vbPos != null ? vbPos.lock() : null; // For shadows
 		var l = geom.structLength;
 		#end
 		var numVerts = Std.int(v.length / l);

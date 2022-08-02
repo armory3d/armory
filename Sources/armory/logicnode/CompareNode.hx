@@ -19,9 +19,11 @@ class CompareNode extends LogicNode {
 
 		switch (property0) {
 		case "Equal":
-			cond = Std.is(v1, Vec4) ? v1.equals(v2) : v1 == v2;
+			cond = Std.isOfType(v1, Vec4) ? (v1: Vec4).equals(v2) : v1 == v2;
+		case "Not Equal":
+			cond = Std.isOfType(v1, Vec4) ? !(v1: Vec4).equals(v2) : v1 != v2;
 		case "Almost Equal":
-			cond = Std.is(v1, Vec4) ? v1.almostEquals(v2, property1) : Math.abs(v1 - v2) < property1;
+			cond = Std.isOfType(v1, Vec4) ? (v1: Vec4).almostEquals(v2, property1) : Math.abs(v1 - v2) < property1;
 		case "Greater":
 			cond = v1 > v2;
 		case "Greater Equal":
@@ -30,6 +32,9 @@ class CompareNode extends LogicNode {
 			cond = v1 < v2;
 		case "Less Equal":
 			cond = v1 <= v2;
+		case "Between":
+			var v3: Dynamic = inputs[2].get();
+			cond = v2 <= v1 && v1 <= v3;
 		case "Or":
 			for (input in inputs) {
 				if (input.get()) {

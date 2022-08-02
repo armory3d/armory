@@ -7,14 +7,17 @@
 #ifdef _Clusters
 #include "std/clusters.glsl"
 #endif
+#ifdef _Spot
+#include "std/light_common.glsl"
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D snoise;
 
 #ifdef _Clusters
-uniform vec4 lightsArray[maxLights * 2];
+uniform vec4 lightsArray[maxLights * 3];
 	#ifdef _Spot
-	uniform vec4 lightsArraySpot[maxLights];
+	uniform vec4 lightsArraySpot[maxLights * 2];
 	#endif
 uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
@@ -24,7 +27,7 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	uniform sampler2DShadow shadowMapSpot[1];
-	uniform mat4 LWVPSpot0;
+	uniform mat4 LWVPSpot[1];
 	#else
 	uniform samplerCubeShadow shadowMapPoint[1];
 	uniform vec2 lightProj;
@@ -35,10 +38,7 @@ uniform vec2 cameraPlane;
 	uniform vec2 lightProj;
 	#ifdef _Spot
 	uniform sampler2DShadow shadowMapSpot[4];
-	uniform mat4 LWVPSpot0;
-	uniform mat4 LWVPSpot1;
-	uniform mat4 LWVPSpot2;
-	uniform mat4 LWVPSpot3;
+	uniform mat4 LWVPSpot[maxLightsCluster];
 	#endif
 #endif
 #endif
@@ -47,7 +47,15 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
+	#ifdef _ShadowMapAtlas
+	#ifndef _SingleAtlas
+	uniform sampler2DShadow shadowMapAtlasSun;
+	#else
+	uniform sampler2DShadow shadowMapAtlas;
+	#endif
+	#else
 	uniform sampler2DShadow shadowMap;
+	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
 	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
@@ -65,7 +73,8 @@ uniform vec3 pointCol;
 	#endif
 	#ifdef _Spot
 	uniform vec3 spotDir;
-	uniform vec2 spotData;
+	uniform vec3 spotRight;
+	uniform vec4 spotData;
 	#endif
 #endif
 
@@ -86,30 +95,40 @@ const float lighting = 0.4;
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
 	curPos += stepLenWorld * viewVecNorm;
 	const float density = 1.0;
-	
+
 	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
+	float visibility = 0.0;
+	vec4 lPos;
+
 #ifdef _Sun
 	#ifdef _CSM
-    mat4 LWVP = mat4(casData[4], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
+	mat4 LWVP = mat4(casData[4], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
 	#endif
-	vec4 lPos = LWVP * vec4(curPos, 1.0);
+	lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
-	float visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias));
+	visibility = texture(
+		#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			shadowMapAtlasSun
+			#else
+			shadowMapAtlas
+			#endif
+		#else
+		shadowMap
+		#endif
+	, vec3(lPos.xy, lPos.z - shadowsBias));
 #endif
 
 #ifdef _SinglePoint
 	#ifdef _Spot
-	vec4 lPos = LWVPSpot0 * vec4(curPos, 1.0);
-	float visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
-	float spotEffect = dot(spotDir, normalize(pointPos - curPos)); // lightDir
-	if (spotEffect < spotData.x) { // x - cutoff, y - cutoff - exponent
-		visibility *= smoothstep(spotData.y, spotData.x, spotEffect);
-	}
+	lPos = LWVPSpot[0] * vec4(curPos, 1.0);
+	visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
+	visibility *= spotlightMask(normalize(pointPos - curPos), spotDir, spotRight, spotData.zw, spotData.x, spotData.y);
 	#else
 	vec3 ld = pointPos - curPos;
-	float visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));
+	visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));
 	#endif
 #endif
 

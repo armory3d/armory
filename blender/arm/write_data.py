@@ -1,19 +1,40 @@
-import bpy
-import os
-import shutil
 import glob
 import json
+import os
+import shutil
 import stat
-import arm.utils
+import html
+from typing import List
+
+import bpy
+
 import arm.assets as assets
 import arm.make_state as state
+import arm.utils
 
-def add_armory_library(sdk_path, name, rel_path=False):
+if arm.is_reload(__name__):
+    import arm
+    assets = arm.reload_module(assets)
+    state = arm.reload_module(state)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
+def on_same_drive(path1: str, path2: str) -> bool:
+    drive_path1, _ = os.path.splitdrive(path1)
+    drive_path2, _ = os.path.splitdrive(path2)
+    return drive_path1 == drive_path2
+
+
+def add_armory_library(sdk_path: str, name: str, rel_path=False) -> str:
     if rel_path:
         sdk_path = '../' + os.path.relpath(sdk_path, arm.utils.get_fp()).replace('\\', '/')
+
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/').replace('//', '/')
 
-def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
+
+def add_assets(path: str, quality=1.0, use_data_dir=False, rel_path=False) -> str:
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
 
@@ -29,24 +50,34 @@ def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
     s += '});\n'
     return s
 
-def add_shaders(path, rel_path=False):
+
+def add_shaders(path: str, rel_path=False) -> str:
     if rel_path:
         path = os.path.relpath(path, arm.utils.get_fp())
     return 'project.addShaders("' + path.replace('\\', '/').replace('//', '/') + '");\n'
+
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, import_traits, import_logicnodes):
-    sdk_path = arm.utils.get_sdk_path()
-    rel_path = arm.utils.get_relative_paths() # Convert absolute paths to relative
+
+def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
+                    import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
 
-    with open('khafile.js', 'w') as f:
-        f.write(
+    sdk_path = arm.utils.get_sdk_path()
+    rel_path = arm.utils.get_relative_paths()  # Convert absolute paths to relative
+    project_path = arm.utils.get_fp()
+    build_dir = arm.utils.build_dir()
+
+    # Whether to use relative paths for paths inside the SDK
+    do_relpath_sdk = rel_path and on_same_drive(sdk_path, project_path)
+
+    with open('khafile.js', 'w', encoding="utf-8") as khafile:
+        khafile.write(
 """// Auto-generated
-let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """');
+let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version) + """');
 
 project.addSources('Sources');
 """)
@@ -57,108 +88,119 @@ project.addSources('Sources');
                 if os.path.isfile(file):
                     assets.add(file)
 
+        # Auto-add shape key textures if exists
+        if os.path.exists('MorphTargets'):
+            for file in glob.glob("MorphTargets/**", recursive=True):
+                if os.path.isfile(file):
+                    assets.add(file)
+
+        # Add project shaders
         if os.path.exists('Shaders'):
             # Copy to enable includes
-            if os.path.exists(arm.utils.build_dir() + '/compiled/Shaders/Project'):
-                shutil.rmtree(arm.utils.build_dir() + '/compiled/Shaders/Project', onerror=remove_readonly)
-            shutil.copytree('Shaders', arm.utils.build_dir() + '/compiled/Shaders/Project')
-            f.write("project.addShaders('" + arm.utils.build_dir() + "/compiled/Shaders/Project/**');\n")
+            shader_path = os.path.join(build_dir, 'compiled', 'Shaders', 'Project')
+            if os.path.exists(shader_path):
+                shutil.rmtree(shader_path, onerror=remove_readonly)
+            shutil.copytree('Shaders', shader_path)
+
+            khafile.write("project.addShaders('" + build_dir + "/compiled/Shaders/Project/**');\n")
             # for file in glob.glob("Shaders/**", recursive=True):
-                # if os.path.isfile(file):
-                    # assets.add_shader(file)
+            #     if os.path.isfile(file):
+            #         assets.add_shader(file)
 
-        if not os.path.exists('Libraries/armory'):
-            f.write(add_armory_library(sdk_path, 'armory', rel_path=rel_path))
-
-        if not os.path.exists('Libraries/iron'):
-            f.write(add_armory_library(sdk_path, 'iron', rel_path=rel_path))
+        # Add engine sources if the project does not use its own armory/iron versions
+        if not os.path.exists(os.path.join('Libraries', 'armory')):
+            khafile.write(add_armory_library(sdk_path, 'armory', rel_path=do_relpath_sdk))
+        if not os.path.exists(os.path.join('Libraries', 'iron')):
+            khafile.write(add_armory_library(sdk_path, 'iron', rel_path=do_relpath_sdk))
 
         # Project libraries
         if os.path.exists('Libraries'):
             libs = os.listdir('Libraries')
             for lib in libs:
                 if os.path.isdir('Libraries/' + lib):
-                    f.write('project.addLibrary("{0}");\n'.format(lib.replace('//', '/')))
+                    khafile.write('project.addLibrary("{0}");\n'.format(lib.replace('//', '/')))
 
         # Subprojects, merge this with libraries
         if os.path.exists('Subprojects'):
             libs = os.listdir('Subprojects')
             for lib in libs:
                 if os.path.isdir('Subprojects/' + lib):
-                    f.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
+                    khafile.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
 
-        if wrd.arm_audio == 'Disabled':
-            assets.add_khafile_def('kha_no_ogg')
-        else:
-            assets.add_khafile_def('arm_audio')
+        if state.target.startswith('krom'):
+            assets.add_khafile_def('js-es=6')
 
         if export_physics:
             assets.add_khafile_def('arm_physics')
             if wrd.arm_physics_engine == 'Bullet':
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
+                    khafile.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=do_relpath_sdk))
                 if state.target.startswith('krom'):
                     ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.wasm.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
-                    f.write(add_assets(ammojs_path, rel_path=rel_path))
+                    khafile.write(add_assets(ammojs_path, rel_path=do_relpath_sdk))
                     ammojs_wasm_path = sdk_path + '/lib/haxebullet/ammo/ammo.wasm.wasm'
                     ammojs_wasm_path = ammojs_wasm_path.replace('\\', '/').replace('//', '/')
-                    f.write(add_assets(ammojs_wasm_path, rel_path=rel_path))
+                    khafile.write(add_assets(ammojs_wasm_path, rel_path=do_relpath_sdk))
                 elif state.target == 'html5' or state.target == 'node':
                     ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
-                    f.write(add_assets(ammojs_path, rel_path=rel_path))
+                    khafile.write(add_assets(ammojs_path, rel_path=do_relpath_sdk))
             elif wrd.arm_physics_engine == 'Oimo':
                 assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'oimo', rel_path=rel_path))
+                    khafile.write(add_armory_library(sdk_path + '/lib/', 'oimo', rel_path=do_relpath_sdk))
 
         if export_navigation:
             assets.add_khafile_def('arm_navigation')
             if not os.path.exists('Libraries/haxerecast'):
-                f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast', rel_path=rel_path))
+                khafile.write(add_armory_library(sdk_path + '/lib/', 'haxerecast', rel_path=do_relpath_sdk))
             if state.target.startswith('krom') or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
-                f.write(add_assets(recastjs_path, rel_path=rel_path))
+                khafile.write(add_assets(recastjs_path, rel_path=do_relpath_sdk))
 
         if is_publish:
             assets.add_khafile_def('arm_published')
+            if wrd.arm_dce:
+                khafile.write("project.addParameter('-dce full');\n")
+            if wrd.arm_no_traces:
+                khafile.write("project.addParameter('--no-traces');\n")
             if wrd.arm_asset_compression:
                 assets.add_khafile_def('arm_compress')
-        else:
-            pass
-            # f.write("""project.addParameter("--macro include('armory.trait')");\n""")
-            # f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
-            # if export_physics:
-            #     f.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
-            #     if wrd.arm_physics_engine == 'Bullet':
-            #         f.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
-            #     else:
-            #         f.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
-            # if export_navigation:
-            #     f.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
-        # if import_logicnodes: # Live patching for logic nodes
-            # f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
+        else:
+            assets.add_khafile_def(f'arm_assert_level={wrd.arm_assert_level}')
+            if wrd.arm_assert_quit:
+                assets.add_khafile_def('arm_assert_quit')
+            # khafile.write("""project.addParameter("--macro include('armory.trait')");\n""")
+            # khafile.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
+            # if export_physics:
+            #     khafile.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
+            #     if wrd.arm_physics_engine == 'Bullet':
+            #         khafile.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
+            #     else:
+            #         khafile.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
+            # if export_navigation:
+            #     khafile.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
         if not wrd.arm_compiler_inline:
-            f.write("project.addParameter('--no-inline');\n")
+            khafile.write("project.addParameter('--no-inline');\n")
 
-        if enable_dce:
-            f.write("project.addParameter('-dce full');\n")
-
-        live_patch = wrd.arm_live_patch and state.target == 'krom'
-        if wrd.arm_debug_console or live_patch:
+        use_live_patch = arm.utils.is_livepatch_enabled()
+        if wrd.arm_debug_console or use_live_patch:
             import_traits.append('armory.trait.internal.Bridge')
-            if live_patch:
+            if use_live_patch:
                 assets.add_khafile_def('arm_patch')
+                # Include all logic node classes so that they can later
+                # get instantiated
+                khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
-            f.write("project.addParameter('" + import_traits[i] + "');\n")
-            f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
+            khafile.write("project.addParameter('" + import_traits[i] + "');\n")
+            khafile.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
         noembed = wrd.arm_cache_build and not is_publish and state.target == 'krom'
         if noembed:
@@ -167,17 +209,17 @@ project.addSources('Sources');
 
         noembed = False # TODO: always embed shaders for now, check compatibility with haxe compile server
 
-        shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
+        shaders_path = build_dir + '/compiled/Shaders/*.glsl'
         if rel_path:
-            shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-        f.write('project.addShaders("' + shaders_path + '", { noembed: ' + str(noembed).lower() + '});\n')
+            shaders_path = os.path.relpath(shaders_path, project_path).replace('\\', '/')
+        khafile.write('project.addShaders("' + shaders_path + '", { noembed: ' + str(noembed).lower() + '});\n')
 
         if arm.utils.get_gapi() == 'direct3d11':
             # noprocessing flag - gets renamed to .d3d11
-            shaders_path = arm.utils.build_dir() + '/compiled/Hlsl/*.glsl'
+            shaders_path = build_dir + '/compiled/Hlsl/*.glsl'
             if rel_path:
-                shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-            f.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
+                shaders_path = os.path.relpath(shaders_path, project_path).replace('\\', '/')
+            khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
 
         # Move assets for published game to /data folder
         use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl')
@@ -185,23 +227,24 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_data_dir')
 
         ext = 'arm' if wrd.arm_minimize else 'json'
-        assets_path = arm.utils.build_dir() + '/compiled/Assets/**'
-        assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.' + ext
+        assets_path = build_dir + '/compiled/Assets/**'
+        assets_path_sh = build_dir + '/compiled/Shaders/*.' + ext
         if rel_path:
-            assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
-            assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
+            assets_path = os.path.relpath(assets_path, project_path).replace('\\', '/')
+            assets_path_sh = os.path.relpath(assets_path_sh, project_path).replace('\\', '/')
         dest = ''
         if use_data_dir:
             dest += ', destination: "data/{name}"'
-        f.write('project.addAssets("' + assets_path + '", { notinlist: true ' + dest + '});\n')
-        f.write('project.addAssets("' + assets_path_sh + '", { notinlist: true ' + dest + '});\n')
+        khafile.write('project.addAssets("' + assets_path + '", { notinlist: true ' + dest + '});\n')
+        khafile.write('project.addAssets("' + assets_path_sh + '", { notinlist: true ' + dest + '});\n')
 
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/').replace('//', '/')
             if '/compiled/' in ref: # Asset already included
                 continue
-            f.write(add_assets(ref, use_data_dir=use_data_dir, rel_path=rel_path))
+            do_relpath_shaders = rel_path and on_same_drive(ref, project_path)
+            khafile.write(add_assets(ref, use_data_dir=use_data_dir, rel_path=do_relpath_shaders))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
@@ -214,34 +257,46 @@ project.addSources('Sources');
                 quality = wrd.arm_sound_quality
             elif s.endswith('.png') or s.endswith('.jpg'):
                 quality = wrd.arm_texture_quality
-            f.write(add_assets(ref, quality=quality, use_data_dir=use_data_dir, rel_path=rel_path))
+
+            do_relpath_assets = rel_path and on_same_drive(ref, project_path)
+            khafile.write(add_assets(ref, quality=quality, use_data_dir=use_data_dir, rel_path=do_relpath_assets))
 
         if wrd.arm_sound_quality < 1.0 or state.target == 'html5':
             assets.add_khafile_def('arm_soundcompress')
+
+        if wrd.arm_audio == 'Disabled':
+            assets.add_khafile_def('kha_no_ogg')
+        else:
+            assets.add_khafile_def('arm_audio')
 
         if wrd.arm_texture_quality < 1.0:
             assets.add_khafile_def('arm_texcompress')
 
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
-            f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
-            f.write("project.addParameter('--times');\n")
+            khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
+
+        if not is_publish and state.target == 'html5':
+            khafile.write("project.addParameter('--debug');\n")
+
+        if arm.utils.get_pref_or_default('haxe_times', False):
+            khafile.write("project.addParameter('--times');\n")
 
         if export_ui:
             if not os.path.exists('Libraries/zui'):
-                f.write(add_armory_library(sdk_path, 'lib/zui', rel_path=rel_path))
+                khafile.write(add_armory_library(sdk_path, 'lib/zui', rel_path=do_relpath_sdk))
             p = sdk_path + '/armory/Assets/font_default.ttf'
             p = p.replace('//', '/')
-            f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
+            khafile.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=do_relpath_sdk))
             assets.add_khafile_def('arm_ui')
 
-        if wrd.arm_minimize == False:
+        if not wrd.arm_minimize:
             assets.add_khafile_def('arm_json')
 
-        if wrd.arm_deinterleaved_buffers == True:
+        if wrd.arm_deinterleaved_buffers:
             assets.add_khafile_def('arm_deinterleaved')
 
-        if wrd.arm_batch_meshes == True:
+        if wrd.arm_batch_meshes:
             assets.add_khafile_def('arm_batch')
 
         if wrd.arm_stream_scene:
@@ -250,6 +305,9 @@ project.addSources('Sources');
         rpdat = arm.utils.get_rp()
         if rpdat.arm_skin != 'Off':
             assets.add_khafile_def('arm_skin')
+
+        if rpdat.arm_morph_target != 'Off':
+            assets.add_khafile_def('arm_morph_target')
 
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
@@ -260,7 +318,7 @@ project.addSources('Sources');
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
 
-        if os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm'):
+        if os.path.exists(project_path + '/Bundled/config.arm'):
             assets.add_khafile_def('arm_config')
 
         if is_publish and wrd.arm_loadscreen:
@@ -272,28 +330,62 @@ project.addSources('Sources');
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
+        # Allow libraries to recognize Armory
+        assets.add_khafile_def('armory')
+
         for d in assets.khafile_defs:
-            f.write("project.addDefine('" + d + "');\n")
+            khafile.write("project.addDefine('" + d + "');\n")
 
         for p in assets.khafile_params:
-            f.write("project.addParameter('" + p + "');\n")
-
-        if wrd.arm_khafile != None:
-            f.write(wrd.arm_khafile.as_string())
+            khafile.write("project.addParameter('" + p + "');\n")
 
         if state.target.startswith('android'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
-            f.write("project.targetOptions.android.package = '{0}';\n".format(arm.utils.safestr(bundle)))
+            khafile.write("project.targetOptions.android_native.package = '{0}';\n".format(arm.utils.safestr(bundle)))
             if wrd.arm_winorient != 'Multi':
-                f.write("project.targetOptions.android.screenOrientation = '{0}';\n".format(wrd.arm_winorient.lower()))
+                khafile.write("project.targetOptions.android_native.screenOrientation = '{0}';\n".format(wrd.arm_winorient.lower()))
+            # Android SDK Versions
+            khafile.write("project.targetOptions.android_native.compileSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_compile))
+            khafile.write("project.targetOptions.android_native.minSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_min))
+            khafile.write("project.targetOptions.android_native.targetSdkVersion = '{0}';\n".format(wrd.arm_project_android_sdk_target))
+            # Permissions
+            if len(wrd.arm_exporter_android_permission_list) > 0:
+                perms = ''
+                for item in wrd.arm_exporter_android_permission_list:
+                    perm = "'android.permission."+ item.arm_android_permissions + "'"
+                    # Checking In
+                    if perms.find(perm) == -1:
+                        if len(perms) > 0:
+                            perms = perms + ', ' + perm
+                        else:
+                            perms = perm
+                if len(perms) > 0:
+                    khafile.write("project.targetOptions.android_native.permissions = [{0}];\n".format(perms))
+            # Android ABI Filters
+            if len(wrd.arm_exporter_android_abi_list) > 0:
+                abis = ''
+                for item in wrd.arm_exporter_android_abi_list:
+                    abi = "'"+ item.arm_android_abi + "'"
+                    # Checking In
+                    if abis.find(abi) == -1:
+                        if len(abis) > 0:
+                            abis = abis + ', ' + abi
+                        else:
+                            abis = abi
+                if len(abis) > 0:
+                    khafile.write("project.targetOptions.android_native.abiFilters = [{0}];\n".format(abis))
         elif state.target.startswith('ios'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
-            f.write("project.targetOptions.ios.bundle = '{0}';\n".format(arm.utils.safestr(bundle)))
+            khafile.write("project.targetOptions.ios.bundle = '{0}';\n".format(arm.utils.safestr(bundle)))
 
         if wrd.arm_project_icon != '':
-            shutil.copy(bpy.path.abspath(wrd.arm_project_icon), arm.utils.get_fp() + '/icon.png')
+            shutil.copy(bpy.path.abspath(wrd.arm_project_icon), project_path + '/icon.png')
 
-        f.write("\n\nresolve(project);\n")
+        if wrd.arm_khafile is not None:
+            khafile.write(wrd.arm_khafile.as_string())
+
+        khafile.write("\n\nresolve(project);\n")
+
 
 def get_winmode(arm_winmode):
     if arm_winmode == 'Window':
@@ -301,35 +393,41 @@ def get_winmode(arm_winmode):
     else: # Fullscreen
         return 1
 
+
 def write_config(resx, resy):
     wrd = bpy.data.worlds['Arm']
-    p = arm.utils.get_fp() + '/Bundled'
+    p = os.path.join(arm.utils.get_fp(), 'Bundled')
     if not os.path.exists(p):
         os.makedirs(p)
-    output = {}
-    output['window_mode'] = get_winmode(wrd.arm_winmode)
-    output['window_w'] = int(resx)
-    output['window_h'] = int(resy)
-    output['window_resizable'] = wrd.arm_winresize
-    output['window_maximizable'] = wrd.arm_winresize and wrd.arm_winmaximize
-    output['window_minimizable'] = wrd.arm_winminimize
-    output['window_vsync'] = wrd.arm_vsync
+
     rpdat = arm.utils.get_rp()
-    output['window_msaa'] = int(rpdat.arm_samples_per_pixel)
-    output['window_scale'] = 1.0
-    output['rp_supersample'] = float(rpdat.rp_supersampling)
     rp_shadowmap_cube = int(rpdat.rp_shadowmap_cube) if rpdat.rp_shadows else 0
-    output['rp_shadowmap_cube'] = rp_shadowmap_cube
     rp_shadowmap_cascade = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
-    output['rp_shadowmap_cascade'] = rp_shadowmap_cascade
-    output['rp_ssgi'] = rpdat.rp_ssgi != 'Off'
-    output['rp_ssr'] = rpdat.rp_ssr != 'Off'
-    output['rp_bloom'] = rpdat.rp_bloom != 'Off'
-    output['rp_motionblur'] = rpdat.rp_motionblur != 'Off'
-    output['rp_gi'] = rpdat.rp_voxelao
-    output['rp_dynres'] = rpdat.rp_dynres
-    with open(p + '/config.arm', 'w') as f:
-        f.write(json.dumps(output, sort_keys=True, indent=4))
+
+    output = {
+        'window_mode': get_winmode(wrd.arm_winmode),
+        'window_w': int(resx),
+        'window_h': int(resy),
+        'window_resizable': wrd.arm_winresize,
+        'window_maximizable': wrd.arm_winresize and wrd.arm_winmaximize,
+        'window_minimizable': wrd.arm_winminimize,
+        'window_vsync': wrd.arm_vsync,
+        'window_msaa': int(rpdat.arm_samples_per_pixel),
+        'window_scale': 1.0,
+        'rp_supersample': float(rpdat.rp_supersampling),
+        'rp_shadowmap_cube': rp_shadowmap_cube,
+        'rp_shadowmap_cascade': rp_shadowmap_cascade,
+        'rp_ssgi': rpdat.rp_ssgi != 'Off',
+        'rp_ssr': rpdat.rp_ssr != 'Off',
+        'rp_bloom': rpdat.rp_bloom != 'Off',
+        'rp_motionblur': rpdat.rp_motionblur != 'Off',
+        'rp_gi': rpdat.rp_voxelao,
+        'rp_dynres': rpdat.rp_dynres
+    }
+
+    with open(os.path.join(p, 'config.arm'), 'w') as configfile:
+        configfile.write(json.dumps(output, sort_keys=True, indent=4))
+
 
 def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     wrd = bpy.data.worlds['Arm']
@@ -345,12 +443,13 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     elif rpdat.rp_driver != 'Armory':
         pathpack = rpdat.rp_driver.lower()
 
-    with open('Sources/Main.hx', 'w') as f:
+    with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
 package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
+    public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
         if rpdat.rp_voxelao:
@@ -367,13 +466,14 @@ class Main {
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
-        if rpdat.rp_shadowmap_cascades != '1':
-            f.write("""
-        iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-        iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
-        if rpdat.arm_shadowmap_bounds != 1.0:
-            f.write("""
-        iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        if rpdat.rp_shadows:
+            if rpdat.rp_shadowmap_cascades != '1':
+                f.write("""
+            iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
+            iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
+            if rpdat.arm_shadowmap_bounds != 1.0:
+                f.write("""
+            iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -405,6 +505,9 @@ def write_indexhtml(w, h, is_publish):
     dest = '/html5' if is_publish else '/debug/html5'
     if not os.path.exists(arm.utils.build_dir() + dest):
         os.makedirs(arm.utils.build_dir() + dest)
+    popupmenu_in_browser = ''
+    if wrd.arm_project_html5_popupmenu_in_browser:
+        popupmenu_in_browser = ' oncontextmenu="return false"'
     with open(arm.utils.build_dir() + dest + '/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>
@@ -414,24 +517,19 @@ def write_indexhtml(w, h, is_publish):
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <style>
-    body {
-        margin: 0;
-    }
-    </style>
 """)
         f.write("""
-    <title>Armory</title>
+    <title>"""+html.escape( wrd.arm_project_name)+"""</title>
 </head>
 <body style="margin: 0; padding: 0;">
 """)
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'></canvas>
+    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
 """)
         else:
             f.write("""
-    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'></canvas></p>
+    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>
 """)
         f.write("""
     <script src='kha.js'></script>
@@ -442,6 +540,7 @@ def write_indexhtml(w, h, is_publish):
 add_compiledglsl = ''
 def write_compiledglsl(defs, make_variants):
     rpdat = arm.utils.get_rp()
+    wrd = bpy.data.worlds['Arm']
     shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
@@ -452,21 +551,22 @@ def write_compiledglsl(defs, make_variants):
             if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
+
+        f.write("""#if defined(HLSL) || defined(METAL)
+#define _InvY
+#endif
+""")
+
+        if state.target == 'html5' or arm.utils.get_gapi() == 'direct3d11':
+            f.write("#define _FlipY\n")
+
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
-        if rpdat.arm_clouds:
-            f.write(
-"""const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 100) / 100) + """;
-const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 100) / 100) + """;
-const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 100) / 100) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 100) / 100) + """);
-const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation * 100) / 100) + """;
-const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
-const int cloudsSteps = """ + str(rpdat.arm_clouds_steps) + """;
-""")
+
         if rpdat.rp_water:
             f.write(
 """const float waterLevel = """ + str(round(rpdat.arm_water_level * 100) / 100) + """;
@@ -573,18 +673,14 @@ const float compoBrightnessExponent = """ + str(round(rpdat.arm_lens_texture_mas
 
         if rpdat.rp_chromatic_aberration:
             f.write(
-"""const float compoChromaticStrength = """ + str(round(rpdat.arm_chromatic_aberration_strength * 100) / 100) + """;
-const int compoChromaticSamples = """ + str(rpdat.arm_chromatic_aberration_samples) + """;
+f"""const float compoChromaticStrength = {round(rpdat.arm_chromatic_aberration_strength * 100) / 100};
+const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 """)
 
-        if rpdat.arm_chromatic_aberration_type == "Spectral":
-            f.write(
-"""const int compoChromaticType = """ + str(1) + """;
-""")
-        else:
-            f.write(
-"""const int compoChromaticType = """ + str(0) + """;
-""")
+            if rpdat.arm_chromatic_aberration_type == "Spectral":
+                f.write("const int compoChromaticType = 1;")
+            else:
+                f.write("const int compoChromaticType = 0;")
 
         focus_distance = 0.0
         fstop = 0.0
@@ -611,15 +707,29 @@ const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 10
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 """)
 
-        if rpdat.rp_sss_state == 'On':
-            f.write(
-"""const float sssWidth = """ + str(rpdat.arm_sss_width / 10.0) + """;
-""")
+        if rpdat.rp_sss:
+            f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")
 
         # Skinning
         if rpdat.arm_skin == 'On':
             f.write(
 """const int skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
+""")
+
+        if '_Clusters' in wrd.world_defs:
+            max_lights = "4"
+            max_lights_clusters = "4"
+            if rpdat.rp_shadowmap_atlas:
+                max_lights = str(rpdat.rp_max_lights)
+                max_lights_clusters = str(rpdat.rp_max_lights_cluster)
+                # prevent max lights cluster being higher than max lights
+                if (int(max_lights_clusters) > int(max_lights)):
+                    max_lights_clusters = max_lights
+
+            f.write(
+"""const int maxLights = """ + max_lights + """;
+const int maxLightsCluster = """ + max_lights_clusters + """;
+const float clusterNear = 3.0;
 """)
 
         f.write(add_compiledglsl + '\n') # External defined constants

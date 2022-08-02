@@ -2,12 +2,11 @@ package armory.logicnode;
 
 import iron.object.Object;
 import iron.math.Quat;
-import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
 
 class RotateObjectNode extends LogicNode {
 
-	var q = new Quat();
+	public var property0 = "Local";
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -15,13 +14,19 @@ class RotateObjectNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
-		var vec: Vec4 = inputs[2].get();
+		var q: Quat = inputs[2].get();
+		
+		if (object == null || q == null) return;
 
-		if (object == null || vec == null) return;
-
-		q.fromEuler(vec.x, vec.y, vec.z);
-
-		object.transform.rot.mult(q);
+		q.normalize();
+		switch (property0){
+		case "Local":
+		     object.transform.rot.mult(q);
+		case "Global": 
+		     object.transform.rot.multquats(q, object.transform.rot);
+		     // that function call (Quat.multquats) is weird: it both modifies the object, and returns `this`
+		}
+			
 		object.transform.buildMatrix();
 
 		#if arm_physics

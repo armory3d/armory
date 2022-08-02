@@ -1,10 +1,47 @@
-import os
-import shutil
+from typing import Optional
+
+import bpy
+from bpy.props import *
+
 import arm.assets as assets
 import arm.utils
-import bpy
-from bpy.types import Menu, Panel, UIList
-from bpy.props import *
+
+if arm.is_reload(__name__):
+    assets = arm.reload_module(assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+atlas_sizes = [ ('256', '256', '256'),
+                ('512', '512', '512'),
+                ('1024', '1024', '1024'),
+                ('2048', '2048', '2048'),
+                ('4096', '4096', '4096'),
+                ('8192', '8192', '8192'),
+                ('16384', '16384', '16384'),
+                ('32768', '32768', '32768') ]
+
+def atlas_sizes_from_min(min_size: int) -> list:
+    """ Create an enum list of atlas sizes from a minimal size """
+    sizes = []
+    for i in range(len(atlas_sizes)):
+        if int(atlas_sizes[i][0]) > min_size:
+            sizes.append(atlas_sizes[i])
+    return sizes
+
+def update_spot_sun_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.Context) -> list:
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+        return []
+    rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+    return atlas_sizes_from_min(int(rpdat.rp_shadowmap_cascade))
+
+def update_point_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.Context) -> list:
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+        return []
+    rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+    return atlas_sizes_from_min(int(rpdat.rp_shadowmap_cube) * 2)
 
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
@@ -20,6 +57,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -55,6 +93,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
@@ -88,6 +127,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_depth_texture_state = 'Auto'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
@@ -128,6 +168,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Off'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
@@ -153,7 +194,7 @@ def update_preset(self, context):
     update_renderpath(self, context)
 
 def update_renderpath(self, context):
-    if assets.invalidate_enabled == False:
+    if not assets.invalidate_enabled:
         return
     assets.invalidate_shader_cache(self, context)
     bpy.data.worlds['Arm'].arm_recompile = True
@@ -202,6 +243,17 @@ def update_blending_state(self, context):
         return
     update_renderpath(self, context)
 
+
+def update_depth_texture_state(self, context):
+    if self.rp_depth_texture_state == 'On':
+        self.rp_depth_texture = True
+    elif self.rp_depth_texture_state == 'Off':
+        self.rp_depth_texture = False
+    else: # Auto - updates rp at build time if depth texture mat is used
+        return
+    update_renderpath(self, context)
+
+
 def update_sss_state(self, context):
     if self.rp_sss_state == 'On':
         self.rp_sss = True
@@ -233,17 +285,57 @@ class ArmRPListItem(bpy.types.PropertyGroup):
              ('Clear', 'Clear', 'Clear'),
              ('Off', 'No Clear', 'Off'),
       ],
-      name="Background", description="Background type", default='World', update=update_renderpath)    
+      name="Background", description="Background type", default='World', update=update_renderpath)
     arm_irradiance: BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
     arm_radiance: BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
     arm_radiance_size: EnumProperty(
         items=[('512', '512', '512'),
-               ('1024', '1024', '1024'), 
+               ('1024', '1024', '1024'),
                ('2048', '2048', '2048')],
         name="Map Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     rp_autoexposure: BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes: BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadows: BoolProperty(name="Shadows", description="Enable shadow casting", default=True, update=update_renderpath)
+    rp_max_lights: EnumProperty(
+        items=[('4', '4', '4'),
+               ('8', '8', '8'),
+               ('16', '16', '16'),
+               ('24', '24', '24'),
+               ('32', '32', '32'),
+               ('64', '64', '64'),],
+        name="Max Lights", description="Max number of lights that can be visible in the screen", default='16')
+    rp_max_lights_cluster: EnumProperty(
+        items=[('4', '4', '4'),
+               ('8', '8', '8'),
+               ('16', '16', '16'),
+               ('24', '24', '24'),
+               ('32', '32', '32'),
+               ('64', '64', '64'),],
+        name="Max Lights Shadows", description="Max number of rendered shadow maps that can be visible in the screen. Always equal or lower than Max Lights", default='16')
+    rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
+    rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
+        items=[('2', '2', '2'),
+               ('3', '3', '3'),
+               ('4', '4', '4'),
+               ('5', '5', '5'),
+               ('6', '6', '6'),
+               ('7', '7', '7'),
+               ('8', '8', '8'),],
+        name="LOD Subdivisions", description="Number of subdivisions of the default tile size for LOD", default='2', update=update_renderpath)
+    rp_shadowmap_atlas_max_size_point: EnumProperty(
+        items=update_point_atlas_size_options,
+        name="Max Atlas Texture Size Points", description="Sets the limit of the size of the texture.", update=update_renderpath)
+    rp_shadowmap_atlas_max_size_spot: EnumProperty(
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size Spots", description="Sets the limit of the size of the texture.", update=update_renderpath)
+    rp_shadowmap_atlas_max_size_sun: EnumProperty(
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size Sun", description="Sets the limit of the size of the texture.", update=update_renderpath)
+    rp_shadowmap_atlas_max_size: EnumProperty(
+        items=update_spot_sun_atlas_size_options,
+        name="Max Atlas Texture Size", description="Sets the limit of the size of the texture.", update=update_renderpath)
     rp_shadowmap_cube: EnumProperty(
         items=[('256', '256', '256'),
                ('512', '512', '512'),
@@ -296,19 +388,19 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_translucency: BoolProperty(name="Translucency", description="Current render-path state", default=False)
     rp_translucency_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
     rp_decals: BoolProperty(name="Decals", description="Current render-path state", default=False)
     rp_decals_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Decals", description="Decals pass", default='Auto', update=update_decals_state)
     rp_overlays: BoolProperty(name="Overlays", description="Current render-path state", default=False)
     rp_overlays_state: EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
+               ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
     rp_sss: BoolProperty(name="SSS", description="Current render-path state", default=False)
@@ -328,8 +420,14 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Distance', 'Distance', 'Distance'),
                ('Shader', 'Shader', 'Shader')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
+    rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
+    rp_depth_texture_state: EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'),
+               ('Auto', 'Auto', 'Auto')],
+        name='Depth Texture', description='Whether materials can read from a depth texture', default='Auto', update=update_depth_texture_state)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
-    rp_water: BoolProperty(name="Water", description="Water surface pass", default=False, update=update_renderpath)
+    rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
     rp_gi: EnumProperty( # TODO: remove in 0.8
         items=[('Off', 'Off', 'Off'),
@@ -350,13 +448,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('0.5', '0.5', '0.5'),
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
-    arm_clouds: BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Micro shadowing based on ambient occlusion", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
-               ('Linear', 'Linear', 'Linear'), 
-               ('Point', 'Closest', 'Point'), 
+               ('Linear', 'Linear', 'Linear'),
+               ('Point', 'Closest', 'Point'),
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model: EnumProperty(
@@ -380,7 +478,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution", description="Resolution to perform rendering at", default='Display', update=update_renderpath)
     arm_rp_resolution_size: IntProperty(name="Size", description="Resolution height in pixels(for example 720p), width is auto-fit to preserve aspect ratio", default=720, min=0, update=update_renderpath)
     arm_rp_resolution_filter: EnumProperty(
-        items=[('Linear', 'Linear', 'Linear'), 
+        items=[('Linear', 'Linear', 'Linear'),
                ('Point', 'Closest', 'Point')],
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
@@ -397,7 +495,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('4', '4', '4'),
                ('8', '8', '8'),
                ('16', '16', '16')],
-        name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
+        name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')
 
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
@@ -412,13 +510,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=1.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_clouds_lower: FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_upper: FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_wind: FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
-    arm_clouds_secondary: FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_precipitation: FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    arm_clouds_steps: IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
-    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1,1,1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
     arm_water_displace: FloatProperty(name="Displace", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_speed: FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)
@@ -496,6 +588,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Skinning', description='Enable skinning', default='On', update=assets.invalidate_shader_cache)
     arm_skin_max_bones_auto: BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     arm_skin_max_bones: IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+    arm_morph_target: EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off')],
+        name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
     arm_particles: EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
@@ -503,6 +599,16 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
+
+    @staticmethod
+    def get_by_name(name: str) -> Optional['ArmRPListItem']:
+        wrd = bpy.data.worlds['Arm']
+        # Assume unique rp names
+        for i in range(len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == name:
+                return wrd.arm_rplist[i]
+        return None
+
 
 class ARM_UL_RPList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):

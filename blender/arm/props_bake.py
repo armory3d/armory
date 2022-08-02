@@ -1,8 +1,18 @@
-import arm.utils
-import arm.assets
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+
+from arm.lightmapper import operators, properties, utility
+
+import arm.assets
+import arm.utils
+
+if arm.is_reload(__name__):
+    arm.assets = arm.reload_module(arm.assets)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
     obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
@@ -165,7 +175,7 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node.image = img
                 img_node.select = True
                 nodes.active = img_node
-        
+
         obs = bpy.context.view_layer.objects
 
         # Unwrap
@@ -351,6 +361,16 @@ def register():
                  ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],
         name = "UV Unwrap", default='Smart UV Project')
 
+
+    #Register lightmapper
+    bpy.types.Scene.arm_bakemode = EnumProperty(
+        items = [('Static Map', 'Static Map', 'Static Map'),
+                 ('Lightmap', 'Lightmap', 'Lightmap')],
+        name = "Bake mode", default='Static Map')
+
+    operators.register()
+    properties.register()
+
 def unregister():
     bpy.utils.unregister_class(ArmBakeListItem)
     bpy.utils.unregister_class(ARM_UL_BakeList)
@@ -364,3 +384,8 @@ def unregister():
     bpy.utils.unregister_class(ArmBakeAddSelectedButton)
     bpy.utils.unregister_class(ArmBakeClearAllButton)
     bpy.utils.unregister_class(ArmBakeRemoveBakedMaterialsButton)
+
+    #Unregister lightmapper
+
+    operators.unregister()
+    properties.unregister()

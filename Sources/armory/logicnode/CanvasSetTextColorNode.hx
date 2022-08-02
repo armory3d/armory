@@ -22,7 +22,8 @@ class CanvasSetTextColorNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).color_text = Color.fromFloats(r, g, b, a);
+		var e = canvas.getElement(element);
+		if (e != null) e.color_text = Color.fromFloats(r, g, b, a);
 		runOutput(0);
 	}
 

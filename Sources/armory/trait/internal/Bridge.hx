@@ -11,6 +11,8 @@ class Bridge {
 	public static var Input = iron.system.Input;
 	public static var Object = iron.object.Object;
 	public static var Data = iron.data.Data;
+	public static var Vec4 = iron.math.Vec4;
+	public static var Quat = iron.math.Quat;
 	public static function log(s: String) { trace(s); };
 }
 

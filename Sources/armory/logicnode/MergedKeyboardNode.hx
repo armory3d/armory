@@ -15,11 +15,11 @@ class MergedKeyboardNode extends LogicNode {
 		var keyboard = iron.system.Input.getKeyboard();
 		var b = false;
 		switch (property0) {
-		case "Down":
-			b = keyboard.down(property1);
-		case "Started":
+		case "started":
 			b = keyboard.started(property1);
-		case "Released":
+		case "down":
+			b = keyboard.down(property1);
+		case "released":
 			b = keyboard.released(property1);
 		}
 		if (b) runOutput(0);
@@ -28,11 +28,11 @@ class MergedKeyboardNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var keyboard = iron.system.Input.getKeyboard();
 		switch (property0) {
-		case "Down":
-			return keyboard.down(property1);
-		case "Started":
+		case "started":
 			return keyboard.started(property1);
-		case "Released":
+		case "down":
+			return keyboard.down(property1);
+		case "released":
 			return keyboard.released(property1);
 		}
 		return false;

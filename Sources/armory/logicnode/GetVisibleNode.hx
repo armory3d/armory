@@ -11,8 +11,14 @@ class GetVisibleNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
 
-		if (object == null) false;
+		if (object == null) return null;
 
-		return object.visible;
+		return switch (from) {
+			case 0: object.visible;
+			case 1: object.visibleMesh;
+			case 2: object.visibleShadow;
+			default: null;
+		}
+
 	}
 }

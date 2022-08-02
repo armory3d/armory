@@ -31,34 +31,22 @@ class GetChildNode extends LogicNode {
 	}
 
 	function contains(o: Object, name: String): Object {
-		if (o.name.indexOf(name) >= 0) return o;
-		else {
-			for (c in o.children) {
-				var r = contains(c, name);
-				if (r != null) return r;
-			}
+		for (c in o.children) {
+			if (c.name.indexOf(name) >= 0) return c;
 		}
 		return null;
 	}
 
 	function startsWith(o: Object, name: String): Object {
-		if (StringTools.startsWith(o.name, name)) return o;
-		else {
-			for (c in o.children) {
-				var r = contains(c, name);
-				if (r != null) return r;
-			}
+		for (c in o.children) {
+			if (StringTools.startsWith(c.name, name)) return c;
 		}
 		return null;
 	}
 
 	function endsWith(o: Object, name: String): Object {
-		if (StringTools.endsWith(o.name, name)) return o;
-		else {
-			for (c in o.children) {
-				var r = contains(c, name);
-				if (r != null) return r;
-			}
+		for (c in o.children) {
+			if (StringTools.endsWith(c.name, name)) return c;
 		}
 		return null;
 	}

@@ -1,6 +1,7 @@
 package armory.renderpath;
 
 import iron.RenderPath;
+import iron.Scene;
 
 class RenderPathForward {
 
@@ -34,8 +35,10 @@ class RenderPathForward {
 
 		#if (rp_background == "World")
 		{
-			RenderPathCreator.setTargetMeshes();
-			path.drawSkydome("shader_datas/world_pass/world_pass");
+			if (Scene.active.raw.world_ref != null) {
+				RenderPathCreator.setTargetMeshes();
+				path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
+			}
 		}
 		#end
 
@@ -62,9 +65,25 @@ class RenderPathForward {
 
 		path = _path;
 
-		#if (rp_background == "World")
+		#if kha_metal
 		{
-			path.loadShader("shader_datas/world_pass/world_pass");
+			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
+			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
+			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
+			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
+		}
+		#end
+
+		#if rp_depth_texture
+		{
+			var t = new RenderTargetRaw();
+			t.name = "depthtex";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -105,7 +124,7 @@ class RenderPathForward {
 			}
 			#end
 
-			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
+			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_depth_texture))
 			{
 				var t = new RenderTargetRaw();
 				t.name = "buf";
@@ -139,7 +158,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water))
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water) || (rp_depth_texture))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -205,6 +224,12 @@ class RenderPathForward {
 		#if rp_water
 		{
 			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if rp_depth_texture
+		{
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
@@ -281,13 +306,24 @@ class RenderPathForward {
 			#end
 		}
 		#end
+
+		#if rp_chromatic_aberration
+		{
+			path.loadShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
 	}
 
 	public static function commands() {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.drawShadowMapAtlas();
+			#else
 			Inc.drawShadowMap();
+			#end
 		}
 		#end
 
@@ -339,7 +375,11 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 		}
 		#end
 
@@ -453,7 +493,11 @@ class RenderPathForward {
 			{
 				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
 				Inc.bindShadowMap();
+				#end
 				path.drawShader("shader_datas/volumetric_light/volumetric_light");
 
 				path.setTarget("singleb");
@@ -482,6 +526,18 @@ class RenderPathForward {
 
 				path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
 				path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
+			}
+			#end
+
+			#if rp_chromatic_aberration
+			{
+				path.setTarget("bufa");
+				path.bindTarget("lbuffer0", "tex");
+				path.drawShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+
+				path.setTarget("lbuffer0");
+				path.bindTarget("bufa", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
 			#end
 
@@ -557,6 +613,30 @@ class RenderPathForward {
 			path.drawMeshes("overlay");
 		}
 		#end
+	}
+
+	public static function setupDepthTexture() {
+		// When render to texture is off, lbuffer0 does not exist, so for
+		// now do nothing then and pass an empty uniform to the shader
+		#if rp_render_to_texture
+			#if (!kha_opengl)
+			path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
+			path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
+			#end
+
+			// Copy the depth buffer to the depth texture
+			path.setTarget("depthtex");
+			path.bindTarget("_main", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+
+			#if (!kha_opengl)
+			path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
+			path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
+			#end
+		#end // rp_render_to_texture
+
+		setTargetMeshes();
+		path.bindTarget("depthtex", "depthtex");
 	}
 	#end
 }

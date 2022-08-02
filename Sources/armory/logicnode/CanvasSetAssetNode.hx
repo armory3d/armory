@@ -18,7 +18,8 @@ class CanvasSetAssetNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		canvas.getElement(element).asset = asset;
+		var e = canvas.getElement(element);
+		if (e != null) e.asset = asset;
 		runOutput(0);
 	}
 

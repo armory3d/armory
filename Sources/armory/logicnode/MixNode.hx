@@ -6,7 +6,7 @@ class MixNode extends LogicNode {
 
 	public var property0: String; // Type
 	public var property1: String; // Ease
-	public var property2: String; // Clamp
+	public var property2: Bool; // Clamp
 
 	var ease: Float->Float = null;
 
@@ -34,6 +34,10 @@ class MixNode extends LogicNode {
 				ease = property1 == "In" ? Tween.easeCircIn : (property1 == "Out" ? Tween.easeCircOut : Tween.easeCircInOut);
 			case "Back":
 				ease = property1 == "In" ? Tween.easeBackIn : (property1 == "Out" ? Tween.easeBackOut : Tween.easeBackInOut);
+			case "Bounce":
+				ease = property1 == "In" ? Tween.easeBounceIn : (property1 == "Out" ? Tween.easeBounceOut : Tween.easeBounceInOut);
+			case "Elastic":
+				ease = property1 == "In" ? Tween.easeElasticIn : (property1 == "Out" ? Tween.easeElasticOut : Tween.easeElasticInOut);
 			default:
 				ease = Tween.easeLinear;
 		}
@@ -46,7 +50,9 @@ class MixNode extends LogicNode {
 		var v2: Float = inputs[2].get();
 		var f = v1 + (v2 - v1) * ease(k);
 
-		if (property2 == "true") f = f < 0 ? 0 : f > 1 ? 1 : f;
+		// Clamp
+		if (property2) f = f < 0 ? 0 : f > 1 ? 1 : f;
+
 		return f;
 	}
 }

@@ -18,8 +18,8 @@ class CanvasSetVisibleNode extends LogicNode {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
 
-		if (visible == true) canvas.getElement(element).visible = true
-		else canvas.getElement(element).visible = false;
+		var element = canvas.getElement(element);
+		if (element != null) element.visible = this.visible;
 		runOutput(0);
 	}
 	override function run(from: Int) {

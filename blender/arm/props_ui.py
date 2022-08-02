@@ -1,19 +1,50 @@
-import bpy
-import webbrowser
+import json
 import os
-from bpy.types import Menu, Panel, UIList
+import shutil
+
+import bpy
 from bpy.props import *
-import arm.utils
+
+from arm.lightmapper.panels import scene
+
+import arm.api
+import arm.assets as assets
+from arm.exporter import ArmoryExporter
+import arm.log as log
+import arm.logicnode.replacement
 import arm.make as make
 import arm.make_state as state
-import arm.assets as assets
-import arm.log as log
-import arm.proxy
-import arm.api
+import arm.props as props
 import arm.props_properties
+import arm.props_traits
+import arm.nodes_logic
+import arm.proxy
+import arm.ui_icons as ui_icons
+import arm.utils
 
-# Menu in object region
+
+if arm.is_reload(__name__):
+    arm.api = arm.reload_module(arm.api)
+    assets = arm.reload_module(assets)
+    arm.exporter = arm.reload_module(arm.exporter)
+    from arm.exporter import ArmoryExporter
+    log = arm.reload_module(log)
+    arm.logicnode.replacement = arm.reload_module(arm.logicnode.replacement)
+    make = arm.reload_module(make)
+    state = arm.reload_module(state)
+    props = arm.reload_module(props)
+    arm.props_properties = arm.reload_module(arm.props_properties)
+    arm.props_traits = arm.reload_module(arm.props_traits)
+    arm.nodes_logic = arm.reload_module(arm.nodes_logic)
+    arm.proxy = arm.reload_module(arm.proxy)
+    ui_icons = arm.reload_module(ui_icons)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
+    """Menu in object region."""
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -28,12 +59,13 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'arm_export')
+        col = layout.column()
+        col.prop(obj, 'arm_export')
         if not obj.arm_export:
             return
-        layout.prop(obj, 'arm_spawn')
-        layout.prop(obj, 'arm_mobile')
-        layout.prop(obj, 'arm_animation_enabled')
+        col.prop(obj, 'arm_spawn')
+        col.prop(obj, 'arm_mobile')
+        col.prop(obj, 'arm_animation_enabled')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -49,6 +81,93 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
+
+        # Lightmapping props
+        if obj.type == "MESH":
+            row = layout.row(align=True)
+            row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_use")
+
+            if obj.TLM_ObjectProperties.tlm_mesh_lightmap_use:
+
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_use_default_channel")
+
+                if not obj.TLM_ObjectProperties.tlm_use_default_channel:
+
+                    row = layout.row()
+                    row.prop_search(obj.TLM_ObjectProperties, "tlm_uv_channel", obj.data, "uv_layers", text='UV Channel')
+
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_resolution")
+                if obj.TLM_ObjectProperties.tlm_use_default_channel:
+                    row = layout.row()
+                    row.prop(obj.TLM_ObjectProperties, "tlm_mesh_lightmap_unwrap_mode")
+                row = layout.row()
+                if obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode == "AtlasGroupA":
+
+                    if scene.TLM_AtlasListItem >= 0 and len(scene.TLM_AtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_AtlasList[scene.TLM_AtlasListItem]
+                        row.prop_search(obj.TLM_ObjectProperties, "tlm_atlas_pointer", scene, "TLM_AtlasList", text='Atlas Group')
+                        row = layout.row()
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row = layout.row()
+
+                else:
+                    row = layout.row()
+                    row.prop(obj.TLM_ObjectProperties, "tlm_postpack_object")
+                    row = layout.row()
+
+
+                if obj.TLM_ObjectProperties.tlm_postpack_object and obj.TLM_ObjectProperties.tlm_mesh_lightmap_unwrap_mode != "AtlasGroupA":
+                    if scene.TLM_PostAtlasListItem >= 0 and len(scene.TLM_PostAtlasList) > 0:
+                        row = layout.row()
+                        item = scene.TLM_PostAtlasList[scene.TLM_PostAtlasListItem]
+                        row.prop_search(obj.TLM_ObjectProperties, "tlm_postatlas_pointer", scene, "TLM_PostAtlasList", text='Atlas Group')
+                        row = layout.row()
+
+                    else:
+                        row = layout.label(text="Add Atlas Groups from the scene lightmapping settings.")
+                        row = layout.row()
+
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_unwrap_margin")
+                row = layout.row()
+                row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filter_override")
+                row = layout.row()
+                if obj.TLM_ObjectProperties.tlm_mesh_filter_override:
+                    row = layout.row(align=True)
+                    row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_mode")
+                    row = layout.row(align=True)
+                    if obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Gaussian":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_gaussian_strength")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    elif obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Box":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_box_strength")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    elif obj.TLM_ObjectProperties.tlm_mesh_filtering_mode == "Bilateral":
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_diameter")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_color_deviation")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_bilateral_coordinate_deviation")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+                    else:
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_median_kernel", expand=True)
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_mesh_filtering_iterations")
+
+                #If UV Packer installed
+                if "UV-Packer" in bpy.context.preferences.addons.keys():
+                    row.prop(obj.TLM_ObjectProperties, "tlm_use_uv_packer")
+                    if obj.TLM_ObjectProperties.tlm_use_uv_packer:
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_padding")
+                        row = layout.row(align=True)
+                        row.prop(obj.TLM_ObjectProperties, "tlm_uv_packer_packing_engine")
 
 class ARM_PT_ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -98,15 +217,29 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        if obj.rigid_body != None:
+        rb = obj.rigid_body
+        if rb is not None:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+
+            rb_type = 'Dynamic'
+            if ArmoryExporter.rigid_body_static(rb):
+                rb_type = 'Static'
+            if rb.kinematic:
+                rb_type = 'Kinematic'
+            row.label(text=(f'Rigid Body Export Type: {rb_type}'), icon='AUTO')
+
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_trigger')
-            layout.prop(obj, 'arm_rb_force_deactivation')
             layout.prop(obj, 'arm_rb_ccd')
 
-        if obj.soft_body != None:
+        if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
+
+        if obj.rigid_body_constraint is not None:
+            layout.prop(obj, 'arm_relative_physics_constraint')
 
 # Menu in data region
 class ARM_PT_DataPropsPanel(bpy.types.Panel):
@@ -143,7 +276,33 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'arm_autobake')
+            layout.prop(obj.data, 'arm_relative_bone_constraints')
             pass
+
+class ARM_PT_WorldPropsPanel(bpy.types.Panel):
+    bl_label = "Armory World Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "world"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        world = context.world
+        if world is None:
+            return
+
+        layout.prop(world, 'arm_use_clouds')
+        col = layout.column(align=True)
+        col.enabled = world.arm_use_clouds
+        col.prop(world, 'arm_darken_clouds')
+        col.prop(world, 'arm_clouds_lower')
+        col.prop(world, 'arm_clouds_upper')
+        col.prop(world, 'arm_clouds_precipitation')
+        col.prop(world, 'arm_clouds_secondary')
+        col.prop(world, 'arm_clouds_wind')
+        col.prop(world, 'arm_clouds_steps')
 
 class ARM_PT_ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -164,7 +323,7 @@ class ARM_PT_ScenePropsPanel(bpy.types.Panel):
         row.prop(scene, 'arm_export')
 
 class InvalidateCacheButton(bpy.types.Operator):
-    '''Delete cached mesh data'''
+    """Delete cached mesh data"""
     bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
 
@@ -173,7 +332,7 @@ class InvalidateCacheButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class InvalidateMaterialCacheButton(bpy.types.Operator):
-    '''Delete cached material data'''
+    """Delete cached material data"""
     bl_idname = "arm.invalidate_material_cache"
     bl_label = "Invalidate Cache"
 
@@ -181,6 +340,220 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
         context.material.arm_cached = False
         context.material.signature = ''
         return{'FINISHED'}
+
+
+class ARM_OT_NewCustomMaterial(bpy.types.Operator):
+    bl_idname = "arm.new_custom_material"
+    bl_label = "New Custom Material"
+    bl_description = "Add a new custom material. This will create all the necessary files and folders"
+
+    def poll_mat_name(self, context):
+        project_dir = arm.utils.get_fp()
+        shader_dir_dst = os.path.join(project_dir, 'Shaders')
+        mat_name = arm.utils.safestr(self.mat_name)
+
+        self.mat_exists = os.path.isdir(os.path.join(project_dir, 'Bundled', mat_name))
+
+        vert_exists = os.path.isfile(os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+        frag_exists = os.path.isfile(os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+        self.shader_exists = vert_exists or frag_exists
+
+    mat_name: StringProperty(
+        name='Material Name', description='The name of the new material',
+        default='MyCustomMaterial',
+        update=poll_mat_name)
+    mode: EnumProperty(
+        name='Target RP', description='Choose for which render path mode the new material is created',
+        default='deferred',
+        items=[('deferred', 'Deferred', 'Create the material for a deferred render path'),
+               ('forward', 'Forward', 'Create the material for a forward render path')])
+    mat_exists: BoolProperty(
+        name='Material Already Exists',
+        default=False,
+        options={'HIDDEN', 'SKIP_SAVE'})
+    shader_exists: BoolProperty(
+        name='Shaders Already Exist',
+        default=False,
+        options={'HIDDEN', 'SKIP_SAVE'})
+
+    def invoke(self, context, event):
+        if not bpy.data.is_saved:
+            self.report({'INFO'}, "Please save your file first")
+            return {"CANCELLED"}
+
+        # Try to set deferred/forward based on the selected render path
+        try:
+            self.mode = 'forward' if arm.utils.get_rp().rp_renderer == 'Forward' else 'deferred'
+        except IndexError:
+            # No render path, use default (deferred)
+            pass
+
+        self.poll_mat_name(context)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.prop(self, 'mat_name')
+        layout.prop(self, 'mode', expand=True)
+
+        if self.mat_exists:
+            box = layout.box()
+            box.alert = True
+            col = box.column(align=True)
+            col.label(text='A custom material with that name already exists,', icon='ERROR')
+            col.label(text='clicking on \'OK\' will override the material!', icon='BLANK1')
+
+        if self.shader_exists:
+            box = layout.box()
+            box.alert = True
+            col = box.column(align=True)
+            col.label(text='Shader file(s) with that name already exists,', icon='ERROR')
+            col.label(text='clicking on \'OK\' will override the shader(s)!', icon='BLANK1')
+
+    def execute(self, context):
+        if self.mat_name == '':
+            return {'CANCELLED'}
+
+        project_dir = arm.utils.get_fp()
+        shader_dir_src = os.path.join(arm.utils.get_sdk_path(), 'armory', 'Shaders', 'custom_mat_presets')
+        shader_dir_dst = os.path.join(project_dir, 'Shaders')
+        mat_name = arm.utils.safestr(self.mat_name)
+        mat_dir = os.path.join(project_dir, 'Bundled', mat_name)
+
+        os.makedirs(mat_dir, exist_ok=True)
+        os.makedirs(shader_dir_dst, exist_ok=True)
+
+        # Shader data
+        if self.mode == 'forward':
+            col_attachments = ['RGBA64']
+            constants = [{'link': '_worldViewProjectionMatrix', 'name': 'WVP', 'type': 'mat4'}]
+            vertex_elems = [{'name': 'pos', 'data': 'short4norm'}]
+        else:
+            col_attachments = ['RGBA64', 'RGBA64']
+            constants = [
+                {'link': '_worldViewProjectionMatrix', 'name': 'WVP', 'type': 'mat4'},
+                {'link': '_normalMatrix', 'name': 'N', 'type': 'mat3'}
+            ]
+            vertex_elems = [
+                {'name': 'pos', 'data': 'short4norm'},
+                {'name': 'nor', 'data': 'short2norm'}
+            ]
+
+        con = {
+            'color_attachments':  col_attachments,
+            'compare_mode': 'less',
+            'constants': constants,
+            'cull_mode': 'clockwise',
+            'depth_write': True,
+            'fragment_shader': f'{mat_name}.frag',
+            'name': 'mesh',
+            'texture_units': [],
+            'vertex_shader': f'{mat_name}.vert',
+            'vertex_elements': vertex_elems
+        }
+        data = {
+            'shader_datas': [{
+                'contexts': [con],
+                'name': f'{mat_name}'
+            }]
+        }
+
+        # Save shader data file
+        with open(os.path.join(mat_dir, f'{mat_name}.json'), 'w') as datafile:
+            json.dump(data, datafile, indent=4, sort_keys=True)
+
+        # Copy preset shaders to project
+        if self.mode == 'forward':
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_forward.frag.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_forward.vert.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+        else:
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_deferred.frag.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.frag.glsl'))
+            shutil.copy(os.path.join(shader_dir_src, 'custom_mat_deferred.vert.glsl'), os.path.join(shader_dir_dst, f'{mat_name}.vert.glsl'))
+
+        # True if called from the material properties tab, else it was called from the search menu
+        if hasattr(context, 'material') and context.material is not None:
+            context.material.arm_custom_material = mat_name
+
+        return{'FINISHED'}
+
+
+class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
+    uniform_name: StringProperty(
+        name='Uniform Name',
+        description='The name of the sampler uniform as used in the shader',
+        default='ImageTexture',
+    )
+
+    image: PointerProperty(
+        name='Image',
+        type=bpy.types.Image,
+        description='The image to attach to the texture unit',
+    )
+
+
+class ARM_UL_BindTexturesList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item: ARM_PG_BindTexturesListItem, icon, active_data, active_propname, index):
+        row = layout.row(align=True)
+
+        if item.image is not None:
+            row.label(text=item.uniform_name, icon_value=item.image.preview.icon_id)
+        else:
+            row.label(text='<empty>', icon='ERROR')
+
+
+class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
+    bl_idname = "arm_bind_textures_list.new_item"
+    bl_label = "Add Texture Binding"
+    bl_description = "Add a new texture binding to the list"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+        return True
+
+    def execute(self, context):
+        mat = context.material
+        mat.arm_bind_textures_list.add()
+        mat.arm_bind_textures_list_index = len(mat.arm_bind_textures_list) - 1
+        return{'FINISHED'}
+
+
+class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
+    bl_idname = "arm_bind_textures_list.delete_item"
+    bl_label = "Remove Texture Binding"
+    bl_description = "Delete the selected texture binding from the list"
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+        return len(mat.arm_bind_textures_list) > 0
+
+    def execute(self, context):
+        mat = context.material
+        lst = mat.arm_bind_textures_list
+        index = mat.arm_bind_textures_list_index
+
+        if len(lst) <= index:
+            return{'FINISHED'}
+
+        lst.remove(index)
+
+        if index > 0:
+            index = index - 1
+        mat.arm_bind_textures_list_index = index
+
+        return{'FINISHED'}
+
 
 class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -193,7 +566,7 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         mat = bpy.context.material
-        if mat == None:
+        if mat is None:
             return
 
         layout.prop(mat, 'arm_cast_shadow')
@@ -201,11 +574,13 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         columnb.enabled = len(wrd.arm_rplist) > 0 and arm.utils.get_rp().rp_renderer == 'Forward'
         columnb.prop(mat, 'arm_receive_shadow')
+        layout.prop(mat, 'arm_ignore_irradiance')
         layout.prop(mat, 'arm_two_sided')
         columnb = layout.column()
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
         layout.prop(mat, 'arm_material_id')
+        layout.prop(mat, 'arm_depth_read')
         layout.prop(mat, 'arm_overlay')
         layout.prop(mat, 'arm_decal')
         layout.prop(mat, 'arm_discard')
@@ -213,12 +588,94 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb.enabled = mat.arm_discard
         columnb.prop(mat, 'arm_discard_opacity')
         columnb.prop(mat, 'arm_discard_opacity_shadows')
-        layout.prop(mat, 'arm_custom_material')
+        row = layout.row(align=True)
+        row.prop(mat, 'arm_custom_material')
+        row.operator('arm.new_custom_material', text='', icon='ADD')
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_particle_fade')
         layout.prop(mat, 'arm_billboard')
 
         layout.operator("arm.invalidate_material_cache")
+
+
+class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
+    bl_label = "Bind Textures"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_MaterialPropsPanel"
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+
+        return mat.arm_custom_material != ''
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        mat = bpy.context.material
+        if mat is None:
+            return
+
+        row = layout.row(align=True)
+        col = row.column(align=True)
+        col.template_list('ARM_UL_BindTexturesList', '', mat, 'arm_bind_textures_list', mat, 'arm_bind_textures_list_index')
+
+        if mat.arm_bind_textures_list_index >= 0 and len(mat.arm_bind_textures_list) > 0:
+            item = mat.arm_bind_textures_list[mat.arm_bind_textures_list_index]
+            box = col.box()
+
+            if item.image is None:
+                _row = box.row()
+                _row.alert = True
+                _row.alignment = 'RIGHT'
+                _row.label(text="No image selected, skipping export")
+
+            box.prop(item, 'uniform_name')
+            box.prop(item, 'image')
+
+        col = row.column(align=True)
+        col.operator("arm_bind_textures_list.new_item", icon='ADD', text="")
+        col.operator("arm_bind_textures_list.delete_item", icon='REMOVE', text="")
+
+
+class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
+    """Per-material properties for custom render path drivers"""
+    bl_label = "Armory Driver Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+
+    @classmethod
+    def poll(cls, context):
+        mat = context.material
+        if mat is None:
+            return False
+
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_rplist_index < 0 or len(wrd.arm_rplist) == 0:
+            return False
+
+        if len(arm.api.drivers) == 0:
+            return False
+
+        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+        return rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_mat_props'] is not None
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        wrd = bpy.data.worlds['Arm']
+        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+        arm.api.drivers[rpdat.rp_driver]['draw_mat_props'](layout, context.material)
+
 
 class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_label = "Blending"
@@ -229,7 +686,7 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_parent_id = "ARM_PT_MaterialPropsPanel"
 
     def draw_header(self, context):
-        if context.material == None:
+        if context.material is None:
             return
         self.layout.prop(context.material, 'arm_blending', text="")
 
@@ -238,16 +695,18 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         mat = bpy.context.material
-        if mat == None:
+        if mat is None:
             return
 
         flow = layout.grid_flow()
         flow.enabled = mat.arm_blending
-        col = flow.column()
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source')
         col.prop(mat, 'arm_blending_destination')
         col.prop(mat, 'arm_blending_operation')
-        col = flow.column()
+        flow.separator()
+
+        col = flow.column(align=True)
         col.prop(mat, 'arm_blending_source_alpha')
         col.prop(mat, 'arm_blending_destination_alpha')
         col.prop(mat, 'arm_blending_operation_alpha')
@@ -263,21 +722,41 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
+        row.scale_y = 1.3
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
-        row.operator("arm.clean_menu")
-        layout.prop(wrd, 'arm_runtime')
-        layout.prop(wrd, 'arm_play_camera')
+        row.operator("arm.clean_menu", icon="BRUSH_DATA")
+
+        col = layout.box().column()
+        col.prop(wrd, 'arm_runtime')
+        col.prop(wrd, 'arm_play_camera')
+        col.prop(wrd, 'arm_play_scene')
+        col.prop_search(wrd, 'arm_play_renderpath', wrd, 'arm_rplist', text='Render Path')
 
         if log.num_warnings > 0:
             box = layout.box()
+            box.alert = True
+
+            col = box.column(align=True)
+            warnings = 'warnings' if log.num_warnings > 1 else 'warning'
+            col.label(text=f'{log.num_warnings} {warnings} occurred during compilation!', icon='ERROR')
+            # Blank icon to achieve the same indentation as the line before
+            # prevent showing "open console" twice:
+            if log.num_errors == 0:
+                col.label(text='Please open the console to get more information.', icon='BLANK1')
+
+        if log.num_errors > 0:
+            box = layout.box()
+            box.alert = True
             # Less spacing between lines
             col = box.column(align=True)
-            col.label(text=f'{log.num_warnings} warnings occurred during compilation!', icon='ERROR')
+            errors = 'errors' if log.num_errors > 1 else 'error'
+            col.label(text=f'{log.num_errors} {errors} occurred during compilation!', icon='CANCEL')
             # Blank icon to achieve the same indentation as the line before
             col.label(text='Please open the console to get more information.', icon='BLANK1')
 
@@ -293,12 +772,13 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        row.operator("arm.build_project")
+        row.scale_y = 1.3
+        row.operator("arm.build_project", icon="MOD_BUILD")
         # row.operator("arm.patch_project")
         row.operator("arm.publish_project", icon="EXPORT")
-        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
         rows = 2
         if len(wrd.arm_exporterlist) > 1:
@@ -331,18 +811,222 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
             layout.separator()
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(wrd, 'arm_project_name')
         col.prop(wrd, 'arm_project_package')
-        col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_bundle')
+
+        col = layout.column(align=True)
+        col.prop(wrd, 'arm_project_version')
+        col.prop(wrd, 'arm_project_version_autoinc')
+
+        col = layout.column()
         col.prop(wrd, 'arm_project_icon')
+
+        col = layout.column(heading='Code Output', align=True)
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_minify_js')
+        col.prop(wrd, 'arm_no_traces')
+
+        col = layout.column(heading='Data', align=True)
+        col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
+
+
+class ExporterTargetSettingsMixin:
+    """Mixin for common exporter setting subpanel functionality.
+
+    Panels that inherit from this mixin need to have a arm_target
+    variable for polling."""
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'render'
+    bl_parent_id = 'ARM_PT_ArmoryExporterPanel'
+
+    # Override this in sub classes
+    arm_panel = ''
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target == cls.arm_target
+        return False
+
+    def draw_header(self, context):
+        self.layout.label(text='', icon='SETTINGS')
+
+
+class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
+    bl_label = "Android Settings"
+    arm_target = 'android-hl'  # See ExporterTargetSettingsMixin
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+
+        col = layout.column()
+        col.prop(wrd, 'arm_winorient')
+        col.prop(wrd, 'arm_project_android_sdk_min')
+        col.prop(wrd, 'arm_project_android_sdk_target')
+        col.prop(wrd, 'arm_project_android_sdk_compile')
+
+
+class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
+    bl_label = "Permissions"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        # Permission
+        row = layout.row()
+        rows = 2
+        if len(wrd.arm_exporter_android_permission_list) > 1:
+            rows = 4
+        row.template_list("ARM_UL_Exporter_AndroidPermissionList", "The_List", wrd, "arm_exporter_android_permission_list", wrd, "arm_exporter_android_permission_list_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_exporter_android_permission_list.new_item", icon='ADD', text="")
+        col.operator("arm_exporter_android_permission_list.delete_item", icon='REMOVE', text="")
+        row = layout.row()
+
+        if wrd.arm_exporter_android_permission_list_index >= 0 and len(wrd.arm_exporter_android_permission_list) > 0:
+            item = wrd.arm_exporter_android_permission_list[wrd.arm_exporter_android_permission_list_index]
+            row = layout.row()
+            row.prop(item, 'arm_android_permissions')
+
+class ARM_PT_ArmoryExporterAndroidAbiPanel(bpy.types.Panel):
+    bl_label = "Android ABI Filters"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = { 'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        # ABIs
+        row = layout.row()
+        rows = 2
+        if len(wrd.arm_exporter_android_abi_list) > 1:
+            rows = 4
+        row.template_list("ARM_UL_Exporter_AndroidAbiList", "The_List", wrd, "arm_exporter_android_abi_list", wrd, "arm_exporter_android_abi_list_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_exporter_android_abi_list.new_item", icon='ADD', text="")
+        col.operator("arm_exporter_android_abi_list.delete_item", icon='REMOVE', text="")
+        row = layout.row()
+
+        if wrd.arm_exporter_android_abi_list_index >= 0 and len(wrd.arm_exporter_android_abi_list) > 0:
+            item = wrd.arm_exporter_android_abi_list[wrd.arm_exporter_android_abi_list_index]
+            row = layout.row()
+            row.prop(item, 'arm_android_abi')
+
+class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
+    bl_label = "Building APK"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ArmoryExporterAndroidSettingsPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        path = arm.utils.get_android_sdk_root_path()
+
+        col = layout.column()
+
+        row = col.row()
+        row.enabled = len(path) > 0
+        row.prop(wrd, 'arm_project_android_build_apk')
+
+        row = col.row()
+        row.enabled = wrd.arm_project_android_build_apk
+        row.prop(wrd, 'arm_project_android_rename_apk')
+        row = col.row()
+        row.enabled = wrd.arm_project_android_build_apk and len(arm.utils.get_android_apk_copy_path()) > 0
+        row.prop(wrd, 'arm_project_android_copy_apk')
+
+        row = col.row(align=True)
+        row.prop(wrd, 'arm_project_android_list_avd')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0
+        sub.operator('arm.update_list_android_emulator', text='', icon='FILE_REFRESH')
+        sub = row.column(align=True)
+        sub.enabled = len(path) > 0 and len(arm.utils.get_android_emulator_name()) > 0
+        sub.operator('arm.run_android_emulator', text='', icon='PLAY')
+
+        row = col.row()
+        row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
+        row.prop(wrd, 'arm_project_android_run_avd')
+
+
+class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
+    bl_label = "HTML5 Settings"
+    arm_target = 'html5'  # See ExporterTargetSettingsMixin
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+
+        col = layout.column()
+        col.prop(wrd, 'arm_project_html5_popupmenu_in_browser')
+        row = col.row()
+        row.enabled = len(arm.utils.get_html5_copy_path()) > 0
+        row.prop(wrd, 'arm_project_html5_copy')
+        row = col.row()
+        row.enabled = len(arm.utils.get_html5_copy_path()) > 0 and wrd.arm_project_html5_copy and len(arm.utils.get_link_web_server()) > 0
+        row.prop(wrd, 'arm_project_html5_start_browser')
+
+
+class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
+    bl_label = "Windows Settings"
+    arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+
+        col = layout.column()
+        row = col.row(align=True)
+        row.prop(wrd, 'arm_project_win_list_vs')
+        sub = row.column(align=True)
+        sub.enabled = arm.utils.get_os_is_windows()
+        sub.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+
+        row = col.row()
+        row.enabled = arm.utils.get_os_is_windows()
+        row.prop(wrd, 'arm_project_win_build', text='After Publish')
+        layout.separator()
+
+        col = layout.column()
+        col.enabled = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        col.prop(wrd, 'arm_project_win_build_mode')
+        col.prop(wrd, 'arm_project_win_build_arch')
+        col.prop(wrd, 'arm_project_win_build_log')
+        col.prop(wrd, 'arm_project_win_build_cpu')
+        col.prop(wrd, 'arm_project_win_build_open')
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -356,7 +1040,7 @@ class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         row = layout.row(align=True)
-        row.operator("arm.open_editor")
+        row.operator("arm.open_editor", icon="DESKTOP")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
 class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
@@ -371,22 +1055,52 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
-        row = layout.row()
-        row.enabled = wrd.arm_ui != 'Disabled'
-        row.prop(wrd, 'arm_debug_console')
-        layout.prop(wrd, 'arm_verbose_output')
-        layout.prop(wrd, 'arm_cache_build')
-        layout.prop(wrd, 'arm_live_patch')
-        layout.prop(wrd, 'arm_stream_scene')
-        layout.prop(wrd, 'arm_batch_meshes')
-        layout.prop(wrd, 'arm_batch_materials')
-        layout.prop(wrd, 'arm_write_config')
-        layout.prop(wrd, 'arm_minimize')
-        layout.prop(wrd, 'arm_deinterleaved_buffers')
-        layout.prop(wrd, 'arm_export_tangents')
-        layout.prop(wrd, 'arm_loadscreen')
-        layout.prop(wrd, 'arm_texture_quality')
-        layout.prop(wrd, 'arm_sound_quality')
+
+        col = layout.column(heading='Debug', align=True)
+        col.prop(wrd, 'arm_verbose_output')
+        col.prop(wrd, 'arm_cache_build')
+        col.prop(wrd, 'arm_assert_level')
+        col.prop(wrd, 'arm_assert_quit')
+
+        col = layout.column(heading='Runtime', align=True)
+        col.prop(wrd, 'arm_live_patch')
+        col.prop(wrd, 'arm_stream_scene')
+        col.prop(wrd, 'arm_loadscreen')
+        col.prop(wrd, 'arm_write_config')
+
+        col = layout.column(heading='Renderer', align=True)
+        col.prop(wrd, 'arm_batch_meshes')
+        col.prop(wrd, 'arm_batch_materials')
+        col.prop(wrd, 'arm_deinterleaved_buffers')
+        col.prop(wrd, 'arm_export_tangents')
+
+        col = layout.column(heading='Quality')
+        col.prop(wrd, 'arm_texture_quality')
+        col.prop(wrd, 'arm_sound_quality')
+
+class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
+    bl_label = "Debug Console"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ARM_PT_ProjectFlagsPanel"
+
+    def draw_header(self, context):
+        wrd = bpy.data.worlds['Arm']
+        self.layout.prop(wrd, 'arm_debug_console', text='')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        col = layout.column()
+        col.enabled = wrd.arm_debug_console
+        col.prop(wrd, 'arm_debug_console_position')
+        col.prop(wrd, 'arm_debug_console_scale')
+        col.prop(wrd, 'arm_debug_console_visible')
+        col.prop(wrd, 'arm_debug_console_trace_pos')
 
 class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"
@@ -402,12 +1116,15 @@ class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_winmode')
-        layout.prop(wrd, 'arm_winorient')
-        layout.prop(wrd, 'arm_winresize')
-        col = layout.column()
-        col.enabled = wrd.arm_winresize
-        col.prop(wrd, 'arm_winmaximize')
-        layout.prop(wrd, 'arm_winminimize')
+
+        col = layout.column(align=True)
+        col.prop(wrd, 'arm_winresize')
+        sub = col.column()
+        sub.enabled = wrd.arm_winresize
+        sub.prop(wrd, 'arm_winmaximize')
+        col.enabled = True
+        col.prop(wrd, 'arm_winminimize')
+
         layout.prop(wrd, 'arm_vsync')
 
 class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
@@ -451,9 +1168,20 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_idname = 'arm.play'
     bl_label = 'Play'
 
+    def invoke(self, context, event):
+        if event.shift:
+            state.is_play = True
+            make.build_success()
+            return{'FINISHED'}
+        return self.execute(context)
+
     def execute(self, context):
         if state.proc_build != None:
             return {"CANCELLED"}
+
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -485,11 +1213,20 @@ class ArmoryStopButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
-    '''Build and compile project'''
+    """Build and compile project"""
     bl_idname = 'arm.build_project'
     bl_label = 'Build'
 
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
+
     def execute(self, context):
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
@@ -521,11 +1258,20 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPublishProjectButton(bpy.types.Operator):
-    '''Build project ready for publishing'''
+    """Build project ready for publishing."""
     bl_idname = 'arm.publish_project'
     bl_label = 'Publish'
 
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
+
     def execute(self, context):
+        # Compare version Blender and Armory (major, minor)
+        if not arm.utils.compare_version_blender_arm():
+            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
@@ -568,7 +1314,7 @@ class ArmoryOpenProjectFolderButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        arm.utils.open_folder()
+        arm.utils.open_folder(arm.utils.get_fp())
         return{'FINISHED'}
 
 class ArmoryOpenEditorButton(bpy.types.Operator):
@@ -624,6 +1370,11 @@ def draw_view3d_header(self, context):
         self.layout.label(text='Compiling..')
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
+
+def draw_view3d_object_menu(self, context):
+    self.layout.separator()
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator('arm.copy_traits_to_active')
 
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
@@ -694,6 +1445,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, 'rp_overlays_state')
         layout.prop(rpdat, 'rp_decals_state')
         layout.prop(rpdat, 'rp_blending_state')
+        layout.prop(rpdat, 'rp_depth_texture_state')
         layout.prop(rpdat, 'rp_draw_order')
         layout.prop(rpdat, 'arm_samples_per_pixel')
         layout.prop(rpdat, 'arm_texture_filter')
@@ -711,17 +1463,29 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_tess_shadows_outer')
 
         layout.prop(rpdat, 'arm_particles')
-        layout.prop(rpdat, 'arm_skin')
-        row = layout.row()
-        row.enabled = rpdat.arm_skin == 'On'
-        row.prop(rpdat, 'arm_skin_max_bones_auto')
-        row = layout.row()
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_skin')
+        col = col.column()
+        col.enabled = rpdat.arm_skin == 'On'
+        col.prop(rpdat, 'arm_skin_max_bones_auto')
+        row = col.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto
         row.prop(rpdat, 'arm_skin_max_bones')
-        layout.prop(rpdat, "rp_hdr")
-        layout.prop(rpdat, "rp_stereo")
-        layout.prop(rpdat, 'arm_culling')
-        layout.prop(rpdat, 'rp_pp')
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_morph_target')
+        col = col.column()
+        col.enabled = rpdat.arm_morph_target == 'On'
+        layout.separator(factor=0.1)
+
+        col = layout.column()
+        col.prop(rpdat, "rp_hdr")
+        col.prop(rpdat, "rp_stereo")
+        col.prop(rpdat, 'arm_culling')
+        col.prop(rpdat, 'rp_pp')
 
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
@@ -738,6 +1502,27 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
         self.layout.prop(rpdat, "rp_shadows", text="")
 
+    def compute_subdivs(self, max, subdivs):
+        l = [max]
+        for i in range(subdivs - 1):
+            l.append(int(max / 2))
+            max = max / 2
+        return l
+
+    def tiles_per_light_type(self, rpdat: arm.props_renderpath.ArmRPListItem, light_type: str) -> int:
+        if light_type == 'point':
+            return 6
+        elif light_type == 'spot':
+            return 1
+        else:
+            return int(rpdat.rp_shadowmap_cascades)
+
+    def lights_number_atlas(self, rpdat: arm.props_renderpath.ArmRPListItem, atlas_size: int, shadowmap_size: int, light_type: str) -> int:
+        '''Compute number lights that could fit in an atlas'''
+        lights = atlas_size / shadowmap_size
+        lights *= lights / self.tiles_per_light_type(rpdat, light_type)
+        return int(lights)
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -748,7 +1533,9 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_shadows
-        layout.prop(rpdat, 'rp_shadowmap_cube')
+        col = layout.column()
+        col.enabled = not rpdat.rp_shadowmap_atlas_single_map or not rpdat.rp_shadowmap_atlas
+        col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
         col = layout.column()
@@ -757,6 +1544,104 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_shadowmap_split')
         col.prop(rpdat, 'arm_shadowmap_bounds')
         col.prop(rpdat, 'arm_pcfsize')
+        layout.separator()
+
+        layout.prop(rpdat, 'rp_shadowmap_atlas')
+        colatlas = layout.column()
+        colatlas.enabled = rpdat.rp_shadowmap_atlas
+        colatlas.prop(rpdat, 'rp_max_lights')
+        colatlas.prop(rpdat, 'rp_max_lights_cluster')
+        colatlas.prop(rpdat, 'rp_shadowmap_atlas_lod')
+
+        colatlas_lod = colatlas.column()
+        colatlas_lod.enabled = rpdat.rp_shadowmap_atlas_lod
+        colatlas_lod.prop(rpdat, 'rp_shadowmap_atlas_lod_subdivisions')
+
+        colatlas_lod_info = colatlas_lod.row()
+        colatlas_lod_info.alignment = 'RIGHT'
+        subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cascade), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
+        subdiv_text = "Subdivisions for spot lights: " + ', '.join(map(str, subdivs_list))
+        colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        if not rpdat.rp_shadowmap_atlas_single_map:
+            colatlas_lod_info = colatlas_lod.row()
+            colatlas_lod_info.alignment = 'RIGHT'
+            subdivs_list = self.compute_subdivs(int(rpdat.rp_shadowmap_cube), int(rpdat.rp_shadowmap_atlas_lod_subdivisions))
+            subdiv_text = "Subdivisions for point lights: " + ', '.join(map(str, subdivs_list))
+            colatlas_lod_info.label(text=subdiv_text, icon="IMAGE_ZDEPTH")
+
+        size_warning = int(rpdat.rp_shadowmap_cascade) > 2048 or int(rpdat.rp_shadowmap_cube) > 2048
+
+        colatlas.prop(rpdat, 'rp_shadowmap_atlas_single_map')
+        # show size for single texture
+        if rpdat.rp_shadowmap_atlas_single_map:
+            colatlas_single = colatlas.column()
+            colatlas_single.prop(rpdat, 'rp_shadowmap_atlas_max_size')
+            if rpdat.rp_shadowmap_atlas_max_size != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                col = colatlas_single.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for { point_lights } point lights or { spot_lights } spot lights or { dir_lights } directional lights.')
+        else:
+            # show size for all types
+            colatlas_mixed = colatlas.column()
+            colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_spot')
+
+            if rpdat.rp_shadowmap_atlas_max_size_spot != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_spot)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                spot_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'spot')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {spot_lights} spot lights.')
+
+            colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_point')
+
+            if rpdat.rp_shadowmap_atlas_max_size_point != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_point)
+                shadowmap_size = int(rpdat.rp_shadowmap_cube)
+                point_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'point')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {point_lights} point lights.')
+
+            colatlas_mixed.prop(rpdat, 'rp_shadowmap_atlas_max_size_sun')
+
+            if rpdat.rp_shadowmap_atlas_max_size_sun != '':
+                atlas_size = int(rpdat.rp_shadowmap_atlas_max_size_sun)
+                shadowmap_size = int(rpdat.rp_shadowmap_cascade)
+                dir_lights = self.lights_number_atlas(rpdat, atlas_size, shadowmap_size, 'sun')
+
+                if shadowmap_size > 2048:
+                    size_warning = True
+
+                col = colatlas_mixed.row()
+                col.alignment = 'RIGHT'
+                col.label(text=f'Enough space for {dir_lights} directional lights.')
+
+        # show warning when user picks a size higher than 2048 (arbitrary number).
+        if size_warning:
+            col = layout.column()
+            row = col.row()
+            row.alignment = 'RIGHT'
+            row.label(text='Warning: Game will crash if texture size is higher than max texture size allowed by target.', icon='ERROR')
 
 class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_label = "Voxel AO"
@@ -817,24 +1702,22 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.prop(rpdat, "rp_background")
-        layout.prop(rpdat, 'arm_irradiance')
+
         col = layout.column()
-        col.enabled = rpdat.arm_irradiance
-        col.prop(rpdat, 'arm_radiance')
+        col.prop(rpdat, 'arm_irradiance')
         colb = col.column()
-        colb.enabled = rpdat.arm_radiance
-        colb.prop(rpdat, 'arm_radiance_size')
+        colb.enabled = rpdat.arm_irradiance
+        colb.prop(rpdat, 'arm_radiance')
+        sub = colb.row()
+        sub.enabled = rpdat.arm_radiance
+        sub.prop(rpdat, 'arm_radiance_size')
+        layout.separator()
+
         layout.prop(rpdat, 'arm_clouds')
-        col = layout.column()
-        col.enabled = rpdat.arm_clouds
-        col.prop(rpdat, 'arm_clouds_lower')
-        col.prop(rpdat, 'arm_clouds_upper')
-        col.prop(rpdat, 'arm_clouds_precipitation')
-        col.prop(rpdat, 'arm_clouds_secondary')
-        col.prop(rpdat, 'arm_clouds_wind')
-        col.prop(rpdat, 'arm_clouds_steps')
-        layout.prop(rpdat, "rp_water")
-        col = layout.column()
+
+        col = layout.column(align=True)
+        col.prop(rpdat, "rp_water")
+        col = col.column(align=True)
         col.enabled = rpdat.rp_water
         col.prop(rpdat, 'arm_water_level')
         col.prop(rpdat, 'arm_water_density')
@@ -870,27 +1753,35 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.enabled = rpdat.rp_render_to_texture
-        row = layout.row()
-        row.prop(rpdat, "rp_antialiasing")
-        layout.prop(rpdat, "rp_supersampling")
-        layout.prop(rpdat, 'arm_rp_resolution')
+        col = layout.column()
+        col.prop(rpdat, "rp_antialiasing")
+        col.prop(rpdat, "rp_supersampling")
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_rp_resolution')
         if rpdat.arm_rp_resolution == 'Custom':
-            layout.prop(rpdat, 'arm_rp_resolution_size')
-            layout.prop(rpdat, 'arm_rp_resolution_filter')
-        layout.prop(rpdat, 'rp_dynres')
+            col.prop(rpdat, 'arm_rp_resolution_size')
+            col.prop(rpdat, 'arm_rp_resolution_filter')
+        col.prop(rpdat, 'rp_dynres')
         layout.separator()
-        row = layout.row()
-        row.prop(rpdat, "rp_ssgi")
+
         col = layout.column()
-        col.enabled = rpdat.rp_ssgi != 'Off'
-        col.prop(rpdat, 'arm_ssgi_half_res')
-        col.prop(rpdat, 'arm_ssgi_rays')
-        col.prop(rpdat, 'arm_ssgi_radius')
-        col.prop(rpdat, 'arm_ssgi_strength')
-        col.prop(rpdat, 'arm_ssgi_max_steps')
+        col.prop(rpdat, "rp_ssgi")
+        sub = col.column()
+        sub.enabled = rpdat.rp_ssgi != 'Off'
+        sub.prop(rpdat, 'arm_ssgi_half_res')
+        sub.prop(rpdat, 'arm_ssgi_rays')
+        sub.prop(rpdat, 'arm_ssgi_radius')
+        sub.prop(rpdat, 'arm_ssgi_strength')
+        sub.prop(rpdat, 'arm_ssgi_max_steps')
+        layout.separator(factor=0.5)
+
+        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_ssr")
+
         col = layout.column()
+        col.prop(rpdat, "rp_ssr")
+        col = col.column()
         col.enabled = rpdat.rp_ssr
         col.prop(rpdat, 'arm_ssr_half_res')
         col.prop(rpdat, 'arm_ssr_ray_step')
@@ -899,33 +1790,42 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
         layout.separator()
-        layout.prop(rpdat, 'arm_ssrs')
+
         col = layout.column()
+        col.prop(rpdat, 'arm_ssrs')
+        col = col.column()
         col.enabled = rpdat.arm_ssrs
         col.prop(rpdat, 'arm_ssrs_ray_step')
-        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
-        layout.prop(rpdat, "rp_bloom")
+
         col = layout.column()
+        col.prop(rpdat, "rp_bloom")
+        col = col.column()
         col.enabled = rpdat.rp_bloom
         col.prop(rpdat, 'arm_bloom_threshold')
         col.prop(rpdat, 'arm_bloom_strength')
         col.prop(rpdat, 'arm_bloom_radius')
         layout.separator()
-        layout.prop(rpdat, "rp_motionblur")
+
         col = layout.column()
+        col.prop(rpdat, "rp_motionblur")
+        col = col.column()
         col.enabled = rpdat.rp_motionblur != 'Off'
         col.prop(rpdat, 'arm_motion_blur_intensity')
         layout.separator()
-        layout.prop(rpdat, "rp_volumetriclight")
+
         col = layout.column()
+        col.prop(rpdat, "rp_volumetriclight")
+        col = col.column()
         col.enabled = rpdat.rp_volumetriclight
         col.prop(rpdat, 'arm_volumetric_light_air_color')
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
         layout.separator()
-        layout.prop(rpdat, "rp_chromatic_aberration")
+
         col = layout.column()
+        col.prop(rpdat, "rp_chromatic_aberration")
+        col = col.column()
         col.enabled = rpdat.rp_chromatic_aberration
         col.prop(rpdat, 'arm_chromatic_aberration_type')
         col.prop(rpdat, 'arm_chromatic_aberration_strength')
@@ -958,45 +1858,51 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
 
         layout.enabled = rpdat.rp_compositornodes
         layout.prop(rpdat, 'arm_tonemap')
-        layout.prop(rpdat, 'arm_letterbox')
+        layout.separator()
+
         col = layout.column()
-        col.enabled = rpdat.arm_letterbox
-        col.prop(rpdat, 'arm_letterbox_size')
-        layout.prop(rpdat, 'arm_sharpen')
+        draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
+        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
+        draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
+        draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
+        layout.separator()
+
         col = layout.column()
-        col.enabled = rpdat.arm_sharpen
-        col.prop(rpdat, 'arm_sharpen_strength')
-        layout.prop(rpdat, 'arm_fisheye')
-        layout.prop(rpdat, 'arm_vignette')
-        col = layout.column()
-        col.enabled = rpdat.arm_vignette
-        col.prop(rpdat, 'arm_vignette_strength')
-        layout.prop(rpdat, 'arm_lensflare')
-        layout.prop(rpdat, 'arm_grain')
-        col = layout.column()
-        col.enabled = rpdat.arm_grain
-        col.prop(rpdat, 'arm_grain_strength')
-        layout.prop(rpdat, 'arm_fog')
-        col = layout.column()
+        col.prop(rpdat, 'arm_fog')
+        col = col.column(align=True)
         col.enabled = rpdat.arm_fog
         col.prop(rpdat, 'arm_fog_color')
         col.prop(rpdat, 'arm_fog_amounta')
         col.prop(rpdat, 'arm_fog_amountb')
         layout.separator()
-        layout.prop(rpdat, "rp_autoexposure")
+
         col = layout.column()
-        col.enabled = rpdat.rp_autoexposure
-        col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
-        col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
-        layout.prop(rpdat, 'arm_lens_texture')
+        col.prop(rpdat, "rp_autoexposure")
+        sub = col.column(align=True)
+        sub.enabled = rpdat.rp_autoexposure
+        sub.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
+        sub.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lensflare')
+        col.prop(rpdat, 'arm_fisheye')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, 'arm_lens_texture')
         if rpdat.arm_lens_texture != "":
-            layout.prop(rpdat, 'arm_lens_texture_masking')
+            col.prop(rpdat, 'arm_lens_texture_masking')
             if rpdat.arm_lens_texture_masking:
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
-                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
-                layout.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
+                sub.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
+                sub = col.column(align=True)
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
+                sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
+                col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
+                layout.separator()
+
         layout.prop(rpdat, 'arm_lut_texture')
 
 class ARM_PT_BakePanel(bpy.types.Panel):
@@ -1013,41 +1919,46 @@ class ARM_PT_BakePanel(bpy.types.Panel):
         scn = bpy.data.scenes[context.scene.name]
 
         row = layout.row(align=True)
-        row.alignment = 'EXPAND'
-        row.operator("arm.bake_textures", icon="RENDER_STILL")
-        row.operator("arm.bake_apply")
+        row.prop(scn, "arm_bakemode", expand=True)
 
-        col = layout.column()
-        col.prop(scn, 'arm_bakelist_scale')
-        col.prop(scn.cycles, "samples")
+        if scn.arm_bakemode == "Static Map":
 
-        layout.prop(scn, 'arm_bakelist_unwrap')
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            row.operator("arm.bake_textures", icon="RENDER_STILL")
+            row.operator("arm.bake_apply")
 
-        rows = 2
-        if len(scn.arm_bakelist) > 1:
-            rows = 4
-        row = layout.row()
-        row.template_list("ARM_UL_BakeList", "The_List", scn, "arm_bakelist", scn, "arm_bakelist_index", rows=rows)
-        col = row.column(align=True)
-        col.operator("arm_bakelist.new_item", icon='ADD', text="")
-        col.operator("arm_bakelist.delete_item", icon='REMOVE', text="")
-        col.menu("ARM_MT_BakeListSpecials", icon='DOWNARROW_HLT', text="")
+            col = layout.column()
+            col.prop(scn, 'arm_bakelist_scale')
+            col.prop(scn.cycles, "samples")
 
-        if len(scn.arm_bakelist) > 1:
-            col.separator()
-            op = col.operator("arm_bakelist.move_item", icon='TRIA_UP', text="")
-            op.direction = 'UP'
-            op = col.operator("arm_bakelist.move_item", icon='TRIA_DOWN', text="")
-            op.direction = 'DOWN'
+            layout.prop(scn, 'arm_bakelist_unwrap')
 
-        if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
-            item = scn.arm_bakelist[scn.arm_bakelist_index]
-            layout.prop_search(item, "obj", bpy.data, "objects", text="Object")
-            layout.prop(item, "res_x")
-            layout.prop(item, "res_y")
+            rows = 2
+            if len(scn.arm_bakelist) > 1:
+                rows = 4
+            row = layout.row()
+            row.template_list("ARM_UL_BakeList", "The_List", scn, "arm_bakelist", scn, "arm_bakelist_index", rows=rows)
+            col = row.column(align=True)
+            col.operator("arm_bakelist.new_item", icon='ADD', text="")
+            col.operator("arm_bakelist.delete_item", icon='REMOVE', text="")
+            col.menu("ARM_MT_BakeListSpecials", icon='DOWNARROW_HLT', text="")
+
+            if len(scn.arm_bakelist) > 1:
+                col.separator()
+                op = col.operator("arm_bakelist.move_item", icon='TRIA_UP', text="")
+                op.direction = 'UP'
+                op = col.operator("arm_bakelist.move_item", icon='TRIA_DOWN', text="")
+                op.direction = 'DOWN'
+
+            if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
+                item = scn.arm_bakelist[scn.arm_bakelist_index]
+                layout.prop_search(item, "obj", bpy.data, "objects", text="Object")
+                layout.prop(item, "res_x")
+                layout.prop(item, "res_y")
 
 class ArmGenLodButton(bpy.types.Operator):
-    '''Automatically generate LoD levels'''
+    """Automatically generate LoD levels."""
     bl_idname = 'arm.generate_lod'
     bl_label = 'Auto Generate'
 
@@ -1177,7 +2088,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
         node.location = (-200, -200)
         node.inputs[0].default_value = 5.0
         links.new(nodes['Bump'].inputs[2], nodes['_TerrainHeight'].outputs[0])
-        links.new(nodes['Principled BSDF'].inputs[17], nodes['Bump'].outputs[0])
+        links.new(nodes['Principled BSDF'].inputs[20], nodes['Bump'].outputs[0])
 
         # Create sectors
         root_obj = bpy.data.objects.new("Terrain", None)
@@ -1311,17 +2222,27 @@ class ARM_PT_ProxyPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         layout.operator("arm.make_proxy")
+
         obj = bpy.context.object
-        if obj != None and obj.proxy != None:
-            layout.label(text="Sync")
-            layout.prop(obj, "arm_proxy_sync_loc")
-            layout.prop(obj, "arm_proxy_sync_rot")
-            layout.prop(obj, "arm_proxy_sync_scale")
-            layout.prop(obj, "arm_proxy_sync_materials")
-            layout.prop(obj, "arm_proxy_sync_modifiers")
-            layout.prop(obj, "arm_proxy_sync_traits")
-            layout.operator("arm.proxy_toggle_all")
-            layout.operator("arm.proxy_apply_all")
+        if obj is not None and obj.proxy is not None:
+            col = layout.column(heading="Sync")
+            col.prop(obj, "arm_proxy_sync_loc")
+            col.prop(obj, "arm_proxy_sync_rot")
+            col.prop(obj, "arm_proxy_sync_scale")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_materials")
+            col.prop(obj, "arm_proxy_sync_modifiers")
+            col.separator()
+
+            col.prop(obj, "arm_proxy_sync_traits")
+            row = col.row()
+            row.enabled = obj.arm_proxy_sync_traits
+            row.prop(obj, "arm_proxy_sync_trait_props")
+
+            row = layout.row(align=True)
+            row.operator("arm.proxy_toggle_all")
+            row.operator("arm.proxy_apply_all")
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
@@ -1349,11 +2270,13 @@ class ArmProxyToggleAllButton(bpy.types.Operator):
         obj.arm_proxy_sync_materials = b
         obj.arm_proxy_sync_modifiers = b
         obj.arm_proxy_sync_traits = b
+        obj.arm_proxy_sync_trait_props = b
         return{'FINISHED'}
 
 class ArmProxyApplyAllButton(bpy.types.Operator):
     bl_idname = 'arm.proxy_apply_all'
     bl_label = 'Apply to All'
+
     def execute(self, context):
         for obj in bpy.data.objects:
             if obj.proxy == None:
@@ -1365,6 +2288,7 @@ class ArmProxyApplyAllButton(bpy.types.Operator):
                 obj.arm_proxy_sync_materials = context.object.arm_proxy_sync_materials
                 obj.arm_proxy_sync_modifiers = context.object.arm_proxy_sync_modifiers
                 obj.arm_proxy_sync_traits = context.object.arm_proxy_sync_traits
+                obj.arm_proxy_sync_trait_props = context.object.arm_proxy_sync_trait_props
         return{'FINISHED'}
 
 class ArmSyncProxyButton(bpy.types.Operator):
@@ -1387,7 +2311,7 @@ class ArmSyncProxyButton(bpy.types.Operator):
                     arm.proxy.sync_modifiers(obj)
                 if obj.arm_proxy_sync_traits:
                     arm.proxy.sync_traits(obj)
-            print('Armory: Proxy objects synchronized')
+            print('Proxy objects synchronized')
         return{'FINISHED'}
 
 class ArmPrintTraitsButton(bpy.types.Operator):
@@ -1409,7 +2333,13 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
     bl_idname = 'ARM_PT_MaterialNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Node'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        return (context.space_data.tree_type == 'ShaderNodeTree'
+                and context.space_data.edit_tree
+                and context.space_data.shader_type == 'OBJECT')
 
     def draw(self, context):
         layout = self.layout
@@ -1419,6 +2349,323 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')
 
+class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
+    bl_label = 'Show old file version info'
+    bl_idname = 'arm.show_old_file_version_info'
+    bl_description = ('Displays an info panel that warns about opening a file'
+                       'which was created in a previous version of Armory')
+    bl_options = {'INTERNAL'}
+
+    wrd = None
+
+    def draw_message_box(self, context):
+        file_version = ARM_OT_ShowFileVersionInfo.wrd.arm_version
+        current_version = props.arm_version
+
+
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        if current_version == file_version:
+            layout.label('This file was saved in', icon='INFO')
+            layout.label('the current Armory version', icon='BLANK1')
+            layout.separator()
+            layout.label(f'(version: {current_version}')
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.discard_popup', text='Ok')
+
+        # this will help order versions better, somewhat.
+        # note: this is NOT complete
+        current_version = tuple( current_version.split('.') )
+        file_version = tuple( file_version.split('.') )
+
+        if current_version > file_version:
+            layout.label(text='Warning: This file was saved in a', icon='ERROR')
+            layout.label(text='previous version of Armory!', icon='BLANK1')
+            layout.separator()
+
+            layout.label(text='Please inform yourself about breaking changes!', icon='BLANK1')
+            layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+            layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+            layout.separator()
+            layout.separator()
+            layout.label(text='Should Armory try to automatically update', icon='BLANK1')
+            layout.label(text='the file to the current SDK version?', icon='BLANK1')
+            layout.separator()
+
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.update_file_sdk', text='Yes')
+            row.active_default = False
+            row.operator('arm.discard_popup', text='No')
+        else:
+            layout.label(text='Warning: This file was saved in a', icon='ERROR')
+            layout.label(text='future version of Armory!', icon='BLANK1')
+            layout.separator()
+
+            layout.label(text='It is impossible to downgrade a file,', icon='BLANK1')
+            layout.label(text='Something will probably be broken here.', icon='BLANK1')
+            layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+            layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+            layout.separator()
+            layout.separator()
+            layout.label(text='Please check how this file was created', icon='BLANK1')
+            layout.separator()
+
+            row = layout.row(align=True)
+            row.active_default = True
+            row.operator('arm.discard_popup', text='Ok')
+
+    def execute(self, context):
+        ARM_OT_ShowFileVersionInfo.wrd = bpy.data.worlds['Arm']
+        context.window_manager.popover(ARM_OT_ShowFileVersionInfo.draw_message_box, ui_units_x=16)
+
+        return {"FINISHED"}
+
+class ARM_OT_ShowNodeUpdateErrors(bpy.types.Operator):
+    bl_label = 'Show upgrade failure details'
+    bl_idname = 'arm.show_node_update_errors'
+    bl_description = ('Displays an info panel that shows the different errors that occurred when upgrading nodes')
+
+    wrd = None  # a helper internal variable
+
+    def draw_message_box(self, context):
+        list_of_errors = arm.logicnode.replacement.replacement_errors.copy()
+        # note: list_of_errors is a set of tuples: `(error_type, node_class, tree_name)`
+        # where `error_type` can be "unregistered", "update failed", "future version", "bad version", or "misc."
+
+        file_version = ARM_OT_ShowNodeUpdateErrors.wrd.arm_version
+        current_version = props.arm_version
+
+        # this will help order versions better, somewhat.
+        # note: this is NOT complete
+        current_version_2 = tuple(current_version.split('.'))
+        file_version_2 = tuple(file_version.split('.'))
+        is_armory_upgrade = (current_version_2 > file_version_2)
+
+        error_types = set()
+        errored_trees = set()
+        errored_nodes = set()
+        for error_entry in list_of_errors:
+            error_types.add(error_entry[0])
+            errored_nodes.add(error_entry[1])
+            errored_trees.add(error_entry[2])
+
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        layout.label(text="Some nodes failed to be updated to the current Armory version", icon="ERROR")
+        if current_version == file_version:
+            layout.label(text="(This might be because you are using a development snapshot, or a homemade version ;) )", icon='BLANK1')
+        elif not is_armory_upgrade:
+            layout.label(text="(Please note that it is not possible do downgrade nodes to a previous version either.", icon='BLANK1')
+            layout.label(text="This might be the cause of your problem.)", icon='BLANK1')
+
+        layout.label(text=f'File saved in: {file_version}', icon='BLANK1')
+        layout.label(text=f'Current version: {current_version}', icon='BLANK1')
+        layout.separator()
+
+        if 'update failed' in error_types:
+            layout.label(text="Some nodes do not have an update procedure to deal with the version saved in this file.", icon='BLANK1')
+            if current_version == file_version:
+                layout.label(text="(if you are a developer, this might be because you didn't implement it yet.)", icon='BLANK1')
+        if 'bad version' in error_types:
+            layout.label(text="Some nodes do not have version information attached to them.", icon='BLANK1')
+        if 'unregistered' in error_types:
+            if is_armory_upgrade:
+                layout.label(text='Some nodes seem to be too old to be understood by armory anymore', icon='BLANK1')
+            else:
+                layout.label(text="Some nodes are unknown to armory, either because they are too new or too old.", icon='BLANK1')
+        if 'future version' in error_types:
+            if is_armory_upgrade:
+                layout.label(text='Somehow, some nodes seem to have been created with a future version of armory.', icon='BLANK1')
+            else:
+                layout.label(text='Some nodes seem to have been created with a future version of armory.', icon='BLANK1')
+        if 'misc.' in error_types:
+            layout.label(text="Some nodes' update procedure failed to complete")
+
+        layout.separator()
+        layout.label(text='the nodes impacted are the following:', icon='BLANK1')
+        for node in errored_nodes:
+            layout.label(text=f'   {node}', icon='BLANK1')
+        layout.separator()
+        layout.label(text='the node trees impacted are the following:', icon='BLANK1')
+        for tree in errored_trees:
+            layout.label(text=f'   "{tree}"', icon='BLANK1')
+
+        layout.separator()
+        layout.label(text="A detailed error report has been saved next to the blender file.", icon='BLANK1')
+        layout.label(text="the file name is \"node_update_failure\", followed by the current time.", icon='BLANK1')
+        layout.separator()
+
+        row = layout.row(align=True)
+        row.active_default = False
+        row.operator('arm.discard_popup', text='Ok')
+        row.operator('arm.open_project_folder', text='Open Project Folder', icon="FILE_FOLDER")
+
+    def execute(self, context):
+        ARM_OT_ShowNodeUpdateErrors.wrd = bpy.data.worlds['Arm']
+        context.window_manager.popover(ARM_OT_ShowNodeUpdateErrors.draw_message_box, ui_units_x=32)
+        return {"FINISHED"}
+
+class ARM_OT_UpdateFileSDK(bpy.types.Operator):
+    bl_idname = 'arm.update_file_sdk'
+    bl_label = 'Update file to current SDK version'
+    bl_description = bl_label
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        wrd = bpy.data.worlds['Arm']
+        # This allows for seamless migration from ealier versions of Armory
+        for rp in wrd.arm_rplist: # TODO: deprecated
+            if rp.rp_gi != 'Off':
+                rp.rp_gi = 'Off'
+                rp.rp_voxelao = True
+
+        # Replace deprecated nodes
+        arm.logicnode.replacement.replace_all()
+
+        wrd.arm_version = props.arm_version
+        wrd.arm_commit = props.arm_commit
+
+        arm.make.clean()
+        print(f'Project updated to SDK {props.arm_version}. Please save the .blend file.')
+
+        return {'FINISHED'}
+
+class ARM_OT_DiscardPopup(bpy.types.Operator):
+    """Empty operator for discarding dialogs."""
+    bl_idname = 'arm.discard_popup'
+    bl_label = 'OK'
+    bl_description = 'Discard'
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+class ArmoryUpdateListAndroidEmulatorButton(bpy.types.Operator):
+    '''Updating the list of emulators for the Android platform'''
+    bl_idname = 'arm.update_list_android_emulator'
+    bl_label = 'Update List Emulators'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if len(arm.utils.get_android_sdk_root_path()) == 0:
+            return {"CANCELLED"}
+
+        os.environ['ANDROID_SDK_ROOT'] = arm.utils.get_android_sdk_root_path()
+        items, err = arm.utils.get_android_emulators_list()
+        if len(err) > 0:
+            print('Update List Emulators Warning: File "'+ arm.utils.get_android_emulator_file() +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
+            return{'FINISHED'}
+        if len(items) > 0:
+            items_enum = []
+            for i in items:
+                items_enum.append((i, i, i))
+            bpy.types.World.arm_project_android_list_avd = EnumProperty(items=items_enum, name="Emulator", update=assets.invalidate_compiler_cache)
+        return{'FINISHED'}
+
+class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
+    '''Launch Android emulator selected from the list'''
+    bl_idname = 'arm.run_android_emulator'
+    bl_label = 'Launch Emulator'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if len(arm.utils.get_android_sdk_root_path()) == 0:
+            return {"CANCELLED"}
+
+        make.run_android_emulators(arm.utils.get_android_emulator_name())
+        return{'FINISHED'}
+
+class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
+    """Update the list of installed Visual Studio versions for the Windows platform"""
+    bl_idname = 'arm.update_list_installed_vs'
+    bl_label = 'Update List of Installed Visual Studio Versions'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+        if not arm.utils.get_os_is_windows():
+            return {"CANCELLED"}
+
+        wrd = bpy.data.worlds['Arm']
+        items, err = arm.utils.get_list_installed_vs_version()
+        if len(err) > 0:
+            print('Warning for operation Update List Installed Visual Studio: '+ err +'. Check if ArmorySDK is installed correctly.')
+            return{'FINISHED'}
+        if len(items) > 0:
+            items_enum = [('10', '2010', 'Visual Studio 2010 (version 10)'),
+                          ('11', '2012', 'Visual Studio 2012 (version 11)'),
+                          ('12', '2013', 'Visual Studio 2013 (version 12)'),
+                          ('14', '2015', 'Visual Studio 2015 (version 14)'),
+                          ('15', '2017', 'Visual Studio 2017 (version 15)'),
+                          ('16', '2019', 'Visual Studio 2019 (version 16)'),
+                          ('17', '2022', 'Visual Studio 2022 (version 17)')]
+            prev_select = wrd.arm_project_win_list_vs
+            res_items_enum = []
+            for vs in items_enum:
+                l_vs = list(vs)
+                for ver in items:
+                    if l_vs[0] == ver[0]:
+                        l_vs[1] = l_vs[1] + ' (installed)'
+                        l_vs[2] = l_vs[2] + ' (installed)'
+                        break
+                res_items_enum.append((l_vs[0], l_vs[1], l_vs[2]))
+            bpy.types.World.arm_project_win_list_vs = EnumProperty(items=res_items_enum, name="Visual Studio Version", default=prev_select, update=assets.invalidate_compiler_cache)
+        return{'FINISHED'}
+
+def draw_custom_node_menu(self, context):
+    """Extension of the node context menu.
+
+    https://blender.stackexchange.com/questions/150101/python-how-to-add-items-in-context-menu-in-2-8
+    """
+    if context.selected_nodes is None or len(context.selected_nodes) != 1:
+        return
+
+    if context.space_data.tree_type == 'ArmLogicTreeType':
+        if context.selected_nodes[0].bl_idname.startswith('LN'):
+            layout = self.layout
+            layout.separator()
+            layout.operator("arm.open_node_documentation", text="Show documentation for this node", icon='HELP')
+            layout.operator("arm.open_node_haxe_source", text="Open .hx source in the browser", icon_value=ui_icons.get_id("haxe"))
+            layout.operator("arm.open_node_python_source", text="Open .py source in the browser", icon='FILE_SCRIPT')
+
+    elif context.space_data.tree_type == 'ShaderNodeTree':
+        if context.active_node.bl_idname in ('ShaderNodeRGB', 'ShaderNodeValue', 'ShaderNodeTexImage'):
+            layout = self.layout
+            layout.separator()
+            layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
+
+
+def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.types.AnyType, prop_condition: str, prop_value: str) -> None:
+    """Draws a property row with a checkbox that enables a value field.
+    The function fails when prop_condition is not a boolean property.
+    """
+    col = layout.column(heading=heading)
+    row = col.row()
+    row.prop(data, prop_condition, text='')
+    sub = row.row()
+    sub.enabled = getattr(data, prop_condition)
+    sub.prop(data, prop_value, expand=True)
+
+
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.register_class(ARM_PT_ModifiersPropsPanel)
@@ -1426,14 +2673,29 @@ def register():
     bpy.utils.register_class(ARM_PT_PhysicsPropsPanel)
     bpy.utils.register_class(ARM_PT_DataPropsPanel)
     bpy.utils.register_class(ARM_PT_ScenePropsPanel)
+    bpy.utils.register_class(ARM_PT_WorldPropsPanel)
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
+    bpy.utils.register_class(ARM_OT_NewCustomMaterial)
+    bpy.utils.register_class(ARM_PG_BindTexturesListItem)
+    bpy.utils.register_class(ARM_UL_BindTexturesList)
+    bpy.utils.register_class(ARM_OT_BindTexturesListNewItem)
+    bpy.utils.register_class(ARM_OT_BindTexturesListDeleteItem)
     bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.register_class(ARM_PT_BindTexturesPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
     bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
+    bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
     bpy.utils.register_class(ARM_PT_ProjectWindowPanel)
     bpy.utils.register_class(ARM_PT_ProjectModulesPanel)
     bpy.utils.register_class(ARM_PT_RenderPathPanel)
@@ -1466,23 +2728,69 @@ def register():
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
+    bpy.utils.register_class(ARM_OT_UpdateFileSDK)
+    bpy.utils.register_class(ARM_OT_ShowFileVersionInfo)
+    bpy.utils.register_class(ARM_OT_ShowNodeUpdateErrors)
+    bpy.utils.register_class(ARM_OT_DiscardPopup)
+    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
+    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
+    bpy.utils.register_class(ArmoryUpdateListInstalledVSButton)
+
+    bpy.utils.register_class(scene.TLM_PT_Settings)
+    bpy.utils.register_class(scene.TLM_PT_Denoise)
+    bpy.utils.register_class(scene.TLM_PT_Filtering)
+    bpy.utils.register_class(scene.TLM_PT_Encoding)
+    bpy.utils.register_class(scene.TLM_PT_Utility)
+    bpy.utils.register_class(scene.TLM_PT_Additional)
+
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
+    bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
+    bpy.types.NODE_MT_context_menu.append(draw_custom_node_menu)
+
+    bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
+    bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
+
 
 def unregister():
+    bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
+    bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
+
+    bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
+    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
+    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
+    bpy.utils.unregister_class(ARM_OT_DiscardPopup)
+    bpy.utils.unregister_class(ARM_OT_ShowNodeUpdateErrors)
+    bpy.utils.unregister_class(ARM_OT_ShowFileVersionInfo)
+    bpy.utils.unregister_class(ARM_OT_UpdateFileSDK)
     bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ModifiersPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)
     bpy.utils.unregister_class(ARM_PT_PhysicsPropsPanel)
     bpy.utils.unregister_class(ARM_PT_DataPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_WorldPropsPanel)
     bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
-    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.unregister_class(ARM_OT_NewCustomMaterial)
+    bpy.utils.unregister_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_BindTexturesPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.unregister_class(ARM_OT_BindTexturesListDeleteItem)
+    bpy.utils.unregister_class(ARM_OT_BindTexturesListNewItem)
+    bpy.utils.unregister_class(ARM_UL_BindTexturesList)
+    bpy.utils.unregister_class(ARM_PG_BindTexturesListItem)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryProjectPanel)
+    bpy.utils.unregister_class(ARM_PT_ProjectFlagsDebugConsolePanel)
     bpy.utils.unregister_class(ARM_PT_ProjectFlagsPanel)
     bpy.utils.unregister_class(ARM_PT_ProjectWindowPanel)
     bpy.utils.unregister_class(ARM_PT_ProjectModulesPanel)
@@ -1516,3 +2824,10 @@ def unregister():
     bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
     bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)
+
+    bpy.utils.unregister_class(scene.TLM_PT_Settings)
+    bpy.utils.unregister_class(scene.TLM_PT_Denoise)
+    bpy.utils.unregister_class(scene.TLM_PT_Filtering)
+    bpy.utils.unregister_class(scene.TLM_PT_Encoding)
+    bpy.utils.unregister_class(scene.TLM_PT_Utility)
+    bpy.utils.unregister_class(scene.TLM_PT_Additional)

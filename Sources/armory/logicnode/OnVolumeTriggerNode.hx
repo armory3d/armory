@@ -37,12 +37,12 @@ class OnVolumeTriggerNode extends LogicNode {
 
 		var b = false;
 		switch (property0) {
-		case "Enter":
+		case "begin":
 			b = overlap && !lastOverlap;
-		case "Leave":
-			b = !overlap && lastOverlap;
-		case "Overlap":
+		case "overlap":
 			b = overlap;
+		case "end":
+			b = !overlap && lastOverlap;
 		}
 
 		lastOverlap = overlap;

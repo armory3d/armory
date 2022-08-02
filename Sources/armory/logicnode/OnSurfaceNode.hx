@@ -4,6 +4,7 @@ class OnSurfaceNode extends LogicNode {
 
 	public var property0: String;
 
+	@:deprecated("The 'On Surface' node is deprecated and will be removed in future SDK versions. Please use 'Surface' instead.")
 	public function new(tree: LogicTree) {
 		super(tree);
 

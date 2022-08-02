@@ -21,7 +21,7 @@ class ObjectNode extends LogicNode {
 	override function set(value: Dynamic) {
 		if (inputs.length > 0) inputs[0].set(value);
 		else {
-			objectName = value.name;
+			objectName = value != null ? value.name : "";
 			this.value = value;
 		}
 	}

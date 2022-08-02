@@ -10,14 +10,12 @@ class NavigableLocationNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		iron.Scene.active.notifyOnInit(function() {
-			get(0);
-		});
 	}
 
 	override function get(from: Int): Dynamic {
 #if arm_navigation
-		// Assume navmesh exists..
+	
+		assert(Error, Navigation.active.navMeshes.length > 0, "No Navigation Mesh Present");
 		Navigation.active.navMeshes[0].getRandomPoint(function(p: Vec4) {
 			loc = p;
 		});

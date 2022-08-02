@@ -7,6 +7,8 @@ class RenderPathCreator {
 
 	public static var path: RenderPath;
 
+	public static var commands: Void->Void = function() {};
+
 	#if (rp_renderer == "Forward")
 	public static var setTargetMeshes: Void->Void = RenderPathForward.setTargetMeshes;
 	public static var drawMeshes: Void->Void = RenderPathForward.drawMeshes;
@@ -32,14 +34,25 @@ class RenderPathCreator {
 		#end
 
 		#if (rp_renderer == "Forward")
-		RenderPathForward.init(path);
-		path.commands = RenderPathForward.commands;
+			RenderPathForward.init(path);
+			path.commands = function() {
+				RenderPathForward.commands();
+				commands();
+			}
+			path.setupDepthTexture = RenderPathForward.setupDepthTexture;
 		#elseif (rp_renderer == "Deferred")
-		RenderPathDeferred.init(path);
-		path.commands = RenderPathDeferred.commands;
+			RenderPathDeferred.init(path);
+			path.commands = function() {
+				RenderPathDeferred.commands();
+				commands();
+			}
+			path.setupDepthTexture = RenderPathDeferred.setupDepthTexture;
 		#elseif (rp_renderer == "Raytracer")
-		RenderPathRaytracer.init(path);
-		path.commands = RenderPathRaytracer.commands;
+			RenderPathRaytracer.init(path);
+			path.commands = function() {
+				RenderPathRaytracer.commands();
+				commands();
+			}
 		#end
 		return path;
 	}

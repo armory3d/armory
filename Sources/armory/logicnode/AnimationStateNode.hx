@@ -12,11 +12,16 @@ class AnimationStateNode extends LogicNode {
 		var object: Object = inputs[0].get();
 
 		if (object == null) return null;
+
 		var animation = object.animation;
+
 		if (animation == null) animation = object.getParentArmature(object.name);
 
-		if (from == 0) return !animation.paused; // is playing
-		else if (from == 1) return animation.action;
-		else return animation.currentFrame();
+		return switch (from) {
+			case 0: animation.action;
+			case 1: animation.currentFrame();
+			case 2: animation.paused;
+			default: null;
+		}
 	}
 }

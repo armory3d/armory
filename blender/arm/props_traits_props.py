@@ -1,6 +1,8 @@
 import bpy
 from bpy.props import *
 
+__all__ = ['ArmTraitPropWarning', 'ArmTraitPropListItem', 'ARM_UL_PropList']
+
 PROP_TYPE_ICONS = {
     "String": "SORTALPHA",
     "Int": "CHECKBOX_DEHLT",
@@ -32,6 +34,7 @@ def filter_objects(item, b_object):
 
 
 class ArmTraitPropWarning(bpy.types.PropertyGroup):
+    propName: StringProperty(name="Property Name")
     warning: StringProperty(name="Warning")
 
 

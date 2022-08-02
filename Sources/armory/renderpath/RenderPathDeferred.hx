@@ -1,6 +1,7 @@
 package armory.renderpath;
 
 import iron.RenderPath;
+import iron.Scene;
 
 class RenderPathDeferred {
 
@@ -37,9 +38,12 @@ class RenderPathDeferred {
 
 		path = _path;
 
-		#if (rp_background == "World")
+		#if kha_metal
 		{
-			path.loadShader("shader_datas/world_pass/world_pass");
+			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
+			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
+			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
+			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
 		}
 		#end
 
@@ -123,6 +127,19 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_depth_texture
+		{
+			var t = new RenderTargetRaw();
+			t.name = "depthtex";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -251,6 +268,12 @@ class RenderPathDeferred {
 		#if rp_water
 		{
 			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if rp_depth_texture
+		{
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
@@ -498,7 +521,12 @@ class RenderPathDeferred {
 		#end
 
 		#if (rp_shadowmap)
+		// atlasing is exclusive for now
+		#if arm_shadowmap_atlas
+		Inc.drawShadowMapAtlas();
+		#else
 		Inc.drawShadowMap();
+		#end
 		#end
 
 		// Voxels
@@ -529,7 +557,6 @@ class RenderPathDeferred {
 			}
 		}
 		#end
-
 		// ---
 		// Deferred light
 		// ---
@@ -540,6 +567,13 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+
+		#if rp_gbuffer2
+		{
+			path.bindTarget("gbuffer2", "gbuffer2");
+		}
+		#end
+
 		#if (rp_ssgi != "Off")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
@@ -568,7 +602,11 @@ class RenderPathDeferred {
 
 		#if rp_shadowmap
 		{
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 		}
 		#end
 
@@ -616,11 +654,41 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (!kha_opengl)
+		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+		#end
+
+		#if (rp_background == "World")
+		{
+			if (Scene.active.raw.world_ref != null) {
+				path.setTarget("tex"); // Re-binds depth
+				path.drawSkydome("shader_datas/World_" + Scene.active.raw.world_ref + "/World_" + Scene.active.raw.world_ref);
+			}
+		}
+		#end
+
+		#if rp_blending
+		{
+			path.setTarget("tex");
+			path.drawMeshes("blend");
+		}
+		#end
+
+		#if rp_translucency
+		{
+			Inc.drawTranslucency("tex");
+		}
+		#end
+
 		#if rp_volumetriclight
 		{
 			path.setTarget("singlea");
 			path.bindTarget("_main", "gbufferD");
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
 			Inc.bindShadowMap();
+			#end
 			path.drawShader("shader_datas/volumetric_light/volumetric_light");
 
 			path.setTarget("singleb");
@@ -630,29 +698,6 @@ class RenderPathDeferred {
 			path.setTarget("tex");
 			path.bindTarget("singleb", "tex");
 			path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-		}
-		#end
-
-		#if (!kha_opengl)
-		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
-		#end
-
-		#if (rp_background == "World")
-		{
-			path.setTarget("tex"); // Re-binds depth
-			path.drawSkydome("shader_datas/world_pass/world_pass");
-		}
-		#end
-
-		#if rp_blending
-		{
-			path.drawMeshes("blend");
-		}
-		#end
-
-		#if rp_translucency
-		{
-			Inc.drawTranslucency("tex");
 		}
 		#end
 
@@ -923,6 +968,27 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
 		#end
+	}
+
+	public static function setupDepthTexture() {
+		#if (!kha_opengl)
+		path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+		path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+		#end
+
+		// Copy the depth buffer to the depth texture
+		path.setTarget("depthtex");
+		path.bindTarget("_main", "tex");
+		path.drawShader("shader_datas/copy_pass/copy_pass");
+
+		#if (!kha_opengl)
+		path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+		path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+		#end
+
+		// Prepare to draw meshes
+		setTargetMeshes();
+		path.bindTarget("depthtex", "depthtex");
 	}
 	#end
 }

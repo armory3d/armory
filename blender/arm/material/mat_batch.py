@@ -1,7 +1,14 @@
-import bpy
+import arm
 import arm.material.cycles as cycles
 import arm.material.make_shader as make_shader
 import arm.material.mat_state as mat_state
+
+if arm.is_reload(__name__):
+    cycles = arm.reload_module(cycles)
+    make_shader = arm.reload_module(make_shader)
+    mat_state = arm.reload_module(mat_state)
+else:
+    arm.enable_reload(__name__)
 
 # TODO: handle groups
 # TODO: handle cached shaders
@@ -21,7 +28,7 @@ def traverse_tree(node, sign):
 def get_signature(mat):
     nodes = mat.node_tree.nodes
     output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
-    
+
     if output_node != None:
         sign = traverse_tree(output_node, '')
         # Append flags
@@ -40,7 +47,7 @@ def traverse_tree2(node, ar):
 def get_sorted(mat):
     nodes = mat.node_tree.nodes
     output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
-    
+
     if output_node != None:
         ar = []
         traverse_tree2(output_node, ar)

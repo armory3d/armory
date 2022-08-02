@@ -4,6 +4,8 @@ import iron.object.Object;
 import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
 
+using armory.object.TransformExtension;
+
 class ApplyTorqueNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
@@ -13,14 +15,17 @@ class ApplyTorqueNode extends LogicNode {
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
 		var torque: Vec4 = inputs[2].get();
+		var local: Bool = inputs.length > 3 ? inputs[3].get() : false;
 
 		if (object == null || torque == null) return;
 
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
-		rb.applyTorque(torque);
+
+		!local ? rb.applyTorque(torque) : rb.applyTorque(object.transform.worldVecToOrientation(torque));
 #end
 
 		runOutput(0);
 	}
+
 }
