@@ -537,6 +537,8 @@ def update_armory_world():
             arm.logicnode.replacement.node_compat_sdk2108()
         if file_version < (2022, 3):
             arm.logicnode.tree_variables.node_compat_sdk2203()
+        if file_version < (2022, 9):
+            arm.logicnode.tree_variables.node_compat_sdk2209()
 
         arm.logicnode.replacement.replace_all()
 
