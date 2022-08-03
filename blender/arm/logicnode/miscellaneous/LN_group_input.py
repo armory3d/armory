@@ -25,7 +25,7 @@ class GroupInputsNode(ArmLogicTreeNode):
             arm.log.warn("Only one group input node per node tree is allowed")
             tree.nodes.remove(self)
         else:
-            self.arm_init(context)
+            super().init(context)
 
     def copy(self, node):
         tree = bpy.context.space_data.edit_tree
