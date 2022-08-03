@@ -717,7 +717,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel')
 
         frag.write('direct += sampleLight(')
-    	frag.write('wposition, n, vVec, dotNV, ')
+        frag.write('wposition, n, vVec, dotNV, ')
         frag.write('pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
