@@ -649,6 +649,8 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/copy_pass/copy_pass");
 			path.setTarget("tex");
 			path.bindTarget("_main", "gbufferD");
+			path.bindTarget("gbuffer0", "gbuffer0");
+			path.bindTarget("gbuffer1", "gbuffer1");
 			path.bindTarget("buf", "tex");
 			path.drawShader("shader_datas/water_pass/water_pass");
 		}
