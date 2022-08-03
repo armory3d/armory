@@ -88,10 +88,10 @@ def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: 
             else:
                 vert.write_attrib('texCoord = tex * texUnpack;')
 
-        if tese is not None:
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
-            tese.write_pre = False
+            if tese is not None:
+                tese.write_pre = True
+                make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
+                tese.write_pre = False
 
     if con_mesh.is_elem('tex1'):
         vert.add_out('vec2 texCoord1')
