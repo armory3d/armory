@@ -575,6 +575,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
+    if '_MicroShadowing' in wrd.world_defs:
+        vert.add_out('vec3 viewRay')
+    
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
@@ -707,29 +710,14 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         if '_MicroShadowing' in wrd.world_defs:
             frag.add_include('std/gbuffer.glsl')
-            frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('sampler2D gbuffer1')
-            frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('vec3 eyeLook', link='_cameraLook')
-            frag.write('vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);')
-            frag.write('vec3 n2;')
-            frag.write('n2.z = 1.0 - abs(g0.x) - abs(g0.y);')
-            frag.write('n2.xy = n2.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);')
-            frag.write('n2 = normalize(n2);')
             frag.write('vec4 g1 = textureLod(gbuffer1, texCoord, 0.0);')
             frag.write('vec2 occspec = unpackFloat2(g1.a);')
-            frag.write('float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
-            frag.write('vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);')
-            frag.write('vec3 v = normalize(eye - p);')
-            frag.write('float dotNV2 = max(dot(n2, v), 0.0);')
-            frag.write('occspec.x = mix(1.0, occspec.x, dotNV2); // AO Fresnel')
+            frag.write('occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel')
 
         frag.write('direct += sampleLight(')
-        if '_Microshadowing' in wrd.world_defs:
-        	frag.write('wposition, n2, vVec, dotNV2, ') 
-        else:
-        	frag.write('wposition, n, vVec, dotNV, ')
-
+    	frag.write('wposition, n, vVec, dotNV, ')
         frag.write('pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -740,7 +728,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(' , occspec.x')
         if '_SSRS' in wrd.world_defs:
-            vert.add_out('vec3 viewRay');
             if not '_Microshadowing' in wrd.world_defs:
                 frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP')
