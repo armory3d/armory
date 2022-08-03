@@ -728,8 +728,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(' , occspec.x')
         if '_SSRS' in wrd.world_defs:
-            if not '_Microshadowing' in wrd.world_defs:
-                frag.add_uniform('sampler2D gbufferD')
+            frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP')
        	    frag.write(' , gbufferD, invVP, eye')
         frag.write(');')
