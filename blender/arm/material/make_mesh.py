@@ -555,12 +555,12 @@ def make_forward(con_mesh):
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
-
+    rpdat = arm.utils.get_rp()
     arm_discard = mat_state.material.arm_discard
     make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
 
     blend = mat_state.material.arm_blending
-
+	
     vert = con_mesh.vert
     frag = con_mesh.frag
     tese = con_mesh.tese
@@ -585,7 +585,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
     
-    if '_MicroShadowing' in wrd.world_defs and transluc_pass:
+    if '_MicroShadowing' in wrd.world_defs and (transluc_pass or rpdat.rp_renderer == 'Forward'):
         vert.add_out('vec2 texCoord')
         vert.add_out('vec3 viewRay')
 
