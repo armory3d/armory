@@ -737,7 +737,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
     	    frag.write('    n,')
     	    frag.write('    vVec,')
-    	    frag.write('    dotNV')
+    	    frag.write('    dotNV,')
 
         frag.write('pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:

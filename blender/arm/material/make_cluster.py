@@ -82,7 +82,7 @@ def write(vert, frag):
     else:
     	frag.write('    n,')
     	frag.write('    vVec,')
-    	frag.write('    dotNV')
+    	frag.write('    dotNV,')
 
     frag.write('    lightsArray[li * 3].xyz,') # lp
     frag.write('    lightsArray[li * 3 + 1].xyz,') # lightCol
