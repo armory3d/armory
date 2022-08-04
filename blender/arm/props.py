@@ -502,14 +502,14 @@ def init_properties():
     create_wrd()
 
 def create_wrd():
-    if not 'Arm' in bpy.data.worlds:
+    if 'Arm' not in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
 
 def init_properties_on_load():
-    if not 'Arm' in bpy.data.worlds:
+    if 'Arm' not in bpy.data.worlds:
         init_properties()
     # New project?
     if bpy.data.filepath == '':
@@ -537,6 +537,8 @@ def update_armory_world():
             arm.logicnode.replacement.node_compat_sdk2108()
         if file_version < (2022, 3):
             arm.logicnode.tree_variables.node_compat_sdk2203()
+        if file_version < (2022, 9):
+            arm.logicnode.tree_variables.node_compat_sdk2209()
 
         arm.logicnode.replacement.replace_all()
 

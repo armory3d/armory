@@ -172,7 +172,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
     if name_prefix is not None:
         name = name_prefix + name
 
-    # Link nodes using IDs
+    # Link tree variable nodes using IDs
     if node.arm_logic_id != '':
         parse_id = node.arm_logic_id
         if name_prefix is not None:
