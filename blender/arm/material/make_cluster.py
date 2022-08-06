@@ -1,5 +1,4 @@
 import bpy
-import arm.utils
 
 def write(vert, frag):
     wrd = bpy.data.worlds['Arm']

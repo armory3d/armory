@@ -72,11 +72,10 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
 
 
 def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: Optional[Shader]):
-    wrd = bpy.data.worlds['Arm'];
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-	vert.add_uniform('float texUnpack', link='_texUnpack')
+        vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:
             if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
                 make_particle.write_tilesheet(vert)
