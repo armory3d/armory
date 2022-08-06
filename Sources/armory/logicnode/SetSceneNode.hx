@@ -15,6 +15,8 @@ class SetSceneNode extends LogicNode {
 
 		#if arm_json
 		sceneName += ".json";
+		#elseif arm_compress
+		sceneName += ".lz4";
 		#end
 
 		iron.Scene.setActive(sceneName, function(o: iron.object.Object) {
