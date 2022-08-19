@@ -7,7 +7,9 @@ class DrawStringNode(ArmLogicTreeNode):
     @input Draw: Activate to draw the string on this frame. The input must
         be (indirectly) called from an `On Render2D` node.
     @input String: The string to draw.
-    @input Font File: The filename of the font.
+    @input Font File: The filename of the font (including the extension).
+        If empty and Zui is _enabled_, the default font is used. If empty
+        and Zui is _disabled_, nothing is rendered.
     @input Font Size: The size of the font in pixels.
     @input Color: The color of the string.
     @input X/Y: Position of the string, in pixels from the top left corner.

@@ -3,8 +3,9 @@ package armory.logicnode;
 import kha.Font;
 import kha.Color;
 
+#if arm_ui
 import armory.ui.Canvas;
-
+#end
 
 class DrawStringNode extends LogicNode {
 	var font: Font;
@@ -19,7 +20,11 @@ class DrawStringNode extends LogicNode {
 
 		var fontName = inputs[2].get();
 		if (fontName == "") {
+			#if arm_ui
 			fontName = Canvas.defaultFontName;
+			#else
+			return; // No default font is exported, there is nothing we can do here
+			#end
 		}
 
 		if (fontName != lastFontName) {
