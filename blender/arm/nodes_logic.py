@@ -203,7 +203,7 @@ class ArmOpenNodeHaxeSource(bpy.types.Operator):
                     name = context.selected_nodes[0].bl_idname[2:]
                     version = arm.utils.get_last_commit()
                     if version == '':
-                        version = 'master'
+                        version = 'main'
                     webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/Sources/armory/logicnode/{name}.hx')
         return{'FINISHED'}
 
@@ -220,7 +220,7 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
                 if node.bl_idname.startswith('LN') and node.arm_version is not None:
                     version = arm.utils.get_last_commit()
                     if version == '':
-                        version = 'master'
+                        version = 'main'
                     rel_path = node.__module__.replace('.', '/')
                     webbrowser.open(f'https://github.com/armory3d/armory/tree/{version}/blender/{rel_path}.py')
         return{'FINISHED'}

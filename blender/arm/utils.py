@@ -205,7 +205,7 @@ def get_sdk_path():
         return os.path.normpath(addon_prefs.sdk_path)
 
 def get_last_commit():
-    p = get_sdk_path() + 'armory/.git/refs/heads/master'
+    p = get_sdk_path() + 'armory/.git/refs/heads/main'
 
     try:
         file = open(p, 'r')
