@@ -127,68 +127,27 @@ vec3 decNor(uint val) {
 	return normal;
 }
 
-// GBuffer helper - Sebastien Lagarde
-// https://seblagarde.wordpress.com/2018/09/02/gbuffer-helper-packing-integer-and-float-together/
-float packFloatInt8(const float f, const uint i) {
-	// Constant optimize by compiler
-	const int numBitTarget = 8;
-	const int numBitI = 4;
-	const float prec = float(1 << numBitTarget);
-	const float maxi = float(1 << numBitI);
-	const float precMinusOne = prec - 1.0;
-	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
-	const float t2 = (prec / maxi) / precMinusOne;
-	// Code
-	return t1 * f + t2 * float(i);
-}
-
+/**
+	Packs a float in [0, 1] and an integer in [0..15] into a single 16 bit float value.
+**/
 float packFloatInt16(const float f, const uint i) {
-	// Constant optimize by compiler
-	const int numBitTarget = 16;
-	const int numBitI = 4;
-	const float prec = float(1 << numBitTarget);
-	const float maxi = float(1 << numBitI);
-	const float precMinusOne = prec - 1.0;
-	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
-	const float t2 = (prec / maxi) / precMinusOne;
-	// Code
-	return t1 * f + t2 * float(i);
-}
+	const uint numBitFloat = 12;
+	const float maxValFloat = float((1 << numBitFloat) - 1);
 
-void unpackFloatInt8(const float val, out float f, out uint i) {
-	// Constant optimize by compiler
-	const int numBitTarget = 8;
-	const int numBitI = 4;
-	const float prec = float(1 << numBitTarget);
-	const float maxi = float(1 << numBitI);
-	const float precMinusOne = prec - 1.0;
-	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
-	const float t2 = (prec / maxi) / precMinusOne;
-	// Code
-	// extract integer part
-	// + rcp(precMinusOne) to deal with precision issue
-	i = int((val / t2) + (1.0 / precMinusOne));
-	// Now that we have i, solve formula in packFloatInt for f
-	//f = (val - t2 * float(i)) / t1 => convert in mads form
-	f = clamp((-t2 * float(i) + val) / t1, 0.0, 1.0); // Saturate in case of precision issue
+	const uint bitsInt = i << numBitFloat;
+	const uint bitsFloat = uint(f * maxValFloat);
+
+	return float(bitsInt | bitsFloat);
 }
 
 void unpackFloatInt16(const float val, out float f, out uint i) {
-	// Constant optimize by compiler
-	const int numBitTarget = 16;
-	const int numBitI = 4;
-	const float prec = float(1 << numBitTarget);
-	const float maxi = float(1 << numBitI);
-	const float precMinusOne = prec - 1.0;
-	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
-	const float t2 = (prec / maxi) / precMinusOne;
-	// Code
-	// extract integer part
-	// + rcp(precMinusOne) to deal with precision issue
-	i = int((val / t2) + (1.0 / precMinusOne));
-	// Now that we have i, solve formula in packFloatInt for f
-	//f = (val - t2 * float(i)) / t1 => convert in mads form
-	f = clamp((-t2 * float(i) + val) / t1, 0.0, 1.0); // Saturate in case of precision issue
+	const uint numBitFloat = 12;
+	const float maxValFloat = float((1 << numBitFloat) - 1);
+
+	const uint bitsValue = uint(val);
+
+	i = bitsValue >> numBitFloat;
+	f = (bitsValue & ~(0xF << numBitFloat)) / maxValFloat;
 }
 
 #endif

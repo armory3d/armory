@@ -121,7 +121,7 @@ in vec3 viewRay;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
 
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
