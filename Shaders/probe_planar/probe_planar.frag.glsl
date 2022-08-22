@@ -21,7 +21,7 @@ void main() {
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
 
 	float roughness = g0.b;
 	if (roughness > 0.95) {

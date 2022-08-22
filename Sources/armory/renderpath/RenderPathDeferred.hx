@@ -746,6 +746,10 @@ class RenderPathDeferred {
 
 		#if rp_sss
 		{
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+			#end
+
 			path.setTarget("buf");
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
@@ -757,6 +761,10 @@ class RenderPathDeferred {
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
+
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+			#end
 		}
 		#end
 
