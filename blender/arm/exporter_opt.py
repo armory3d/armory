@@ -120,6 +120,12 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
     vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
     num_verts = len(vert_list)
     num_uv_layers = len(export_mesh.uv_layers)
+    # Check if shape keys were exported
+    has_morph_target = self.get_shape_keys(bobject.data)
+    if has_morph_target:
+        # Shape keys UV are exported separately, so reduce UV count by 1
+        num_uv_layers -= 1
+        morph_uv_index = self.get_morph_uv_index(bobject.data)
     has_tex = self.get_export_uvs(export_mesh) and num_uv_layers > 0
     if self.has_baked_material(bobject, export_mesh.materials):
         has_tex = True
@@ -130,44 +136,63 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
 
     pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
     ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
-    if has_tex:
-        # Get active uvmap
-        t0map = 0
+    if has_tex or has_morph_target:
         uv_layers = export_mesh.uv_layers
-        if uv_layers is not None:
-            if 'UVMap_baked' in uv_layers:
-                for i in range(0, len(uv_layers)):
-                    if uv_layers[i].name == 'UVMap_baked':
-                        t0map = i
-                        break
-            else:
-                for i in range(0, len(uv_layers)):
-                    if uv_layers[i].active_render:
-                        t0map = i
-                        break
-        t1map = 1 if t0map == 0 else 0
-        # Alloc data
-        t0data = np.empty(num_verts * 2, dtype='<f4')
-        if has_tex1:
-            t1data = np.empty(num_verts * 2, dtype='<f4')
-    if has_col:
-        cdata = np.empty(num_verts * 3, dtype='<f4')
-
-    if has_tex:
-        # Scale for packed coords
         maxdim = 1.0
-        lay0 = export_mesh.uv_layers[t0map]
-        for v in lay0.data:
-            if abs(v.uv[0]) > maxdim:
-                maxdim = abs(v.uv[0])
-            if abs(v.uv[1]) > maxdim:
-                maxdim = abs(v.uv[1])
+        if has_tex:
+            t0map = 0 # Get active uvmap
+            t0data = np.empty(num_verts * 2, dtype='<f4')
+            if uv_layers is not None:
+                if 'UVMap_baked' in uv_layers:
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].name == 'UVMap_baked':
+                            t0map = i
+                            break
+                else:
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].active_render and uv_layers[i].name != 'UVMap_shape_key':
+                            t0map = i
+                            break
+            if has_tex1:
+                for i in range(0, len(uv_layers)):
+                    # Not UVMap 0
+                    if i != t0map:
+                        # Not Shape Key UVMap
+                        if has_morph_target and uv_layers[i].name == 'UVMap_shape_key':
+                            continue
+                        # Neither UVMap 0 Nor Shape Key Map
+                        t1map = i
+                t1data = np.empty(num_verts * 2, dtype='<f4')
+            # Scale for packed coords
+            lay0 = uv_layers[t0map]
+            for v in lay0.data:
+                if abs(v.uv[0]) > maxdim:
+                    maxdim = abs(v.uv[0])
+                if abs(v.uv[1]) > maxdim:
+                    maxdim = abs(v.uv[1])
+            if has_tex1:
+                lay1 = uv_layers[t1map]
+                for v in lay1.data:
+                    if abs(v.uv[0]) > maxdim:
+                        maxdim = abs(v.uv[0])
+                    if abs(v.uv[1]) > maxdim:
+                        maxdim = abs(v.uv[1])
+        if has_morph_target:
+            morph_data = np.empty(num_verts * 2, dtype='<f4')
+            lay2 = uv_layers[morph_uv_index]
+            for v in lay2.data:
+                if abs(v.uv[0]) > maxdim:
+                    maxdim = abs(v.uv[0])
+                if abs(v.uv[1]) > maxdim:
+                    maxdim = abs(v.uv[1])
         if maxdim > 1:
             o['scale_tex'] = maxdim
             invscale_tex = (1 / o['scale_tex']) * 32767
         else:
             invscale_tex = 1 * 32767
-        # TODO: handle t1map
+
+    if has_col:
+        cdata = np.empty(num_verts * 3, dtype='<f4')
 
     # Save aabb
     self.calc_aabb(bobject)
@@ -205,6 +230,10 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
                 uv = v.uvs[t1map]
                 t1data[i2    ] = uv[0]
                 t1data[i2 + 1] = 1.0 - uv[1]
+        if has_morph_target:
+               uv = v.uvs[morph_uv_index]
+               morph_data[i2    ] = uv[0]
+               morph_data[i2 + 1] = 1.0 - uv[1]
         if has_col:
             i3 = i * 3
             cdata[i3    ] = v.col[0]
@@ -263,6 +292,9 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
         if has_tex1:
             t1data *= invscale_tex
             t1data = np.array(t1data, dtype='<i2')
+    if has_morph_target:
+        morph_data *= invscale_tex
+        morph_data = np.array(morph_data, dtype='<i2')
     if has_col:
         cdata *= 32767
         cdata = np.array(cdata, dtype='<i2')
@@ -278,6 +310,8 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
         o['vertex_arrays'].append({ 'attrib': 'tex', 'values': t0data, 'data': 'short2norm' })
         if has_tex1:
             o['vertex_arrays'].append({ 'attrib': 'tex1', 'values': t1data, 'data': 'short2norm' })
+    if has_morph_target:
+        o['vertex_arrays'].append({ 'attrib': 'morph', 'values': morph_data, 'data': 'short2norm' })
     if has_col:
         o['vertex_arrays'].append({ 'attrib': 'col', 'values': cdata, 'data': 'short4norm', 'padding': 1 })
     if has_tang:
