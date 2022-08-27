@@ -9,7 +9,7 @@ import re
 import shlex
 import shutil
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 import webbrowser
 
 import numpy as np
@@ -522,15 +522,22 @@ def fetch_wasm_names():
                 name = file.rsplit('.', 1)[0]
                 wrd.arm_wasm_list.add().name = name
 
+
 def fetch_trait_props():
     for o in bpy.data.objects:
-        fetch_prop(o)
+        if o.override_library is None:
+            # We can't update the list of trait properties for linked
+            # objects because Blender doesn't allow to remove items from
+            # overridden lists
+            fetch_prop(o)
+
     for s in bpy.data.scenes:
+        print("SCENE", s)
         fetch_prop(s)
 
-def fetch_prop(o):
+
+def fetch_prop(o: Union[bpy.types.Object, bpy.types.Scene]):
     for item in o.arm_traitlist:
-        name = ''
         if item.type_prop == 'Bundled Script':
             name = 'armory.trait.' + item.name
         else:
@@ -573,7 +580,7 @@ def fetch_prop(o):
                         or found_prop.get_value() == "") and defaults[index]:
                     prop.set_value(defaults[index])
                 # Type has changed, update displayed name
-                if (len(found_prop.name) == 1 or (len(found_prop.name) > 1 and found_prop.name[1] != p[1])):
+                if len(found_prop.name) == 1 or (len(found_prop.name) > 1 and found_prop.name[1] != p[1]):
                     prop.name = p[0]
                     prop.type = p[1]
 
@@ -582,6 +589,7 @@ def fetch_prop(o):
                 entry = item.arm_traitpropswarnings.add()
                 entry.propName = warning[0]
                 entry.warning = warning[1]
+
 
 def fetch_bundled_trait_props():
     # Bundled script props
