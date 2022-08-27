@@ -1007,7 +1007,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
-                
+
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
 
@@ -1791,16 +1791,6 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-
-                # This object is controlled by proxy
-                has_proxy_user = False
-                for bo in bpy.data.objects:
-                    if bo.proxy == bobject:
-                        has_proxy_user = True
-                        break
-                if has_proxy_user:
-                    continue
-
                 asset_name = arm.utils.asset_name(bobject)
 
                 # Collection is in the same file

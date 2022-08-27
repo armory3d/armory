@@ -8,7 +8,6 @@ import arm.logicnode.replacement
 import arm.logicnode.tree_variables
 import arm.make
 import arm.nodes_logic
-import arm.proxy
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -17,7 +16,6 @@ if arm.is_reload(__name__):
     arm.logicnode.tree_variables = arm.reload_module(arm.logicnode.tree_variables)
     arm.make = arm.reload_module(arm.make)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
-    arm.proxy = arm.reload_module(arm.proxy)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
@@ -316,13 +314,6 @@ def init_properties():
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')
-    bpy.types.Object.arm_proxy_sync_loc = BoolProperty(name="Location", description="Keep location synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_loc)
-    bpy.types.Object.arm_proxy_sync_rot = BoolProperty(name="Rotation", description="Keep rotation synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_rot)
-    bpy.types.Object.arm_proxy_sync_scale = BoolProperty(name="Scale", description="Keep scale synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_scale)
-    bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_materials)
-    bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_modifiers)
-    bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_traits)
-    bpy.types.Object.arm_proxy_sync_trait_props = BoolProperty(name="Trait Property Values", description="Keep trait property values synchronized with proxy object", default=False, update=arm.proxy.proxy_sync_traits)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)

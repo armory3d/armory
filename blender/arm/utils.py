@@ -654,6 +654,29 @@ def unique_str_for_list(items: list, name_attr: str, wanted_name: str, ignore_it
     return out_name
 
 
+def merge_into_collection(col_src, col_dst, clear_dst=True):
+    """Merges the items of the `col_src` collection property into the
+    `col_dst` collection property.
+
+    If `clear_dst` is true, the destination collection is cleared before
+    merging. Otherwise, new items are added on top of the existing items
+    in `col_dst`. There is no check for duplicates.
+    """
+    if clear_dst:
+        col_dst.clear()
+
+    for item_src in col_src:
+        item_dst = col_dst.add()
+
+        # collect names of writable properties
+        prop_names = [p.identifier for p in item_src.bl_rna.properties
+                      if not p.is_readonly]
+
+        # copy those properties
+        for prop_name in prop_names:
+            setattr(item_dst, prop_name, getattr(item_src, prop_name))
+
+
 def safesrc(s):
     s = safestr(s).replace('.', '_').replace('-', '_').replace(' ', '')
     if s[0].isdigit():

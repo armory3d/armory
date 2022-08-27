@@ -18,7 +18,6 @@ import arm.props as props
 import arm.props_properties
 import arm.props_traits
 import arm.nodes_logic
-import arm.proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 
@@ -36,7 +35,6 @@ if arm.is_reload(__name__):
     arm.props_properties = arm.reload_module(arm.props_properties)
     arm.props_traits = arm.reload_module(arm.props_traits)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
-    arm.proxy = arm.reload_module(arm.proxy)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
 else:
@@ -2210,109 +2208,6 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
                 layout.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
-class ARM_PT_ProxyPanel(bpy.types.Panel):
-    bl_label = "Armory Proxy"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        layout.operator("arm.make_proxy")
-
-        obj = bpy.context.object
-        if obj is not None and obj.proxy is not None:
-            col = layout.column(heading="Sync")
-            col.prop(obj, "arm_proxy_sync_loc")
-            col.prop(obj, "arm_proxy_sync_rot")
-            col.prop(obj, "arm_proxy_sync_scale")
-            col.separator()
-
-            col.prop(obj, "arm_proxy_sync_materials")
-            col.prop(obj, "arm_proxy_sync_modifiers")
-            col.separator()
-
-            col.prop(obj, "arm_proxy_sync_traits")
-            row = col.row()
-            row.enabled = obj.arm_proxy_sync_traits
-            row.prop(obj, "arm_proxy_sync_trait_props")
-
-            row = layout.row(align=True)
-            row.operator("arm.proxy_toggle_all")
-            row.operator("arm.proxy_apply_all")
-
-class ArmMakeProxyButton(bpy.types.Operator):
-    '''Create proxy from linked object'''
-    bl_idname = 'arm.make_proxy'
-    bl_label = 'Make Proxy'
-
-    def execute(self, context):
-        obj = context.object
-        if obj == None:
-            return{'CANCELLED'}
-        if obj.library == None:
-            self.report({'ERROR'}, 'Select linked object')
-        arm.proxy.make(obj)
-        return{'FINISHED'}
-
-class ArmProxyToggleAllButton(bpy.types.Operator):
-    bl_idname = 'arm.proxy_toggle_all'
-    bl_label = 'Toggle All'
-    def execute(self, context):
-        obj = context.object
-        b = not obj.arm_proxy_sync_loc
-        obj.arm_proxy_sync_loc = b
-        obj.arm_proxy_sync_rot = b
-        obj.arm_proxy_sync_scale = b
-        obj.arm_proxy_sync_materials = b
-        obj.arm_proxy_sync_modifiers = b
-        obj.arm_proxy_sync_traits = b
-        obj.arm_proxy_sync_trait_props = b
-        return{'FINISHED'}
-
-class ArmProxyApplyAllButton(bpy.types.Operator):
-    bl_idname = 'arm.proxy_apply_all'
-    bl_label = 'Apply to All'
-
-    def execute(self, context):
-        for obj in bpy.data.objects:
-            if obj.proxy == None:
-                continue
-            if obj.proxy == context.object.proxy:
-                obj.arm_proxy_sync_loc = context.object.arm_proxy_sync_loc
-                obj.arm_proxy_sync_rot = context.object.arm_proxy_sync_rot
-                obj.arm_proxy_sync_scale = context.object.arm_proxy_sync_scale
-                obj.arm_proxy_sync_materials = context.object.arm_proxy_sync_materials
-                obj.arm_proxy_sync_modifiers = context.object.arm_proxy_sync_modifiers
-                obj.arm_proxy_sync_traits = context.object.arm_proxy_sync_traits
-                obj.arm_proxy_sync_trait_props = context.object.arm_proxy_sync_trait_props
-        return{'FINISHED'}
-
-class ArmSyncProxyButton(bpy.types.Operator):
-    bl_idname = 'arm.sync_proxy'
-    bl_label = 'Sync'
-    def execute(self, context):
-        if len(bpy.data.libraries) > 0:
-            for obj in bpy.data.objects:
-                if obj == None or obj.proxy == None:
-                    continue
-                if obj.arm_proxy_sync_loc:
-                    arm.proxy.sync_location(obj)
-                if obj.arm_proxy_sync_rot:
-                    arm.proxy.sync_rotation(obj)
-                if obj.arm_proxy_sync_scale:
-                    arm.proxy.sync_scale(obj)
-                if obj.arm_proxy_sync_materials:
-                    arm.proxy.sync_materials(obj)
-                if obj.arm_proxy_sync_modifiers:
-                    arm.proxy.sync_modifiers(obj)
-                if obj.arm_proxy_sync_traits:
-                    arm.proxy.sync_traits(obj)
-            print('Proxy objects synchronized')
-        return{'FINISHED'}
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
@@ -2721,11 +2616,6 @@ def register():
     bpy.utils.register_class(ArmGenTerrainButton)
     bpy.utils.register_class(ARM_PT_TerrainPanel)
     bpy.utils.register_class(ARM_PT_TilesheetPanel)
-    bpy.utils.register_class(ARM_PT_ProxyPanel)
-    bpy.utils.register_class(ArmMakeProxyButton)
-    bpy.utils.register_class(ArmProxyToggleAllButton)
-    bpy.utils.register_class(ArmProxyApplyAllButton)
-    bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
     bpy.utils.register_class(ARM_OT_UpdateFileSDK)
@@ -2817,11 +2707,6 @@ def unregister():
     bpy.utils.unregister_class(ArmGenTerrainButton)
     bpy.utils.unregister_class(ARM_PT_TerrainPanel)
     bpy.utils.unregister_class(ARM_PT_TilesheetPanel)
-    bpy.utils.unregister_class(ARM_PT_ProxyPanel)
-    bpy.utils.unregister_class(ArmMakeProxyButton)
-    bpy.utils.unregister_class(ArmProxyToggleAllButton)
-    bpy.utils.unregister_class(ArmProxyApplyAllButton)
-    bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
     bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)
 

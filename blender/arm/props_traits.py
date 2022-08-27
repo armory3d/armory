@@ -11,7 +11,6 @@ import bpy.utils.previews
 
 import arm.make as make
 from arm.props_traits_props import *
-import arm.proxy as proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
@@ -20,7 +19,6 @@ if arm.is_reload(__name__):
     arm.make = arm.reload_module(arm.make)
     arm.props_traits_props = arm.reload_module(arm.props_traits_props)
     from arm.props_traits_props import *
-    proxy = arm.reload_module(proxy)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
     arm.write_data = arm.reload_module(arm.write_data)
@@ -720,12 +718,11 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
             if not self.overwrite:
                 offset = len(target_obj.arm_traitlist)
 
-            # Make use of proxy functions here
-            proxy.sync_collection(
+            arm.utils.merge_into_collection(
                 source_obj.arm_traitlist, target_obj.arm_traitlist, clear_dst=self.overwrite)
 
             for i in range(len(source_obj.arm_traitlist)):
-                proxy.sync_collection(
+                arm.utils.merge_into_collection(
                     source_obj.arm_traitlist[i].arm_traitpropslist,
                     target_obj.arm_traitlist[i + offset].arm_traitpropslist
                 )
