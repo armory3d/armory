@@ -715,7 +715,7 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject: bpy.types.Object, scene: bpy.types.Scene, out_parent: Dict = None) -> None:
+    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None) -> None:
         """This function exports a single object in the scene and
         includes its name, object reference, material references (for
         meshes), and transform.
@@ -1008,7 +1008,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
-                
+
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
 
@@ -1036,7 +1036,7 @@ class ArmoryExporter:
 
         if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
-                self.export_object(subbobject, scene, out_object)
+                self.export_object(subbobject, out_object)
 
     def export_skin(self, bobject: bpy.types.Object, armature, export_mesh: bpy.types.Mesh, out_mesh):
         """This function exports all skinning data, which includes the
@@ -1810,7 +1810,7 @@ Make sure the mesh only has tris/quads.""")
                     # all other objects (in scene_objects) are already exported.
                     if bobject.name not in scene_objects:
                         self.process_bobject(bobject)
-                        self.export_object(bobject, self.scene)
+                        self.export_object(bobject)
                 else:
                     # Add external linked objects
                     # Iron differentiates objects based on their names,
@@ -1827,7 +1827,7 @@ Make sure the mesh only has tris/quads.""")
                         continue
 
                     self.process_bobject(bobject)
-                    self.export_object(bobject, self.scene)
+                    self.export_object(bobject)
 
                 out_collection['object_refs'].append(asset_name)
 
@@ -2352,7 +2352,7 @@ Make sure the mesh only has tris/quads.""")
             # Skip objects that have a parent because children are
             # exported recursively
             if not bobject.parent:
-                self.export_object(bobject, self.scene)
+                self.export_object(bobject)
 
         # Export collections
         if bpy.data.collections:
