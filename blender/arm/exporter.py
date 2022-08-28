@@ -474,14 +474,20 @@ class ArmoryExporter:
             self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
-        # Particle object with no material assigned
+        """Select the particle material variant for all particle system
+        instance objects that use the armdefault material.
+        """
         for ps in bpy.data.particles:
             if ps.render_type != 'OBJECT' or ps.instance_object is None:
                 continue
+
             po = ps.instance_object
             if po not in self.object_to_arm_object_dict:
-                continue
+                self.process_bobject(po)
+                self.export_object(po)
             o = self.object_to_arm_object_dict[po]
+
+            # Check if the instance object uses the armdefault material
             if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.default_part_material_objects:
                 self.default_part_material_objects.append(po)
                 o['material_refs'] = ['armdefaultpart']  # Replace armdefault
@@ -2185,7 +2191,13 @@ Make sure the mesh only has tris/quads.""")
                 'weight_gravity': psettings.effector_weights.gravity
             }
 
+            if psettings.instance_object not in self.object_to_arm_object_dict:
+                # The instance object is not yet exported, e.g. because it is
+                # in a different scene outside of every (non-scene) collection
+                self.process_bobject(psettings.instance_object)
+                self.export_object(psettings.instance_object)
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+
             self.output['particle_datas'].append(out_particlesys)
 
     def export_tilesheets(self):
