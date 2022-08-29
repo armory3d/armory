@@ -1,4 +1,6 @@
 from math import pi, cos, sin, sqrt
+from typing import Type
+
 import bpy
 from bpy.props import *
 from bpy.types import NodeSocket
@@ -541,7 +543,60 @@ def draw_socket_layout_split(socket: bpy.types.NodeSocket, layout: bpy.types.UIL
     if not socket.is_output and not socket.is_linked:
         layout.prop(socket, prop_name, text='')
 
+
+def _make_socket_interface(interface_name: str, bl_idname: str) -> Type[bpy.types.NodeSocketInterface]:
+    """Create a socket interface class that is used by Blender for node
+    groups. We currently don't use real node groups, but without these
+    classes Blender will (incorrectly) draw the socket borders in light grey.
+    """
+    def draw(self, context, layout):
+        pass
+
+    def draw_color(self, context):
+        # This would be used if we were using "real" node groups
+        return 0, 0, 0, 1
+
+    cls = type(
+        interface_name,
+        (bpy.types.NodeSocketInterface, ), {
+            'bl_socket_idname': bl_idname,
+            'draw': draw,
+            'draw_color': draw_color,
+        }
+    )
+    return cls
+
+
+ArmActionSocketInterface = _make_socket_interface('ArmActionSocketInterface', 'ArmNodeSocketAction')
+ArmAnimSocketInterface = _make_socket_interface('ArmAnimSocketInterface', 'ArmNodeSocketAnimAction')
+ArmRotationSocketInterface = _make_socket_interface('ArmRotationSocketInterface', 'ArmRotationSocket')
+ArmArraySocketInterface = _make_socket_interface('ArmArraySocketInterface', 'ArmNodeSocketArray')
+ArmBoolSocketInterface = _make_socket_interface('ArmBoolSocketInterface', 'ArmBoolSocket')
+ArmColorSocketInterface = _make_socket_interface('ArmColorSocketInterface', 'ArmColorSocket')
+ArmDynamicSocketInterface = _make_socket_interface('ArmDynamicSocketInterface', 'ArmDynamicSocket')
+ArmFloatSocketInterface = _make_socket_interface('ArmFloatSocketInterface', 'ArmFloatSocket')
+ArmIntSocketInterface = _make_socket_interface('ArmIntSocketInterface', 'ArmIntSocket')
+ArmObjectSocketInterface = _make_socket_interface('ArmObjectSocketInterface', 'ArmNodeSocketObject')
+ArmStringSocketInterface = _make_socket_interface('ArmStringSocketInterface', 'ArmStringSocket')
+ArmVectorSocketInterface = _make_socket_interface('ArmVectorSocketInterface', 'ArmVectorSocket')
+ArmAnySocketInterface = _make_socket_interface('ArmAnySocketInterface', 'ArmAnySocket')
+
+
 REG_CLASSES = (
+    ArmActionSocketInterface,
+    ArmAnimSocketInterface,
+    ArmRotationSocketInterface,
+    ArmArraySocketInterface,
+    ArmBoolSocketInterface,
+    ArmColorSocketInterface,
+    ArmDynamicSocketInterface,
+    ArmFloatSocketInterface,
+    ArmIntSocketInterface,
+    ArmObjectSocketInterface,
+    ArmStringSocketInterface,
+    ArmVectorSocketInterface,
+    ArmAnySocketInterface,
+
     ArmActionSocket,
     ArmAnimActionSocket,
     ArmRotationSocket,
