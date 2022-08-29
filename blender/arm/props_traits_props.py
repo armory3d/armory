@@ -62,18 +62,22 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             ("SpeakerObject", "Speaker Object", "Speaker Object Type")),
         name="Type",
         description="The type of this property",
-        default="String")
+        default="String",
+        override={"LIBRARY_OVERRIDABLE"}
+    )
 
     # === VALUES ===
-    value_string: StringProperty(name="Value", default="")
-    value_int: IntProperty(name="Value", default=0)
-    value_float: FloatProperty(name="Value", default=0.0)
-    value_bool: BoolProperty(name="Value", default=False)
-    value_vec2: FloatVectorProperty(name="Value", size=2)
-    value_vec3: FloatVectorProperty(name="Value", size=3)
-    value_vec4: FloatVectorProperty(name="Value", size=4)
+    value_string: StringProperty(name="Value", default="", override={"LIBRARY_OVERRIDABLE"})
+    value_int: IntProperty(name="Value", default=0, override={"LIBRARY_OVERRIDABLE"})
+    value_float: FloatProperty(name="Value", default=0.0, override={"LIBRARY_OVERRIDABLE"})
+    value_bool: BoolProperty(name="Value", default=False, override={"LIBRARY_OVERRIDABLE"})
+    value_vec2: FloatVectorProperty(name="Value", size=2, override={"LIBRARY_OVERRIDABLE"})
+    value_vec3: FloatVectorProperty(name="Value", size=3, override={"LIBRARY_OVERRIDABLE"})
+    value_vec4: FloatVectorProperty(name="Value", size=4, override={"LIBRARY_OVERRIDABLE"})
     value_object: PointerProperty(
-        name="Value", type=bpy.types.Object, poll=filter_objects)
+        name="Value", type=bpy.types.Object, poll=filter_objects,
+        override={"LIBRARY_OVERRIDABLE"}
+    )
 
     def set_value(self, val):
         # Would require way too much effort, so it's out of scope here.

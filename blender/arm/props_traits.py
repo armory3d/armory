@@ -11,7 +11,6 @@ import bpy.utils.previews
 
 import arm.make as make
 from arm.props_traits_props import *
-import arm.proxy as proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 import arm.write_data as write_data
@@ -20,7 +19,6 @@ if arm.is_reload(__name__):
     arm.make = arm.reload_module(arm.make)
     arm.props_traits_props = arm.reload_module(arm.props_traits_props)
     from arm.props_traits_props import *
-    proxy = arm.reload_module(proxy)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
     arm.write_data = arm.reload_module(arm.write_data)
@@ -94,17 +92,19 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
         """Ensure that only logic node trees show up as node traits"""
         return tree.bl_idname == 'ArmLogicTreeType'
 
-    name: StringProperty(name="Name", description="A name for this item", default="")
-    enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
+    name: StringProperty(name="Name", description="The name of the trait", default="", override={"LIBRARY_OVERRIDABLE"})
+    enabled_prop: BoolProperty(name="", description="Whether this trait is enabled", default=True, update=trigger_recompile, override={"LIBRARY_OVERRIDABLE"})
     is_object: BoolProperty(name="", default=True)
-    fake_user: BoolProperty(name="Fake User", description="Export this trait even if it is deactivated", default=False)
+    fake_user: BoolProperty(name="Fake User", description="Export this trait even if it is deactivated", default=False, override={"LIBRARY_OVERRIDABLE"})
     type_prop: EnumProperty(name="Type", items=PROP_TYPES_ENUM)
-    class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
-    canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
-    webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
-    node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group, poll=poll_node_trees)
+
+    class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group, override={"LIBRARY_OVERRIDABLE"})
+    canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group, override={"LIBRARY_OVERRIDABLE"})
+    webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group, override={"LIBRARY_OVERRIDABLE"})
+    node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group, override={"LIBRARY_OVERRIDABLE"}, poll=poll_node_trees)
+
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
-    arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
+    arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
     arm_traitpropswarnings: CollectionProperty(type=ArmTraitPropWarning)
 
 class ARM_UL_TraitList(bpy.types.UIList):
@@ -190,7 +190,7 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
     def poll(self, context):
         """ Enable if there's something in the list """
         obj = bpy.context.object
-        if obj == None:
+        if obj is None:
             return False
         return len(obj.arm_traitlist) > 0
 
@@ -200,16 +200,24 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
         index = obj.arm_traitlist_index
 
         if len(lst) <= index:
-            return{'FINISHED'}
+            return {'FINISHED'}
 
-        lst.remove(index)
+        try:
+            lst.remove(index)
+        except TypeError as e:
+            if obj.override_library is not None:
+                return {'CANCELLED'}
+            else:
+                raise e
+
         update_trait_group(self, context)
 
         if index > 0:
             index = index - 1
 
         obj.arm_traitlist_index = index
-        return{'FINISHED'}
+
+        return {'FINISHED'}
 
 class ArmTraitListDeleteItemScene(bpy.types.Operator):
     """Delete the selected item from the list"""
@@ -328,7 +336,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
     bl_description = 'Copy script to project and edit in the text editor'
     bl_options = {'INTERNAL'}
 
-    is_object: BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(default=False)
 
     def execute(self, context):
         if not arm.utils.check_saved(self):
@@ -636,10 +644,17 @@ class ArmNewWasmButton(bpy.types.Operator):
         webbrowser.open('https://webassembly.studio/')
         return{'FINISHED'}
 
+
 class ArmRefreshScriptsButton(bpy.types.Operator):
-    """Fetch all script names"""
+    """Fetch all script names and trait properties."""
     bl_idname = 'arm.refresh_scripts'
     bl_label = 'Refresh Traits'
+
+    poll_msg = (
+        "Cannot refresh scripts for overrides at the moment due to"
+        " Blender limitations. Please use the 'Refresh' operator in"
+        " the linked file."
+    )
 
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
@@ -648,6 +663,26 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
         arm.utils.fetch_trait_props()
         arm.utils.fetch_wasm_names()
         return{'FINISHED'}
+
+
+class ArmRefreshObjectScriptsButton(bpy.types.Operator):
+    """Fetch all script names and trait properties."""
+    bl_idname = 'arm.refresh_object_scripts'
+    bl_label = 'Refresh Traits'
+    bl_options = {'INTERNAL'}
+
+    @classmethod
+    def poll(cls, context):
+        cls.poll_message_set(ArmRefreshScriptsButton.poll_msg)
+        # Technically we could keep the operator enabled here since
+        # fetch_trait_props() checks for overrides and the operator does
+        # not depend on the current object, but this way the user
+        # can recognize why refreshing doesn't work.
+        return context.object.override_library is None
+
+    def execute(self, context):
+        return ArmRefreshScriptsButton.execute(self, context)
+
 
 class ArmRefreshCanvasListButton(bpy.types.Operator):
     """Fetch all canvas names"""
@@ -720,12 +755,11 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
             if not self.overwrite:
                 offset = len(target_obj.arm_traitlist)
 
-            # Make use of proxy functions here
-            proxy.sync_collection(
+            arm.utils.merge_into_collection(
                 source_obj.arm_traitlist, target_obj.arm_traitlist, clear_dst=self.overwrite)
 
             for i in range(len(source_obj.arm_traitlist)):
-                proxy.sync_collection(
+                arm.utils.merge_into_collection(
                     source_obj.arm_traitlist[i].arm_traitpropslist,
                     target_obj.arm_traitlist[i + offset].arm_traitpropslist
                 )
@@ -807,10 +841,10 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 else:
                     row.operator("arm.edit_bundled_script", icon="FILE_SCRIPT").is_object = is_object
 
-            row.operator("arm.refresh_scripts", text="Refresh", icon="FILE_REFRESH")
+            refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
+            row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
 
             # Default props
-            item.name = item.class_name_prop
             row = layout.row()
             if item.type_prop == 'Haxe Script':
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
@@ -821,22 +855,22 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
 
         elif item.type_prop == 'WebAssembly':
-            item.name = item.webassembly_prop
-
             row.operator("arm.new_wasm", icon="FILE_NEW")
-            row.operator("arm.refresh_scripts", text="Refresh", icon="FILE_REFRESH")
+
+            refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
+            row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
 
             row = layout.row()
             row.prop_search(item, "webassembly_prop", bpy.data.worlds['Arm'], "arm_wasm_list", text="Module")
 
         elif item.type_prop == 'UI Canvas':
-            item.name = item.canvas_name_prop
-
             row.operator("arm.new_canvas", icon="FILE_NEW").is_object = is_object
             column = row.column(align=True)
             column.enabled = item.canvas_name_prop != ''
             column.operator("arm.edit_canvas", icon="NODE_COMPOSITING").is_object = is_object
-            row.operator("arm.refresh_canvas_list", text="Refresh", icon="FILE_REFRESH")
+
+            refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
+            row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
 
             row = layout.row()
             row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
@@ -905,15 +939,16 @@ def register():
     bpy.utils.register_class(ArmNewCanvasDialog)
     bpy.utils.register_class(ArmNewWasmButton)
     bpy.utils.register_class(ArmRefreshScriptsButton)
+    bpy.utils.register_class(ArmRefreshObjectScriptsButton)
     bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ARM_PT_TraitPanel)
     bpy.utils.register_class(ARM_PT_SceneTraitPanel)
     bpy.utils.register_class(ARM_OT_CopyTraitsFromActive)
 
-    bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
-    bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
+    bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
+    bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
+    bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
+    bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
 
 
 def unregister():
@@ -934,6 +969,7 @@ def unregister():
     bpy.utils.unregister_class(ArmNewTreeNodeDialog)
     bpy.utils.unregister_class(ArmNewCanvasDialog)
     bpy.utils.unregister_class(ArmNewWasmButton)
+    bpy.utils.unregister_class(ArmRefreshObjectScriptsButton)
     bpy.utils.unregister_class(ArmRefreshScriptsButton)
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ARM_PT_TraitPanel)
