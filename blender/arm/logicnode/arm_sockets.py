@@ -13,22 +13,24 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
+# See Blender sources: /source/blender/editors/space_node/drawnode.cc
+# Permalink for 3.2.2: https://github.com/blender/blender/blob/bcfdb14560e77891d674c2701a5071a7c07baba3/source/blender/editors/space_node/drawnode.cc#L1152-L1167
 socket_colors = {
     'ArmNodeSocketAction': (0.8, 0.3, 0.3, 1),
     'ArmNodeSocketAnimAction': (0.8, 0.8, 0.8, 1),
     'ArmRotationSocket': (0.68, 0.22, 0.62, 1),
     'ArmNodeSocketArray': (0.8, 0.4, 0.0, 1),
-    'ArmBoolSocket': (0.8, 0.651, 0.839, 1),
-    'ArmColorSocket': (0.78, 0.78, 0.161, 1),
-    'ArmDynamicSocket': (0.388, 0.78, 0.388, 1),
-    'ArmFloatSocket': (0.631, 0.631, 0.631, 1),
+    'ArmBoolSocket': (0.80, 0.65, 0.84, 1.0),
+    'ArmColorSocket': (0.78, 0.78, 0.16, 1.0),
+    'ArmDynamicSocket': (0.39, 0.78, 0.39, 1.0),
+    'ArmFloatSocket': (0.63, 0.63, 0.63, 1.0),
     'ArmIntSocket': (0.059, 0.522, 0.149, 1),
     'ArmNodeSocketObject': (0.15, 0.55, 0.75, 1),
-    'ArmStringSocket': (0.439, 0.698, 1, 1),
-    'ArmVectorSocket': (0.388, 0.388, 0.78, 1),
+    'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
+    'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
     'ArmAnySocket': (0.9, 0.9, 0.9, 1)
-
 }
+
 
 def _on_update_socket(self, context):
     self.node.on_socket_val_update(context, self)
