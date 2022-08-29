@@ -280,6 +280,7 @@ def build():
             assets.add_shader_pass('blur_gaus_pass')
 
         if rpdat.rp_ssr:
+            wrd.world_defs += '_SSR'
             assets.add_khafile_def('rp_ssr')
             assets.add_shader_pass('ssr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
