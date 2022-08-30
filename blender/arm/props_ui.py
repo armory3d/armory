@@ -802,10 +802,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             if item.arm_project_target == 'custom':
                 box.prop(item, 'arm_project_khamake')
             box.prop(item, arm.utils.target_to_gapi(item.arm_project_target))
-            wrd.arm_rpcache_list.clear() # Make UIList work with prop_search()
-            for i in wrd.arm_rplist:
-                wrd.arm_rpcache_list.add().name = i.name
-            box.prop_search(item, "arm_project_rp", wrd, "arm_rpcache_list", text="Render Path")
+            box.prop_search(item, "arm_project_rp", wrd, "arm_rplist", text="Render Path")
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
             layout.separator()
 
@@ -1408,11 +1405,7 @@ class ARM_PT_RenderPathPanel(bpy.types.Panel):
 
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
         if len(arm.api.drivers) > 0:
-            rpdat.rp_driver_list.clear()
-            rpdat.rp_driver_list.add().name = 'Armory'
-            for d in arm.api.drivers:
-                rpdat.rp_driver_list.add().name = arm.api.drivers[d]['driver_name']
-            layout.prop_search(rpdat, "rp_driver", rpdat, "rp_driver_list", text="Driver")
+            layout.prop_search(rpdat, "rp_driver", wrd, "rp_driver_list", text="Driver")
             layout.separator()
             if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_props'] != None:
                 arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
