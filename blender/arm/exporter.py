@@ -1326,7 +1326,36 @@ class ArmoryExporter:
             abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
         ]
 
-    def export_mesh_data(self, exportMesh, bobject: bpy.types.Object, o, has_armature=False):
+    @staticmethod
+    def get_num_vertex_colors(mesh: bpy.types.Mesh) -> int:
+        """Return the amount of vertex color attributes of the given mesh."""
+        num = 0
+        for attr in mesh.attributes:
+            if attr.data_type in ('BYTE_COLOR', 'FLOAT_COLOR'):
+                if attr.domain == 'CORNER':
+                    num += 1
+                else:
+                    log.warn(f'Only vertex colors with domain "Face Corner" are supported for now, ignoring "{attr.name}"')
+
+        return num
+
+    @staticmethod
+    def get_nth_vertex_colors(mesh: bpy.types.Mesh, n: int) -> Optional[bpy.types.Attribute]:
+        """Return the n-th vertex color attribute from the given mesh,
+        ignoring all other attribute types and unsupported domains.
+        """
+        i = 0
+        for attr in mesh.attributes:
+            if attr.data_type in ('BYTE_COLOR', 'FLOAT_COLOR'):
+                if attr.domain != 'CORNER':
+                    log.warn(f'Only vertex colors with domain "Face Corner" are supported for now, ignoring "{attr.name}"')
+                    continue
+                if i == n:
+                    return attr
+                i += 1
+        return None
+
+    def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
         exportMesh.calc_normals_split()
         exportMesh.calc_loop_triangles()
 
@@ -1334,7 +1363,7 @@ class ArmoryExporter:
         num_verts = len(loops)
         num_uv_layers = len(exportMesh.uv_layers)
         is_baked = self.has_baked_material(bobject, exportMesh.materials)
-        num_colors = len(exportMesh.vertex_colors)
+        num_colors = self.get_num_vertex_colors(exportMesh)
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
         # Check if shape keys were exported
         has_morph_target = self.get_shape_keys(bobject.data)
@@ -1437,8 +1466,9 @@ Make sure the mesh only has tris/quads.""")
         if has_morph_target:
             lay2 = exportMesh.uv_layers[morph_uv_index]
         if has_col:
-            vcol0 = exportMesh.vertex_colors[0].data
+            vcol0 = self.get_nth_vertex_colors(exportMesh, 0).data
 
+        loop: bpy.types.MeshLoop
         for i, loop in enumerate(loops):
             v = verts[loop.vertex_index]
             co = v.co

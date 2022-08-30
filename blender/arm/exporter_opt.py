@@ -2,7 +2,9 @@
 Exports smaller geometry but is slower.
 To be replaced with https://github.com/zeux/meshoptimizer
 """
+from typing import Optional
 
+import bpy
 from mathutils import *
 import numpy as np
 
@@ -18,15 +20,14 @@ else:
 
 class Vertex:
     __slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertex_index")
-    def __init__(self, mesh, loop):
+
+    def __init__(self, mesh: bpy.types.Mesh, loop: bpy.types.MeshLoop, vcol0: Optional[bpy.types.Attribute]):
         self.vertex_index = loop.vertex_index
         loop_idx = loop.index
         self.co = mesh.vertices[self.vertex_index].co[:]
         self.normal = loop.normal[:]
         self.uvs = tuple(layer.data[loop_idx].uv[:] for layer in mesh.uv_layers)
-        self.col = [0.0, 0.0, 0.0]
-        if len(mesh.vertex_colors) > 0:
-            self.col = mesh.vertex_colors[0].data[loop_idx].color[:]
+        self.col = [0.0, 0.0, 0.0] if vcol0 is None else vcol0.data[loop_idx].color[:]
         self.loop_indices = [loop_idx]
         self.index = 0
 
@@ -110,17 +111,19 @@ def calc_tangents(posa, nora, uva, ias, scale_pos):
         tangents[i * 3 + 2] = v.z
     return tangents
 
-def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
+
+def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
     exportMesh.calc_normals_split()
     # exportMesh.calc_loop_triangles()
-    vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
+    vcol0 = self.get_nth_vertex_colors(exportMesh, 0)
+    vert_list = {Vertex(exportMesh, loop, vcol0): 0 for loop in exportMesh.loops}.keys()
     num_verts = len(vert_list)
     num_uv_layers = len(exportMesh.uv_layers)
     has_tex = self.get_export_uvs(exportMesh) == True and num_uv_layers > 0
     if self.has_baked_material(bobject, exportMesh.materials):
         has_tex = True
     has_tex1 = has_tex == True and num_uv_layers > 1
-    num_colors = len(exportMesh.vertex_colors)
+    num_colors = self.get_num_vertex_colors(exportMesh)
     has_col = self.get_export_vcols(exportMesh) == True and num_colors > 0
     has_tang = self.has_tangents(exportMesh)
 
