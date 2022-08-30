@@ -47,6 +47,7 @@ class Vertex:
             other.loop_indices = indices
         return eq
 
+
 def calc_tangents(posa, nora, uva, ias, scale_pos):
     num_verts = int(len(posa) / 4)
     tangents = np.empty(num_verts * 3, dtype='<f4')
@@ -112,28 +113,28 @@ def calc_tangents(posa, nora, uva, ias, scale_pos):
     return tangents
 
 
-def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
-    exportMesh.calc_normals_split()
+def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
+    export_mesh.calc_normals_split()
     # exportMesh.calc_loop_triangles()
-    vcol0 = self.get_nth_vertex_colors(exportMesh, 0)
-    vert_list = {Vertex(exportMesh, loop, vcol0): 0 for loop in exportMesh.loops}.keys()
+    vcol0 = self.get_nth_vertex_colors(export_mesh, 0)
+    vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
     num_verts = len(vert_list)
-    num_uv_layers = len(exportMesh.uv_layers)
-    has_tex = self.get_export_uvs(exportMesh) == True and num_uv_layers > 0
-    if self.has_baked_material(bobject, exportMesh.materials):
+    num_uv_layers = len(export_mesh.uv_layers)
+    has_tex = self.get_export_uvs(export_mesh) and num_uv_layers > 0
+    if self.has_baked_material(bobject, export_mesh.materials):
         has_tex = True
-    has_tex1 = has_tex == True and num_uv_layers > 1
-    num_colors = self.get_num_vertex_colors(exportMesh)
-    has_col = self.get_export_vcols(exportMesh) == True and num_colors > 0
-    has_tang = self.has_tangents(exportMesh)
+    has_tex1 = has_tex and num_uv_layers > 1
+    num_colors = self.get_num_vertex_colors(export_mesh)
+    has_col = self.get_export_vcols(export_mesh) and num_colors > 0
+    has_tang = self.has_tangents(export_mesh)
 
     pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
     ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
     if has_tex:
         # Get active uvmap
         t0map = 0
-        uv_layers = exportMesh.uv_layers
-        if uv_layers != None:
+        uv_layers = export_mesh.uv_layers
+        if uv_layers is not None:
             if 'UVMap_baked' in uv_layers:
                 for i in range(0, len(uv_layers)):
                     if uv_layers[i].name == 'UVMap_baked':
@@ -155,7 +156,7 @@ def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object
     if has_tex:
         # Scale for packed coords
         maxdim = 1.0
-        lay0 = exportMesh.uv_layers[t0map]
+        lay0 = export_mesh.uv_layers[t0map]
         for v in lay0.data:
             if abs(v.uv[0]) > maxdim:
                 maxdim = abs(v.uv[0])
@@ -169,12 +170,7 @@ def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object
         # TODO: handle t1map
 
     # Save aabb
-    aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
-    bobject.data.arm_aabb = [ \
-        abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
-        abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
-        abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
-    ]
+    self.calc_aabb(bobject)
 
     # Scale for packed coords
     maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
@@ -216,17 +212,17 @@ def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object
             cdata[i3 + 2] = v.col[2]
 
     # Indices
-    prims = {ma.name if ma else '': [] for ma in exportMesh.materials}
+    prims = {ma.name if ma else '': [] for ma in export_mesh.materials}
     if not prims:
         prims = {'': []}
 
     vert_dict = {i : v for v in vert_list for i in v.loop_indices}
-    for poly in exportMesh.polygons:
+    for poly in export_mesh.polygons:
         first = poly.loop_start
-        if len(exportMesh.materials) == 0:
+        if len(export_mesh.materials) == 0:
             prim = prims['']
         else:
-            mat = exportMesh.materials[min(poly.material_index, len(exportMesh.materials) - 1)]
+            mat = export_mesh.materials[min(poly.material_index, len(export_mesh.materials) - 1)]
             prim = prims[mat.name if mat else '']
         indices = [vert_dict[i].index for i in range(first, first+poly.loop_total)]
 
@@ -244,14 +240,12 @@ def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object
             idata[i] = v
         if len(idata) == 0: # No face assigned
             continue
-        ia = {}
-        ia['values'] = idata
-        ia['material'] = 0
+        ia = {'values': idata, 'material': 0}
         # Find material index for multi-mat mesh
-        if len(exportMesh.materials) > 1:
-            for i in range(0, len(exportMesh.materials)):
-                if (exportMesh.materials[i] != None and mat == exportMesh.materials[i].name) or \
-                   (exportMesh.materials[i] == None and mat == ''): # Default material for empty slots
+        if len(export_mesh.materials) > 1:
+            for i in range(0, len(export_mesh.materials)):
+                if (export_mesh.materials[i] is not None and mat == export_mesh.materials[i].name) or \
+                   (export_mesh.materials[i] is None and mat == ''):  # Default material for empty slots
                     ia['material'] = i
                     break
         o['index_arrays'].append(ia)

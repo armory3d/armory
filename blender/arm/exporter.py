@@ -1320,10 +1320,10 @@ class ArmoryExporter:
     @staticmethod
     def calc_aabb(bobject):
         aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
-        bobject.data.arm_aabb = [ \
-            abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
-            abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
-            abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
+        bobject.data.arm_aabb = [
+            abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2,
+            abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2,
+            abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2
         ]
 
     @staticmethod
@@ -1355,15 +1355,15 @@ class ArmoryExporter:
                 i += 1
         return None
 
-    def export_mesh_data(self, exportMesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
-        exportMesh.calc_normals_split()
-        exportMesh.calc_loop_triangles()
+    def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
+        export_mesh.calc_normals_split()
+        export_mesh.calc_loop_triangles()
 
-        loops = exportMesh.loops
+        loops = export_mesh.loops
         num_verts = len(loops)
-        num_uv_layers = len(exportMesh.uv_layers)
-        is_baked = self.has_baked_material(bobject, exportMesh.materials)
-        num_colors = self.get_num_vertex_colors(exportMesh)
+        num_uv_layers = len(export_mesh.uv_layers)
+        is_baked = self.has_baked_material(bobject, export_mesh.materials)
+        num_colors = self.get_num_vertex_colors(export_mesh)
         has_col = self.get_export_vcols(bobject.data) and num_colors > 0
         # Check if shape keys were exported
         has_morph_target = self.get_shape_keys(bobject.data)
@@ -1378,7 +1378,7 @@ class ArmoryExporter:
         pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
         ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
         if has_tex or has_morph_target:
-            uv_layers = exportMesh.uv_layers
+            uv_layers = export_mesh.uv_layers
             maxdim = 1.0
             if has_tex:
                 t0map = 0 # Get active uvmap
@@ -1433,7 +1433,7 @@ class ArmoryExporter:
                 invscale_tex = 1 * 32767
             if has_tang:
                 try:
-                    exportMesh.calc_tangents(uvmap=lay0.name)
+                    export_mesh.calc_tangents(uvmap=lay0.name)
                 except Exception as e:
                     if hasattr(e, 'message'):
                         log.error(e.message)
@@ -1458,15 +1458,15 @@ Make sure the mesh only has tris/quads.""")
         scale_pos = o['scale_pos']
         invscale_pos = (1 / scale_pos) * 32767
 
-        verts = exportMesh.vertices
+        verts = export_mesh.vertices
         if has_tex:
-            lay0 = exportMesh.uv_layers[t0map]
+            lay0 = export_mesh.uv_layers[t0map]
             if has_tex1:
-                lay1 = exportMesh.uv_layers[t1map]
+                lay1 = export_mesh.uv_layers[t1map]
         if has_morph_target:
-            lay2 = exportMesh.uv_layers[morph_uv_index]
+            lay2 = export_mesh.uv_layers[morph_uv_index]
         if has_col:
-            vcol0 = self.get_nth_vertex_colors(exportMesh, 0).data
+            vcol0 = self.get_nth_vertex_colors(export_mesh, 0).data
 
         loop: bpy.types.MeshLoop
         for i, loop in enumerate(loops):
@@ -1507,18 +1507,18 @@ Make sure the mesh only has tris/quads.""")
                 cdata[i3 + 1] = col[1]
                 cdata[i3 + 2] = col[2]
 
-        mats = exportMesh.materials
+        mats = export_mesh.materials
         poly_map = []
         for i in range(max(len(mats), 1)):
             poly_map.append([])
-        for poly in exportMesh.polygons:
+        for poly in export_mesh.polygons:
             poly_map[poly.material_index].append(poly)
 
         o['index_arrays'] = []
 
         # map polygon indices to triangle loops
         tri_loops = {}
-        for loop in exportMesh.loop_triangles:
+        for loop in export_mesh.loop_triangles:
             if loop.polygon_index not in tri_loops:
                 tri_loops[loop.polygon_index] = []
             tri_loops[loop.polygon_index].append(loop)
@@ -1539,12 +1539,10 @@ Make sure the mesh only has tris/quads.""")
                     prim[i + 2] = loops[loop.loops[2]].index
                     i += 3
 
-            ia = {}
-            ia['values'] = prim
-            ia['material'] = 0
+            ia = {'values': prim, 'material': 0}
             if len(mats) > 1:
-                for i in range(len(mats)): # Multi-mat mesh
-                    if (mats[i] == mats[index]): # Default material for empty slots
+                for i in range(len(mats)):  # Multi-mat mesh
+                    if mats[i] == mats[index]:  # Default material for empty slots
                         ia['material'] = i
                         break
             o['index_arrays'].append(ia)
