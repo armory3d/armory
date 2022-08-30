@@ -474,14 +474,20 @@ class ArmoryExporter:
             self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
-        # Particle object with no material assigned
+        """Select the particle material variant for all particle system
+        instance objects that use the armdefault material.
+        """
         for ps in bpy.data.particles:
             if ps.render_type != 'OBJECT' or ps.instance_object is None:
                 continue
+
             po = ps.instance_object
             if po not in self.object_to_arm_object_dict:
-                continue
+                self.process_bobject(po)
+                self.export_object(po)
             o = self.object_to_arm_object_dict[po]
+
+            # Check if the instance object uses the armdefault material
             if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.default_part_material_objects:
                 self.default_part_material_objects.append(po)
                 o['material_refs'] = ['armdefaultpart']  # Replace armdefault
@@ -715,7 +721,7 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject: bpy.types.Object, scene: bpy.types.Scene, out_parent: Dict = None) -> None:
+    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None) -> None:
         """This function exports a single object in the scene and
         includes its name, object reference, material references (for
         meshes), and transform.
@@ -1008,7 +1014,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
-                
+
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
 
@@ -1036,7 +1042,7 @@ class ArmoryExporter:
 
         if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
-                self.export_object(subbobject, scene, out_object)
+                self.export_object(subbobject, out_object)
 
     def export_skin(self, bobject: bpy.types.Object, armature, export_mesh: bpy.types.Mesh, out_mesh):
         """This function exports all skinning data, which includes the
@@ -1810,7 +1816,7 @@ Make sure the mesh only has tris/quads.""")
                     # all other objects (in scene_objects) are already exported.
                     if bobject.name not in scene_objects:
                         self.process_bobject(bobject)
-                        self.export_object(bobject, self.scene)
+                        self.export_object(bobject)
                 else:
                     # Add external linked objects
                     # Iron differentiates objects based on their names,
@@ -1827,7 +1833,7 @@ Make sure the mesh only has tris/quads.""")
                         continue
 
                     self.process_bobject(bobject)
-                    self.export_object(bobject, self.scene)
+                    self.export_object(bobject)
 
                 out_collection['object_refs'].append(asset_name)
 
@@ -2185,7 +2191,13 @@ Make sure the mesh only has tris/quads.""")
                 'weight_gravity': psettings.effector_weights.gravity
             }
 
+            if psettings.instance_object not in self.object_to_arm_object_dict:
+                # The instance object is not yet exported, e.g. because it is
+                # in a different scene outside of every (non-scene) collection
+                self.process_bobject(psettings.instance_object)
+                self.export_object(psettings.instance_object)
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+
             self.output['particle_datas'].append(out_particlesys)
 
     def export_tilesheets(self):
@@ -2352,7 +2364,7 @@ Make sure the mesh only has tris/quads.""")
             # Skip objects that have a parent because children are
             # exported recursively
             if not bobject.parent:
-                self.export_object(bobject, self.scene)
+                self.export_object(bobject)
 
         # Export collections
         if bpy.data.collections:
