@@ -588,7 +588,8 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_v
     if is_parsed(tex_store):
         return tex_store
     state.parsed.add(tex_store)
-    mat_bind_texture(tex)
+    if is_arm_mat_param is None:
+        mat_bind_texture(tex)
     state.con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
     triplanar = node.projection == 'BOX'
