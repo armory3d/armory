@@ -22,7 +22,7 @@ def morph_pos(vert):
     vert.write_attrib('spos.xyz /= posUnpack;')
 
 def morph_nor(vert, is_bone, prep):
-    vert.write_attrib('vec3 morphNor;')
+    vert.write_attrib('vec3 morphNor = vec3(0, 0, 0);')
     vert.write_attrib('getMorphedNormal(texCoordMorph, vec3(nor.xy, pos.w), morphNor);')
     if not is_bone:
         vert.write_attrib(prep + 'wnormal = normalize(N * morphNor);')
