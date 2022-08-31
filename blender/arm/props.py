@@ -293,7 +293,8 @@ def init_properties():
                  ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Instances use their unique position, rotation and scale (ipos, irot, iscl)')],
         name="Instanced Children", default='Off',
         description='Whether to use instancing to draw the children of this object. If enabled, this option defines what attributes may vary between the instances',
-        update=assets.invalidate_instance_cache)
+        update=assets.invalidate_instance_cache,
+        override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
