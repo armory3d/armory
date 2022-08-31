@@ -758,6 +758,15 @@ def get_cascade_size(rpdat):
         cascade_size = 4096
     return cascade_size
 
+
+def check_blender_version(op: bpy.types.Operator):
+    """Check whether the user uses the correct Blender version, if not
+    report in UI.
+    """
+    if not compare_version_blender_arm():
+        op.report({'INFO'}, 'For Armory to work correctly, you need Blender 3.3 LTS.')
+
+
 def check_saved(self):
     if bpy.data.filepath == "":
         msg = "Save blend file first"
@@ -1086,7 +1095,7 @@ def get_link_web_server():
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
 
 def compare_version_blender_arm():
-    return not (bpy.app.version[0] != 2 or bpy.app.version[1] != 93)
+    return not (bpy.app.version[0] != 3 or bpy.app.version[1] != 3)
 
 def get_file_arm_version_tuple() -> tuple[int]:
     wrd = bpy.data.worlds['Arm']

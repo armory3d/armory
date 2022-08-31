@@ -1171,12 +1171,10 @@ class ArmoryPlayButton(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
-        if state.proc_build != None:
+        if state.proc_build is not None:
             return {"CANCELLED"}
 
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1218,9 +1216,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1263,9 +1259,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
