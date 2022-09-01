@@ -69,8 +69,17 @@ def setup_envmap_render():
     else:
         log.info('Using CPU for environment render (might be slow). Enable CUDA if possible.')
 
-    # One sample is enough for world background only
+    # Those settings are sufficient for rendering only the world background
     scene.cycles.samples = 1
+    scene.cycles.max_bounces = 1
+    scene.cycles.diffuse_bounces = 1
+    scene.cycles.glossy_bounces = 1
+    scene.cycles.transmission_bounces = 1
+    scene.cycles.volume_bounces = 1
+    scene.cycles.transparent_max_bounces = 1
+    scene.cycles.caustics_reflective = False
+    scene.cycles.caustics_refractive = False
+    scene.cycles.use_denoising = False
 
     # Setup scene
     cam = bpy.data.cameras.new("_arm_cam_envmap_render")
