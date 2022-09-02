@@ -5,8 +5,6 @@
 #include "std/math.glsl"
 
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0; // Normal, roughness
-uniform sampler2D gbuffer1; // basecol, spec
 uniform sampler2D tex;
 uniform sampler2D sbase;
 uniform sampler2D sdetail;
