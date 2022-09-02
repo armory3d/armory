@@ -143,21 +143,13 @@ void main() {
 	vec3 refracted = textureLod(tex, tc, 0.0).rgb;
 	
 	#ifdef _SSR
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = 0.1;//unpackFloat(g0.b).y;
 	//if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	float spec = 0.9;//fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	//if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
-	vec2 enc = g0.rg;
-	vec3 n;
-	n.z = 1.0 - abs(enc.x) - abs(enc.y);
-	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(n);
-
-	vec3 viewnormal = V3 * n;
-	vec3 viewNormal = normalize(((n + n2) / 2.0) * 2.0 - 1.0);
+	vec3 viewNormal = n2
 	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
