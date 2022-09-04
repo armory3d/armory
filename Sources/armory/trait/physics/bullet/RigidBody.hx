@@ -76,7 +76,7 @@ class RigidBody extends iron.Trait {
 	static var usersCache = new Map<MeshData, Int>();
 
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
-						params: Array<Float> = null, flags: Array<Bool> = null) {
+						params: RigidBodyParams = null, flags: RigidBodyFlags = null) {
 		super();
 
 		if (nullvec) {
@@ -96,7 +96,19 @@ class RigidBody extends iron.Trait {
 		this.group = group;
 		this.mask = mask;
 
-		if (params == null) params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+		if (params == null) params = { linearDamping: 0.04,
+									   angularDamping: 0.1,
+									   //angularFriction: 0.1,
+									   linearFactorsX: 1.0,
+									   linearFactorsY: 1.0,
+									   linearFactorsZ: 1.0,
+									   angularFactorsX: 1.0,
+									   angularFactorsY: 1.0,
+									   angularFactorsZ: 1.0,
+									   collisionMargin: 0.0,
+									   linearDeactivationThreshold: 0.0,
+									   angularDeactivationThrshold: 0.0,
+									   deactivationTime: 0.0};
 		/**
 		 * params:[ linear damping
 		 * 		    angular damping
@@ -112,7 +124,11 @@ class RigidBody extends iron.Trait {
 		 * 			deactivation time(Not used)]
 		 */
 
-		if (flags == null) flags = [false, false, false, false, true];
+		if (flags == null) flags = { animated: false,
+									 trigger: false,
+									 ccd: false,
+									 staticObj: false,
+									 useDeactivation: true};
 		/**
 		 * flags:[ is animated
 		 * 		   is trigger
@@ -121,17 +137,20 @@ class RigidBody extends iron.Trait {
 		 * 		   use deactivation]
 		 */
 
-		this.linearDamping = params[0];
-		this.angularDamping = params[1];
-		this.linearFactors = [params[2], params[3], params[4]];
-		this.angularFactors = [params[5], params[6], params[7]];
-		this.collisionMargin = params[8];
-		this.deactivationParams = [params[9], params[10], params[11]];
-		this.animated = flags[0];
-		this.trigger = flags[1];
-		this.ccd = flags[2];
-		this.staticObj = flags[3];
-		this.useDeactivation = flags[4];
+		trace(params);
+		trace(flags);
+
+		this.linearDamping = params.linearDamping;
+		this.angularDamping = params.angularDamping;
+		this.linearFactors = [params.linearFactorsX, params.linearFactorsY, params.linearFactorsZ];
+		this.angularFactors = [params.angularFactorsX, params.angularFactorsY, params.angularFactorsZ];
+		this.collisionMargin = params.collisionMargin;
+		this.deactivationParams = [params.linearDeactivationThreshold, params.angularDeactivationThrshold, params.deactivationTime];
+		this.animated = flags.animated;
+		this.trigger = flags.trigger;
+		this.ccd = flags.ccd;
+		this.staticObj = flags.staticObj;
+		this.useDeactivation = flags.useDeactivation;
 
 		notifyOnAdd(init);
 	}
@@ -259,7 +278,7 @@ class RigidBody extends iron.Trait {
 
 		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(friction);
-		// body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
+		body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
 		bodyColl.setRestitution(restitution);
 
 		if ( useDeactivation) {
@@ -658,4 +677,27 @@ class RigidBody extends iron.Trait {
 	var Terrain = 7;
 }
 
+typedef RigidBodyParams = {
+	var linearDamping: Float;
+	var angularDamping: Float;
+	//var angularFriction: Float;
+	var linearFactorsX: Float;
+	var linearFactorsY: Float;
+	var linearFactorsZ: Float;
+	var angularFactorsX: Float;
+	var angularFactorsY: Float;
+	var angularFactorsZ: Float;
+	var collisionMargin: Float;
+	var linearDeactivationThreshold: Float;
+	var angularDeactivationThrshold: Float;
+	var deactivationTime: Float;
+}
+
+typedef RigidBodyFlags = {
+	var animated: Bool;
+	var trigger: Bool;
+	var ccd: Bool;
+	var staticObj: Bool;
+	var useDeactivation: Bool;
+}
 #end
