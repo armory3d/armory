@@ -2650,23 +2650,28 @@ Make sure the mesh only has tris/quads.""")
                 deact_lv = '0.0'
                 deact_av = '0.0'
                 deact_time = '0.0'
-            body_params = '[{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}]'.format(
-                str(rb.linear_damping),
-                str(rb.angular_damping),
-                str(lx), str(ly), str(lz),
-                str(ax), str(ay), str(az),
-                col_margin,
-                deact_lv, deact_av, deact_time
-            )
-            body_flags = '[{0}, {1}, {2}, {3}, {4}]'.format(
-                str(rb.kinematic).lower(),
-                str(bobject.arm_rb_trigger).lower(),
-                str(bobject.arm_rb_ccd).lower(),
-                str(is_static).lower(),
-                str(rb.use_deactivation).lower()
-            )
-            x['parameters'].append(body_params)
-            x['parameters'].append(body_flags)
+            body_params = {}
+            body_params['linearDamping'] = rb.linear_damping
+            body_params['angularDamping'] = rb.angular_damping
+            body_params['linearFactorsX'] = lx
+            body_params['linearFactorsY'] = ly
+            body_params['linearFactorsZ'] = lz
+            body_params['angularFactorsX'] = ax
+            body_params['angularFactorsY'] = ay
+            body_params['angularFactorsZ'] = az
+            body_params['angularFriction'] = bobject.arm_rb_angular_friction
+            body_params['collisionMargin'] = col_margin
+            body_params['linearDeactivationThreshold'] = deact_lv
+            body_params['angularDeactivationThrshold'] = deact_av
+            body_params['deactivationTime'] = deact_time
+            body_flags = {}
+            body_flags['animated'] = str(rb.kinematic).lower()
+            body_flags['trigger'] = str(bobject.arm_rb_trigger).lower()
+            body_flags['ccd'] = str(bobject.arm_rb_ccd).lower()
+            body_flags['staticObj'] = str(is_static).lower()
+            body_flags['useDeactivation'] = str(rb.use_deactivation).lower()
+            x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
+            x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
             o['traits'].append(x)
 
         # Phys traits
