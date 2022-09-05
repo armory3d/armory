@@ -2641,15 +2641,15 @@ Make sure the mesh only has tris/quads.""")
                 ay = 0
             if bobject.lock_rotation[2]:
                 az = 0
-            col_margin = str(rb.collision_margin) if rb.use_margin else '0.0'
+            col_margin = rb.collision_margin if rb.use_margin else 0.0
             if rb.use_deactivation:
-                deact_lv = str(rb.deactivate_linear_velocity)
-                deact_av = str(rb.deactivate_angular_velocity)
-                deact_time = str(bobject.arm_rb_deactivation_time)
+                deact_lv = rb.deactivate_linear_velocity
+                deact_av = rb.deactivate_angular_velocity
+                deact_time = bobject.arm_rb_deactivation_time
             else:
-                deact_lv = '0.0'
-                deact_av = '0.0'
-                deact_time = '0.0'
+                deact_lv = 0.0
+                deact_av = 0.0
+                deact_time = 0.0
             body_params = {}
             body_params['linearDamping'] = rb.linear_damping
             body_params['angularDamping'] = rb.angular_damping
@@ -2665,11 +2665,13 @@ Make sure the mesh only has tris/quads.""")
             body_params['angularDeactivationThrshold'] = deact_av
             body_params['deactivationTime'] = deact_time
             body_flags = {}
-            body_flags['animated'] = str(rb.kinematic).lower()
-            body_flags['trigger'] = str(bobject.arm_rb_trigger).lower()
-            body_flags['ccd'] = str(bobject.arm_rb_ccd).lower()
-            body_flags['staticObj'] = str(is_static).lower()
-            body_flags['useDeactivation'] = str(rb.use_deactivation).lower()
+            body_flags['animated'] = rb.kinematic
+            body_flags['trigger'] = bobject.arm_rb_trigger
+            body_flags['ccd'] = bobject.arm_rb_ccd
+            body_flags['staticObj'] = is_static
+            body_flags['useDeactivation'] = rb.use_deactivation
+            print(arm.utils.get_haxe_json_string(body_params))
+            print(arm.utils.get_haxe_json_string(body_flags))
             x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
             x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
             o['traits'].append(x)
