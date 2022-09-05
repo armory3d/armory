@@ -21,6 +21,7 @@ class RigidBody extends iron.Trait {
 	public var transform: Transform = null;
 	public var mass: Float;
 	public var friction: Float;
+	public var angularFriction: Float;
 	public var restitution: Float;
 	public var collisionMargin: Float;
 	public var linearDamping: Float;
@@ -98,7 +99,7 @@ class RigidBody extends iron.Trait {
 
 		if (params == null) params = { linearDamping: 0.04,
 									   angularDamping: 0.1,
-									   //angularFriction: 0.1,
+									   angularFriction: 0.1,
 									   linearFactorsX: 1.0,
 									   linearFactorsY: 1.0,
 									   linearFactorsZ: 1.0,
@@ -136,12 +137,10 @@ class RigidBody extends iron.Trait {
 		 * 		   is static
 		 * 		   use deactivation]
 		 */
-
-		trace(params);
-		trace(flags);
-
+		
 		this.linearDamping = params.linearDamping;
 		this.angularDamping = params.angularDamping;
+		this.angularFriction = params.angularFriction;
 		this.linearFactors = [params.linearFactorsX, params.linearFactorsY, params.linearFactorsZ];
 		this.angularFactors = [params.angularFactorsX, params.angularFactorsY, params.angularFactorsZ];
 		this.collisionMargin = params.collisionMargin;
@@ -278,7 +277,7 @@ class RigidBody extends iron.Trait {
 
 		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(friction);
-		body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
+		bodyColl.setRollingFriction(angularFriction);
 		bodyColl.setRestitution(restitution);
 
 		if ( useDeactivation) {
@@ -680,7 +679,7 @@ class RigidBody extends iron.Trait {
 typedef RigidBodyParams = {
 	var linearDamping: Float;
 	var angularDamping: Float;
-	//var angularFriction: Float;
+	var angularFriction: Float;
 	var linearFactorsX: Float;
 	var linearFactorsY: Float;
 	var linearFactorsZ: Float;
