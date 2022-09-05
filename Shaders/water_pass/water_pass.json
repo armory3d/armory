@@ -59,11 +59,13 @@
 				},
 				{
 					"name": "P",
-					"link": "_projectionMatrix"
+					"link": "_projectionMatrix",
+					"ifdef": ["_SSR"]
 				},
 				{
 					"name": "V3",
-					"link": "_viewMatrix3"
+					"link": "_viewMatrix3",
+					"ifdef": ["_SSR"]
 				}
 			],
 			"texture_params": [],
