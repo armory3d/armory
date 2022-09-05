@@ -669,8 +669,8 @@ def safestr(s: str) -> str:
 
 def get_haxe_json_string(d: dict) -> str:
     s = str(d)
-    s = s.replace("'true'", 'true')
-    s = s.replace("'false'", 'false')
+    s = s.replace('True', 'true')
+    s = s.replace('False', 'false')
     s = s.replace("'", '"')
     return s
 
