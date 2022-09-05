@@ -2670,8 +2670,6 @@ Make sure the mesh only has tris/quads.""")
             body_flags['ccd'] = bobject.arm_rb_ccd
             body_flags['staticObj'] = is_static
             body_flags['useDeactivation'] = rb.use_deactivation
-            print(arm.utils.get_haxe_json_string(body_params))
-            print(arm.utils.get_haxe_json_string(body_flags))
             x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
             x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
             o['traits'].append(x)
