@@ -31,6 +31,8 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
     @input Angular Damping: Damping for angular translation. Recommended range 0 to 1.
 
+    @input Angular Friction: Rolling or angular friction. Recommended range >= 0
+
     @input Use Deactivation: Deactive this rigid body when below the Linear and Angular velocity threshold. Enable to improve performance.
 
     @input Linear Velocity Threshold: Velocity below which decativation occurs if enabled.
@@ -48,7 +50,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
 
     bl_idname = 'LNAddRigidBodyNode'
     bl_label = 'Add Rigid Body'
-    arm_version = 1
+    arm_version = 2
 
     NUM_STATIC_INS = 9
 
@@ -111,6 +113,7 @@ class AddRigidBodyNode(ArmLogicTreeNode):
             self.add_input('ArmFloatSocket', 'Margin', 0.04)
             self.add_input('ArmFloatSocket', 'Linear Damping', 0.04)
             self.add_input('ArmFloatSocket', 'Angular Damping', 0.1)
+            self.add_input('ArmFloatSocket', 'Angular Friction', 0.1)
             self.add_input('ArmBoolSocket', 'Use Deacivation')
             self.add_input('ArmFloatSocket', 'Linear Velocity Threshold', 0.4)
             self.add_input('ArmFloatSocket', 'Angular Velocity Threshold', 0.5)
@@ -121,3 +124,17 @@ class AddRigidBodyNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "property1")
         layout.prop(self, 'property0')
+    
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        in_socket_mapping={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8}
+        if self.property1:
+            in_socket_mapping.update({9:9, 10:10, 11:11, 12:12, 13:14, 14:15, 15:16, 16:17, 17:18})
+
+        return NodeReplacement(
+            'LNAddRigidBodyNode', self.arm_version, 'LNAddRigidBodyNode', 2,
+            in_socket_mapping=in_socket_mapping,
+            out_socket_mapping={0:0, 1:1},
+            property_mapping={'property0':'property0', 'property1':'property1'})
