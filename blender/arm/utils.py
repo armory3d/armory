@@ -667,6 +667,13 @@ def safestr(s: str) -> str:
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
+def get_haxe_json_string(d: dict) -> str:
+    s = str(d)
+    s = s.replace("'true'", 'true')
+    s = s.replace("'false'", 'false')
+    s = s.replace("'", '"')
+    return s
+
 def asset_name(bdata):
     if bdata == None:
         return None
