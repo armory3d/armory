@@ -72,13 +72,13 @@ class NishitaData {
 	**/
 	public static var jSteps = 8;
 
-	/** Radius of the atmosphere in meters. **/
-	public static var radiusAtmo = 6420000;
+	/** Radius of the atmosphere in kilometers. **/
+	public static var radiusAtmo = 6420.0;
 	/**
-		Radius of the planet in meters. The default value is the earth radius as
+		Radius of the planet in kilometers. The default value is the earth radius as
 		defined in Cycles.
 	**/
-	public static var radiusPlanet = 6360000;
+	public static var radiusPlanet = 6360.0;
 
 	/** Rayleigh scattering coefficient. **/
 	public static var rayleighCoeff = new Vec3(5.5e-6, 13.0e-6, 22.4e-6);
@@ -118,7 +118,7 @@ class NishitaData {
 		this function returns the distances to the two intersection points,
 		which might be equal.
 	**/
-	function raySphereIntersection(rayOrigin: Vec3, rayDirection: Vec3, sphereRadius: Int): Vec2 {
+	function raySphereIntersection(rayOrigin: Vec3, rayDirection: Vec3, sphereRadius: Float): Vec2 {
 		// Algorithm is described here: https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
 		var a = rayDirection.dot(rayDirection);
 		var b = 2.0 * rayDirection.dot(rayOrigin);
@@ -146,7 +146,7 @@ class NishitaData {
 
 			// Use quadratic height for better horizon precision
 			height *= height;
-			height *= radiusAtmo; // Denormalize
+			height *= radiusAtmo * 1000; // Denormalize height
 
 			for (y in 0...lutAngleSteps) {
 				var sunTheta = y / (lutAngleSteps - 1) * 2 - 1;
@@ -173,12 +173,17 @@ class NishitaData {
 		Calculates the integral for the secondary ray.
 	**/
 	public function sampleSecondaryRay(height: FastFloat, sunTheta: FastFloat, density: Vec3): Vec3 {
+		var radiusPlanetMeters = radiusPlanet * 1000;
+
 		// Reconstruct values from the shader
-		var iPos = new Vec3(0, 0, height + radiusPlanet);
+		var iPos = new Vec3(0, 0, height + radiusPlanetMeters);
 		var pSun = new Vec3(0.0, Math.sin(sunTheta), Math.cos(sunTheta)).normalize();
 
 		var jTime: FastFloat = 0.0;
-		var jStepSize: FastFloat = raySphereIntersection(iPos, pSun, radiusAtmo).y / jSteps;
+		// We compute the ray-sphere intersection in km to allow larger
+		// atmosphere radii (radius is squared inside raySphereIntersection())
+		var jStepSize: FastFloat = raySphereIntersection(iPos.clone().mult(0.001), pSun, radiusAtmo).y / jSteps;
+		jStepSize *= 1000; // convert back to m
 
 		// Optical depth accumulators for the secondary ray (Rayleigh, Mie, ozone)
 		var jODepth = new Vec3();
@@ -187,7 +192,7 @@ class NishitaData {
 
 			// Calculate the secondary ray sample position and height
 			var jPos = iPos.clone().add(pSun.clone().mult(jTime + jStepSize * 0.5));
-			var jHeight = jPos.length() - radiusPlanet;
+			var jHeight = jPos.length() - radiusPlanetMeters;
 
 			// Accumulate optical depth
 			var optDepthRayleigh = Math.exp(-jHeight / rayleighScale) * density.x;
