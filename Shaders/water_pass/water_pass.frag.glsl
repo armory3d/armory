@@ -9,15 +9,18 @@ uniform sampler2D tex;
 uniform sampler2D sbase;
 uniform sampler2D sdetail;
 uniform sampler2D sfoam;
+
+#ifdef _SSR
 uniform mat4 P;
 uniform mat3 V3;
-#ifdef _Rad
-uniform sampler2D senvmapRadiance;
-#endif
-
 #ifdef _CPostprocess
 uniform vec3 PPComp9;
 uniform vec3 PPComp10;
+#endif
+#endfi
+
+#ifdef _Rad
+uniform sampler2D senvmapRadiance;
 #endif
 
 uniform float time;
