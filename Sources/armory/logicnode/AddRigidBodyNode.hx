@@ -36,6 +36,7 @@ class AddRigidBodyNode extends LogicNode {
 		var marginLen: Float = 0.0;
 		var linDamp: Float = 0.0;
 		var angDamp: Float = 0.0;
+		var angFriction: Float = 0.0;
 		var useDeactiv: Bool = false;
 		var linearVelThreshold: Float = 0.0;
 		var angVelThreshold: Float = 0.0;
@@ -49,11 +50,12 @@ class AddRigidBodyNode extends LogicNode {
 			marginLen = inputs[10].get();
 			linDamp = inputs[11].get();
 			angDamp = inputs[12].get();
-			useDeactiv = inputs[13].get();
-			linearVelThreshold = inputs[14].get();
-			angVelThreshold = inputs[15].get();
-			group = inputs[16].get();
-			mask = inputs[17].get();
+			angFriction = inputs[13].get();
+			useDeactiv = inputs[14].get();
+			linearVelThreshold = inputs[15].get();
+			angVelThreshold = inputs[16].get();
+			group = inputs[17].get();
+			mask = inputs[18].get();
 		}
 
 		var rb: RigidBody = object.getTrait(RigidBody);
@@ -78,6 +80,7 @@ class AddRigidBodyNode extends LogicNode {
 			if (property1) {
 				rb.linearDamping = linDamp;
 				rb.angularDamping = angDamp;
+				rb.angularFriction = angFriction;
 				if (margin) rb.collisionMargin = marginLen;
 				if (useDeactiv) {
 					rb.setUpDeactivation(true, linearVelThreshold, angVelThreshold, 0.0);

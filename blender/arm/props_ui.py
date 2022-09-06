@@ -232,6 +232,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
 
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
+            layout.prop(obj, 'arm_rb_angular_friction')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
 

@@ -2641,32 +2641,37 @@ Make sure the mesh only has tris/quads.""")
                 ay = 0
             if bobject.lock_rotation[2]:
                 az = 0
-            col_margin = str(rb.collision_margin) if rb.use_margin else '0.0'
+            col_margin = rb.collision_margin if rb.use_margin else 0.0
             if rb.use_deactivation:
-                deact_lv = str(rb.deactivate_linear_velocity)
-                deact_av = str(rb.deactivate_angular_velocity)
-                deact_time = str(bobject.arm_rb_deactivation_time)
+                deact_lv = rb.deactivate_linear_velocity
+                deact_av = rb.deactivate_angular_velocity
+                deact_time = bobject.arm_rb_deactivation_time
             else:
-                deact_lv = '0.0'
-                deact_av = '0.0'
-                deact_time = '0.0'
-            body_params = '[{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}]'.format(
-                str(rb.linear_damping),
-                str(rb.angular_damping),
-                str(lx), str(ly), str(lz),
-                str(ax), str(ay), str(az),
-                col_margin,
-                deact_lv, deact_av, deact_time
-            )
-            body_flags = '[{0}, {1}, {2}, {3}, {4}]'.format(
-                str(rb.kinematic).lower(),
-                str(bobject.arm_rb_trigger).lower(),
-                str(bobject.arm_rb_ccd).lower(),
-                str(is_static).lower(),
-                str(rb.use_deactivation).lower()
-            )
-            x['parameters'].append(body_params)
-            x['parameters'].append(body_flags)
+                deact_lv = 0.0
+                deact_av = 0.0
+                deact_time = 0.0
+            body_params = {}
+            body_params['linearDamping'] = rb.linear_damping
+            body_params['angularDamping'] = rb.angular_damping
+            body_params['linearFactorsX'] = lx
+            body_params['linearFactorsY'] = ly
+            body_params['linearFactorsZ'] = lz
+            body_params['angularFactorsX'] = ax
+            body_params['angularFactorsY'] = ay
+            body_params['angularFactorsZ'] = az
+            body_params['angularFriction'] = bobject.arm_rb_angular_friction
+            body_params['collisionMargin'] = col_margin
+            body_params['linearDeactivationThreshold'] = deact_lv
+            body_params['angularDeactivationThrshold'] = deact_av
+            body_params['deactivationTime'] = deact_time
+            body_flags = {}
+            body_flags['animated'] = rb.kinematic
+            body_flags['trigger'] = bobject.arm_rb_trigger
+            body_flags['ccd'] = bobject.arm_rb_ccd
+            body_flags['staticObj'] = is_static
+            body_flags['useDeactivation'] = rb.use_deactivation
+            x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
+            x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
             o['traits'].append(x)
 
         # Phys traits
