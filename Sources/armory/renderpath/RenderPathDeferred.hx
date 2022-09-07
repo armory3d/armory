@@ -557,7 +557,6 @@ class RenderPathDeferred {
 			}
 		}
 		#end
-
 		// ---
 		// Deferred light
 		// ---

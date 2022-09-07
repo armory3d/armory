@@ -56,6 +56,16 @@
 					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_SSR"]
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3",
+					"ifdef": ["_SSR"]
 				}
 			],
 			"texture_params": [],
