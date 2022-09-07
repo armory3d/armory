@@ -29,7 +29,7 @@ class UniformsManager extends Trait{
 	public function new(){
 		super();
 
-		notifyOnInit(init);
+		notifyOnAdd(init);
 
 		notifyOnRemove(removeObject);
 
