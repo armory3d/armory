@@ -228,7 +228,7 @@ class UniformsManager extends Trait{
     }
 
 	// Mehtod to get object specific material parameter float value
-    static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
+	public static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 		
 		if(object == null || mat == null) return null;
 
@@ -246,7 +246,7 @@ class UniformsManager extends Trait{
 	}
 
 	// Mehtod to get object specific material parameter vec3 value
-    static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 		
 		if(object == null || mat == null) return null;
 
@@ -264,7 +264,7 @@ class UniformsManager extends Trait{
 	}
 
 	// Mehtod to get object specific material parameter texture value
-    static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
+	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
 		
 		if(object == null || mat == null) return null;
 
