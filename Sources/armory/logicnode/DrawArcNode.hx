@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import kha.Color;
+import armory.renderpath.RenderToTexture;
 
 using kha.graphics2.GraphicsExtension;
 
@@ -11,10 +12,10 @@ class DrawArcNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		OnRender2DNode.ensure2DContext("DrawArcNode");
+		RenderToTexture.ensure2DContext("DrawArcNode");
 
 		final colorVec = inputs[1].get();
-		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
 		final segments = inputs[4].get();
 		final cx = inputs[5].get();
@@ -25,9 +26,9 @@ class DrawArcNode extends LogicNode {
 		final ccw = inputs[10].get();
 
 		if (inputs[2].get()) {
-			OnRender2DNode.g.fillArc(cx, cy, radius, sAngle, eAngle, ccw, segments);
+			RenderToTexture.g.fillArc(cx, cy, radius, sAngle, eAngle, ccw, segments);
 		} else {
-			OnRender2DNode.g.drawArc(cx, cy, radius, sAngle, eAngle, inputs[3].get(), ccw, segments);
+			RenderToTexture.g.drawArc(cx, cy, radius, sAngle, eAngle, inputs[3].get(), ccw, segments);
 		}
 
 		runOutput(0);

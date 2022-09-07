@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import kha.Color;
+import armory.renderpath.RenderToTexture;
 
 class DrawLineNode extends LogicNode {
 
@@ -9,12 +10,12 @@ class DrawLineNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		OnRender2DNode.ensure2DContext("DrawLineNode");
+		RenderToTexture.ensure2DContext("DrawLineNode");
 
 		final colorVec = inputs[1].get();
-		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
-		OnRender2DNode.g.drawLine(inputs[3].get(), inputs[4].get(), inputs[5].get(), inputs[6].get(), inputs[2].get());
+		RenderToTexture.g.drawLine(inputs[3].get(), inputs[4].get(), inputs[5].get(), inputs[6].get(), inputs[2].get());
 
 		runOutput(0);
 	}

@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import kha.Color;
+import armory.renderpath.RenderToTexture;
 
 using kha.graphics2.GraphicsExtension;
 
@@ -11,10 +12,10 @@ class DrawCircleNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		OnRender2DNode.ensure2DContext("DrawCircleNode");
+		RenderToTexture.ensure2DContext("DrawCircleNode");
 
 		final colorVec = inputs[1].get();
-		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
 		final segments = inputs[4].get();
 		final cx = inputs[5].get();
@@ -22,10 +23,10 @@ class DrawCircleNode extends LogicNode {
 		final radius = inputs[7].get();
 
 		if (inputs[2].get()) {
-			OnRender2DNode.g.fillCircle(cx, cy, radius, segments);
+			RenderToTexture.g.fillCircle(cx, cy, radius, segments);
 		}
 		else {
-			OnRender2DNode.g.drawCircle(cx, cy, radius, inputs[3].get(), segments);
+			RenderToTexture.g.drawCircle(cx, cy, radius, inputs[3].get(), segments);
 		}
 
 		runOutput(0);

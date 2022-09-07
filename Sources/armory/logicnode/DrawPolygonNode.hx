@@ -2,6 +2,7 @@ package armory.logicnode;
 
 import kha.Color;
 import kha.math.Vector2;
+import armory.renderpath.RenderToTexture;
 
 using kha.graphics2.GraphicsExtension;
 
@@ -15,7 +16,7 @@ class DrawPolygonNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		OnRender2DNode.ensure2DContext("DrawPolygonNode");
+		RenderToTexture.ensure2DContext("DrawPolygonNode");
 
 		if (vertices == null) {
 			final numDynamicInputs = inputs.length - numStaticInputs;
@@ -35,12 +36,12 @@ class DrawPolygonNode extends LogicNode {
 		}
 
 		final colorVec = inputs[1].get();
-		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
 		if (inputs[2].get()) {
-			OnRender2DNode.g.fillPolygon(inputs[4].get(), inputs[5].get(), vertices);
+			RenderToTexture.g.fillPolygon(inputs[4].get(), inputs[5].get(), vertices);
 		} else {
-			OnRender2DNode.g.drawPolygon(inputs[4].get(), inputs[5].get(), vertices, inputs[3].get());
+			RenderToTexture.g.drawPolygon(inputs[4].get(), inputs[5].get(), vertices, inputs[3].get());
 		}
 
 		runOutput(0);

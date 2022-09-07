@@ -2,6 +2,7 @@ package armory.logicnode;
 
 import kha.Font;
 import kha.Color;
+import armory.renderpath.RenderToTexture;
 
 #if arm_ui
 import armory.ui.Canvas;
@@ -16,7 +17,7 @@ class DrawStringNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		OnRender2DNode.ensure2DContext("DrawStringNode");
+		RenderToTexture.ensure2DContext("DrawStringNode");
 
 		var fontName = inputs[2].get();
 		if (fontName == "") {
@@ -41,12 +42,12 @@ class DrawStringNode extends LogicNode {
 		}
 
 		final colorVec = inputs[4].get();
-		OnRender2DNode.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
-		OnRender2DNode.g.fontSize = inputs[3].get();
-		OnRender2DNode.g.font = font;
+		RenderToTexture.g.fontSize = inputs[3].get();
+		RenderToTexture.g.font = font;
 
-		OnRender2DNode.g.drawString(inputs[1].get(), inputs[5].get(), inputs[6].get());
+		RenderToTexture.g.drawString(inputs[1].get(), inputs[5].get(), inputs[6].get());
 
 		runOutput(0);
 	}
