@@ -17,7 +17,7 @@ uniform mat3 V3;
 uniform vec3 PPComp9;
 uniform vec3 PPComp10;
 #endif
-#endfi
+#endif
 
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
