@@ -19,6 +19,7 @@ class DrawStringNode extends LogicNode {
 	override function run(from: Int) {
 		RenderToTexture.ensure2DContext("DrawStringNode");
 
+		var string:String = Std.string(inputs[1].get());
 		var fontName = inputs[2].get();
 		if (fontName == "") {
 			#if arm_ui
@@ -47,7 +48,7 @@ class DrawStringNode extends LogicNode {
 		RenderToTexture.g.fontSize = inputs[3].get();
 		RenderToTexture.g.font = font;
 
-		RenderToTexture.g.drawString(inputs[1].get(), inputs[5].get(), inputs[6].get());
+		RenderToTexture.g.drawString(string, inputs[5].get(), inputs[6].get());
 
 		runOutput(0);
 	}
