@@ -18,7 +18,6 @@ import arm.props as props
 import arm.props_properties
 import arm.props_traits
 import arm.nodes_logic
-import arm.proxy
 import arm.ui_icons as ui_icons
 import arm.utils
 
@@ -36,7 +35,6 @@ if arm.is_reload(__name__):
     arm.props_properties = arm.reload_module(arm.props_properties)
     arm.props_traits = arm.reload_module(arm.props_traits)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
-    arm.proxy = arm.reload_module(arm.proxy)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
 else:
@@ -805,10 +803,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             if item.arm_project_target == 'custom':
                 box.prop(item, 'arm_project_khamake')
             box.prop(item, arm.utils.target_to_gapi(item.arm_project_target))
-            wrd.arm_rpcache_list.clear() # Make UIList work with prop_search()
-            for i in wrd.arm_rplist:
-                wrd.arm_rpcache_list.add().name = i.name
-            box.prop_search(item, "arm_project_rp", wrd, "arm_rpcache_list", text="Render Path")
+            box.prop_search(item, "arm_project_rp", wrd, "arm_rplist", text="Render Path")
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
             layout.separator()
 
@@ -1177,12 +1172,10 @@ class ArmoryPlayButton(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
-        if state.proc_build != None:
+        if state.proc_build is not None:
             return {"CANCELLED"}
 
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1224,9 +1217,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1269,9 +1260,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         return wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
     def execute(self, context):
-        # Compare version Blender and Armory (major, minor)
-        if not arm.utils.compare_version_blender_arm():
-            self.report({'INFO'}, 'For Armory to work correctly, you need Blender 2.93 LTS.')
+        arm.utils.check_blender_version(self)
 
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -1411,11 +1400,7 @@ class ARM_PT_RenderPathPanel(bpy.types.Panel):
 
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
         if len(arm.api.drivers) > 0:
-            rpdat.rp_driver_list.clear()
-            rpdat.rp_driver_list.add().name = 'Armory'
-            for d in arm.api.drivers:
-                rpdat.rp_driver_list.add().name = arm.api.drivers[d]['driver_name']
-            layout.prop_search(rpdat, "rp_driver", rpdat, "rp_driver_list", text="Driver")
+            layout.prop_search(rpdat, "rp_driver", wrd, "rp_driver_list", text="Driver")
             layout.separator()
             if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_props'] != None:
                 arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
@@ -2211,109 +2196,6 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
                 layout.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
-class ARM_PT_ProxyPanel(bpy.types.Panel):
-    bl_label = "Armory Proxy"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        layout.operator("arm.make_proxy")
-
-        obj = bpy.context.object
-        if obj is not None and obj.proxy is not None:
-            col = layout.column(heading="Sync")
-            col.prop(obj, "arm_proxy_sync_loc")
-            col.prop(obj, "arm_proxy_sync_rot")
-            col.prop(obj, "arm_proxy_sync_scale")
-            col.separator()
-
-            col.prop(obj, "arm_proxy_sync_materials")
-            col.prop(obj, "arm_proxy_sync_modifiers")
-            col.separator()
-
-            col.prop(obj, "arm_proxy_sync_traits")
-            row = col.row()
-            row.enabled = obj.arm_proxy_sync_traits
-            row.prop(obj, "arm_proxy_sync_trait_props")
-
-            row = layout.row(align=True)
-            row.operator("arm.proxy_toggle_all")
-            row.operator("arm.proxy_apply_all")
-
-class ArmMakeProxyButton(bpy.types.Operator):
-    '''Create proxy from linked object'''
-    bl_idname = 'arm.make_proxy'
-    bl_label = 'Make Proxy'
-
-    def execute(self, context):
-        obj = context.object
-        if obj == None:
-            return{'CANCELLED'}
-        if obj.library == None:
-            self.report({'ERROR'}, 'Select linked object')
-        arm.proxy.make(obj)
-        return{'FINISHED'}
-
-class ArmProxyToggleAllButton(bpy.types.Operator):
-    bl_idname = 'arm.proxy_toggle_all'
-    bl_label = 'Toggle All'
-    def execute(self, context):
-        obj = context.object
-        b = not obj.arm_proxy_sync_loc
-        obj.arm_proxy_sync_loc = b
-        obj.arm_proxy_sync_rot = b
-        obj.arm_proxy_sync_scale = b
-        obj.arm_proxy_sync_materials = b
-        obj.arm_proxy_sync_modifiers = b
-        obj.arm_proxy_sync_traits = b
-        obj.arm_proxy_sync_trait_props = b
-        return{'FINISHED'}
-
-class ArmProxyApplyAllButton(bpy.types.Operator):
-    bl_idname = 'arm.proxy_apply_all'
-    bl_label = 'Apply to All'
-
-    def execute(self, context):
-        for obj in bpy.data.objects:
-            if obj.proxy == None:
-                continue
-            if obj.proxy == context.object.proxy:
-                obj.arm_proxy_sync_loc = context.object.arm_proxy_sync_loc
-                obj.arm_proxy_sync_rot = context.object.arm_proxy_sync_rot
-                obj.arm_proxy_sync_scale = context.object.arm_proxy_sync_scale
-                obj.arm_proxy_sync_materials = context.object.arm_proxy_sync_materials
-                obj.arm_proxy_sync_modifiers = context.object.arm_proxy_sync_modifiers
-                obj.arm_proxy_sync_traits = context.object.arm_proxy_sync_traits
-                obj.arm_proxy_sync_trait_props = context.object.arm_proxy_sync_trait_props
-        return{'FINISHED'}
-
-class ArmSyncProxyButton(bpy.types.Operator):
-    bl_idname = 'arm.sync_proxy'
-    bl_label = 'Sync'
-    def execute(self, context):
-        if len(bpy.data.libraries) > 0:
-            for obj in bpy.data.objects:
-                if obj == None or obj.proxy == None:
-                    continue
-                if obj.arm_proxy_sync_loc:
-                    arm.proxy.sync_location(obj)
-                if obj.arm_proxy_sync_rot:
-                    arm.proxy.sync_rotation(obj)
-                if obj.arm_proxy_sync_scale:
-                    arm.proxy.sync_scale(obj)
-                if obj.arm_proxy_sync_materials:
-                    arm.proxy.sync_materials(obj)
-                if obj.arm_proxy_sync_modifiers:
-                    arm.proxy.sync_modifiers(obj)
-                if obj.arm_proxy_sync_traits:
-                    arm.proxy.sync_traits(obj)
-            print('Proxy objects synchronized')
-        return{'FINISHED'}
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
@@ -2722,11 +2604,6 @@ def register():
     bpy.utils.register_class(ArmGenTerrainButton)
     bpy.utils.register_class(ARM_PT_TerrainPanel)
     bpy.utils.register_class(ARM_PT_TilesheetPanel)
-    bpy.utils.register_class(ARM_PT_ProxyPanel)
-    bpy.utils.register_class(ArmMakeProxyButton)
-    bpy.utils.register_class(ArmProxyToggleAllButton)
-    bpy.utils.register_class(ArmProxyApplyAllButton)
-    bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
     bpy.utils.register_class(ARM_OT_UpdateFileSDK)
@@ -2818,11 +2695,6 @@ def unregister():
     bpy.utils.unregister_class(ArmGenTerrainButton)
     bpy.utils.unregister_class(ARM_PT_TerrainPanel)
     bpy.utils.unregister_class(ARM_PT_TilesheetPanel)
-    bpy.utils.unregister_class(ARM_PT_ProxyPanel)
-    bpy.utils.unregister_class(ArmMakeProxyButton)
-    bpy.utils.unregister_class(ArmProxyToggleAllButton)
-    bpy.utils.unregister_class(ArmProxyApplyAllButton)
-    bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
     bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)
 

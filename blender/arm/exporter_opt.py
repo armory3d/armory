@@ -2,7 +2,9 @@
 Exports smaller geometry but is slower.
 To be replaced with https://github.com/zeux/meshoptimizer
 """
+from typing import Optional
 
+import bpy
 from mathutils import *
 import numpy as np
 
@@ -18,15 +20,14 @@ else:
 
 class Vertex:
     __slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertex_index")
-    def __init__(self, mesh, loop):
+
+    def __init__(self, mesh: bpy.types.Mesh, loop: bpy.types.MeshLoop, vcol0: Optional[bpy.types.Attribute]):
         self.vertex_index = loop.vertex_index
         loop_idx = loop.index
         self.co = mesh.vertices[self.vertex_index].co[:]
         self.normal = loop.normal[:]
         self.uvs = tuple(layer.data[loop_idx].uv[:] for layer in mesh.uv_layers)
-        self.col = [0.0, 0.0, 0.0]
-        if len(mesh.vertex_colors) > 0:
-            self.col = mesh.vertex_colors[0].data[loop_idx].color[:]
+        self.col = [0.0, 0.0, 0.0] if vcol0 is None else vcol0.data[loop_idx].color[:]
         self.loop_indices = [loop_idx]
         self.index = 0
 
@@ -45,6 +46,7 @@ class Vertex:
             self.loop_indices = indices
             other.loop_indices = indices
         return eq
+
 
 def calc_tangents(posa, nora, uva, ias, scale_pos):
     num_verts = int(len(posa) / 4)
@@ -110,30 +112,32 @@ def calc_tangents(posa, nora, uva, ias, scale_pos):
         tangents[i * 3 + 2] = v.z
     return tangents
 
-def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
-    exportMesh.calc_normals_split()
+
+def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
+    export_mesh.calc_normals_split()
     # exportMesh.calc_loop_triangles()
-    vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
+    vcol0 = self.get_nth_vertex_colors(export_mesh, 0)
+    vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
     num_verts = len(vert_list)
-    num_uv_layers = len(exportMesh.uv_layers)
+    num_uv_layers = len(export_mesh.uv_layers)
     # Check if shape keys were exported
     has_morph_target = self.get_shape_keys(bobject.data)
     if has_morph_target:
         # Shape keys UV are exported separately, so reduce UV count by 1
         num_uv_layers -= 1
         morph_uv_index = self.get_morph_uv_index(bobject.data)
-    has_tex = self.get_export_uvs(exportMesh) == True and num_uv_layers > 0
-    if self.has_baked_material(bobject, exportMesh.materials):
+    has_tex = self.get_export_uvs(export_mesh) and num_uv_layers > 0
+    if self.has_baked_material(bobject, export_mesh.materials):
         has_tex = True
     has_tex1 = has_tex and num_uv_layers > 1
-    num_colors = len(exportMesh.vertex_colors)
-    has_col = self.get_export_vcols(exportMesh) and num_colors > 0
-    has_tang = self.has_tangents(exportMesh)
+    num_colors = self.get_num_vertex_colors(export_mesh)
+    has_col = self.get_export_vcols(export_mesh) and num_colors > 0
+    has_tang = self.has_tangents(export_mesh)
 
     pdata = np.empty(num_verts * 4, dtype='<f4') # p.xyz, n.z
     ndata = np.empty(num_verts * 2, dtype='<f4') # n.xy
     if has_tex or has_morph_target:
-        uv_layers = exportMesh.uv_layers
+        uv_layers = export_mesh.uv_layers
         maxdim = 1.0
         if has_tex:
             t0map = 0 # Get active uvmap
@@ -187,13 +191,11 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         else:
             invscale_tex = 1 * 32767
 
+    if has_col:
+        cdata = np.empty(num_verts * 3, dtype='<f4')
+
     # Save aabb
-    aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
-    bobject.data.arm_aabb = [ \
-        abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
-        abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
-        abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
-    ]
+    self.calc_aabb(bobject)
 
     # Scale for packed coords
     maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
@@ -239,17 +241,17 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
             cdata[i3 + 2] = v.col[2]
 
     # Indices
-    prims = {ma.name if ma else '': [] for ma in exportMesh.materials}
+    prims = {ma.name if ma else '': [] for ma in export_mesh.materials}
     if not prims:
         prims = {'': []}
 
     vert_dict = {i : v for v in vert_list for i in v.loop_indices}
-    for poly in exportMesh.polygons:
+    for poly in export_mesh.polygons:
         first = poly.loop_start
-        if len(exportMesh.materials) == 0:
+        if len(export_mesh.materials) == 0:
             prim = prims['']
         else:
-            mat = exportMesh.materials[min(poly.material_index, len(exportMesh.materials) - 1)]
+            mat = export_mesh.materials[min(poly.material_index, len(export_mesh.materials) - 1)]
             prim = prims[mat.name if mat else '']
         indices = [vert_dict[i].index for i in range(first, first+poly.loop_total)]
 
@@ -267,14 +269,12 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
             idata[i] = v
         if len(idata) == 0: # No face assigned
             continue
-        ia = {}
-        ia['values'] = idata
-        ia['material'] = 0
+        ia = {'values': idata, 'material': 0}
         # Find material index for multi-mat mesh
-        if len(exportMesh.materials) > 1:
-            for i in range(0, len(exportMesh.materials)):
-                if (exportMesh.materials[i] != None and mat == exportMesh.materials[i].name) or \
-                   (exportMesh.materials[i] == None and mat == ''): # Default material for empty slots
+        if len(export_mesh.materials) > 1:
+            for i in range(0, len(export_mesh.materials)):
+                if (export_mesh.materials[i] is not None and mat == export_mesh.materials[i].name) or \
+                   (export_mesh.materials[i] is None and mat == ''):  # Default material for empty slots
                     ia['material'] = i
                     break
         o['index_arrays'].append(ia)

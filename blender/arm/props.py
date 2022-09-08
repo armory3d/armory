@@ -8,7 +8,6 @@ import arm.logicnode.replacement
 import arm.logicnode.tree_variables
 import arm.make
 import arm.nodes_logic
-import arm.proxy
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -17,7 +16,6 @@ if arm.is_reload(__name__):
     arm.logicnode.tree_variables = arm.reload_module(arm.logicnode.tree_variables)
     arm.make = arm.reload_module(arm.make)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
-    arm.proxy = arm.reload_module(arm.proxy)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
@@ -228,7 +226,7 @@ def init_properties():
     bpy.types.World.arm_minimize = BoolProperty(name="Binary Scene Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_no_traces = BoolProperty(name="No Traces", description="Don't compile trace calls in the program when publishing", default=False)
-    bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data, prolongs build times", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data when publishing, prolongs build times", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_export_tangents = BoolProperty(name="Precompute Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=assets.invalidate_compiler_cache)
@@ -295,11 +293,12 @@ def init_properties():
                  ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Instances use their unique position, rotation and scale (ipos, irot, iscl)')],
         name="Instanced Children", default='Off',
         description='Whether to use instancing to draw the children of this object. If enabled, this option defines what attributes may vary between the instances',
-        update=assets.invalidate_instance_cache)
-    bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True)
-    bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
-    bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False)
-    bpy.types.Object.arm_visible = BoolProperty(name="Visible", description="Render this object", default=True)
+        update=assets.invalidate_instance_cache,
+        override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True, override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_visible = BoolProperty(name="Visible", description="Render this object", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_soft_body_margin = FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
     bpy.types.Object.arm_rb_linear_factor = FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
@@ -317,13 +316,6 @@ def init_properties():
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')
-    bpy.types.Object.arm_proxy_sync_loc = BoolProperty(name="Location", description="Keep location synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_loc)
-    bpy.types.Object.arm_proxy_sync_rot = BoolProperty(name="Rotation", description="Keep rotation synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_rot)
-    bpy.types.Object.arm_proxy_sync_scale = BoolProperty(name="Scale", description="Keep scale synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_scale)
-    bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_materials)
-    bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_modifiers)
-    bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=arm.proxy.proxy_sync_traits)
-    bpy.types.Object.arm_proxy_sync_trait_props = BoolProperty(name="Trait Property Values", description="Keep trait property values synchronized with proxy object", default=False, update=arm.proxy.proxy_sync_traits)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)

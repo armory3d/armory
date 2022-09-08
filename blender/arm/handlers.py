@@ -170,8 +170,6 @@ def on_load_post(context):
     props.init_properties_on_load()
     reload_blend_data()
 
-    bpy.ops.arm.sync_proxy()
-
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
     arm.api.remove_drivers()

@@ -203,22 +203,27 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
         # return 'objectInfoColor'
         return c.to_vec3((1.0, 1.0, 1.0))
 
-    # Object Index
+    # Alpha
     elif out_socket == node.outputs[2]:
+        # TODO, see color output above
+        return '0.0'
+
+    # Object Index
+    elif out_socket == node.outputs[3]:
         if state.context == ParserContext.WORLD:
             return '0.0'
         state.curshader.add_uniform('float objectInfoIndex', link='_objectInfoIndex')
         return 'objectInfoIndex'
 
     # Material Index
-    elif out_socket == node.outputs[3]:
+    elif out_socket == node.outputs[4]:
         if state.context == ParserContext.WORLD:
             return '0.0'
         state.curshader.add_uniform('float objectInfoMaterialIndex', link='_objectInfoMaterialIndex')
         return 'objectInfoMaterialIndex'
 
     # Random
-    elif out_socket == node.outputs[4]:
+    elif out_socket == node.outputs[5]:
         if state.context == ParserContext.WORLD:
             return '0.0'
 

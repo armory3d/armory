@@ -54,10 +54,10 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # subsurface = c.parse_vector_input(node.inputs[1])
         # subsurface_radius = c.parse_vector_input(node.inputs[2])
         # subsurface_color = c.parse_vector_input(node.inputs[3])
-        state.out_metallic = c.parse_value_input(node.inputs[4])
-        state.out_specular = c.parse_value_input(node.inputs[5])
+        state.out_metallic = c.parse_value_input(node.inputs[6])
+        state.out_specular = c.parse_value_input(node.inputs[7])
         # specular_tint = c.parse_vector_input(node.inputs[6])
-        state.out_roughness = c.parse_value_input(node.inputs[7])
+        state.out_roughness = c.parse_value_input(node.inputs[9])
         # aniso = c.parse_vector_input(node.inputs[8])
         # aniso_rot = c.parse_vector_input(node.inputs[9])
         # sheen = c.parse_vector_input(node.inputs[10])
@@ -67,14 +67,14 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # ior = c.parse_vector_input(node.inputs[14])
         # transmission = c.parse_vector_input(node.inputs[15])
         # transmission_roughness = c.parse_vector_input(node.inputs[16])
-        if node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0:
-            state.out_emission = '({0}.x)'.format(c.parse_vector_input(node.inputs[17]))
+        if node.inputs[20].is_linked or node.inputs[20].default_value != 0.0:
+            state.out_emission = '({0}.x)'.format(c.parse_vector_input(node.inputs[20]))
             state.emission_found = True
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
-        if len(node.inputs) > 21:
-            state.out_opacity = c.parse_value_input(node.inputs[19])
+        if len(node.inputs) >= 21:
+            state.out_opacity = c.parse_value_input(node.inputs[21])
 
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:

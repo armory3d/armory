@@ -1,4 +1,6 @@
 from math import pi, cos, sin, sqrt
+from typing import Type
+
 import bpy
 from bpy.props import *
 from bpy.types import NodeSocket
@@ -13,22 +15,24 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
+# See Blender sources: /source/blender/editors/space_node/drawnode.cc
+# Permalink for 3.2.2: https://github.com/blender/blender/blob/bcfdb14560e77891d674c2701a5071a7c07baba3/source/blender/editors/space_node/drawnode.cc#L1152-L1167
 socket_colors = {
     'ArmNodeSocketAction': (0.8, 0.3, 0.3, 1),
     'ArmNodeSocketAnimAction': (0.8, 0.8, 0.8, 1),
     'ArmRotationSocket': (0.68, 0.22, 0.62, 1),
     'ArmNodeSocketArray': (0.8, 0.4, 0.0, 1),
-    'ArmBoolSocket': (0.8, 0.651, 0.839, 1),
-    'ArmColorSocket': (0.78, 0.78, 0.161, 1),
-    'ArmDynamicSocket': (0.388, 0.78, 0.388, 1),
-    'ArmFloatSocket': (0.631, 0.631, 0.631, 1),
+    'ArmBoolSocket': (0.80, 0.65, 0.84, 1.0),
+    'ArmColorSocket': (0.78, 0.78, 0.16, 1.0),
+    'ArmDynamicSocket': (0.39, 0.78, 0.39, 1.0),
+    'ArmFloatSocket': (0.63, 0.63, 0.63, 1.0),
     'ArmIntSocket': (0.059, 0.522, 0.149, 1),
     'ArmNodeSocketObject': (0.15, 0.55, 0.75, 1),
-    'ArmStringSocket': (0.439, 0.698, 1, 1),
-    'ArmVectorSocket': (0.388, 0.388, 0.78, 1),
+    'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
+    'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
     'ArmAnySocket': (0.9, 0.9, 0.9, 1)
-
 }
+
 
 def _on_update_socket(self, context):
     self.node.on_socket_val_update(context, self)
@@ -539,7 +543,60 @@ def draw_socket_layout_split(socket: bpy.types.NodeSocket, layout: bpy.types.UIL
     if not socket.is_output and not socket.is_linked:
         layout.prop(socket, prop_name, text='')
 
+
+def _make_socket_interface(interface_name: str, bl_idname: str) -> Type[bpy.types.NodeSocketInterface]:
+    """Create a socket interface class that is used by Blender for node
+    groups. We currently don't use real node groups, but without these
+    classes Blender will (incorrectly) draw the socket borders in light grey.
+    """
+    def draw(self, context, layout):
+        pass
+
+    def draw_color(self, context):
+        # This would be used if we were using "real" node groups
+        return 0, 0, 0, 1
+
+    cls = type(
+        interface_name,
+        (bpy.types.NodeSocketInterface, ), {
+            'bl_socket_idname': bl_idname,
+            'draw': draw,
+            'draw_color': draw_color,
+        }
+    )
+    return cls
+
+
+ArmActionSocketInterface = _make_socket_interface('ArmActionSocketInterface', 'ArmNodeSocketAction')
+ArmAnimSocketInterface = _make_socket_interface('ArmAnimSocketInterface', 'ArmNodeSocketAnimAction')
+ArmRotationSocketInterface = _make_socket_interface('ArmRotationSocketInterface', 'ArmRotationSocket')
+ArmArraySocketInterface = _make_socket_interface('ArmArraySocketInterface', 'ArmNodeSocketArray')
+ArmBoolSocketInterface = _make_socket_interface('ArmBoolSocketInterface', 'ArmBoolSocket')
+ArmColorSocketInterface = _make_socket_interface('ArmColorSocketInterface', 'ArmColorSocket')
+ArmDynamicSocketInterface = _make_socket_interface('ArmDynamicSocketInterface', 'ArmDynamicSocket')
+ArmFloatSocketInterface = _make_socket_interface('ArmFloatSocketInterface', 'ArmFloatSocket')
+ArmIntSocketInterface = _make_socket_interface('ArmIntSocketInterface', 'ArmIntSocket')
+ArmObjectSocketInterface = _make_socket_interface('ArmObjectSocketInterface', 'ArmNodeSocketObject')
+ArmStringSocketInterface = _make_socket_interface('ArmStringSocketInterface', 'ArmStringSocket')
+ArmVectorSocketInterface = _make_socket_interface('ArmVectorSocketInterface', 'ArmVectorSocket')
+ArmAnySocketInterface = _make_socket_interface('ArmAnySocketInterface', 'ArmAnySocket')
+
+
 REG_CLASSES = (
+    ArmActionSocketInterface,
+    ArmAnimSocketInterface,
+    ArmRotationSocketInterface,
+    ArmArraySocketInterface,
+    ArmBoolSocketInterface,
+    ArmColorSocketInterface,
+    ArmDynamicSocketInterface,
+    ArmFloatSocketInterface,
+    ArmIntSocketInterface,
+    ArmObjectSocketInterface,
+    ArmStringSocketInterface,
+    ArmVectorSocketInterface,
+    ArmAnySocketInterface,
+
     ArmActionSocket,
     ArmAnimActionSocket,
     ArmRotationSocket,

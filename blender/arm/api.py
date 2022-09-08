@@ -1,5 +1,6 @@
 from typing import Callable, Dict, Optional
 
+import bpy
 from bpy.types import Material, UILayout
 
 import arm
@@ -38,6 +39,15 @@ def add_driver(driver_name: str,
         'draw_mat_props': draw_mat_props
     }
 
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.rp_driver_list) == 0:
+        wrd.rp_driver_list.add().name = 'Armory' # Add default driver
+    wrd.rp_driver_list.add().name = driver_name
+
 
 def remove_drivers():
+    wrd = bpy.data.worlds['Arm']
+    wrd.rp_driver_list.clear()
+    wrd.rp_driver_list.add().name = 'Armory'
+
     drivers.clear()
