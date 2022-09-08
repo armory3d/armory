@@ -389,7 +389,7 @@ def parse_lightpath(node: bpy.types.ShaderNodeLightPath, out_socket: bpy.types.N
 def parse_value(node: bpy.types.ShaderNodeValue, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
     if node.arm_material_param:
         nn = 'param_' + c.node_name(node.name)
-        value = c.to_vec1(node.outputs[0].default_value)
+        value = node.outputs[0].default_value
         is_arm_mat_param = True
         state.curshader.add_uniform('float {0}'.format(nn), link='{0}'.format(node.name), default_value=value, is_arm_mat_param=is_arm_mat_param)
         return nn

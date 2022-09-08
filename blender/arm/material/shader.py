@@ -128,7 +128,7 @@ class ShaderContext:
             if ctype == 'vec3':
                 c['vec3'] = default_value
         if is_arm_mat_param is not None:
-            c['is_arm_parameter'] = 'true'
+            c['is_arm_parameter'] = True
         self.constants.append(c)
 
     def add_texture_unit(self, name, link=None, is_image=None,
@@ -157,7 +157,7 @@ class ShaderContext:
         if default_value is not None:
             c['default_image_file'] = default_value
         if is_arm_mat_param is not None:
-            c['is_arm_parameter'] = 'true'
+            c['is_arm_parameter'] = True
 
         self.tunits.append(c)
 
