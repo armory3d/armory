@@ -532,7 +532,6 @@ def fetch_trait_props():
             fetch_prop(o)
 
     for s in bpy.data.scenes:
-        print("SCENE", s)
         fetch_prop(s)
 
 
