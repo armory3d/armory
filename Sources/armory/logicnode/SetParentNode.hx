@@ -11,24 +11,18 @@ class SetParentNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: Object = inputs[1].get();
+		var parentObject: Object = inputs[2].get();
+		var keepTransform: Bool = inputs[3].get();
+		var parentInverse: Bool = inputs[4].get();
 
-		var isUnparent = false;
-		if (Std.isOfType(inputs[2].fromNode, ObjectNode)) {
-			var parentNode = cast(inputs[2].fromNode, ObjectNode);
-			isUnparent = parentNode.objectName == "";
-		}
-
-		var parent: Object = isUnparent ? iron.Scene.active.root : inputs[2].get();
-
-		if (object == null || parent == null || object.parent == parent) return;
+		if (object == null || parentObject == null || object.parent == parentObject) return;
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
 		if (rigidBody != null) rigidBody.setActivationState(0);
 		#end
 
-		object.setParent(parent, !isUnparent, isUnparent);
-
+		object.setParent(parentObject, parentInverse, keepTransform);
 		runOutput(0);
 	}
 }
