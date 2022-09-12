@@ -17,7 +17,7 @@ class SetParentNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmNodeSocketObject', 'Parent')
-        self.add_input('ArmBoolSocket', 'Keep Transform')
+        self.add_input('ArmBoolSocket', 'Keep Transform', default_value = True)
         self.add_input('ArmBoolSocket', 'Parent Inverse')
 
         self.add_output('ArmNodeSocketAction', 'Out')
