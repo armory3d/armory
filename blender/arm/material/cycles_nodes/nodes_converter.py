@@ -363,7 +363,8 @@ def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.No
     state.curshader.add_function(c_functions.str_hue_sat)
 
     hsv_var = c.node_name(node.name) + '_hsv'
-    state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
+    if not state.curshader.contains(hsv_var):  # Already written if a second output is parsed
+        state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
 
     if out_socket == node.outputs[0]:
         return f'{hsv_var}.x'
