@@ -331,6 +331,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'VALTORGB': nodes_converter.parse_valtorgb,  # ColorRamp
         'CURVE_VEC': nodes_vector.parse_curvevec,  # Vector Curves
         'CURVE_RGB': nodes_color.parse_curvergb,
+        'COMBINE_COLOR': nodes_converter.parse_combine_color,
         'COMBHSV': nodes_converter.parse_combhsv,
         'COMBRGB': nodes_converter.parse_combrgb,
         'WAVELENGTH': nodes_converter.parse_wavelength,
@@ -453,6 +454,7 @@ def parse_value(node, socket):
         'VALTORGB': nodes_converter.parse_valtorgb,
         'MATH': nodes_converter.parse_math,
         'RGBTOBW': nodes_converter.parse_rgbtobw,
+        'SEPARATE_COLOR': nodes_converter.parse_separate_color,
         'SEPHSV': nodes_converter.parse_sephsv,
         'SEPRGB': nodes_converter.parse_seprgb,
         'SEPXYZ': nodes_converter.parse_sepxyz,

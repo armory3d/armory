@@ -131,6 +131,16 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
         return f'mix({prev_stop_col}, {next_stop_col}, max({rel_pos}, 0.0))'
 
 
+def parse_combine_color(node: bpy.types.ShaderNodeCombineColor, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    if node.mode == 'RGB':
+        return parse_combrgb(node, out_socket, state)
+    elif node.mode == 'HSV':
+        return parse_combhsv(node, out_socket, state)
+    elif node.mode == 'HSL':
+        log.warn('Combine Color node: HSL mode is not supported, using default value')
+        return c.to_vec3((0.0, 0.0, 0.0))
+
+
 def parse_combhsv(node: bpy.types.ShaderNodeCombineHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     state.curshader.add_function(c_functions.str_hue_sat)
     h = c.parse_value_input(node.inputs[0])
@@ -339,11 +349,22 @@ def parse_rgbtobw(node: bpy.types.ShaderNodeRGBToBW, out_socket: bpy.types.NodeS
     return c.rgb_to_bw(c.parse_vector_input(node.inputs[0]))
 
 
+def parse_separate_color(node: bpy.types.ShaderNodeSeparateColor, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    if node.mode == 'RGB':
+        return parse_seprgb(node, out_socket, state)
+    elif node.mode == 'HSV':
+        return parse_sephsv(node, out_socket, state)
+    elif node.mode == 'HSL':
+        log.warn('Separate Color node: HSL mode is not supported, using default value')
+        return '0.0'
+
+
 def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
     state.curshader.add_function(c_functions.str_hue_sat)
 
     hsv_var = c.node_name(node.name) + '_hsv'
-    state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
+    if not state.curshader.contains(hsv_var):  # Already written if a second output is parsed
+        state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
 
     if out_socket == node.outputs[0]:
         return f'{hsv_var}.x'
