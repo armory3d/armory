@@ -2,6 +2,7 @@ package armory.trait.internal;
 
 import iron.Trait;
 #if arm_ui
+import iron.Scene;
 import zui.Zui;
 import armory.ui.Canvas;
 #end
@@ -175,6 +176,15 @@ class CanvasScript extends Trait {
 	public function getHandle(name: String): Handle {
 		// Consider this a temporary solution
 		return Canvas.h.children[getElement(name).id];
+	}
+
+	public static function getActiveCanvas(): CanvasScript {
+		var activeCanvas = Scene.active.getTrait(CanvasScript);
+		if (activeCanvas == null) activeCanvas = Scene.active.camera.getTrait(CanvasScript);
+
+		assert(Error, activeCanvas != null, "Could not find a canvas trait on the active scene or camera");
+
+		return activeCanvas;
 	}
 
 #else
