@@ -169,6 +169,7 @@ def on_load_post(context):
 
     props.init_properties_on_load()
     reload_blend_data()
+    arm.utils.fetch_bundled_script_names()
 
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
