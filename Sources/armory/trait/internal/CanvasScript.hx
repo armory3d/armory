@@ -17,6 +17,8 @@ class CanvasScript extends Trait {
 	public var ready(get, null): Bool;
 	function get_ready(): Bool { return canvas != null; }
 
+	var onReadyFuncs: Array<Void->Void> = null;
+
 	/**
 	 * Create new CanvasScript from canvas
 	 * @param canvasName Name of the canvas
@@ -78,13 +80,23 @@ class CanvasScript extends Trait {
 				if (all != null) for (entry in all) entry.onEvent();
 			}
 
-			if (onReady != null) { onReady(); onReady = null; }
+			if (onReadyFuncs != null) {
+				for (f in onReadyFuncs) {
+					f();
+				}
+				onReadyFuncs.resize(0);
+			}
 		});
 	}
 
-	var onReady: Void->Void = null;
+	/**
+		Run the given callback function `f` when the canvas is loaded and ready.
+
+		@see https://github.com/armory3d/armory/wiki/traits#canvas-trait-events
+	**/
 	public function notifyOnReady(f: Void->Void) {
-		onReady = f;
+		if (onReadyFuncs == null) onReadyFuncs = [];
+		onReadyFuncs.push(f);
 	}
 
 	/**
