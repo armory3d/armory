@@ -13,13 +13,13 @@ import iron.object.Uniforms;
 
 class UniformsManager extends Trait{
 
-    static var floatsRegistered = false;
-    static var floatsMap = new Map<Object, Map<MaterialData, Map<String, Null<kha.FastFloat>>>>();
+	static var floatsRegistered = false;
+	static var floatsMap = new Map<Object, Map<MaterialData, Map<String, Null<kha.FastFloat>>>>();
 
-    static var vectorsRegistered = false;
-    static var vectorsMap = new Map<Object, Map<MaterialData, Map<String, Vec4>>>();
+	static var vectorsRegistered = false;
+	static var vectorsMap = new Map<Object, Map<MaterialData, Map<String, Vec4>>>();
 
-    static var texturesRegistered = false;
+	static var texturesRegistered = false;
 	static var texturesMap = new Map<Object, Map<MaterialData, Map<String, kha.Image>>>();
 
 	static var sceneRemoveInitalized = false;
@@ -29,7 +29,7 @@ class UniformsManager extends Trait{
 	public function new(){
 		super();
 
-		notifyOnInit(init);
+		notifyOnAdd(init);
 
 		notifyOnRemove(removeObject);
 
@@ -77,22 +77,22 @@ class UniformsManager extends Trait{
 	// Helper method to register float, vec3 and texture getter functions
 	static function register(type: UniformType){
 		switch (type){
-            case Float:
-                if(! floatsRegistered){
-                    floatsRegistered = true;
-                    Uniforms.externalFloatLinks.push(floatLink);
-                }
-            case Vector:
-                if(! vectorsRegistered){
-                    vectorsRegistered = true;
-                    Uniforms.externalVec3Links.push(vec3Link);
-                }
-            case Texture:
-                if(! texturesRegistered){
-                    texturesRegistered = true;
-                    Uniforms.externalTextureLinks.push(textureLink);
-                }
-        }
+			case Float:
+				if(! floatsRegistered){
+					floatsRegistered = true;
+					Uniforms.externalFloatLinks.push(floatLink);
+				}
+			case Vector:
+				if (! vectorsRegistered){
+					vectorsRegistered = true;
+					Uniforms.externalVec3Links.push(vec3Link);
+				}
+			case Texture:
+				if (! texturesRegistered){
+					texturesRegistered = true;
+					Uniforms.externalTextureLinks.push(textureLink);
+				}
+		}
 	}
 
 	// Register and map shader uniforms if it is an armory shader parameter
@@ -162,14 +162,14 @@ class UniformsManager extends Trait{
 	}
 
 	// Method to set map Object -> Material -> Link -> FLoat 
-    public static function setFloatValue(material: MaterialData, object: Object, link: String, value: Null<kha.FastFloat>){
-        
+	public static function setFloatValue(material: MaterialData, object: Object, link: String, value: Null<kha.FastFloat>){
+
 		if(object == null || material == null || link == null) return;
 
-        var map = floatsMap;
+		var map = floatsMap;
 
-        var matMap = map.get(object);
-        if (matMap == null) {
+		var matMap = map.get(object);
+		if (matMap == null) {
 			matMap = new Map();
 			map.set(object, matMap);
 		}
@@ -181,17 +181,17 @@ class UniformsManager extends Trait{
 		}
 
 		entry.set(link, value); // parameter name, value
-    }
+	}
 
 	// Method to set map Object -> Material -> Link -> Vec3 
-    public static function setVec3Value(material: MaterialData, object: Object, link: String, value: Vec4){
-        
+	public static function setVec3Value(material: MaterialData, object: Object, link: String, value: Vec4){
+
 		if(object == null || material == null || link == null) return;
 
-        var map = vectorsMap;
+		var map = vectorsMap;
 
-        var matMap = map.get(object);
-        if (matMap == null) {
+		var matMap = map.get(object);
+		if (matMap == null) {
 			matMap = new Map();
 			map.set(object, matMap);
 		}
@@ -203,17 +203,17 @@ class UniformsManager extends Trait{
 		}
 
 		entry.set(link, value); // parameter name, value
-    }
+	}
 
 	// Method to set map Object -> Material -> Link -> Texture 
-    public static function setTextureValue(material: MaterialData, object: Object, link: String, value: kha.Image){
-        
+	public static function setTextureValue(material: MaterialData, object: Object, link: String, value: kha.Image){
+
 		if(object == null || material == null || link == null) return;
 
-        var map = texturesMap;
+		var map = texturesMap;
 
-        var matMap = map.get(object);
-        if (matMap == null) {
+		var matMap = map.get(object);
+		if (matMap == null) {
 			matMap = new Map();
 			map.set(object, matMap);
 		}
@@ -225,10 +225,10 @@ class UniformsManager extends Trait{
 		}
 
 		entry.set(link, value); // parameter name, value
-    }
+	}
 
 	// Mehtod to get object specific material parameter float value
-    static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
+	public static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 		
 		if(object == null || mat == null) return null;
 
@@ -246,15 +246,15 @@ class UniformsManager extends Trait{
 	}
 
 	// Mehtod to get object specific material parameter vec3 value
-    static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 		
 		if(object == null || mat == null) return null;
 
-        if(! vectorsMap.exists(object)){
+		if(! vectorsMap.exists(object)){
 			object = Scene.active.root;
 		}
 
-        var material = vectorsMap.get(object);
+		var material = vectorsMap.get(object);
 		if (material == null) return null;
 
 		var entry = material.get(mat);
@@ -264,15 +264,16 @@ class UniformsManager extends Trait{
 	}
 
 	// Mehtod to get object specific material parameter texture value
-    static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
+	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
+		
 		
 		if(object == null || mat == null) return null;
 
-        if(! texturesMap.exists(object)){
+		if(! texturesMap.exists(object)){
 			object = Scene.active.root;
 		}
 
-        var material = texturesMap.get(object);
+		var material = texturesMap.get(object);
 		if (material == null) return null;
 
 		var entry = material.get(mat);
