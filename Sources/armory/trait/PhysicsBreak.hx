@@ -60,7 +60,21 @@ class PhysicsBreak extends Trait {
 				// var numObjects = debris.length;
 				for (o in debris) {
 					var ud = breaker.userDataMap.get(cast o);
-					var params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.04, 0.0, 0.0, 0.0];
+					var params: RigidBodyParams = {
+						linearDamping: 0.04,
+						angularDamping: 0.1,
+						angularFriction: 0.1,
+						linearFactorsX: 1.0,
+						linearFactorsY: 1.0,
+						linearFactorsZ: 1.0,
+						angularFactorsX: 1.0,
+						angularFactorsY: 1.0,
+						angularFactorsZ: 1.0,
+						collisionMargin: 0.04,
+						linearDeactivationThreshold: 0.0,
+						angularDeactivationThrshold: 0.0,
+						deactivationTime: 0.0
+					};
 					o.addTrait(new RigidBody(Shape.ConvexHull, ud.mass, ud.friction, 0, 1, params));
 					if (cast(o, MeshObject).data.geom.positions.values.length < 600) {
 						o.addTrait(new PhysicsBreak());
