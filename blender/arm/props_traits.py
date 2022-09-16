@@ -849,9 +849,6 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
             if item.type_prop == 'Haxe Script':
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
             else:
-                # Bundled scripts not yet fetched
-                if not bpy.data.worlds['Arm'].arm_bundled_scripts_list:
-                    arm.utils.fetch_bundled_script_names()
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
 
         elif item.type_prop == 'WebAssembly':
