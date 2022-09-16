@@ -31,8 +31,8 @@ class CanvasSetSliderNode extends LogicNode {
 	override function run(from: Int) {
 		element = inputs[1].get();
 		value = inputs[2].get();
-		canvas = Scene.active.getTrait(CanvasScript);
-		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
+
+		canvas = CanvasScript.getActiveCanvas();
 
 		// Ensure canvas is ready
 		tree.notifyOnUpdate(update);
