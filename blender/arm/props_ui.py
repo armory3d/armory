@@ -20,6 +20,7 @@ import arm.props_traits
 import arm.nodes_logic
 import arm.ui_icons as ui_icons
 import arm.utils
+import arm.utils_vs
 
 
 if arm.is_reload(__name__):
@@ -37,6 +38,7 @@ if arm.is_reload(__name__):
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
 
@@ -2489,7 +2491,7 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         wrd = bpy.data.worlds['Arm']
-        items, err = arm.utils.get_list_installed_vs_version()
+        items, err = arm.utils_vs.get_list_installed_vs_version()
         if len(err) > 0:
             print('Warning for operation Update List Installed Visual Studio: '+ err +'. Check if ArmorySDK is installed correctly.')
             return{'FINISHED'}

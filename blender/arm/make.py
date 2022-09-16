@@ -25,6 +25,7 @@ import arm.make_renderpath as make_renderpath
 import arm.make_state as state
 import arm.make_world as make_world
 import arm.utils
+import arm.utils_vs
 import arm.write_data as write_data
 
 if arm.is_reload(__name__):
@@ -40,6 +41,7 @@ if arm.is_reload(__name__):
     state = arm.reload_module(state)
     make_world = arm.reload_module(make_world)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
     write_data = arm.reload_module(write_data)
 else:
     arm.enable_reload(__name__)
@@ -698,7 +700,7 @@ def build_success():
                 print('\nCompile and run project ' + os.path.join(project_path, project_name + '.vcxproj'))
             if int(wrd.arm_project_win_build) > 0:
                 # Check Visual Studio
-                list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
+                list_vs, err = arm.utils_vs.get_list_installed_vs(True, True, True)
                 if len(err) > 0:
                     print(err)
                     return
@@ -801,7 +803,7 @@ def done_vs_vars():
         state.proc_publish_build = None
         # MSBuild
         wrd = bpy.data.worlds['Arm']
-        list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
+        list_vs, err = arm.utils_vs.get_list_installed_vs(True, True, True)
         # Current VS
         vs_path = ''
         vs_name = ''
