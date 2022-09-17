@@ -5,6 +5,8 @@ package armory.trait.physics.bullet;
 import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
+import iron.math.Quat;
+import iron.math.Mat4;
 import iron.math.RayCaster;
 
 class Hit {
@@ -14,6 +16,15 @@ class Hit {
 	public var normal: Vec4;
 	public function new(rb: RigidBody, pos: Vec4, normal: Vec4){
 		this.rb = rb;
+		this.pos = pos;
+		this.normal = normal;
+	}
+}
+
+class ConvexHit {
+	public var pos: Vec4;
+	public var normal: Vec4;
+	public function new(pos: Vec4, normal: Vec4){
 		this.pos = pos;
 		this.normal = normal;
 	}
@@ -56,11 +67,16 @@ class PhysicsWorld extends Trait {
 	public var solverIterations = 10;
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
+	public var convexHitPointWorld = new Vec4();
+	public var convexHitNormalWorld = new Vec4();
 	var pairCache: Bool = false;
 
 	static var nullvec = true;
 	static var vec1: bullet.Bt.Vector3 = null;
 	static var vec2: bullet.Bt.Vector3 = null;
+	static var quat1: bullet.Bt.Quaternion = null;
+	static var transform1: bullet.Bt.Transform = null;
+	static var transform2: bullet.Bt.Transform = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
@@ -73,6 +89,9 @@ class PhysicsWorld extends Trait {
 			nullvec = false;
 			vec1 = new bullet.Bt.Vector3(0, 0, 0);
 			vec2 = new bullet.Bt.Vector3(0, 0, 0);
+			transform1 = new bullet.Bt.Transform();
+			transform2 = new bullet.Bt.Transform();
+			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 1.0);
 		}
 
 		// Scene spawn
@@ -392,6 +411,69 @@ class PhysicsWorld extends Trait {
 		bullet.Bt.Ammo.destroy(rayCallback);
 		#else
 		rayCallback.delete();
+		#end
+
+		return hitInfo;
+	}
+
+	public function convexSweepTest(rb: RigidBody, from: Mat4, to: Mat4, group: Int = 0x00000001, mask = 0xFFFFFFFF): Hit {
+		var transformFrom = transform1;
+		var transformTo = transform2;
+		transformFrom.setIdentity();
+		transformTo.setIdentity();
+
+		var loc = new Vec4();
+		var rot = new Quat();
+		var scl = new Vec4();
+
+		from.decompose(loc, rot, scl);
+		vec1.setValue(loc.x, loc.y, loc.z);
+		transformFrom.setOrigin(vec1);
+		quat1.setValue(rot.x, rot.y, rot.z, rot.w);
+		transformFrom.setRotation(quat1);
+
+		to.decompose(loc, rot, scl);
+		vec2.setValue(loc.x, loc.y, loc.z);
+		transformTo.setOrigin(vec2);
+		quat1.setValue(rot.x, rot.y, rot.z, rot.w);
+		transformFrom.setRotation(quat1);
+
+		var convexCallback = new bullet.Bt.ClosestConvexResultCallback(vec1, vec2);
+		#if js
+		convexCallback.set_m_collisionFilterGroup(group);
+		convexCallback.set_m_collisionFilterMask(mask);
+		#elseif (cpp || hl)
+		convexCallback.m_collisionFilterGroup = group;
+		convexCallback.m_collisionFilterMask = mask;
+		#end
+		var worldDyn: bullet.Bt.DynamicsWorld = world;
+		var worldCol: bullet.Bt.CollisionWorld = worldDyn;
+		var bodyColl: bullet.Bt.CollisionShape = rb.body.getCollisionShape();
+		worldCol.convexSweepTest(bodyColl, transformFrom, transformTo, convexCallback, 0.0);
+		
+		var hitInfo: ConvexHit = null;
+
+		var cc: bullet.Bt.ClosestConvexResultCallback = convexCallback;
+		if (cc.hasHit()) {
+			#if js
+			var hit = convexCallback.get_m_hitPointWorld();
+			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
+			var norm = convexCallback.get_m_hitNormalWorld();
+			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
+			hitInfo = new ConvexHit(convexHitPointWorld, convexHitNormalWorld);
+			#elseif (cpp || hl)
+			var hit = convexCallback.m_hitPointWorld;
+			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
+			var norm = convexCallback.m_hitNormalWorld;
+			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
+			hitInfo = new Hit(convexHitPointWorld, convexHitNormalWorld);
+			#end
+		}
+
+		#if js
+		bullet.Bt.Ammo.destroy(convexCallback);
+		#else
+		convexCallback.delete();
 		#end
 
 		return hitInfo;
