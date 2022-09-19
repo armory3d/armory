@@ -169,6 +169,14 @@ class CanvasScript extends Trait {
 	public function getCanvasFontSize(): Int {
 		return cui.t.FONT_SIZE;
 	}
+	
+	public function setCanvasInputTextFocus(e: Handle, focus: Bool) {
+		if(focus == true){
+			@:privateAccess cui.startTextEdit(e);
+		} else {
+			@:privateAccess cui.deselectText();
+		}
+	}
 
 	// Contains data
 	@:access(armory.ui.Canvas)
