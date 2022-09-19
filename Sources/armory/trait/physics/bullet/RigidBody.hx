@@ -97,47 +97,30 @@ class RigidBody extends iron.Trait {
 		this.group = group;
 		this.mask = mask;
 
-		if (params == null) params = { linearDamping: 0.04,
-									   angularDamping: 0.1,
-									   angularFriction: 0.1,
-									   linearFactorsX: 1.0,
-									   linearFactorsY: 1.0,
-									   linearFactorsZ: 1.0,
-									   angularFactorsX: 1.0,
-									   angularFactorsY: 1.0,
-									   angularFactorsZ: 1.0,
-									   collisionMargin: 0.0,
-									   linearDeactivationThreshold: 0.0,
-									   angularDeactivationThrshold: 0.0,
-									   deactivationTime: 0.0};
-		/**
-		 * params:[ linear damping
-		 * 		    angular damping
-		 * 			linear factor X
-		 * 			linear factor Y
-		 * 			linear factor Z
-		 * 			angular factor X
-		 * 			angular factor Y
-		 * 			angular factor Z
-		 * 			collision margin
-		 * 			linear deactivation threshold
-		 * 			angular deactivation thrshold
-		 * 			deactivation time(Not used)]
-		 */
+		if (params == null) params = {
+			linearDamping: 0.04,
+			angularDamping: 0.1,
+			angularFriction: 0.1,
+			linearFactorsX: 1.0,
+			linearFactorsY: 1.0,
+			linearFactorsZ: 1.0,
+			angularFactorsX: 1.0,
+			angularFactorsY: 1.0,
+			angularFactorsZ: 1.0,
+			collisionMargin: 0.0,
+			linearDeactivationThreshold: 0.0,
+			angularDeactivationThrshold: 0.0,
+			deactivationTime: 0.0
+		};
 
-		if (flags == null) flags = { animated: false,
-									 trigger: false,
-									 ccd: false,
-									 staticObj: false,
-									 useDeactivation: true};
-		/**
-		 * flags:[ is animated
-		 * 		   is trigger
-		 * 		   continuous collision detection
-		 * 		   is static
-		 * 		   use deactivation]
-		 */
-		
+		if (flags == null) flags = {
+			animated: false,
+			trigger: false,
+			ccd: false,
+			staticObj: false,
+			useDeactivation: true
+		};
+
 		this.linearDamping = params.linearDamping;
 		this.angularDamping = params.angularDamping;
 		this.angularFriction = params.angularFriction;
