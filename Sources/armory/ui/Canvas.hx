@@ -66,29 +66,41 @@ class Canvas {
 
 		switch (element.type) {
 			case Text:
-				var size = ui.fontSize;
-
+				var prevFontSize = ui.fontSize;
+				var prevTEXT_COL = ui.t.TEXT_COL;
 				ui.fontSize = scaled(element.height);
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
+
 				ui.text(getText(canvas, element), element.alignment);
 
-				ui.fontSize = size;
+				ui.fontSize = prevFontSize;
+				ui.t.TEXT_COL = prevTEXT_COL;
 
 			case Button:
-				var eh = ui.t.ELEMENT_H;
-				var bh = ui.t.BUTTON_H;
+				var prevELEMENT_H = ui.t.ELEMENT_H;
+				var prevBUTTON_H = ui.t.BUTTON_H;
+				var prevBUTTON_COL = ui.t.BUTTON_COL;
+				var prevBUTTON_TEXT_COL = ui.t.BUTTON_TEXT_COL;
+				var prevBUTTON_HOVER_COL = ui.t.BUTTON_HOVER_COL;
+				var prevBUTTON_PRESSED_COL = ui.t.BUTTON_PRESSED_COL;
 				ui.t.ELEMENT_H = element.height;
 				ui.t.BUTTON_H = element.height;
 				ui.t.BUTTON_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.BUTTON_TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).BUTTON_TEXT_COL);
 				ui.t.BUTTON_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
 				ui.t.BUTTON_PRESSED_COL = getColor(element.color_press, getTheme(canvas.theme).BUTTON_PRESSED_COL);
+
 				if (ui.button(getText(canvas, element), element.alignment)) {
 					var e = element.event;
 					if (e != null && e != "") events.push(e);
 				}
-				ui.t.ELEMENT_H = eh;
-				ui.t.BUTTON_H = bh;
+
+				ui.t.ELEMENT_H = prevELEMENT_H;
+				ui.t.BUTTON_H = prevBUTTON_H;
+				ui.t.BUTTON_COL = prevBUTTON_COL;
+				ui.t.BUTTON_TEXT_COL = prevBUTTON_TEXT_COL;
+				ui.t.BUTTON_HOVER_COL = prevBUTTON_HOVER_COL;
+				ui.t.BUTTON_PRESSED_COL = prevBUTTON_PRESSED_COL;
 
 			case Image:
 				var image = getAsset(canvas, element.asset);
@@ -141,48 +153,101 @@ class Canvas {
 				ui.g.color = col;
 
 			case Check:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				ui.check(h.nest(element.id), getText(canvas, element));
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case Radio:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				zui.Ext.inlineRadio(ui, h.nest(element.id), getText(canvas, element).split(";"));
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case Combo:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevLABEL_COL = ui.t.LABEL_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevSEPARATOR_COL = ui.t.SEPARATOR_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.SEPARATOR_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				ui.combo(h.nest(element.id), getText(canvas, element).split(";"));
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.LABEL_COL = prevLABEL_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.SEPARATOR_COL = prevSEPARATOR_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case Slider:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevLABEL_COL = ui.t.LABEL_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				ui.slider(h.nest(element.id), getText(canvas, element), 0.0, 1.0, true, 100, true, element.alignment);
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.LABEL_COL = prevLABEL_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case TextInput:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevLABEL_COL = ui.t.LABEL_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				ui.textInput(h.nest(element.id), getText(canvas, element), element.alignment);
 				if (h.nest(element.id).changed) {
 					var e = element.event;
 					if (e != null && e != "") events.push(e);
 				}
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.LABEL_COL = prevLABEL_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case TextArea:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevLABEL_COL = ui.t.LABEL_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				h.nest(element.id).text = getText(canvas, element);
 				zui.Ext.textArea(ui,h.nest(element.id), element.alignment,element.editable);
 				if (h.nest(element.id).changed) {
@@ -190,12 +255,27 @@ class Canvas {
 					if (e != null && e != "") events.push(e);
 				}
 
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.LABEL_COL = prevLABEL_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
+
 			case KeyInput:
+				var prevTEXT_COL = ui.t.TEXT_COL;
+				var prevLABEL_COL = ui.t.LABEL_COL;
+				var prevACCENT_COL = ui.t.ACCENT_COL;
+				var prevACCENT_HOVER_COL = ui.t.ACCENT_HOVER_COL;
 				ui.t.TEXT_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+
 				Ext.keyInput(ui, h.nest(element.id), getText(canvas, element));
+
+				ui.t.TEXT_COL = prevTEXT_COL;
+				ui.t.LABEL_COL = prevLABEL_COL;
+				ui.t.ACCENT_COL = prevACCENT_COL;
+				ui.t.ACCENT_HOVER_COL = prevACCENT_HOVER_COL;
 
 			case ProgressBar:
 				var col = ui.g.color;
@@ -216,6 +296,7 @@ class Canvas {
 				ui.g.color = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.g.fillCircle(ui._x + (scaled(element.width) / 2), ui._y + (scaled(element.height) / 2), (ui._w / 2) - 10);
 				ui.g.color = col;
+
 			case Empty:
 		}
 
