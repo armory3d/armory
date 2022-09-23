@@ -334,7 +334,7 @@ def compile(assets_only=False):
         dxc_path = fp + '/HlslShaders/dxc.exe'
         subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
 
-    if arm.utils.get_khamake_threads() > 1:
+    if arm.utils.get_khamake_threads() != 1:
         cmd.append('--parallelAssetConversion')
         cmd.append(str(arm.utils.get_khamake_threads()))
 

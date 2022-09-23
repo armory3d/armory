@@ -245,8 +245,10 @@ def get_ui_scale():
     addon_prefs = get_arm_preferences()
     return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
 
-def get_khamake_threads():
+def get_khamake_threads() -> int:
     addon_prefs = get_arm_preferences()
+    if hasattr(addon_prefs, 'khamake_threads_use_auto') and addon_prefs.khamake_threads_use_auto:
+        return -1
     return 1 if not hasattr(addon_prefs, 'khamake_threads') else addon_prefs.khamake_threads
 
 def get_compilation_server():
