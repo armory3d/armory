@@ -1,4 +1,5 @@
 import platform
+import subprocess
 
 DEBUG = 36
 INFO = 37
@@ -68,3 +69,14 @@ def error(text):
     global num_errors
     num_errors += 1
     log('ERROR: ' + text, ERROR)
+
+
+def warn_called_process_error(e: subprocess.CalledProcessError):
+    out = f'Command {e.cmd} exited with code {e.returncode}.'
+    if e.output is not None:
+        out += (
+            f'Command output:\n'
+            f'---------------\n'
+            f'{e.output.decode(encoding="utf-8")}'  # Output is encoded as bytes by default
+        )
+    warn(out)

@@ -4,7 +4,6 @@ Various utilities for interacting with Visual Studio on Windows.
 import json
 import os
 import subprocess
-import traceback
 from typing import Any, Optional, Callable
 
 import bpy
@@ -95,7 +94,10 @@ def fetch_installed_vs() -> bool:
         path = vswhere_get_path(inst)
 
         if name is None or versions is None or path is None:
-            log.warn(f'Found a Visual Studio installation with incomplete information, skipping ({name=}, {versions=}, {path=})')
+            log.warn(
+                f'Found a Visual Studio installation with incomplete information, skipping\n'
+                f'    ({name=}, {versions=}, {path=})'
+            )
             continue
 
         items.append({
@@ -122,8 +124,8 @@ def open_project_in_vs(version_major: str, project_path: str, project_name: str)
 
     try:
         subprocess.check_call(cmd, shell=True)
-    except subprocess.CalledProcessError:
-        print(traceback.format_exc())
+    except subprocess.CalledProcessError as e:
+        log.warn_called_process_error(e)
         return False
 
     return True
@@ -223,10 +225,10 @@ def vswhere_get_instances() -> Optional[list[dict[str, Any]]]:
     try:
         result = subprocess.check_output(command)
     except subprocess.CalledProcessError as e:
-        log.warn(f'Command {command} exited with code {e.returncode}.')
+        log.warn_called_process_error(e)
         return None
     except FileNotFoundError as e:
-        log.warn(f'Could not open file from command {command} ({e.errno=}).')
+        log.warn(f'Could not open file "{exe_path}", make sure the file exists (errno {e.errno}).')
         return None
 
     result = json.loads(result.decode('utf-8'))
