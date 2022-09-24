@@ -79,25 +79,26 @@ def get_supported_version(version_major: str) -> Optional[dict[str, str]]:
     return None
 
 
-def fetch_installed_vs() -> bool:
+def fetch_installed_vs(silent=False) -> bool:
     global _installed_versions
 
-    data_instances = vswhere_get_instances()
+    data_instances = _vswhere_get_instances(silent)
     if data_instances is None:
         return False
 
     items = []
 
     for inst in data_instances:
-        name = vswhere_get_display_name(inst)
-        versions = vswhere_get_version(inst)
-        path = vswhere_get_path(inst)
+        name = _vswhere_get_display_name(inst)
+        versions = _vswhere_get_version(inst)
+        path = _vswhere_get_path(inst)
 
         if name is None or versions is None or path is None:
-            log.warn(
-                f'Found a Visual Studio installation with incomplete information, skipping\n'
-                f'    ({name=}, {versions=}, {path=})'
-            )
+            if not silent:
+                log.warn(
+                    f'Found a Visual Studio installation with incomplete information, skipping\n'
+                    f'    ({name=}, {versions=}, {path=})'
+                )
             continue
 
         items.append({
@@ -195,14 +196,14 @@ def compile_in_vs(version_major: str, done: Callable[[], None]) -> bool:
     return True
 
 
-def vswhere_get_display_name(instance_data: dict[str, Any]) -> Optional[str]:
+def _vswhere_get_display_name(instance_data: dict[str, Any]) -> Optional[str]:
     name_raw = instance_data.get('displayName', None)
     if name_raw is None:
         return None
     return arm.utils.safestr(name_raw).replace('_', ' ').strip()
 
 
-def vswhere_get_version(instance_data: dict[str, Any]) -> Optional[tuple[str, str]]:
+def _vswhere_get_version(instance_data: dict[str, Any]) -> Optional[tuple[str, str]]:
     version_raw = instance_data.get('installationVersion', None)
     if version_raw is None:
         return None
@@ -212,11 +213,11 @@ def vswhere_get_version(instance_data: dict[str, Any]) -> Optional[tuple[str, st
     return version_major, version_full
 
 
-def vswhere_get_path(instance_data: dict[str, Any]) -> Optional[str]:
+def _vswhere_get_path(instance_data: dict[str, Any]) -> Optional[str]:
     return instance_data.get('installationPath', None)
 
 
-def vswhere_get_instances() -> Optional[list[dict[str, Any]]]:
+def _vswhere_get_instances(silent=False) -> Optional[list[dict[str, Any]]]:
     # vswhere.exe only exists at that location since VS2017 v15.2, for
     # earlier versions we'd need to package vswhere with Armory
     exe_path = os.path.join(os.environ["ProgramFiles(x86)"], 'Microsoft Visual Studio', 'Installer', 'vswhere.exe')
@@ -225,10 +226,13 @@ def vswhere_get_instances() -> Optional[list[dict[str, Any]]]:
     try:
         result = subprocess.check_output(command)
     except subprocess.CalledProcessError as e:
+        # Do not silence this warning, if this exception is caught there
+        # likely is an issue in the command above
         log.warn_called_process_error(e)
         return None
     except FileNotFoundError as e:
-        log.warn(f'Could not open file "{exe_path}", make sure the file exists (errno {e.errno}).')
+        if not silent:
+            log.warn(f'Could not open file "{exe_path}", make sure the file exists (errno {e.errno}).')
         return None
 
     result = json.loads(result.decode('utf-8'))

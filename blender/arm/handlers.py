@@ -17,6 +17,7 @@ import arm.make as make
 import arm.make_state as state
 import arm.props as props
 import arm.utils
+import arm.utils_vs
 
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
@@ -28,6 +29,7 @@ if arm.is_reload(__name__):
     state = arm.reload_module(state)
     props = arm.reload_module(props)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
 
@@ -249,6 +251,15 @@ def load_library(asset_name):
 
     for ref in data_refs:
         ref.use_fake_user = True
+
+
+def post_register():
+    """Called in start.py after all Armory modules have been registered.
+    It is also called in case of add-on reloads. Put code here that
+    needs to be run once at the beginning of each session.
+    """
+    if arm.utils.get_os_is_windows():
+        arm.utils_vs.fetch_installed_vs(silent=True)
 
 
 def register():
