@@ -327,17 +327,17 @@ class DebugConsole extends Trait {
 						h = Id.handle();
 						h.text = roundfp(localPos.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
-						if (ui.changed) localPos.x = f;
+						if (h.changed) localPos.x = f;
 
 						h = Id.handle();
 						h.text = roundfp(localPos.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) localPos.y = f;
+						if (h.changed) localPos.y = f;
 
 						h = Id.handle();
 						h.text = roundfp(localPos.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) localPos.z = f;
+						if (h.changed) localPos.z = f;
 
 						ui.row(row4);
 						ui.text("Rotation");
@@ -346,17 +346,17 @@ class DebugConsole extends Trait {
 						h.text = roundfp(rot.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
 						var changed = false;
-						if (ui.changed) { changed = true; rot.x = f; }
+						if (h.changed) { changed = true; rot.x = f; }
 
 						h = Id.handle();
 						h.text = roundfp(rot.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) { changed = true; rot.y = f; }
+						if (h.changed) { changed = true; rot.y = f; }
 
 						h = Id.handle();
 						h.text = roundfp(rot.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) { changed = true; rot.z = f; }
+						if (h.changed) { changed = true; rot.z = f; }
 
 						if (changed && selectedObject.name != "Scene") {
 							rot.mult(3.141592 / 180);
@@ -374,17 +374,17 @@ class DebugConsole extends Trait {
 						h = Id.handle();
 						h.text = roundfp(scale.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
-						if (ui.changed) scale.x = f;
+						if (h.changed) scale.x = f;
 
 						h = Id.handle();
 						h.text = roundfp(scale.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) scale.y = f;
+						if (h.changed) scale.y = f;
 
 						h = Id.handle();
 						h.text = roundfp(scale.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) scale.z = f;
+						if (h.changed) scale.z = f;
 
 						ui.row(row4);
 						ui.text("Dimensions");
@@ -392,17 +392,17 @@ class DebugConsole extends Trait {
 						h = Id.handle();
 						h.text = roundfp(dim.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
-						if (ui.changed) dim.x = f;
+						if (h.changed) dim.x = f;
 
 						h = Id.handle();
 						h.text = roundfp(dim.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
-						if (ui.changed) dim.y = f;
+						if (h.changed) dim.y = f;
 
 						h = Id.handle();
 						h.text = roundfp(dim.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
-						if (ui.changed) dim.z = f;
+						if (h.changed) dim.z = f;
 
 						selectedObject.transform.dirty = true;
 						ui.unindent();
@@ -450,7 +450,7 @@ class DebugConsole extends Trait {
 							var fovHandle = Id.handle();
 							fovHandle.value = Std.int(cam.data.raw.fov * 100) / 100;
 							cam.data.raw.fov = ui.slider(fovHandle, "Field of View", 0.3, 2.0, true);
-							if (ui.changed) {
+							if (fovHandle.changed) {
 								cam.buildProjection();
 							}
 						}
