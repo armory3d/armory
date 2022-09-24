@@ -160,10 +160,12 @@ def get_os() -> str:
     else:
         return 'linux'
 
-def get_os_is_windows():
-    return True if get_os() == 'win' else False
 
-def get_os_is_windows_64():
+def get_os_is_windows() -> bool:
+    return get_os() == 'win'
+
+
+def get_os_is_windows_64() -> bool:
     if platform.machine().endswith('64'):
         return True
     # Checks if Python (32 bit) is running on Windows (64 bit)
@@ -176,6 +178,7 @@ def get_os_is_windows_64():
             return True
     else:
         return False
+
 
 def get_gapi():
     wrd = bpy.data.worlds['Arm']
