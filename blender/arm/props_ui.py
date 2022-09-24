@@ -1007,13 +1007,18 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
-        layout.enabled = arm.utils.get_os_is_windows()
+        is_windows = arm.utils.get_os_is_windows()
 
         col = layout.column()
         col.prop(wrd, 'arm_project_win_list_vs')
-        col.prop(wrd, 'arm_project_win_build', text='After Publish')
+        row = col.row()
+        row.enabled = is_windows
+        row.prop(wrd, 'arm_project_win_build', text='After Publish')
 
-        if wrd.arm_project_win_build != 'nothing' and not arm.utils_vs.is_version_installed(wrd.arm_project_win_list_vs):
+        layout = layout.column()
+        layout.enabled = is_windows
+
+        if is_windows and wrd.arm_project_win_build != 'nothing' and not arm.utils_vs.is_version_installed(wrd.arm_project_win_list_vs):
             box = draw_error_box(
                 layout,
                 'The selected version of Visual Studio could not be found and'

@@ -686,25 +686,25 @@ def build_success():
                     webbrowser.open(link_html5_app)
 
         # Windows After Publish
-        if target_name.startswith('windows'):
+        if target_name.startswith('windows') and wrd.arm_project_win_build != 'nothing' and arm.utils.get_os_is_windows():
             project_name = arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version)
+
+            # Open in Visual Studio
             if wrd.arm_project_win_build == 'open':
                 print('\nOpening in Visual Studio: ' + os.path.join(project_path, project_name + '.sln"'))
-            elif wrd.arm_project_win_build == 'compile':
-                print('\nCompiling project ' + os.path.join(project_path, project_name + '.vcxproj'))
-            elif wrd.arm_project_win_build == 'compile_and_run':
-                print('\nCompiling and running project ' + os.path.join(project_path, project_name + '.vcxproj'))
+                _ = arm.utils_vs.open_project_in_vs(wrd.arm_project_win_list_vs, project_path, project_name)
 
-            if wrd.arm_project_win_build != 'nothing':
-                # Open in Visual Studio
-                if wrd.arm_project_win_build == 'open':
-                    _ = arm.utils_vs.open_project_in_vs(wrd.arm_project_win_list_vs, project_path, project_name)
-                # Compile
-                elif wrd.arm_project_win_build.startswith('compile'):
-                    success = arm.utils_vs.enable_vsvars_env(wrd.arm_project_win_list_vs, done_vs_vars)
-                    if not success:
-                        state.redraw_ui = True
-                        log.error('Compile failed, check console')
+            # Compile
+            elif wrd.arm_project_win_build.startswith('compile'):
+                if wrd.arm_project_win_build == 'compile':
+                    print('\nCompiling project ' + os.path.join(project_path, project_name + '.vcxproj'))
+                elif wrd.arm_project_win_build == 'compile_and_run':
+                    print('\nCompiling and running project ' + os.path.join(project_path, project_name + '.vcxproj'))
+
+                success = arm.utils_vs.enable_vsvars_env(wrd.arm_project_win_list_vs, done_vs_vars)
+                if not success:
+                    state.redraw_ui = True
+                    log.error('Compile failed, check console')
 
 
 def done_gradlew_build():
