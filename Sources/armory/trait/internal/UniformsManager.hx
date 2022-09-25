@@ -265,13 +265,17 @@ class UniformsManager extends Trait{
 
 	// Mehtod to get object specific material parameter texture value
 	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
-		
-		
+
 		if(object == null || mat == null) return null;
 
-		if(! texturesMap.exists(object)){
-			object = Scene.active.root;
+		var res = getObjectTextureLink(object, mat, link);
+		if(res == null) {
+			res = getObjectTextureLink(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	static function getObjectTextureLink(object: Object, mat: MaterialData, link: String): kha.Image {
 
 		var material = texturesMap.get(object);
 		if (material == null) return null;
