@@ -3,6 +3,7 @@ Various utilities for interacting with Visual Studio on Windows.
 """
 import json
 import os
+import re
 import subprocess
 from typing import Any, Optional, Callable
 
@@ -47,6 +48,8 @@ version_to_khamake_id = {
 
 # VS versions found with fetch_installed_vs()
 _installed_versions = []
+
+_REGEX_SLN_MIN_VERSION = re.compile(r'MinimumVisualStudioVersion\s*=\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
 
 
 def is_version_installed(version_major: str) -> bool:
@@ -104,22 +107,37 @@ def fetch_installed_vs(silent=False) -> bool:
         items.append({
             'version_major': versions[0],
             'version_full': versions[1],
+            'version_full_ints': versions[2],
             'name': name,
             'path': path
         })
+
+    # Store in descending order
+    items.sort(key=lambda x: x['version_major'], reverse=True)
 
     _installed_versions = items
     return True
 
 
-def open_project_in_vs(version_major: str, project_path: str, project_name: str) -> bool:
+def open_project_in_vs(version_major: str, version_min_full: Optional[str] = None) -> bool:
     installation = get_installed_version(version_major, re_fetch=True)
     if installation is None:
-        vs_info = get_supported_version(version_major)
-        log.warn(f'Could not open project in Visual Studio, {vs_info["name"]} was not found.')
-        return False
+        if version_min_full is not None:
+            # Try whether other installed versions are supported, versions
+            # are already sorted in descending order
+            for installed_version in _installed_versions:
+                if (installed_version['version_full_ints'] >= version_full_to_ints(version_min_full)
+                        and int(installed_version['version_major']) < int(version_major)):
+                    installation = installed_version
+                    break
 
-    sln_path = os.path.join(project_path, project_name + '.sln"')
+        # Still nothing found, warn for version_major
+        if installation is None:
+            vs_info = get_supported_version(version_major)
+            log.warn(f'Could not open project in Visual Studio, {vs_info["name"]} was not found.')
+            return False
+
+    sln_path = get_sln_path()
     devenv_path = os.path.join(installation['path'], 'Common7', 'IDE', 'devenv.exe')
     cmd = ['start', devenv_path, sln_path]
 
@@ -171,9 +189,7 @@ def compile_in_vs(version_major: str, done: Callable[[], None]) -> bool:
         )
         return False
 
-    project_name = arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version)
-    project_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target)) + '-build'
-    projectfile_path = os.path.join(project_path, project_name + '.vcxproj')
+    projectfile_path = get_vcxproj_path()
 
     cmd = [msbuild_path, projectfile_path]
 
@@ -203,14 +219,15 @@ def _vswhere_get_display_name(instance_data: dict[str, Any]) -> Optional[str]:
     return arm.utils.safestr(name_raw).replace('_', ' ').strip()
 
 
-def _vswhere_get_version(instance_data: dict[str, Any]) -> Optional[tuple[str, str]]:
+def _vswhere_get_version(instance_data: dict[str, Any]) -> Optional[tuple[str, str, tuple[int, ...]]]:
     version_raw = instance_data.get('installationVersion', None)
     if version_raw is None:
         return None
 
     version_full = version_raw.strip()
+    version_full_ints = version_full_to_ints(version_full)
     version_major = version_full.split('.')[0]
-    return version_major, version_full
+    return version_major, version_full, version_full_ints
 
 
 def _vswhere_get_path(instance_data: dict[str, Any]) -> Optional[str]:
@@ -237,3 +254,74 @@ def _vswhere_get_instances(silent=False) -> Optional[list[dict[str, Any]]]:
 
     result = json.loads(result.decode('utf-8'))
     return result
+
+
+def version_full_to_ints(version_full: str) -> tuple[int, ...]:
+    return tuple(int(i) for i in version_full.split('.'))
+
+
+def get_project_path() -> str:
+    return os.path.join(arm.utils.get_fp_build(), 'windows-hl-build')
+
+
+def get_project_name():
+    wrd = bpy.data.worlds['Arm']
+    return arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version)
+
+
+def get_sln_path() -> str:
+    project_path = get_project_path()
+    project_name = get_project_name()
+    return os.path.join(project_path, project_name + '.sln')
+
+
+def get_vcxproj_path() -> str:
+    project_name = get_project_name()
+    project_path = get_project_path()
+    return os.path.join(project_path, project_name + '.vcxproj')
+
+
+def fetch_project_version() -> tuple[Optional[str], Optional[str], Optional[str]]:
+    version_major = None
+    version_min_full = None
+
+    try:
+        # References:
+        # https://learn.microsoft.com/en-us/visualstudio/extensibility/internals/solution-dot-sln-file?view=vs-2022#file-header
+        # https://github.com/Kode/kmake/blob/a104a89b55218054ceed761d5bc75d6e5cd60573/kmake/src/Exporters/VisualStudioExporter.ts#L188-L225
+        with open(get_sln_path(), 'r') as file:
+            for linenum, line in enumerate(file):
+                line = line.strip()
+
+                if linenum == 1:
+                    if line == '# Visual Studio Version 17':
+                        version_major = 17
+                    elif line == '# Visual Studio Version 16':
+                        version_major = 16
+                    elif line == '# Visual Studio 15':
+                        version_major = 15
+                    elif line == '# Visual Studio 14':
+                        version_major = 14
+                    elif line == '# Visual Studio 2013':
+                        version_major = 12
+                    elif line == '# Visual Studio 2012':
+                        version_major = 11
+                    elif line == '# Visual Studio 2010':
+                        version_major = 10
+                    else:
+                        log.warn(f'Could not parse Visual Studio version. Invalid major version, parsed {line}')
+                        return None, None, 'err_invalid_version_major'
+
+                elif linenum == 3 and version_major >= 12:
+                    match = _REGEX_SLN_MIN_VERSION.match(line)
+                    if match:
+                        version_min_full = match.group(1)
+                        break
+
+                    log.warn(f'Could not parse Visual Studio version. Invalid full version, parsed {line}')
+                    return None, None, 'err_invalid_version_full'
+
+    except FileNotFoundError:
+        return None, None, 'err_file_not_found'
+
+    return str(version_major), version_min_full, None

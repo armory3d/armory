@@ -691,15 +691,15 @@ def build_success():
 
             # Open in Visual Studio
             if wrd.arm_project_win_build == 'open':
-                print('\nOpening in Visual Studio: ' + os.path.join(project_path, project_name + '.sln"'))
-                _ = arm.utils_vs.open_project_in_vs(wrd.arm_project_win_list_vs, project_path, project_name)
+                print('\nOpening in Visual Studio: ' + arm.utils_vs.get_sln_path())
+                _ = arm.utils_vs.open_project_in_vs(wrd.arm_project_win_list_vs)
 
             # Compile
             elif wrd.arm_project_win_build.startswith('compile'):
                 if wrd.arm_project_win_build == 'compile':
-                    print('\nCompiling project ' + os.path.join(project_path, project_name + '.vcxproj'))
+                    print('\nCompiling project ' + arm.utils_vs.get_vcxproj_path())
                 elif wrd.arm_project_win_build == 'compile_and_run':
-                    print('\nCompiling and running project ' + os.path.join(project_path, project_name + '.vcxproj'))
+                    print('\nCompiling and running project ' + arm.utils_vs.get_vcxproj_path())
 
                 success = arm.utils_vs.enable_vsvars_env(wrd.arm_project_win_list_vs, done_vs_vars)
                 if not success:
