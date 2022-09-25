@@ -320,6 +320,20 @@ class UniformsManager extends Trait{
 			case Texture: texturesMap.remove(object);
 		}
 	}
+
+	public static function removeTextureValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = texturesMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if(! entry.keys().hasNext()) material.remove(mat);
+		if(! material.keys().hasNext()) texturesMap.remove(object);
+	}
 }
 
 @:enum abstract UniformType(Int) from Int to Int {
