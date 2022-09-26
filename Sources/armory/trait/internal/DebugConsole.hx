@@ -309,7 +309,7 @@ class DebugConsole extends Trait {
 					ui.indent();
 
 					if (selectedObject != null) {
-						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject) && selectedObject != iron.Scene.active.camera) {
 							ui.row([1/2, 1/2]);
 						}
 
@@ -317,9 +317,9 @@ class DebugConsole extends Trait {
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
 
-						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject) && selectedObject != iron.Scene.active.camera) {
 							if (ui.button("Set Active Camera")) {
-								iron.Scene.active.camera = cast(selectedObject, iron.object.CameraObject);
+								iron.Scene.active.camera = cast selectedObject;
 							}
 						}
 
