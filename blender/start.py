@@ -71,6 +71,8 @@ def register(local_sdk=False):
     arm.handlers.register()
     arm.props_collision_filter_mask.register()
 
+    arm.handlers.post_register()
+
     if reload_started != 0:
         arm.log.debug(f'Armory SDK: Reloading finished in {time.time() - reload_started:.3f}s')
 

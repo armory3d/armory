@@ -25,6 +25,7 @@ import arm.make_renderpath as make_renderpath
 import arm.make_state as state
 import arm.make_world as make_world
 import arm.utils
+import arm.utils_vs
 import arm.write_data as write_data
 
 if arm.is_reload(__name__):
@@ -40,6 +41,7 @@ if arm.is_reload(__name__):
     state = arm.reload_module(state)
     make_world = arm.reload_module(make_world)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
     write_data = arm.reload_module(write_data)
 else:
     arm.enable_reload(__name__)
@@ -257,7 +259,7 @@ def export_data(fp, sdk_path):
 
     # Change project version (Build, Publish)
     if (not state.is_play) and (wrd.arm_project_version_autoinc):
-        wrd.arm_project_version = arm.utils.arm.utils.change_version_project(wrd.arm_project_version)
+        wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
     write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, ArmoryExporter.import_traits)
@@ -304,9 +306,8 @@ def compile(assets_only=False):
     cmd.append(state.export_gapi)
     # Windows - Set Visual Studio Version
     if state.target.startswith('windows'):
-        cmd.append('-visualstudio')
-        vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
-        cmd.append(vs_id)
+        cmd.append('--visualstudio')
+        cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         if 'html5' in state.target or 'ios' in state.target:
@@ -624,10 +625,10 @@ def build_success():
             print('Exported XCode project to ' + project_path)
         elif target_name.startswith('windows'):
             project_path = files_path + '-build'
-            vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
-            print('Exported '+ vs_name +' project to ' + project_path)
+            vs_info = arm.utils_vs.get_supported_version(wrd.arm_project_win_list_vs)
+            print(f'Exported {vs_info["name"]} project to {project_path}')
         elif target_name.startswith('android'):
-            project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
+            project_name = arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version)
             project_path = os.path.join(files_path + '-build', project_name)
             print('Exported Android Studio project to ' + project_path)
         elif target_name.startswith('krom'):
@@ -685,58 +686,26 @@ def build_success():
                     webbrowser.open(link_html5_app)
 
         # Windows After Publish
-        if target_name.startswith('windows'):
-            list_vs = []
-            err = ''
-            # Print message
-            project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
-            if int(wrd.arm_project_win_build) == 1:
-                print('\nOpen in Visual Studio: ' + os.path.join(project_path, project_name + '.sln"'))
-            if int(wrd.arm_project_win_build) == 2:
-                print('\nCompile project ' + os.path.join(project_path, project_name + '.vcxproj'))
-            if int(wrd.arm_project_win_build) == 3:
-                print('\nCompile and run project ' + os.path.join(project_path, project_name + '.vcxproj'))
-            if int(wrd.arm_project_win_build) > 0:
-                # Check Visual Studio
-                list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
-                if len(err) > 0:
-                    print(err)
-                    return
-                if len(list_vs) == 0:
-                    print('No Visual Studio found')
-                    return
-                is_check = False
-                for vs in list_vs:
-                    if vs[0] == wrd.arm_project_win_list_vs:
-                        is_check = True
-                        break
-                if not is_check:
-                    vs_ver, vs_year, vs_name, vs_id = arm.utils.get_visual_studio_from_version(wrd.arm_project_win_list_vs)
-                    print(vs_name + ' not found.')
-                    print('The following are installed on the PC:')
-                    for vs in list_vs:
-                        print('- ' + vs[1] + ' (version ' + vs[3] +')')
-                    return
-                # Current VS
-                vs_path = ''
-                for vs in list_vs:
-                    if vs[0] == wrd.arm_project_win_list_vs:
-                        vs_path = vs[2]
-                        break
-                # Open in Visual Studio
-                if int(wrd.arm_project_win_build) == 1:
-                    cmd = os.path.join('start "' + vs_path, 'Common7', 'IDE', 'devenv.exe" "' + os.path.join(project_path, project_name + '.sln"'))
-                    subprocess.Popen(cmd, shell=True)
-                # Compile
-                if int(wrd.arm_project_win_build) > 1:
-                    bits = '64' if wrd.arm_project_win_build_arch == 'x64' else '32'
-                    # vcvars
-                    cmd = os.path.join(vs_path, 'VC', 'Auxiliary', 'Build', 'vcvars' + bits + '.bat')
-                    if not os.path.isfile(cmd):
-                        print('File "'+ cmd +'" not found. Verify ' + vs_name + ' was installed correctly')
-                        log.error('Compile failed, check console')
-                        return
-                    state.proc_publish_build = run_proc(cmd, done_vs_vars)
+        if target_name.startswith('windows') and wrd.arm_project_win_build != 'nothing' and arm.utils.get_os_is_windows():
+            project_name = arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version)
+
+            # Open in Visual Studio
+            if wrd.arm_project_win_build == 'open':
+                print('\nOpening in Visual Studio: ' + arm.utils_vs.get_sln_path())
+                _ = arm.utils_vs.open_project_in_vs(wrd.arm_project_win_list_vs)
+
+            # Compile
+            elif wrd.arm_project_win_build.startswith('compile'):
+                if wrd.arm_project_win_build == 'compile':
+                    print('\nCompiling project ' + arm.utils_vs.get_vcxproj_path())
+                elif wrd.arm_project_win_build == 'compile_and_run':
+                    print('\nCompiling and running project ' + arm.utils_vs.get_vcxproj_path())
+
+                success = arm.utils_vs.enable_vsvars_env(wrd.arm_project_win_list_vs, done_vs_vars)
+                if not success:
+                    state.redraw_ui = True
+                    log.error('Compile failed, check console')
+
 
 def done_gradlew_build():
     if state.proc_publish_build == None:
@@ -793,49 +762,31 @@ def run_android_emulators(avd_name):
     else:
         print('Update List Emulators Warning: File "'+ path_file +'" not found. Check that the variable ANDROID_SDK_ROOT is correct in environment variables or in "Android SDK Path" setting: \n- If you specify an environment variable ANDROID_SDK_ROOT, then you need to restart Blender;\n- If you specify the setting "Android SDK Path", then repeat operation "Publish"')
 
+
 def done_vs_vars():
-    if state.proc_publish_build == None:
+    if state.proc_publish_build is None:
         return
+
     result = state.proc_publish_build.poll()
     if result == 0:
         state.proc_publish_build = None
-        # MSBuild
+
         wrd = bpy.data.worlds['Arm']
-        list_vs, err = arm.utils.get_list_installed_vs(True, True, True)
-        # Current VS
-        vs_path = ''
-        vs_name = ''
-        for vs in list_vs:
-            if vs[0] == wrd.arm_project_win_list_vs:
-                vs_name = vs[1]
-                vs_path = vs[2]
-                break
-        msbuild = os.path.join(vs_path, 'MSBuild', 'Current', 'Bin', 'MSBuild.exe')
-        if not os.path.isfile(msbuild):
-            print('File "'+ msbuild +'" not found. Verify ' + vs_name + ' was installed correctly')
-            log.error('Compile failed, check console')
+        success = arm.utils_vs.compile_in_vs(wrd.arm_project_win_list_vs, done_vs_build)
+        if not success:
+            state.proc_publish_build = None
             state.redraw_ui = True
-            return
-        project_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version)
-        project_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target)) + '-build'
-        cmd = '"' + msbuild + '" "' + os.path.join(project_path, project_name + '.vcxproj"')
-        # Arguments
-        platform = 'x64' if wrd.arm_project_win_build_arch == 'x64' else 'win32'
-        log_param = wrd.arm_project_win_build_log
-        if log_param == 'WarningsAndErrorsOnly':
-            log_param = 'WarningsOnly;ErrorsOnly'
-        cmd = cmd + ' -m:' + str(wrd.arm_project_win_build_cpu) + ' -clp:'+ log_param +' /p:Configuration='+ wrd.arm_project_win_build_mode +' /p:Platform=' + platform
-        print('\nCompiling the project ' + os.path.join(project_path, project_name + '.vcxproj"'))
-        state.proc_publish_build = run_proc(cmd, done_vs_build)
-        state.redraw_ui = True
+            log.error('Compile failed, check console')
     else:
         state.proc_publish_build = None
         state.redraw_ui = True
-        log.error('\nCompile failed, check console')
+        log.error('Compile failed, check console')
+
 
 def done_vs_build():
-    if state.proc_publish_build == None:
+    if state.proc_publish_build is None:
         return
+
     result = state.proc_publish_build.poll()
     if result == 0:
         state.proc_publish_build = None
@@ -848,7 +799,7 @@ def done_vs_build():
             path = os.path.join(project_path, wrd.arm_project_win_build_mode)
         print('\nCompilation completed in ' + path)
         # Run
-        if int(wrd.arm_project_win_build) == 3:
+        if wrd.arm_project_win_build == 'compile_and_run':
             # Copying the executable file
             res_path = os.path.join(arm.utils.get_fp_build(), arm.utils.get_kha_target(state.target))
             file_name = arm.utils.safesrc(wrd.arm_project_name +'-'+ wrd.arm_project_version) + '.exe'

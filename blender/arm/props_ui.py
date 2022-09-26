@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import textwrap
 
 import bpy
 from bpy.props import *
@@ -20,6 +21,7 @@ import arm.props_traits
 import arm.nodes_logic
 import arm.ui_icons as ui_icons
 import arm.utils
+import arm.utils_vs
 
 
 if arm.is_reload(__name__):
@@ -37,6 +39,7 @@ if arm.is_reload(__name__):
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
 
@@ -1004,25 +1007,36 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
-        col = layout.column()
-        row = col.row(align=True)
-        row.prop(wrd, 'arm_project_win_list_vs')
-        sub = row.column(align=True)
-        sub.enabled = arm.utils.get_os_is_windows()
-        sub.operator('arm.update_list_installed_vs', text='', icon='FILE_REFRESH')
+        is_windows = arm.utils.get_os_is_windows()
 
+        col = layout.column()
+        col.prop(wrd, 'arm_project_win_list_vs')
         row = col.row()
-        row.enabled = arm.utils.get_os_is_windows()
+        row.enabled = is_windows
         row.prop(wrd, 'arm_project_win_build', text='After Publish')
+
+        layout = layout.column()
+        layout.enabled = is_windows
+
+        if is_windows and wrd.arm_project_win_build != 'nothing' and not arm.utils_vs.is_version_installed(wrd.arm_project_win_list_vs):
+            box = draw_error_box(
+                layout,
+                'The selected version of Visual Studio could not be found and'
+                ' may not be installed. The "After Publish" action may not work'
+                ' as intended.'
+            )
+            box.operator('arm.update_list_installed_vs', icon='FILE_REFRESH')
+
         layout.separator()
 
         col = layout.column()
-        col.enabled = arm.utils.get_os_is_windows() and wrd.arm_project_win_build != '0' and wrd.arm_project_win_build != '1'
+        col.enabled = wrd.arm_project_win_build.startswith('compile')
         col.prop(wrd, 'arm_project_win_build_mode')
         col.prop(wrd, 'arm_project_win_build_arch')
         col.prop(wrd, 'arm_project_win_build_log')
         col.prop(wrd, 'arm_project_win_build_cpu')
         col.prop(wrd, 'arm_project_win_build_open')
+
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -2474,45 +2488,23 @@ class ArmoryUpdateListAndroidEmulatorRunButton(bpy.types.Operator):
         make.run_android_emulators(arm.utils.get_android_emulator_name())
         return{'FINISHED'}
 
+
 class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
     """Update the list of installed Visual Studio versions for the Windows platform"""
     bl_idname = 'arm.update_list_installed_vs'
-    bl_label = 'Update List of Installed Visual Studio Versions'
+    bl_label = '(Re-)Fetch Installed Visual Studio Versions'
 
     def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
         if not arm.utils.get_os_is_windows():
             return {"CANCELLED"}
 
-        wrd = bpy.data.worlds['Arm']
-        items, err = arm.utils.get_list_installed_vs_version()
-        if len(err) > 0:
-            print('Warning for operation Update List Installed Visual Studio: '+ err +'. Check if ArmorySDK is installed correctly.')
-            return{'FINISHED'}
-        if len(items) > 0:
-            items_enum = [('10', '2010', 'Visual Studio 2010 (version 10)'),
-                          ('11', '2012', 'Visual Studio 2012 (version 11)'),
-                          ('12', '2013', 'Visual Studio 2013 (version 12)'),
-                          ('14', '2015', 'Visual Studio 2015 (version 14)'),
-                          ('15', '2017', 'Visual Studio 2017 (version 15)'),
-                          ('16', '2019', 'Visual Studio 2019 (version 16)'),
-                          ('17', '2022', 'Visual Studio 2022 (version 17)')]
-            prev_select = wrd.arm_project_win_list_vs
-            res_items_enum = []
-            for vs in items_enum:
-                l_vs = list(vs)
-                for ver in items:
-                    if l_vs[0] == ver[0]:
-                        l_vs[1] = l_vs[1] + ' (installed)'
-                        l_vs[2] = l_vs[2] + ' (installed)'
-                        break
-                res_items_enum.append((l_vs[0], l_vs[1], l_vs[2]))
-            bpy.types.World.arm_project_win_list_vs = EnumProperty(items=res_items_enum, name="Visual Studio Version", default=prev_select, update=assets.invalidate_compiler_cache)
-        return{'FINISHED'}
+        success = arm.utils_vs.fetch_installed_vs()
+        if not success:
+            self.report({"ERROR"}, "Could not fetch installed Visual Studio versions, check console for details.")
+            return {'CANCELLED'}
+
+        return {'FINISHED'}
+
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
@@ -2547,6 +2539,23 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub = row.row()
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
+
+
+def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
+    """Draw an error box in the given UILayout and return it for
+    further optional modification. The text is wrapped automatically
+    according to the current region's width.
+    """
+    textwrap_width = max(0, int((bpy.context.region.width - 25) / 6))
+    lines = textwrap.wrap(text, width=textwrap_width, break_long_words=True)
+
+    box = layout.box()
+    col = box.column(align=True)
+    col.alert = True
+    for idx, line in enumerate(lines):
+        col.label(text=line, icon='ERROR' if idx == 0 else 'BLANK1')
+
+    return box
 
 
 def register():

@@ -10,10 +10,12 @@ from bpy.props import *
 
 import arm.assets as assets
 import arm.utils
+import arm.utils_vs
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
 
@@ -357,6 +359,7 @@ class ArmExporter_AndroidAbiListDeleteItem(bpy.types.Operator):
         mdata.arm_exporter_android_abi_list_index = index
         return{'FINISHED'}
 
+
 class ArmExporterSpecialsMenu(bpy.types.Menu):
     bl_label = "More"
     bl_idname = "ARM_MT_ExporterListSpecials"
@@ -365,6 +368,9 @@ class ArmExporterSpecialsMenu(bpy.types.Menu):
         layout = self.layout
         layout.operator("arm.exporter_open_folder")
         layout.operator("arm.exporter_gpuprofile")
+        if arm.utils.get_os_is_windows():
+            layout.operator("arm.exporter_open_vs")
+
 
 class ArmoryExporterOpenFolderButton(bpy.types.Operator):
     """Open published folder"""
@@ -405,23 +411,70 @@ class ArmExporterGpuProfileButton(bpy.types.Operator):
         subprocess.Popen([p, pbin])
         return{'FINISHED'}
 
+
+class ARM_OT_ExporterOpenVS(bpy.types.Operator):
+    """Open the generated project in Visual Studio, if installed"""
+    bl_idname = 'arm.exporter_open_vs'
+    bl_label = 'Open in Visual Studio'
+
+    @classmethod
+    def poll(cls, context):
+        if not arm.utils.get_os_is_windows():
+            cls.poll_message_set('This operator is only supported on Windows')
+            return False
+
+        wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_exporterlist) == 0:
+            cls.poll_message_set('No export configuration exists')
+            return False
+
+        if wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target != 'windows-hl':
+            cls.poll_message_set('This operator only works with the Windows (C) target')
+            return False
+
+        return True
+
+    def execute(self, context):
+        version_major, version_min_full, err = arm.utils_vs.fetch_project_version()
+        if err is not None:
+            if err == 'err_file_not_found':
+                self.report({'ERROR'}, 'Publish project using Windows (C) target first')
+            elif err.startswith('err_invalid_version'):
+                self.report({'ERROR'}, 'Could not parse Visual Studio version, check console for details')
+            return {'CANCELLED'}
+
+        success = arm.utils_vs.open_project_in_vs(version_major, version_min_full)
+        if not success:
+            self.report({'ERROR'}, 'Could not open the project in Visual Studio, check console for details')
+            return {'CANCELLED'}
+
+        return{'FINISHED'}
+
+
+REG_CLASSES = (
+    ArmExporterListItem,
+    ArmExporterAndroidPermissionListItem,
+    ArmExporterAndroidAbiListItem,
+    ARM_UL_ExporterList,
+    ARM_UL_Exporter_AndroidPermissionList,
+    ARM_UL_Exporter_AndroidAbiList,
+    ArmExporterListNewItem,
+    ArmExporterListDeleteItem,
+    ArmExporterListMoveItem,
+    ArmExporter_AndroidPermissionListNewItem,
+    ArmExporter_AndroidPermissionListDeleteItem,
+    ArmExporter_AndroidAbiListNewItem,
+    ArmExporter_AndroidAbiListDeleteItem,
+    ArmExporterSpecialsMenu,
+    ArmExporterGpuProfileButton,
+    ArmoryExporterOpenFolderButton,
+    ARM_OT_ExporterOpenVS
+)
+_reg_classes, _unreg_classes = bpy.utils.register_classes_factory(REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmExporterListItem)
-    bpy.utils.register_class(ArmExporterAndroidPermissionListItem)
-    bpy.utils.register_class(ArmExporterAndroidAbiListItem)
-    bpy.utils.register_class(ARM_UL_ExporterList)
-    bpy.utils.register_class(ARM_UL_Exporter_AndroidPermissionList)
-    bpy.utils.register_class(ARM_UL_Exporter_AndroidAbiList)
-    bpy.utils.register_class(ArmExporterListNewItem)
-    bpy.utils.register_class(ArmExporterListDeleteItem)
-    bpy.utils.register_class(ArmExporterListMoveItem)
-    bpy.utils.register_class(ArmExporter_AndroidPermissionListNewItem)
-    bpy.utils.register_class(ArmExporter_AndroidPermissionListDeleteItem)
-    bpy.utils.register_class(ArmExporter_AndroidAbiListNewItem)
-    bpy.utils.register_class(ArmExporter_AndroidAbiListDeleteItem)
-    bpy.utils.register_class(ArmExporterSpecialsMenu)
-    bpy.utils.register_class(ArmExporterGpuProfileButton)
-    bpy.utils.register_class(ArmoryExporterOpenFolderButton)
+    _reg_classes()
 
     bpy.types.World.arm_exporterlist = CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = IntProperty(name="Index for my_list", default=0)
@@ -430,20 +483,6 @@ def register():
     bpy.types.World.arm_exporter_android_abi_list = CollectionProperty(type=ArmExporterAndroidAbiListItem)
     bpy.types.World.arm_exporter_android_abi_list_index = IntProperty(name="Index for my_list", default=0)
 
+
 def unregister():
-    bpy.utils.unregister_class(ArmExporterListItem)
-    bpy.utils.unregister_class(ArmExporterAndroidPermissionListItem)
-    bpy.utils.unregister_class(ArmExporterAndroidAbiListItem)
-    bpy.utils.unregister_class(ARM_UL_ExporterList)
-    bpy.utils.unregister_class(ARM_UL_Exporter_AndroidPermissionList)
-    bpy.utils.unregister_class(ARM_UL_Exporter_AndroidAbiList)
-    bpy.utils.unregister_class(ArmExporterListNewItem)
-    bpy.utils.unregister_class(ArmExporterListDeleteItem)
-    bpy.utils.unregister_class(ArmExporterListMoveItem)
-    bpy.utils.unregister_class(ArmExporter_AndroidPermissionListNewItem)
-    bpy.utils.unregister_class(ArmExporter_AndroidPermissionListDeleteItem)
-    bpy.utils.unregister_class(ArmExporter_AndroidAbiListNewItem)
-    bpy.utils.unregister_class(ArmExporter_AndroidAbiListDeleteItem)
-    bpy.utils.unregister_class(ArmExporterSpecialsMenu)
-    bpy.utils.unregister_class(ArmExporterGpuProfileButton)
-    bpy.utils.unregister_class(ArmoryExporterOpenFolderButton)
+    _unreg_classes()

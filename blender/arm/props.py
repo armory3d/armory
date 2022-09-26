@@ -9,6 +9,7 @@ import arm.logicnode.tree_variables
 import arm.make
 import arm.nodes_logic
 import arm.utils
+import arm.utils_vs
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
@@ -17,6 +18,7 @@ if arm.is_reload(__name__):
     arm.make = arm.reload_module(arm.make)
     arm.nodes_logic = arm.reload_module(arm.nodes_logic)
     arm.utils = arm.reload_module(arm.utils)
+    arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
 
@@ -103,32 +105,6 @@ def set_android_build_apk(self, value):
         wrd.arm_project_android_copy_apk = False
         wrd.arm_project_android_run_avd = False
 
-def get_win_build_arch(self):
-    if self.get('arm_project_win_build_arch', -1) == -1:
-        if arm.utils.get_os_is_windows_64():
-            return 0
-        else:
-            return 1
-    else:
-        return self.get('arm_project_win_build_arch', 'x64')
-
-def set_win_build_arch(self, value):
-    self['arm_project_win_build_arch'] = value
-
-def set_win_build(self, value):
-    if arm.utils.get_os_is_windows():
-        self['arm_project_win_build'] = value
-    else:
-        self['arm_project_win_build'] = 0
-    if (self['arm_project_win_build'] == 0) or (self['arm_project_win_build'] == 1):
-        wrd = bpy.data.worlds['Arm']
-        wrd.arm_project_win_build_open = False
-
-def get_win_build(self):
-    if arm.utils.get_os_is_windows():
-        return self.get('arm_project_win_build', 0)
-    else:
-        return 0
 
 def init_properties():
     global arm_version
@@ -157,21 +133,14 @@ def init_properties():
     bpy.types.World.arm_project_html5_popupmenu_in_browser = BoolProperty(name="Disable Browser Context Menu", description="Disable the browser context menu for the canvas element on the page", default=False, update=assets.invalidate_compiler_cache)
     # Windows Settings
     bpy.types.World.arm_project_win_list_vs = EnumProperty(
-        items=[('10', '2010', 'Visual Studio 2010 (version 10)'),
-               ('11', '2012', 'Visual Studio 2012 (version 11)'),
-               ('12', '2013', 'Visual Studio 2013 (version 12)'),
-               ('14', '2015', 'Visual Studio 2015 (version 14)'),
-               ('15', '2017', 'Visual Studio 2017 (version 15)'),
-               ('16', '2019', 'Visual Studio 2019 (version 16)'),
-               ('17', '2022', 'Visual Studio 2022 (version 17)')],
+        items=arm.utils_vs.supported_versions,
         name="Visual Studio Version", default='17', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_win_build = EnumProperty(
-        items=[('0', 'Nothing', 'Nothing'),
-               ('1', 'Open in Visual Studio', 'Open in Visual Studio'),
-               ('2', 'Compile', 'Compile application'),
-               ('3', 'Compile and Run', 'Compile and run application')],
-        name="Action After Publishing", update=assets.invalidate_compiler_cache,
-        set=set_win_build, get=get_win_build)
+        items=[('nothing', 'Nothing', 'Nothing'),
+               ('open', 'Open in Visual Studio', 'Open in Visual Studio'),
+               ('compile', 'Compile', 'Compile the application'),
+               ('compile_and_run', 'Compile and Run', 'Compile and run the application')],
+        name="Action After Publishing", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_win_build_mode = EnumProperty(
         items=[('Debug', 'Debug', 'Debug'),
                ('Release', 'Release', 'Release')],
@@ -179,8 +148,7 @@ def init_properties():
     bpy.types.World.arm_project_win_build_arch = EnumProperty(
         items=[('x64', 'x64', 'x64'),
                ('x86', 'x86', 'x86')],
-        name="Architecture", update=assets.invalidate_compiler_cache,
-        set=set_win_build_arch, get=get_win_build_arch)
+        name="Architecture", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_win_build_log = EnumProperty(
         items=[('Summary', 'Summary', 'Show the error and warning summary at the end'),
                ('NoSummary', 'No Summary', 'Don\'t show the error and warning summary at the end'),
