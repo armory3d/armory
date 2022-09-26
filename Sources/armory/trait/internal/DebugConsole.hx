@@ -209,6 +209,7 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
+					ui._y -= ui.ELEMENT_OFFSET();
 
 					var listX = ui._x;
 					var listW = ui._w;
