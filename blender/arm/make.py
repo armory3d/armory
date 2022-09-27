@@ -545,14 +545,15 @@ def build_success():
     wrd = bpy.data.worlds['Arm']
 
     if state.is_play:
+        cmd = []
         if wrd.arm_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
             prefs = arm.utils.get_arm_preferences()
             t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
             t.start()
-            html5_app_path = 'http://localhost:{}/{}/debug/html5'.format(prefs.html5_server_port, arm.utils.build_dir())
-            webbrowser.open(html5_app_path)
+            url = 'http://localhost:{}/{}/debug/html5/'.format(prefs.html5_server_port, arm.utils.build_dir())
+            cmd = [webbrowser.get().name, url]
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()
@@ -565,9 +566,9 @@ def build_success():
                 cmd.append(str(os.getpid()))
             if wrd.arm_audio == 'Disabled':
                 cmd.append('--nosound')
-            if wrd.arm_verbose_output:
-                print("Running: ", *cmd)
-            state.proc_play = run_proc(cmd, play_done)
+        if wrd.arm_verbose_output:
+            print(*cmd)
+        state.proc_play = run_proc(cmd, play_done)
 
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
