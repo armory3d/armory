@@ -190,6 +190,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
             invscale_tex = (1 / o['scale_tex']) * 32767
         else:
             invscale_tex = 1 * 32767
+        self.check_uv_precision(export_mesh, maxdim, invscale_tex)
 
     if has_col:
         cdata = np.empty(num_verts * 3, dtype='<f4')

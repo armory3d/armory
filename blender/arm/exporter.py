@@ -1361,6 +1361,26 @@ class ArmoryExporter:
                 i += 1
         return None
 
+    @staticmethod
+    def check_uv_precision(mesh: bpy.types.Mesh, uv_max_dim: float, invscale_tex: float):
+        """Check whether the pixel size (assuming max_texture_size below)
+        can be represented inside the usual [0, 1] UV range with the
+        given `invscale_tex` that is used to normalize the UV coords.
+        If it is not possible, display a warning.
+        """
+        max_texture_size = 16384
+        pixel_size = 1 / max_texture_size
+
+        # There are fewer distinct floating point values around 1 than
+        # around 0, so we use 1 for checking here. We do not check whether
+        # UV coords with an absolute value > 1 can be reliably represented.
+        if np.float32(1.0) == np.float32(1.0) - np.float32(pixel_size * invscale_tex):
+            log.warn(
+                f'A UV map of the mesh "{mesh.name}" contains very large'
+                f' coordinates (max. distance from origin: {uv_max_dim}).'
+                f' The UV precision may suffer.'
+            )
+
     def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
         export_mesh.calc_normals_split()
         export_mesh.calc_loop_triangles()
@@ -1437,6 +1457,7 @@ class ArmoryExporter:
                 invscale_tex = (1 / o['scale_tex']) * 32767
             else:
                 invscale_tex = 1 * 32767
+            self.check_uv_precision(export_mesh, maxdim, invscale_tex)
             if has_tang:
                 try:
                     export_mesh.calc_tangents(uvmap=lay0.name)
