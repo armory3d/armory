@@ -30,7 +30,20 @@ def prepare_build(self=0, background_mode=False, shutdown_after_build=False):
 
     print("Building lightmaps")
 
-    if bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode == "combinedao":
+    if bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode == "combinedao": 
+
+        scene = bpy.context.scene
+
+        if not "tlm_plus_mode" in bpy.app.driver_namespace or bpy.app.driver_namespace["tlm_plus_mode"] == 0:
+            filepath = bpy.data.filepath
+            dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
+            if os.path.isdir(dirpath):
+                for file in os.listdir(dirpath):
+                    os.remove(os.path.join(dirpath + "/" + file))
+            bpy.app.driver_namespace["tlm_plus_mode"] = 1
+            print("Plus Mode")
+
+    if bpy.context.scene.TLM_EngineProperties.tlm_lighting_mode == "indirectao": 
 
         scene = bpy.context.scene
 
@@ -292,18 +305,20 @@ def begin_build():
 
     if sceneProperties.tlm_lightmap_engine == "Cycles":
 
-        try:
-            lightmap.bake()
-        except Exception as e:
+        lightmap.bake()
 
-            print("An error occured during lightmap baking. See the line below for more detail:")
-            print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+        # try:
+        #     lightmap.bake()
+        # except Exception as e:
 
-            tlm_log.append("An error occured during lightmap baking. See the line below for more detail:")
-            tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+        #     print("An error occured during lightmap baking. See the line below for more detail:")
+        #     print(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
 
-            if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
-                print("Turn on verbose mode to get more detail.")
+        #     tlm_log.append("An error occured during lightmap baking. See the line below for more detail:")
+        #     tlm_log.append(f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}")
+
+        #     if not bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+        #         print("Turn on verbose mode to get more detail.")
 
     if sceneProperties.tlm_lightmap_engine == "LuxCoreRender":
         pass
@@ -815,108 +830,106 @@ def manage_build(background_pass=False, load_atlas=0):
         #We need to also make sure out postpacked atlases gets split w. premultiplied
         #CHECK FOR ATLAS MAPS!
 
-        if bpy.context.scene.TLM_SceneProperties.tlm_encoding_use and bpy.context.scene.TLM_SceneProperties.tlm_encoding_device == "GPU":
+        if bpy.context.scene.TLM_SceneProperties.tlm_split_premultiplied:
 
-            if bpy.context.scene.TLM_SceneProperties.tlm_split_premultiplied and bpy.context.scene.TLM_SceneProperties.tlm_encoding_use and bpy.context.scene.TLM_SceneProperties.tlm_encoding_device == "GPU" and bpy.context.scene.TLM_SceneProperties.tlm_encoding_mode_b == "LogLuv":
+            dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
+            dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
 
-                dirpath = os.path.join(os.path.dirname(bpy.data.filepath), scene.TLM_EngineProperties.tlm_lightmap_savedir)
-                dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+            for atlas in bpy.context.scene.TLM_PostAtlasList:
 
-                for atlas in bpy.context.scene.TLM_PostAtlasList:
+                for file in dirfiles:
+                    if file.startswith(atlas.name):
 
-                    for file in dirfiles:
-                        if file.startswith(atlas.name):
+                        print("TODO: SPLIT LOGLUV FOR: " + str(file))
+                        encoding.splitLogLuvAlpha(os.path.join(dirpath, file), dirpath, 0)
 
-                            print("TODO: SPLIT LOGLUV FOR: " + str(file))
-                            encoding.splitLogLuvAlpha(os.path.join(dirpath, file), dirpath, 0)
+            #Need to update file list for some reason?
+            dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
 
-                #Need to update file list for some reason?
-                dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+            for atlas in bpy.context.scene.TLM_PostAtlasList:
 
-                for atlas in bpy.context.scene.TLM_PostAtlasList:
+                #FIND SOME WAY TO FIND THE RIGTH FILE! TOO TIRED NOW!
+                for obj in bpy.context.scene.objects:
+                    if obj.TLM_ObjectProperties.tlm_postpack_object:
+                        if obj.TLM_ObjectProperties.tlm_postatlas_pointer == atlas.name:
+                            for slot in obj.material_slots:
+                            
+                                mat = slot.material
 
-                    #FIND SOME WAY TO FIND THE RIGTH FILE! TOO TIRED NOW!
-                    for obj in bpy.context.scene.objects:
-                        if obj.TLM_ObjectProperties.tlm_postpack_object:
-                            if obj.TLM_ObjectProperties.tlm_postatlas_pointer == atlas.name:
-                                for slot in obj.material_slots:
-                                
-                                    mat = slot.material
+                                node_tree = mat.node_tree
 
-                                    node_tree = mat.node_tree
+                                foundBakedNode = False
 
-                                    foundBakedNode = False
+                                #for file in dirfiles:
+                                #    if file.startswith(atlas.name):
+                                #        if file.endswith("XYZ"):
 
-                                    #for file in dirfiles:
-                                    #    if file.startswith(atlas.name):
-                                    #        if file.endswith("XYZ"):
+                                #Find nodes
+                                for node in node_tree.nodes:
 
-                                    #Find nodes
-                                    for node in node_tree.nodes:
+                                    if node.name == "TLM_Lightmap":
 
-                                        if node.name == "TLM_Lightmap":
+                                        print("Found the main lightmap node: LOGLUV")
 
-                                            print("Found the main lightmap node: LOGLUV")
+                                        for file in dirfiles:
+                                            if file.startswith(atlas.name) and file.endswith("XYZ.png"):
+                                                print("Found an atlas file: " + str(file))
+                                                node.image.filepath_raw = os.path.join(dirpath, file)
+                                                print("CHANGED LIGHTMAP MAIN INTO XYZ: " + str(file))
 
-                                            for file in dirfiles:
-                                                if file.startswith(atlas.name) and file.endswith("XYZ.png"):
-                                                    print("Found an atlas file: " + str(file))
-                                                    node.image.filepath_raw = os.path.join(dirpath, file)
-                                                    print("CHANGED LIGHTMAP MAIN INTO XYZ: " + str(file))
+                                    if node.name == "TLM_Lightmap_Extra":
 
-                                        if node.name == "TLM_Lightmap_Extra":
+                                        print("Found the main lightmap node: LOGLUV")
 
-                                            print("Found the main lightmap node: LOGLUV")
+                                        for file in dirfiles:
+                                            if file.startswith(atlas.name) and file.endswith("W.png"):
+                                                print("Found an atlas file: " + str(file))
+                                                node.image.filepath_raw = os.path.join(dirpath, file)
+                                                print("CHANGED LIGHTMAP MAIN INTO W: " + str(file))
 
-                                            for file in dirfiles:
-                                                if file.startswith(atlas.name) and file.endswith("W.png"):
-                                                    print("Found an atlas file: " + str(file))
-                                                    node.image.filepath_raw = os.path.join(dirpath, file)
-                                                    print("CHANGED LIGHTMAP MAIN INTO W: " + str(file))
+                                        #print("Found the extra lightmap node: LOGLUV")
+                                        # if node.image.filepath_raw.startswith(atlas.name):
+                                        #     if node.image.filepath_raw.endswith("W.png"):
+                                        #         print("ALREADY W: " + str(node.image.filepath_raw))
+                                        
+                                        # else:
 
-                                            #print("Found the extra lightmap node: LOGLUV")
-                                            # if node.image.filepath_raw.startswith(atlas.name):
-                                            #     if node.image.filepath_raw.endswith("W.png"):
-                                            #         print("ALREADY W: " + str(node.image.filepath_raw))
-                                            
-                                            # else:
+                                        #     for file in dirfiles:
+                                        #         if file.startswith(atlas.name):
+                                        #             if file.endswith("W.png"):
 
-                                            #     for file in dirfiles:
-                                            #         if file.startswith(atlas.name):
-                                            #             if file.endswith("W.png"):
+                                        #                 node.image.filepath_raw = os.path.join(dirpath, file)
+                                        #                 print("CHANGED LIGHTMAP MAIN INTO W: " + str(file))
 
-                                            #                 node.image.filepath_raw = os.path.join(dirpath, file)
-                                            #                 print("CHANGED LIGHTMAP MAIN INTO W: " + str(file))
+            #for file in dirfiles:
+            #    if file.endswith(end + ".hdr"):
 
-                #for file in dirfiles:
-                #    if file.endswith(end + ".hdr"):
-
-                #for atlas in bpy.context.scene.TLM_PostAtlasList:
+            #for atlas in bpy.context.scene.TLM_PostAtlasList:
 
 
 
-                    #print("TODO: SPLIT LOGLUV FOR: " + str(atlas.name) + "..file?")
+                #print("TODO: SPLIT LOGLUV FOR: " + str(atlas.name) + "..file?")
 
-                        #CHECK FOR ATLAS MAPS!
-                    #dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
-                        # for file in dirfiles:
-                        #     if file.endswith(end + ".hdr"):
+                    #CHECK FOR ATLAS MAPS!
+                #dirfiles = [f for f in listdir(dirpath) if isfile(join(dirpath, f))]
+                    # for file in dirfiles:
+                    #     if file.endswith(end + ".hdr"):
 
-                        #         img = bpy.data.images.load(os.path.join(dirpath, file), check_existing=False)
-                                
-                        #         encoding.encodeLogLuvGPU(img, dirpath, 0)
+                    #         img = bpy.data.images.load(os.path.join(dirpath, file), check_existing=False)
+                            
+                    #         encoding.encodeLogLuvGPU(img, dirpath, 0)
 
-                        #         if sceneProperties.tlm_split_premultiplied:
+                    #         if sceneProperties.tlm_split_premultiplied:
 
-                        #             image_name = img.name
+                    #             image_name = img.name
 
-                        #             if image_name[-4:] == '.exr' or image_name[-4:] == '.hdr':
-                        #                 image_name = image_name[:-4]
+                    #             if image_name[-4:] == '.exr' or image_name[-4:] == '.hdr':
+                    #                 image_name = image_name[:-4]
 
-                        #             image_name = image_name + '_encoded.png'
+                    #             image_name = image_name + '_encoded.png'
 
-                        #             print("SPLIT PREMULTIPLIED: " + image_name)
-                        #             encoding.splitLogLuvAlpha(os.path.join(dirpath, image_name), dirpath, 0)
+                    #             print("SPLIT PREMULTIPLIED: " + image_name)
+                    #             encoding.splitLogLuvAlpha(os.path.join(dirpath, image_name), dirpath, 0)
 
         for image in bpy.data.images:
             if image.users < 1:
@@ -1345,3 +1358,4 @@ def checkAtlasSize():
         return True
     else:
         return False
+

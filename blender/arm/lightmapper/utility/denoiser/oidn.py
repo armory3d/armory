@@ -25,7 +25,7 @@ class TLM_OIDN_Denoise:
 
         if oidnPath != "":
 
-            file = os.path.basename(os.path.realpath(oidnPath))
+            file = oidnPath
             filename, file_extension = os.path.splitext(file)
             
             

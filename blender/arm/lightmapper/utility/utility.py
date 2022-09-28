@@ -434,7 +434,7 @@ def Unwrap_Lightmap_Group_Xatlas_2_headless_call(obj):
 
     #get the path to xatlas
     #file_path = os.path.dirname(os.path.abspath(__file__))
-    scriptsDir = bpy.utils.user_resource('SCRIPTS', "addons")
+    scriptsDir = os.path.join(bpy.utils.user_resource('SCRIPTS'), "addons")
     file_path = os.path.join(scriptsDir, "blender_xatlas")
     if platform.system() == "Windows":
         xatlas_path = os.path.join(file_path, "xatlas", "xatlas-blender.exe")
