@@ -209,11 +209,39 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
+					ui._y -= ui.ELEMENT_OFFSET();
+
+					var listX = ui._x;
+					var listW = ui._w;
+
+					function drawObjectNameInList(object: iron.object.Object, selected: Bool) {
+						var _y = ui._y;
+						ui.text(object.name);
+
+						if (object == iron.Scene.active.camera) {
+							var tagWidth = 100;
+							var offsetX = listW - tagWidth;
+
+							var prevX = ui._x;
+							var prevY = ui._y;
+							var prevW = ui._w;
+							ui._x = listX + offsetX;
+							ui._y = _y;
+							ui._w = tagWidth;
+							ui.g.color = selected ? kha.Color.White : kha.Color.fromFloats(0.941, 0.914, 0.329, 1.0);
+							ui.drawString(ui.g, "Active Camera", null, 0, Right);
+							ui._x = prevX;
+							ui._y = prevY;
+							ui._w = prevW;
+						}
+					}
 
 					var lineCounter = 0;
 					function drawList(listHandle: zui.Zui.Handle, currentObject: iron.object.Object) {
 						if (currentObject.name.charAt(0) == ".") return; // Hidden
 						var b = false;
+
+						var isLineSelected = currentObject == selectedObject;
 
 						// Highlight every other line
 						if (lineCounter % 2 == 0) {
@@ -223,7 +251,7 @@ class DebugConsole extends Trait {
 						}
 
 						// Highlight selected line
-						if (currentObject == selectedObject) {
+						if (isLineSelected) {
 							ui.g.color = 0xff205d9c;
 							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
 							ui.g.color = 0xffffffff;
@@ -232,7 +260,7 @@ class DebugConsole extends Trait {
 						if (currentObject.children.length > 0) {
 							ui.row([1 / 13, 12 / 13]);
 							b = ui.panel(listHandle.nest(lineCounter, {selected: true}), "", true, false, false);
-							ui.text(currentObject.name);
+							drawObjectNameInList(currentObject, isLineSelected);
 						}
 						else {
 							ui._x += 18; // Sign offset
@@ -242,7 +270,7 @@ class DebugConsole extends Trait {
 							ui.g.drawLine(ui._x - 10, ui._y + ui.ELEMENT_H() / 2, ui._x, ui._y + ui.ELEMENT_H() / 2);
 							ui.g.color = 0xffffffff;
 
-							ui.text(currentObject.name);
+							drawObjectNameInList(currentObject, isLineSelected);
 							ui._x -= 18;
 						}
 
@@ -281,7 +309,7 @@ class DebugConsole extends Trait {
 					ui.indent();
 
 					if (selectedObject != null) {
-						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject) && selectedObject != iron.Scene.active.camera) {
 							ui.row([1/2, 1/2]);
 						}
 
@@ -289,9 +317,9 @@ class DebugConsole extends Trait {
 						h.selected = selectedObject.visible;
 						selectedObject.visible = ui.check(h, "Visible");
 
-						if (Std.isOfType(selectedObject, iron.object.CameraObject)) {
+						if (Std.isOfType(selectedObject, iron.object.CameraObject) && selectedObject != iron.Scene.active.camera) {
 							if (ui.button("Set Active Camera")) {
-								iron.Scene.active.camera = cast(selectedObject, iron.object.CameraObject);
+								iron.Scene.active.camera = cast selectedObject;
 							}
 						}
 
