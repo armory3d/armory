@@ -5,7 +5,7 @@ class FloatArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores an array of float elements as a variable."""
     bl_idname = 'LNArrayFloatNode'
     bl_label = 'Array Float'
-    arm_version = 1
+    arm_version = 2
     arm_section = 'variable'
 
     def __init__(self):
@@ -22,8 +22,11 @@ class FloatArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = self.get_id_str()
         op.socket_type = 'ArmFloatSocket'
-        op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
-        op2.node_index = self.get_id_str()
+        column = row.column(align=True)
+        op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op.node_index = str(id(self))
+        if len(self.inputs) == 0:
+            column.enabled = False
 
     def draw_label(self) -> str:
         if len(self.inputs) == 0:
@@ -38,3 +41,9 @@ class FloatArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
             inp.hide = self.arm_logic_id != ''
             inp.enabled = self.arm_logic_id == ''
             inp.default_value_raw = master_node.inputs[i].get_default_value()
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)

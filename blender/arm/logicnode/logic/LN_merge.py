@@ -22,7 +22,7 @@ class MergeNode(ArmLogicTreeNode):
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
     arm_section = 'flow'
-    arm_version = 2
+    arm_version = 3
 
     def update_exec_mode(self, context):
         self.outputs['Active Input Index'].hide = self.property0 == 'once_per_frame'
@@ -55,8 +55,11 @@ class MergeNode(ArmLogicTreeNode):
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
         op.socket_type = 'ArmNodeSocketAction'
-        op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
-        op2.node_index = str(id(self))
+        column = row.column(align=True)
+        op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op.node_index = str(id(self))
+        if len(self.inputs) == 0:
+            column.enabled = False
 
     def draw_label(self) -> str:
         if len(self.inputs) == 0:
@@ -67,20 +70,5 @@ class MergeNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-
-        newnode = node_tree.nodes.new('LNMergeNode')
-        newnode.property0 = self.property0
-
-        # Recreate all original inputs
-        array_nodes[str(id(newnode))] = newnode
-        for idx, input in enumerate(self.inputs):
-            bpy.ops.arm.node_add_input('EXEC_DEFAULT', node_index=str(id(newnode)), socket_type='ArmNodeSocketAction')
-
-            for link in input.links:
-                node_tree.links.new(link.from_socket, newnode.inputs[idx])
-
-        # Recreate outputs
-        for link in self.outputs[0].links:
-            node_tree.links.new(newnode.outputs[0], link.to_socket)
-
-        return newnode
+            
+        return NodeReplacement.Identity(self)

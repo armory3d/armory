@@ -19,7 +19,7 @@ class GateNode(ArmLogicTreeNode):
     the input when both booleans are true (And) or at least one (Or)."""
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
-    arm_version = 2
+    arm_version = 3
 
     min_inputs = 3
     property0: HaxeEnumProperty(
@@ -61,14 +61,14 @@ class GateNode(ArmLogicTreeNode):
             op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
             op.socket_type = 'ArmDynamicSocket'
-            op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
-            op2.node_index = str(id(self))
+            column = row.column(align=True)
+            op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+            op.node_index = str(id(self))
+            if len(self.inputs) == 3:
+                column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
             
-        return NodeReplacement(
-            'LNGateNode', self.arm_version, 'LNGateNode', 2,
-            in_socket_mapping={0:0, 1:1, 2:2}, out_socket_mapping={0:0, 1:1}
-        )
+        return NodeReplacement.Identity(self)
