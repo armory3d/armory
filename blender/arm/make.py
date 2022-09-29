@@ -3,9 +3,11 @@ import glob
 import json
 import os
 from queue import Queue
+import re
 import shlex
 import shutil
 import stat
+from string import Template
 import subprocess
 import threading
 import time
@@ -546,30 +548,45 @@ def build_success():
 
     if state.is_play:
         cmd = []
+        width, height = arm.utils.get_render_resolution(arm.utils.get_active_scene())
         if wrd.arm_runtime == 'Browser':
-            # Start server
             os.chdir(arm.utils.get_fp())
             prefs = arm.utils.get_arm_preferences()
+            host = 'localhost'
             t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
             t.start()
-            url = 'http://localhost:{}/{}/debug/html5/'.format(prefs.html5_server_port, arm.utils.build_dir())
-            cmd = [webbrowser.get().name, url]
+            build_dir = arm.utils.build_dir()
+            url = 'http://{}:{}/{}/debug/html5/'.format(host, prefs.html5_server_port, build_dir)
+            if 'ARMORY_PLAY_HTML5' in os.environ:
+                str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'dir': build_dir})
+                cmd = re.split(' +', str)
+            if len(cmd) == 0:
+                browser = webbrowser.get().name
+                if browser == '':
+                    webbrowser.open(url)
+                    return
+                else:
+                    cmd = [browser, url]
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
+            pid = os.getpid()
             os.chdir(krom_location)
-            cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
-            if arm.utils.get_os() == 'win':
-                cmd.append('--consolepid')
-                cmd.append(str(os.getpid()))
-            if wrd.arm_audio == 'Disabled':
-                cmd.append('--nosound')
+            if 'ARMORY_PLAY_KROM' in os.environ:
+                str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid, 'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'path': krom_path, 'width': width, 'height': height })
+                cmd = re.split(' +', str)
+            if len(cmd) == 0:
+                cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
+                if arm.utils.get_os() == 'win':
+                    cmd.append('--consolepid')
+                    cmd.append(pid)
+                if wrd.arm_audio == 'Disabled':
+                    cmd.append('--nosound')
         if wrd.arm_verbose_output:
             print(*cmd)
         state.proc_play = run_proc(cmd, play_done)
-
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
         target_name = arm.utils.get_kha_target(state.target)
