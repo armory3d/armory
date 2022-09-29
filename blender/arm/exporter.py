@@ -1361,6 +1361,26 @@ class ArmoryExporter:
                 i += 1
         return None
 
+    @staticmethod
+    def check_uv_precision(mesh: bpy.types.Mesh, uv_max_dim: float, max_dim_uvmap: bpy.types.MeshUVLoopLayer, invscale_tex: float):
+        """Check whether the pixel size (assuming max_texture_size below)
+        can be represented inside the usual [0, 1] UV range with the
+        given `invscale_tex` that is used to normalize the UV coords.
+        If it is not possible, display a warning.
+        """
+        max_texture_size = 16384
+        pixel_size = 1 / max_texture_size
+
+        # There are fewer distinct floating point values around 1 than
+        # around 0, so we use 1 for checking here. We do not check whether
+        # UV coords with an absolute value > 1 can be reliably represented.
+        if np.float32(1.0) == np.float32(1.0) - np.float32(pixel_size * invscale_tex):
+            log.warn(
+                f'Mesh "{mesh.name}": The UV map "{max_dim_uvmap.name}"'
+                ' contains very large coordinates (max. distance from'
+                f' origin: {uv_max_dim}). The UV precision may suffer.'
+            )
+
     def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
         export_mesh.calc_normals_split()
         export_mesh.calc_loop_triangles()
@@ -1386,6 +1406,7 @@ class ArmoryExporter:
         if has_tex or has_morph_target:
             uv_layers = export_mesh.uv_layers
             maxdim = 1.0
+            maxdim_uvlayer = None
             if has_tex:
                 t0map = 0 # Get active uvmap
                 t0data = np.empty(num_verts * 2, dtype='<f4')
@@ -1412,6 +1433,7 @@ class ArmoryExporter:
                     t1data = np.empty(num_verts * 2, dtype='<f4')
                 # Scale for packed coords
                 lay0 = uv_layers[t0map]
+                maxdim_uvlayer = lay0
                 for v in lay0.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
@@ -1422,21 +1444,26 @@ class ArmoryExporter:
                     for v in lay1.data:
                         if abs(v.uv[0]) > maxdim:
                             maxdim = abs(v.uv[0])
+                            maxdim_uvlayer = lay1
                         if abs(v.uv[1]) > maxdim:
                             maxdim = abs(v.uv[1])
+                            maxdim_uvlayer = lay1
             if has_morph_target:
                 morph_data = np.empty(num_verts * 2, dtype='<f4')
                 lay2 = uv_layers[morph_uv_index]
                 for v in lay2.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
+                        maxdim_uvlayer = lay2
                     if abs(v.uv[1]) > maxdim:
                         maxdim = abs(v.uv[1])
+                        maxdim_uvlayer = lay2
             if maxdim > 1:
                 o['scale_tex'] = maxdim
                 invscale_tex = (1 / o['scale_tex']) * 32767
             else:
                 invscale_tex = 1 * 32767
+            self.check_uv_precision(export_mesh, maxdim, maxdim_uvlayer, invscale_tex)
             if has_tang:
                 try:
                     export_mesh.calc_tangents(uvmap=lay0.name)
