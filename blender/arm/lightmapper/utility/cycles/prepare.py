@@ -69,9 +69,9 @@ def configure_meshes(self):
             if "_Original" in mat.name:
                 bpy.data.materials.remove(mat)
 
-    for image in bpy.data.images:
-        if image.name.endswith("_baked"):
-            bpy.data.images.remove(image, do_unlink=True)
+    #for image in bpy.data.images:
+    #    if image.name.endswith("_baked"):
+    #        bpy.data.images.remove(image, do_unlink=True)
 
     iterNum = 0
     currentIterNum = 0
@@ -531,34 +531,44 @@ def configure_meshes(self):
                             if scene.TLM_EngineProperties.tlm_directional_mode == "None":
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("Directional mode")
-                                if not len(mainNode.inputs[19].links) == 0:
+                                if not len(mainNode.inputs[22].links) == 0:
                                     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                         print("NOT LEN 0")
-                                    ninput = mainNode.inputs[19].links[0]
-                                    noutput = mainNode.inputs[19].links[0].from_node
+                                    ninput = mainNode.inputs[22].links[0]
+                                    noutput = mainNode.inputs[22].links[0].from_node
                                     nodetree.links.remove(noutput.outputs[0].links[0])
 
                             #Clamp metallic
                             if bpy.context.scene.TLM_SceneProperties.tlm_metallic_clamp == "limit":
 
-                                MainMetNodeSocket = mainNode.inputs[4]
+                                MainMetNodeSocket = mainNode.inputs.get("Metallic")
                                 if not len(MainMetNodeSocket.links) == 0:
+
+                                    print("Creating new clamp node")
+
                                     nodes = nodetree.nodes
                                     MetClampNode = nodes.new('ShaderNodeClamp')
                                     MetClampNode.location = (-200,150)
                                     MetClampNode.inputs[2].default_value = 0.9
-                                    minput = mainNode.inputs[4].links[0] #Metal input socket
-                                    moutput = mainNode.inputs[4].links[0].from_socket #Output socket
+                                    minput = mainNode.inputs.get("Metallic").links[0] #Metal input socket
+                                    moutput = mainNode.inputs.get("Metallic").links[0].from_socket #Output socket
                                     
                                     nodetree.links.remove(minput)
 
                                     nodetree.links.new(moutput, MetClampNode.inputs[0]) #minput node to clamp node
                                     nodetree.links.new(MetClampNode.outputs[0], MainMetNodeSocket) #clamp node to metinput
 
+                                elif mainNode.type == "PRINCIPLED_BSDF" and MainMetNodeSocket.links[0].from_node.type == "CLAMP":
+
+                                    pass
+
                                 else:
+
+                                    print("New clamp node NOT made")
 
                                     if mainNode.inputs[4].default_value > 0.9:
                                         mainNode.inputs[4].default_value = 0.9
+
                             elif bpy.context.scene.TLM_SceneProperties.tlm_metallic_clamp == "zero":
 
                                 MainMetNodeSocket = mainNode.inputs[4]
@@ -687,7 +697,7 @@ def preprocess_material(obj, scene):
 
         #If image not in bpy.data.images or if size changed, make a new image
         if atlas_image_name not in bpy.data.images or bpy.data.images[atlas_image_name].size[0] != res or bpy.data.images[atlas_image_name].size[1] != res:
-            img = bpy.data.images.new(img_name, res, res, alpha=True, float_buffer=True)
+            img = bpy.data.images.new(img_name, int(res), int(res), alpha=True, float_buffer=True)
 
             num_pixels = len(img.pixels)
             result_pixel = list(img.pixels)
@@ -725,13 +735,24 @@ def preprocess_material(obj, scene):
             img_node.select = True
             nodes.active = img_node
 
+        #We need to save this file first in Blender 3.3 due to new filmic option?
+        image = img
+        saveDir = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+        bakemap_path = os.path.join(saveDir, image.name)
+        filepath_ext = ".hdr"
+        image.filepath_raw = bakemap_path + filepath_ext
+        image.file_format = "HDR"
+        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+            print("Saving to: " + image.filepath_raw)
+        image.save()
+
     else:
 
         res = int(obj.TLM_ObjectProperties.tlm_mesh_lightmap_resolution) / int(scene.TLM_EngineProperties.tlm_resolution_scale) * int(supersampling_scale)
 
         #If image not in bpy.data.images or if size changed, make a new image
         if img_name not in bpy.data.images or bpy.data.images[img_name].size[0] != res or bpy.data.images[img_name].size[1] != res:
-            img = bpy.data.images.new(img_name, res, res, alpha=True, float_buffer=True)
+            img = bpy.data.images.new(img_name, int(res), int(res), alpha=True, float_buffer=True)
 
             num_pixels = len(img.pixels)
             result_pixel = list(img.pixels)
@@ -768,6 +789,17 @@ def preprocess_material(obj, scene):
             img_node.select = True
             nodes.active = img_node
 
+        #We need to save this file first in Blender 3.3 due to new filmic option?
+        image = img
+        saveDir = os.path.join(os.path.dirname(bpy.data.filepath), bpy.context.scene.TLM_EngineProperties.tlm_lightmap_savedir)
+        bakemap_path = os.path.join(saveDir, image.name)
+        filepath_ext = ".hdr"
+        image.filepath_raw = bakemap_path + filepath_ext
+        image.file_format = "HDR"
+        if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
+            print("Saving to: " + image.filepath_raw)
+        image.save()
+
 def set_settings():
 
     scene = bpy.context.scene
@@ -778,9 +810,8 @@ def set_settings():
     cycles.device = scene.TLM_EngineProperties.tlm_mode
     
     print(bpy.app.version)
-    
-    if (3, 0, 0) >= bpy.app.version:
-    
+
+    if bpy.app.version[0] == 3:
         if cycles.device == "GPU":
             scene.cycles.tile_size = 256
         else:
