@@ -556,12 +556,13 @@ def build_success():
             t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
             t.start()
             build_dir = arm.utils.build_dir()
-            url = 'http://{}:{}/{}/debug/html5/'.format(host, prefs.html5_server_port, build_dir)
+            path = '{}/debug/html5/'.format(build_dir)
+            url = 'http://{}:{}/{}'.format(host, prefs.html5_server_port, path)
+            browser = webbrowser.get().name
             if 'ARMORY_PLAY_HTML5' in os.environ:
-                str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'dir': build_dir})
+                str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
                 cmd = re.split(' +', str)
             if len(cmd) == 0:
-                browser = webbrowser.get().name
                 if browser == '':
                     webbrowser.open(url)
                     return
@@ -572,13 +573,16 @@ def build_success():
                 live_patch.start()
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
+            path = arm.utils.get_fp_build() + '/debug/krom'
+            path_resources = path + '-resouces'
             pid = os.getpid()
             os.chdir(krom_location)
             if 'ARMORY_PLAY_KROM' in os.environ:
-                str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid, 'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'path': krom_path, 'width': width, 'height': height })
+                str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
                 cmd = re.split(' +', str)
             if len(cmd) == 0:
-                cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
+                #cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
+                cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
                     cmd.append('--consolepid')
                     cmd.append(pid)
