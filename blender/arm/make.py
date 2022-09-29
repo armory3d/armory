@@ -581,7 +581,6 @@ def build_success():
                 str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
                 cmd = re.split(' +', str)
             if len(cmd) == 0:
-                #cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
                 cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
                     cmd.append('--consolepid')
