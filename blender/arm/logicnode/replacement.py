@@ -126,6 +126,22 @@ class NodeReplacement:
         for p, x in old_property_defaults.items():
             self.property_defaults[ other.property_mapping[p] ] = x
 
+    @staticmethod
+    def replace_input_socket(tree: bpy.types.NodeTree, socket_src: bpy.types.NodeSocket, socket_dst: bpy.types.NodeSocket):
+        if socket_src.is_linked:
+            for link in socket_src.links:
+                tree.links.new(link.from_socket, socket_dst)
+        else:
+            node_utils.set_socket_default(socket_dst, node_utils.get_socket_default(socket_src))
+
+    @staticmethod
+    def replace_output_socket(tree: bpy.types.NodeTree, socket_src: bpy.types.NodeSocket, socket_dst: bpy.types.NodeSocket):
+        if socket_src.is_linked:
+            for link in socket_src.links:
+                tree.links.new(socket_dst, link.to_socket)
+        else:
+            node_utils.set_socket_default(socket_dst, node_utils.get_socket_default(socket_src))
+
 
 def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
     """Replaces the given node with its replacement."""
@@ -164,12 +180,7 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
             setattr(newnode, prop_name, prop_value)
         for input_id, input_value in replacement.input_defaults.items():
             input_socket = newnode.inputs[input_id]
-            if isinstance(input_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
-                if input_socket.arm_socket_type != 'NONE':
-                    input_socket.default_value_raw = input_value
-            elif input_socket.type != 'SHADER':
-                # note: shader-type sockets don't have a default value...
-                input_socket.default_value = input_value
+            node_utils.set_socket_default(input_socket, input_value)
 
         # map properties
         for src_prop_name, dest_prop_name in replacement.property_mapping.items():
@@ -179,23 +190,14 @@ def replace(tree: bpy.types.NodeTree, node: 'ArmLogicTreeNode'):
         for src_socket_id, dest_socket_id in replacement.in_socket_mapping.items():
             src_socket = node.inputs[src_socket_id]
             dest_socket = newnode.inputs[dest_socket_id]
-            if src_socket.is_linked:
-                # an input socket only has one link
-                datasource_socket = src_socket.links[0].from_socket
-                tree.links.new(datasource_socket, dest_socket)
-            else:
-                if isinstance(dest_socket, arm.logicnode.arm_sockets.ArmCustomSocket):
-                    if dest_socket.arm_socket_type != 'NONE':
-                        dest_socket.default_value_raw = src_socket.default_value_raw
-                elif dest_socket.type != 'SHADER':
-                    # note: shader-type sockets don't have a default value...
-                    dest_socket.default_value = src_socket.default_value
+            NodeReplacement.replace_input_socket(tree, src_socket, dest_socket)
 
         # map outputs
         for src_socket_id, dest_socket_id in replacement.out_socket_mapping.items():
+            src_socket = node.outputs[src_socket_id]
             dest_socket = newnode.outputs[dest_socket_id]
-            for link in node.outputs[src_socket_id].links:
-                tree.links.new(dest_socket, link.to_socket)
+            NodeReplacement.replace_output_socket(tree, src_socket, dest_socket)
+
     else:
         print(response)
 
@@ -331,12 +333,7 @@ def node_compat_sdk2108():
                     inp_idname = socket_replacements.get(inp_idname, inp_idname)
 
                     newinp = newnode.inputs.new(inp_idname, inp.name, identifier=inp.identifier)
-
-                    if inp.is_linked:
-                        for link in inp.links:
-                            tree.links.new(link.from_socket, newinp)
-                    else:
-                        node_utils.set_socket_default(newinp, node_utils.get_socket_default(inp))
+                    NodeReplacement.replace_input_socket(tree, inp, newinp)
 
                 newnode.outputs.clear()
                 for out in node.outputs:
@@ -344,11 +341,6 @@ def node_compat_sdk2108():
                     out_idname = socket_replacements.get(out_idname, out_idname)
 
                     newout = newnode.outputs.new(out_idname, out.name, identifier=out.identifier)
-
-                    if out.is_linked:
-                        for link in out.links:
-                            tree.links.new(newout, link.to_socket)
-                    else:
-                        node_utils.set_socket_default(newout, node_utils.get_socket_default(out))
+                    NodeReplacement.replace_output_socket(tree, out, newout)
 
                 tree.nodes.remove(node)
