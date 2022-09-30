@@ -17,7 +17,7 @@ uniform mat3 V3;
 uniform vec3 PPComp9;
 uniform vec3 PPComp10;
 #endif
-#endfi
+#endif
 
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
@@ -175,8 +175,9 @@ void main() {
 	#endif
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
-	fragColor.rgb = mix(refracted, reflCol * intensity * 0.5, waterReflect * fresnel * 0.5);
-	fragColor.rgb = mix(fragColor.rgb, reflectedEnv, waterReflect * fresnel);
+	fragColor.rgb = reflectedEnv * waterReflect / 4 * fresnel;
+	fragColor.rgb += reflCol * intensity * waterReflect;
+	fragColor.rgb += refracted;
 	#else
 	fragColor.rgb = mix(refracted, reflectedEnv, waterReflect * fresnel);
 	#endif
