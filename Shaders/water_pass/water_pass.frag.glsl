@@ -176,7 +176,7 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	fragColor.rgb = reflectedEnv * waterReflect / 4 * fresnel;
-	fragColor.rgb += reflCol * intensity * waterReflect;
+	fragColor.rgb += reflCol * intensity * waterReflect * fresnel;
 	fragColor.rgb += refracted;
 	#else
 	fragColor.rgb = mix(refracted, reflectedEnv, waterReflect * fresnel);
