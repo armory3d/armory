@@ -44,4 +44,6 @@ class CanvasSetTextColorNode(ArmLogicTreeNode):
             ]
         )
 
+        NodeReplacement.replace_output_socket(node_tree, self.outputs[0], newnode.outputs[0])
+
         return newnode

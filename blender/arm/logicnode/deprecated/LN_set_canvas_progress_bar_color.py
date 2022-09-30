@@ -28,5 +28,6 @@ class CanvasSetProgressBarColorNode(ArmLogicTreeNode):
         NodeReplacement.replace_input_socket(node_tree, self.inputs[1], newnode.inputs[1])
         NodeReplacement.replace_input_socket(node_tree, self.inputs[2], newnode.inputs[2])
 
+        NodeReplacement.replace_output_socket(node_tree, self.outputs[0], newnode.outputs[0])
 
         return newnode
