@@ -25,23 +25,23 @@ class CanvasSetTextColorNode(ArmLogicTreeNode):
             raise LookupError()
 
         newnode = node_tree.nodes.new('LNCanvasSetColorNode')
+
         newnode.property0 = 'color_text'
 
-        for link in self.inputs[0].links:
-            node_tree.links.new(link.from_socket, newnode.inputs[0])
-
-        if self.inputs[1].is_linked:
-            for link in self.inputs[1].links:
-                node_tree.links.new(link.from_socket, newnode.inputs[1])
-        else:
-            node_utils.set_socket_default(newnode.inputs[1], node_utils.get_socket_default(self.inputs[1]))
+        NodeReplacement.replace_input_socket(node_tree, self.inputs[0], newnode.inputs[0])
+        NodeReplacement.replace_input_socket(node_tree, self.inputs[1], newnode.inputs[1])
 
         # We do not have a RGBA to Color node or a Vec4 node currently,
         # so we cannot reconnect color inputs... So unfortunately we can only
         # use the socket default colors here
-        newnode.inputs[2].default_value_raw[0] = self.inputs[2].default_value_raw
-        newnode.inputs[2].default_value_raw[1] = self.inputs[3].default_value_raw
-        newnode.inputs[2].default_value_raw[2] = self.inputs[4].default_value_raw
-        newnode.inputs[2].default_value_raw[3] = self.inputs[5].default_value_raw
+        node_utils.set_socket_default(
+            newnode.inputs[2],
+            [
+                node_utils.get_socket_default(self.inputs[2]),
+                node_utils.get_socket_default(self.inputs[3]),
+                node_utils.get_socket_default(self.inputs[4]),
+                node_utils.get_socket_default(self.inputs[5])
+            ]
+        )
 
         return newnode

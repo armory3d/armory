@@ -1,5 +1,4 @@
 from arm.logicnode.arm_nodes import *
-import arm.node_utils as node_utils
 
 
 @deprecated('Set Canvas Color')
@@ -22,21 +21,12 @@ class CanvasSetProgressBarColorNode(ArmLogicTreeNode):
             raise LookupError()
 
         newnode = node_tree.nodes.new('LNCanvasSetColorNode')
+
         newnode.property0 = 'color_progress'
 
-        for link in self.inputs[0].links:
-            node_tree.links.new(link.from_socket, newnode.inputs[0])
+        NodeReplacement.replace_input_socket(node_tree, self.inputs[0], newnode.inputs[0])
+        NodeReplacement.replace_input_socket(node_tree, self.inputs[1], newnode.inputs[1])
+        NodeReplacement.replace_input_socket(node_tree, self.inputs[2], newnode.inputs[2])
 
-        if self.inputs[1].is_linked:
-            for link in self.inputs[1].links:
-                node_tree.links.new(link.from_socket, newnode.inputs[1])
-        else:
-            node_utils.set_socket_default(newnode.inputs[1], node_utils.get_socket_default(self.inputs[1]))
-
-        if self.inputs[2].is_linked:
-            for link in self.inputs[2].links:
-                node_tree.links.new(link.from_socket, newnode.inputs[2])
-        else:
-            node_utils.set_socket_default(newnode.inputs[2], node_utils.get_socket_default(self.inputs[2]))
 
         return newnode
