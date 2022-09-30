@@ -4,6 +4,7 @@ import iron.Scene;
 import armory.trait.internal.CanvasScript;
 import kha.Color;
 
+@:deprecated("The 'Set Canvas Text Color' node is deprecated and will be removed in future SDK versions. Please use 'Set Canvas Color' instead.")
 class CanvasSetTextColorNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
