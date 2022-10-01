@@ -560,8 +560,8 @@ def build_success():
             url = 'http://{}:{}/{}'.format(host, prefs.html5_server_port, path)
             browser = webbrowser.get().name
             if 'ARMORY_PLAY_HTML5' in os.environ:
-                str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
-                cmd = re.split(' +', str)
+                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
+                cmd = re.split(' +', template_str)
             if len(cmd) == 0:
                 if browser == '':
                     webbrowser.open(url)
@@ -578,13 +578,13 @@ def build_success():
             pid = os.getpid()
             os.chdir(krom_location)
             if 'ARMORY_PLAY_KROM' in os.environ:
-                str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
-                cmd = re.split(' +', str)
+                template_str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
+                cmd = re.split(' +', template_str)
             if len(cmd) == 0:
                 cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
                     cmd.append('--consolepid')
-                    cmd.append(pid)
+                    cmd.append(str(pid))
                 if wrd.arm_audio == 'Disabled':
                     cmd.append('--nosound')
         if wrd.arm_verbose_output:
