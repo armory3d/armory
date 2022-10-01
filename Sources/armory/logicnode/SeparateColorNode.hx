@@ -12,8 +12,12 @@ class SeparateColorNode extends LogicNode {
 		var vector: Vec4 = inputs[0].get();
 		if (vector == null) return 0.0;
 
-		if (from == 0) return vector.x;
-		else if (from == 1) return vector.y;
-		else return vector.z;
+		return switch (from) {
+			case 0: vector.x;
+			case 1: vector.y;
+			case 2: vector.z;
+			case 3: vector.w;
+			default: throw "Unreachable";
+		}
 	}
 }
