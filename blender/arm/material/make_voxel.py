@@ -57,8 +57,7 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    if '_Emission' in wrd.world_defs:
-        frag.write('float emission;') #
+    frag.write('vec3 emissionCol;')
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
 
