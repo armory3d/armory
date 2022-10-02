@@ -2422,10 +2422,6 @@ class ARM_OT_UpdateFileSDK(bpy.types.Operator):
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
         # This allows for seamless migration from earlier versions of Armory
-        for rp in wrd.arm_rplist: # TODO: deprecated
-            if rp.rp_gi != 'Off':
-                rp.rp_gi = 'Off'
-                rp.rp_voxelao = True
 
         # Replace deprecated nodes
         arm.logicnode.replacement.replace_all()
