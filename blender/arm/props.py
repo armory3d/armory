@@ -517,11 +517,6 @@ def update_armory_world():
     file_version = tuple(map(int, wrd.arm_version.split('.')))
     sdk_version = tuple(map(int, arm_version.split('.')))
     if bpy.data.filepath != '' and (file_version < sdk_version or wrd.arm_commit != arm_commit):
-        # This allows for seamless migration from earlier versions of Armory
-        for rp in wrd.arm_rplist:  # TODO: deprecated
-            if rp.rp_gi != 'Off':
-                rp.rp_gi = 'Off'
-                rp.rp_voxelao = True
 
         # For some breaking changes we need to use a special update
         # routine first before regularly replacing nodes

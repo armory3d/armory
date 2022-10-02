@@ -57,7 +57,11 @@ class RenderPathCreator {
 		return path;
 	}
 
+<<<<<<< HEAD
 	#if rp_voxels
+=======
+	#if rp_gi
+>>>>>>> d5e1540b (voxels gi)
 	public static var voxelFrame = 0;
 	public static var voxelFreq = 6; // Revoxelizing frequency
 	#end
