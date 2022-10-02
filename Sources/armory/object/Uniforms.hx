@@ -163,7 +163,7 @@ class Uniforms {
 				}
 			}
 			#end
-			#if rp_voxelao
+			#if (rp_gi != "Off")
 			case "_cameraPositionSnap": {
 				v = iron.object.Uniforms.helpVec;
 				var camera = iron.Scene.active.camera;
@@ -177,7 +177,6 @@ class Uniforms {
 			}
 			#end
 		}
-
 		return v;
 	}
 
@@ -210,10 +209,10 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-			#if rp_voxelao
+			#if (rp_gi != "Off")
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
-				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+				return (armory.renderpath.RenderPathCreator.voxelFrame % freq + 1) / freq;
 			}
 			#end
 		}
