@@ -569,15 +569,14 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
-				var voxtex = voxels;
 
-				path.clearImage(voxtex, 0x00000000);
+				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 
-				path.bindTarget(voxtex, "voxels");
+				path.bindTarget(voxels, "voxels");
 				#if (rp_shadowmap && rp_gi == "Voxel GI")
 				{
 					#if arm_shadowmap_atlas
@@ -603,9 +602,6 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		#if rp_gbuffer2_direct
-		path.bindTarget("gbuffer2", "gbuffer2");
-		#end
 
 		#if rp_gbuffer2
 		{
