@@ -8,6 +8,9 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
+#ifdef _VoxelGI
+#include "std/conetrace.glsl"
+#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -28,6 +31,9 @@ uniform sampler2D gbuffer1;
 	uniform sampler2D gbufferEmission;
 #endif
 
+#ifdef _VoxelGI
+uniform sampler3D voxels;
+#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 #endif
@@ -224,11 +230,9 @@ void main() {
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
 
-	// Envmap
+// Envmap
 #ifdef _Irr
-
 	vec3 envl = shIrradiance(n, shirr);
-
 	#ifdef _gbuffer2
 		if (g2.b < 0.5) {
 			envl = envl;
@@ -236,18 +240,11 @@ void main() {
 			envl = vec3(1.0);
 		}
 	#endif
-
 	#ifdef _EnvTex
 		envl /= PI;
 	#endif
 #else
 	vec3 envl = vec3(1.0);
-#endif
-
-#ifdef _Rad
-	vec3 reflectionWorld = reflect(-v, n);
-	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
-	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
 
 #ifdef _EnvLDR
@@ -257,6 +254,11 @@ void main() {
 	#endif
 #endif
 
+#ifdef _Rad
+	vec3 reflectionWorld = reflect(-v, n);
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
+	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+#endif
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
@@ -274,7 +276,6 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
-
 	#ifdef _VoxelGICam
 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
 	#else
@@ -292,14 +293,43 @@ void main() {
 
 #endif
 
+#ifdef _VoxelGI
+	#ifdef _VoxelGICam
+	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxpos = p / voxelgiHalfExtents;
+	#endif
+
+	#ifdef _VoxelGITemporal
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend +
+							traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
+	#else
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
+	#endif
+
+	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
+
+	if (occspec.y > 0.0) {
+		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, roughness);
+		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
+		fragColor.rgb += indirectSpecular * voxelgiSpec * occspec.y;
+	}
+	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
+#endif
+
+#ifdef _VoxelGI
+	fragColor.rgb += envl * voxelgiEnv;
+#else
 	fragColor.rgb = envl;
+#endif
+
 
 #ifdef _SSAO
-	// #ifdef _RTGI
-	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	// #else
+	#ifdef _RTGI
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	#else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	// #endif
+	#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -321,17 +351,9 @@ void main() {
 #endif
 
 	// Show voxels
-	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	// vec3 direction = vec3(0.0, 0.0, -1.0);
-	// vec4 color = vec4(0.0f);
-	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	// 	vec3 point = origin + 0.005 * step * direction;
-	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	// }
-	// fragColor.rgb += color.rgb;
 
-	// Show SSAO
-	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
+	//Show SSAO
+	//fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
@@ -358,7 +380,8 @@ void main() {
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-			if (lPos.w > 0.0) svisibility = shadowTest(
+			if (lPos.w > 0.0)
+			svisibility = shadowTest(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
@@ -371,12 +394,6 @@ void main() {
 				, lPos.xyz / lPos.w, shadowsBias
 			);
 		#endif
-	#endif
-
-	#ifdef _VoxelAOvar
-	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
-	#endif
 	#endif
 
 	#ifdef _SSRS
@@ -443,6 +460,9 @@ void main() {
 		, voxels, voxpos
 		#endif
 		#endif
+		#ifdef _VoxelGIShadow
+		, voxels, voxpos
+		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
@@ -502,6 +522,9 @@ void main() {
 			, voxels, voxpos
 			#endif
 			#endif
+			#ifdef _VoxelGIShadow
+			, voxels, voxpos
+			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
 			#endif
@@ -511,4 +534,17 @@ void main() {
 		);
 	}
 #endif // _Clusters
+//	fragColor.a = 1.0; // Mark as opaque
+
+	// Show voxels
+	/*
+	vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	vec3 direction = vec3(0.0, 0.0, -1.0);
+	vec4 color = vec4(0.0f);
+	for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	 	vec3 point = origin + 0.005 * step * direction;
+	 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	}
+	fragColor.rgb += color.rgb;
+	*/
 }

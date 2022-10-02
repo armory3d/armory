@@ -249,6 +249,20 @@ class RenderPathForward {
 		#if rp_voxels
 		{
 			Inc.initGI();
+			#if arm_voxelgi_temporal
+			{
+				Inc.initGI("voxelsB");
+			}
+			#end
+			#if (rp_gi == "Voxel GI")
+			{
+				Inc.initGI("voxelsOpac");
+				Inc.initGI("voxelsNor");
+				#if (rp_gi_bounces)
+				Inc.initGI("voxelsBounce");
+				#end
+			}
+			#end
 		}
 		#end
 
@@ -407,6 +421,13 @@ class RenderPathForward {
 		{
 			var voxelize = path.voxelize();
 
+			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			// Relight if light was moved
+			for (light in iron.Scene.active.lights) {
+				if (light.transform.diff()) { voxelize = true; break; }
+			}
+			#end
+
 			#if arm_voxelgi_temporal
 			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
 
@@ -418,14 +439,49 @@ class RenderPathForward {
 
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
+
+				#if (rp_gi == "Voxel GI")
+				var voxtex = "voxelsOpac";
+				#else
 				var voxtex = voxels;
+				#end
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 				path.setViewport(res, res);
 				path.bindTarget(voxtex, "voxels");
+				#if (rp_gi == "Voxel GI")
+				path.bindTarget("voxelsNor", "voxelsNor");
+				for (l in iron.Scene.active.lights) {
+					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
+					var n = "shadowMap";
+					path.bindTarget(n, n);
+					break;
+				}
+				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
+				relight = true;
+			}
+
+			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			// Relight if light was moved
+			for (light in iron.Scene.active.lights) {
+				if (light.transform.diff()) { relight = true; break; }
+			}
+			#end
+
+			if (relight) {
+				#if (rp_gi == "Voxel GI")
+					Inc.computeVoxelsBegin();
+					Inc.computeVoxels();
+					Inc.computeVoxelsEnd();
+					#if (rp_gi_bounces)
+					voxels = "voxelsBounce";
+					#end
+				#else
+				path.generateMipmaps(voxels); // AO
+				#end
 			}
 		}
 		#end
