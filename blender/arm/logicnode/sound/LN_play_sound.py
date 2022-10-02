@@ -94,9 +94,4 @@ class PlaySoundNode(ArmLogicTreeNode):
         if self.arm_version not in (0, 1):
             raise LookupError()
 
-        return NodeReplacement(
-            'LNPlaySoundRawNode', self.arm_version, 'LNPlaySoundRawNode', 2,
-            in_socket_mapping={0:0, 1:1, 2:2},
-            out_socket_mapping={0:0, 1:1, 2:2},
-            property_mapping={'property0':'property0', 'property1':'property1', 'property2':'property2',
-                              'property3':'property3', 'property4':'property4', 'property5':'property5'})
+        return NodeReplacement.Identity(self)
