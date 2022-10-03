@@ -122,7 +122,7 @@ def add_world_defs():
 
     # Light defines
     point_lights = 0
-    for bo in bpy.data.objects: # TODO: temp
+    for bo in bpy.data.objects:
         if bo.arm_export and bo.type == 'LIGHT':
             light = bo.data
             if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
@@ -149,10 +149,8 @@ def add_world_defs():
         assets.add_khafile_def('arm_clusters')
 
 
-    if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
+    if '_Rad' in wrd.world_defs or '_VoxelAO' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         wrd.world_defs += '_Brdf'
-    if '_Brdf' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
-        wrd.world_defs += '_IndPos'
 
 def build():
     rpdat = arm.utils.get_rp()
