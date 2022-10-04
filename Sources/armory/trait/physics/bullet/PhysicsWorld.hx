@@ -416,7 +416,7 @@ class PhysicsWorld extends Trait {
 		return hitInfo;
 	}
 
-	public function convexSweepTest(rb: RigidBody, from: Mat4, to: Mat4, group: Int = 0x00000001, mask = 0xFFFFFFFF): Hit {
+	public function convexSweepTest(rb: RigidBody, from: Mat4, to: Mat4, group: Int = 0x00000001, mask = 0xFFFFFFFF): ConvexHit {
 		var transformFrom = transform1;
 		var transformTo = transform2;
 		transformFrom.setIdentity();
@@ -448,7 +448,7 @@ class PhysicsWorld extends Trait {
 		#end
 		var worldDyn: bullet.Bt.DynamicsWorld = world;
 		var worldCol: bullet.Bt.CollisionWorld = worldDyn;
-		var bodyColl: bullet.Bt.CollisionShape = rb.body.getCollisionShape();
+		var bodyColl: bullet.Bt.ConvexShape =  cast rb.body.getCollisionShape();
 		worldCol.convexSweepTest(bodyColl, transformFrom, transformTo, convexCallback, 0.0);
 		
 		var hitInfo: ConvexHit = null;
@@ -460,14 +460,13 @@ class PhysicsWorld extends Trait {
 			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = convexCallback.get_m_hitNormalWorld();
 			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
-			hitInfo = new ConvexHit(convexHitPointWorld, convexHitNormalWorld);
 			#elseif (cpp || hl)
 			var hit = convexCallback.m_hitPointWorld;
 			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = convexCallback.m_hitNormalWorld;
 			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
-			hitInfo = new Hit(convexHitPointWorld, convexHitNormalWorld);
 			#end
+			hitInfo = new ConvexHit(convexHitPointWorld, convexHitNormalWorld);
 		}
 
 		#if js
