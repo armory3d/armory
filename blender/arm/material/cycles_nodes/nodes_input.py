@@ -10,6 +10,7 @@ import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
+import arm.material.mat_utils as mat_utils
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -103,7 +104,7 @@ def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.N
     return c.cast_value('0.0', from_type='float', to_type=out_type)
 
 
-def parse_rgb(node: bpy.types.ShaderNodeRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+def parse_rgb(bnode: bpy.types.ShaderNodeRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     if node.arm_material_param:
         nn = 'param_' + c.node_name(node.name)
         v = out_socket.default_value
@@ -291,7 +292,11 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     if out_socket == node.outputs[0]: # Generated - bounds
         return 'bposition'
     elif out_socket == node.outputs[1]: # Normal
-        return 'n'
+        is_displacement = mat_utils.disp_linked(mat_state.output_node)
+        if is_displacement:
+            return 'wposition'
+        else:
+            return 'n'
     elif out_socket == node.outputs[2]: # UV
         if state.context == ParserContext.WORLD:
             return 'vec3(0.0)'
