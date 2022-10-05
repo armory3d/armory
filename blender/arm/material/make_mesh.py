@@ -592,8 +592,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                     frag.add_uniform('vec3 PPComp9')
                     frag.add_uniform('vec3 PPComp10')
 
-                frag.add_in('vec3 viewRay')
-                frag.add_in('vec2 texCoord')
+                vert.add_out('vec3 viewRay')
+                vert.add_out('vec2 texCoord')
 
                 frag.write_header('vec3 hitCoord;')
                 frag.write_header('float depth;')
