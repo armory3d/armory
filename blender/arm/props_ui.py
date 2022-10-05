@@ -1791,10 +1791,10 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssr_jitter')
         layout.separator()
 
+        col = layout.column()
         col.prop(rpdat, "rp_ss_refraction")
         col = col.column()
-        col.enabled = rpdat.rp_ssr
-        col.prop(rpdat, 'arm_ss_refraction_half_res')
+        col.enabled = rpdat.rp_ss_refraction
         col.prop(rpdat, 'arm_ss_refraction_ray_step')
         col.prop(rpdat, 'arm_ss_refraction_min_ray_step')
         col.prop(rpdat, 'arm_ss_refraction_search_dist')

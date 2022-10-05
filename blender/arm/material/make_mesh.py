@@ -10,6 +10,7 @@ import arm.material.make_cluster as make_cluster
 import arm.material.make_finalize as make_finalize
 import arm.material.make_attrib as make_attrib
 import arm.utils
+import arm.material.ray_marching_glsl as ray_marching_glsl
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
@@ -574,9 +575,81 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-        else:
-            opac = '0.9999' # 1.0 - eps
-            frag.write('if (opacity < {0}) discard;'.format(opac))
+            if '_SSRefraction' in wrd.world_defs:
+                frag.add_include('compiled.inc')
+                frag.add_include('std/math.glsl')
+                frag.add_include('std/gbuffer.gls;')
+
+                frag.add_uniform('sampler2D tex')
+                frag.add_uniform('sampler2D gbufferD')
+                frag.add_uniform('sampler2D gbuffer0')
+                frag.add_uniform('sampler2D gbuffer1')
+                frag.add_uniform('mat4 P')
+                frag.add_uniform('mat3 V3')
+                frag.add_uniform('vec2 cameraProj')
+
+                if '_CPostprocess' in wrd.world_defs:
+                    frag.add_uniform('vec3 PPComp9')
+                    frag.add_uniform('vec3 PPComp10')
+
+                frag.add_in('vec3 viewRay')
+                frag.add_in('vec2 texCoord')
+
+                frag.write_header('vec3 hitCoord;')
+                frag.write_header('float depth;')
+
+                frag.write_header('const int numBinarySearchSteps = 7;')
+                frag.write_header('const int maxSteps = 18;')
+
+                frag.add_function(ray_marching_glsl.get_projected_coord)
+                frag.add_function(ray_marching_glsl.get_delta_depth)
+                frag.add_function(ray_marching_glsl.binary_search)
+                frag.add_function(ray_marching_glsl.raycast)
+
+                frag.write('vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);')
+                frag.write('float roughness = unpackFloat(g0.b).y;')
+                frag.write('if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }')
+
+                frag.write('float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);')
+                frag.write('if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }')
+
+                frag.write('float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
+                frag.write('if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }')
+
+                frag.write('vec2 enc = g0.rg;')
+                frag.write('vec3 n;')
+                frag.write('n.z = 1.0 - abs(enc.x) - abs(enc.y);')
+                frag.write('n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);')
+                frag.write('n = normalize(n);')
+
+                frag.write('vec3 viewNormal = V3 * n;')
+                frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
+                frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, 2.440));')
+                frag.write('hitCoord = viewPos;')
+
+                if '_CPostprocess' in wrd.world_defs:
+                    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;')
+                else:
+                    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;')
+
+                frag.write('vec4 coords = rayCast(dir);')
+
+                frag.write('vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);')
+                frag.write('float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);')
+
+                frag.write('float reflectivity = 1.0 - roughness;')
+                if '_CPostprocess' in wrd.world_defs:
+                    frag.write('float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;')
+                else:
+                    frag.write('float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;')
+
+                frag.write('intensity = clamp(intensity, 0.0, 1.0);')
+                frag.write('vec3 refractCol = textureLod(tex, coords.xy, 0.0).rgb;')
+                frag.write('refractCol = clamp(refractCol, 0.0, 1.0);')
+            else:
+                opac = '0.9999' # 1.0 - eps
+                frag.write('if (opacity < {0}) discard;'.format(opac))
+
 
     if blend:
         frag.add_out('vec4 fragColor[1]')
@@ -587,7 +660,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
-
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
