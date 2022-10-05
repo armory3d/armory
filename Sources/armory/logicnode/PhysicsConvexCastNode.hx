@@ -33,6 +33,9 @@ class PhysicsConvexCastNode extends LogicNode {
 			if (hit != null) return hit.pos;
 		}
 		else if (from == 1) { // Hit
+			if (hit != null) return hit.hitFraction;
+		}
+		else if (from == 2) { // Hit
 			if (hit != null) return hit.normal;
 		}
 #end

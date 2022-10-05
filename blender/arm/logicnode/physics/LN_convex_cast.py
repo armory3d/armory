@@ -26,4 +26,5 @@ class ConvexCastNode(ArmLogicTreeNode):
         self.add_input('ArmIntSocket', 'Mask', default_value=1)
 
         self.add_output('ArmVectorSocket', 'Hit')
+        self.add_output('ArmFloatSocket', 'Hit Fraction')
         self.add_output('ArmVectorSocket', 'Normal')

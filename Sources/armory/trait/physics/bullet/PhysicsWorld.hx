@@ -24,9 +24,11 @@ class Hit {
 class ConvexHit {
 	public var pos: Vec4;
 	public var normal: Vec4;
-	public function new(pos: Vec4, normal: Vec4){
+	public var hitFraction: Float;
+	public function new(pos: Vec4, normal: Vec4, hitFraction: Float){
 		this.pos = pos;
 		this.normal = normal;
+		this.hitFraction = hitFraction;
 	}
 }
 
@@ -460,13 +462,15 @@ class PhysicsWorld extends Trait {
 			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = convexCallback.get_m_hitNormalWorld();
 			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
+			var hitFraction = convexCallback.get_m_closestHitFraction();
 			#elseif (cpp || hl)
 			var hit = convexCallback.m_hitPointWorld;
 			convexHitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = convexCallback.m_hitNormalWorld;
 			convexHitNormalWorld.set(norm.x(), norm.y(), norm.z());
+			var hitFraction = convexCallback.m_closestHitFraction;
 			#end
-			hitInfo = new ConvexHit(convexHitPointWorld, convexHitNormalWorld);
+			hitInfo = new ConvexHit(convexHitPointWorld, convexHitNormalWorld, hitFraction);
 		}
 
 		#if js
