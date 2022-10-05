@@ -329,7 +329,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ss_refraction_half || rp_ssgi_half)
 		{
 			{
 				path.loadShader("shader_datas/downsample_depth/downsample_depth");
@@ -363,6 +363,35 @@ class RenderPathDeferred {
 			{
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			#end
+		}
+		#end
+
+		#if rp_ss_refraction
+		{
+			path.loadShader("shader_datas/ss_refraction_pass/ss_refraction_pass");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+
+			#if rp_ss_refraction_half
+			{
+				var t = new RenderTargetRaw();
+				t.name = "ss_refractiona";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			{
+				var t = new RenderTargetRaw();
+				t.name = "ss_refractionb";
 				t.width = 0;
 				t.height = 0;
 				t.scale = Inc.getSuperSampling() * 0.5;
@@ -470,7 +499,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ss_refraction_half || rp_ssgi_half)
 		path.setTarget("half");
 		path.bindTarget("_main", "texdepth");
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
@@ -788,6 +817,41 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");
+
+				path.setTarget(targetb);
+				path.bindTarget(targeta, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+
+				path.setTarget("tex");
+				path.bindTarget(targetb, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			}
+		}
+		#end
+
+		#if rp_ss_refraction
+		{
+			if (armory.data.Config.raw.rp_ssr != false) {
+				#if rp_ss_refraction_half
+				var targeta = "ss_refractiona";
+				var targetb = "ss_refractionb";
+				#else
+				var targeta = "buf";
+				var targetb = "gbuffer1";
+				#end
+
+				path.setTarget(targeta);
+				path.bindTarget("tex", "tex");
+				#if rp_ss_refraction_half
+				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.drawShader("shader_datas/ss_refraction_pass/ss_refraction_pass");
 
 				path.setTarget(targetb);
 				path.bindTarget(targeta, "tex");
