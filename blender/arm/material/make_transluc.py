@@ -32,8 +32,8 @@ def make(context_id):
 	frag.add_out('vec4 fragColor[2]')
 
 	# Remove fragColor = ...;
-	frag.main = frag.main[:frag.main.rfind('fragColor')]
-	frag.write('\n')
+	#frag.main = frag.main[:frag.main.rfind('fragColor')]
+	#frag.write('\n')
 
 	if '_VoxelAOvar' in wrd.world_defs:
 		frag.write('indirect *= 0.25;')
