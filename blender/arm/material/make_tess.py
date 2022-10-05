@@ -10,6 +10,7 @@ def tesc_levels(tesc, innerLevel, outerLevel):
     tesc.write('}')
 
 def interpolate(tese, var, size, normalize=False, declare_out=False):
+    tese.add_include('compiled.inc')
     vec = 'vec{0}'.format(size)
     if declare_out:
         tese.add_out('{0} {1}'.format(vec, var))
