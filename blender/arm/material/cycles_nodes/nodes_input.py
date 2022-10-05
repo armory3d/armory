@@ -10,7 +10,6 @@ import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
-import arm.material.mat_utils as mat_utils
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -292,11 +291,7 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
     if out_socket == node.outputs[0]: # Generated - bounds
         return 'bposition'
     elif out_socket == node.outputs[1]: # Normal
-        is_displacement = mat_utils.disp_linked(mat_state.output_node)
-        if is_displacement:
-            return 'wposition'
-        else:
-            return 'n'
+        return 'n'
     elif out_socket == node.outputs[2]: # UV
         if state.context == ParserContext.WORLD:
             return 'vec3(0.0)'
