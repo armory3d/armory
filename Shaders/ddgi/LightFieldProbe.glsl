@@ -1,3 +1,4 @@
+#version 450
 #ifndef LightFieldProbe_glsl
 #define LightFieldProbe_glsl
 
@@ -11,11 +12,6 @@
 
 const float minThickness = 0.03; // meters
 const float maxThickness = 0.50; // meters
-
-uniform sampler3D voxels;
-in vec2 texCoord;
-in vec3 viewRay;
-out vec4 fragColor;
 
 // Points exactly on the boundary in octahedral space (x = 0 and y = 0 planes) map to two different
 // locations in octahedral space. We shorten the segments slightly to give unambigous locations that lead

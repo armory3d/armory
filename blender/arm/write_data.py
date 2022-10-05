@@ -419,6 +419,7 @@ def write_config(resx, resy):
         'rp_shadowmap_cascade': rp_shadowmap_cascade,
         'rp_ssgi': rpdat.rp_ssgi != 'Off',
         'rp_ssr': rpdat.rp_ssr != 'Off',
+        'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
         'rp_gi': rpdat.rp_voxelao,
@@ -609,6 +610,14 @@ const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
+""")
+        if rpdat.rp_ss_refraction:
+            f.write(
+"""const float ss_refractionRayStep = """ + str(round(rpdat.arm_ss_refraction_ray_step * 100) / 100) + """;
+const float ss_refractionMinRayStep = """ + str(round(rpdat.arm_ss_refraction_min_ray_step * 100) / 100) + """;
+const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
+const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
+const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
 """)
 
         if rpdat.arm_ssrs:

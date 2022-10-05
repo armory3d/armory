@@ -287,6 +287,13 @@ def build():
             if rpdat.arm_ssr_half_res:
                 assets.add_khafile_def('rp_ssr_half')
 
+        if rpdat.rp_ss_refraction:
+            assets.add_khafile_def('rp_ss_refraction')
+            assets.add_shader_pass('ss_refraction_pass')
+            assets.add_shader_pass('blur_adaptive_pass')
+            if rpdat.arm_ssr_half_res:
+                assets.add_khafile_def('rp_ss_refraction_half')
+
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
