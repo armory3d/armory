@@ -24,6 +24,7 @@ def interpolate(tese, var, size, normalize=False, declare_out=False):
 
     if normalize:
         s += '{0}{1} = normalize({1}_0 + {1}_1 + {1}_2);\n'.format(prep, var)
+        s += 'vec3 n = {0};\n'.format(var)
     else:
         s += '{0}{1} = {1}_0 + {1}_1 + {1}_2;\n'.format(prep, var)
 
