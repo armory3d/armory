@@ -112,7 +112,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_rior, out_emission = parse_shader_input(node.inputs[0])
         if parse_surface:
             curshader.write('basecol = {0};'.format(out_basecol))
             curshader.write('roughness = {0};'.format(out_roughness))
@@ -123,6 +123,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                 curshader.write('emission = {0};'.format(out_emission))
         if parse_opacity:
             curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
+            curshader.write('rior = {0};'.format(out_rior))
 
     # Volume
     # parse_volume_input(node.inputs[1])

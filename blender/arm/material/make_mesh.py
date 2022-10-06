@@ -139,6 +139,7 @@ def make_base(con_mesh, parse_opacity):
             frag.write('float emission;')
         if parse_opacity:
             frag.write('float opacity;')
+            frag.write('float rior;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
     if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
@@ -305,6 +306,7 @@ def make_forward_mobile(con_mesh):
     parse_opacity = (blend and is_transluc) or arm_discard
     if parse_opacity:
         frag.write('float opacity;')
+        frag.write('float rior;')
 
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
 
@@ -477,6 +479,7 @@ def make_forward_solid(con_mesh):
     parse_opacity = (blend and is_transluc) or arm_discard
     if parse_opacity:
         frag.write('float opacity;')
+        frag.write('float rior;')
 
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
@@ -598,8 +601,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write_header('vec3 hitCoord;')
                 frag.write_header('float depth;')
 
-                frag.write_header('const int numBinarySearchSteps = 7;')
-                frag.write_header('const int maxSteps = 18;')
+                frag.add_const('int', 'numBinarySearchSteps', '7')
+                frag.add_const('int' ,'maxSteps', '18')
 
                 frag.add_function(ray_marching_glsl.get_projected_coord)
                 frag.add_function(ray_marching_glsl.get_delta_depth)
@@ -624,7 +627,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
                 frag.write('vec3 viewNormal = V3 * n;')
                 frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
-                frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, 2.440));')
+                frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, rior));')
                 frag.write('hitCoord = viewPos;')
 
                 if '_CPostprocess' in wrd.world_defs:
