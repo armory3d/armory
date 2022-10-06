@@ -629,23 +629,23 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, rior));')
                 frag.write('hitCoord = viewPos;')
 
-                if '_CPostprocess' in wrd.world_defs:
-                    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;')
-                else:
-                    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;')
+                #if '_CPostprocess' in wrd.world_defs:
+                #    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;')
+                #else:
+                #    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;')
 
-                frag.write('vec4 coords = rayCast(dir);')
+                frag.write('vec4 coords = rayCast(refracted);')
 
                 frag.write('vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);')
                 frag.write('float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);')
 
                 frag.write('float reflectivity = 1.0 - roughness;')
-                if '_CPostprocess' in wrd.world_defs:
-                    frag.write('float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;')
-                else:
-                    frag.write('float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;')
+                #if '_CPostprocess' in wrd.world_defs:
+                #    frag.write('float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;')
+                #else:
+                #    frag.write('float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;')
 
-                frag.write('intensity = clamp(intensity, 0.0, 1.0);')
+                #frag.write('intensity = clamp(intensity, 0.0, 1.0);')
                 frag.write('vec3 refractCol = textureLod(tex, coords.xy, 0.0).rgb;')
                 frag.write('refractCol = clamp(refractCol, 0.0, 1.0);')
         else:
