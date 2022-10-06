@@ -646,9 +646,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('intensity = clamp(intensity, 0.0, 1.0);')
                 frag.write('vec3 refractCol = textureLod(tex, coords.xy, 0.0).rgb;')
                 frag.write('refractCol = clamp(refractCol, 0.0, 1.0);')
-            else:
-                opac = '0.9999' # 1.0 - eps
-                frag.write('if (opacity < {0}) discard;'.format(opac))
+        else:
+            opac = '0.9999' # 1.0 - eps
+            frag.write('if (opacity < {0}) discard;'.format(opac))
 
 
     if blend:
