@@ -11,12 +11,17 @@ class NavAgent extends Trait {
 	public var speed: Float = 5;
 	@prop
 	public var turnDuration: Float = 0.4;
+	@prop
+	public var heightOffset: Float = 0.0;
 
 	var path: Array<Vec4> = null;
 	var index = 0;
 
 	var rotAnim: TAnim = null;
 	var locAnim: TAnim = null;
+
+	public var tickPos: Null<Void -> Void>;
+	public var tickRot: Null<Void -> Void>;
 
 	public function new() {
 		super();
@@ -60,14 +65,14 @@ class NavAgent extends Trait {
 
 		orient.subvecs(p, object.transform.loc).normalize;
 		var targetAngle = Math.atan2(orient.y, orient.x) + Math.PI / 2;
-		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y, z: p.z }, duration: dist / speed, done: function() {
+		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y, z: p.z + heightOffset }, duration: dist / speed, tick: tickPos, done: function() {
 			index++;
 			if (index < path.length) go();
 			else removeUpdate(update);
 		}});
 
 		var q = new Quat();
-		rotAnim = Tween.to({ target: object.transform, props: { rot: q.fromEuler(0, 0, targetAngle) }, duration: turnDuration});
+		rotAnim = Tween.to({ target: object.transform, props: { rot: q.fromEuler(0, 0, targetAngle) }, tick: tickRot, duration: turnDuration});
 	}
 
 	function update() {
