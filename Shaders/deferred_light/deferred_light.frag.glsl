@@ -18,8 +18,6 @@
 #include "std/ssrs.glsl"
 #endif
 
-#include "ddgi/LightFieldProbe.glsl"
-
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;

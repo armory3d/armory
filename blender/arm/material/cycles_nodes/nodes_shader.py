@@ -75,7 +75,7 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
     if state.parse_opacity:
         if len(node.inputs) >= 21:
             state.out_opacity = c.parse_value_input(node.inputs[21])
-        state.out_rior = c.parse_value_inputs[16];
+        state.out_rior = c.parse_value_input(node.inputs[16]);
 
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:

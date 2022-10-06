@@ -104,7 +104,7 @@ def parse_attribute(node: bpy.types.ShaderNodeAttribute, out_socket: bpy.types.N
     return c.cast_value('0.0', from_type='float', to_type=out_type)
 
 
-def parse_rgb(bnode: bpy.types.ShaderNodeRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+def parse_rgb(node: bpy.types.ShaderNodeRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     if node.arm_material_param:
         nn = 'param_' + c.node_name(node.name)
         v = out_socket.default_value

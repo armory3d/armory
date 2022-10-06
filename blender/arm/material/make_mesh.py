@@ -599,7 +599,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 vert.add_out('vec2 texCoord')
 
                 frag.write_header('vec3 hitCoord;')
-                frag.write_header('float depth;')
 
                 frag.add_const('int', 'numBinarySearchSteps', '7')
                 frag.add_const('int' ,'maxSteps', '18')
