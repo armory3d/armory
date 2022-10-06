@@ -49,7 +49,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
 
 def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
-        c.write_normal(node.inputs[20])
+        c.write_normal(node.inputs[22])
         state.out_basecol = c.parse_vector_input(node.inputs[0])
         # subsurface = c.parse_vector_input(node.inputs[1])
         # subsurface_radius = c.parse_vector_input(node.inputs[2])
@@ -68,7 +68,7 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # transmission = c.parse_vector_input(node.inputs[15])
         # transmission_roughness = c.parse_vector_input(node.inputs[16])
         if node.inputs[20].is_linked or node.inputs[20].default_value != 0.0:
-            state.out_emission = '({0}.x)'.format(c.parse_vector_input(node.inputs[20]))
+            state.out_emission = f'({c.rgb_to_bw(c.parse_vector_input(node.inputs[19]))} * {c.parse_value_input(node.inputs[20])})'
             state.emission_found = True
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])

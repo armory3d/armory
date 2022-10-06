@@ -35,11 +35,13 @@ class PlaySoundRawNode extends LogicNode {
 				if (channel != null) {
 					if (property2) channel.stop();
 					channel.play();
+					channel.volume = inputs[4].get();
 				}
 				// Start
 				else if (sound != null) {
 					if (property3) sound.sampleRate = property4;
 					channel = iron.system.Audio.play(sound, property1, property5);
+					channel.volume = inputs[4].get();
 				}
 
 				tree.notifyOnUpdate(this.onUpdate);
@@ -53,6 +55,9 @@ class PlaySoundRawNode extends LogicNode {
 				if (channel != null) channel.stop();
 				tree.removeUpdate(this.onUpdate);
 				runOutput(2);
+			
+			case UpdateVolume:
+				if (channel != null) channel.volume = inputs[4].get();
 		}
 	}
 
@@ -73,4 +78,5 @@ private enum abstract PlayState(Int) from Int to Int {
 	var Play = 0;
 	var Pause = 1;
 	var Stop = 2;
+	var UpdateVolume = 3;
 }

@@ -558,16 +558,21 @@ def build_success():
             build_dir = arm.utils.build_dir()
             path = '{}/debug/html5/'.format(build_dir)
             url = 'http://{}:{}/{}'.format(host, prefs.html5_server_port, path)
-            browser = webbrowser.get().name
+            browser = webbrowser.get()
+            browsername = None
+            if hasattr(browser, "name"):
+                browsername = getattr(browser,'name')
+            elif hasattr(browser,"_name"):
+                browsername = getattr(browser,'_name')
             if 'ARMORY_PLAY_HTML5' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
+                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browsername})
                 cmd = re.split(' +', template_str)
             if len(cmd) == 0:
-                if browser == '':
+                if browsername == None or browsername == '':
                     webbrowser.open(url)
                     return
                 else:
-                    cmd = [browser, url]
+                    cmd = [browsername, url]
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()
