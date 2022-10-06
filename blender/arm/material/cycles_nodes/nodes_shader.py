@@ -75,6 +75,7 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
     if state.parse_opacity:
         if len(node.inputs) >= 21:
             state.out_opacity = c.parse_value_input(node.inputs[21])
+        state.out_rior = c.parse_value_inputs[16];
 
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:
@@ -124,6 +125,7 @@ def parse_bsdfglass(node: bpy.types.ShaderNodeBsdfGlass, out_socket: NodeSocket,
         state.out_roughness = c.parse_value_input(node.inputs[1])
     if state.parse_opacity:
         state.out_opacity = '(1.0 - {0}.r)'.format(c.parse_vector_input(node.inputs[0]))
+        state.out_rior = c.parse_value_input(node.inputs[2])
 
 
 def parse_bsdfhair(node: bpy.types.ShaderNodeBsdfHair, out_socket: NodeSocket, state: ParserState) -> None:
