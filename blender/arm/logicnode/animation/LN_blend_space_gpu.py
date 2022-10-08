@@ -153,9 +153,11 @@ class BlendSpaceNode(ArmLogicTreeNode):
                 break  
     
     def remove_point(self):
-        if 2 < self.active_point_index_ref < 10:
-            self.property1[self.active_point_index_ref] = False
-            self.active_point_index_ref = 10
+        for i in range(len(self.property1) - 2, 2, -1):
+            if self.property1[i]:
+                self.property1[i] = False
+                self.active_point_index_ref = i - 1
+                break
 
         
     def draw_buttons(self, context, layout):
