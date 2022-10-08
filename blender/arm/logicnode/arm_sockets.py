@@ -30,7 +30,7 @@ socket_colors = {
     'ArmNodeSocketObject': (0.15, 0.55, 0.75, 1),
     'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
     'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
-    'ArmAnySocket': (0.9, 0.9, 0.9, 1)
+    'ArmAnySocket': (0.9, 0.9, 0.9, 1),
     'ArmNodeSocketAnimTree': (0.3, 0.1, 0.0, 1),
     'ArmFactorSocket': (0.631, 0.631, 0.631, 1),
     'ArmBlendSpaceSocket': (0.631, 0.631, 0.631, 1)
