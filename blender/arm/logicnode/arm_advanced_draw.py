@@ -1,6 +1,5 @@
 import bpy
 import gpu
-from bgl import *
 from mathutils import Vector
 from gpu_extras.batch import batch_for_shader
 from gpu_extras.presets import *
@@ -132,10 +131,8 @@ class Rectangle:
         shader.bind()
         shader.uniform_float("color", color)
 
-        glEnable(GL_BLEND)
         batch.draw(shader)
-        glDisable(GL_BLEND)
-        
+
 
         if borderThickness == 0: return
 
@@ -150,11 +147,9 @@ class Rectangle:
 
         shader.bind()
         shader.uniform_float("color", borderColor)
+        gpu.state.line_width_set(abs(borderThickness))
 
-        glEnable(GL_BLEND)
-        glLineWidth(abs(borderThickness))
         batch.draw(shader)
-        glDisable(GL_BLEND)
 
     def __repr__(self):
         return "({}, {}) - ({}, {})".format(self.x1, self.y1, self.x2, self.y2)
@@ -323,9 +318,7 @@ class RectangleWithGrid:
         shader.bind()
         shader.uniform_float("color", color)
 
-        glEnable(GL_BLEND)
         batch.draw(shader)
-        glDisable(GL_BLEND)
 
         locations = (
             (self.x1 + self.width/self.numGrids, self.y1 - self.height/self.numGrids),
@@ -338,9 +331,7 @@ class RectangleWithGrid:
         shader.bind()
         shader.uniform_float("color", borderColor)
 
-        glEnable(GL_BLEND)
         batch.draw(shader)
-        glDisable(GL_BLEND)
 
         if borderThickness == 0: return
 
@@ -356,11 +347,9 @@ class RectangleWithGrid:
 
         shader.bind()
         shader.uniform_float("color", gridColor)
+        gpu.state.line_width_set(abs(borderThickness))
 
-        glEnable(GL_BLEND)
-        glLineWidth(abs(borderThickness))
         batch.draw(shader)
-        glDisable(GL_BLEND)
 
         offset = (self.x2 - self.x1) / (self.numGrids + 1)
         gridPoints = []
@@ -379,11 +368,9 @@ class RectangleWithGrid:
 
         shader.bind()
         shader.uniform_float("color", gridColor)
-        
-        glEnable(GL_BLEND)
-        glLineWidth(abs(gridLineThickness))
+        gpu.state.line_width_set(abs(gridLineThickness))
+
         batch.draw(shader)
-        glDisable(GL_BLEND)
 
     def __repr__(self):
         return "({}, {}) - ({}, {})".format(self.x1, self.y1, self.x2, self.y2)
