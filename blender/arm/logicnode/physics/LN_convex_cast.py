@@ -1,18 +1,21 @@
 from arm.logicnode.arm_nodes import *
 
 class ConvexCastNode(ArmLogicTreeNode):
-    """Casts a convex rigid body and get the closest hit point.
+    """Casts a convex rigid body and get the closest hit point. Also called Convex Sweep Test.
 
     @seeNode Mask
 
-    @input From: The initial transform of the convex object. Only location and rotation are considered.
-    @input To: The final transform of the convex object. Only location and rotation are considered.
-    @input Mask: a bit mask value to specify which
+    @input Convex RB: A convex Rigid Body object to be used for the sweep test.
+    @input From: The initial location of the convex object.
+    @input To: The final location of the convex object.
+    @input Rotation: Rotation of the Convex RB during sweep test.
+    @input Mask: A bit mask value to specify which
         objects are considered
 
-    @output Hit: the hit position in world coordinates
-    @output Normal: the surface normal of the hit position relative to
-        the world
+    @output Hit Position: The hit position in world coordinates
+    @output RB Position: Position of the convex RB at the time of collision.
+    @output Normal: The surface normal of the hit position relative to
+        the world.
     """
     bl_idname = 'LNPhysicsConvexCastNode'
     bl_label = 'Convex Cast'
@@ -21,10 +24,11 @@ class ConvexCastNode(ArmLogicTreeNode):
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Convex RB')
-        self.add_input('ArmDynamicSocket', 'From')
-        self.add_input('ArmDynamicSocket', 'To')
+        self.add_input('ArmVectorSocket', 'From')
+        self.add_input('ArmVectorSocket', 'To')
+        self.add_input('ArmRotationSocket', 'Rotation')
         self.add_input('ArmIntSocket', 'Mask', default_value=1)
 
-        self.add_output('ArmVectorSocket', 'Hit')
-        self.add_output('ArmFloatSocket', 'Hit Fraction')
+        self.add_output('ArmVectorSocket', 'Hit Position')
+        self.add_output('ArmVectorSocket', 'RB Position')
         self.add_output('ArmVectorSocket', 'Normal')
