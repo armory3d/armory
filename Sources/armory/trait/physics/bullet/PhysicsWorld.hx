@@ -6,7 +6,6 @@ import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
 import iron.math.Quat;
-import iron.math.Mat4;
 import iron.math.RayCaster;
 
 class Hit {
@@ -418,26 +417,20 @@ class PhysicsWorld extends Trait {
 		return hitInfo;
 	}
 
-	public function convexSweepTest(rb: RigidBody, from: Mat4, to: Mat4, group: Int = 0x00000001, mask = 0xFFFFFFFF): ConvexHit {
+	public function convexSweepTest(rb: RigidBody, from: Vec4, to: Vec4, rotation: Quat, group: Int = 0x00000001, mask = 0xFFFFFFFF): ConvexHit {
 		var transformFrom = transform1;
 		var transformTo = transform2;
 		transformFrom.setIdentity();
 		transformTo.setIdentity();
 
-		var loc = new Vec4();
-		var rot = new Quat();
-		var scl = new Vec4();
-
-		from.decompose(loc, rot, scl);
-		vec1.setValue(loc.x, loc.y, loc.z);
+		vec1.setValue(from.x, from.y, from.z);
 		transformFrom.setOrigin(vec1);
-		quat1.setValue(rot.x, rot.y, rot.z, rot.w);
+		quat1.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
 		transformFrom.setRotation(quat1);
 
-		to.decompose(loc, rot, scl);
-		vec2.setValue(loc.x, loc.y, loc.z);
+		vec2.setValue(to.x, to.y, to.z);
 		transformTo.setOrigin(vec2);
-		quat1.setValue(rot.x, rot.y, rot.z, rot.w);
+		quat1.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
 		transformFrom.setRotation(quat1);
 
 		var convexCallback = new bullet.Bt.ClosestConvexResultCallback(vec1, vec2);
