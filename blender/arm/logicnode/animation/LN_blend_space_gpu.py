@@ -56,6 +56,12 @@ class BlendSpaceNode(ArmLogicTreeNode):
         default = -1
     )
 
+    show_numbers: BoolProperty(
+        name = "Show Point Numbers",
+        description="",
+        default = False
+    )
+
     active_point_index_ref: IntProperty(
         default = 0
     )
@@ -169,6 +175,7 @@ class BlendSpaceNode(ArmLogicTreeNode):
             op = row.operator('arm.node_call_func', text = 'Exit Edit', icon = 'OBJECT_DATAMODE', emboss = True, depress = not self.property2)
             op.node_index = str(id(self))
             op.callback_name = 'stop_modal'
+            layout.prop(self, 'show_numbers')
             if self.property2:
                 col = layout.column()
                 row = col.row(align=True)

@@ -1,4 +1,5 @@
 import bpy
+import blf
 import gpu
 from mathutils import Vector
 from gpu_extras.batch import batch_for_shader
@@ -55,7 +56,7 @@ class BlendSpaceGUI:
     def draw(self):
         self.calculateBoundaries()
         self.boundary.draw()
-        self.points.calcPoints(self.node.property0, self.node.property1, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner)
+        self.points.calcPoints(self.node.property0, self.node.property1, self.boundary.x1 + self.boundary.offsetInner, self.boundary.y1 - self.boundary.offsetInner, self.boundary.widthInner, self.node.show_numbers)
         self.setGUIBounds()
         self.setPointSize()
         self.points.drawPointCirc()
@@ -160,20 +161,21 @@ class Points:
         self.points = points
         self.point_size = 0.025
         self.width = 0.0
-        self.colors = [ (0.4, 0.5, 0.9, 0.4),
-                        (1.0, 0.0, 1.0, 0.4),
-                        (0.0, 1.0, 1.0, 0.4),
-                        (1.0, 1.0, 0.0, 0.4),
-                        (0.0, 0.0, 1.0, 0.4),
-                        (0.0, 1.0, 0.0, 0.4),
-                        (1.0, 0.0, 0.0, 0.4),
-                        (0.8, 0.6, 1.0, 0.4),
-                        (0.6, 0.8, 1.0, 0.4),
-                        (1.0, 0.6, 0.8, 0.4), 
+        self.colors = [ (0.4, 0.5, 0.9, 1.0),
+                        (1.0, 0.0, 1.0, 1.0),
+                        (0.0, 1.0, 1.0, 1.0),
+                        (1.0, 1.0, 0.0, 1.0),
+                        (0.0, 0.0, 1.0, 1.0),
+                        (0.0, 1.0, 0.0, 1.0),
+                        (1.0, 0.0, 0.0, 1.0),
+                        (0.8, 0.6, 1.0, 1.0),
+                        (0.6, 0.8, 1.0, 1.0),
+                        (1.0, 0.6, 0.8, 1.0), 
                         (1.0, 1.0, 1.0, 1.0)]
         self.circle_coords = self.circle(0.0, 0.0, self.point_size, 4)
         self.square_coord = self.circle(0.0, 0.0, self.point_size, 5)
         self.visible = []
+        self.show_numbers = False
     
     def get_points_list(self):
         p = []
@@ -183,10 +185,11 @@ class Points:
         
         return p
 
-    def calcPoints(self, points, visible, x1, y1, width):
+    def calcPoints(self, points, visible, x1, y1, width, show_numbers):
         self.width = width
         self.points = []
         self.visible = visible
+        self.show_numbers = show_numbers
 
         for i in range(len(points) // 2):
             point = []
@@ -224,11 +227,18 @@ class Points:
         shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
         for i in range(len(self.points) - 1):
             if(self.visible[i]):
-                circle_co = self.reset_circle(self.points[i])
+                pos = self.points[i]
+                circle_co = self.reset_circle(pos)
                 batch = batch_for_shader(shader, 'TRI_FAN',{"pos": circle_co})
                 shader.bind()
-                shader.uniform_float("color", self.colors[i])
+                col = self.colors[i]
+                shader.uniform_float("color", col)
                 batch.draw(shader)
+                if self.show_numbers:
+                    blf.color(0, col[0], col[1], col[2], col[3])
+                    blf.size(0, self.width/10, int(getDpi()))
+                    blf.position(0, pos[0], pos[1], 0)
+                    blf.draw(0, str(i + 1))
         square_co = self.reset_square(self.points[len(self.points) - 1])
         batch = batch_for_shader(shader, 'TRI_FAN',{"pos": square_co})
         shader.bind()
