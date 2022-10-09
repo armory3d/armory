@@ -579,7 +579,7 @@ def build_success():
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
             path = arm.utils.get_fp_build() + '/debug/krom'
-            path_resources = path + '-resouces'
+            path_resources = path + '-resources'
             pid = os.getpid()
             os.chdir(krom_location)
             if 'ARMORY_PLAY_KROM' in os.environ:
