@@ -1,5 +1,6 @@
 import platform
 import subprocess
+import sys
 
 DEBUG = 36
 INFO = 37
@@ -44,21 +45,18 @@ def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
 
 def log(text, color=None):
-    if HAS_COLOR_SUPPORT and color is not None:
-        csi = '\033['
-        text = csi + str(color) + 'm' + text + csi + '0m'
-    print(text)
+    print(colorize(text, color))
 
 def debug(text):
-    log(text, DEBUG)
+    print(colorize(text, DEBUG))
 
 def info(text):
     global info_text
-    log(text, INFO)
+    print(colorize(text, INFO))
     info_text = format_text(text)
 
 def print_warn(text):
-    log('WARNING: ' + text, WARN)
+    print(colorize('WARNING: ' + text, WARN))
 
 def warn(text):
     global num_warnings
@@ -68,8 +66,13 @@ def warn(text):
 def error(text):
     global num_errors
     num_errors += 1
-    log('ERROR: ' + text, ERROR)
+    print(colorize('ERROR: ' + text, ERROR), file=sys.stderr)
 
+def colorize(text:str, color=None):
+    if HAS_COLOR_SUPPORT and color is not None:
+        csi = '\033['
+        text = csi + str(color) + 'm' + text + csi + '0m'
+    return text
 
 def warn_called_process_error(e: subprocess.CalledProcessError):
     out = f'Command {e.cmd} exited with code {e.returncode}.'
