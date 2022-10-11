@@ -8,3 +8,4 @@ batch = False
 texture_grad = False # Sample textures using textureGrad()
 con_mesh = None # Mesh context
 uses_instancing = False  # Whether the current material has at least one user with instancing enabled
+is_shadeless = False

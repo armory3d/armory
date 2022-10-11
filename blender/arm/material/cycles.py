@@ -26,7 +26,7 @@ import arm.make_state
 import arm.material.cycles_functions as c_functions
 from arm.material.cycles_nodes import *
 import arm.material.mat_state as mat_state
-from arm.material.parser_state import ParserState, ParserContext
+from arm.material.parser_state import EmissionKind, ParserState, ParserContext
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
 import arm.utils
 
@@ -89,7 +89,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     parse_surface = state.parse_surface
     parse_opacity = state.parse_opacity
     parse_displacement = state.parse_displacement
-    state.emission_found = False
     particle_info = {
         'index': False,
         'age': False,
@@ -104,6 +103,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     state.procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
+    mat_state.is_shadeless = False
+
     # Surface
     if parse_surface or parse_opacity:
         state.parents = []
@@ -112,15 +113,25 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission_col = parse_shader_input(node.inputs[0])
         if parse_surface:
-            curshader.write('basecol = {0};'.format(out_basecol))
-            curshader.write('roughness = {0};'.format(out_roughness))
-            curshader.write('metallic = {0};'.format(out_metallic))
-            curshader.write('occlusion = {0};'.format(out_occlusion))
-            curshader.write('specular = {0};'.format(out_specular))
-            if '_Emission' in wrd.world_defs:
-                curshader.write('emission = {0};'.format(out_emission))
+            curshader.write(f'basecol = {out_basecol};')
+            curshader.write(f'roughness = {out_roughness};')
+            curshader.write(f'metallic = {out_metallic};')
+            curshader.write(f'occlusion = {out_occlusion};')
+            curshader.write(f'specular = {out_specular};')
+            curshader.write(f'emissionCol = {out_emission_col};')
+
+            if state.emission_kind == EmissionKind.SHADELESS:
+                if '_EmissionShadeless' not in wrd.world_defs:
+                    wrd.world_defs += '_EmissionShadeless'
+                # TODO: find better solution than this mat_state hack to
+                #  get information to make_mesh.py
+                mat_state.is_shadeless = True
+            elif state.emission_kind == EmissionKind.SHADED:
+                if '_EmissionShaded' not in wrd.world_defs:
+                    wrd.world_defs += '_EmissionShaded'
+
         if parse_opacity:
             curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
 
@@ -243,8 +254,8 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                 state.out_metallic = parse_value_input(node.inputs[4])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    state.out_emission = parse_value_input(node.inputs[6])
-                    state.emission_found = True
+                    state.out_emission_col = f'({state.out_basecol} * clamp({parse_value_input(node.inputs[6])}, 0.0, 1.0))'
+                    state.emission_kind = EmissionKind.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
         else:

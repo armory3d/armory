@@ -82,31 +82,3 @@ def is_transluc_type(node: bpy.types.ShaderNode) -> bool:
     return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT') \
         or (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs['Opacity'].is_linked or node.inputs['Opacity'].default_value != 1.0)) \
         or (node.type == 'BSDF_PRINCIPLED' and (node.inputs['Alpha'].is_linked or node.inputs['Alpha'].default_value != 1.0))
-
-
-def is_emmisive(material):
-    nodes = material.node_tree.nodes
-    output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
-    if output_node == None or output_node.inputs[0].is_linked == False:
-        return False
-
-    surface_node = output_node.inputs[0].links[0].from_node
-    return is_emmisive_traverse(surface_node)
-
-def is_emmisive_traverse(node):
-    # TODO: traverse groups
-    if is_emmisive_type(node):
-        return True
-    for inp in node.inputs:
-        if inp.is_linked:
-            res = is_emmisive_traverse(inp.links[0].from_node)
-            if res:
-                return True
-    return False
-
-def is_emmisive_type(node):
-    if node.type == 'EMISSION' or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[6].is_linked or node.inputs[6].default_value != 0.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[20].is_linked or node.inputs[20] != 0.0)):
-       return True
-    return False

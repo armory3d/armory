@@ -22,7 +22,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
-uniform sampler2D gbuffer2;
+	uniform sampler2D gbuffer2;
+#endif
+#ifdef _EmissionShaded
+	uniform sampler2D gbufferEmission;
 #endif
 
 #ifdef _VoxelAOvar
@@ -295,11 +298,22 @@ void main() {
 	// #endif
 #endif
 
-#ifdef _Emission
-	if (matid == 1) {
-		fragColor.rgb += g1.rgb; // materialid
-		albedo = vec3(0.0);
+#ifdef _EmissionShadeless
+	if (matid == 1) { // pure emissive material, color stored in basecol
+		fragColor.rgb += g1.rgb;
+		fragColor.a = 1.0; // Mark as opaque
+		return;
 	}
+#endif
+#ifdef _EmissionShaded
+	#ifdef _EmissionShadeless
+	else {
+	#endif
+		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		fragColor.rgb += emission;
+	#ifdef _EmissionShadeless
+	}
+	#endif
 #endif
 
 	// Show voxels
