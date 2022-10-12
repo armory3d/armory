@@ -15,6 +15,6 @@ in vec2 nor; // nor.xy
 out vec3 wnormal;
 
 void main() {
-    wnormal = normalize(N * vec3(nor.xy, pos.w));
-    gl_Position = WVP * vec4(pos.xyz, 1.0);
+	wnormal = normalize(N * vec3(nor.xy, pos.w));
+	gl_Position = WVP * vec4(pos.xyz, 1.0);
 }

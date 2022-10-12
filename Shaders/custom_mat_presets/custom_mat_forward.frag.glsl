@@ -4,6 +4,6 @@
 out vec4 fragColor;
 
 void main() {
-    // Shadeless white color
-    fragColor = vec4(1.0);
+	// Shadeless white color
+	fragColor = vec4(1.0);
 }
