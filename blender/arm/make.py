@@ -111,6 +111,7 @@ def remove_readonly(func, path, excinfo):
 
 def export_data(fp, sdk_path):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
 
     print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
@@ -236,6 +237,12 @@ def export_data(fp, sdk_path):
         res['shader_datas'] += make_world.shader_datas
 
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+
+    if wrd.arm_debug_console and rpdat.rp_renderer == 'Deferred':
+        # Copy deferred shader so that it can include compiled.inc
+        line_deferred_src = os.path.join(sdk_path, 'armory', 'Shaders', 'debug_draw', 'line_deferred.frag.glsl')
+        line_deferred_dst = os.path.join(shaders_path, 'line_deferred.frag.glsl')
+        shutil.copyfile(line_deferred_src, line_deferred_dst)
 
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:

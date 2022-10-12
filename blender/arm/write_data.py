@@ -67,6 +67,7 @@ def remove_readonly(func, path, excinfo):
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
                     import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
 
     sdk_path = arm.utils.get_sdk_path()
     rel_path = arm.utils.get_relative_paths()  # Convert absolute paths to relative
@@ -276,7 +277,12 @@ project.addSources('Sources');
 
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
-            khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
+
+            if rpdat.rp_renderer == 'Forward':
+                # deferred line frag shader is currently handled in make.py,
+                # only add forward shader here
+                khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/line.frag.glsl", rel_path=do_relpath_sdk))
+            khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/line.vert.glsl", rel_path=do_relpath_sdk))
 
         if not is_publish and state.target == 'html5':
             khafile.write("project.addParameter('--debug');\n")
