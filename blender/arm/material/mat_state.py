@@ -11,6 +11,21 @@ class EmissionKind(IntEnum):
     SHADED = 2
     """The material is emissive and interacts with lights/shadows."""
 
+    @staticmethod
+    def get_effective_combination(a: 'EmissionKind', b: 'EmissionKind') -> 'EmissionKind':
+        # Shaded emission always has precedence over shadeless emission
+        if a == EmissionKind.SHADED or b == EmissionKind.SHADED:
+            return EmissionKind.SHADED
+
+        if a == EmissionKind.SHADELESS and b == EmissionKind.SHADELESS:
+            return EmissionKind.SHADELESS
+
+        # If only one input is shadeless we still need shaded emission
+        if a == EmissionKind.SHADELESS or b == EmissionKind.SHADELESS:
+            return EmissionKind.SHADED
+
+        return EmissionKind.NO_EMISSION
+
 
 data = None # ShaderData
 material = None
