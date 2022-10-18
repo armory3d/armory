@@ -52,8 +52,6 @@ class ParserState:
         self.parse_displacement = True
         self.basecol_only = False
 
-        self.emission_kind = EmissionKind.NO_EMISSION
-
         self.procedurals_written = False
         # Already exported radiance/irradiance (currently we can only convert
         # an already existing texture as radiance/irradiance)
@@ -87,14 +85,3 @@ class ParserState:
         """Return the shader output values as a tuple."""
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,
                 self.out_opacity, self.out_emission_col)
-
-
-class EmissionKind(IntEnum):
-    NO_EMISSION = 0
-    """The material has no emission at all."""
-
-    SHADELESS = 1
-    """The material is emissive and does not interact with lights/shadows."""
-
-    SHADED = 2
-    """The material is emissive and interacts with lights/shadows."""
