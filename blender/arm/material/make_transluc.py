@@ -46,7 +46,7 @@ def make(context_id):
         frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
 
     else:
-        frag.add_out('vec4 fragColor;')
+        frag.add_out('vec4 fragColor')
         frag.write('fragColor.rgb = refractCol;')
 
     make_finalize.make(con_transluc)

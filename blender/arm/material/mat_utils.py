@@ -31,11 +31,10 @@ def disp_linked(output_node):
     return disp_enabled
 
 def get_rpasses(material):
-
     ar = []
-
     rpdat = arm.utils.get_rp()
     has_voxels = arm.utils.voxel_support()
+    wrd = bpy.data.worlds['Arm']
 
     if material.arm_decal:
         ar.append('decal')
@@ -47,6 +46,8 @@ def get_rpasses(material):
             ar.append(con)
         if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
             ar.append('translucent')
+            if '_SSRefraction' in wrd.world_defs:
+                ar.append('translucent_2')
         if rpdat.rp_voxelao and has_voxels:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:

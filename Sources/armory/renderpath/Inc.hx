@@ -417,11 +417,12 @@ class Inc {
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
-	    if '_SSRefraction' in wrd.world_defs:
+	    #if rp_ssrefr
 	        path.setTarget("tex");
 			path.bindTarget("gbufferD", "gbufferD");
 			path.bindTarget("tex", "tex");
 	        path.drawMeshes("translucent_2");
+	    #end
 	}
 	#end
 

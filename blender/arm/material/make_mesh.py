@@ -581,41 +581,40 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-            if con_mesh['name'] == 'translucent_2':
-                if '_SSRefraction' in wrd.world_defs:
-                    frag.add_include('compiled.inc')
-                    frag.add_include('std/math.glsl')
-                    frag.add_include('std/gbuffer.glsl')
+            if con_mesh.data['name'] == 'translucent_2':
+                frag.add_include('compiled.inc')
+                frag.add_include('std/math.glsl')
+                frag.add_include('std/gbuffer.glsl')
 
-                    frag.add_uniform('sampler2D tex')
-                    frag.add_uniform('sampler2D gbufferD')
-                    frag.add_uniform('mat4 P', link='_projectionMatrix')
-                    frag.add_uniform('mat3 V3', link='_viewMatrix3')
-                    frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+                frag.add_uniform('sampler2D tex')
+                frag.add_uniform('sampler2D gbufferD')
+                frag.add_uniform('mat4 P', link='_projectionMatrix')
+                frag.add_uniform('mat3 V3', link='_viewMatrix3')
+                frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
 
-                    vert.add_out('vec3 viewRay')
-                    vert.add_out('vec2 texCoord')
+                vert.add_out('vec3 viewRay')
+                vert.add_out('vec2 texCoord')
 
-                    frag.write_header('vec3 hitCoord;')
+                frag.write_header('vec3 hitCoord;')
 
-                    frag.add_const('int', 'numBinarySearchSteps', '24')
-                    frag.add_const('int' ,'maxSteps', '32')
+                frag.add_const('int', 'numBinarySearchSteps', '24')
+                frag.add_const('int' ,'maxSteps', '32')
 
-                    frag.add_function(ray_marching_glsl.get_projected_coord)
-                    frag.add_function(ray_marching_glsl.get_delta_depth)
-                    frag.add_function(ray_marching_glsl.binary_search)
-                    frag.add_function(ray_marching_glsl.raycast)
+                frag.add_function(ray_marching_glsl.get_projected_coord)
+                frag.add_function(ray_marching_glsl.get_delta_depth)
+                frag.add_function(ray_marching_glsl.binary_search)
+                frag.add_function(ray_marching_glsl.raycast)
 
-                    frag.write('float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
+                frag.write('float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
 
-                    frag.write('vec3 viewNormal = V3 * n;')
-                    frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
-                    frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, rior));')
-                    frag.write('hitCoord = viewPos;')
-                    frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter) * 2.0;')
-                    frag.write('vec4 coords = rayCast(dir);')
-                    frag.write('vec3 refractCol = textureLod(tex, coords.xy, 0.0).rgb;')
-                    frag.write('refractCol = clamp(refractCol, 0.0, 1.0);')
+                frag.write('vec3 viewNormal = V3 * n;')
+                frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
+                frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, rior));')
+                frag.write('hitCoord = viewPos;')
+                frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter) * 2.0;')
+                frag.write('vec4 coords = rayCast(dir);')
+                frag.write('vec3 refractCol = textureLod(tex, coords.xy, 0.0).rgb;')
+                frag.write('refractCol = clamp(refractCol, 0.0, 1.0);')
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
