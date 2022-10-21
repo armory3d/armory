@@ -248,6 +248,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                     state.emission_found = True
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
+                #TODO parse rior
         else:
             return parse_group(node, socket)
 

@@ -83,6 +83,7 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         mat_state.bind_textures = tar
 
         con = None
+        con2 = None #we use two shaders for refraction
 
         if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpass'] is not None:
             con = arm.api.drivers[rpdat.rp_driver]['make_rpass'](rp)
@@ -98,6 +99,8 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
 
         elif rp == 'translucent':
             con = make_transluc.make(rp)
+            if '_SSRefraction' in wrd.world_defs:
+                con2 = make_transluc.make(rp + "_2")
 
         elif rp == 'overlay':
             con = make_overlay.make(rp)
@@ -115,6 +118,8 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             con = rpass_hook(rp)
 
         write_shaders(rel_path, con, rp, matname)
+        if '_SSRefraction' in wrd.world_defs:
+            write_shaders(rel_path, con2, rp + "_2", matname)
 
     shader_data_name = matname + '_data'
 

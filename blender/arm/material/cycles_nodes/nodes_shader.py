@@ -20,8 +20,8 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     fac_inv_var = c.node_name(node.name) + '_fac_inv'
     state.curshader.write('{0}float {1} = {2};'.format(prefix, fac_var, fac))
     state.curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
-    bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[1])
-    bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[2])
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[1])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[2])
     if state.parse_surface:
         state.out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
         state.out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
@@ -31,11 +31,11 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
         state.out_emission = '({0} * {3} + {1} * {2})'.format(emi1, emi2, fac_var, fac_inv_var)
     if state.parse_opacity:
         state.out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
-
+        state.out_rior = '({0} * {3} + {1} * {2})'.format(rior1, rior2, fac_var, fac_inv_var)
 
 def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket, state: ParserState) -> None:
-    bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[0])
-    bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[1])
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[0])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     if state.parse_surface:
         state.out_basecol = '({0} + {1})'.format(bc1, bc2)
         state.out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
@@ -45,7 +45,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
         state.out_emission = '({0} * 0.5 + {1} * 0.5)'.format(emi1, emi2)
     if state.parse_opacity:
         state.out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
-
+        state.out_rior = '({0} * 0.5 + {1} * 0.5)'.format(rior1, rior2)
 
 def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
