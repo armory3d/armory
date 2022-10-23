@@ -173,6 +173,10 @@ class RenderPathDeferred {
 		}
 		#end
 
+        #if rp_ssrefr
+            path.loadShader("shader_datas/copy_pass/copy_pass");
+        #end
+
 		#if ((rp_ssgi != "Off") || rp_volumetriclight)
 		{
 			var t = new RenderTargetRaw();
