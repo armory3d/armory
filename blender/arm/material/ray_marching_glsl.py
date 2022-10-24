@@ -21,7 +21,6 @@ float getDeltaDepth(const vec3 hit) {
 binary_search = """
 vec4 binarySearch(vec3 dir) {
 	float ddepth;
-	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
@@ -47,7 +46,7 @@ vec4 rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 	}
 	return vec4(0.0);
 }

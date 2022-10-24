@@ -363,7 +363,6 @@ class Inc {
 	#if (rp_translucency)
 	public static function initTranslucency() {
 		path.createDepthBuffer("main", "DEPTH24");
-
 		var t = new RenderTargetRaw();
 		t.name = "accum";
 		t.width = 0;
@@ -388,12 +387,13 @@ class Inc {
 	}
 
 	public static function drawTranslucency(target: String) {
-        #if rp_ssrefr
+	    #if rp_ssrefr
             path.setTarget("buf");
-		    path.bindTarget("tex", "tex");
-		    path.drawShader("shader_datas/copy_pass/copy_pass");
+	        path.bindTarget("tex", "tex");
+	        path.drawShader("shader_datas/copy_pass/copy_pass");
         #end
-		path.setTarget("accum");
+        /*
+	    path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
@@ -409,28 +409,27 @@ class Inc {
 		}
 		#end
 
-		path.drawMeshes("translucent");
-		
+        path.drawMeshes("translucent");
+
 		//#if rp_render_to_texture
 		{
 			path.setTarget(target);
 		}
-		/*
-		#else
+		//#else
 		{
-			path.setTarget("");
+		//	path.setTarget("");
 		}
-		#end
-		*/
+		//#end
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
-	    
-	    
-		#if rp_ssrefr
+        */
+
+        #if rp_ssrefr
 		    path.setTarget("tex");
 			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("buf", "tex");
+			path.bindTarget("tex", "tex");
 			path.drawMeshes("translucent_2");
 		#end
 	}
