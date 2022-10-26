@@ -287,9 +287,10 @@ def build():
             if rpdat.arm_ssr_half_res:
                 assets.add_khafile_def('rp_ssr_half')
 
-        if rpdat.rp_ss_refraction:
-            wrd.world_defs += '_SSRefraction'
-            assets.add_khafile_def('rp_ssrefr')
+    if rpdat.rp_ss_refraction:
+        wrd.world_defs += '_SSRefraction'
+        assets.add_khafile_def('rp_ssrefr')
+        rpdat.rp_translucency = True
 
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')

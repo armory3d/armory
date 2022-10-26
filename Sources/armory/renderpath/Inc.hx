@@ -398,7 +398,7 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
-
+        
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -411,35 +411,60 @@ class Inc {
 
         path.drawMeshes("translucent");
         
-//		#if rp_render_to_texture
+		#if rp_render_to_texture
 		{
 			path.setTarget(target);
 		}
-		/*
 		#else
 		
 		{
 			path.setTarget("");
 		}
 		#end
-*/
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
-
+        
         #if rp_ssrefr
-		    path.setTarget("tex");
-			path.bindTarget("_main", "gbufferD");
+            path.setTarget("tex");
+		    path.bindTarget("_main", "gbufferD");
 			path.bindTarget("buf", "tex");
 			path.drawMeshes("translucent_2");
 		#end
         
+		#if rp_render_to_texture
+		{
+			path.setTarget(target);
+		}
+		#else
+		
+		{
+			path.setTarget("");
+		}
+		#end
+
+		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
+
         #if rp_ssrefr
-		    path.setTarget("tex");
-			path.bindTarget("_main", "gbufferD");
+            path.setTarget("tex");
+		    path.bindTarget("_main", "gbufferD");
 			path.bindTarget("tex", "tex");
 			path.drawMeshes("translucent_2");
 		#end
+        
+		#if rp_render_to_texture
+		{
+			path.setTarget(target);
+		}
+		#else
+		
+		{
+			path.setTarget("");
+		}
+		#end
+
+		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end
 
