@@ -27,7 +27,7 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	// Ugly discard of hits too far away
+	//Ugly discard of hits too far away
 	#ifdef _CPostprocess
 		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
 	#else

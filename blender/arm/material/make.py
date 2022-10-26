@@ -129,7 +129,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
                             uname = arm.utils.safesrc(inp.node.name) + arm.utils.safesrc(inp.name)  # Merge with cycles module
                             c['bind_constants'].append({'name': uname, cycles.glsl_type(inp.type): glsl_value(inp.default_value)})
 
-        elif rp == 'translucent':
+        elif rp == 'translucent' or rp == 'translucent_2':
             c['bind_constants'].append({'name': 'receiveShadow', 'bool': material.arm_receive_shadow})
 
     if wrd.arm_single_data_file:

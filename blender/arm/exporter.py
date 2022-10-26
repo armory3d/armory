@@ -2113,7 +2113,7 @@ Make sure the mesh only has tris/quads.""")
                         for user in mat_armusers[material]:
                             user['traits'].append(trait)
 
-            if 'translucent' in rpasses:
+            if 'translucent' in rpasses or 'translucent_2' in rpasses:
                 transluc_used = True
             if 'overlay' in rpasses:
                 overlays_used = True
