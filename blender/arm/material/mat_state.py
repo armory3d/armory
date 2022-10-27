@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 
-class EmissionKind(IntEnum):
+class EmissionType(IntEnum):
     NO_EMISSION = 0
     """The material has no emission at all."""
 
@@ -12,19 +12,19 @@ class EmissionKind(IntEnum):
     """The material is emissive and interacts with lights/shadows."""
 
     @staticmethod
-    def get_effective_combination(a: 'EmissionKind', b: 'EmissionKind') -> 'EmissionKind':
+    def get_effective_combination(a: 'EmissionType', b: 'EmissionType') -> 'EmissionType':
         # Shaded emission always has precedence over shadeless emission
-        if a == EmissionKind.SHADED or b == EmissionKind.SHADED:
-            return EmissionKind.SHADED
+        if a == EmissionType.SHADED or b == EmissionType.SHADED:
+            return EmissionType.SHADED
 
-        if a == EmissionKind.SHADELESS and b == EmissionKind.SHADELESS:
-            return EmissionKind.SHADELESS
+        if a == EmissionType.SHADELESS and b == EmissionType.SHADELESS:
+            return EmissionType.SHADELESS
 
         # If only one input is shadeless we still need shaded emission
-        if a == EmissionKind.SHADELESS or b == EmissionKind.SHADELESS:
-            return EmissionKind.SHADED
+        if a == EmissionType.SHADELESS or b == EmissionType.SHADELESS:
+            return EmissionType.SHADED
 
-        return EmissionKind.NO_EMISSION
+        return EmissionType.NO_EMISSION
 
 
 data = None # ShaderData
@@ -37,4 +37,4 @@ batch = False
 texture_grad = False # Sample textures using textureGrad()
 con_mesh = None # Mesh context
 uses_instancing = False  # Whether the current material has at least one user with instancing enabled
-emission_kind = EmissionKind.NO_EMISSION
+emission_type = EmissionType.NO_EMISSION

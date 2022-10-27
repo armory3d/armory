@@ -238,7 +238,7 @@ def make_deferred(con_mesh, rpasses):
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
 
-    is_shadeless = mat_state.emission_kind == mat_state.EmissionKind.SHADELESS
+    is_shadeless = mat_state.emission_type == mat_state.EmissionType.SHADELESS
     if is_shadeless or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.write('uint matid = 0;')
         if is_shadeless:
@@ -713,8 +713,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Clusters' in wrd.world_defs:
         make_cluster.write(vert, frag)
 
-    if mat_state.emission_kind != mat_state.EmissionKind.NO_EMISSION:
-        if mat_state.emission_kind == mat_state.EmissionKind.SHADELESS:
+    if mat_state.emission_type != mat_state.EmissionType.NO_EMISSION:
+        if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 

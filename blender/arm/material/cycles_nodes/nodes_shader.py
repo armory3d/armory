@@ -34,13 +34,13 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     state.curshader.write('{0}float {1} = clamp({2}, 0.0, 1.0);'.format(prefix, fac_var, fac))
     state.curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
 
-    mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[1])
-    ek1 = mat_state.emission_kind
+    ek1 = mat_state.emission_type
 
-    mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[2])
-    ek2 = mat_state.emission_kind
+    ek2 = mat_state.emission_type
 
     if state.parse_surface:
         state.out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
@@ -49,19 +49,19 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
         state.out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
         state.out_specular = '({0} * {3} + {1} * {2})'.format(spec1, spec2, fac_var, fac_inv_var)
         state.out_emission_col = '({0} * {3} + {1} * {2})'.format(emi1, emi2, fac_var, fac_inv_var)
-        mat_state.emission_kind = mat_state.EmissionKind.get_effective_combination(ek1, ek2)
+        mat_state.emission_type = mat_state.EmissionType.get_effective_combination(ek1, ek2)
     if state.parse_opacity:
         state.out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
 
 
 def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket, state: ParserState) -> None:
-    mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[0])
-    ek1 = mat_state.emission_kind
+    ek1 = mat_state.emission_type
 
-    mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[1])
-    ek2 = mat_state.emission_kind
+    ek2 = mat_state.emission_type
 
     if state.parse_surface:
         state.out_basecol = '({0} + {1})'.format(bc1, bc2)
@@ -70,7 +70,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
         state.out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
         state.out_specular = '({0} * 0.5 + {1} * 0.5)'.format(spec1, spec2)
         state.out_emission_col = '({0} + {1})'.format(emi1, emi2)
-        mat_state.emission_kind = mat_state.EmissionKind.get_effective_combination(ek1, ek2)
+        mat_state.emission_type = mat_state.EmissionType.get_effective_combination(ek1, ek2)
     if state.parse_opacity:
         state.out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
 
@@ -100,9 +100,9 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
             emission_col = c.parse_vector_input(node.inputs[19])
             emission_strength = c.parse_value_input(node.inputs[20])
             state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
-            mat_state.emission_kind = mat_state.EmissionKind.SHADED
+            mat_state.emission_type = mat_state.EmissionType.SHADED
         else:
-            mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+            mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
@@ -149,7 +149,7 @@ def parse_emission(node: bpy.types.ShaderNodeEmission, out_socket: NodeSocket, s
         state.out_basecol = 'vec3(0.0)'
         state.out_specular = '0.0'
         state.out_metallic = '0.0'
-        mat_state.emission_kind = mat_state.EmissionKind.SHADELESS
+        mat_state.emission_type = mat_state.EmissionType.SHADELESS
 
 
 def parse_bsdfglass(node: bpy.types.ShaderNodeBsdfGlass, out_socket: NodeSocket, state: ParserState) -> None:

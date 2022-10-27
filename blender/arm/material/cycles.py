@@ -103,7 +103,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     state.procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
-    mat_state.emission_kind = mat_state.EmissionKind.NO_EMISSION
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
 
     # Surface
     if parse_surface or parse_opacity:
@@ -122,10 +122,10 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
             curshader.write(f'specular = {out_specular};')
             curshader.write(f'emissionCol = {out_emission_col};')
 
-            if mat_state.emission_kind == mat_state.EmissionKind.SHADELESS:
+            if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
                 if '_EmissionShadeless' not in wrd.world_defs:
                     wrd.world_defs += '_EmissionShadeless'
-            elif mat_state.emission_kind == mat_state.EmissionKind.SHADED:
+            elif mat_state.emission_type == mat_state.EmissionType.SHADED:
                 if '_EmissionShaded' not in wrd.world_defs:
                     wrd.world_defs += '_EmissionShaded'
 
@@ -252,7 +252,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
                     state.out_emission_col = f'({state.out_basecol} * clamp({parse_value_input(node.inputs[6])}, 0.0, 1.0))'
-                    mat_state.emission_kind = mat_state.EmissionKind.SHADED
+                    mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
         else:
