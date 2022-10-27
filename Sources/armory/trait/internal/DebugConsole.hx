@@ -847,7 +847,7 @@ class DebugConsole extends Trait {
 			var handleWindow = handleWinTrait.nest(objectID).nest(traitIndex);
 			// This solution is not optimal, dragged windows will change their
 			// position if the selectedTraits array is changed.
-			wx -= ww + 8;
+			wx = position_console == PositionStateEnum.LEFT ? wx + ww + 8 : wx - ww - 8;
 			wy = 0;
 
 			handleWindow.redraws = 1;
