@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.inc"
+#include "../compiled.inc"
 
 // Include functions for gbuffer operations (packFloat2() etc.)
 #include "../std/gbuffer.glsl"
