@@ -241,17 +241,22 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
                     log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
-                # Base color
-                state.out_basecol = parse_vector_input(node.inputs[0])
-                # Occlusion
+
+                emission_factor = f'clamp({parse_value_input(node.inputs[6])}, 0.0, 1.0)'
+                basecol = parse_vector_input(node.inputs[0])
+
+                # Multiply base color with inverse of emission factor to
+                # copy behaviour of the Mix Shader node used in the group
+                # (less base color -> less shading influence)
+                state.out_basecol = f'({basecol} * (1 - {emission_factor}))'
+
                 state.out_occlusion = parse_value_input(node.inputs[2])
-                # Roughness
                 state.out_roughness = parse_value_input(node.inputs[3])
-                # Metallic
                 state.out_metallic = parse_value_input(node.inputs[4])
+
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    state.out_emission_col = f'({state.out_basecol} * clamp({parse_value_input(node.inputs[6])}, 0.0, 1.0))'
+                    state.out_emission_col = f'({basecol} * {emission_factor})'
                     mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
