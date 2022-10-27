@@ -443,6 +443,7 @@ class DebugConsole extends Trait {
 										selectedTraits.push(t);
 									}
 								}
+								if (ui.isHovered) ui.tooltip("Open details about the trait in another window");
 							}
 							ui.unindent();
 						}
