@@ -87,7 +87,7 @@ def make(context_id, rpasses):
 
     return con_mesh
 
-def make_base(con_mesh, parse_opacity, is_transluc):
+def make_base(con_mesh, parse_opacity):
     global is_displacement
     global write_material_attribs
     global write_material_attribs_post
@@ -189,9 +189,10 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses or 'translucent_2' in rpasses
+    parse_opacity = arm_discard or 'translucent' in rpasses
+    parse_ior = parse_opacity and 'refraction' in rpasses
 
-    make_base(con_mesh, parse_opacity=parse_opacity, is_transluc=False)
+    make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
     vert = con_mesh.vert
@@ -202,7 +203,47 @@ def make_deferred(con_mesh, rpasses):
             opac = mat_state.material.arm_discard_opacity
         else:
             opac = '0.9999' # 1.0 - eps
-        frag.write('if (opacity < {0}) discard;'.format(opac))
+        if parse_ior:
+            frag.add_include('compiled.inc')
+            frag.add_include('std/math.glsl')
+            frag.add_include('std/gbuffer.glsl')
+
+            frag.add_uniform('sampler2D tex')
+            frag.add_uniform('sampler2D gbufferD')
+
+            frag.add_uniform('mat4 P', link='_projectionMatrix')
+            frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+
+            frag.add_out('vec3 viewRay')
+            frag.add_out('vec2 texCoord')
+
+            frag.write_header('vec3 hitCoord;')
+
+            frag.add_const('int', 'numBinarySearchSteps', '32')
+            frag.add_const('int' ,'maxSteps', '32')
+
+            frag.add_function(ray_marching_glsl.get_projected_coord)
+            frag.add_function(ray_marching_glsl.get_delta_depth)
+            frag.add_function(ray_marching_glsl.binary_search)
+            frag.add_function(ray_marching_glsl.raycast)
+
+            frag.write('float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
+            frag.write('vec3 viewNormal = n;')
+            frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
+            frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, 1.0 / rior));')
+            frag.write('hitCoord = viewPos;')
+            frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter) * 2.0;')
+            frag.write('vec4 coords = rayCast(dir);')
+            frag.write('vec3 refractCol = textureLod(tex, hitCoord.xy, 0.0).rgb;')
+            frag.write('vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);')
+            frag.write('float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);')
+            frag.write('float reflectivity = 1.0;// - roughness;')
+            frag.write('float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;')
+            frag.add_out('vec4 fragColor')
+            frag.write('fragColor = mix(fragColor, vec4(refractCol, 1.0), 0.5);')
+        else:
+            frag.write('if (opacity < {0}) discard;'.format(opac))
+            
 
     gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
@@ -233,9 +274,12 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
-    else:
+    elif not parse_ior:
         frag.add_out('vec4 fragColor[2]')
-
+    else:
+        return con_mesh
+        
+    
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
 
@@ -565,7 +609,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     wrd = bpy.data.worlds['Arm']
 
     arm_discard = mat_state.material.arm_discard
-    make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard), is_transluc=transluc_pass)
+    make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
 
     blend = mat_state.material.arm_blending
 
@@ -579,42 +623,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-            if con_mesh.data['name'] == 'translucent_2':
-                frag.add_include('compiled.inc')
-                frag.add_include('std/math.glsl')
-                frag.add_include('std/gbuffer.glsl')
-
-                frag.add_uniform('sampler2D tex')
-                frag.add_uniform('sampler2D gbufferD')
-
-                frag.add_uniform('mat4 P', link='_projectionMatrix')
-                frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
-
-                frag.add_out('vec3 viewRay')
-                frag.add_out('vec2 texCoord')
-
-                frag.write_header('vec3 hitCoord;')
-
-                frag.add_const('int', 'numBinarySearchSteps', '32')
-                frag.add_const('int' ,'maxSteps', '32')
-
-                frag.add_function(ray_marching_glsl.get_projected_coord)
-                frag.add_function(ray_marching_glsl.get_delta_depth)
-                frag.add_function(ray_marching_glsl.binary_search)
-                frag.add_function(ray_marching_glsl.raycast)
-
-                frag.write('float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;')
-                frag.write('vec3 viewNormal = n;')
-                frag.write('vec3 viewPos = getPosView(viewRay, d, cameraProj);')
-                frag.write('vec3 refracted = normalize(refract(viewPos, viewNormal, 1.0 / rior));')
-                frag.write('hitCoord = viewPos;')
-                frag.write('vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter) * 2.0;')
-                frag.write('vec4 coords = rayCast(dir);')
-                frag.write('vec3 refractCol = textureLod(tex, hitCoord.xy, 0.0).rgb;')
-                frag.write('vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);')
-                frag.write('float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);')
-                frag.write('float reflectivity = 1.0 - roughness;')
-                frag.write('float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;')
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))

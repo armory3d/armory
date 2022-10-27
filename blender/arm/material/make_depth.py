@@ -45,13 +45,15 @@ def make(context_id, rpasses, shadowmap=False):
 
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
 
-    parse_opacity = 'translucent' in rpasses or 'translucent_2' in rpasses or mat_state.material.arm_discard
+    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
+    parse_ior = parse_opacity and 'refraction' in rpasses
 
     parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
 
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior;')
+        if parse_ior:
+            frag.write('float rior;')
     
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)

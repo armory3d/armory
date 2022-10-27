@@ -387,12 +387,6 @@ class Inc {
 	}
 
 	public static function drawTranslucency(target: String) {
-        #if rp_ssrefr
-        path.setTarget("buf");
-		path.bindTarget("tex", "tex");
-		path.drawShader("shader_datas/copy_pass/copy_pass");
-        #end
-
         path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
@@ -424,46 +418,6 @@ class Inc {
 
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
-		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
-        
-        #if rp_ssrefr
-            path.setTarget("tex");
-		    path.bindTarget("_main", "gbufferD");
-			path.bindTarget("buf", "tex");
-			path.drawMeshes("translucent_2");
-		#end
-        
-		#if rp_render_to_texture
-		{
-			path.setTarget(target);
-		}
-		#else
-		
-		{
-			path.setTarget("");
-		}
-		#end
-
-		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
-
-        #if rp_ssrefr
-            path.setTarget("tex");
-		    path.bindTarget("_main", "gbufferD");
-			path.bindTarget("tex", "tex");
-			path.drawMeshes("translucent_2");
-		#end
-        
-		#if rp_render_to_texture
-		{
-			path.setTarget(target);
-		}
-		#else
-		
-		{
-			path.setTarget("");
-		}
-		#end
-
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end

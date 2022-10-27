@@ -683,6 +683,22 @@ class RenderPathDeferred {
 			Inc.drawTranslucency("tex");
 		}
 		#end
+		
+		#if rp_ssrefr
+	        path.setTarget("buf");
+		    path.bindTarget("tex", "tex");
+		    path.drawShader("shader_datas/copy_pass/copy_pass");
+
+		    path.setTarget("buf");
+		    path.bindTarget("_main", "gbufferD");
+			path.bindTarget("buf", "tex");
+			path.drawMeshes("translucent_2");
+
+		    path.setTarget("buf");
+		    path.bindTarget("_main", "gbufferD");
+			path.bindTarget("tex", "tex");
+			path.drawMeshes("translucent_2");
+		#end
 
 		#if rp_volumetriclight
 		{
