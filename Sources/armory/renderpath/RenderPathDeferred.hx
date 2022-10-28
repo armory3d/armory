@@ -680,31 +680,27 @@ class RenderPathDeferred {
 
 		#if rp_translucency
 		{
-		    #if rp_ssrefr
+			Inc.drawTranslucency("tex");
+
+            #if rp_ssrefr
 			path.setTarget("buf");
 		    path.bindTarget("tex", "tex");
 		    path.drawShader("shader_datas/copy_pass/copy_pass");
-            #end
-			Inc.drawTranslucency("tex");
+
+	        path.setTarget("gbuffer2");
+	        path.bindTarget("_main", "gbufferD");
+		    path.bindTarget("buf", "tex");
+		    path.bindTarget("gbuffer2", "gbuffer2");
+		    path.drawMeshes("refraction");  
+
+			path.setTarget("");
+		    path.bindTarget("gbuffer2", "tex");
+		    path.drawShader("shader_datas/copy_pass/copy_pass");
+                        
+		    #end
 		}
 		#end
 
-        #if rp_ssrefr            
-			path.setTarget("buf");
-		    path.bindTarget("buf", "tex");
-		    path.drawShader("shader_datas/copy_pass/copy_pass");
-
-		    path.setTarget("tex");
-		    path.bindTarget("_main", "gbufferD");
-			path.bindTarget("buf", "tex");
-			path.drawMeshes("refraction");  
-
-			path.setTarget("tex");
-		    path.bindTarget("_main", "gbufferD");
-			path.bindTarget("tex", "tex");
-			path.drawMeshes("refraction");
-        #end
-		
 		#if rp_volumetriclight
 		{
 			path.setTarget("singlea");

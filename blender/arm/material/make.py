@@ -90,7 +90,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         }
         mat_data['contexts'].append(c)
 
-        if rp == 'mesh':
+        if rp == 'mesh' or rp == 'refraction':
             c['bind_constants'].append({'name': 'receiveShadow', 'bool': material.arm_receive_shadow})
 
             if material.arm_material_id != 0:

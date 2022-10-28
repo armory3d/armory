@@ -204,8 +204,7 @@ def make_deferred(con_mesh, rpasses):
 
     gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
-        if not con_mesh.data['name'] == 'refraction':
-            frag.add_out('vec4 fragColor[3]')
+        frag.add_out('vec4 fragColor[3]')
         if '_Veloc' in wrd.world_defs:
             if tese == None:
                 vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -232,7 +231,7 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
-    elif not con_mesh.data['name'] == 'refraction':
+    else:
         frag.add_out('vec4 fragColor[2]')
         
     
@@ -254,9 +253,6 @@ def make_deferred(con_mesh, rpasses):
             frag.write('if (materialID == 2) matid = 2;')
     else:
         frag.write('const uint matid = 0;')
-    
-    if con_mesh.data['name'] == 'refraction':
-        return con_mesh
 
     frag.write('fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid));')
     frag.write('fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));')
