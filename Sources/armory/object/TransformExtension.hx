@@ -54,4 +54,19 @@ class TransformExtension {
 		
 		return new Vec4().add(right).add(look).add(up);
 	}
+
+	/**
+	* Returns the given world vector in local orientation
+	* @param worldVec Vector in world orientation
+	* @return Local vector
+	**/
+	public static inline function getWorldVectorAlongLocalAxis(t: Transform, worldVec: Vec4): Vec4 {
+
+		var localVec = new Vec4();
+		localVec.x = worldVec.dot(t.right().normalize());
+		localVec.y = worldVec.dot(t.look().normalize());
+		localVec.z = worldVec.dot(t.up().normalize());
+
+		return localVec;
+	}
 }
