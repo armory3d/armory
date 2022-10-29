@@ -21,35 +21,35 @@ else:
 
 __all__ = ["get_id"]
 
-_icons_dict: Optional[bpy.utils.previews.ImagePreviewCollection] = None
+_ICONS_DICT: Optional[bpy.utils.previews.ImagePreviewCollection] = None
 """Dictionary of all loaded icons, or `None` if not loaded"""
 
-_icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
+_ICONS_DIR = os.path.join(os.path.dirname(__file__), "custom_icons")
 """Directory of the icon files"""
 
 
 def _load_icons():
     """(Re)loads all icons."""
-    global _icons_dict
+    global _ICONS_DICT
 
     _unload_icons()
 
-    _icons_dict = bpy.utils.previews.new()
-    _icons_dict.load("bundle", os.path.join(_icons_dir, "bundle.png"), 'IMAGE', force_reload=True)
-    _icons_dict.load("haxe", os.path.join(_icons_dir, "haxe.png"), 'IMAGE', force_reload=True)
-    _icons_dict.load("wasm", os.path.join(_icons_dir, "wasm.png"), 'IMAGE', force_reload=True)
+    _ICONS_DICT = bpy.utils.previews.new()
+    _ICONS_DICT.load("bundle", os.path.join(_ICONS_DIR, "bundle.png"), 'IMAGE', force_reload=True)
+    _ICONS_DICT.load("haxe", os.path.join(_ICONS_DIR, "haxe.png"), 'IMAGE', force_reload=True)
+    _ICONS_DICT.load("wasm", os.path.join(_ICONS_DIR, "wasm.png"), 'IMAGE', force_reload=True)
 
 
 def _unload_icons():
     """Unloads all icons."""
-    global _icons_dict
-    if _icons_dict is not None:
-        bpy.utils.previews.remove(_icons_dict)
-    _icons_dict = None
+    global _ICONS_DICT
+    if _ICONS_DICT is not None:
+        bpy.utils.previews.remove(_ICONS_DICT)
+    _ICONS_DICT = None
 
 
 def get_id(identifier: str) -> int:
     """Returns the icon ID from the given identifier."""
-    if _icons_dict is None:
+    if _ICONS_DICT is None:
         _load_icons()
-    return _icons_dict[identifier].icon_id
+    return _ICONS_DICT[identifier].icon_id

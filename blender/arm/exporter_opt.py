@@ -5,11 +5,11 @@ To be replaced with https://github.com/zeux/meshoptimizer
 from typing import Optional
 
 import bpy
-from mathutils import *
+from mathutils import Vector
 import numpy as np
 
-import arm.log as log
 import arm.utils
+from arm import log
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -402,8 +402,8 @@ def export_skin(self, bobject, armature, vert_list, o):
             bone_weight_array[count] = bv[0] * 32767
             bone_index_array[count] = bv[1]
             count += 1
-
-        if total_weight != 0.0 and total_weight != 1.0:
+        
+        if total_weight not in (0.0, 1.0):
             normalizer = 1.0 / total_weight
             for i in range(bone_count):
                 bone_weight_array[count - i - 1] *= normalizer
