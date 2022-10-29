@@ -148,7 +148,7 @@ class DebugDraw {
 
 		midPoint.set(x1 + x2, y1 + y2, z1 + z2);
 		midPoint.mult(0.5);
-		
+
 		midLine.set(x1, y1, z1);
 		midLine.sub(midPoint);
 

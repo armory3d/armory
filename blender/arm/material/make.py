@@ -8,6 +8,7 @@ import arm.log as log
 import arm.material.cycles as cycles
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
+import arm.material.mat_utils as mat_utils
 import arm.node_utils
 import arm.utils
 
@@ -16,6 +17,7 @@ if arm.is_reload(__name__):
     cycles = arm.reload_module(cycles)
     make_shader = arm.reload_module(make_shader)
     mat_batch = arm.reload_module(mat_batch)
+    mat_utils = arm.reload_module(mat_utils)
     arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
@@ -152,7 +154,7 @@ def material_needs_sss(material: Material) -> bool:
         if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
             return True
 
-    for sss_node in arm.node_utils.iter_nodes_armorypbr(material.node_tree):
+    for sss_node in mat_utils.iter_nodes_armorypbr(material.node_tree):
         if sss_node is not None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
             return True
 
