@@ -657,6 +657,7 @@ const float autoExposureSpeed = """ + str(rpdat.arm_autoexposure_speed) + """;
         if rpdat.arm_letterbox:
             f.write(
 """const float compoLetterboxSize = """ + str(round(rpdat.arm_letterbox_size * 100) / 100) + """;
+const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[2] * 100) / 100) + """);
 """)
 
         if rpdat.arm_grain:
