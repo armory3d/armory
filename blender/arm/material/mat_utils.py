@@ -40,19 +40,19 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
+    elif is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending and rpdat.rp_ss_refraction:
+        ar.append('refraction')
     else:
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
         if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
             ar.append('translucent')
-            if '_SSRefraction' in wrd.world_defs:
-                ar.append('refraction')
         if rpdat.rp_voxelao and has_voxels:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
-
+        
     if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
         ar.append('shadowmap')
 

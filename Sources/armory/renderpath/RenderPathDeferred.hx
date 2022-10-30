@@ -175,6 +175,7 @@ class RenderPathDeferred {
 
         #if rp_ssrefr
             path.loadShader("shader_datas/copy_pass/copy_pass");
+            path.loadShader('shader_datas/refraction_pass/refraction_pass');
         #end
 
 		#if ((rp_ssgi != "Off") || rp_volumetriclight)
@@ -681,23 +682,6 @@ class RenderPathDeferred {
 		#if rp_translucency
 		{
 			Inc.drawTranslucency("tex");
-
-            #if rp_ssrefr
-			path.setTarget("buf");
-		    path.bindTarget("tex", "tex");
-		    path.drawShader("shader_datas/copy_pass/copy_pass");
-
-	        path.setTarget("gbuffer2");
-	        path.bindTarget("_main", "gbufferD");
-		    path.bindTarget("buf", "tex");
-		    path.bindTarget("gbuffer2", "gbuffer2");
-		    path.drawMeshes("refraction");  
-
-			path.setTarget("");
-		    path.bindTarget("gbuffer2", "tex");
-		    path.drawShader("shader_datas/copy_pass/copy_pass");
-                        
-		    #end
 		}
 		#end
 
@@ -787,6 +771,38 @@ class RenderPathDeferred {
 			#end
 		}
 		#end
+
+         #if rp_ssrefr
+            RenderPathCreator.setTargetMeshes();
+		    path.drawMeshes('refraction');
+
+            #if (!kha_opengl)
+		    path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+		    #end
+		    path.setTarget("tex");
+		    path.bindTarget("_main", "gbufferD");
+		    path.bindTarget("gbuffer0", "gbuffer0");
+		    path.bindTarget("gbuffer1", "gbuffer1");
+
+            #if rp_material_solid
+		    path.drawShader("shader_datas/deferred_light_solid/deferred_light");
+		    #elseif rp_material_mobile
+		    path.drawShader("shader_datas/deferred_light_mobile/deferred_light");
+		    #else
+		    voxelao_pass ?
+			    path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
+			    path.drawShader("shader_datas/deferred_light/deferred_light");
+		    #end
+
+            #if (!kha_opengl)
+		    path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+		    #end
+		    path.setTarget("buf");
+		    path.bindTarget("_main", "gbufferD");
+		    path.bindTarget("gbuffer0", "gbuffer0");
+		    path.bindTarget("gbuffer2", "refrdata");
+		    path.drawShader('shader_datas/refraction_pass/refraction_pass');
+        #end
 
 		#if rp_ssr
 		{
