@@ -66,8 +66,11 @@ def on_depsgraph_update_post(self):
         if len(ops) > 0 and ops[-1] is not None:
             live_patch.on_operator(ops[-1].bl_idname)
 
-    # Hacky solution to update armory props after operator executions
-    last_operator = bpy.context.active_operator
+    # Hacky solution to update armory props after operator executions.
+    # bpy.context.active_operator doesn't always exist, in some cases
+    # like marking assets for example, this code is also executed before
+    # the operator actually finishes and sets the variable
+    last_operator = getattr(bpy.context, 'active_operator', None)
     if last_operator is not None:
         on_operator_post(last_operator.bl_idname)
 
