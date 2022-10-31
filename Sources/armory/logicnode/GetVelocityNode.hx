@@ -13,8 +13,8 @@ class GetVelocityNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var object: Object = inputs[0].get();
-		var localLinear: Bool = inputs.length > 1 ? inputs[1].get() : false;
-		var localAngular: Bool = inputs.length > 2 ? inputs[2].get() : false;
+		var localLinear: Bool = inputs[1].get();
+		var localAngular: Bool = inputs[2].get();
 
 		if (object == null) return null;
 
@@ -22,11 +22,11 @@ class GetVelocityNode extends LogicNode {
 		var rb: RigidBody = object.getTrait(RigidBody);
 
 		if (from == 0) {
-		!localLinear ? return rb.getLinearVelocity() : return object.transform.worldVecToOrientation(rb.getLinearVelocity());
+		!localLinear ? return rb.getLinearVelocity() : return object.transform.getWorldVectorAlongLocalAxis(rb.getLinearVelocity());
 		}
 
 		else {
-		!localAngular ? return rb.getAngularVelocity() : return object.transform.worldVecToOrientation(rb.getAngularVelocity());
+		!localAngular ? return rb.getAngularVelocity() : return object.transform.getWorldVectorAlongLocalAxis(rb.getAngularVelocity());
 		}
 #end
 
