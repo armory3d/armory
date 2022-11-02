@@ -47,6 +47,8 @@ class GetDateTimeNode(ArmLogicTreeNode):
             if (self.get_count_in(select_current) == 0):
                     self.add_output('ArmStringSocket', 'Date')
             elif (self.get_count_in(select_current) == 10):
+                    self.add_input('ArmNodeSocketAction', 'In')
+                    self.add_output('ArmNodeSocketAction', 'Out')
                     self.add_output('ArmIntSocket', 'Timestamp')
                     self.add_output('ArmIntSocket', 'Timezone Offset')
                     self.add_output('ArmIntSocket', 'Weekday')
@@ -92,6 +94,8 @@ class GetDateTimeNode(ArmLogicTreeNode):
 
 
     def arm_init(self, context):
+        self.add_input('ArmNodeSocketAction', 'In')
+        self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmIntSocket', 'Timestamp')
         self.add_output('ArmIntSocket', 'Timezone Offset')
         self.add_output('ArmIntSocket', 'Weekday')
