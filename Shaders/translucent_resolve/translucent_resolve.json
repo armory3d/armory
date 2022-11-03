@@ -2,22 +2,42 @@
 	"contexts": [
 		{
 			"name": "translucent_resolve",
-			"depth_write": false,
+			"depth_write": true,
 			"compare_mode": "always",
 			"cull_mode": "none",
-			"blend_source": "source_alpha",
-			"blend_destination": "inverse_source_alpha",
-			"blend_operation": "add",
-			"alpha_blend_source": "source_alpha",
-			"alpha_blend_destination": "inverse_source_alpha",
-			"alpha_blend_operation": "add",
 			"links": [
 				{
 					"name": "texSize",
 					"link": "_screenSize"
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3"
+				},
+				{
+					"name": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "PPComp9",
+					"link": "_PPComp9",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp10",
+					"link": "_PPComp10",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
-			"vertex_shader": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass_viewray2.vert.glsl",
 			"fragment_shader": "translucent_resolve.frag.glsl"
 		}
 	]

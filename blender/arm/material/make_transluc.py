@@ -19,9 +19,7 @@ else:
 
 def make(context_id):
     wrd = bpy.data.worlds['Arm']
-    con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
-		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
-		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'})
+    con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise'})
 
     make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
 
@@ -29,7 +27,7 @@ def make(context_id):
     frag = con_transluc.frag
     tese = con_transluc.tese
     
-    frag.add_out('vec4 fragColor[2]')
+    frag.add_out('vec4 fragColor[3]')
     #Remove fragColor = ...;
     frag.main = frag.main[:frag.main.rfind('fragColor')]
     frag.write('\n')
@@ -39,6 +37,7 @@ def make(context_id):
     frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
     frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
     frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
+    frag.write('fragColor[2] = vec4(rior, opacity, 0.0, 0.0);')
 
     make_finalize.make(con_transluc)
 

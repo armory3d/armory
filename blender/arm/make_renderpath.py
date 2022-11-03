@@ -290,7 +290,6 @@ def build():
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
             assets.add_khafile_def('rp_ssrefr')
-            assets.add_shader_pass('refraction_pass')
 
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
