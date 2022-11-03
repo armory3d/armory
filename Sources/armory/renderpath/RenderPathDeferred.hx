@@ -344,6 +344,10 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_ssrefr
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		#end
+
 		#if rp_ssr
 		{
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");

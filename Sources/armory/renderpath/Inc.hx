@@ -383,15 +383,19 @@ class Inc {
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 		
-	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
+	    	path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
 	public static function drawTranslucency(target: String) {
-        path.setTarget("accum");
+		path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
-		path.setTarget("accum", ["revealage"]);
+		#if rp_ssrefr
+		path.setTarget("accum", ["revealage", "gbuffer2"]);
+        #else
+        path.setTarget("accum", ["revealage"]);
+        #end
         
 		#if rp_shadowmap
 		{
@@ -403,14 +407,13 @@ class Inc {
 		}
 		#end
 
-        	path.drawMeshes("translucent");
+        path.drawMeshes("translucent");
         
 		#if rp_render_to_texture
 		{
 			path.setTarget(target);
 		}
 		#else
-		
 		{
 			path.setTarget("");
 		}
@@ -420,6 +423,7 @@ class Inc {
 		path.bindTarget("revealage", "gbuffer1");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer2", "gbuffer2");
+		path.bindTarget("tex", "tex");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end
