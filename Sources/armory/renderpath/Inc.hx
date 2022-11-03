@@ -387,13 +387,21 @@ class Inc {
 	}
 
 	public static function drawTranslucency(target: String) {
+		#if rp_ssrefr
+		path.setTarget("buf");
+		path.bindTarget("tex", "tex");
+		path.drawShader("shader_datas/copy_pass/copy_pass");
+		path.setTarget("buf1");
+		path.bindTarget("_main", "tex");
+		path.drawShader("shader_datas/copy_pass/copy_pass");
+        #end
 		path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		#if rp_ssrefr
 		path.setTarget("accum", ["revealage", "gbuffer2"]);
-        #else
+		#else
         path.setTarget("accum", ["revealage"]);
         #end
         
@@ -419,12 +427,30 @@ class Inc {
 		}
 		#end
 
+		path.bindTarget("buf", "tex");
+		path.bindTarget("buf1", "gbufferD");
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
-		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer2", "gbuffer2");
-		path.bindTarget("tex", "tex");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
+		
+		#if rp_render_to_texture
+		{
+			path.setTarget(target);
+		}
+		#else
+		{
+			path.setTarget("");
+		}
+		#end
+
+		path.bindTarget("tex", "tex");
+		path.bindTarget("_main", "gbufferD");
+		path.bindTarget("accum", "gbuffer0");
+		path.bindTarget("revealage", "gbuffer1");
+		path.bindTarget("gbuffer2", "gbuffer2");
+		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
+		
 	}
 	#end
 

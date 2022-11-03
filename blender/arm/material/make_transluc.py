@@ -24,9 +24,8 @@ def make(context_id):
     else:
         con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
             'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
-             'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'})
+            'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'})
 
-    
     make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
 
     vert = con_transluc.vert
@@ -41,6 +40,7 @@ def make(context_id):
     frag.write('\n')
     if '_VoxelAOvar' in wrd.world_defs:
         frag.write('indirect *= 0.25;')
+
     frag.write('vec4 premultipliedReflect = vec4(vec3(direct + indirect * 0.5) * opacity, opacity);')
     frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
     frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')

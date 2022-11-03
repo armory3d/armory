@@ -96,7 +96,18 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
-
+		#if rp_ssrefr
+		{
+			var t = new RenderTargetRaw();
+			t.name = "buf1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer1";

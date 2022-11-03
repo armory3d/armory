@@ -137,7 +137,7 @@ def make_base(con_mesh, parse_opacity):
         if '_Emission' in wrd.world_defs:
             frag.write('float emission;')
         frag.write('float opacity;')
-        frag.write('float rior;')
+        frag.write('float rior = 1.450;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
     if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
@@ -573,7 +573,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if parse_opacity or arm_discard:
+    if parse_opacity or arm_discard and not '_SSRefraction' in wrd.world_defs:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))

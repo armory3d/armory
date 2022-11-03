@@ -2,7 +2,7 @@
 	"contexts": [
 		{
 			"name": "translucent_resolve",
-			"depth_write": true,
+			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [
