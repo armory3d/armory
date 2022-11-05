@@ -2,9 +2,15 @@
 	"contexts": [
 		{
 			"name": "translucent_resolve",
-			"depth_write": false,
+			"depth_write": true,
 			"compare_mode": "always",
 			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"blend_source_alpha": "blend_zero",
+			"blend_destination_alpha": "inverse_source_alpha",
+			"blend_operation": "add",
 			"links": [
 				{
 					"name": "texSize",

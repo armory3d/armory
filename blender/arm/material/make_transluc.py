@@ -45,10 +45,10 @@ def make(context_id):
     frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
     frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
     frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
-    frag.write('fragColor[2] = vec4(rior, opacity, 0.0, 0.0);')
+    frag.write('fragColor[2] = vec4(rior, 0.0, 0.0, 0.0);')
 
     make_finalize.make(con_transluc)
-
+    
 	# assets.vs_equal(con_transluc, assets.shader_cons['transluc_vert']) # shader_cons has no transluc yet
     # assets.fs_equal(con_transluc, assets.shader_cons['transluc_frag'])
 

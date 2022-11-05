@@ -306,7 +306,7 @@ def make_forward_mobile(con_mesh):
     parse_opacity = (blend and is_transluc) or arm_discard
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior;')
+        frag.write('float rior = 1.450;')
 
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
 
