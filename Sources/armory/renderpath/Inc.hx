@@ -392,7 +392,11 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		#if rp_ssrefr
-		path.setTarget("accum", ["revealage", "ior"]);
+		#if rp_gbuffer2
+		path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2", "iorn"]);
+		#else
+		path.setTarget("gbuffer0", ["gbuffer1", "iorn"]);
+		#end
 		#else
         path.setTarget("accum", ["revealage"]);
         #end
@@ -419,12 +423,15 @@ class Inc {
 		}
 		#end
 		
+		#if rp_ssrefr
 		path.bindTarget("tex", "tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("iorn", "iorn");
+		#else
 		path.bindTarget("accum", "accum");
 		path.bindTarget("revealage", "revealage");
-		path.bindTarget("ior", "ior");
+		#end
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end

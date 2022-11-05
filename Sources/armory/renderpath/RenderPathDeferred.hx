@@ -103,16 +103,16 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 			
 			var t = new RenderTargetRaw();
-			t.name = "ior";
+			t.name = "iorn";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -644,6 +644,12 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_light/deferred_light");
 		#end
 
+		#if rp_translucency
+		{
+			Inc.drawTranslucency("tex");
+		}
+		#end
+
 		#if rp_probes
 		if (!path.isProbe) {
 			var probes = iron.Scene.active.probes;
@@ -698,11 +704,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_translucency
-		{
-			Inc.drawTranslucency("tex");
-		}
-		#end
+		
 
 		#if rp_volumetriclight
 		{

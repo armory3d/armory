@@ -195,7 +195,7 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
         
     
-    if parse_opacity:
+    if parse_opacity and not '_SSRefraction' in wrd.world_defs:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -204,7 +204,10 @@ def make_deferred(con_mesh, rpasses):
 
     gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
-        frag.add_out('vec4 fragColor[3]')
+        if '_SSRefraction' in wrd.world_defs:
+            frag.add_out('vec4 fragColor[4]')
+        else:
+            frag.add_out('vec4 fragColor[3]')
         if '_Veloc' in wrd.world_defs:
             if tese == None:
                 vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -232,8 +235,10 @@ def make_deferred(con_mesh, rpasses):
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
     else:
-        frag.add_out('vec4 fragColor[2]')
-        
+        if '_SSRefraction' in wrd.world_defs:
+            frag.add_out('vec4 fragColor[3]')
+        else:
+            frag.add_out('vec4 fragColor[2]')
     
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
@@ -573,7 +578,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if parse_opacity or arm_discard and not '_SSRefraction' in wrd.world_defs:
+    if parse_opacity or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -588,7 +593,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if parse_opacity:
             frag.write('fragColor[0] = vec4(basecol, opacity);')
         else:
-            # frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
+            #frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
             frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return

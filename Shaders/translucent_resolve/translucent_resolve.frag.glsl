@@ -16,7 +16,7 @@ out vec4 fragColor;
 #ifdef _SSRefraction
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
-uniform sampler2D ior;
+uniform sampler2D iorn; //ior\normal
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
@@ -30,8 +30,8 @@ in vec3 viewRay;
 vec3 hitCoord;
 float depth;
 
-const int numBinarySearchSteps = 7;
-const int maxSteps = 32;
+const int numBinarySearchSteps = 8;
+const int maxSteps = 24;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -51,21 +51,21 @@ float getDeltaDepth(const vec3 hit) {
 
 vec4 binarySearch(vec3 dir) {
 	float ddepth;
-	for (int i = 0; i < numBinarySearchSteps; i++) {
+	vec3 start = hitCoord;
+	for (int i = 0; i < numBinarySearchSteps; i++) 
+	{
 		dir *= ss_refractionMinRayStep;
-		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
+		start -= dir;
+		ddepth = getDeltaDepth(start);
+		if (ddepth < 0.0) start += dir;
 	}
 	// Ugly discard of hits too far away
-	/*
 	#ifdef _CPostprocess
 	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
 	#else
 	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
 	#endif
-	*/
-	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
+	return vec4(getProjectedCoord(start), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
@@ -85,12 +85,13 @@ vec4 rayCast(vec3 dir) {
 
 void main() {
 	#ifdef _SSRefraction
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float ior = textureLod(ior, texCoord, 0.0).r;
-
+	float ior = textureLod(iorn, texCoord, 0.0).r;
+	float opacity = textureLod(iorn, texCoord, 0.0).b;
 	if (ior == 1.0) { discard; }
+	if (opacity == 1.0) { discard; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -126,19 +127,19 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	#endif
+	fragColor = vec4(refractionCol * intensity, 1.0);
+	
+	#else
 	
 	vec4 Accum = texelFetch(accum, ivec2(texCoord * texSize), 0);
-	float opacity = 1.0 - Accum.a;
+	float reveal = 1.0 - Accum.a;
 	// Save the blending and color texture fetch cost
 
-	if (opacity == 0.0) {
+	if (reveal == 0.0) {
 		discard;
 	}
 
 	float f = texelFetch(revealage, ivec2(texCoord * texSize), 0).r;
-	fragColor = vec4(Accum.rgb / clamp(f, 0.0001, 5000), opacity);
-	#ifdef _SSRefraction
-	fragColor = mix(fragColor, vec4(refractionCol, 1.0), intensity);
-	#endif	
+	fragColor = vec4(Accum.rgb / clamp(f, 0.0001, 5000), reveal);
+	#endif
 }
