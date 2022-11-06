@@ -99,11 +99,11 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			var t = new RenderTargetRaw();
-			t.name = "buf1";
+			t.name = "gbufferD1";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 			

@@ -16,6 +16,7 @@ out vec4 fragColor;
 #ifdef _SSRefraction
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
+uniform sampler2D gbufferD1;
 uniform sampler2D iorn; //ior\normal
 uniform mat4 P;
 uniform mat3 V3;
@@ -44,7 +45,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
 }
@@ -60,6 +61,7 @@ vec4 binarySearch(vec3 dir) {
 		if (ddepth < 0.0) start += dir;
 	}
 	// Ugly discard of hits too far away
+	
 	#ifdef _CPostprocess
 	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
 	#else
@@ -128,7 +130,6 @@ void main() {
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
 	fragColor = vec4(refractionCol * intensity, 1.0);
-	
 	#else
 	
 	vec4 Accum = texelFetch(accum, ivec2(texCoord * texSize), 0);
