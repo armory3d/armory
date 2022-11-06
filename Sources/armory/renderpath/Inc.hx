@@ -398,6 +398,8 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		#if rp_ssrefr
+		path.setTarget("iorn");
+		path.clearTarget(0xffffffff);
 		#if rp_gbuffer2
 		path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2", "iorn"]);
 		#else

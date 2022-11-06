@@ -88,7 +88,7 @@ vec4 rayCast(vec3 dir) {
 void main() {
 	#ifdef _SSRefraction
 	float ior = textureLod(iorn, texCoord, 0.0).r;
-	float opacity = textureLod(iorn, texCoord, 0.0).b;
+	float opacity = textureLod(iorn, texCoord, 0.0).g;
 	if (ior == 1.0) { discard; }
 	if (opacity == 1.0) { discard; }
 
@@ -125,13 +125,12 @@ void main() {
 	float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) \
 	* (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
 	#endif
-
+	
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor = vec4(refractionCol * intensity, 1.0);
+	fragColor = mix(fragColor, vec4(refractionCol * intensity, 1.0), intensity);
 	#else
-	
 	vec4 Accum = texelFetch(accum, ivec2(texCoord * texSize), 0);
 	float reveal = 1.0 - Accum.a;
 	// Save the blending and color texture fetch cost
