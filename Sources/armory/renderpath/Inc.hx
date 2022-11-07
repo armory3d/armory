@@ -388,6 +388,9 @@ class Inc {
 
 	public static function drawTranslucency(target: String) {
 		#if rp_ssrefr
+		#if (!kha_opengl)
+		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+		#end
 		path.setTarget("gbufferD1");
 		path.bindTarget("_main", "tex");
 		path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -399,7 +402,7 @@ class Inc {
 		path.clearTarget(0xffffffff);
 		#if rp_ssrefr
 		path.setTarget("iorn");
-		path.clearTarget(0xffffffff);
+		path.clearTarget(0xff000000);
 		#if rp_gbuffer2
 		path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2", "iorn"]);
 		#else

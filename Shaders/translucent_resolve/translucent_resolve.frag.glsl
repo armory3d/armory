@@ -87,10 +87,12 @@ vec4 rayCast(vec3 dir) {
 
 void main() {
 	#ifdef _SSRefraction
-	float ior = textureLod(iorn, texCoord, 0.0).r;
-	float opacity = textureLod(iorn, texCoord, 0.0).g;
+	vec4 iorn = texelFetch(iorn, ivec2(texCoord * texSize), 0);
+	float ior = iorn.r;
+	float opacity = iorn.g;
+	
 	if (ior == 1.0) { discard; }
-	if (opacity == 1.0) { discard; }
+	if (opacity == 0.0) { discard; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
@@ -129,7 +131,7 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor = mix(fragColor, vec4(refractionCol * intensity, 1.0), intensity);
+	fragColor = vec4(refractionCol, 1.0);
 	#else
 	vec4 Accum = texelFetch(accum, ivec2(texCoord * texSize), 0);
 	float reveal = 1.0 - Accum.a;

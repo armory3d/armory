@@ -49,9 +49,9 @@ def make(context_id, rpasses):
 
     else:
         if '_gbuffer2' in wrd.world_defs:
-            frag.write('fragColor[3] = vec4(rior, opacity, 0.0, 0.0);')
+            frag.write('fragColor[3] = vec4(rior, 1.0 - opacity, 0.0, 0.0);')
         else:
-            frag.write('fragColor[2] = vec4(rior, opacity, 0.0, 0.0);')
+            frag.write('fragColor[2] = vec4(rior, 1.0 - opacity, 0.0, 0.0);')
 
     make_finalize.make(con_transluc)
 
