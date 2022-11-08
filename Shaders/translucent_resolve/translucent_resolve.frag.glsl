@@ -21,6 +21,8 @@ uniform sampler2D iorn; //ior\normal
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
+uniform vec3 eye;
+uniform vec3 eyeLook;
 
 #ifdef _CPostprocess
 uniform vec3 PPComp9;
@@ -32,7 +34,7 @@ vec3 hitCoord;
 float depth;
 
 const int numBinarySearchSteps = 8;
-const int maxSteps = 24;
+const int maxSteps = 64;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -52,13 +54,12 @@ float getDeltaDepth(const vec3 hit) {
 
 vec4 binarySearch(vec3 dir) {
 	float ddepth;
-	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) 
 	{
 		dir *= ss_refractionMinRayStep;
-		start -= dir;
-		ddepth = getDeltaDepth(start);
-		if (ddepth < 0.0) start += dir;
+		hitCoord -= dir;
+		ddepth = getDeltaDepth(hitCoord);
+		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	
@@ -67,7 +68,7 @@ vec4 binarySearch(vec3 dir) {
 	#else
 	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
 	#endif
-	return vec4(getProjectedCoord(start), 0.0, 1.0);
+	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
@@ -88,22 +89,17 @@ vec4 rayCast(vec3 dir) {
 void main() {
 	#ifdef _SSRefraction
 	float ior = textureLod(iorn, texCoord, 0.0).r;
-	float opacity = textureLod(iorn, texCoord, 0.0).g;
+	vec3 n = textureLod(iorn, texCoord, 0.0).gba;
 	if (ior == 1.0) { discard; }
-	if (opacity == 1.0) { discard; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 
-	vec2 enc = g0.rg;
-	vec3 n;
-	n.z = 1.0 - abs(enc.x) - abs(enc.y);
-	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(n);
-
+    n /= (abs(n.x) + abs(n.y) + abs(n.z));
+    n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
+    
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
-	vec3 refracted = normalize(refract(viewPos, viewNormal,  ior));
+	vec3 refracted = refract(normalize(viewPos), normalize(viewNormal),  1.0 / ior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -117,7 +113,7 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	float reflectivity = 1.0;// - revealage;
+	float reflectivity = 1.0;// - roughness;
 	#ifdef _CPostprocess
 	float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord))  \
 	* (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
@@ -125,12 +121,12 @@ void main() {
 	float intensity = pow(reflectivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) \
 	* (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
 	#endif
-	
+
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor = mix(fragColor, vec4(refractionCol * intensity, 1.0), intensity);
-	#else
+
+	#endif
 	vec4 Accum = texelFetch(accum, ivec2(texCoord * texSize), 0);
 	float reveal = 1.0 - Accum.a;
 	// Save the blending and color texture fetch cost
@@ -141,5 +137,9 @@ void main() {
 
 	float f = texelFetch(revealage, ivec2(texCoord * texSize), 0).r;
 	fragColor = vec4(Accum.rgb / clamp(f, 0.0001, 5000), reveal);
+
+	#ifdef _SSRefraction
+	fragColor.rgb = refractionCol * intensity;
 	#endif
+
 }

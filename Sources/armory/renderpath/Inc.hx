@@ -400,14 +400,11 @@ class Inc {
 		#if rp_ssrefr
 		path.setTarget("iorn");
 		path.clearTarget(0xffffffff);
-		#if rp_gbuffer2
-		path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2", "iorn"]);
-		#else
-		path.setTarget("gbuffer0", ["gbuffer1", "iorn"]);
-		#end
+		path.setTarget("accum", ["revealage", "iorn"]);
 		#else
         path.setTarget("accum", ["revealage"]);
-        
+        #end
+
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -417,8 +414,7 @@ class Inc {
 			#end
 		}
 		#end
-		#end
-
+		
         path.drawMeshes("translucent");
 		
        	#if rp_render_to_texture
@@ -438,9 +434,7 @@ class Inc {
 		path.bindTarget("tex", "tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbufferD1", "gbufferD1");
-		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("iorn", "iorn");
-		#else
 		path.bindTarget("accum", "accum");
 		path.bindTarget("revealage", "revealage");
 		#end
