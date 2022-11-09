@@ -67,7 +67,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
         self.add_input('ArmNodeSocketAction', 'Update Volume')
-        self.add_input('ArmFloatSocket', 'Volume')
+        self.add_input('ArmFloatSocket', 'Volume', default_value=1.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Is Running')
