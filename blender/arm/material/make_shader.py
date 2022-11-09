@@ -97,7 +97,7 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             con = make_depth.make(rp, rpasses, shadowmap=True)
 
         elif rp == 'translucent':
-            con = make_transluc.make(rp, rpasses)
+            con = make_transluc.make(rp)
 
         elif rp == 'overlay':
             con = make_overlay.make(rp)

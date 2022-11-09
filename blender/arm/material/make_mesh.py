@@ -180,7 +180,7 @@ def make_base(con_mesh, parse_opacity):
         sh.add_uniform('mat4 VP', '_viewProjectionMatrix')
         sh.write('wposition += wnormal * disp;')
         sh.write('gl_Position = VP * vec4(wposition, 1.0);')
-    
+
 def make_deferred(con_mesh, rpasses):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -188,14 +188,14 @@ def make_deferred(con_mesh, rpasses):
     arm_discard = mat_state.material.arm_discard
     parse_opacity = arm_discard or 'translucent' in rpasses
 
-    make_base(con_mesh, parse_opacity)
+    make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
     vert = con_mesh.vert
     tese = con_mesh.tese
         
     
-    if parse_opacity and not '_SSRefraction' in wrd.world_defs:
+    if parse_opacity:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -204,10 +204,7 @@ def make_deferred(con_mesh, rpasses):
 
     gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
-        if '_SSRefraction' in wrd.world_defs:
-            frag.add_out('vec4 fragColor[4]')
-        else:
-            frag.add_out('vec4 fragColor[3]')
+        frag.add_out('vec4 fragColor[3]')
         if '_Veloc' in wrd.world_defs:
             if tese == None:
                 vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -234,12 +231,7 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
-    else:
-        if '_SSRefraction' in wrd.world_defs:
-            frag.add_out('vec4 fragColor[3]')
-        else:
-            frag.add_out('vec4 fragColor[2]')
-    
+
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
 
@@ -526,8 +518,6 @@ def make_forward(con_mesh):
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
 
-    if con_mesh.data['name'] == 'refraction':
-        return
     if '_LTC' in wrd.world_defs:
         frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
         frag.add_uniform('vec3 lightArea1', '_lightArea1', included=True)
@@ -570,7 +560,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     wrd = bpy.data.worlds['Arm']
 
     arm_discard = mat_state.material.arm_discard
-    make_base(con_mesh, parse_opacity)
+    make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
 
     blend = mat_state.material.arm_blending
 
@@ -597,7 +587,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
-         
+   
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
