@@ -24,7 +24,7 @@ float g1_approx(const float NdotX, const float alpha)
 float g2_approx(const float NdotL, const float NdotV, const float alpha)
 {
 	vec2 helper = (2.0 * vec2(NdotL, NdotV)) * (1.0 / (vec2(NdotL, NdotV) * (2.0 - alpha) + alpha));
-	return helper.x * helper.y;
+	return max(helper.x * helper.y, 0.0); //This can go negative, let's fix that
 }
 
 float d_ggx(const float nh, const float a) {
@@ -35,7 +35,7 @@ float d_ggx(const float nh, const float a) {
 
 vec3 specularBRDF(const vec3 f0, const float roughness, const float nl, const float nh, const float nv, const float vh) {
 	float a = roughness * roughness;
-	return d_ggx(nh, a) * g2_approx(nl, nv, a) * f_schlick(f0, vh) / max(4.0 * nl * nv, 1e-5);
+	return d_ggx(nh, a) * g2_approx(nl, nv, a) * f_schlick(f0, vh) / max(4.0 * nv, 1e-5); //NdotL cancels out later
 }
 
 // John Hable - Optimizing GGX Shaders
