@@ -231,6 +231,8 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+    else:
+        frag.add_out('vec4 fragColor[2]')
 
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')

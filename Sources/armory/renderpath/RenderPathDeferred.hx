@@ -96,7 +96,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
-		#end
+
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer1";

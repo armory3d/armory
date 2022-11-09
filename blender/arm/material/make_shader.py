@@ -16,7 +16,6 @@ import arm.material.make_depth as make_depth
 import arm.material.make_mesh as make_mesh
 import arm.material.make_overlay as make_overlay
 import arm.material.make_transluc as make_transluc
-import arm.material.make_refract as make_refract
 import arm.material.make_voxel as make_voxel
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils

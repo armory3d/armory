@@ -6,8 +6,6 @@
 #include "std/gbuffer.glsl"
 
 uniform vec2 texSize;
-uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1;
 uniform sampler2D accum;
 uniform sampler2D revealage;
 in vec2 texCoord;
@@ -21,8 +19,6 @@ uniform sampler2D iorn; //ior\normal
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
-uniform vec3 eye;
-uniform vec3 eyeLook;
 
 #ifdef _CPostprocess
 uniform vec3 PPComp9;
