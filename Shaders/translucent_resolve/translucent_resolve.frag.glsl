@@ -139,7 +139,7 @@ void main() {
 	fragColor = vec4(Accum.rgb / clamp(f, 0.0001, 5000), reveal);
 
 	#ifdef _SSRefraction
-	fragColor.rgb = refractionCol * intensity;
+	fragColor = mix(fragColor, vec4(refractionCol * intensity, 1.0), intensity);
 	#endif
 
 }

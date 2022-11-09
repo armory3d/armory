@@ -47,7 +47,7 @@ vec4 binarySearch(vec3 dir) {
 	float ddepth;
 	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= 0.5;
+		dir *= ssrMinRayStep;
 		hitCoord -= dir;
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;

@@ -62,7 +62,7 @@ vec4 binarySearch(vec3 dir) {
 	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) 
 	{
-		dir *= 0.5;
+		dir *= ssrMinRayStep;
 		start -= dir;
 		ddepth = getDeltaDepth(start);
 		if (ddepth < 0.0) hitCoord += dir;
@@ -152,7 +152,7 @@ void main() {
 
 	vec3 viewNormal = n2;
 	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
-	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	vec3 reflected = reflect(normalize(viewPos), normalize(viewNormal));
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

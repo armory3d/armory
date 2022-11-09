@@ -435,9 +435,9 @@ class Inc {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbufferD1", "gbufferD1");
 		path.bindTarget("iorn", "iorn");
+		#end
 		path.bindTarget("accum", "accum");
 		path.bindTarget("revealage", "revealage");
-		#end
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end
