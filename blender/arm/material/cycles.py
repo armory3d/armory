@@ -89,7 +89,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     parse_surface = state.parse_surface
     parse_opacity = state.parse_opacity
     parse_displacement = state.parse_displacement
-    state.emission_found = False
     particle_info = {
         'index': False,
         'age': False,
@@ -104,6 +103,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     state.procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
+    mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
+
     # Surface
     if parse_surface or parse_opacity:
         state.parents = []
@@ -112,15 +113,24 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_rior, out_emission = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_rior, out_emission_col, out_emission = parse_shader_input(node.inputs[0])
+
         if parse_surface:
-            curshader.write('basecol = {0};'.format(out_basecol))
-            curshader.write('roughness = {0};'.format(out_roughness))
-            curshader.write('metallic = {0};'.format(out_metallic))
-            curshader.write('occlusion = {0};'.format(out_occlusion))
-            curshader.write('specular = {0};'.format(out_specular))
-            if '_Emission' in wrd.world_defs:
-                curshader.write('emission = {0};'.format(out_emission))
+            curshader.write(f'basecol = {out_basecol};')
+            curshader.write(f'roughness = {out_roughness};')
+            curshader.write(f'metallic = {out_metallic};')
+            curshader.write(f'occlusion = {out_occlusion};')
+            curshader.write(f'specular = {out_specular};')
+            curshader.write(f'emissionCol = {out_emission_col};')
+            curshader.write(f'emission = {out_emission};')
+
+            if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
+                if '_EmissionShadeless' not in wrd.world_defs:
+                    wrd.world_defs += '_EmissionShadeless'
+            elif mat_state.emission_type == mat_state.EmissionType.SHADED:
+                if '_EmissionShaded' not in wrd.world_defs:
+                    wrd.world_defs += '_EmissionShaded'
+
         if parse_opacity:
             curshader.write('opacity = {0};'.format(out_opacity))
             curshader.write('rior = {0};'.format(out_rior))
@@ -234,18 +244,23 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
                     log.warn(tree_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
-                # Base color
-                state.out_basecol = parse_vector_input(node.inputs[0])
-                # Occlusion
+
+                emission_factor = f'clamp({parse_value_input(node.inputs[6])}, 0.0, 1.0)'
+                basecol = parse_vector_input(node.inputs[0])
+
+                # Multiply base color with inverse of emission factor to
+                # copy behaviour of the Mix Shader node used in the group
+                # (less base color -> less shading influence)
+                state.out_basecol = f'({basecol} * (1 - {emission_factor}))'
+
                 state.out_occlusion = parse_value_input(node.inputs[2])
-                # Roughness
                 state.out_roughness = parse_value_input(node.inputs[3])
-                # Metallic
                 state.out_metallic = parse_value_input(node.inputs[4])
+
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    state.out_emission = parse_value_input(node.inputs[6])
-                    state.emission_found = True
+                    state.out_emission_col = f'({basecol} * {emission_factor})'
+                    mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
                 #TODO parse rior

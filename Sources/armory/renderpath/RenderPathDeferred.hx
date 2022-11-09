@@ -14,16 +14,13 @@ class RenderPathDeferred {
 	static var voxelsLast = "voxels";
 	#end
 
-	public static function setTargetMeshes() {
-		#if rp_gbuffer2
-		{
-			path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2"]);
-		}
-		#else
-		{
-			path.setTarget("gbuffer0", ["gbuffer1"]);
-		}
-		#end
+	public static inline function setTargetMeshes() {
+		// Always keep the order of render targets the same as defined in compiled.inc
+		path.setTarget("gbuffer0", [
+			"gbuffer1",
+			#if rp_gbuffer2 "gbuffer2", #end
+			#if rp_gbuffer_emission "gbuffer_emission" #end
+		]);
 	}
 
 	public static function drawMeshes() {
@@ -127,6 +124,19 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_gbuffer_emission
+		{
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_emission";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -571,6 +581,12 @@ class RenderPathDeferred {
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
+		}
+		#end
+
+		#if rp_gbuffer_emission
+		{
+			path.bindTarget("gbuffer_emission", "gbufferEmission");
 		}
 		#end
 

@@ -1873,7 +1873,14 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
+        col.prop(rpdat, 'arm_letterbox')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_letterbox
+        col.prop(rpdat, 'arm_letterbox_color')
+        col.prop(rpdat, 'arm_letterbox_size')
+        layout.separator()
+
+        col = layout.column()
         draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
         draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')

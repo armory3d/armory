@@ -49,18 +49,6 @@ def iter_nodes_by_type(node_group: bpy.types.NodeTree, ntype: str) -> Generator[
             yield node
 
 
-def get_node_armorypbr(node_group: bpy.types.NodeTree) -> bpy.types.Node:
-    for node in node_group.nodes:
-        if node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR'):
-            return node
-
-
-def iter_nodes_armorypbr(node_group: bpy.types.NodeTree) -> Generator[bpy.types.Node, None, None]:
-    for node in node_group.nodes:
-        if node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR'):
-            yield node
-
-
 def input_get_connected_node(input_socket: bpy.types.NodeSocket) -> tuple[Optional[bpy.types.Node], Optional[bpy.types.NodeSocket]]:
     """Get the node and the output socket of that node that is connected
     to the given input, while following reroutes. If the input has
