@@ -728,7 +728,6 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('float specular;')
     # We may not use emission, but the attribute will then be removed
     # by the shader compiler
-    frag.write('float emission;')
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
