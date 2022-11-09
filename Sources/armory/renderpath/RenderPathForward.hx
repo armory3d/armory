@@ -160,7 +160,7 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel AO")
+			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
 		}
@@ -336,10 +336,11 @@ class RenderPathForward {
 		#end
 
 		#if rp_voxels
+		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
 				if (light.transform.diff()) { voxelize = true; break; }
@@ -356,16 +357,14 @@ class RenderPathForward {
 			#end
 
 			if (voxelize) {
-				var voxtex = voxels;
-
-				path.clearImage(voxtex, 0x00000000);
+				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 
-				path.bindTarget(voxtex, "voxels");
-				#if (rp_shadowmap && rp_gi == "Voxel GI")
+				path.bindTarget(voxels, "voxels");
+				#if (rp_shadowmap && rp_voxels == "Voxel GI")
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
@@ -412,7 +411,7 @@ class RenderPathForward {
 <<<<<<< HEAD
 		#if rp_voxels
 =======
-		#if (rp_gi != "Off")
+		#if (rp_voxels != "Off")
 >>>>>>> d5e1540b (voxels gi)
 		{
 			path.bindTarget(voxels, "voxels");
