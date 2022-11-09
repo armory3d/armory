@@ -96,35 +96,6 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
-		#if rp_ssrefr
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbufferD1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "R32";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-			
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer3";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-			
-			var t = new RenderTargetRaw();
-			t.name = "iorn";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
 		#end
 		{
 			var t = new RenderTargetRaw();
@@ -371,10 +342,6 @@ class RenderPathDeferred {
 				path.createRenderTarget(t);
 			}
 		}
-		#end
-
-		#if rp_ssrefr
-			path.loadShader("shader_datas/copy_pass/copy_pass");
 		#end
 
 		#if rp_ssr
@@ -653,12 +620,6 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_light/deferred_light");
 		#end
 
-		#if rp_translucency
-		{
-			Inc.drawTranslucency("tex");
-		}
-		#end
-
 		#if rp_probes
 		if (!path.isProbe) {
 			var probes = iron.Scene.active.probes;
@@ -713,7 +674,11 @@ class RenderPathDeferred {
 		}
 		#end
 
-		
+		#if rp_translucency
+		{
+			Inc.drawTranslucency("tex");
+		}
+		#end
 
 		#if rp_volumetriclight
 		{

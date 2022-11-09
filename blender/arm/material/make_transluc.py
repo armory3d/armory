@@ -21,12 +21,13 @@ def make(context_id, rpasses):
     wrd = bpy.data.worlds['Arm']
     if '_SSRefraction' in wrd.world_defs:
         con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise'})
-        make_mesh.make_deferred(con_transluc, rpasses);
+
     else:
         con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
             'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
             'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'})
-        make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
+
+    make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
 
     vert = con_transluc.vert
     frag = con_transluc.frag
@@ -35,13 +36,13 @@ def make(context_id, rpasses):
     frag.add_include('std/gbuffer.glsl')
 
     #Remove fragColor = ...;
-    if not '_SSRefraction' in wrd.world_defs:
-        frag.add_out('vec4 fragColor[2]')
-        frag.main = frag.main[:frag.main.rfind('fragColor')]
-        frag.write('\n')
-        if '_VoxelAOvar' in wrd.world_defs:
-            frag.write('indirect *= 0.25;')
+    frag.add_out('vec4 fragColor[3]')
+    frag.main = frag.main[:frag.main.rfind('fragColor')]
+    frag.write('\n')
+    if '_VoxelAOvar' in wrd.world_defs:
+        frag.write('indirect *= 0.25;')
 
+<<<<<<< HEAD
         frag.write('vec4 premultipliedReflect = vec4(vec3(direct + indirect * 0.5) * opacity, opacity);')
         frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
         frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
@@ -52,6 +53,13 @@ def make(context_id, rpasses):
             frag.write('fragColor[3] = vec4(rior, 1.0 - opacity, 0.0, 0.0);')
         else:
             frag.write('fragColor[2] = vec4(rior, 1.0 - opacity, 0.0, 0.0);')
+=======
+    frag.write('vec4 premultipliedReflect = vec4(vec3(direct + indirect * 0.5) * opacity, opacity);')
+    frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
+    frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
+    frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
+    frag.write('fragColor[2] = vec4(rior, n);')
+>>>>>>> armorcore
 
     make_finalize.make(con_transluc)
 

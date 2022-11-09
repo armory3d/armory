@@ -384,6 +384,27 @@ class Inc {
 		path.createRenderTarget(t);
 		
 	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
+	    
+		#if rp_ssrefr
+		var t = new RenderTargetRaw();
+		t.name = "gbufferD1";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "R32";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
+
+		var t = new RenderTargetRaw();
+		t.name = "iorn";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
+		path.loadShader("shader_datas/copy_pass/copy_pass");
+		#end
 	}
 
 	public static function drawTranslucency(target: String) {
@@ -402,15 +423,12 @@ class Inc {
 		path.clearTarget(0xffffffff);
 		#if rp_ssrefr
 		path.setTarget("iorn");
-		path.clearTarget(0xff000000);
-		#if rp_gbuffer2
-		path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2", "iorn"]);
-		#else
-		path.setTarget("gbuffer0", ["gbuffer1", "iorn"]);
-		#end
+		path.clearTarget(0xffffffff);
+		path.setTarget("accum", ["revealage", "iorn"]);
 		#else
         path.setTarget("accum", ["revealage"]);
-        
+        #end
+
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -420,8 +438,7 @@ class Inc {
 			#end
 		}
 		#end
-		#end
-
+		
         path.drawMeshes("translucent");
 		
        	#if rp_render_to_texture
@@ -441,12 +458,10 @@ class Inc {
 		path.bindTarget("tex", "tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbufferD1", "gbufferD1");
-		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("iorn", "iorn");
-		#else
+		#end
 		path.bindTarget("accum", "accum");
 		path.bindTarget("revealage", "revealage");
-		#end
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end
