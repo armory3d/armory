@@ -12,6 +12,8 @@ class PlaySoundNode(ArmLogicTreeNode):
         nothing happens.
     @input Stop: Stops the playing sound. If the playback is paused,
         this will reset the playback position to the start of the sound.
+    @input Update Volume: Updates the volume of the current playback.
+    @input Volume: Volume of the playback. Typically ranges from 0 to 1.
 
     @output Out: activated once when Play is activated.
     @output Running: activated while the playback is active.
@@ -29,7 +31,7 @@ class PlaySoundNode(ArmLogicTreeNode):
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
     bl_width_default = 200
-    arm_version = 1
+    arm_version = 2
 
     property0: HaxePointerProperty('property0', name='', type=bpy.types.Sound)
     property1: HaxeBoolProperty(
@@ -64,6 +66,8 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
+        self.add_input('ArmNodeSocketAction', 'Update Volume')
+        self.add_input('ArmFloatSocket', 'Volume', default_value=1.0)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Is Running')
@@ -85,3 +89,9 @@ class PlaySoundNode(ArmLogicTreeNode):
         if not self.property3:
             row.enabled = False
         row.prop(self, 'property4')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement.Identity(self)

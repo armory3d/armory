@@ -212,6 +212,13 @@ void main() {
 	texCo *= dynamicScale;
 #endif
 
+#ifdef _CLetterbox
+    if(texCo.y  < compoLetterboxSize || texCo.y > (1.0 - compoLetterboxSize) ) {
+		fragColor.rgb = compoLetterboxColor;
+        return;
+    }
+#endif
+
 #ifdef _CFishEye
 	#ifdef _CPostprocess
 		const float fishEyeStrength = -(PPComp2.y);
@@ -562,11 +569,6 @@ void main() {
 	#else
 		fragColor.rgb += textureLod(lensTexture, texCo, 0.0).rgb;
 	#endif
-#endif
-
-#ifdef _CLetterbox
-	// const float compoLetterboxSize = 0.1;
-	fragColor.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
 #endif
 
 //3D LUT Implementation from GPUGems 2 by Nvidia

@@ -111,6 +111,7 @@ def remove_readonly(func, path, excinfo):
 
 def export_data(fp, sdk_path):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
 
     print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
@@ -236,6 +237,12 @@ def export_data(fp, sdk_path):
         res['shader_datas'] += make_world.shader_datas
 
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+
+    if wrd.arm_debug_console and rpdat.rp_renderer == 'Deferred':
+        # Copy deferred shader so that it can include compiled.inc
+        line_deferred_src = os.path.join(sdk_path, 'armory', 'Shaders', 'debug_draw', 'line_deferred.frag.glsl')
+        line_deferred_dst = os.path.join(shaders_path, 'line_deferred.frag.glsl')
+        shutil.copyfile(line_deferred_src, line_deferred_dst)
 
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
@@ -558,23 +565,28 @@ def build_success():
             build_dir = arm.utils.build_dir()
             path = '{}/debug/html5/'.format(build_dir)
             url = 'http://{}:{}/{}'.format(host, prefs.html5_server_port, path)
-            browser = webbrowser.get().name
+            browser = webbrowser.get()
+            browsername = None
+            if hasattr(browser, "name"):
+                browsername = getattr(browser,'name')
+            elif hasattr(browser,"_name"):
+                browsername = getattr(browser,'_name')
             if 'ARMORY_PLAY_HTML5' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
+                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browsername})
                 cmd = re.split(' +', template_str)
             if len(cmd) == 0:
-                if browser == '':
+                if browsername == None or browsername == '':
                     webbrowser.open(url)
                     return
                 else:
-                    cmd = [browser, url]
+                    cmd = [browsername, url]
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             krom_location, krom_path = arm.utils.krom_paths()
             path = arm.utils.get_fp_build() + '/debug/krom'
-            path_resources = path + '-resouces'
+            path_resources = path + '-resources'
             pid = os.getpid()
             os.chdir(krom_location)
             if 'ARMORY_PLAY_KROM' in os.environ:
