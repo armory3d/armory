@@ -38,7 +38,7 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     ek1 = mat_state.emission_type
 
-	bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     ek2 = mat_state.emission_type
 
@@ -59,7 +59,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     ek1 = mat_state.emission_type
 
-	bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
     ek2 = mat_state.emission_type
 
