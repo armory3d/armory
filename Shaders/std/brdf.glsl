@@ -11,6 +11,22 @@ float v_smithschlick(const float nl, const float nv, const float a) {
 	return 1.0 / ((nl * (1.0 - a) + a) * (nv * (1.0 - a) + a));
 }
 
+//Uncorrelated masking/shadowing (info below) function
+//Because it is uncorrelated, G1(NdotL, a) gives us shadowing, and G1(NdotV, a) gives us masking function.
+//Approximation from: https://ubm-twvideo01.s3.amazonaws.com/o1/vault/gdc2017/Presentations/Hammon_Earl_PBR_Diffuse_Lighting.pdf
+float g1_approx(const float NdotX, const float alpha)
+{
+	return (2.0 * NdotX) * (1.0 / (NdotX * (2.0 - alpha) + alpha));
+}
+
+//Uncorrelated masking-shadowing function
+//Approximation from: https://ubm-twvideo01.s3.amazonaws.com/o1/vault/gdc2017/Presentations/Hammon_Earl_PBR_Diffuse_Lighting.pdf
+float g2_approx(const float NdotL, const float NdotV, const float alpha)
+{
+	vec2 helper = (2.0 * vec2(NdotL, NdotV)) * (1.0 / (vec2(NdotL, NdotV) * (2.0 - alpha) + alpha));
+	return max(helper.x * helper.y, 0.0); //This can go negative, let's fix that
+}
+
 float d_ggx(const float nh, const float a) {
 	float a2 = a * a;
 	float denom = pow(nh * nh * (a2 - 1.0) + 1.0, 2.0);
@@ -19,7 +35,7 @@ float d_ggx(const float nh, const float a) {
 
 vec3 specularBRDF(const vec3 f0, const float roughness, const float nl, const float nh, const float nv, const float vh) {
 	float a = roughness * roughness;
-	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
+	return d_ggx(nh, a) * g2_approx(nl, nv, a) * f_schlick(f0, vh) / max(4.0 * nv, 1e-5); //NdotL cancels out later
 }
 
 // John Hable - Optimizing GGX Shaders
