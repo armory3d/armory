@@ -731,5 +731,5 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior = 1.450;')
+        frag.write('float rior = 1.450;')#case shader is arm we don't get an ior
 

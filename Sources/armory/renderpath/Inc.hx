@@ -438,9 +438,9 @@ class Inc {
 			#end
 		}
 		#end
-		
+
         path.drawMeshes("translucent");
-		
+
        	#if rp_render_to_texture
 		{
 			path.setTarget(target);
@@ -450,7 +450,7 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
-		
+
 		#if rp_ssrefr
 		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
