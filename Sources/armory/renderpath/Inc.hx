@@ -4,7 +4,6 @@ import iron.RenderPath;
 import iron.object.LightObject;
 
 class Inc {
-
 	static var path: RenderPath;
 	public static var superSample = 1.0;
 
@@ -409,14 +408,20 @@ class Inc {
 
 	public static function drawTranslucency(target: String) {
 		#if rp_ssrefr
+		#if rp_forward
+		path.setTarget("bufa");
+		path.bindTarget("lbuffer0", "tex");
+		path.drawShader("shader_datas/copy_pass/copy_pass");
+		#else
 		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+		#end
 		#end
 		path.setTarget("gbufferD1");
 		path.bindTarget("_main", "tex");
 		path.drawShader("shader_datas/copy_pass/copy_pass");
 		#end
-		
+
 		path.setTarget("accum");
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
@@ -442,7 +447,7 @@ class Inc {
         path.drawMeshes("translucent");
 
        	#if rp_render_to_texture
-		{
+       	{
 			path.setTarget(target);
 		}
 		#else
@@ -452,10 +457,11 @@ class Inc {
 		#end
 
 		#if rp_ssrefr
-		#if (!kha_opengl)
-		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-		#end
+		#if rp_forward
+		path.bindTarget("bufa", "tex");
+		#else
 		path.bindTarget("tex", "tex");
+		#end
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbufferD1", "gbufferD1");
 		path.bindTarget("iorn", "iorn");
@@ -463,6 +469,11 @@ class Inc {
 		path.bindTarget("accum", "accum");
 		path.bindTarget("revealage", "revealage");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
+		
+		#if rp_forward
+		path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
+		path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
+		#end
 	}
 	#end
 

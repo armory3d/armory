@@ -423,7 +423,6 @@ class RenderPathDeferred {
 
 	@:access(iron.RenderPath)
 	public static function commands() {
-
 		path.setTarget("gbuffer0"); // Only clear gbuffer0
 		#if (rp_background == "Clear")
 		{

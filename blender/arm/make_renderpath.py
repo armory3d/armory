@@ -180,6 +180,8 @@ def build():
 
     if rpdat.rp_renderer == 'Deferred':
         assets.add_shader_pass('copy_pass')
+    else:
+        assets.add_khafile_def('rp_forward')
 
     if rpdat.rp_render_to_texture:
         assets.add_khafile_def('rp_render_to_texture')
