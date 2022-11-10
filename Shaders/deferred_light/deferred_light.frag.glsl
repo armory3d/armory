@@ -260,7 +260,7 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	env1.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
