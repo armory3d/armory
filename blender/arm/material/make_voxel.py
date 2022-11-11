@@ -15,8 +15,8 @@ def make(context_id):
         con = make_ao(context_id)
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
-    assets.gs_equal(con, assets.shader_cons['voxel_frag'])
-    assets.fs_equal(con, assets.shader_cons['voxel_geom'])
+    assets.fs_equal(con, assets.shader_cons['voxel_frag'])
+    assets.gs_equal(con, assets.shader_cons['voxel_geom'])
 
     return con
 
@@ -57,8 +57,7 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    if '_Emission' in wrd.world_defs:
-        frag.write('float emission;') #
+    frag.write('vec3 emissionCol;') #
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
 
