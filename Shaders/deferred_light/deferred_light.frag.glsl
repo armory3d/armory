@@ -262,7 +262,7 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	env1.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
@@ -455,10 +455,8 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
-		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
 		, voxels, voxpos
-		#endif
 		#endif
 		#ifdef _VoxelGIShadow
 		, voxels, voxpos
@@ -518,10 +516,8 @@ void main() {
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
-			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
 			, voxels, voxpos
-			#endif
 			#endif
 			#ifdef _VoxelGIShadow
 			, voxels, voxpos
