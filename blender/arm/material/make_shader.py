@@ -59,9 +59,6 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     rpasses = mat_utils.get_rpasses(material)
-    is_emissive = mat_utils.is_emmisive(material)
-    if is_emissive and '_Emission' not in wrd.world_defs:
-        wrd.world_defs += '_Emission'
     matname = arm.utils.safesrc(arm.utils.asset_name(material))
     rel_path = arm.utils.build_dir() + '/compiled/Shaders/'
     full_path = arm.utils.get_fp() + '/' + rel_path

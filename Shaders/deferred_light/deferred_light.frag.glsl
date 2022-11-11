@@ -25,7 +25,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
-uniform sampler2D gbuffer2;
+	uniform sampler2D gbuffer2;
+#endif
+#ifdef _EmissionShaded
+	uniform sampler2D gbufferEmission;
 #endif
 
 #ifdef _VoxelGI
@@ -258,11 +261,15 @@ void main() {
 #endif
 	envl.rgb *= albedo;
 
+#ifdef _Brdf
+	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+#endif
+
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metallic); // f0
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
@@ -325,11 +332,22 @@ void main() {
 	#endif
 #endif
 
-#ifdef _Emission
-	if (matid == 1) {
-		fragColor.rgb += g1.rgb; // materialid
-		albedo = vec3(0.0);
+#ifdef _EmissionShadeless
+	if (matid == 1) { // pure emissive material, color stored in basecol
+		fragColor.rgb += g1.rgb;
+		fragColor.a = 1.0; // Mark as opaque
+		return;
 	}
+#endif
+#ifdef _EmissionShaded
+	#ifdef _EmissionShadeless
+	else {
+	#endif
+		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		fragColor.rgb += emission;
+	#ifdef _EmissionShadeless
+	}
+	#endif
 #endif
 
 	// Show voxels
