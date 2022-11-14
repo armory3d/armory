@@ -9,7 +9,7 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if (rp_voxels != "Off")
+	#if rp_voxels
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
@@ -152,7 +152,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_voxels != "Off")
+		#if rp_voxels
 		{
 			Inc.initGI();
 			#if arm_voxelgi_temporal
@@ -340,8 +340,8 @@ class RenderPathForward {
 			#end
 		}
 		#end
-		#if (rp_voxels != "Off")
-		var relight = false;
+
+		#if rp_voxels
 		{
 			var voxelize = path.voxelize();
 
@@ -439,7 +439,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_voxels != "Off")
+		#if rp_voxels
 		{
 			path.bindTarget(voxels, "voxels");
 			#if arm_voxelgi_temporal
