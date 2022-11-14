@@ -353,6 +353,35 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+		
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+
+			#if rp_ssrefr_half
+			{
+				var t = new RenderTargetRaw();
+				t.name = "ssrefra";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			{
+				var t = new RenderTargetRaw();
+				t.name = "ssrefrb";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			#end
+		}
+		#end
 
 		#if rp_ssr
 		{
@@ -781,6 +810,43 @@ class RenderPathDeferred {
 			#end
 		}
 		#end
+		
+		#if rp_ssrefr
+		{
+			if (armory.data.Config.raw.rp_ssrefr != false) {
+				#if rp_ssrefr_half
+				var targeta = "ssrefra";
+				var targetb = "ssrefrb";
+				#else
+				var targeta = "buf";
+				var targetb = "gbuffer1";
+				#end
+
+				path.setTarget(targeta);
+				path.bindTarget("tex", "tex");
+				#if rp_ssrefr_half
+				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+
+				path.setTarget(targetb);
+				path.bindTarget(targeta, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+
+				path.setTarget("tex");
+				path.bindTarget(targetb, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			}
+		}
+		#end
+
+		
 
 		#if rp_ssr
 		{

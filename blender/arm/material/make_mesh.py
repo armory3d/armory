@@ -194,7 +194,7 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
         
     
-    if parse_opacity:
+    if parse_opacity and not '_SSRefraction' in wrd.world_defs:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -268,6 +268,9 @@ def make_deferred(con_mesh, rpasses):
         assets.add_khafile_def('rp_gbuffer_emission')
         # Alpha channel is unused at the moment
         frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
+        
+    if '_SSRefraction' in wrd.world_defs:
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0;')
 
     return con_mesh
 

@@ -295,6 +295,7 @@ def build():
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
             assets.add_khafile_def('rp_ssrefr')
+            assets.add_shader_pass('ssrefr_pass')
 
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
@@ -419,7 +420,7 @@ def get_num_gbuffer_rts_deferred() -> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction'):
         if flag in wrd.world_defs:
             num += 1
     return num
