@@ -328,14 +328,14 @@ def build():
         assets.add(assets_path + 'vr.png')
         assets.add_embedded_data('vr.png')
 
-    rp_voxels = rpdat.rp_gi
+    rp_voxels = rpdat.rp_voxels
     has_voxels = arm.utils.voxel_support()
     if not has_voxels or rpdat.arm_material_model != 'Full':
         rp_voxels = 'Off'
-    assets.add_khafile_def('rp_voxels={0}'.format(rp_gi))
+    assets.add_khafile_def('rp_voxels={0}'.format(rp_voxels))
     if rpdat.rp_voxels != 'Off':
         if has_voxels:
-            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_gi))
+            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
             if rpdat.arm_voxelgi_shadows:
