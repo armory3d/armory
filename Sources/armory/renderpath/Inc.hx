@@ -383,27 +383,6 @@ class Inc {
 		path.createRenderTarget(t);
 		
 	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
-	    
-		#if rp_ssrefr
-		var t = new RenderTargetRaw();
-		t.name = "gbufferD1";
-		t.width = 0;
-		t.height = 0;
-		t.displayp = Inc.getDisplayp();
-		t.format = "R32";
-		t.scale = Inc.getSuperSampling();
-		path.createRenderTarget(t);
-
-		var t = new RenderTargetRaw();
-		t.name = "iorn";
-		t.width = 0;
-		t.height = 0;
-		t.displayp = Inc.getDisplayp();
-		t.format = "RGBA64";
-		t.scale = Inc.getSuperSampling();
-		path.createRenderTarget(t);
-		path.loadShader("shader_datas/copy_pass/copy_pass");
-		#end
 	}
 
 	public static function drawTranslucency(target: String) {

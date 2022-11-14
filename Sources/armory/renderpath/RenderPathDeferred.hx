@@ -20,6 +20,7 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission" #end
+			#if rp_ssrefr "gbuffer_refraction" #end
 		]);
 	}
 
@@ -137,6 +138,28 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_ssrefr
+		{
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -359,6 +382,7 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			#if rp_ssrefr_half
 			{
@@ -814,6 +838,13 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
+				path.setTarget("gbufferD1");
+				path.bindTarget("_main", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
+				setTargetMeshes();
+				path.drawMeshes("refraction");
+
 				#if rp_ssrefr_half
 				var targeta = "ssrefra";
 				var targetb = "ssrefrb";
@@ -829,24 +860,15 @@ class RenderPathDeferred {
 				#else
 				path.bindTarget("_main", "gbufferD");
 				#end
+				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
-				path.setTarget(targetb);
-				path.bindTarget(targeta, "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
-
-				path.setTarget("tex");
-				path.bindTarget(targetb, "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");				
 			}
 		}
 		#end
-
-		
 
 		#if rp_ssr
 		{

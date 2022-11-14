@@ -72,6 +72,12 @@ def make(context_id, rpasses):
     if '_gbuffer2' in wrd.world_defs:
         con['color_attachments'].append(attachment_format)
 
+    """
+    if 'refraction' in rpasses:
+	    con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
+            'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
+            'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'}
+	"""
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
@@ -185,8 +191,7 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses
-
+    parse_opacity = arm_discard or 'translucent' in rpasses or 'refraction' in rpasses
     make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
@@ -194,7 +199,7 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
         
     
-    if parse_opacity and not '_SSRefraction' in wrd.world_defs:
+    if parse_opacity and not 'refraction' in rpasses:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -269,8 +274,8 @@ def make_deferred(con_mesh, rpasses):
         # Alpha channel is unused at the moment
         frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
         
-    if '_SSRefraction' in wrd.world_defs:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0;')
+    if 'refraction' in rpasses:
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
 
     return con_mesh
 
