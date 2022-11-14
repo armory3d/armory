@@ -163,7 +163,7 @@ class Uniforms {
 				}
 			}
 			#end
-			#if rp_voxelao
+			#if rp_voxels
 			case "_cameraPositionSnap": {
 				v = iron.object.Uniforms.helpVec;
 				var camera = iron.Scene.active.camera;
@@ -210,7 +210,7 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-			#if rp_voxelao
+			#if rp_voxels
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
 				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
