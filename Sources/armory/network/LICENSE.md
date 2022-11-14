@@ -1,7 +1,9 @@
 MIT License
 
-Copyright (c) [ 2018 - 2022 ] "hxWebSocket" by Ian Harrigan and contributors (fork of "haxe-ws") 
+Copyright (c) [ 2018 - 2022 ] "hxWebSocket" by Ian Harrigan and contributors (fork of "haxe-ws")
+
 Copyright (c) [ 2022 ] "Connect.hx" by Onek8 (wrapper class for "Armory 3D") 
+
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
