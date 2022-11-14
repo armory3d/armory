@@ -9,7 +9,7 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if (rp_gi != "Off")
+	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
@@ -152,7 +152,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_gi != "Off")
+		#if (rp_voxels != "Off")
 		{
 			Inc.initGI();
 			#if arm_voxelgi_temporal
@@ -160,11 +160,11 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel GI")
+			#if (rp_voxels == "Voxel GI")
 			{
 				Inc.initGI("voxelsOpac");
 				Inc.initGI("voxelsNor");
-				#if (rp_gi_bounces)
+				#if (rp_voxels_bounces)
 				Inc.initGI("voxelsBounce");
 				#end
 			}
@@ -340,12 +340,12 @@ class RenderPathForward {
 			#end
 		}
 		#end
-		#if (rp_gi != "Off")
+		#if (rp_voxels != "Off")
 		var relight = false;
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
 				if (light.transform.diff()) { voxelize = true; break; }
@@ -364,7 +364,7 @@ class RenderPathForward {
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
 
-				#if (rp_gi == "Voxel GI")
+				#if (rp_voxels == "Voxel GI")
 				var voxtex = "voxelsOpac";
 				#else
 				var voxtex = voxels;
@@ -374,7 +374,7 @@ class RenderPathForward {
 				path.setTarget("");
 				path.setViewport(res, res);
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_gi == "Voxel GI")
+				#if (rp_voxels == "Voxel GI")
 				path.bindTarget("voxelsNor", "voxelsNor");
 				for (l in iron.Scene.active.lights) {
 					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
@@ -388,7 +388,7 @@ class RenderPathForward {
 				relight = true;
 			}
 
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
 				if (light.transform.diff()) { relight = true; break; }
@@ -396,11 +396,11 @@ class RenderPathForward {
 			#end
 
 			if (relight) {
-				#if (rp_gi == "Voxel GI")
+				#if (rp_voxels == "Voxel GI")
 					Inc.computeVoxelsBegin();
 					Inc.computeVoxels();
 					Inc.computeVoxelsEnd();
-					#if (rp_gi_bounces)
+					#if (rp_voxels_bounces)
 					voxels = "voxelsBounce";
 					#end
 				#else
@@ -439,7 +439,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_gi != "Off")
+		#if (rp_voxels != "Off")
 		{
 			path.bindTarget(voxels, "voxels");
 			#if arm_voxelgi_temporal

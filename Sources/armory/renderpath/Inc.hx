@@ -5,7 +5,7 @@ import iron.object.LightObject;
 
 class Inc {
 	static var path: RenderPath;
-	#if (rp_gi == "Voxel GI")
+	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh:kha.compute.Shader = null;
 	static var voxel_ta:kha.compute.TextureUnit;
 	static var voxel_tb:kha.compute.TextureUnit;
@@ -24,7 +24,7 @@ class Inc {
 	static var voxel_ci:kha.compute.ConstantLocation;
 	static var m = iron.math.Mat4.identity();
 	#end
-	#if (rp_gi_bounces)
+	#if (rp_voxels_bounces)
 	static var bounce_sh:kha.compute.Shader = null;
 	static var bounce_ta:kha.compute.TextureUnit;
 	static var bounce_tb:kha.compute.TextureUnit;
@@ -37,7 +37,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if ((rp_gi != "Off") && arm_config)
+	#if ((rp_voxels != "Off") && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -380,7 +380,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if (rp_gi != "Off")
+		#if (rp_voxels != "Off")
 		if (!voxelsCreated) initGI("voxels");
 		#end
 		#end // arm_config
@@ -448,12 +448,12 @@ class Inc {
 	}
 	#end
 
-	#if (rp_gi != "Off")
+	#if (rp_voxels != "Off")
 	public static function initGI(tname = "voxels") {
 		var t = new RenderTargetRaw();
 		t.name = tname;
 
-		#if (rp_gi == "Voxel AO")
+		#if (rp_voxels == "Voxel AO")
 		{
 			t.format = "R8";
 		}
@@ -583,7 +583,7 @@ class Inc {
 	}
 
 
-	#if (rp_gi == "Voxel GI")
+	#if (rp_voxels == "Voxel GI")
 	public static function computeVoxelsBegin() {
 	 	if (voxel_sh == null) {
 	 		voxel_sh = path.getComputeShader("voxel_light");

@@ -57,9 +57,9 @@ def add_world_defs():
     voxelao = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_gi == 'Voxel GI':
+        if rpdat.rp_voxels == 'Voxel GI':
             voxelgi = True
-        elif rpdat.rp_gi == 'Voxel AO':
+        elif rpdat.rp_voxels == 'Voxel AO':
             voxelao = True
     # Shadows
     if rpdat.rp_shadows:
@@ -328,14 +328,14 @@ def build():
         assets.add(assets_path + 'vr.png')
         assets.add_embedded_data('vr.png')
 
-    rp_gi = rpdat.rp_gi
+    rp_voxels = rpdat.rp_gi
     has_voxels = arm.utils.voxel_support()
     if not has_voxels or rpdat.arm_material_model != 'Full':
-        rp_gi = 'Off'
-    assets.add_khafile_def('rp_gi={0}'.format(rp_gi))
-    if rpdat.rp_gi != 'Off':
+        rp_voxels = 'Off'
+    assets.add_khafile_def('rp_voxels={0}'.format(rp_gi))
+    if rpdat.rp_voxels != 'Off':
         if has_voxels:
-            assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))
+            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_gi))
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
             if rpdat.arm_voxelgi_shadows:

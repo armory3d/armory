@@ -9,7 +9,7 @@ import arm.make_state as state
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
-    if rpdat.rp_gi == 'Voxel GI':
+    if rpdat.rp_voxels == 'Voxel GI':
         con = make_gi(context_id)
     else:
         con = make_ao(context_id)
