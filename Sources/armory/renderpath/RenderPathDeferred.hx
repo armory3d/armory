@@ -548,7 +548,7 @@ class RenderPathDeferred {
 
 		// Voxels
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_gi != false)
+		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
 
@@ -628,7 +628,7 @@ class RenderPathDeferred {
 
 		var voxelao_pass = false;
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_gi != false)
+		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
