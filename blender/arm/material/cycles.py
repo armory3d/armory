@@ -130,7 +130,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                     wrd.world_defs += '_EmissionShaded'
 
         if parse_opacity:
-            curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
+            curshader.write('opacity = {0};'.format(out_opacity))
+            curshader.write('rior = {0};'.format(out_rior))
 
     # Volume
     # parse_volume_input(node.inputs[1])

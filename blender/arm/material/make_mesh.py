@@ -197,8 +197,7 @@ def make_deferred(con_mesh, rpasses):
     frag = con_mesh.frag
     vert = con_mesh.vert
     tese = con_mesh.tese
-        
-    
+
     if parse_opacity and not 'refraction' in rpasses:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
@@ -275,7 +274,9 @@ def make_deferred(con_mesh, rpasses):
         frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
         
     if 'refraction' in rpasses:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
+    else:
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
 
     return con_mesh
 

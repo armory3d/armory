@@ -838,6 +838,9 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -849,12 +852,15 @@ class RenderPathDeferred {
 				var targeta = "ssrefra";
 				var targetb = "ssrefrb";
 				#else
-				var targeta = "buf";
+				var targeta = "tex";
 				var targetb = "gbuffer1";
 				#end
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
 				#if rp_ssrefr_half
 				path.bindTarget("half", "gbufferD");
 				#else
