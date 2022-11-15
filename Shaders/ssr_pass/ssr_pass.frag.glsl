@@ -54,18 +54,18 @@ vec4 binarySearch(vec3 dir) {
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
 	#else
-		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	if (abs(ddepth) > ssrSearchDist) return vec4(0.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
 	#ifdef _CPostprocess
-		dir *= PPComp9.x;
+	dir *= PPComp9.x;
 	#else
-		dir *= ssrRayStep;
+	dir *= ssrRayStep;
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
@@ -110,13 +110,13 @@ void main() {
 
 	float reflectivity = 1.0 - roughness;
 	#ifdef _CPostprocess
-		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
-		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * 0.5;
+	fragColor.rgb = reflCol * intensity;
 }
