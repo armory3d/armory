@@ -143,28 +143,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-			
-			var t = new RenderTargetRaw();
-			t.name = "gbufferD1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "R32";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
-		#end
-
 		#if rp_depth_texture
 		{
 			var t = new RenderTargetRaw();
@@ -404,6 +382,33 @@ class RenderPathDeferred {
 				path.createRenderTarget(t);
 			}
 			#end
+			
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			
+			var t = new RenderTargetRaw();
+			t.name = "tex1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -838,40 +843,27 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-				#end
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+				
+				path.setTarget("tex1");
+				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
 				setTargetMeshes();
 				path.drawMeshes("refraction");
 
-				#if rp_ssrefr_half
-				var targeta = "ssrefra";
-				var targetb = "ssrefrb";
-				#else
-				var targeta = "tex";
-				var targetb = "gbuffer1";
-				#end
+				path.setTarget("tex");
 
-				path.setTarget(targeta);
-				path.bindTarget("tex", "tex");
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-				#end
-				#if rp_ssrefr_half
-				path.bindTarget("half", "gbufferD");
-				#else
+				path.bindTarget("tex1", "tex");
 				path.bindTarget("_main", "gbufferD");
-				#end
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");				
+				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
 		}
 		#end

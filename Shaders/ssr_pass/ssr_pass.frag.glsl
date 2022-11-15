@@ -93,13 +93,13 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
-	vec3 reflected = reflect(normalize(viewPos), normalize(viewNormal));
+	vec3 reflected = normalize(reflect(normalize(viewPos), viewNormal));
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
-		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
 	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
 	#endif
 
 	// * max(ssrMinRayStep, -viewPos.z)
