@@ -64,7 +64,7 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 
-def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
+def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, export_network: bool, is_publish: bool,
                     import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -297,6 +297,11 @@ project.addSources('Sources');
             p = p.replace('//', '/')
             khafile.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=do_relpath_sdk))
             assets.add_khafile_def('arm_ui')
+
+        if export_network:
+            if not os.path.exists('Libraries/network'):
+                khafile.write(add_armory_library(sdk_path, 'lib/network', rel_path=do_relpath_sdk))
+            assets.add_khafile_def('arm_network')
 
         if not wrd.arm_minimize:
             assets.add_khafile_def('arm_json')

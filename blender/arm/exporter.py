@@ -178,6 +178,9 @@ class ArmoryExporter:
         if wrd.arm_navigation == 'Enabled':
             cls.export_navigation = True
         cls.export_ui = False
+        cls.export_network = False
+        if wrd.arm_network == 'Enabled':
+            cls.export_network = True
 
     @staticmethod
     def write_matrix(matrix):

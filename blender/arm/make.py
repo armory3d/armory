@@ -140,6 +140,8 @@ def export_data(fp, sdk_path):
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
     export_navigation = bpy.data.worlds['Arm'].arm_navigation != 'Disabled'
     export_ui = bpy.data.worlds['Arm'].arm_ui != 'Disabled'
+    export_network = bpy.data.worlds['Arm'].arm_network != 'Disabled'
+
     assets.reset()
 
     # Build node trees
@@ -153,6 +155,7 @@ def export_data(fp, sdk_path):
     physics_found = False
     navigation_found = False
     ui_found = False
+    network_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
@@ -180,6 +183,8 @@ def export_data(fp, sdk_path):
                 navigation_found = True
             if ArmoryExporter.export_ui:
                 ui_found = True
+            if ArmoryExporter.export_network:
+                network_found = True
             assets.add(asset_path)
 
     if physics_found == False: # Disable physics if no rigid body is exported
@@ -191,8 +196,14 @@ def export_data(fp, sdk_path):
     if ui_found == False:
         export_ui = False
 
+    if network_found == False:
+        export_network = False
+
     if wrd.arm_ui == 'Enabled':
         export_ui = True
+
+    if wrd.arm_network == 'Enabled':
+        export_network = True
 
     modules = []
     if wrd.arm_audio == 'Enabled':
@@ -203,6 +214,8 @@ def export_data(fp, sdk_path):
         modules.append('navigation')
     if export_ui:
         modules.append('ui')
+    if export_network:
+        modules.append('network')
 
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
@@ -271,7 +284,7 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, ArmoryExporter.import_traits)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
