@@ -72,12 +72,6 @@ def make(context_id, rpasses):
     if '_gbuffer2' in wrd.world_defs:
         con['color_attachments'].append(attachment_format)
 
-    """
-    if 'refraction' in rpasses:
-	    con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
-            'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
-            'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add'}
-	"""
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
@@ -272,11 +266,12 @@ def make_deferred(con_mesh, rpasses):
         assets.add_khafile_def('rp_gbuffer_emission')
         # Alpha channel is unused at the moment
         frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
-        
-    if 'refraction' in rpasses:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
-    else:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
+    
+    if '_SSRefraction' in wrd.world_defs:
+        if 'refraction' in rpasses:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
+        else:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));') #avoid doing refraction on opaque / non-refractive objects
 
     return con_mesh
 
