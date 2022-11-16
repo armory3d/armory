@@ -5,10 +5,9 @@ from typing import Any, Type
 import bpy
 
 import arm.assets
+from arm import log, make
 from arm.exporter import ArmoryExporter
-import arm.log as log
 from arm.logicnode.arm_nodes import ArmLogicTreeNode
-import arm.make as make
 import arm.make_state as state
 import arm.node_utils
 import arm.utils
@@ -107,7 +106,7 @@ def patch_done():
 def write_patch(js: str):
     """Write the given javascript code to 'krom.patch'."""
     global patch_id
-    with open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w') as f:
+    with open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w', encoding='utf-8') as f:
         patch_id += 1
         f.write(str(patch_id) + '\n')
         f.write(js)

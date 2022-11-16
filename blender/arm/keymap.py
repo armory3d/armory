@@ -1,8 +1,6 @@
 import bpy
-
 import arm
-import arm.log as log
-import arm.props_ui as props_ui
+from arm import log, props_ui
 
 if arm.is_reload(__name__):
     props_ui = arm.reload_module(props_ui)

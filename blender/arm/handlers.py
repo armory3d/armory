@@ -9,15 +9,12 @@ from bpy.app.handlers import persistent
 
 import arm
 import arm.api
-import arm.live_patch as live_patch
-import arm.log as log
-import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
-import arm.make as make
 import arm.make_state as state
-import arm.props as props
 import arm.utils
 import arm.utils_vs
+from arm import live_patch, log, make, props
+from arm.logicnode import arm_nodes
 
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
@@ -36,7 +33,7 @@ else:
 
 @persistent
 def on_depsgraph_update_post(self):
-    if state.proc_build != None:
+    if state.proc_build is not None:
         return
 
     # Recache
@@ -94,7 +91,7 @@ def on_operator_post(operator_id: str) -> None:
 
 
 def send_operator(op):
-    if hasattr(bpy.context, 'object') and bpy.context.object != None:
+    if hasattr(bpy.context, 'object') and bpy.context.object is not None:
         obj = bpy.context.object.name
         if op.name == 'Move':
             vec = bpy.context.object.location

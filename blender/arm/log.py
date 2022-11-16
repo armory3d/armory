@@ -1,3 +1,7 @@
+"""
+CLI output.
+"""
+
 import platform
 import subprocess
 import sys
@@ -74,12 +78,12 @@ def colorize(text:str, color=None):
         text = csi + str(color) + 'm' + text + csi + '0m'
     return text
 
-def warn_called_process_error(e: subprocess.CalledProcessError):
-    out = f'Command {e.cmd} exited with code {e.returncode}.'
-    if e.output is not None:
+def warn_called_process_error(proc: subprocess.CalledProcessError):
+    out = f'Command {proc.cmd} exited with code {proc.returncode}.'
+    if proc.output is not None:
         out += (
             f'Command output:\n'
             f'---------------\n'
-            f'{e.output.decode(encoding="utf-8")}'  # Output is encoded as bytes by default
+            f'{proc.output.decode(encoding="utf-8")}'  # Output is encoded as bytes by default
         )
     warn(out)
