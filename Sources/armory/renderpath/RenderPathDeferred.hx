@@ -402,12 +402,13 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 			
+			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "DEPTH24";
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -844,20 +845,23 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
+				path.setTarget("gbufferD1");
+				path.bindTarget("_main", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
 				setTargetMeshes();
-				path.bindTarget("_main", "gbufferD1");
 				path.drawMeshes("refraction");
 
-				
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
