@@ -23,6 +23,7 @@ class MergeNode(ArmLogicTreeNode):
     bl_label = 'Merge'
     arm_section = 'flow'
     arm_version = 3
+    min_inputs = 0
 
     def update_exec_mode(self, context):
         self.outputs['Active Input Index'].hide = self.property0 == 'once_per_frame'
@@ -58,11 +59,11 @@ class MergeNode(ArmLogicTreeNode):
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
-        if len(self.inputs) == 0:
+        if len(self.inputs) == self.min_inputs:
             column.enabled = False
 
     def draw_label(self) -> str:
-        if len(self.inputs) == 0:
+        if len(self.inputs) == self.min_inputs:
             return self.bl_label
 
         return f'{self.bl_label}: [{len(self.inputs)}]'

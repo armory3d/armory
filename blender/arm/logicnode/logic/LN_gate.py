@@ -20,8 +20,8 @@ class GateNode(ArmLogicTreeNode):
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
     arm_version = 3
-
     min_inputs = 3
+
     property0: HaxeEnumProperty(
         'property0',
         items = [('Equal', 'Equal', 'Equal'),
@@ -64,7 +64,7 @@ class GateNode(ArmLogicTreeNode):
             column = row.column(align=True)
             op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op.node_index = str(id(self))
-            if len(self.inputs) == 3:
+            if len(self.inputs) == self.min_inputs:
                 column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

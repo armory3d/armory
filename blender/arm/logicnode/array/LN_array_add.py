@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class ArrayAddNode(ArmLogicTreeNode):
     """Adds the given value to the given array.
 
@@ -35,7 +36,7 @@ class ArrayAddNode(ArmLogicTreeNode):
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
-        if len(self.inputs) == 5:
+        if len(self.inputs) == self.min_inputs:
             column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

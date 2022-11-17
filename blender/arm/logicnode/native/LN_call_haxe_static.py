@@ -33,7 +33,7 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
-        if len(self.inputs) == 2:
+        if len(self.inputs) == self.min_inputs:
             column.enabled = False
         
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

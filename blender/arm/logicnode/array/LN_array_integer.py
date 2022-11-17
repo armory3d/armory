@@ -7,6 +7,7 @@ class IntegerArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     bl_label = 'Array Integer'
     arm_version = 2
     arm_section = 'variable'
+    min_inputs = 0
 
     def __init__(self):
         super(IntegerArrayNode, self).__init__()
@@ -25,11 +26,11 @@ class IntegerArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
-        if len(self.inputs) == 0:
+        if len(self.inputs) == self.min_inputs:
             column.enabled = False
 
     def draw_label(self) -> str:
-        if len(self.inputs) == 0:
+        if len(self.inputs) == self.min_inputs:
             return super().draw_label()
 
         return f'{super().draw_label()} [{len(self.inputs)}]'
