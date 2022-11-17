@@ -68,7 +68,25 @@ class MergeNode(ArmLogicTreeNode):
         return f'{self.bl_label}: [{len(self.inputs)}]'
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 2):
             raise LookupError()
             
-        return NodeReplacement.Identity(self)
+        if self.arm_version == 1:
+            newnode = node_tree.nodes.new('LNMergeNode')
+            newnode.property0 = self.property0
+
+            # Recreate all original inputs
+            array_nodes[str(id(newnode))] = newnode
+            for idx, input in enumerate(self.inputs):
+                bpy.ops.arm.node_add_input('EXEC_DEFAULT', node_index=str(id(newnode)), socket_type='ArmNodeSocketAction')
+
+                for link in input.links:
+                    node_tree.links.new(link.from_socket, newnode.inputs[idx])
+
+            # Recreate outputs
+            for link in self.outputs[0].links:
+                node_tree.links.new(newnode.outputs[0], link.to_socket)
+
+            return newnode
+        elif self.arm_version == 2:
+            return NodeReplacement.Identity(self)

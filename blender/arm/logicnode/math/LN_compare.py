@@ -57,7 +57,13 @@ class CompareNode(ArmLogicTreeNode):
                 column.enabled = False
             
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 2):
             raise LookupError()
-            
-        return NodeReplacement.Identity(self)
+
+        if self.arm_version == 1:
+            return NodeReplacement(
+                'LNGateNode', self.arm_version, 'LNGateNode', 2,
+                in_socket_mapping={0:0, 1:1, 2:2}, out_socket_mapping={0:0, 1:1}
+            )
+        elif self.arm_version == 2:
+            return NodeReplacement.Identity(self)
