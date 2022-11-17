@@ -10,7 +10,6 @@ class SwitchNode(ArmLogicTreeNode):
     bl_label = 'Switch Output'
     arm_version = 2
     min_inputs = 2
-    min_outputs = 1
 
     def __init__(self):
         super(SwitchNode, self).__init__()
