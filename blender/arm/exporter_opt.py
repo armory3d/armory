@@ -5,11 +5,11 @@ To be replaced with https://github.com/zeux/meshoptimizer
 from typing import Optional
 
 import bpy
-from mathutils import *
+from mathutils import Vector
 import numpy as np
 
-import arm.log as log
 import arm.utils
+from arm import log
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -139,6 +139,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
     if has_tex or has_morph_target:
         uv_layers = export_mesh.uv_layers
         maxdim = 1.0
+        maxdim_uvlayer = None
         if has_tex:
             t0map = 0 # Get active uvmap
             t0data = np.empty(num_verts * 2, dtype='<f4')
@@ -165,6 +166,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
                 t1data = np.empty(num_verts * 2, dtype='<f4')
             # Scale for packed coords
             lay0 = uv_layers[t0map]
+            maxdim_uvlayer = lay0
             for v in lay0.data:
                 if abs(v.uv[0]) > maxdim:
                     maxdim = abs(v.uv[0])
@@ -175,21 +177,26 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
                 for v in lay1.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
+                        maxdim_uvlayer = lay1
                     if abs(v.uv[1]) > maxdim:
                         maxdim = abs(v.uv[1])
+                        maxdim_uvlayer = lay1
         if has_morph_target:
             morph_data = np.empty(num_verts * 2, dtype='<f4')
             lay2 = uv_layers[morph_uv_index]
             for v in lay2.data:
                 if abs(v.uv[0]) > maxdim:
                     maxdim = abs(v.uv[0])
+                    maxdim_uvlayer = lay2
                 if abs(v.uv[1]) > maxdim:
                     maxdim = abs(v.uv[1])
+                    maxdim_uvlayer = lay2
         if maxdim > 1:
             o['scale_tex'] = maxdim
             invscale_tex = (1 / o['scale_tex']) * 32767
         else:
             invscale_tex = 1 * 32767
+        self.check_uv_precision(export_mesh, maxdim, maxdim_uvlayer, invscale_tex)
 
     if has_col:
         cdata = np.empty(num_verts * 3, dtype='<f4')
@@ -395,8 +402,8 @@ def export_skin(self, bobject, armature, vert_list, o):
             bone_weight_array[count] = bv[0] * 32767
             bone_index_array[count] = bv[1]
             count += 1
-
-        if total_weight != 0.0 and total_weight != 1.0:
+        
+        if total_weight not in (0.0, 1.0):
             normalizer = 1.0 / total_weight
             for i in range(bone_count):
                 bone_weight_array[count - i - 1] *= normalizer

@@ -5,6 +5,7 @@ import armory.trait.internal.CanvasScript;
 import kha.Color;
 import iron.math.Vec4;
 
+@:deprecated("The 'Set Canvas Progress Bar Color' node is deprecated and will be removed in future SDK versions. Please use 'Set Canvas Color' instead.")
 class CanvasSetProgressBarColorNode extends LogicNode {
 
 	public function new(tree: LogicTree) {

@@ -24,7 +24,7 @@ class TLM_Optix_Denoise:
 
         if optixPath != "":
 
-            file = os.path.basename(os.path.realpath(optixPath))
+            file = optixPath
             filename, file_extension = os.path.splitext(file)
 
             if(file_extension == ".exe"):

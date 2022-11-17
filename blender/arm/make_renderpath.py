@@ -1,3 +1,5 @@
+from typing import Callable, Optional
+
 import bpy
 
 import arm.api
@@ -15,7 +17,8 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
-callback = None
+callback: Optional[Callable[[], None]] = None
+
 
 def add_world_defs():
     wrd = bpy.data.worlds['Arm']
@@ -301,7 +304,7 @@ def build():
 
     has_voxels = arm.utils.voxel_support()
     if rpdat.rp_voxelao and has_voxels and rpdat.arm_material_model == 'Full':
-        assets.add_khafile_def('rp_voxelao')
+        assets.add_khafile_def('rp_voxels')
         assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
         assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
 
@@ -401,5 +404,16 @@ def build():
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'
 
-    if callback != None:
+    if callback is not None:
         callback()
+
+
+def get_num_gbuffer_rts_deferred() -> int:
+    """Return the number of render targets required for the G-Buffer."""
+    wrd = bpy.data.worlds['Arm']
+
+    num = 2
+    for flag in ('_gbuffer2', '_EmissionShaded'):
+        if flag in wrd.world_defs:
+            num += 1
+    return num

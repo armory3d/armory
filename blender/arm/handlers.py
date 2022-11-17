@@ -9,15 +9,12 @@ from bpy.app.handlers import persistent
 
 import arm
 import arm.api
-import arm.live_patch as live_patch
-import arm.log as log
-import arm.logicnode.arm_nodes as arm_nodes
 import arm.nodes_logic
-import arm.make as make
 import arm.make_state as state
-import arm.props as props
 import arm.utils
 import arm.utils_vs
+from arm import live_patch, log, make, props
+from arm.logicnode import arm_nodes
 
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
@@ -36,7 +33,7 @@ else:
 
 @persistent
 def on_depsgraph_update_post(self):
-    if state.proc_build != None:
+    if state.proc_build is not None:
         return
 
     # Recache
@@ -66,8 +63,11 @@ def on_depsgraph_update_post(self):
         if len(ops) > 0 and ops[-1] is not None:
             live_patch.on_operator(ops[-1].bl_idname)
 
-    # Hacky solution to update armory props after operator executions
-    last_operator = bpy.context.active_operator
+    # Hacky solution to update armory props after operator executions.
+    # bpy.context.active_operator doesn't always exist, in some cases
+    # like marking assets for example, this code is also executed before
+    # the operator actually finishes and sets the variable
+    last_operator = getattr(bpy.context, 'active_operator', None)
     if last_operator is not None:
         on_operator_post(last_operator.bl_idname)
 
@@ -91,7 +91,7 @@ def on_operator_post(operator_id: str) -> None:
 
 
 def send_operator(op):
-    if hasattr(bpy.context, 'object') and bpy.context.object != None:
+    if hasattr(bpy.context, 'object') and bpy.context.object is not None:
         obj = bpy.context.object.name
         if op.name == 'Move':
             vec = bpy.context.object.location
