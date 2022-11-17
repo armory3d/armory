@@ -7,6 +7,13 @@ import arm.material.mat_utils as mat_utils
 import arm.material.make_particle as make_particle
 import arm.make_state as state
 
+if arm.is_reload(__name__):
+    arm.utils = arm.reload_module(arm.utils)
+    assets = arm.reload_module(assets)
+    mat_state = arm.reload_module(mat_state)
+else:
+    arm.enable_reload(__name__)
+
 def make(context_id):
     rpdat = arm.utils.get_rp()
     if rpdat.rp_voxels == 'Voxel GI':
