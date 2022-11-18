@@ -16,6 +16,8 @@ uniform sampler2D gbuffer_refraction; //ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
+uniform vec3 eye;
+uniform vec3 eyeLook;
 
 #ifdef _CPostprocess
 uniform vec3 PPComp9;
@@ -95,7 +97,7 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewPos = getPosView(viewRay, d, cameraProj);
 	vec3 refracted = normalize(refract(normalize(viewPos), viewNormal,  1.0 / ioro.x));
 	hitCoord = viewPos;
 
