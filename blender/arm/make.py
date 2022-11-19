@@ -389,8 +389,11 @@ def compile(assets_only=False):
             cmd.append('--nohaxe')
             cmd.append('--noproject')
         state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
-        if bpy.app.background and state.proc_build.returncode == 0:
-            build_success()
+        if bpy.app.background:
+            if state.proc_build.returncode == 0:
+                build_success()
+            else:
+                log.error('Build failed')
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
