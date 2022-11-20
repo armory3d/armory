@@ -44,7 +44,7 @@ def parse_context(c: dict, sres: dict, asset, defs: list[str], vert: list[str] =
     # Params
     params = ['depth_write', 'compare_mode', 'cull_mode', \
         'blend_source', 'blend_destination', 'blend_operation', \
-        'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation' \
+        'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation', \
         'color_writes_red', 'color_writes_green', 'color_writes_blue', 'color_writes_alpha', \
         'conservative_raster']
 
