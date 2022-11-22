@@ -372,6 +372,7 @@ class RenderPathDeferred {
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
 			}
+
 			{
 				var t = new RenderTargetRaw();
 				t.name = "ssrefrb";
@@ -400,6 +401,7 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 			
 			//holds background depth
@@ -849,17 +851,29 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
+
+				path.setTarget("gbufferD1");
+				path.bindTarget("_main", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
 				setTargetMeshes();
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex");
 				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer0"); // Unbind depth so we can read it
+				#end
 			}
 		}
 		#end
