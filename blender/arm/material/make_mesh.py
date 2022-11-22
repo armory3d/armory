@@ -630,7 +630,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength;')
 
-    if '_VoxelAOvar' in wrd.world_defs:
+    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
@@ -643,6 +643,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('vec3 direct = vec3(0.0);')
 
     if '_Sun' in wrd.world_defs:
+        if '_VoxelGIShadow' in wrd.world_defs or '_VoxelGIShadow' in wrd.world_defs:
+            frag.add_uniform('sampler3D voxels');
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 1.0;')
