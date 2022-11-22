@@ -22,10 +22,7 @@ class Event {
 
 	/**
 		Return the array of event listeners registered for events with the
-		given name.
-
-		The return value is `null` if no listener with the given name was ever
-		registered or `remove()` was called for the given name.
+		given name, or `null` if no listener is currently registered for the event.
 	**/
 	public static function get(name: String): Array<TEvent> {
 		return events.get(name);
@@ -60,7 +57,12 @@ class Event {
 	**/
 	public static function removeListener(event: TEvent) {
 		var entries = events.get(event.name);
-		if (entries != null) entries.remove(event);
+		if (entries != null) {
+			entries.remove(event);
+			if (entries.length == 0) {
+				events.remove(event.name);
+			}
+		}
 	}
 }
 
