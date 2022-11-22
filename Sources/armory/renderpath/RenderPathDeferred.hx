@@ -569,7 +569,6 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
-
 				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 

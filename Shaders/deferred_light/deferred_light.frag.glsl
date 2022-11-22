@@ -380,8 +380,7 @@ void main() {
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-			if (lPos.w > 0.0)
-			svisibility = shadowTest(
+			if (lPos.w > 0.0) svisibility = shadowTest(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
@@ -460,8 +459,10 @@ void main() {
 		, voxels, voxpos
 		#endif
 		#endif
+		#ifdef _VoxelGI
 		#ifdef _VoxelGIShadow
 		, voxels, voxpos
+		#endif
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -523,8 +524,10 @@ void main() {
 			, voxels, voxpos
 			#endif
 			#endif
+			#ifdef _VoxelGI
 			#ifdef _VoxelGIShadow
 			, voxels, voxpos
+			#endif
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
