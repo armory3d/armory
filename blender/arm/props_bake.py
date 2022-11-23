@@ -157,7 +157,7 @@ class ArmBakeButton(bpy.types.Operator):
             ry = o.res_y * sc
             # Get image
             if img_name not in bpy.data.images or bpy.data.images[img_name].size[0] != rx or bpy.data.images[img_name].size[1] != ry:
-                img = bpy.data.images.new(img_name, rx, ry)
+                img = bpy.data.images.new(img_name, int(rx), int(ry))
                 img.name = img_name # Force img_name (in case Blender picked img_name.001)
             else:
                 img = bpy.data.images[img_name]
