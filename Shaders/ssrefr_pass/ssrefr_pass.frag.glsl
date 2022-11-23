@@ -51,10 +51,10 @@ vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= ss_refractionMinRayStep;
-		hitCoord -= dir;
+		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if (d > depth || getPosView(viewRay, d, cameraProj).z - hitCoord.z > 0.0)
-			hitCoord += dir;
+		if (d < depth)
+			hitCoord -= dir;
 	}
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -68,7 +68,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		float d = getDeltaDepth(hitCoord);
-		if(d > depth && getPosView(viewRay, d, cameraProj).z - hitCoord.z < 0.0)
+		if(d > depth)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
