@@ -188,14 +188,19 @@ class ArmBakeButton(bpy.types.Operator):
                 uv_layers.active_index = len(uv_layers) - 1
                 obs.active = ob
                 if scn.arm_bakelist_unwrap == 'Lightmap Pack':
+                    bpy.context.view_layer.objects.active = ob
+                    ob.select_set(True)
                     bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 else:
+                    bpy.ops.object.mode_set(mode='OBJECT')
                     bpy.ops.object.select_all(action='DESELECT')
+                    bpy.context.view_layer.objects.active = ob
                     ob.select_set(True)
                     bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='SELECT')
+                    bpy.ops.uv.smart_project()
                     bpy.ops.mesh.select_all(action='DESELECT')
                     bpy.ops.object.mode_set(mode='OBJECT')
-                    bpy.ops.uv.smart_project('EXEC_SCREEN')
             else:
                 for i in range(0, len(uv_layers)):
                     if uv_layers[i].name == 'UVMap_baked':
