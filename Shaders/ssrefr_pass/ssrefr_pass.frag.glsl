@@ -29,7 +29,7 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const int numBinarySearchSteps = 7;
+const int numBinarySearchSteps = 64;
 const int maxSteps = 128;
 
 vec2 getProjectedCoord(const vec3 hit) {
@@ -43,9 +43,8 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hit.z;
+	float depth2 = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	return depth2;
 }
 
 vec4 binarySearch(vec3 dir) {
@@ -54,7 +53,7 @@ vec4 binarySearch(vec3 dir) {
 		dir *= ss_refractionMinRayStep;
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
-		if (d < depth)
+		if (d > depth || getPosView(viewRay, d, cameraProj).z - hitCoord.z > 0.0)
 			hitCoord += dir;
 	}
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
@@ -68,7 +67,8 @@ vec4 rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		if(getDeltaDepth(hitCoord) >= depth)
+		float d = getDeltaDepth(hitCoord);
+		if(d > depth && getPosView(viewRay, d, cameraProj).z - hitCoord.z < 0.0)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -99,7 +99,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = normalize(refract(normalize(viewPos), normalize(viewNormal),  1.0 / ioro.x));
+	vec3 refracted = refract(normalize(viewPos), viewNormal,  1.0 / ioro.x);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

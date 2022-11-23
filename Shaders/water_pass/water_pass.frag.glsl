@@ -152,7 +152,7 @@ void main() {
 
 	vec3 viewNormal = n2;
 	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
-	vec3 reflected = normalize(reflect(normalize(viewPos), viewNormal));
+	vec3 reflected = reflect(normalize(viewPos), viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
