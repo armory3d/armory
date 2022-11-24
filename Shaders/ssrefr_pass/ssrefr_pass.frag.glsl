@@ -29,7 +29,7 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const int numBinarySearchSteps = 64;
+const int numBinarySearchSteps = 7;
 const int maxSteps = 128;
 
 vec2 getProjectedCoord(const vec3 hit) {
@@ -77,18 +77,17 @@ vec4 rayCast(vec3 dir) {
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.z;
-	if (roughness == 1.0) { 
-		discard;
-	}
+
+	if (roughness == 1.0) discard;
+
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
 	vec2 ioro = unpackFloat2(gr.r);
-	if (ioro.x == 1.0) { 
-		discard;
-	}
-	if (ioro.y == 1.0) {
-		discard;
-	}
+	if (ioro.x == 1.0) discard;
+
+	if (ioro.y == 1.0) discard;
+
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+
 	if (depth == 1.0) discard;
 
     vec2 enc = g0.rg;
@@ -98,8 +97,8 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = refract(normalize(viewPos), viewNormal,  1.0 / ioro.x);
+	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
+	vec3 refracted = refract(viewPos, viewNormal,  1.0 / ioro.x);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
