@@ -67,6 +67,7 @@ class SoftBody extends Trait {
 		for (ar in ars) {
 			for (j in 0...ar.length) {
 				vals[i] = ar[j];
+				trace(ar[j]);
 				i++;
 			}
 		}
@@ -101,6 +102,8 @@ class SoftBody extends Trait {
 			v.y *= object.transform.scale.y;
 			v.z *= object.transform.scale.z;
 			v.addf(object.transform.worldx(), object.transform.worldy(), object.transform.worldz());
+			trace("Position index" + i);
+			trace(v);
 			positions[i * 3    ] = v.x;
 			positions[i * 3 + 1] = v.y;
 			positions[i * 3 + 2] = v.z;
@@ -124,8 +127,36 @@ class SoftBody extends Trait {
 			helpersCreated = true;
 		}
 
+		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(positions.length);
+		for(i in 0...positions.length){
+			positionsVector.set(i, positions.get(i));
+		}
+
+		var vecindVector: haxe.ds.Vector<Int> = new haxe.ds.Vector<Int>(vecind.length);
+		for(i in 0...vecind.length){
+			vecindVector.set(i, vecind.get(i));
+		}
+
+		/* trace("_______________________________________________");
+		trace(worldInfo);
+
+		//var posVector: haxe.ds.Vector<Float> = cast positions;
+		trace(positions);
+		for(vvv in 0...positions.length) trace(positions.get(vvv));
+		trace("posVector");
+		for(vvv in 0...positionsVector.length) trace(positionsVector.get(vvv));
+
+		//var vecindVector: haxe.ds.Vector<Int> = cast vecind;
+		trace(vecind);
+		for(vvv in 0...vecind.length) trace(vecind.get(vvv));
+		trace("vecindVector");
+		for(vvv in 0...vecindVector.length) trace(vecindVector.get(vvv));
+
+		trace(numtri);
+		trace("_______________________________________________"); */
+
 		#if js
-		body = helpers.CreateFromTriMesh(worldInfo, cast positions, cast vecind, numtri);
+		body = helpers.CreateFromTriMesh(worldInfo, positionsVector, vecindVector, numtri);
 		#elseif cpp
 		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
 		#end
@@ -195,6 +226,8 @@ class SoftBody extends Trait {
 			var node = nodes.at(i);
 			#if js
 			var nodePos = node.get_m_x();
+			trace("nodepos " + i);
+			trace("( " + nodePos.x() + ", " + nodePos.y() + ", " + nodePos.z() + " )");
 			#elseif cpp
 			var nodePos = node.m_x;
 			#end
