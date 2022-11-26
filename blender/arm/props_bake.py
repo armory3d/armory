@@ -190,7 +190,7 @@ class ArmBakeButton(bpy.types.Operator):
                 if scn.arm_bakelist_unwrap == 'Lightmap Pack':
                     bpy.context.view_layer.objects.active = ob
                     ob.select_set(True)
-                    bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
+                    bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
                 else:
                     bpy.ops.object.mode_set(mode='OBJECT')
                     bpy.ops.object.select_all(action='DESELECT')
@@ -249,6 +249,10 @@ class ArmBakeApplyButton(bpy.types.Operator):
         scn = context.scene
         if len(scn.arm_bakelist) == 0:
             return{'FINISHED'}
+        for material in bpy.data.materials:
+            if not material.users:
+                bpy.data.materials.remove(material)
+
         # Remove leftover _baked materials for removed objects
         for mat in bpy.data.materials:
             if mat.name.endswith('_baked'):
@@ -266,19 +270,20 @@ class ArmBakeApplyButton(bpy.types.Operator):
             img_name = ob.name + '_baked'
             # Save images
             bpy.data.images[img_name].pack()
-            bpy.data.images[img_name].save()
+            #bpy.data.images[img_name].save()
             for slot in ob.material_slots:
                 mat = slot.material
                 # Remove temp material
                 if mat.name.endswith('_temp'):
                     old = slot.material
-                    slot.material = bpy.data.materials[old.name.split('_' + ob.name)[0]]
+                    slot.material = bpy.data.materials[old.name.split('_' + ob.name)[0] + "_" + ob.name + "_baked"]
                     bpy.data.materials.remove(old, do_unlink=True)
         # Restore uv slots
         for o in scn.arm_bakelist:
             ob = o.obj
             uv_layers = ob.data.uv_layers
             uv_layers.active_index = 0
+            uv_layers["UVMap_baked"].active_render = True
 
         return{'FINISHED'}
 
