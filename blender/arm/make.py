@@ -580,18 +580,11 @@ def build_success():
                 template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browser})
                 cmd = re.split(' +', template_str)
             if len(cmd) == 0:
-<<<<<<< HEAD
-                if browsername in (None, ''):
-                    webbrowser.open(url)
-                    return
-                cmd = [browsername, url]
-=======
                 if browser == '':
                     webbrowser.open(url)
                     return
                 else:
                     cmd = [browser, url]
->>>>>>> b4b944f9 (all files copied from where emission is working)
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()

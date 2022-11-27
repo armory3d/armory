@@ -536,13 +536,8 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-<<<<<<< HEAD
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_gi != false)
-=======
-		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_voxels != false)
->>>>>>> b4b944f9 (all files copied from where emission is working)
 		{
 			var voxelize = path.voxelize();
 
@@ -619,13 +614,8 @@ class RenderPathDeferred {
 		#end
 
 		var voxelao_pass = false;
-<<<<<<< HEAD
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_gi != false)
-=======
-		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_voxels != false)
->>>>>>> b4b944f9 (all files copied from where emission is working)
 		{
 			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
