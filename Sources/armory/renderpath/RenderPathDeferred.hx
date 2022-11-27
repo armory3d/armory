@@ -7,19 +7,21 @@ class RenderPathDeferred {
 
 	#if (rp_renderer == "Deferred")
 	static var path: RenderPath;
-
 	#if rp_voxels
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
 
-	public static inline function setTargetMeshes() {
-		// Always keep the order of render targets the same as defined in compiled.inc
-		path.setTarget("gbuffer0", [
-			"gbuffer1",
-			#if rp_gbuffer2 "gbuffer2", #end
-			#if rp_gbuffer_emission "gbuffer_emission" #end
-		]);
+	public static function setTargetMeshes() {
+		#if rp_gbuffer2
+		{
+			path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2"]);
+		}
+		#else
+		{
+			path.setTarget("gbuffer0", ["gbuffer1"]);
+		}
+		#end
 	}
 
 	public static function drawMeshes() {
@@ -57,7 +59,7 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel AO")
+			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
 		}
@@ -130,19 +132,6 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
-		#end
-
-		#if rp_gbuffer_emission
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_emission";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -547,12 +536,17 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
+<<<<<<< HEAD
 		#if rp_voxels
 		if (armory.data.Config.raw.rp_gi != false)
+=======
+		#if (rp_voxels != "Off")
+		if (armory.data.Config.raw.rp_voxels != false)
+>>>>>>> b4b944f9 (all files copied from where emission is working)
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
 				if (light.transform.diff()) { voxelize = true; break; }
@@ -569,15 +563,16 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
+				var voxtex = voxels;
 
-				path.clearImage(voxels, 0x00000000);
+				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 
-				path.bindTarget(voxels, "voxels");
-				#if (rp_shadowmap && rp_gi == "Voxel GI")
+				path.bindTarget(voxtex, "voxels");
+				#if (rp_shadowmap && rp_voxels == "Voxel GI")
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
@@ -602,16 +597,13 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+		#if rp_gbuffer2_direct
+		path.bindTarget("gbuffer2", "gbuffer2");
+		#end
 
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
-		}
-		#end
-
-		#if rp_gbuffer_emission
-		{
-			path.bindTarget("gbuffer_emission", "gbufferEmission");
 		}
 		#end
 
@@ -627,10 +619,15 @@ class RenderPathDeferred {
 		#end
 
 		var voxelao_pass = false;
+<<<<<<< HEAD
 		#if rp_voxels
 		if (armory.data.Config.raw.rp_gi != false)
+=======
+		#if (rp_voxels != "Off")
+		if (armory.data.Config.raw.rp_voxels != false)
+>>>>>>> b4b944f9 (all files copied from where emission is working)
 		{
-			#if (arm_config && (rp_gi == "Voxel AO"))
+			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");

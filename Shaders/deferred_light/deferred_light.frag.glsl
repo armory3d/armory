@@ -25,10 +25,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
-	uniform sampler2D gbuffer2;
-#endif
-#ifdef _EmissionShaded
-	uniform sampler2D gbufferEmission;
+uniform sampler2D gbuffer2;
 #endif
 
 #ifdef _VoxelGI
@@ -214,7 +211,7 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
+	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
@@ -261,15 +258,11 @@ void main() {
 #endif
 	envl.rgb *= albedo;
 
-#ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
-#endif
-
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metallic); // f0
 	#endif
 #endif
 
@@ -332,22 +325,11 @@ void main() {
 	#endif
 #endif
 
-#ifdef _EmissionShadeless
-	if (matid == 1) { // pure emissive material, color stored in basecol
-		fragColor.rgb += g1.rgb;
-		fragColor.a = 1.0; // Mark as opaque
-		return;
+#ifdef _Emission
+	if (matid == 1) {
+		fragColor.rgb += g1.rgb; // materialid
+		albedo = vec3(0.0);
 	}
-#endif
-#ifdef _EmissionShaded
-	#ifdef _EmissionShadeless
-	else {
-	#endif
-		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
-		fragColor.rgb += emission;
-	#ifdef _EmissionShadeless
-	}
-	#endif
 #endif
 
 	// Show voxels
@@ -455,8 +437,10 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
+		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
 		, voxels, voxpos
+		#endif
 		#endif
 		#ifdef _VoxelGIShadow
 		, voxels, voxpos
@@ -516,8 +500,10 @@ void main() {
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
+			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
 			, voxels, voxpos
+			#endif
 			#endif
 			#ifdef _VoxelGIShadow
 			, voxels, voxpos

@@ -1662,11 +1662,11 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
-        layout.prop(rpdat, 'rp_gi')
+        layout.prop(rpdat, 'rp_voxels')
         col = layout.column()
-        col.enabled = rpdat.rp_gi != 'Off'
+        col.enabled = rpdat.rp_voxels != 'Off'
         col2 = col.column()
-        col2.enabled = rpdat.rp_gi == 'Voxel GI'
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'rp_voxelgi_relight')
         col.prop(rpdat, 'arm_voxelgi_cones')
@@ -1680,7 +1680,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_temporal')
         col.label(text="Light")
         col2 = col.column()
-        col2.enabled = rpdat.rp_gi == 'Voxel GI'
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col.prop(rpdat, 'arm_voxelgi_occ')
@@ -1868,14 +1868,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        col.prop(rpdat, 'arm_letterbox')
-        col = col.column(align=True)
-        col.enabled = rpdat.arm_letterbox
-        col.prop(rpdat, 'arm_letterbox_color')
-        col.prop(rpdat, 'arm_letterbox_size')
-        layout.separator()
-
-        col = layout.column()
+        draw_conditional_prop(col, 'Letterbox', rpdat, 'arm_letterbox', 'arm_letterbox_size')
         draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
         draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
@@ -2431,6 +2424,10 @@ class ARM_OT_UpdateFileSDK(bpy.types.Operator):
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
         # This allows for seamless migration from earlier versions of Armory
+        for rp in wrd.arm_rplist: # TODO: deprecated
+            if rp.rp_voxels != 'Off':
+                rp.rp_voxels = 'Off'
+                rp.rp_voxelao = True
 
         # Replace deprecated nodes
         arm.logicnode.replacement.replace_all()

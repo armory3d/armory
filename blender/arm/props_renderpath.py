@@ -62,7 +62,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -98,7 +98,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -132,7 +132,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Voxel GI'
+        rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '128'
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
@@ -174,7 +174,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -430,7 +430,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
-    rp_gi: EnumProperty(
+    rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Voxel GI', 'Voxel GI', 'Voxel GI'),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
@@ -567,7 +567,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_chromatic_aberration_samples: IntProperty(name="Samples", default=32, min=8, update=assets.invalidate_shader_cache)
     # Compositor
     arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
-    arm_letterbox_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_letterbox_size: FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
     arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)

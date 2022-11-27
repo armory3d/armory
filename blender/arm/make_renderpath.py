@@ -1,5 +1,3 @@
-from typing import Callable, Optional
-
 import bpy
 
 import arm.api
@@ -17,8 +15,7 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
-callback: Optional[Callable[[], None]] = None
-
+callback = None
 
 def add_world_defs():
     wrd = bpy.data.worlds['Arm']
@@ -57,9 +54,9 @@ def add_world_defs():
     voxelao = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_gi == 'Voxel GI':
+        if rpdat.rp_voxels == 'Voxel GI':
             voxelgi = True
-        elif rpdat.rp_gi == 'Voxel AO':
+        elif rpdat.rp_voxels == 'Voxel AO':
             voxelao = True
     # Shadows
     if rpdat.rp_shadows:
@@ -328,15 +325,15 @@ def build():
         assets.add(assets_path + 'vr.png')
         assets.add_embedded_data('vr.png')
 
-    rp_gi = rpdat.rp_gi
+    rp_voxels = rpdat.rp_voxels
     has_voxels = arm.utils.voxel_support()
 
     if not has_voxels or rpdat.arm_material_model != 'Full':
-        rp_gi = 'Off'
+        rp_voxels = 'Off'
     assets.add_khafile_def('rp_gi={0}'.format(rp_gi))
     if rpdat.rp_voxels != 'Off':
         if has_voxels:
-            assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))
+            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
             if rpdat.arm_voxelgi_shadows:
@@ -442,16 +439,5 @@ def build():
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'
 
-    if callback is not None:
+    if callback != None:
         callback()
-
-
-def get_num_gbuffer_rts_deferred() -> int:
-    """Return the number of render targets required for the G-Buffer."""
-    wrd = bpy.data.worlds['Arm']
-
-    num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded'):
-        if flag in wrd.world_defs:
-            num += 1
-    return num

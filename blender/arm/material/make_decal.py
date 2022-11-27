@@ -70,7 +70,8 @@ def make(context_id):
     frag.write('float occlusion;')
     frag.write('float specular;')
     frag.write('float opacity;')
-    frag.write('vec3 emissionCol;')  # Declared to prevent compiler errors, but decals currently don't output any emission
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
     cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese)
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')

@@ -1,5 +1,3 @@
-from typing import Any, Callable, Optional
-
 import bpy
 
 import arm.assets as assets
@@ -11,7 +9,6 @@ import arm.material.make_particle as make_particle
 import arm.material.make_cluster as make_cluster
 import arm.material.make_finalize as make_finalize
 import arm.material.make_attrib as make_attrib
-import arm.material.shader as shader
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -24,18 +21,14 @@ if arm.is_reload(__name__):
     make_cluster = arm.reload_module(make_cluster)
     make_finalize = arm.reload_module(make_finalize)
     make_attrib = arm.reload_module(make_attrib)
-    shader = arm.reload_module(shader)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
 
 is_displacement = False
-
-# User callbacks
-write_material_attribs: Optional[Callable[[dict[str, Any], shader.Shader], bool]] = None
-write_material_attribs_post: Optional[Callable[[dict[str, Any], shader.Shader], None]] = None
-write_vertex_attribs: Optional[Callable[[shader.Shader], bool]] = None
-
+write_material_attribs = None
+write_material_attribs_post = None
+write_vertex_attribs = None
 
 def make(context_id, rpasses):
     wrd = bpy.data.worlds['Arm']
@@ -93,10 +86,12 @@ def make(context_id, rpasses):
 
     return con_mesh
 
-
 def make_base(con_mesh, parse_opacity):
     global is_displacement
+    global write_material_attribs
+    global write_material_attribs_post
     global write_vertex_attribs
+    wrd = bpy.data.worlds['Arm']
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
@@ -125,18 +120,26 @@ def make_base(con_mesh, parse_opacity):
     # No displacement
     else:
         frag.ins = vert.outs
-        if write_vertex_attribs is not None:
+        if write_vertex_attribs != None:
             vattr_written = write_vertex_attribs(vert)
 
     frag.add_include('compiled.inc')
 
-    attribs_written = False
-    if write_material_attribs is not None:
-        attribs_written = write_material_attribs(con_mesh, frag)
-    if not attribs_written:
-        _write_material_attribs_default(frag, parse_opacity)
+    written = False
+    if write_material_attribs != None:
+        written = write_material_attribs(con_mesh, frag)
+    if written == False:
+        frag.write('vec3 basecol;')
+        frag.write('float roughness;')
+        frag.write('float metallic;')
+        frag.write('float occlusion;')
+        frag.write('float specular;')
+        if '_Emission' in wrd.world_defs:
+            frag.write('float emission;')
+        if parse_opacity:
+            frag.write('float opacity;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
-    if write_material_attribs_post is not None:
+    if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
 
     vert.add_out('vec3 wnormal')
@@ -178,7 +181,6 @@ def make_base(con_mesh, parse_opacity):
         sh.write('wposition += wnormal * disp;')
         sh.write('gl_Position = VP * vec4(wposition, 1.0);')
 
-
 def make_deferred(con_mesh, rpasses):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -199,11 +201,11 @@ def make_deferred(con_mesh, rpasses):
             opac = '0.9999' # 1.0 - eps
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    frag.add_out(f'vec4 fragColor[GBUF_SIZE]')
-
+    gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
+        frag.add_out('vec4 fragColor[3]')
         if '_Veloc' in wrd.world_defs:
-            if tese is None:
+            if tese == None:
                 vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
                 vert.add_out('vec4 wvpposition')
                 vert.add_out('vec4 prevwvpposition')
@@ -228,6 +230,8 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+    else:
+        frag.add_out('vec4 fragColor[2]')
 
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
@@ -238,37 +242,29 @@ def make_deferred(con_mesh, rpasses):
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
 
-    is_shadeless = mat_state.emission_type == mat_state.EmissionType.SHADELESS
-    if is_shadeless or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+    if '_Emission' in wrd.world_defs or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.write('uint matid = 0;')
-        if is_shadeless:
-            frag.write('matid = 1;')
-            frag.write('basecol = emissionCol;')
+        if '_Emission' in wrd.world_defs:
+            frag.write('if (emission > 0) { basecol *= emission; matid = 1; }')
         if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
             frag.add_uniform('int materialID')
             frag.write('if (materialID == 2) matid = 2;')
     else:
         frag.write('const uint matid = 0;')
 
-    frag.write('fragColor[GBUF_IDX_0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid));')
-    frag.write('fragColor[GBUF_IDX_1] = vec4(basecol, packFloat2(occlusion, specular));')
+    frag.write('fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid));')
+    frag.write('fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
         if '_Veloc' in wrd.world_defs:
             frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
-            frag.write('fragColor[GBUF_IDX_2].rg = vec2(posa - posb);')
+            frag.write('fragColor[2].rg = vec2(posa - posb);')
 
         if mat_state.material.arm_ignore_irradiance:
-            frag.write('fragColor[GBUF_IDX_2].b = 1.0;')
-
-    if '_EmissionShaded' in wrd.world_defs:
-        assets.add_khafile_def('rp_gbuffer_emission')
-        # Alpha channel is unused at the moment
-        frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
+            frag.write('fragColor[2].b = 1.0;')
 
     return con_mesh
-
 
 def make_raytracer(con_mesh):
     con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}, {'name': 'tex', 'data': 'float2'}]
@@ -280,7 +276,6 @@ def make_raytracer(con_mesh):
     vert.write('n = nor;')
     vert.write('uv = tex;')
     vert.write('gl_Position = vec4(pos.xyz, 1.0);')
-
 
 def make_forward_mobile(con_mesh):
     wrd = bpy.data.worlds['Arm']
@@ -295,13 +290,21 @@ def make_forward_mobile(con_mesh):
     frag.ins = vert.outs
 
     frag.add_include('compiled.inc')
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;')
+    frag.write('float metallic;')
+    frag.write('float occlusion;')
+    frag.write('float specular;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
 
     arm_discard = mat_state.material.arm_discard
     blend = mat_state.material.arm_blending
     is_transluc = mat_utils.is_transluc(mat_state.material)
     parse_opacity = (blend and is_transluc) or arm_discard
+    if parse_opacity:
+        frag.write('float opacity;')
 
-    _write_material_attribs_default(frag, parse_opacity)
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
 
     if arm_discard:
@@ -442,7 +445,6 @@ def make_forward_mobile(con_mesh):
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
-
 def make_forward_solid(con_mesh):
     wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
@@ -460,13 +462,21 @@ def make_forward_solid(con_mesh):
     frag.ins = vert.outs
 
     frag.add_include('compiled.inc')
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;')
+    frag.write('float metallic;')
+    frag.write('float occlusion;')
+    frag.write('float specular;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
 
     arm_discard = mat_state.material.arm_discard
     blend = mat_state.material.arm_blending
     is_transluc = mat_utils.is_transluc(mat_state.material)
     parse_opacity = (blend and is_transluc) or arm_discard
+    if parse_opacity:
+        frag.write('float opacity;')
 
-    _write_material_attribs_default(frag, parse_opacity)
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     if arm_discard:
@@ -498,7 +508,6 @@ def make_forward_solid(con_mesh):
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
-
 def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -525,7 +534,7 @@ def make_forward(con_mesh):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
-        mrt = rpdat.rp_ssr  # mrt: multiple render targets
+        mrt = rpdat.rp_ssr
         if mrt:
             # Store light gbuffer for post-processing
             frag.add_out('vec4 fragColor[2]')
@@ -545,7 +554,6 @@ def make_forward(con_mesh):
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
-
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
@@ -630,7 +638,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength;')
 
-    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
+    if '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
@@ -680,7 +688,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('}') # receiveShadow
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
-        if '_VoxelGIShadow' in wrd.world_defs and '_VoxelGI' in wrd.world_defs:
+        if '_VoxelGIShadow' in wrd.world_defs:
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
@@ -710,27 +718,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
-        if '_VoxelGIShadow' in wrd.world_defs and '_VoxelGI' in wrd.world_defs:
+        if '_VoxelGIShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:
         make_cluster.write(vert, frag)
 
-    if mat_state.emission_type != mat_state.EmissionType.NO_EMISSION:
-        if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
-            frag.write('direct = vec3(0.0);')
-        frag.write('indirect += emissionCol;')
-
-
-def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
-    frag.write('vec3 basecol;')
-    frag.write('float roughness;')
-    frag.write('float metallic;')
-    frag.write('float occlusion;')
-    frag.write('float specular;')
-    # We may not use emission, but the attribute will then be removed
-    # by the shader compiler
-    frag.write('vec3 emissionCol;')
-    if parse_opacity:
-        frag.write('float opacity;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('if (emission > 0.0) {')
+        frag.write('    direct = vec3(0.0);')
+        frag.write('    indirect += basecol * emission;')
+        frag.write('}')

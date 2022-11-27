@@ -63,10 +63,10 @@ class DebugConsole extends Trait {
 	public static var debugFloat = 1.0;
 	public static var watchNodes: Array<armory.logicnode.LogicNode> = [];
 
-	static var positionConsole: PositionStateEnum = PositionStateEnum.Right;
-	var shortcutVisible = kha.input.KeyCode.Tilde;
-	var shortcutScaleIn = kha.input.KeyCode.OpenBracket;
-	var shortcutScaleOut = kha.input.KeyCode.CloseBracket;
+	public static var position_console: PositionStateEnum = PositionStateEnum.RIGHT;
+	var shortcut_visible = kha.input.KeyCode.Tilde;
+	var shortcut_scale_in = kha.input.KeyCode.OpenBracket;
+	var shortcut_scale_out = kha.input.KeyCode.CloseBracket;
 
 	#if arm_shadowmap_atlas
 	var lightColorMap: Map<String, Int> = new Map();
@@ -89,10 +89,14 @@ class DebugConsole extends Trait {
 			// Set settings
 			setScale(scaleDebugConsole);
 			setVisible(visibleDebugConsole == 1);
-			setPosition(positionDebugConsole);
-			shortcutVisible = keyCodeVisible;
-			shortcutScaleIn = keyCodeScaleIn;
-			shortcutScaleOut = keyCodeScaleOut;
+			switch (positionDebugConsole) {
+				case 0: setPosition(PositionStateEnum.LEFT);
+				case 1: setPosition(PositionStateEnum.CENTER);
+				case 2: setPosition(PositionStateEnum.RIGHT);
+			}
+			shortcut_visible = keyCodeVisible;
+			shortcut_scale_in = keyCodeScaleIn;
+			shortcut_scale_out = keyCodeScaleOut;
 
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
@@ -112,16 +116,16 @@ class DebugConsole extends Trait {
 					trace("debugFloat = " + debugFloat);
 				}
 				// Shortcut - Visible
-				if (key == shortcutVisible) visible = !visible;
+				if (key == shortcut_visible) visible = !visible;
 				// Scale In
-				else if (key == shortcutScaleIn) {
+				else if (key == shortcut_scale_in) {
 					var debugScale = getScale() - 0.1;
 					if (debugScale > 0.3) {
 						setScale(debugScale);
 					}
 				}
 				// Scale Out
-				else if (key == shortcutScaleOut) {
+				else if (key == shortcut_scale_out) {
 					var debugScale = getScale() + 0.1;
 					if (debugScale < 10.0) {
 						setScale(debugScale);
@@ -186,10 +190,10 @@ class DebugConsole extends Trait {
 		var wy = 0;
 		var wh = iron.App.h();
 		// Check position
-		switch (positionConsole) {
-			case PositionStateEnum.Left: wx = 0;
-			case PositionStateEnum.Center: wx = Math.round(iron.App.w() / 2 - ww / 2);
-			case PositionStateEnum.Right: wx = iron.App.w() - ww;
+		switch (position_console) {
+			case PositionStateEnum.LEFT: wx = 0;
+			case PositionStateEnum.CENTER: wx = Math.round(iron.App.w() / 2 - ww / 2);
+			case PositionStateEnum.RIGHT: wx = iron.App.w() - ww;
 		}
 
 		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
@@ -443,7 +447,6 @@ class DebugConsole extends Trait {
 										selectedTraits.push(t);
 									}
 								}
-								if (ui.isHovered) ui.tooltip("Open details about the trait in another window");
 							}
 							ui.unindent();
 						}
@@ -844,7 +847,7 @@ class DebugConsole extends Trait {
 			var handleWindow = handleWinTrait.nest(objectID).nest(traitIndex);
 			// This solution is not optimal, dragged windows will change their
 			// position if the selectedTraits array is changed.
-			wx = positionConsole == PositionStateEnum.Left ? wx + ww + 8 : wx - ww - 8;
+			wx -= ww + 8;
 			wy = 0;
 
 			handleWindow.redraws = 1;
@@ -984,17 +987,17 @@ class DebugConsole extends Trait {
 	}
 
 	public static function setPosition(value: PositionStateEnum) {
-		positionConsole = value;
+		position_console = value;
 	}
 
 	public static function getPosition(): PositionStateEnum {
-		return positionConsole;
+		return position_console;
 	}
 #end
 }
 
-enum abstract PositionStateEnum(Int) from Int {
-	var Left;
-	var Center;
-	var Right;
+enum PositionStateEnum {
+	LEFT;
+	CENTER;
+	RIGHT;
 }

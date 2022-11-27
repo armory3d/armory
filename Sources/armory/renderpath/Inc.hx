@@ -5,31 +5,6 @@ import iron.object.LightObject;
 
 class Inc {
 	static var path: RenderPath;
-	#if (rp_gi == "Voxel GI")
-	static var voxel_sh:kha.compute.Shader = null;
-	static var voxel_ta:kha.compute.TextureUnit;
-	static var voxel_tb:kha.compute.TextureUnit;
-	static var voxel_tc:kha.compute.TextureUnit;
-	static var voxel_td:kha.compute.TextureUnit;
-	static var voxel_te:kha.compute.TextureUnit;
-	static var voxel_tf:kha.compute.TextureUnit;
-	static var voxel_ca:kha.compute.ConstantLocation;
-	static var voxel_cb:kha.compute.ConstantLocation;
-	static var voxel_cc:kha.compute.ConstantLocation;
-	static var voxel_cd:kha.compute.ConstantLocation;
-	static var voxel_ce:kha.compute.ConstantLocation;
-	static var voxel_cf:kha.compute.ConstantLocation;
-	static var voxel_cg:kha.compute.ConstantLocation;
-	static var voxel_ch:kha.compute.ConstantLocation;
-	static var voxel_ci:kha.compute.ConstantLocation;
-	static var m = iron.math.Mat4.identity();
-	#end
-	#if (rp_gi_bounces)
-	static var bounce_sh:kha.compute.Shader = null;
-	static var bounce_ta:kha.compute.TextureUnit;
-	static var bounce_tb:kha.compute.TextureUnit;
-	static var bounce_tc:kha.compute.TextureUnit;
-	#end
 
 	public static var superSample = 1.0;
 
@@ -428,6 +403,10 @@ class Inc {
 			#end
 		}
 		#end
+		
+		path.bindTarget("_main", "gbufferD");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("gbuffer1", "gbuffer1");
 		path.drawMeshes("translucent");
 		#if rp_render_to_texture
 		{
@@ -449,7 +428,7 @@ class Inc {
 		var t = new RenderTargetRaw();
 		t.name = tname;
 
-		#if (rp_gi == "Voxel AO")
+		#if (rp_voxels == "Voxel AO")
 		{
 			t.format = "R8";
 		}
@@ -579,7 +558,7 @@ class Inc {
 	}
 
 
-	#if (rp_gi == "Voxel GI")
+	#if (rp_voxels == "Voxel GI")
 	public static function computeVoxelsBegin() {
 	 	if (voxel_sh == null) {
 	 		voxel_sh = path.getComputeShader("voxel_light");

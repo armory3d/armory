@@ -9,14 +9,12 @@ from typing import List
 import bpy
 
 import arm.assets as assets
-import arm.make_renderpath as make_renderpath
 import arm.make_state as state
 import arm.utils
 
 if arm.is_reload(__name__):
     import arm
     assets = arm.reload_module(assets)
-    make_renderpath = arm.reload_module(make_renderpath)
     state = arm.reload_module(state)
     arm.utils = arm.reload_module(arm.utils)
 else:
@@ -67,7 +65,6 @@ def remove_readonly(func, path, excinfo):
 def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, export_network: bool, is_publish: bool,
                     import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
-    rpdat = arm.utils.get_rp()
 
     sdk_path = arm.utils.get_sdk_path()
     rel_path = arm.utils.get_relative_paths()  # Convert absolute paths to relative
@@ -277,12 +274,7 @@ project.addSources('Sources');
 
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
-
-            if rpdat.rp_renderer == 'Forward':
-                # deferred line frag shader is currently handled in make.py,
-                # only add forward shader here
-                khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/line.frag.glsl", rel_path=do_relpath_sdk))
-            khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/line.vert.glsl", rel_path=do_relpath_sdk))
+            khafile.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=do_relpath_sdk))
 
         if not is_publish and state.target == 'html5':
             khafile.write("project.addParameter('--debug');\n")
@@ -434,7 +426,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
-        'rp_gi': rpdat.rp_gi != "Off",
+        'rp_voxels': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
     }
 
@@ -465,7 +457,7 @@ class Main {
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
-        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+        if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
@@ -565,22 +557,6 @@ def write_compiledglsl(defs, make_variants):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
 
-        if rpdat.rp_renderer == 'Deferred':
-            gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
-            f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
-
-            # Write indices of G-Buffer render targets
-            f.write('#define GBUF_IDX_0 0\n')
-            f.write('#define GBUF_IDX_1 1\n')
-
-            idx_emission = 2
-            if '_gbuffer2' in wrd.world_defs:
-                f.write('#define GBUF_IDX_2 2\n')
-                idx_emission += 1
-
-            if '_EmissionShaded' in wrd.world_defs:
-                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
-
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif
@@ -662,7 +638,6 @@ const float autoExposureSpeed = """ + str(rpdat.arm_autoexposure_speed) + """;
         if rpdat.arm_letterbox:
             f.write(
 """const float compoLetterboxSize = """ + str(round(rpdat.arm_letterbox_size * 100) / 100) + """;
-const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[2] * 100) / 100) + """);
 """)
 
         if rpdat.arm_grain:
@@ -725,7 +700,7 @@ const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+        if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);

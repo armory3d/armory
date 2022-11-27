@@ -9,14 +9,14 @@ import arm.make_state as state
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
-    if rpdat.rp_gi == 'Voxel GI':
+    if rpdat.rp_voxels == 'Voxel GI':
         con = make_gi(context_id)
     else:
         con = make_ao(context_id)
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
-    assets.fs_equal(con, assets.shader_cons['voxel_frag'])
-    assets.gs_equal(con, assets.shader_cons['voxel_geom'])
+    assets.gs_equal(con, assets.shader_cons['voxel_frag'])
+    assets.fs_equal(con, assets.shader_cons['voxel_geom'])
 
     return con
 
@@ -57,7 +57,8 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    frag.write('vec3 emissionCol;') #
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;') #
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
 
@@ -233,7 +234,7 @@ def make_gi(context_id):
             frag.write('    visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('}')
         frag.add_uniform('vec3 sunCol', link="_sunColor")
-        frag.write('basecol *= emissionCol * visibility * sunCol;')
+        frag.write('basecol *= visibility * sunCol;')
     else:
         print('Armory Warning: Voxel GI requires sun light and enabled shadows')
         vert.add_out('vec4 lightPositionGeom')
