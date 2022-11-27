@@ -10,14 +10,16 @@ if arm.is_reload(__name__):
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import ShaderContext
 else:
-    drivers: Dict[str, Dict] = dict()
+    drivers: Dict[str, Dict] = {} #dict()
 
     arm.enable_reload(__name__)
 
 
 def add_driver(driver_name: str,
-               make_rpass: Callable[[str], Optional[ShaderContext]], make_rpath: Callable[[], None],
-               draw_props: Optional[Callable[[UILayout], None]], draw_mat_props: Optional[Callable[[UILayout, Material], None]]) -> None:
+               make_rpass: Callable[[str], Optional[ShaderContext]],
+               make_rpath: Callable[[], None],
+               draw_props: Optional[Callable[[UILayout], None]],
+               draw_mat_props: Optional[Callable[[UILayout, Material], None]]) -> None:
     """Register a new driver. If there already exists a driver with the given name, nothing happens.
 
     @param driver_name Unique name for the new driver that will be displayed in the UI.

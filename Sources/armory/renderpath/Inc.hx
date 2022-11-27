@@ -12,7 +12,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxelao && arm_config)
+	#if (rp_voxels && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -354,7 +354,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if rp_voxelao
+		#if rp_voxels
 		if (!voxelsCreated) initGI();
 		#end
 		#end // arm_config
@@ -418,7 +418,7 @@ class Inc {
 	}
 	#end
 
-	#if rp_voxelao
+	#if rp_voxels
 	public static function initGI(tname = "voxels") {
 		#if arm_config
 		var config = armory.data.Config.raw;

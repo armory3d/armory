@@ -20,19 +20,14 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 import numpy as np
 
 import bpy
-from mathutils import *
+from mathutils import Matrix, Vector
 
 import bmesh
 
-import arm.assets as assets
-import arm.exporter_opt as exporter_opt
-import arm.log as log
-import arm.make_renderpath as make_renderpath
-import arm.material.cycles as cycles
-import arm.material.make as make_material
-import arm.material.mat_batch as mat_batch
 import arm.utils
 import arm.profiler
+from arm import assets, exporter_opt, log, make_renderpath
+from arm.material import cycles, make as make_material, mat_batch
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
@@ -67,7 +62,7 @@ class NodeType(Enum):
         if bobject.type == "MESH":
             if bobject.data.polygons:
                 return cls.MESH
-        elif bobject.type == "FONT" or bobject.type == "META":
+        elif bobject.type in ('FONT', 'META'):
             return cls.MESH
         elif bobject.type == "LIGHT":
             return cls.LIGHT
@@ -178,6 +173,9 @@ class ArmoryExporter:
         if wrd.arm_navigation == 'Enabled':
             cls.export_navigation = True
         cls.export_ui = False
+        cls.export_network = False
+        if wrd.arm_network == 'Enabled':
+            cls.export_network = True
 
     @staticmethod
     def write_matrix(matrix):
@@ -199,7 +197,7 @@ class ArmoryExporter:
     @staticmethod
     def get_shape_keys(mesh):
         rpdat = arm.utils.get_rp()
-        if(rpdat.arm_morph_target != 'On'):
+        if rpdat.arm_morph_target != 'On':
             return False
         # Metaball
         if not hasattr(mesh, 'shape_keys'):
@@ -211,7 +209,7 @@ class ArmoryExporter:
         if len(shape_keys.key_blocks) < 2:
             return False
         for shape_key in shape_keys.key_blocks[1:]:
-            if(not shape_key.mute):
+            if not shape_key.mute:
                 return True
         return False
 
@@ -355,8 +353,7 @@ class ArmoryExporter:
                             unresolved_data_paths.add(data_path)
                             continue
                         # Missing target entry for array_index or something else
-                        else:
-                            raise
+                        raise
 
                     out_anim['tracks'].append(out_track)
 
@@ -1057,8 +1054,7 @@ class ArmoryExporter:
         bone_count = len(bone_array)
         rpdat = arm.utils.get_rp()
         max_bones = rpdat.arm_skin_max_bones
-        if bone_count > max_bones:
-            bone_count = max_bones
+        bone_count = min(bone_count, max_bones)
 
         # Write the bone object reference array
         oskin['bone_ref_array'] = np.empty(bone_count, dtype=object)
@@ -1119,7 +1115,7 @@ class ArmoryExporter:
                 bone_index_array[count] = bv[1]
                 count += 1
 
-            if total_weight != 0.0 and total_weight != 1.0:
+            if total_weight not in (0.0, 1.0):
                 normalizer = 1.0 / total_weight
                 for i in range(bone_count):
                     bone_weight_array[count - i - 1] *= normalizer
@@ -1159,7 +1155,7 @@ class ArmoryExporter:
         # Loop through all shape keys
         for shape_key in bobject.data.shape_keys.key_blocks[1:]:
 
-            if(count > max_shape_keys - 1):
+            if count > max_shape_keys - 1:
                 break
             # get vertex data from shape key
             if shape_key.mute:
@@ -1173,7 +1169,7 @@ class ArmoryExporter:
             count += 1
 
         # No shape keys present or all shape keys are muted
-        if (count < 1):
+        if count < 1:
             return
 
         # Convert to array for easy manipulation
@@ -1190,7 +1186,7 @@ class ArmoryExporter:
         img_size, extra_zeros, block_size = self.get_best_image_size(array_size)
 
         # Image size required is too large. Skip export
-        if(img_size < 1):
+        if img_size < 1:
             log.error(f"""object {bobject.name} contains too many vertices or shape keys to support shape keys export""")
             self.remove_morph_uv_set(bobject)
             return
@@ -1276,7 +1272,7 @@ class ArmoryExporter:
         for i in range(1, 12):
             block_len = pow(2, i)
             block_height = np.ceil(size[0]/block_len)
-            if(block_height * size[1] <= block_len):
+            if block_height * size[1] <= block_len:
                 extra_zeros_x = block_height * block_len - size[0]
                 return pow(2,i), round(extra_zeros_x), block_height
 
@@ -1284,12 +1280,12 @@ class ArmoryExporter:
 
     def remove_morph_uv_set(self, obj):
         layer = obj.data.uv_layers.get('UVMap_shape_key')
-        if(layer is not None):
+        if layer is not None:
             obj.data.uv_layers.remove(layer)
 
     def create_morph_uv_set(self, obj, img_size):
         # Get/ create morph UV set
-        if(obj.data.uv_layers.get('UVMap_shape_key') is None):
+        if obj.data.uv_layers.get('UVMap_shape_key') is None:
             obj.data.uv_layers.new(name = 'UVMap_shape_key')
 
         bm = bmesh.new()
@@ -1306,7 +1302,7 @@ class ArmoryExporter:
                 uv_data = l[uv_layer]
                 uv_data.uv = Vector(((i + 0.5) * pixel_size, (j + 0.5) * pixel_size))
             i += 1
-            if(i > img_size - 1):
+            if i > img_size - 1:
                 j += 1
                 i = 0
 
@@ -1902,8 +1898,7 @@ Make sure the mesh only has tris/quads.""")
             ar[2] = max(min(ar[2], 1.0), 0.0)
             ar[3] = max(min(ar[3], 1.0), 0.0)
             return ar
-        else:
-            return [0.051, 0.051, 0.051, 1.0]
+        return [0.051, 0.051, 0.051, 1.0]
 
     @staticmethod
     def extract_projection(o, proj, with_planes=True):
@@ -2003,10 +1998,8 @@ Make sure the mesh only has tris/quads.""")
         o = {}
         o['name'] = mat.name
         o['contexts'] = []
-        mat_users = dict()
-        mat_users[mat] = mat_objs
-        mat_armusers = dict()
-        mat_armusers[mat] = [o]
+        mat_users = { mat: mat_objs }
+        mat_armusers = { mat: [o] }
         make_material.parse(mat, o, mat_users, mat_armusers)
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
@@ -2026,7 +2019,7 @@ Make sure the mesh only has tris/quads.""")
                 # Unconnected socket
                 if not hasattr(inp, 'default_value'):
                     sign += 'o'
-                elif inp.type == 'RGB' or inp.type == 'RGBA' or inp.type == 'VECTOR':
+                elif inp.type in ('RGB', 'RGBA', 'VECTOR'):
                     sign += str(inp.default_value[0])
                     sign += str(inp.default_value[1])
                     sign += str(inp.default_value[2])
@@ -2346,7 +2339,7 @@ Make sure the mesh only has tris/quads.""")
                 # Softbody needs connected triangles, use optimized
                 # geometry export
                 for mod in bobject.modifiers:
-                    if mod.type == 'CLOTH' or mod.type == 'SOFT_BODY':
+                    if mod.type in ('CLOTH', 'SOFT_BODY'):
                         ArmoryExporter.optimize_enabled = True
 
         self.process_skinned_meshes()
@@ -2721,7 +2714,7 @@ Make sure the mesh only has tris/quads.""")
         # Phys traits
         if phys_enabled:
             for modifier in bobject.modifiers:
-                if modifier.type == 'CLOTH' or modifier.type == 'SOFT_BODY':
+                if modifier.type in ('CLOTH', 'SOFT_BODY'):
                     self.add_softbody_mod(o, bobject, modifier)
                 elif modifier.type == 'HOOK':
                     self.add_hook_mod(o, bobject, modifier.object.name, modifier.vertex_group)
@@ -2833,7 +2826,7 @@ Make sure the mesh only has tris/quads.""")
                 # Read file list and add canvas assets
                 assetpath = os.path.join(arm.utils.get_fp(), 'Bundled', 'canvas', traitlistItem.canvas_name_prop + '.files')
                 if os.path.exists(assetpath):
-                    with open(assetpath) as f:
+                    with open(assetpath,encoding="utf-8") as f:
                         file_list = f.read().splitlines()
                         for asset in file_list:
                             # Relative to the root/Bundled/canvas path
@@ -2952,9 +2945,9 @@ Make sure the mesh only has tris/quads.""")
             ArmoryExporter.export_ui = True
             # Position
             debug_console_pos_type = 2
-            if (wrd.arm_debug_console_position == 'Left'):
+            if wrd.arm_debug_console_position == 'Left':
                 debug_console_pos_type = 0
-            elif (wrd.arm_debug_console_position == 'Center'):
+            elif wrd.arm_debug_console_position == 'Center':
                 debug_console_pos_type = 1
             else:
                 debug_console_pos_type = 2
@@ -2998,7 +2991,7 @@ Make sure the mesh only has tris/quads.""")
         # If there is a canvas but no _themes.json, create it so that
         # CanvasScript.hx works
         if os.path.exists(path_themes) and not os.path.exists(file_theme):
-            with open(file_theme, "w+"):
+            with open(file_theme, "w+", encoding='utf-8'):
                 pass
             assets.add(file_theme)
 
@@ -3208,7 +3201,7 @@ Make sure the mesh only has tris/quads.""")
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
 
-        mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+        mobile_mat = rpdat.arm_material_model in ('Mobile', 'Solid')
         if mobile_mat:
             arm_radiance = False
 

@@ -16,7 +16,7 @@ import webbrowser
 
 import bpy
 
-import arm.assets as assets
+from arm import assets
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
@@ -92,7 +92,7 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants)
 
     # Open json file
     json_name = shader_name + '.json'
-    with open(json_name) as f:
+    with open(json_name, encoding='utf-8') as f:
         json_file = f.read()
     json_data = json.loads(json_file)
 
@@ -140,6 +140,8 @@ def export_data(fp, sdk_path):
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
     export_navigation = bpy.data.worlds['Arm'].arm_navigation != 'Disabled'
     export_ui = bpy.data.worlds['Arm'].arm_ui != 'Disabled'
+    export_network = bpy.data.worlds['Arm'].arm_network != 'Disabled'
+
     assets.reset()
 
     # Build node trees
@@ -153,6 +155,7 @@ def export_data(fp, sdk_path):
     physics_found = False
     navigation_found = False
     ui_found = False
+    network_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
@@ -161,9 +164,10 @@ def export_data(fp, sdk_path):
     export_coll = bpy.data.collections.new("export_coll")
     bpy.context.scene.collection.children.link(export_coll)
     for scene in bpy.data.scenes:
-        if scene == bpy.context.scene: continue
+        if scene == bpy.context.scene:
+            continue
         for o in scene.collection.all_objects:
-            if o.type == "MESH" or o.type == "EMPTY":
+            if o.type in ('MESH', 'EMPTY'):
                 if o.name not in  export_coll.all_objects.keys():
                     export_coll.objects.link(o)
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -180,19 +184,27 @@ def export_data(fp, sdk_path):
                 navigation_found = True
             if ArmoryExporter.export_ui:
                 ui_found = True
+            if ArmoryExporter.export_network:
+                network_found = True
             assets.add(asset_path)
 
-    if physics_found == False: # Disable physics if no rigid body is exported
+    if physics_found is False: # Disable physics if no rigid body is exported
         export_physics = False
 
-    if navigation_found == False:
+    if navigation_found is False:
         export_navigation = False
 
-    if ui_found == False:
+    if ui_found is False:
         export_ui = False
+
+    if network_found == False:
+        export_network = False
 
     if wrd.arm_ui == 'Enabled':
         export_ui = True
+
+    if wrd.arm_network == 'Enabled':
+        export_network = True
 
     modules = []
     if wrd.arm_audio == 'Enabled':
@@ -203,6 +215,8 @@ def export_data(fp, sdk_path):
         modules.append('navigation')
     if export_ui:
         modules.append('ui')
+    if export_network:
+        modules.append('network')
 
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
@@ -271,7 +285,7 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, ArmoryExporter.import_traits)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -306,7 +320,7 @@ def compile(assets_only=False):
                 cmd.append(s)
 
     ffmpeg_path = arm.utils.get_ffmpeg_path()
-    if ffmpeg_path != None and ffmpeg_path != '':
+    if ffmpeg_path not in (None, ''):
         cmd.append('--ffmpeg')
         cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 
@@ -369,12 +383,17 @@ def compile(assets_only=False):
     #Project needs to be compiled at least once
     #before compilation server can work
     if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
-       state.proc_build = run_proc(cmd, build_done)
+        state.proc_build = run_proc(cmd, build_done)
     else:
         if assets_only or compilation_server:
             cmd.append('--nohaxe')
             cmd.append('--noproject')
         state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+        if bpy.app.background:
+            if state.proc_build.returncode == 0:
+                build_success()
+            else:
+                log.error('Build failed')
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
@@ -432,7 +451,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
     # Save internal Haxe scripts
     for text in bpy.data.texts:
         if text.filepath == '' and text.name[-3:] == '.hx':
-            with open('Sources/' + arm.utils.safestr(wrd.arm_project_package) + '/' + text.name, 'w') as f:
+            with open('Sources/' + arm.utils.safestr(wrd.arm_project_package) + '/' + text.name, 'w', encoding='utf-8') as f:
                 f.write(text.as_string())
 
     # Export data
@@ -503,14 +522,12 @@ def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_runtime == 'Krom':
         return 'krom'
-    else:
-        return 'html5'
+    return 'html5'
 
 def get_khajs_path(target):
     if target == 'krom':
         return arm.utils.build_dir() + '/debug/krom/krom.js'
-    else: # Browser
-        return arm.utils.build_dir() + '/debug/html5/kha.js'
+    return arm.utils.build_dir() + '/debug/html5/kha.js'
 
 def play():
     global scripts_mtime
@@ -575,15 +592,14 @@ def build_success():
                 template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browsername})
                 cmd = re.split(' +', template_str)
             if len(cmd) == 0:
-                if browsername == None or browsername == '':
+                if browsername in (None, ''):
                     webbrowser.open(url)
                     return
-                else:
-                    cmd = [browsername, url]
+                cmd = [browsername, url]
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 live_patch.start()
-                open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
+                open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w', encoding='utf-8').close()
             krom_location, krom_path = arm.utils.krom_paths()
             path = arm.utils.get_fp_build() + '/debug/krom'
             path_resources = path + '-resources'
@@ -607,7 +623,7 @@ def build_success():
         target_name = arm.utils.get_kha_target(state.target)
         files_path = os.path.join(arm.utils.get_fp_build(), target_name)
 
-        if (target_name == 'html5' or target_name == 'krom') and wrd.arm_minify_js:
+        if target_name in ('html5', 'krom') and wrd.arm_minify_js:
             # Minify JS
             minifier_path = sdk_path + '/lib/armory_tools/uglifyjs/bin/uglifyjs'
             if target_name == 'html5':
@@ -682,7 +698,7 @@ def build_success():
                 path_sdk = arm.utils.get_android_sdk_root_path()
                 if len(path_sdk) > 0:
                     # Check Environment Variables - ANDROID_SDK_ROOT
-                    if os.getenv('ANDROID_SDK_ROOT') == None:
+                    if os.getenv('ANDROID_SDK_ROOT') is None:
                         # Set value from settings
                         os.environ['ANDROID_SDK_ROOT'] = path_sdk
                 else:
@@ -741,7 +757,7 @@ def build_success():
 
 
 def done_gradlew_build():
-    if state.proc_publish_build == None:
+    if state.proc_publish_build is None:
         return
     result = state.proc_publish_build.poll()
     if result == 0:
