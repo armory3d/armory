@@ -57,7 +57,7 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    frag.write('vec3 emissionCol;')
+    frag.write('vec3 emissionCol;') #
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
 
@@ -183,6 +183,7 @@ def make_gi(context_id):
         geom.write('    }')
         geom.write('    else {')
         geom.write('      stage_output.gl_Position = float4(stage_input[i].voxpositionGeom.x, stage_input[i].voxpositionGeom.z, 0.0, 1.0);')
+
         geom.write('    }')
         geom.write('    output.Append(stage_output);')
         geom.write('  }')
@@ -234,6 +235,7 @@ def make_gi(context_id):
             frag.write('}')
         frag.add_uniform('vec3 sunCol', link="_sunColor")
         frag.write('basecol *= visibility * sunCol;')
+        frag.write('basecol += emissionCol;')
     else:
         print('Armory Warning: Voxel GI requires sun light and enabled shadows')
         vert.add_out('vec4 lightPositionGeom')
@@ -311,7 +313,6 @@ def make_ao(context_id):
         frag.write('RWTexture3D<float> voxels;')
         frag.write('struct SPIRV_Cross_Input { float3 wpos : TEXCOORD0; };')
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
-
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
         frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
         voxRes = str(rpdat.rp_voxelgi_resolution)
