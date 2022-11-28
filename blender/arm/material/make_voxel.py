@@ -15,8 +15,8 @@ def make(context_id):
         con = make_ao(context_id)
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
-    assets.gs_equal(con, assets.shader_cons['voxel_frag'])
-    assets.fs_equal(con, assets.shader_cons['voxel_geom'])
+    assets.fs_equal(con, assets.shader_cons['voxel_frag'])
+    assets.gs_equal(con, assets.shader_cons['voxel_geom'])
 
     return con
 
