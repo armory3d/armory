@@ -362,27 +362,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			#if rp_ssrefr_half
-			{
-				var t = new RenderTargetRaw();
-				t.name = "ssrefra";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = Inc.getHdrFormat();
-				path.createRenderTarget(t);
-			}
-
-			{
-				var t = new RenderTargetRaw();
-				t.name = "ssrefrb";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = Inc.getHdrFormat();
-				path.createRenderTarget(t);
-			}
-			#end
 			//holds rior and opacity 
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
