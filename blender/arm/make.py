@@ -301,99 +301,99 @@ def compile(assets_only=False):
     fp = arm.utils.get_fp()
     os.chdir(fp)
 
-    # Set build command
-    target_name = state.target
-
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
-    cmd = [node_path, khamake_path]
-
-    kha_target_name = arm.utils.get_kha_target(target_name)
-    if kha_target_name != '':
-        cmd.append(kha_target_name)
 
     # Custom exporter
-    if state.is_export:
+    if state.target == "custom":
+        cmd = [node_path, khamake_path]
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
             for s in item.arm_project_khamake.split(' '):
                 cmd.append(s)
-
-    ffmpeg_path = arm.utils.get_ffmpeg_path()
-    if ffmpeg_path not in (None, ''):
-        cmd.append('--ffmpeg')
-        cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
-
-    state.export_gapi = arm.utils.get_gapi()
-    cmd.append('-g')
-    cmd.append(state.export_gapi)
-    # Windows - Set Visual Studio Version
-    if state.target.startswith('windows'):
-        cmd.append('--visualstudio')
-        cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
-
-    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
-        if 'html5' in state.target or 'ios' in state.target:
-            pass
-        else:
-            cmd.append('--shaderversion')
-            cmd.append('110')
-    elif 'android' in state.target or 'html5' in state.target:
-        cmd.append('--shaderversion')
-        cmd.append('300')
-    else:
-        cmd.append('--shaderversion')
-        cmd.append('330')
-
-    if '_VR' in wrd.world_defs:
-        cmd.append('--vr')
-        cmd.append('webvr')
-
-    if arm.utils.get_pref_or_default('khamake_debug', False):
-        cmd.append('--debug')
-
-    if arm.utils.get_rp().rp_renderer == 'Raytracer':
-        cmd.append('--raytrace')
-        cmd.append('dxr')
-        dxc_path = fp + '/HlslShaders/dxc.exe'
-        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
-
-    if arm.utils.get_khamake_threads() != 1:
-        cmd.append('--parallelAssetConversion')
-        cmd.append(str(arm.utils.get_khamake_threads()))
-
-    compilation_server = False
-
-    cmd.append('--to')
-    if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
-        cmd.append(arm.utils.build_dir() + '/debug')
-        # Start compilation server
-        if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
-            compilation_server = True
-            arm.lib.server.run_haxe(arm.utils.get_haxe_path())
-    else:
-        cmd.append(arm.utils.build_dir())
-
-    if not wrd.arm_verbose_output:
-        cmd.append("--quiet")
-    else:
-        print("Using project from " + arm.utils.get_fp())
-        print("Running: ", *cmd)
-
-    #Project needs to be compiled at least once
-    #before compilation server can work
-    if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+        print(*cmd)
         state.proc_build = run_proc(cmd, build_done)
     else:
-        if assets_only or compilation_server:
-            cmd.append('--nohaxe')
-            cmd.append('--noproject')
-        state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
-        if bpy.app.background:
-            if state.proc_build.returncode == 0:
-                build_success()
+        cmd = [node_path, khamake_path]
+        target_name = state.target
+        kha_target_name = arm.utils.get_kha_target(target_name)
+        if kha_target_name != '':
+            cmd.append(kha_target_name)
+        ffmpeg_path = arm.utils.get_ffmpeg_path()
+        if ffmpeg_path not in (None, ''):
+            cmd.append('--ffmpeg')
+            cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
+
+        state.export_gapi = arm.utils.get_gapi()
+        cmd.append('-g')
+        cmd.append(state.export_gapi)
+        # Windows - Set Visual Studio Version
+        if state.target.startswith('windows'):
+            cmd.append('--visualstudio')
+            cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
+
+        if arm.utils.get_legacy_shaders() or 'ios' in state.target:
+            if 'html5' in state.target or 'ios' in state.target:
+                pass
             else:
-                log.error('Build failed')
+                cmd.append('--shaderversion')
+                cmd.append('110')
+        elif 'android' in state.target or 'html5' in state.target:
+            cmd.append('--shaderversion')
+            cmd.append('300')
+        else:
+            cmd.append('--shaderversion')
+            cmd.append('330')
+
+        if '_VR' in wrd.world_defs:
+            cmd.append('--vr')
+            cmd.append('webvr')
+
+        if arm.utils.get_pref_or_default('khamake_debug', False):
+            cmd.append('--debug')
+
+        if arm.utils.get_rp().rp_renderer == 'Raytracer':
+            cmd.append('--raytrace')
+            cmd.append('dxr')
+            dxc_path = fp + '/HlslShaders/dxc.exe'
+            subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
+
+        if arm.utils.get_khamake_threads() != 1:
+            cmd.append('--parallelAssetConversion')
+            cmd.append(str(arm.utils.get_khamake_threads()))
+
+        compilation_server = False
+
+        cmd.append('--to')
+        if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
+            cmd.append(arm.utils.build_dir() + '/debug')
+            # Start compilation server
+            if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
+                compilation_server = True
+                arm.lib.server.run_haxe(arm.utils.get_haxe_path())
+        else:
+            cmd.append(arm.utils.build_dir())
+
+        if not wrd.arm_verbose_output:
+            cmd.append("--quiet")
+        else:
+            print("Using project from " + arm.utils.get_fp())
+            print(*cmd)
+
+        #Project needs to be compiled at least once
+        #before compilation server can work
+        if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+            state.proc_build = run_proc(cmd, build_done)
+        else:
+            if assets_only or compilation_server:
+                cmd.append('--nohaxe')
+                cmd.append('--noproject')
+            state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+            if bpy.app.background:
+                if state.proc_build.returncode == 0:
+                    build_success()
+                else:
+                    log.error('Build failed')
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
