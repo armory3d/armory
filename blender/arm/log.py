@@ -5,6 +5,7 @@ CLI output.
 import platform
 import subprocess
 import sys
+import bpy
 
 DEBUG = 36
 INFO = 37
@@ -73,6 +74,8 @@ def error(text):
     print(colorize('ERROR: ' + text, ERROR), file=sys.stderr)
 
 def colorize(text:str, color=None):
+    if bpy.context.area is not None and bpy.context.area.type == 'CONSOLE':
+        return text
     if HAS_COLOR_SUPPORT and color is not None:
         csi = '\033['
         text = csi + str(color) + 'm' + text + csi + '0m'
