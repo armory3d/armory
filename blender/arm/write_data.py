@@ -574,7 +574,7 @@ def write_compiledglsl(defs, make_variants):
             if '_gbuffer2' in wrd.world_defs:
                 f.write('#define GBUF_IDX_2 2\n')
                 idx_emission += 1
-                idx_emission += 1
+                idx_refraction += 1
                 
 
             if '_EmissionShaded' in wrd.world_defs:

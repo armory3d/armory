@@ -83,7 +83,7 @@ class ParserState:
         self.out_rior = '1.450'
         self.out_emission_col = 'vec3(0.0)'
 
-    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str]:
+    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str]:
         """Return the shader output values as a tuple."""
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,
                 self.out_opacity, self.out_rior, self.out_emission_col)
