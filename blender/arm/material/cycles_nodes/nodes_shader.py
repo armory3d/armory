@@ -55,12 +55,12 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
         state.out_rior = '({0} * {3} + {1} * {2})'.format(rior1, rior2, fac_var, fac_inv_var)
 
 def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket, state: ParserState) -> None:
-    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[0])
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[0])
     ek1 = mat_state.emission_type
 
-    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     ek2 = mat_state.emission_type
 
     if state.parse_surface:

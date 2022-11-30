@@ -19,7 +19,7 @@ class RenderPathDeferred {
 		path.setTarget("gbuffer0", [
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
-			#if rp_gbuffer_emission "gbuffer_emission" #end
+			#if rp_gbuffer_emission "gbuffer_emission", #end
 			#if rp_ssrefr "gbuffer_refraction" #end
 		]);
 	}
