@@ -34,7 +34,7 @@ class SetMaterialValueParamNode extends LogicNode {
 		if(value == null) return;
 
 		if(! perObject){
-			UniformsManager.removeVectorValue(object, mat, link);
+			UniformsManager.removeFloatValue(object, mat, link);
 			object = Scene.active.root;
 		}
 
