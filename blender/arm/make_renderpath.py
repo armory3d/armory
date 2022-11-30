@@ -297,8 +297,6 @@ def build():
             assets.add_khafile_def('rp_ssrefr')
             assets.add_shader_pass('ssrefr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
-            if rpdat.arm_ss_refraction_half_res:
-                assets.add_khafile_def('rp_ssrefr_half')
 
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
