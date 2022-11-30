@@ -13,23 +13,33 @@ class SetMaterialRgbParamNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		var object: Object;
 		var perObject: Null<Bool>;
+		var mat: MaterialData;
+		var link: String;
+		var vec: Vec4;
 		
-		var object = inputs[1].get();
+		object = inputs[1].get();
 		if(object == null) return;
 
 		perObject = inputs[2].get();
 		if(perObject == null) perObject = false;
 
-		var mat = inputs[3].get();
+		mat = inputs[3].get();
 		if(mat == null) return;
 
+		link = inputs[4].get();
+		if(link == null) return;
+
+		vec = inputs[5].get();
+		if(vec == null) return;
+
 		if(! perObject){
-			UniformsManager.removeObjectFromMap(object, Vector);
+			UniformsManager.removeVectorValue(object, mat, link);
 			object = Scene.active.root;
 		}
 
-		UniformsManager.setVec3Value(mat, object, inputs[4].get(), inputs[5].get());
+		UniformsManager.setVec3Value(mat, object, inputs[4].get(), vec);
 		runOutput(0);
 	}
 }
