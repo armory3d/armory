@@ -26,8 +26,6 @@ class CreateRenderTargetNode extends LogicNode {
 		var mat = inputs[3].get();
 		if(mat == null) return;
 
-		trace("A");
-		UniformsManager.printTexMap();
 		if(! perObject){
 			UniformsManager.removeTextureValue(object, mat, inputs[4].get());
 			object = Scene.active.root;
@@ -36,9 +34,6 @@ class CreateRenderTargetNode extends LogicNode {
 		var img = Image.createRenderTarget(inputs[5].get(), inputs[6].get(), TextureFormat.RGBA32);
 		UniformsManager.setTextureValue(mat, object, inputs[4].get(), img);
 
-		trace("B");
-		UniformsManager.printTexMap();
-		
 		runOutput(0);
 	}
 }

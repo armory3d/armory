@@ -385,23 +385,6 @@ class UniformsManager extends Trait{
 		if(! entry.keys().hasNext()) material.remove(mat);
 		if(! material.keys().hasNext()) texturesMap.remove(object);
 	}
-
-	public static function printTexMap(){
-		for(o in texturesMap.keys()){
-			var oname = o.name;
-			var mmap = texturesMap.get(o);
-			for(m in mmap.keys()){
-				var mname = m.name;
-				var lmap = mmap.get(m);
-				for(l in lmap.keys()){
-					var lname = l;
-					var img = lmap.get(l);
-
-					trace("{ " + oname + " : " + mname + " : " + lname + " : " + img);
-				}
-			}
-		}
-	}
 }
 
 @:enum abstract UniformType(Int) from Int to Int {
