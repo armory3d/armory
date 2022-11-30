@@ -227,14 +227,22 @@ class UniformsManager extends Trait{
 		entry.set(link, value); // parameter name, value
 	}
 
-	// Mehtod to get object specific material parameter float value
+	// Method to get object specific material parameter float value
 	public static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
-		
+
 		if(object == null || mat == null) return null;
 
-		if(! floatsMap.exists(object)){
-			object = Scene.active.root;
+		// First check if float exists per object
+		var res = getObjectFloatLink(object, mat, link);
+		if(res == null) {
+			// If not defined per object, use default scene root 
+			res = getObjectFloatLink(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	// Get float link
+	static function getObjectFloatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 
 		var material = floatsMap.get(object);
 		if (material == null) return null;
@@ -245,14 +253,22 @@ class UniformsManager extends Trait{
 		return entry.get(link);
 	}
 
-	// Mehtod to get object specific material parameter vec3 value
+	// Method to get object specific material parameter vector value
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
-		
+
 		if(object == null || mat == null) return null;
 
-		if(! vectorsMap.exists(object)){
-			object = Scene.active.root;
+		// First check if vector exists per object
+		var res = getObjectVec3Link(object, mat, link);
+		if(res == null) {
+			// If not defined per object, use default scene root 
+			res = getObjectVec3Link(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	// Get vector link
+	static function getObjectVec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 
 		var material = vectorsMap.get(object);
 		if (material == null) return null;
@@ -263,18 +279,21 @@ class UniformsManager extends Trait{
 		return entry.get(link);
 	}
 
-	// Mehtod to get object specific material parameter texture value
+	// Method to get object specific material parameter texture value
 	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
 
 		if(object == null || mat == null) return null;
 
+		// First check if texture exists per object
 		var res = getObjectTextureLink(object, mat, link);
 		if(res == null) {
+			// If not defined per object, use default scene root 
 			res = getObjectTextureLink(Scene.active.root, mat, link);
 		}
 		return res;
 	}
 
+	// Get texture link
 	static function getObjectTextureLink(object: Object, mat: MaterialData, link: String): kha.Image {
 
 		var material = texturesMap.get(object);
@@ -323,6 +342,34 @@ class UniformsManager extends Trait{
 
 			case Texture: texturesMap.remove(object);
 		}
+	}
+
+	public static function removeFloatValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = floatsMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if(! entry.keys().hasNext()) material.remove(mat);
+		if(! material.keys().hasNext()) floatsMap.remove(object);
+	}
+
+	public static function removeVectorValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = vectorsMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if(! entry.keys().hasNext()) material.remove(mat);
+		if(! material.keys().hasNext()) vectorsMap.remove(object);
 	}
 
 	public static function removeTextureValue(object: Object, mat:MaterialData, link: String) {
