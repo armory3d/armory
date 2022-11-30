@@ -13,7 +13,7 @@ class ConvexCastNode(ArmLogicTreeNode):
         objects are considered
 
     @output Hit Position: The hit position in world coordinates
-    @output RB Position: Position of the convex RB at the time of collision.
+    @output Convex Position: Position of the convex RB at the time of collision.
     @output Normal: The surface normal of the hit position relative to
         the world.
     """
@@ -30,5 +30,5 @@ class ConvexCastNode(ArmLogicTreeNode):
         self.add_input('ArmIntSocket', 'Mask', default_value=1)
 
         self.add_output('ArmVectorSocket', 'Hit Position')
-        self.add_output('ArmVectorSocket', 'RB Position')
+        self.add_output('ArmVectorSocket', 'Convex Position')
         self.add_output('ArmVectorSocket', 'Normal')
