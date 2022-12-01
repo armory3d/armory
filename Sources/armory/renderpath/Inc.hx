@@ -7,32 +7,6 @@ import armory.math.Helper;
 
 class Inc {
 	static var path: RenderPath;
-	#if (rp_gi == "Voxel GI")
-	static var voxel_sh:kha.compute.Shader = null;
-	static var voxel_ta:kha.compute.TextureUnit;
-	static var voxel_tb:kha.compute.TextureUnit;
-	static var voxel_tc:kha.compute.TextureUnit;
-	static var voxel_td:kha.compute.TextureUnit;
-	static var voxel_te:kha.compute.TextureUnit;
-	static var voxel_tf:kha.compute.TextureUnit;
-	static var voxel_ca:kha.compute.ConstantLocation;
-	static var voxel_cb:kha.compute.ConstantLocation;
-	static var voxel_cc:kha.compute.ConstantLocation;
-	static var voxel_cd:kha.compute.ConstantLocation;
-	static var voxel_ce:kha.compute.ConstantLocation;
-	static var voxel_cf:kha.compute.ConstantLocation;
-	static var voxel_cg:kha.compute.ConstantLocation;
-	static var voxel_ch:kha.compute.ConstantLocation;
-	static var voxel_ci:kha.compute.ConstantLocation;
-	static var m = iron.math.Mat4.identity();
-	#end
-	#if (rp_gi_bounces)
-	static var bounce_sh:kha.compute.Shader = null;
-	static var bounce_ta:kha.compute.TextureUnit;
-	static var bounce_tb:kha.compute.TextureUnit;
-	static var bounce_tc:kha.compute.TextureUnit;
-	#end
-
 	public static var superSample = 1.0;
 
 	static var pointIndex = 0;
