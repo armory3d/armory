@@ -344,8 +344,6 @@ def build():
         assets.add_khafile_def('rp_stereo')
         assets.add_khafile_def('arm_vr')
         wrd.world_defs += '_VR'
-        assets.add(assets_path + 'vr.png')
-        assets.add_embedded_data('vr.png')
 
     rp_voxels = rpdat.rp_voxels
     has_voxels = arm.utils.voxel_support()
