@@ -1682,7 +1682,9 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
 
         layout.prop(rpdat, 'rp_voxels')
         col = layout.column()
+        col.enabled = rpdat.rp_voxels != 'Off'
         col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'rp_voxelgi_relight')
         col.prop(rpdat, 'arm_voxelgi_cones')
@@ -1696,6 +1698,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_temporal')
         col.label(text="Light")
         col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col.prop(rpdat, 'arm_voxelgi_occ')
