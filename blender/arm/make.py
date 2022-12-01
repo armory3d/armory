@@ -440,13 +440,14 @@ def build(target, is_play=False, is_publish=False, is_export=False):
             break
     if write_texts:
         area = bpy.context.area
-        old_type = area.type
-        area.type = 'TEXT_EDITOR'
-        for text in bpy.data.texts:
-            if text.filepath != '' and text.is_dirty and os.path.isfile(text.filepath):
-                area.spaces[0].text = text
-                bpy.ops.text.save()
-        area.type = old_type
+        if area is not None:
+            old_type = area.type
+            area.type = 'TEXT_EDITOR'
+            for text in bpy.data.texts:
+                if text.filepath != '' and text.is_dirty and os.path.isfile(text.filepath):
+                    area.spaces[0].text = text
+                    bpy.ops.text.save()
+            area.type = old_type
 
     # Save internal Haxe scripts
     for text in bpy.data.texts:
