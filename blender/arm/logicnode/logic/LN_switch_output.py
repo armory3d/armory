@@ -31,7 +31,7 @@ class SwitchNode(ArmLogicTreeNode):
         op.out_name_format = 'Case {0}'
         op.in_index_name_offset = -1
         column = row.column(align=True)
-        op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op = column.operator('arm.node_remove_input_output', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
         if len(self.inputs) == self.min_inputs:
             column.enabled = False
