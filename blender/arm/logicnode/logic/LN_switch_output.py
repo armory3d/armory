@@ -8,7 +8,7 @@ class SwitchNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNSwitchNode'
     bl_label = 'Switch Output'
-    arm_version = 2
+    arm_version = 3
     min_inputs = 2
 
     def __init__(self):
@@ -31,13 +31,13 @@ class SwitchNode(ArmLogicTreeNode):
         op.out_name_format = 'Case {0}'
         op.in_index_name_offset = -1
         column = row.column(align=True)
-        op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op = column.operator('arm.node_remove_input_output', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
         if len(self.inputs) == self.min_inputs:
             column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 2):
             raise LookupError()
             
         return NodeReplacement.Identity(self)
