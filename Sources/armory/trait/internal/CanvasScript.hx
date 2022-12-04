@@ -21,10 +21,10 @@ class CanvasScript extends Trait {
 	var onReadyFuncs: Array<Void->Void> = null;
 
 	/**
-	 * Create new CanvasScript from canvas
-	 * @param canvasName Name of the canvas
-	 * @param font font file (Optional)
-	 */
+		Create new CanvasScript from canvas
+		@param canvasName Name of the canvas
+		@param font font file (Optional)
+	**/
 	public function new(canvasName: String, font: String = Canvas.defaultFontName) {
 		super();
 		cnvName = canvasName;
@@ -101,27 +101,27 @@ class CanvasScript extends Trait {
 	}
 
 	/**
-	 * Returns an element of the canvas.
-	 * @param name The name of the element
-	 * @return TElement
-	 */
+		Returns an element of the canvas.
+		@param name The name of the element
+		@return TElement
+	**/
 	public function getElement(name: String): TElement {
 		for (e in canvas.elements) if (e.name == name) return e;
 		return null;
 	}
 
 	/**
-	 * Returns an array of the elements of the canvas.
-	 * @return Array<TElement>
-	 */
+		Returns an array of the elements of the canvas.
+		@return Array<TElement>
+	**/
 	public function getElements(): Array<TElement> {
 		return canvas.elements;
 	}
 
 	/**
-	 * Returns the canvas object of this trait.
-	 * @return TCanvas
-	 */
+		Returns the canvas object of this trait.
+		@return TCanvas
+	**/
 	public function getCanvas(): Null<TCanvas> {
 		return canvas;
 	}
@@ -141,26 +141,26 @@ class CanvasScript extends Trait {
 	}
 
 	/**
-	 * Set visibility of canvas
-	 * @param visible Whether canvas should be visible or not
-	*/
+		Set visibility of canvas
+		@param visible Whether canvas should be visible or not
+	**/
 	public function setCanvasVisibility(visible: Bool){
 		for (e in canvas.elements) e.visible = visible;
 	}
 
 	/**
-	 * Set dimensions of canvas
-	 * @param x Width
-	 * @param y Height
-	 */
+		Set dimensions of canvas
+		@param x Width
+		@param y Height
+	**/
 	public function setCanvasDimensions(x: Int, y: Int){
 		canvas.width = x;
 		canvas.height = y;
 	}
 	/**
-	 * Set font size of the canvas
-	 * @param fontSize Size of font to be setted
-	 */
+		Set font size of the canvas
+		@param fontSize Size of font to be setted
+	**/
 	public function setCanvasFontSize(fontSize: Int) {
 		cui.t.FONT_SIZE = fontSize;
 		cui.setScale(cui.ops.scaleFactor);
@@ -169,9 +169,9 @@ class CanvasScript extends Trait {
 	public function getCanvasFontSize(): Int {
 		return cui.t.FONT_SIZE;
 	}
-	
+
 	public function setCanvasInputTextFocus(e: Handle, focus: Bool) {
-		if(focus == true){
+		if (focus == true){
 			@:privateAccess cui.startTextEdit(e);
 		} else {
 			@:privateAccess cui.deselectText();
