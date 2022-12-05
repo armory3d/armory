@@ -10,7 +10,7 @@ class ArrayAddNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNArrayAddNode'
     bl_label = 'Array Add'
-    arm_version = 2
+    arm_version = 3
     min_inputs = 5
 
     def __init__(self):
@@ -35,12 +35,12 @@ class ArrayAddNode(ArmLogicTreeNode):
         op.socket_type = 'ArmDynamicSocket'
         column = row.column(align=True)
         op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
-        op.node_index = str(id(self))
+        op.node_index = self.get_id_str()
         if len(self.inputs) == self.min_inputs:
             column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 2):
             raise LookupError()
             
         return NodeReplacement.Identity(self)
