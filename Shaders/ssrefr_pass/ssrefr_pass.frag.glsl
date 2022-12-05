@@ -9,6 +9,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D tex;
+uniform sampler2D tex1;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1;
@@ -77,18 +78,13 @@ vec4 rayCast(vec3 dir) {
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.z;
-
-	if (roughness == 1.0) discard;
-
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
-	vec2 ioro = unpackFloat2(gr.r);
-	if (ioro.x == 1.0) discard;
-
-	if (ioro.y == 1.0) discard;
+	float ior = unpackFloat2(gr.r).x;
+	float opac = unpackFloat2(gr.r).y;
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if (depth == 1.0) discard;
+	if (ior == 1.0 || opac == 1.0 || roughness == 1.0 || depth == 1.0) { discard; return;}
 
     vec2 enc = g0.rg;
 	vec3 n;
@@ -98,7 +94,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
-	vec3 refracted = refract(viewPos, viewNormal,  1.0 / ioro.x);
+	vec3 refracted = refract(viewPos, viewNormal,  1.0 / ior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -123,5 +119,5 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = refractionCol * intensity;
+	fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb + refractionCol * intensity;
 }

@@ -383,6 +383,16 @@ class RenderPathDeferred {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 			
+			//holds colors
+			var t = new RenderTargetRaw();
+			t.name = "tex1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			
 			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -606,7 +616,9 @@ class RenderPathDeferred {
 				path.generateMipmaps(voxels);
 			}
 		}
+
 		#end
+
 		// ---
 		// Deferred light
 		// ---
@@ -617,7 +629,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-
+		
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
@@ -822,14 +834,10 @@ class RenderPathDeferred {
 			#end
 		}
 		#end
-		
+
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
-				path.setTarget("refr");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 				#end
@@ -838,11 +846,85 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
+				path.setTarget("refr");
+				path.bindTarget("tex", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
 				setTargetMeshes();
 				path.drawMeshes("refraction");
 
+				// ---
+				// Deferred light
+				// ---
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
+				path.setTarget("tex");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				
+				#if rp_gbuffer2
+				{
+					path.bindTarget("gbuffer2", "gbuffer2");
+				}
+				#end
+
+				#if rp_gbuffer_emission
+				{
+					path.bindTarget("gbuffer_emission", "gbufferEmission");
+				}
+				#end
+
+				#if (rp_ssgi != "Off")
+				{
+					if (armory.data.Config.raw.rp_ssgi != false) {
+						path.bindTarget("singlea", "ssaotex");
+					}
+					else {
+						path.bindTarget("empty_white", "ssaotex");
+					}
+				}
+				#end
+				var voxelao_pass = false;
+				#if rp_voxelao
+				if (armory.data.Config.raw.rp_gi != false)
+				{
+					#if arm_config
+					voxelao_pass = true;
+					#end
+					path.bindTarget(voxels, "voxels");
+					#if arm_voxelgi_temporal
+					{
+						path.bindTarget(voxelsLast, "voxelsLast");
+					}
+					#end
+				}
+				#end
+
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
+
+				#if rp_material_solid
+				path.drawShader("shader_datas/deferred_light_solid/deferred_light");
+				#elseif rp_material_mobile
+				path.drawShader("shader_datas/deferred_light_mobile/deferred_light");
+				#else
+				voxelao_pass ?
+					path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
+					path.drawShader("shader_datas/deferred_light/deferred_light");
+				#end
+
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex");
+				path.bindTarget("tex", "tex1");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");

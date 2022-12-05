@@ -266,13 +266,13 @@ def make_deferred(con_mesh, rpasses):
         assets.add_khafile_def('rp_gbuffer_emission')
         # Alpha channel is unused at the moment
         frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
-    
+
     if '_SSRefraction' in wrd.world_defs:
         if 'refraction' in rpasses:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
         else:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));') #avoid doing refraction on opaque / non-refractive objects
-
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
+        
     return con_mesh
 
 
