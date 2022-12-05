@@ -84,8 +84,11 @@ void main() {
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if (ior == 1.0 || opac == 1.0 || roughness == 1.0 || depth == 1.0) { discard; return;}
-
+	if (depth == 1.0) { fragColor = textureLod(tex, texCoord, 0.0); return; }
+	else if (ior == 1.0 || opac == 1.0 || roughness == 1.0) { 
+		discard; return;
+	}
+	
     vec2 enc = g0.rg;
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);

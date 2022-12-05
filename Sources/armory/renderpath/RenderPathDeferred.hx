@@ -838,10 +838,6 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-				#end
-
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -849,10 +845,9 @@ class RenderPathDeferred {
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-
+				
 				setTargetMeshes();
 				path.drawMeshes("refraction");
-
 				// ---
 				// Deferred light
 				// ---
@@ -863,7 +858,7 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
-				
+
 				#if rp_gbuffer2
 				{
 					path.bindTarget("gbuffer2", "gbuffer2");
@@ -932,7 +927,7 @@ class RenderPathDeferred {
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 
 				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer0"); // Unbind depth so we can read it
+				path.setDepthFrom("tex", "gbuffer0");
 				#end
 			}
 		}
