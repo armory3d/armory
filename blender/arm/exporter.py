@@ -2438,7 +2438,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_tilesheets()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = self.scene.world.name
+                self.output['world_ref'] = arm.utils.safestr(self.scene.world.name)
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
