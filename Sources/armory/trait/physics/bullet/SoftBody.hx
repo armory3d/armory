@@ -1,5 +1,6 @@
 package armory.trait.physics.bullet;
 
+import kha.arrays.ByteArray;
 #if arm_bullet
 
 import iron.math.Vec4;
@@ -49,8 +50,8 @@ class SoftBody extends Trait {
 		});
 	}
 
-	function fromI16(ar: kha.arrays.Int16Array, scalePos: Float): kha.arrays.Float32Array {
-		var vals = new kha.arrays.Float32Array(Std.int(ar.length / 4) * 3);
+	function fromI16(ar: kha.arrays.Int16Array, scalePos: Float): haxe.ds.Vector<Float> {
+		var vals = new haxe.ds.Vector<Float>(Std.int(ar.length / 4) * 3);
 		for (i in 0...Std.int(vals.length / 3)) {
 			vals[i * 3    ] = (ar[i * 4    ] / 32767) * scalePos;
 			vals[i * 3 + 1] = (ar[i * 4 + 1] / 32767) * scalePos;
@@ -59,10 +60,10 @@ class SoftBody extends Trait {
 		return vals;
 	}
 
-	function fromU32(ars: Array<kha.arrays.Uint32Array>): kha.arrays.Uint32Array {
+	function fromU32(ars: Array<kha.arrays.Uint32Array>): haxe.ds.Vector<Int> {
 		var len = 0;
 		for (ar in ars) len += ar.length;
-		var vals = new kha.arrays.Uint32Array(len);
+		var vals = new haxe.ds.Vector<Int>(len);
 		var i = 0;
 		for (ar in ars) {
 			for (j in 0...ar.length) {
@@ -137,26 +138,8 @@ class SoftBody extends Trait {
 			vecindVector.set(i, vecind.get(i));
 		}
 
-		/* trace("_______________________________________________");
-		trace(worldInfo);
-
-		//var posVector: haxe.ds.Vector<Float> = cast positions;
-		trace(positions);
-		for(vvv in 0...positions.length) trace(positions.get(vvv));
-		trace("posVector");
-		for(vvv in 0...positionsVector.length) trace(positionsVector.get(vvv));
-
-		//var vecindVector: haxe.ds.Vector<Int> = cast vecind;
-		trace(vecind);
-		for(vvv in 0...vecind.length) trace(vecind.get(vvv));
-		trace("vecindVector");
-		for(vvv in 0...vecindVector.length) trace(vecindVector.get(vvv));
-
-		trace(numtri);
-		trace("_______________________________________________"); */
-
 		#if js
-		body = helpers.CreateFromTriMesh(worldInfo, positionsVector, vecindVector, numtri);
+		body = helpers.CreateFromTriMesh(worldInfo, positions, vecind, numtri);
 		#elseif cpp
 		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
 		#end
@@ -203,17 +186,29 @@ class SoftBody extends Trait {
 	function update() {
 		var mo = cast(object, MeshObject);
 		var geom = mo.data.geom;
-
+		trace(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; UPDATE");
 		#if arm_deinterleaved
+		trace("deinterleieved");
 		var v = geom.vertexBuffers[0].lock();
 		var n = geom.vertexBuffers[1].lock();
 		#else
-		var v = geom.vertexBuffer.lock();
+		var v:ByteArray = geom.vertexBuffer.lock();
 		var vbPos = geom.vertexBufferMap.get("pos");
 		var v2 = vbPos != null ? vbPos.lock() : null; // For shadows
 		var l = geom.structLength;
 		#end
-		var numVerts = Std.int(v.length / l);
+		var numVerts = geom.getVerticesCount();
+		trace("num verts = " + numVerts);
+		for(i in 0...numVerts * l) {
+			trace("point " + i + " = " + v.getInt16( i * 2 ));
+		}
+		trace("num tris = " + geom.numTris);
+		trace("structLength = " + l);
+		trace("total len =" + v.byteLength);
+		for(k in geom.vertexBufferMap.keys()){
+			trace("key = " + k);
+			trace(geom.vertexBufferMap.get(k));
+		}
 
 		#if js
 		var nodes = body.get_m_nodes();
@@ -241,6 +236,7 @@ class SoftBody extends Trait {
 
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);
+			var vertIndex = i * l * 2;
 			#if js
 			var nodePos = node.get_m_x();
 			var nodeNor = node.get_m_n();
@@ -256,17 +252,18 @@ class SoftBody extends Trait {
 			n.set(i * 2 + 1, Std.int(nodeNor.y() * 32767));
 			v.set(i * 4 + 3, Std.int(nodeNor.z() * 32767));
 			#else
-			v.set(i * l    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-			v.set(i * l + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-			v.set(i * l + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+			//trace(i);
+			v.setInt16(vertIndex        , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+			v.setInt16(vertIndex + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+			v.setInt16(vertIndex + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
 			if (vbPos != null) {
-				v2.set(i * 4    , v.get(i * l    ));
-				v2.set(i * 4 + 1, v.get(i * l + 1));
-				v2.set(i * 4 + 2, v.get(i * l + 2));
+				v2.setInt16(i * 8    , v.getInt16(vertIndex    ));
+				v2.setInt16(i * 8 + 2, v.getInt16(vertIndex + 2));
+				v2.setInt16(i * 8 + 4, v.getInt16(vertIndex + 4));
 			}
-			v.set(i * l + 3, Std.int(nodeNor.z() * 32767));
-			v.set(i * l + 4, Std.int(nodeNor.x() * 32767));
-			v.set(i * l + 5, Std.int(nodeNor.y() * 32767));
+			v.setInt16(vertIndex + 6, Std.int(nodeNor.z() * 32767));
+			v.setInt16(vertIndex + 8, Std.int(nodeNor.x() * 32767));
+			v.setInt16(vertIndex + 10, Std.int(nodeNor.y() * 32767));
 			#end
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
