@@ -66,6 +66,8 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
     If `done` is not `None`, it is called afterwards in the main thread.
     """
     use_thread = not bpy.app.background
+    
+    print(* cmd)
 
     def wait_for_proc(proc: subprocess.Popen):
         proc.wait()
@@ -469,6 +471,9 @@ def build(target, is_play=False, is_publish=False, is_export=False):
 
 def play_done():
     """Called if the player was stopped/terminated."""
+    if state.proc_play is not None:
+        if state.proc_play.returncode != 0:
+            log.warn(f'Player exited code {state.proc_play.returncode}')
     state.proc_play = None
     state.redraw_ui = True
     log.clear()
@@ -578,7 +583,11 @@ def build_success():
             os.chdir(arm.utils.get_fp())
             prefs = arm.utils.get_arm_preferences()
             host = 'localhost'
-            t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
+            t = threading.Thread(name='localserver',
+                target=arm.lib.server.run_tcp,
+                args=(prefs.html5_server_port,
+                prefs.html5_server_log),
+                daemon=True)
             t.start()
             build_dir = arm.utils.build_dir()
             path = '{}/debug/html5/'.format(build_dir)
@@ -590,10 +599,19 @@ def build_success():
             elif hasattr(browser,"_name"):
                 browsername = getattr(browser,'_name')
             if 'ARMORY_PLAY_HTML5' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browsername})
-                cmd = re.split(' +', template_str)
+                tplstr = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({
+                    'host': host,
+                    'port': prefs.html5_server_port, 
+                    'width': width,
+                    'height': height,
+                    'url': url,
+                    'path': path,
+                    'dir': build_dir,
+                    'browser': browsername
+                })
+                cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
-                if browsername in (None, ''):
+                if browsername in (None, '', 'default'):
                     webbrowser.open(url)
                     return
                 cmd = [browsername, url]
@@ -607,8 +625,17 @@ def build_success():
             pid = os.getpid()
             os.chdir(krom_location)
             if 'ARMORY_PLAY_KROM' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
-                cmd = re.split(' +', template_str)
+                tplstr = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({
+                    'pid': pid,
+                    'audio': wrd.arm_audio != 'Disabled',
+                    'location': krom_location,
+                    'krom_path': krom_path,
+                    'path': path,
+                    'resources': path_resources,
+                    'width': width,
+                    'height': height
+                })
+                cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
                 cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
@@ -616,9 +643,13 @@ def build_success():
                     cmd.append(str(pid))
                 if wrd.arm_audio == 'Disabled':
                     cmd.append('--nosound')
-        if wrd.arm_verbose_output:
-            print(*cmd)
-        state.proc_play = run_proc(cmd, play_done)
+        try:
+            state.proc_play = run_proc(cmd, play_done)
+        except:
+            print('Failed to lauch player')
+            if wrd.arm_runtime == 'Browser':
+                webbrowser.open(url)
+
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
         target_name = arm.utils.get_kha_target(state.target)
