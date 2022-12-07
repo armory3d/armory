@@ -118,7 +118,9 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
     # exportMesh.calc_loop_triangles()
     vcol0 = self.get_nth_vertex_colors(export_mesh, 0)
     vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
+    print("EXPORT")
     num_verts = len(vert_list)
+    print(num_verts)
     num_uv_layers = len(export_mesh.uv_layers)
     # Check if shape keys were exported
     has_morph_target = self.get_shape_keys(bobject.data)
