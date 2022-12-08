@@ -151,7 +151,7 @@ def add_world_defs():
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
-
+	#really unsure about these lines.
     if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         wrd.world_defs += '_Brdf'
     if '_Brdf' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
