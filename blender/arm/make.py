@@ -66,8 +66,6 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
     If `done` is not `None`, it is called afterwards in the main thread.
     """
     use_thread = not bpy.app.background
-    
-    print(* cmd)
 
     def wait_for_proc(proc: subprocess.Popen):
         proc.wait()
@@ -598,18 +596,23 @@ def build_success():
                 browsername = getattr(browser,'name')
             elif hasattr(browser,"_name"):
                 browsername = getattr(browser,'_name')
-            if 'ARMORY_PLAY_HTML5' in os.environ:
-                tplstr = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({
-                    'host': host,
-                    'port': prefs.html5_server_port, 
-                    'width': width,
-                    'height': height,
-                    'url': url,
-                    'path': path,
-                    'dir': build_dir,
-                    'browser': browsername
-                })
-                cmd = re.split(' +', tplstr)
+            envvar = 'ARMORY_PLAY_HTML5'
+            if envvar in os.environ:
+                envcmd = os.environ[envvar]
+                if len(envcmd) == 0:
+                    log.warn(f"Your {envvar} environment variable is set to an empty string")
+                else:
+                    tplstr = Template(envcmd).safe_substitute({
+                        'host': host,
+                        'port': prefs.html5_server_port, 
+                        'width': width,
+                        'height': height,
+                        'url': url,
+                        'path': path,
+                        'dir': build_dir,
+                        'browser': browsername
+                    })
+                    cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
                 if browsername in (None, '', 'default'):
                     webbrowser.open(url)
@@ -624,18 +627,23 @@ def build_success():
             path_resources = path + '-resources'
             pid = os.getpid()
             os.chdir(krom_location)
-            if 'ARMORY_PLAY_KROM' in os.environ:
-                tplstr = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({
-                    'pid': pid,
-                    'audio': wrd.arm_audio != 'Disabled',
-                    'location': krom_location,
-                    'krom_path': krom_path,
-                    'path': path,
-                    'resources': path_resources,
-                    'width': width,
-                    'height': height
-                })
-                cmd = re.split(' +', tplstr)
+            envvar = 'ARMORY_PLAY_KROM'
+            if envvar in os.environ:
+                envcmd = os.environ[envvar]
+                if len(envcmd) == 0:
+                    log.warn(f"Your {envvar} environment variable is set to an empty string")
+                else:
+                    tplstr = Template(envcmd).safe_substitute({
+                        'pid': pid,
+                        'audio': wrd.arm_audio != 'Disabled',
+                        'location': krom_location,
+                        'krom_path': krom_path,
+                        'path': path,
+                        'resources': path_resources,
+                        'width': width,
+                        'height': height
+                    })
+                    cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
                 cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
@@ -643,10 +651,11 @@ def build_success():
                     cmd.append(str(pid))
                 if wrd.arm_audio == 'Disabled':
                     cmd.append('--nosound')
+        print(*cmd)
         try:
             state.proc_play = run_proc(cmd, play_done)
         except:
-            print('Failed to lauch player')
+            log.warn('Failed to launch')
             if wrd.arm_runtime == 'Browser':
                 webbrowser.open(url)
 
