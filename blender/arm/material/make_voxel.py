@@ -28,7 +28,7 @@ def make(context_id):
     return con
 
 def make_gi(context_id):
-    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
+    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_reds': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_write_alpha': False, 'conservative_raster': True })
     wrd = bpy.data.worlds['Arm']
 
     vert = con_voxel.make_vert()
