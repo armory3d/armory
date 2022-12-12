@@ -15,7 +15,7 @@ class RenderPathDeferred {
 	#end
 
 	public static inline function setTargetMeshes() {
-		// Always keep the order of render targets the same as defined in compiled.inc
+		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
@@ -371,7 +371,7 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			
+
 			//holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
 			t.name = "refr";
@@ -382,7 +382,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
-			
+
 			//holds colors
 			var t = new RenderTargetRaw();
 			t.name = "tex1";
@@ -392,7 +392,7 @@ class RenderPathDeferred {
 			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			
+
 			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -855,7 +855,6 @@ class RenderPathDeferred {
 				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 				#end
 				path.setTarget("tex");
-				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 
