@@ -31,7 +31,7 @@ float depth;
 vec3 viewPos;
 
 const int numBinarySearchSteps = 7;
-const int maxSteps = 128;
+const int maxSteps = 18;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -122,5 +122,5 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = textureLod(tex1, texCoord.xy, 0.0).rgb + refractionCol * intensity;
+	fragColor.rgb = (textureLod(tex1, texCoord.xy, 0.0).rgb + refractionCol) * intensity;
 }
