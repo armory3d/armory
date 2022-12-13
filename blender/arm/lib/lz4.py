@@ -36,14 +36,14 @@ class LZ4:
 
     @staticmethod
     def encode_bound(size: int) -> int:
-        return 0 if size > 0x7e000000 else size + (size // 255 | 0) + 16
+        return 0 if size > 0x7E000000 else size + (size // 255 | 0) + 16
 
     @staticmethod
     def encode(b: bytes) -> bytes:
         i_buf: np.ndarray = np.frombuffer(b, dtype=uint8)
         i_len = i_buf.size
 
-        if i_len >= 0x7e000000:
+        if i_len >= 0x7E000000:
             raise LZ4RangeException("Input buffer is too large")
 
         # "The last match must start at least 12 bytes before end of block"
@@ -67,22 +67,30 @@ class LZ4:
         while True:
             ref_pos = int32(0)
             m_offset = 0
-            sequence = uint32(i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24)
+            sequence = uint32(
+                i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24
+            )
 
             # Match-finding loop
             while i_pos <= last_match_pos:
                 # Conversion to uint32 is mandatory to ensure correct
                 # unsigned right shift (compare with .hx implementation)
-                sequence = uint32(uint32(sequence) >> uint32(8) | i_buf[i_pos + 3] << 24)
-                hash_val = (sequence * 0x9e37 & 0xffff) + (uint32(sequence * 0x79b1) >> uint32(16)) & 0xffff
+                sequence = uint32(
+                    uint32(sequence) >> uint32(8) | i_buf[i_pos + 3] << 24
+                )
+                hash_val = (sequence * 0x9E37 & 0xFFFF) + (
+                    uint32(sequence * 0x79B1) >> uint32(16)
+                ) & 0xFFFF
                 ref_pos = LZ4.hash_table[hash_val]
                 LZ4.hash_table[hash_val] = i_pos
                 m_offset = i_pos - ref_pos
-                if (m_offset < 65536
-                        and i_buf[ref_pos + 0] == (sequence & 0xff)
-                        and i_buf[ref_pos + 1] == ((sequence >> uint32(8)) & 0xff)
-                        and i_buf[ref_pos + 2] == ((sequence >> uint32(16)) & 0xff)
-                        and i_buf[ref_pos + 3] == ((sequence >> uint32(24)) & 0xff)):
+                if (
+                    m_offset < 65536
+                    and i_buf[ref_pos + 0] == (sequence & 0xFF)
+                    and i_buf[ref_pos + 1] == ((sequence >> uint32(8)) & 0xFF)
+                    and i_buf[ref_pos + 2] == ((sequence >> uint32(16)) & 0xFF)
+                    and i_buf[ref_pos + 3] == ((sequence >> uint32(24)) & 0xFF)
+                ):
                     break
 
                 i_pos += 1
@@ -105,7 +113,7 @@ class LZ4:
 
             # Write token, length of literals if needed
             if l_len >= 15:
-                o_buf[o_pos] = 0xf0 | token
+                o_buf[o_pos] = 0xF0 | token
                 o_pos += 1
                 l = l_len - 15
                 while l >= 255:
@@ -149,7 +157,7 @@ class LZ4:
         # Last sequence is literals only
         l_len = i_len - anchor_pos
         if l_len >= 15:
-            o_buf[o_pos] = 0xf0
+            o_buf[o_pos] = 0xF0
             o_pos += 1
             l = l_len - 15
             while l >= 255:
