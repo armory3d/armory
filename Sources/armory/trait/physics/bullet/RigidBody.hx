@@ -474,6 +474,15 @@ class RigidBody extends iron.Trait {
 		body.setAngularVelocity(vec1);
 	}
 
+	public function getPointVelocity(x: Float, y: Float, z: Float) {
+		var linear = getLinearVelocity();
+
+		var relativePoint = new Vec4(x, y, z).sub(transform.world.getLoc());
+		var angular = getAngularVelocity().cross(relativePoint);
+
+		return linear.add(angular);
+	}
+
 	public function setFriction(f: Float) {
 		var bodyColl: bullet.Bt.CollisionObject = body;
 		bodyColl.setFriction(f);
