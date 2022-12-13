@@ -1,6 +1,5 @@
 from arm.logicnode.arm_nodes import *
 
-
 class DrawPolygonNode(ArmLogicTreeNode):
     """Draws a polygon.
 
@@ -22,7 +21,8 @@ class DrawPolygonNode(ArmLogicTreeNode):
     bl_idname = 'LNDrawPolygonNode'
     bl_label = 'Draw Polygon'
     arm_section = 'draw'
-    arm_version = 1
+    arm_version = 2
+    min_inputs = 6
 
     num_choices: IntProperty(default=1, min=0)
 
@@ -58,6 +58,15 @@ class DrawPolygonNode(ArmLogicTreeNode):
         op.node_index = str(id(self))
         op.callback_name = 'add_sockets'
 
-        op = row.operator('arm.node_call_func', text='', icon='X', emboss=True)
+        column = row.column(align=True)
+        op = column.operator('arm.node_call_func', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
         op.callback_name = 'remove_sockets'
+        if len(self.inputs) == self.min_inputs:
+            column.enabled = False
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)
