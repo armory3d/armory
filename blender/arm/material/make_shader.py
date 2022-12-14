@@ -97,7 +97,7 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             con = make_transluc.make(rp)
 
         elif rp == 'overlay':
-            con = make_overlay.make(rp)
+            con = make_mesh.make(rp, rpasses)
 
         elif rp == 'decal':
             con = make_decal.make(rp)

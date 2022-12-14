@@ -233,7 +233,7 @@ def make_deferred(con_mesh, rpasses):
     frag.add_include('std/gbuffer.glsl')
 
     if mat_state.material.arm_two_sided:
-        frag.write('if (!gl_FrontFacing) n *= -1;') # Flip normal when drawing back-face
+        frag.write('if (!gl_FrontFacing) n *= -1;') #Flip normal when drawing back-face
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
