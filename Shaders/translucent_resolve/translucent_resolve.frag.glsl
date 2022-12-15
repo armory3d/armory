@@ -2,8 +2,6 @@
 #version 450
 
 #include "compiled.inc"
-#include "std/math.glsl"
-#include "std/gbuffer.glsl"
 
 uniform vec2 texSize;
 uniform sampler2D accum;
