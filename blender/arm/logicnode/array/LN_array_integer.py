@@ -14,7 +14,7 @@ class IntegerArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
         self.register_id()
 
     def arm_init(self, context):
-        self.add_output('ArmNodeSocketArray', 'Array')
+        self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
         self.add_output('ArmIntSocket', 'Length')
 
     def draw_content(self, context, layout):
