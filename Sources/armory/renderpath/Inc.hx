@@ -390,7 +390,6 @@ class Inc {
 		path.clearTarget(0xff000000);
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
-		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
 
 		#if rp_shadowmap

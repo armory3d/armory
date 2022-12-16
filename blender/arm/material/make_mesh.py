@@ -509,7 +509,7 @@ def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
-    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
+    parse_opacity = True#blend or mat_utils.is_transluc(mat_state.material)
 
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
@@ -533,14 +533,14 @@ def make_forward(con_mesh):
         mrt = rpdat.rp_ssr  # mrt: multiple render targets
         if mrt:
             # Store light gbuffer for post-processing
-            frag.add_out('vec4 fragColor[2]')
+            frag.add_out('vec4 fragColor[3]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
         else:
-            frag.add_out('vec4 fragColor[1]')
+            frag.add_out('vec4 fragColor[3]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
 
         if '_LDR' in wrd.world_defs:
@@ -550,6 +550,11 @@ def make_forward(con_mesh):
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
+    
+    if '_SSRefraction' in wrd.world_defs:
+        frag.write('fragColor[2] = vec4(packFloat2(rior, opacity));')
+    else:
+        frag.write('fragColor[2] = vec4(packFloat2(1.0, 1.0));')
 
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
@@ -584,7 +589,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
-   
+
+    # Pack gbuffer
+    frag.add_include('std/gbuffer.glsl')
+
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 

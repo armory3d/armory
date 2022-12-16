@@ -86,7 +86,7 @@ void main() {
 
 	if (depth == 1.0) { fragColor = textureLod(tex, texCoord, 0.0); return; }
 	else if (ior == 1.0 || opac == 1.0 || roughness == 1.0) { 
-		discard; return;
+		discard;
 	}
 	
     vec2 enc = g0.rg;

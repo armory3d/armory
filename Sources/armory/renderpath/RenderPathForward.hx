@@ -17,11 +17,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+			#if rp_ssr "lbuffer1", #end
+			#if rp_ssrefr "gbuffer_refraction" #end
+			]);
 		}
 		#else
 		{
@@ -168,8 +167,7 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -207,8 +205,7 @@ class RenderPathForward {
 				t.format = "R8";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "singleb";
 				t.width = 0;
@@ -243,9 +240,7 @@ class RenderPathForward {
 			t.scale = 0.25;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
-
-		{
+		
 			var t = new RenderTargetRaw();
 			t.name = "bloomtex2";
 			t.width = 0;
@@ -253,9 +248,7 @@ class RenderPathForward {
 			t.scale = 0.25;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
-
-		{
+		
 			path.loadShader("shader_datas/bloom_pass/bloom_pass");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
@@ -293,8 +286,7 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -304,6 +296,56 @@ class RenderPathForward {
 				path.createRenderTarget(t);
 			}
 			#end
+		}
+		#end
+		
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+
+			//holds rior and opacity 
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			//holds colors before refractive meshes are drawn
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+
+			//holds colors
+			var t = new RenderTargetRaw();
+			t.name = "tex1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			//holds background depth
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -444,6 +486,40 @@ class RenderPathForward {
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 				}
+
+				#if rp_ssrefr
+				{
+					if (armory.data.Config.raw.rp_ssrefr != false) {
+						path.setTarget("gbufferD1");
+						path.bindTarget("_main", "tex");
+						path.drawShader("shader_datas/copy_pass/copy_pass");
+		
+						path.setTarget("refr");
+						path.bindTarget("tex", "tex");
+						path.drawShader("shader_datas/copy_pass/copy_pass");
+						
+						setTargetMeshes();
+						path.drawMeshes("refraction");
+
+						#if (!kha_opengl)
+						path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+						#end
+
+						path.setTarget("tex");
+						path.bindTarget("refr", "tex");
+						path.bindTarget("tex", "tex1");
+						path.bindTarget("_main", "gbufferD");
+						path.bindTarget("gbufferD1", "gbufferD1");
+						path.bindTarget("gbuffer0", "gbuffer0");
+						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+						path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+		
+						#if (!kha_opengl)
+						path.setDepthFrom("tex", "gbuffer0");
+						#end
+					}
+				}
+				#end
 			}
 			#end
 

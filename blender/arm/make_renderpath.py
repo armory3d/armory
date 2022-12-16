@@ -178,10 +178,8 @@ def build():
             assets.add(assets_path + 'clouds_map.png')
             assets.add_embedded_data('clouds_map.png')
 
-    if rpdat.rp_renderer == 'Deferred':
-        assets.add_shader_pass('copy_pass')
-    else:
-        assets.add_khafile_def('rp_forward')
+    assets.add_shader_pass('copy_pass')
+    assets.add_khafile_def('rp_forward')
 
     if rpdat.rp_render_to_texture:
         assets.add_khafile_def('rp_render_to_texture')

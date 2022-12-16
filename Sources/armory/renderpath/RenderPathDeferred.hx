@@ -223,8 +223,7 @@ class RenderPathDeferred {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -298,9 +297,7 @@ class RenderPathDeferred {
 			t.scale = 0.25;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "bloomtex2";
 			t.width = 0;
@@ -308,9 +305,7 @@ class RenderPathDeferred {
 			t.scale = 0.25;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
 
-		{
 			path.loadShader("shader_datas/bloom_pass/bloom_pass");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
@@ -326,9 +321,7 @@ class RenderPathDeferred {
 			t.height = 1;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
 
-		{
 			path.loadShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
@@ -420,8 +413,7 @@ class RenderPathDeferred {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -629,7 +621,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		
+
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
