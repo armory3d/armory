@@ -509,7 +509,7 @@ def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
-    parse_opacity = True#blend or mat_utils.is_transluc(mat_state.material)
+    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
 
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
@@ -552,9 +552,10 @@ def make_forward(con_mesh):
         frag.write('fragColor[0].rgb *= p_fade;')
     
     if '_SSRefraction' in wrd.world_defs:
-        frag.write('fragColor[2] = vec4(packFloat2(rior, opacity));')
-    else:
-        frag.write('fragColor[2] = vec4(packFloat2(1.0, 1.0));')
+        if parse_opacity:
+            frag.write('fragColor[2] = vec4(packFloat2(rior, opacity));')
+        else:
+            frag.write('fragColor[2] = vec4(packFloat2(1.0, 1.0));')
 
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):

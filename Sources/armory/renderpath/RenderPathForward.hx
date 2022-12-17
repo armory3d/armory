@@ -486,40 +486,40 @@ class RenderPathForward {
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 				}
+			}
+			#end
 
-				#if rp_ssrefr
-				{
-					if (armory.data.Config.raw.rp_ssrefr != false) {
-						path.setTarget("gbufferD1");
-						path.bindTarget("_main", "tex");
-						path.drawShader("shader_datas/copy_pass/copy_pass");
-		
-						path.setTarget("refr");
-						path.bindTarget("tex", "tex");
-						path.drawShader("shader_datas/copy_pass/copy_pass");
-						
-						setTargetMeshes();
-						path.drawMeshes("refraction");
+			#if rp_ssrefr
+			{
+				if (armory.data.Config.raw.rp_ssrefr != false) {
+					path.setTarget("gbufferD1");
+					path.bindTarget("_main", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+	
+					path.setTarget("refr");
+					path.bindTarget("tex", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+					
+					setTargetMeshes();
+					path.drawMeshes("refraction");
 
-						#if (!kha_opengl)
-						path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-						#end
+					#if (!kha_opengl)
+					path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+					#end
 
-						path.setTarget("tex");
-						path.bindTarget("refr", "tex");
-						path.bindTarget("tex", "tex1");
-						path.bindTarget("_main", "gbufferD");
-						path.bindTarget("gbufferD1", "gbufferD1");
-						path.bindTarget("gbuffer0", "gbuffer0");
-						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-						path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-		
-						#if (!kha_opengl)
-						path.setDepthFrom("tex", "gbuffer0");
-						#end
-					}
+					path.setTarget("tex");
+					path.bindTarget("refr", "tex");
+					path.bindTarget("tex", "tex1");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+	
+					#if (!kha_opengl)
+					path.setDepthFrom("tex", "gbuffer0");
+					#end
 				}
-				#end
 			}
 			#end
 
