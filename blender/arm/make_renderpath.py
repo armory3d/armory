@@ -179,13 +179,11 @@ def build():
             assets.add_embedded_data('clouds_map.png')
 
     assets.add_shader_pass('copy_pass')
-    assets.add_khafile_def('rp_forward')
+    if rpdat.rp_renderer == 'Forward':
+        assets.add_khafile_def('rp_forward')
 
     if rpdat.rp_render_to_texture:
         assets.add_khafile_def('rp_render_to_texture')
-
-        if rpdat.rp_renderer == 'Forward' and not rpdat.rp_compositornodes:
-            assets.add_shader_pass('copy_pass')
 
         if rpdat.rp_compositornodes:
             assets.add_khafile_def('rp_compositornodes')
@@ -414,7 +412,7 @@ def build():
         callback()
 
 
-def get_num_gbuffer_rts_deferred() -> int:
+def get_num_gbuffer_rts() -> int:
     """Return the number of render targets required for the G-Buffer."""
     wrd = bpy.data.worlds['Arm']
 
