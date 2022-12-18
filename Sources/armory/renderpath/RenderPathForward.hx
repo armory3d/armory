@@ -302,8 +302,6 @@ class RenderPathForward {
 		#if rp_ssrefr
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
-			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			//holds rior and opacity 

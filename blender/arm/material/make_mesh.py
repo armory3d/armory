@@ -569,6 +569,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
+    if not transluc_pass:
+        frag.add_out('vec4 fragColor[GBUF_SIZE]')
+
     if parse_opacity or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
@@ -579,8 +582,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
     
-    frag.add_out('vec4 fragColor[GBUF_SIZE]')
-
     if blend:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
