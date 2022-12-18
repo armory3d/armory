@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import iron.Scene;
+import iron.RenderPath;
 
 class PauseActiveCameraRenderNode extends LogicNode {
 
@@ -11,7 +11,7 @@ class PauseActiveCameraRenderNode extends LogicNode {
 	override function run(from: Int) {
 		final isPaused: Bool = inputs[1].get();
 
-		Scene.active.pauseActiveCameraRender = isPaused;
+		RenderPath.active.paused = isPaused;
 		runOutput(0);
 	}
 }
