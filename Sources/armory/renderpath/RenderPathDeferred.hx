@@ -351,8 +351,6 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
-			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			//holds rior and opacity 
@@ -382,7 +380,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "R32";
+			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
@@ -838,7 +836,7 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 				
-				setTargetMeshes();
+				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
 				// ---
 				// Deferred light
@@ -846,6 +844,7 @@ class RenderPathDeferred {
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 				#end
+
 				path.setTarget("tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
