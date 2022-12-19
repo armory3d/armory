@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class PickObjectNode(ArmLogicTreeNode):
     """Picks the rigid body in the given location using the screen
     coordinates (2D).
@@ -27,3 +28,6 @@ class PickObjectNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketObject', 'RB')
         self.add_output('ArmVectorSocket', 'Hit')
         self.add_output('ArmVectorSocket', 'Normal')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        return NodeReplacement.Identity(self)
