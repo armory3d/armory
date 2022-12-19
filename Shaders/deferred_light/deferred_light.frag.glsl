@@ -247,19 +247,19 @@ void main() {
 	vec3 envl = vec3(1.0);
 #endif
 
-#ifdef _EnvLDR
-	envl.rgb = pow(envl.rgb, vec3(2.2));
-	#ifdef _Rad
-		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-	#endif
-#endif
-
 #ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n);
 	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
 	envl.rgb *= albedo;
+
+#ifdef _EnvLDR
+	envl.rgb = pow(envl.rgb, vec3(2.2));
+	#ifdef _Rad
+		prefilteredColor = pow(prefilteredColor, vec3(2.2));
+	#endif
+#endif
 
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
