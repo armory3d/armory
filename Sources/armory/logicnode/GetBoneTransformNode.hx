@@ -25,6 +25,9 @@ class GetBoneTransformNode extends LogicNode {
 
 		return anim.getAbsWorldMat(bone);
 
+        #else
+        return null;
+
 		#end
 	}
 }
