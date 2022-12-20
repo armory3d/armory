@@ -499,6 +499,16 @@ class RenderPathForward {
 					path.drawShader("shader_datas/copy_pass/copy_pass");
 
 					RenderPathCreator.setTargetMeshes();
+
+					#if (rp_background == "Clear")
+					{
+						path.clearTarget(-1, 1.0);
+					}
+					#else
+					{
+						path.clearTarget(null, 1.0);
+					}
+					#end
 					path.drawMeshes("refraction");
 
 					#if (!kha_opengl)
