@@ -70,9 +70,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "tex";
 			t.width = 0;
@@ -82,9 +80,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "buf";
 			t.width = 0;
@@ -93,9 +89,7 @@ class RenderPathDeferred {
 			t.format = Inc.getHdrFormat();
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer1";
 			t.width = 0;
@@ -116,9 +110,7 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "taa";
 			t.width = 0;
@@ -197,8 +189,7 @@ class RenderPathDeferred {
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "singleb";
 			t.width = 0;
@@ -335,16 +326,14 @@ class RenderPathDeferred {
 
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
-			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = "R32"; // R16
-				path.createRenderTarget(t);
-			}
+			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			var t = new RenderTargetRaw();
+			t.name = "half";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = "R32"; // R16
+			path.createRenderTarget(t);	
 		}
 		#end
 		
@@ -380,7 +369,16 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA32";
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "tex1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
@@ -836,6 +834,24 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 				
+				path.setTarget("gbuffer0"); // Only clear gbuffer0
+				#if (rp_background == "Clear")
+				{
+					path.clearTarget(-1, 1.0);
+				}
+				#else
+				{
+					path.clearTarget(null, 1.0);
+				}
+				#end
+
+				#if rp_gbuffer2
+				{
+					path.setTarget("gbuffer2");
+					path.clearTarget(0xff000000);
+				}
+				#end
+
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
 				// ---
