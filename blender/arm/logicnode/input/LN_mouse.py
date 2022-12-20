@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class MouseNode(ArmLogicTreeNode):
     """Activates the output on the given mouse event."""
     bl_idname = 'LNMergedMouseNode'
