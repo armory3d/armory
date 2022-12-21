@@ -260,10 +260,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
             '--output0', output_file_rad,
             '--output0params', 'hdr,rgbe,latlong'
         ]
-        if wrd.arm_verbose_output:
-            print(cmd)
-        else:
+        if not wrd.arm_verbose_output:
             cmd.append('--silent')
+        print(cmd)
         subprocess.call(cmd)
     else:
         cmd = cmft_path + \
@@ -289,10 +288,9 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
             ' --outputNum 1' + \
             ' --output0 "' + output_file_rad + '"' + \
             ' --output0params hdr,rgbe,latlong'
-        if wrd.arm_verbose_output:
-            print(cmd)
-        else:
+        if not wrd.arm_verbose_output:
             cmd += ' --silent'
+        print(cmd)
         subprocess.call([cmd], shell=True)
 
     # Remove size extensions in file name
