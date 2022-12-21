@@ -7,10 +7,14 @@ class BloomGetNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
+		final rawPostprocess = iron.Scene.active.raw.post_process;
+		final radius = (rawPostprocess != null && rawPostprocess.bloom != null) ? rawPostprocess.bloom.radius : 0.0;
+
 		return switch (from) {
 			case 0: armory.renderpath.Postprocess.bloom_uniforms[0];
 			case 1: armory.renderpath.Postprocess.bloom_uniforms[1];
 			case 2: armory.renderpath.Postprocess.bloom_uniforms[2];
+			case 3: radius;
 			default: 0.0;
 		}
 	}

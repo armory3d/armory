@@ -53,6 +53,14 @@ class Helper {
 	}
 
 	/**
+		Clamps an integer within some limits.
+		@return same integer, min or max if exceeded limits.
+	**/
+	public static function clampInt(f: Int, min: Int, max: Int): Int {
+		return f < min ? min : f > max ? max : f;
+	}
+
+	/**
 		Convenience function to map a variable from one coordinate space to
 		another. Equivalent to unlerp() followed by lerp().
 		@param value
@@ -84,5 +92,13 @@ class Helper {
 	public static inline function sign(value: Float): Float {
 		if (value == 0) return 0;
 		return (value < 0) ? -1.0 : 1.0;
+	}
+
+	/**
+		Return the base-2 logarithm of a number.
+	**/
+	public static inline function log2(v: Float): Float {
+		// 1.44269504089 = 1.0 / ln(2.0)
+		return Math.log(v) * 1.44269504089;
 	}
 }

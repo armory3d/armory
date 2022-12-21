@@ -622,11 +622,20 @@ const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 """)
 
         if rpdat.rp_bloom:
+            follow_blender = rpdat.arm_bloom_follow_blender
+            eevee_settings = bpy.context.scene.eevee
+
+            threshold = eevee_settings.bloom_threshold if follow_blender else rpdat.arm_bloom_threshold
+            strength = eevee_settings.bloom_intensity if follow_blender else rpdat.arm_bloom_strength
+            knee = eevee_settings.bloom_knee if follow_blender else rpdat.arm_bloom_knee
+
             f.write(
-"""const float bloomThreshold = """ + str(round(rpdat.arm_bloom_threshold * 100) / 100) + """;
-const float bloomStrength = """ + str(round(rpdat.arm_bloom_strength * 100) / 100) + """;
+"""const float bloomThreshold = """ + str(round(threshold * 100) / 100) + """;
+const float bloomStrength = """ + str(round(strength * 100) / 100) + """;
+const float bloomKnee = """ + str(round(knee * 100) / 100) + """;
 const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) + """;
-""")
+""")  # TODO remove radius if old bloom pass is removed
+
         if rpdat.rp_motionblur != 'Off':
             f.write(
 """const float motionBlurIntensity = """ + str(round(rpdat.arm_motion_blur_intensity * 100) / 100) + """;

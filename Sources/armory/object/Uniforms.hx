@@ -4,6 +4,9 @@ import iron.Scene;
 import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
+
+import armory.renderpath.Postprocess;
+
 using StringTools;
 
 // Structure for setting shader uniforms
@@ -214,6 +217,11 @@ class Uniforms {
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
 				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+			}
+			#end
+			#if rp_bloom
+			case "_bloomSampleScale": {
+				return Postprocess.bloom_uniforms[3];
 			}
 			#end
 		}

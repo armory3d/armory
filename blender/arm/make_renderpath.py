@@ -282,6 +282,13 @@ def build():
             assets.add_shader_pass('bloom_pass')
             assets.add_shader_pass('blur_gaus_pass')
 
+            if rpdat.arm_bloom_quality == 'low':
+                wrd.compo_defs += '_BloomQualityLow'
+            elif rpdat.arm_bloom_quality == 'medium':
+                wrd.compo_defs += '_BloomQualityMedium'
+            else:
+                wrd.compo_defs += '_BloomQualityHigh'
+
         if rpdat.rp_ssr:
             wrd.world_defs += '_SSR'
             assets.add_khafile_def('rp_ssr')

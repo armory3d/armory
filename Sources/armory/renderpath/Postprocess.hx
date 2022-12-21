@@ -72,9 +72,10 @@ class Postprocess {
 	];
 
 	public static var bloom_uniforms = [
-		1.0,				//0: Threshold
-		3.5,				//1: Strength
-		3.0					//2: Radius
+		0.8,                     // 0: Threshold
+		0.5,                     // 1: Knee
+		0.05,                    // 2: Strength
+		0.0,                     // 3: Sample scale (value set by renderpath, not used for realtime postprocess)
 	];
 
 	public static var ssao_uniforms = [
@@ -289,17 +290,17 @@ class Postprocess {
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[3]; //Falloff
 			v.y = ssr_uniforms[4]; //Jitter
-			v.z = bloom_uniforms[0]; //Bloom Threshold
+			v.z = 0;
 		case "_PPComp11":
 			v = iron.object.Uniforms.helpVec;
-			v.x = bloom_uniforms[1]; //Bloom Strength
-			v.y = bloom_uniforms[2]; //Bloom Radius
-			v.z = ssao_uniforms[0]; //SSAO Strength
+			v.x = bloom_uniforms[0]; //Bloom Threshold
+			v.y = bloom_uniforms[1]; //Bloom Knee
+			v.z = bloom_uniforms[2]; //Bloom Strength
 		case "_PPComp12":
 			v = iron.object.Uniforms.helpVec;
-			v.x = ssao_uniforms[1]; //SSAO Radius
-			v.y = ssao_uniforms[2]; //SSAO Max Steps
-			v.z = 0;
+			v.x = ssao_uniforms[0]; //SSAO Strength
+			v.y = ssao_uniforms[1]; //SSAO Radius
+			v.z = ssao_uniforms[2]; //SSAO Max Steps
 		case "_PPComp13":
 			v = iron.object.Uniforms.helpVec;
 			v.x = chromatic_aberration_uniforms[0]; //CA Strength

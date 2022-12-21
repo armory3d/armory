@@ -13,8 +13,7 @@ uniform vec2 screenSize;
 uniform mat4 invVP;
 
 #ifdef _CPostprocess
-uniform vec3 PPComp11;
-uniform vec3 PPComp12;
+	uniform vec3 PPComp12;
 #endif
 
 in vec2 texCoord;
@@ -36,7 +35,7 @@ void main() {
 	// vec3 currentPos = getPos2NoEye(eye, invVP, depth, texCoord);
 	float currentDistance = length(currentPos);
 	#ifdef _CPostprocess
-		float currentDistanceA = currentDistance * PPComp12.y * (1.0 / PPComp11.z);
+		float currentDistanceA = currentDistance * PPComp12.z * (1.0 / PPComp12.y);
 	#else
 		float currentDistanceA = currentDistance * ssaoScale * (1.0 / ssaoRadius);
 	#endif
