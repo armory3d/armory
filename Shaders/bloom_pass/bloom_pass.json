@@ -1,22 +1,6 @@
 {
 	"contexts": [
 		{
-			"name": "bloom_pass",
-			"depth_write": false,
-			"compare_mode": "always",
-			"cull_mode": "none",
-			"links": [
-				{
-					"name": "PPComp10",
-					"link": "_PPComp10",
-					"ifdef": ["_CPostprocess"]
-				}
-			],
-			"texture_params": [],
-			"vertex_shader": "../include/pass.vert.glsl",
-			"fragment_shader": "bloom_pass.frag.glsl"
-		},
-		{
 			"name": "downsample_pass",
 			"depth_write": false,
 			"compare_mode": "always",

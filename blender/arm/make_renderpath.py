@@ -280,7 +280,6 @@ def build():
         if rpdat.rp_bloom:
             assets.add_khafile_def('rp_bloom')
             assets.add_shader_pass('bloom_pass')
-            assets.add_shader_pass('blur_gaus_pass')
 
             if rpdat.arm_bloom_quality == 'low':
                 wrd.compo_defs += '_BloomQualityLow'
