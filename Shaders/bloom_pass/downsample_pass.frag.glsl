@@ -17,16 +17,35 @@ out vec4 fragColor;
 
 const float epsilon = 6.2e-5; // see https://github.com/keijiro/KinoBloom/issues/15
 
+#ifdef _BloomAntiFlicker
+	const bool antiFlicker = true;
+#else
+	const bool antiFlicker = false;
+#endif
+
 void main() {
-	#ifdef _BloomQualityHigh
-		fragColor.rgb = downsample_13_tap(tex, texCoord, screenSizeInv);
-	#else
-		#ifdef _BloomQualityMedium
-			fragColor.rgb = downsample_dual_filter(tex, texCoord, screenSizeInv);
-		#else // _BloomQualityLow
-			fragColor.rgb = downsample_box_filter(tex, texCoord, screenSizeInv);
+	if (antiFlicker && currentMipLevel == 0) {
+		#ifdef _BloomQualityHigh
+			fragColor.rgb = downsample_13_tap_anti_flicker(tex, texCoord, screenSizeInv);
+		#else
+			#ifdef _BloomQualityMedium
+				fragColor.rgb = downsample_dual_filter_anti_flicker(tex, texCoord, screenSizeInv);
+			#else // _BloomQualityLow
+				fragColor.rgb = downsample_box_filter_anti_flicker(tex, texCoord, screenSizeInv);
+			#endif
 		#endif
-	#endif
+	}
+	else {
+		#ifdef _BloomQualityHigh
+			fragColor.rgb = downsample_13_tap(tex, texCoord, screenSizeInv);
+		#else
+			#ifdef _BloomQualityMedium
+				fragColor.rgb = downsample_dual_filter(tex, texCoord, screenSizeInv);
+			#else // _BloomQualityLow
+				fragColor.rgb = downsample_box_filter(tex, texCoord, screenSizeInv);
+			#endif
+		#endif
+	}
 
 	if (currentMipLevel == 0) {
 		#ifdef _CPostprocess

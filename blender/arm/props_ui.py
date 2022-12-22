@@ -1811,6 +1811,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
             _col.prop(rpdat, 'arm_bloom_radius')
             _col.prop(rpdat, 'arm_bloom_strength')
         _col.prop(rpdat, 'arm_bloom_quality')
+        _col.prop(rpdat, 'arm_bloom_anti_flicker')
         layout.separator()
 
         col = layout.column()

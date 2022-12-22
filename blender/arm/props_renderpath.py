@@ -77,6 +77,7 @@ def update_preset(self, context):
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.arm_bloom_quality = 'medium'
+        rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -114,6 +115,7 @@ def update_preset(self, context):
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.arm_bloom_quality = 'low'
+        rpdat.arm_bloom_anti_flicker = False
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -153,6 +155,7 @@ def update_preset(self, context):
         rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
         rpdat.arm_bloom_quality = 'high'
+        rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -191,6 +194,7 @@ def update_preset(self, context):
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.arm_bloom_quality = 'low'
+        rpdat.arm_bloom_anti_flicker = False
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -539,6 +543,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)
     arm_bloom_strength: FloatProperty(name="Strength", description="Strength of the bloom effect", min=0, default=0.05, update=assets.invalidate_shader_cache)
     arm_bloom_radius: FloatProperty(name="Radius", description="Glow radius (screen-size independent)", min=0, default=6.5, update=assets.invalidate_shader_cache)
+    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True, update=assets.invalidate_shader_cache)
     arm_bloom_quality: EnumProperty(
         name="Quality",
         description="Resampling quality of the bloom pass",

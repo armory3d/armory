@@ -289,6 +289,9 @@ def build():
             else:
                 wrd.compo_defs += '_BloomQualityHigh'
 
+            if rpdat.arm_bloom_anti_flicker:
+                wrd.compo_defs += '_BloomAntiFlicker'
+
         if rpdat.rp_ssr:
             wrd.world_defs += '_SSR'
             assets.add_khafile_def('rp_ssr')
