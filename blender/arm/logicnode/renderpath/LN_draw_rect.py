@@ -21,16 +21,30 @@ class DrawRectNode(ArmLogicTreeNode):
     bl_idname = 'LNDrawRectNode'
     bl_label = 'Draw Rect'
     arm_section = 'draw'
-    arm_version = 1
+    arm_version = 2
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Draw')
         self.add_input('ArmColorSocket', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_input('ArmBoolSocket', 'Filled', default_value=False)
         self.add_input('ArmFloatSocket', 'Strength', default_value=1.0)
+        self.add_input('ArmIntSocket', 'Left/Center/Right', default_value=0)
+        self.add_input('ArmIntSocket', 'Top/Middle/Bottom', default_value=0)
         self.add_input('ArmFloatSocket', 'X')
         self.add_input('ArmFloatSocket', 'Y')
         self.add_input('ArmFloatSocket', 'Width')
         self.add_input('ArmFloatSocket', 'Height')
+        self.add_input('ArmFloatSocket', 'Angle')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement(
+            "LNDrawRectNode", self.arm_version,
+            "LNDrawRectNode", 2,
+            in_socket_mapping={0:0, 1:1, 2:2, 3:3, 4:6, 5:7, 6:9, 7:10},
+            out_socket_mapping={0:0},
+        )
