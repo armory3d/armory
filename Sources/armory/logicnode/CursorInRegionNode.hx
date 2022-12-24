@@ -73,6 +73,7 @@ class CursorInRegionNode extends LogicNode {
 		return null;
 	}
 
+	//Rotate cursor location and calculate relative location to shape center
 	inline function alignRotatePoint(point: Vec2, center: Vec2, angle: Float): Vec2 {
 		var relativePoint = point.clone();
 		relativePoint.sub(center);

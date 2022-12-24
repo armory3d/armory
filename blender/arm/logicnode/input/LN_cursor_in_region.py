@@ -1,8 +1,17 @@
 from arm.logicnode.arm_nodes import *
 
-
 class CursorInRegionNode(ArmLogicTreeNode):
-    """Detect cursor in specific region"""
+    """Detect cursor in specific region.
+
+    @input Center X/Y: The position of the center in pixels.
+    @input Width: Width of the region in pixels.
+    @input Height: Height of the region in pixels.
+    @input Angle: Rotation angle in radians. Rotation is clockwise.
+
+    @output On Enter: Activated after the cursor enters the region.
+    @output On Exit: Activated after the cursor exits the region.
+    @output Is Inside: True if inside the region. False otherwise.
+    """
     bl_idname = 'LNCursorInRegionNode'
     bl_label = 'Cursor In Region'
     arm_section = 'mouse'
