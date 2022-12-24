@@ -543,7 +543,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)
     arm_bloom_strength: FloatProperty(name="Strength", description="Strength of the bloom effect", min=0, default=0.05, update=assets.invalidate_shader_cache)
     arm_bloom_radius: FloatProperty(name="Radius", description="Glow radius (screen-size independent)", min=0, default=6.5, update=assets.invalidate_shader_cache)
-    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True, update=assets.invalidate_shader_cache)
+    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker Filter", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True, update=assets.invalidate_shader_cache)
     arm_bloom_quality: EnumProperty(
         name="Quality",
         description="Resampling quality of the bloom pass",
