@@ -14,13 +14,40 @@ class CursorInRegionNode extends LogicNode {
 
 	function update() {
 		var mouse = iron.system.Input.getMouse();
-		var b = false;
+		final center = new Vec2(inputs[0].get(), inputs[1].get());
+		final size = new Vec2(inputs[2].get(), inputs[3].get());
+		final angle: Float = inputs[4].get();
+		final lastPoint = new Vec2(mouse.lastX, mouse.lastY);
+		final point = new Vec2(mouse.x, mouse.y);
 
 		switch (property0) {
 			case "rectangle":
-				runOutput(0);
+				if(lastInside == null) {
+					lastInside = detectPointInRectangle(center, size, angle, lastPoint);
+				}
+				final inside = detectPointInRectangle(center, size, angle, point);
+
+				//On Enter
+				if(!lastInside && inside) runOutput(0);
+
+				//On Exit
+				if(lastInside && !inside) runOutput(1);
+
+				lastInside = inside;
+
 			case "ellipse":
-				runOutput(0);
+				if(lastInside == null) {
+					lastInside = detectPointInEllipse(center, size, angle, lastPoint);
+				}
+				final inside = detectPointInEllipse(center, size, angle, point);
+
+				//On Enter
+				if(!lastInside && inside) runOutput(0);
+
+				//On Exit
+				if(lastInside && !inside) runOutput(1);
+
+				lastInside = inside;
 		}
 	}
 
@@ -28,12 +55,17 @@ class CursorInRegionNode extends LogicNode {
 		var mouse = iron.system.Input.getMouse();
 
 		if(from == 2) {
-			var center = new Vec2(inputs[0].get(), inputs[1].get());
-			var size = new Vec2(inputs[2].get(), inputs[3].get());
-			var angle = inputs[4].get();
-			var point = new Vec2(mouse.x, mouse.y);
+			final center = new Vec2(inputs[0].get(), inputs[1].get());
+			final size = new Vec2(inputs[2].get(), inputs[3].get());
+			final angle = inputs[4].get();
+			final point = new Vec2(mouse.x, mouse.y);
 
-			return detectPointInRectangle(center, size, angle, point);
+			switch (property0) {
+				case "rectangle":
+					return detectPointInRectangle(center, size, angle, point);
+				case "ellipse":
+					return detectPointInEllipse(center, size, angle, point);
+			}
 		}
 
 		return null;
@@ -60,6 +92,17 @@ class CursorInRegionNode extends LogicNode {
 		final magX = Math.abs(relativePoint.x);
 		final magY = Math.abs(relativePoint.y);
 		if(magX <= size.x/2 && magY <= size.y/2){
+			return true;
+		}
+
+		return false;
+	}
+
+	function detectPointInEllipse(center: Vec2, size: Vec2, angle: Float, point: Vec2): Bool {
+		final relativePoint = alignRotatePoint(point, center, -angle);
+		final magX = (relativePoint.x * relativePoint.x) / (0.25 * size.x * size.x);
+		final magY = (relativePoint.y * relativePoint.y) / (0.25 * size.y * size.y);
+		if(magX + magY <= 1.0){
 			return true;
 		}
 
