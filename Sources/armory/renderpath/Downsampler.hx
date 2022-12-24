@@ -10,9 +10,10 @@ import armory.math.Helper;
 
 abstract class Downsampler {
 
+	public static var currentMipLevel(default, null) = 0;
+	public static var numMipLevels(default, null) = 0;
+
 	static var isRegistered = false;
-	static var numMipLevels = 0;
-	static var currentMiplevel = 0;
 
 	final path: RenderPath;
 	final shaderPassHandle: String;
@@ -46,7 +47,7 @@ abstract class Downsampler {
 
 	static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
 		return switch (link) {
-			case "_downsampleCurrentMip": Downsampler.currentMiplevel;
+			case "_downsampleCurrentMip": Downsampler.currentMipLevel;
 			case "_downsampleNumMips": Downsampler.numMipLevels;
 			default: null;
 		}
@@ -93,7 +94,7 @@ private class DownsamplerFragment extends Downsampler {
 
 		Downsampler.numMipLevels = numMips;
 		for (i in 0...numMips) {
-			Downsampler.currentMiplevel = i;
+			Downsampler.currentMipLevel = i;
 			path.setTarget(mipmaps[i].raw.name);
 			path.clearTarget();
 			path.bindTarget(i == 0 ? srcImageName : mipmaps[i - 1].raw.name, "tex");

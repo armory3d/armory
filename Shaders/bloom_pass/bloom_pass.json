@@ -15,8 +15,8 @@
 					"link": "_downsampleCurrentMip"
 				},
 				{
-					"name": "PPComp11",
-					"link": "_PPComp11",
+					"name": "BloomThresholdData",
+					"link": "_BloomThresholdData",
 					"ifdef": ["_CPostprocess"]
 				}
 			],

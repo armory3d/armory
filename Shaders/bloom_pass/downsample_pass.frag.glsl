@@ -8,7 +8,7 @@ uniform vec2 screenSizeInv;
 uniform int currentMipLevel;
 
 #ifdef _CPostprocess
-	uniform vec3 PPComp11;
+	uniform vec4 BloomThresholdData; // Only filled with data if currentMipLevel == 0
 #endif
 
 in vec2 texCoord;
@@ -48,21 +48,28 @@ void main() {
 	}
 
 	if (currentMipLevel == 0) {
+		// https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/#3.2
+		// https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/#3.4
+
+		float brightness = max(fragColor.r, max(fragColor.g, fragColor.b));
+
 		#ifdef _CPostprocess
-			const float threshold = PPComp11.x;
-			const float knee = PPComp11.y;
+			// Only apply precalculation optimization if _CPostprocess, otherwise
+			// the compiler is able to do the same optimization for the constant
+			// values from compiled.inc without the need to pass a uniform
+			float softeningCurve = brightness - BloomThresholdData.y;
+			softeningCurve = clamp(softeningCurve, 0.0, BloomThresholdData.z); // "connect" to hard knee curve
+			softeningCurve = softeningCurve * softeningCurve * BloomThresholdData.w;
+
+			float contributionFactor = max(softeningCurve, brightness - BloomThresholdData.x);
 		#else
-			const float threshold = bloomThreshold;
-			const float knee = bloomKnee;
+			float softeningCurve = brightness - bloomThreshold + bloomKnee;
+			softeningCurve = clamp(softeningCurve, 0.0, 2.0 * bloomKnee);
+			softeningCurve = softeningCurve * softeningCurve / (4 * bloomKnee + epsilon);
+
+			float contributionFactor = max(softeningCurve, brightness - bloomThreshold);
 		#endif
 
-		// https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/#3.2
-		float brightness = max(fragColor.r, max(fragColor.g, fragColor.b));
-		float softeningCurve = brightness - threshold + knee;
-		softeningCurve = clamp(softeningCurve, 0.0, 2.0 * knee); // "connect" to hard knee curve
-		softeningCurve = softeningCurve * softeningCurve / (4 * knee + epsilon);
-
-		float contributionFactor = max(softeningCurve, brightness - threshold);
 		contributionFactor /= max(epsilon, brightness);
 
 		fragColor.rgb *= contributionFactor;

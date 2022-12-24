@@ -29,7 +29,7 @@ void main() {
 
 	if (currentMipLevel == 0) {
 		#ifdef _CPostprocess
-			fragColor.rgb *= PPComp11.z;
+			fragColor.rgb *= PPComp11.x;
 		#else
 			fragColor.rgb *= bloomStrength;
 		#endif

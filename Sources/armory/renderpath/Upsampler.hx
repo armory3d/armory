@@ -10,9 +10,10 @@ import armory.math.Helper;
 
 abstract class Upsampler {
 
+	public static var currentMipLevel(default, null) = 0;
+	public static var numMipLevels(default, null) = 0;
+
 	static var isRegistered = false;
-	static var numMipLevels = 0;
-	static var currentMiplevel = 0;
 
 	final path: RenderPath;
 	final shaderPassHandle: String;
@@ -41,7 +42,7 @@ abstract class Upsampler {
 
 	static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
 		return switch (link) {
-			case "_upsampleCurrentMip": Upsampler.currentMiplevel;
+			case "_upsampleCurrentMip": Upsampler.currentMipLevel;
 			case "_upsampleNumMips": Upsampler.numMipLevels;
 			default: null;
 		}
@@ -72,7 +73,7 @@ private class UpsamplerFragment extends Upsampler {
 		Upsampler.numMipLevels = numMips;
 		for (i in 0...Upsampler.numMipLevels) {
 			final mipLevel = Upsampler.numMipLevels - 1 - i;
-			Upsampler.currentMiplevel = mipLevel;
+			Upsampler.currentMipLevel = mipLevel;
 
 			path.setTarget(mipLevel == 0 ? dstImageName : mipmaps[mipLevel - 1].raw.name);
 			path.bindTarget(mipmaps[mipLevel].raw.name, "tex");

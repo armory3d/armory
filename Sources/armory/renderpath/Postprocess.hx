@@ -97,8 +97,8 @@ class Postprocess {
 		32					//1: Samples
 	];
 
-	public static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
-        var v:Vec4 = null;
+	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+		var v:Vec4 = null;
 
 		switch link {
 		case "_globalWeight":
@@ -293,9 +293,9 @@ class Postprocess {
 			v.z = 0;
 		case "_PPComp11":
 			v = iron.object.Uniforms.helpVec;
-			v.x = bloom_uniforms[0]; //Bloom Threshold
-			v.y = bloom_uniforms[1]; //Bloom Knee
-			v.z = bloom_uniforms[2]; //Bloom Strength
+			v.x = bloom_uniforms[2]; // Bloom Strength
+			v.y = 0; // Unused
+			v.z = 0; // Unused
 		case "_PPComp12":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssao_uniforms[0]; //SSAO Strength
@@ -311,8 +311,27 @@ class Postprocess {
 		return v;
 	}
 
-    public static function init() {
+	public static function vec4Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+		var v: Vec4 = null;
+
+		switch link {
+		case "_BloomThresholdData":
+			if (Downsampler.currentMipLevel == 0) {
+				// See https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/#3.4
+				v = iron.object.Uniforms.helpVec;
+				v.x = bloom_uniforms[0];
+				v.y = v.x - bloom_uniforms[1];
+				v.z = 2 * bloom_uniforms[1];
+				v.w = 0.25 / (bloom_uniforms[1] + 6.2e-5);
+			}
+		}
+
+		return v;
+	}
+
+	public static function init() {
 		iron.object.Uniforms.externalVec3Links.push(vec3Link);
-    }
+		iron.object.Uniforms.externalVec4Links.push(vec4Link);
+	}
 
 }
