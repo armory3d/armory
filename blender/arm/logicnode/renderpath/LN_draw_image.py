@@ -42,6 +42,6 @@ class DrawImageNode(ArmLogicTreeNode):
         return NodeReplacement(
             "LNDrawImageNode", self.arm_version,
             "LNDrawImageNode", 2,
-            in_socket_mapping={0:0, 1:1, 2:2, 3:5, 4:6, 5:7, 6:9},
+            in_socket_mapping={0:0, 1:1, 2:2, 3:5, 4:6, 5:7, 6:8},
             out_socket_mapping={0:0},
         )

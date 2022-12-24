@@ -45,6 +45,6 @@ class DrawRectNode(ArmLogicTreeNode):
         return NodeReplacement(
             "LNDrawRectNode", self.arm_version,
             "LNDrawRectNode", 2,
-            in_socket_mapping={0:0, 1:1, 2:2, 3:3, 4:6, 5:7, 6:9, 7:10},
+            in_socket_mapping={0:0, 1:1, 2:2, 3:3, 4:6, 5:7, 6:8, 7:9},
             out_socket_mapping={0:0},
         )
