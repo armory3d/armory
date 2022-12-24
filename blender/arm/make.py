@@ -951,4 +951,4 @@ def clean():
     if arm.utils.get_compilation_server():
         arm.lib.server.kill_haxe()
 
-    print('Project cleaned')
+    log.info('Project cleaned')
