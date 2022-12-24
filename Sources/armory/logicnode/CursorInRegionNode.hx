@@ -43,8 +43,8 @@ class CursorInRegionNode extends LogicNode {
 		var relativePoint = point.clone();
 		relativePoint.sub(center);
 
-		final sin = Math.sin(-angle);
-		final cos = Math.cos(-angle);
+		final sin = Math.sin(angle);
+		final cos = Math.cos(angle);
 
 		final xnew = relativePoint.x * cos - relativePoint.y * sin;
 		final ynew = relativePoint.x * sin + relativePoint.y * cos;
