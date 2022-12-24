@@ -9,9 +9,14 @@ class DrawRectNode(ArmLogicTreeNode):
     @input Color: The color of the rectangle.
     @input Filled: Whether the rectangle is filled or only the outline is drawn.
     @input Strength: The line strength if the rectangle is not filled.
-    @input X/Y: Position of the rectangle, in pixels from the top left corner.
-    @input Width/Height: Size of the rectangle in pixels. The rectangle
-        grows towards the bottom right corner.
+    @input Left/Center/Right: Horizontal anchor point of the rectangel.
+        0 = Left, 1 = Center, 2 = Right
+    @input Top/Middle/Bottom: Vertical anchor point of the rectangel.
+        0 = Top, 1 = Middle, 2 = Bottom
+    @input X/Y: Position of the anchor point in pixels.
+    @input Width/Height: Size of the rectangle in pixels.
+    @input Angle: Rotation angle in radians. Rectangle will be rotated cloclwiswe
+        at the anchor point.
 
     @output Out: Activated after the rectangle has been drawn.
 
@@ -28,8 +33,8 @@ class DrawRectNode(ArmLogicTreeNode):
         self.add_input('ArmColorSocket', 'Color', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_input('ArmBoolSocket', 'Filled', default_value=False)
         self.add_input('ArmFloatSocket', 'Strength', default_value=1.0)
-        self.add_input('ArmIntSocket', 'Left/Center/Right', default_value=0)
-        self.add_input('ArmIntSocket', 'Top/Middle/Bottom', default_value=0)
+        self.add_input('ArmIntSocket', '0/1/2 = Left/Center/Right', default_value=0)
+        self.add_input('ArmIntSocket', '0/1/2 = Top/Middle/Bottom', default_value=0)
         self.add_input('ArmFloatSocket', 'X')
         self.add_input('ArmFloatSocket', 'Y')
         self.add_input('ArmFloatSocket', 'Width')
