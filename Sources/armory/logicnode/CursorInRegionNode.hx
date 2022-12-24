@@ -10,6 +10,8 @@ class CursorInRegionNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
+
+		tree.notifyOnUpdate(update);
 	}
 
 	function update() {
