@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StringReplaceNode(ArmLogicTreeNode):
-    """Replace all ocurrences of x in Strings"""
+    """Replace all ocurrences of string to find in the input String"""
     bl_idname = 'LNStringReplaceNode'
     bl_label = 'String Replace'
 
