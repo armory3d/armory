@@ -803,8 +803,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             box = layout.box().column()
             box.prop(item, 'arm_project_target')
-            if item.arm_project_target == 'custom':
-                box.prop(item, 'arm_project_khamake')
+            box.prop(item, 'arm_project_khamake')
             box.prop(item, arm.utils.target_to_gapi(item.arm_project_target))
             box.prop_search(item, "arm_project_rp", wrd, "arm_rplist", text="Render Path")
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
