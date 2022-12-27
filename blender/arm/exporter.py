@@ -2318,7 +2318,9 @@ Make sure the mesh only has tris/quads.""")
     def execute(self):
         """Exports the scene."""
         profile_time = time.time()
-        print('Exporting ' + arm.utils.asset_name(self.scene))
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_verbose_output:
+            print('Exporting ' + arm.utils.asset_name(self.scene))
         if self.compress_enabled:
             print('Scene data will be compressed which might take a while.')
 
@@ -2354,7 +2356,6 @@ Make sure the mesh only has tris/quads.""")
         matvars, matslots = self.create_material_variants(self.scene)
 
         # Auto-bones
-        wrd = bpy.data.worlds['Arm']
         rpdat = arm.utils.get_rp()
         if rpdat.arm_skin_max_bones_auto:
             max_bones = 8
@@ -2494,7 +2495,8 @@ Make sure the mesh only has tris/quads.""")
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
+        if wrd.arm_verbose_output:
+            print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""

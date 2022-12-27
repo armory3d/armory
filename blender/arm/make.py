@@ -77,6 +77,7 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
         else:
             done()
 
+    print(*cmd)
     p = subprocess.Popen(cmd)
 
     if use_thread:
@@ -113,8 +114,8 @@ def export_data(fp, sdk_path):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
-    print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
+        print(f'Armory v{wrd.arm_version} ({wrd.arm_commit})')
         print(f'Blender: {bpy.app.version_string}, Target: {state.target}, GAPI: {arm.utils.get_gapi()}')
 
     # Clean compiled variants if cache is disabled
@@ -222,10 +223,10 @@ def export_data(fp, sdk_path):
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
 
     if wrd.arm_verbose_output:
-        print('Exported modules:', ', '.join(modules))
-        print('Shader flags:', ' '.join(defs))
-        print('Compositor flags:', ' '.join(cdefs))
-        print('Khafile flags:', ' '.join(assets.khafile_defs))
+        log.info('Exported modules: '+', '.join(modules))
+        log.info('Shader flags: '+', '.join(defs))
+        log.info('Compositor flags: '+', '.join(cdefs))
+        log.info('Khafile flags: '+', '.join(assets.khafile_defs))
 
     # Render path is configurable at runtime
     has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
@@ -311,7 +312,6 @@ def compile(assets_only=False):
         if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
             for s in item.arm_project_khamake.split(' '):
                 cmd.append(s)
-        print(*cmd)
         state.proc_build = run_proc(cmd, build_done)
     else:
         cmd = [node_path, khamake_path]
@@ -376,9 +376,6 @@ def compile(assets_only=False):
 
         if not wrd.arm_verbose_output:
             cmd.append("--quiet")
-        else:
-            print("Using project from " + arm.utils.get_fp())
-            print(*cmd)
 
         #Project needs to be compiled at least once
         #before compilation server can work
@@ -507,7 +504,8 @@ def compilation_server_done():
         log.error('Build failed, check console')
 
 def build_done():
-    print('Finished in {:0.3f}s'.format(time.time() - profile_time))
+    wrd = bpy.data.worlds['Arm']
+    log.info('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:
@@ -651,11 +649,10 @@ def build_success():
                     cmd.append(str(pid))
                 if wrd.arm_audio == 'Disabled':
                     cmd.append('--nosound')
-        print(*cmd)
         try:
             state.proc_play = run_proc(cmd, play_done)
         except:
-            log.warn('Failed to launch')
+            log.warn('Failed to start player')
             if wrd.arm_runtime == 'Browser':
                 webbrowser.open(url)
 
@@ -954,4 +951,4 @@ def clean():
     if arm.utils.get_compilation_server():
         arm.lib.server.kill_haxe()
 
-    print('Project cleaned')
+    log.info('Project cleaned')
