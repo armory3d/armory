@@ -262,10 +262,11 @@ def make_deferred(con_mesh, rpasses):
         if mat_state.material.arm_ignore_irradiance:
             frag.write('fragColor[GBUF_IDX_2].b = 1.0;')
 
-    if '_EmissionShaded' in wrd.world_defs:
-        assets.add_khafile_def('rp_gbuffer_emission')
-        # Alpha channel is unused at the moment
-        frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')
+    # Even if the material doesn't use emission we need to write to the
+    # emission buffer (if used) to prevent undefined behaviour
+    frag.write('#ifdef _EmissionShaded')
+    frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  # Alpha channel is unused at the moment
+    frag.write('#endif')
 
     return con_mesh
 
