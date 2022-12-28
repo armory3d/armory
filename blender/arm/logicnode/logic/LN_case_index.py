@@ -2,29 +2,16 @@ from bpy.types import NodeSocketInterfaceInt
 from arm.logicnode.arm_nodes import *
 
 class CaseIndexNode(ArmLogicTreeNode):
-    """Selects one of multiple values (of arbitrary types) based on some
-    input state. The exact behaviour of this node is specified by the
-    `Execution Mode` option (see below).
+    """this node can be used as an input for the select node that takes numeric indixes when cases are dynamic values or as an input for anything that requieres a numeric index.
 
-    @output Out: [*Available if Execution Mode is set to From Input*]
-        Activated after the node was executed.
-
-    @output Value: The last selected value. This value is not reset
-        until the next execution of this node.
-
-    @option Execution Mode: Specifies the condition that determines
-        what value to choose.
-        - `From Index`: Select the value at the given index. If there is
-            no value at that index, the value plugged in to the
-            `Default` input is used instead (`null` if unconnected).
-        - `From Input`: This mode uses input pairs of one action socket
-            and one value socket. Depending on which action socket is
-            activated, the associated value socket (the value with the
-            same index as the activated action input) is forwarded to
-            the `Value` output.
-
-    @option New: Add a new value to the list of values.
-    @option X Button: Remove the value with the highest index."""
+    @input dynamic: the value to be compared
+    
+    @input value: cases values for the dynamic comparison
+    
+    @output index: Returns the index of the case dynamic comparison
+    
+    """
+    
     bl_idname = 'LNCaseIndexNode'
     bl_label = 'Case Index'
     arm_version = 1
@@ -50,8 +37,6 @@ class CaseIndexNode(ArmLogicTreeNode):
         self.add_output('ArmDynamicSocket', 'Value')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'property0', text='')
-
         row = layout.row(align=True)
         op = row.operator('arm.node_call_func', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
