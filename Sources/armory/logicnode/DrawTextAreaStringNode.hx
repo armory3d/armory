@@ -73,7 +73,7 @@ class DrawTextAreaStringNode extends LogicNode {
 		while(ar_words.length > 0){
 			var str_line = '';
 			
-				while(str_line.length < max && ar_words.length > 0){
+				while(str_line.length <= max && ar_words.length > 0){
 					str_line +=' '+ar_words.shift();
 				}
 				
