@@ -60,9 +60,6 @@ class DrawTextAreaStringNode extends LogicNode {
 			return;
 		}
 		
-		
-		//mi codigo
-		
 		var len = string.length;
 		
 		var ar_lines = [];
