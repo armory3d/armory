@@ -23,7 +23,6 @@ import arm.ui_icons as ui_icons
 import arm.utils
 import arm.utils_vs
 
-
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     assets = arm.reload_module(assets)
@@ -42,7 +41,6 @@ if arm.is_reload(__name__):
     arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
-
 
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
     """Menu in object region."""
@@ -343,7 +341,6 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
         context.material.signature = ''
         return{'FINISHED'}
 
-
 class ARM_OT_NewCustomMaterial(bpy.types.Operator):
     bl_idname = "arm.new_custom_material"
     bl_label = "New Custom Material"
@@ -482,7 +479,6 @@ class ARM_OT_NewCustomMaterial(bpy.types.Operator):
 
         return{'FINISHED'}
 
-
 class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
     uniform_name: StringProperty(
         name='Uniform Name',
@@ -496,7 +492,6 @@ class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
         description='The image to attach to the texture unit',
     )
 
-
 class ARM_UL_BindTexturesList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item: ARM_PG_BindTexturesListItem, icon, active_data, active_propname, index):
         row = layout.row(align=True)
@@ -505,7 +500,6 @@ class ARM_UL_BindTexturesList(bpy.types.UIList):
             row.label(text=item.uniform_name, icon_value=item.image.preview.icon_id)
         else:
             row.label(text='<empty>', icon='ERROR')
-
 
 class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
     bl_idname = "arm_bind_textures_list.new_item"
@@ -525,7 +519,6 @@ class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
         mat.arm_bind_textures_list.add()
         mat.arm_bind_textures_list_index = len(mat.arm_bind_textures_list) - 1
         return{'FINISHED'}
-
 
 class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
     bl_idname = "arm_bind_textures_list.delete_item"
@@ -555,7 +548,6 @@ class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
         mat.arm_bind_textures_list_index = index
 
         return{'FINISHED'}
-
 
 class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -598,7 +590,6 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_billboard')
 
         layout.operator("arm.invalidate_material_cache")
-
 
 class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
     bl_label = "Bind Textures"
@@ -645,7 +636,6 @@ class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
         col.operator("arm_bind_textures_list.new_item", icon='ADD', text="")
         col.operator("arm_bind_textures_list.delete_item", icon='REMOVE', text="")
 
-
 class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
     """Per-material properties for custom render path drivers"""
     bl_label = "Armory Driver Properties"
@@ -677,7 +667,6 @@ class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
         arm.api.drivers[rpdat.rp_driver]['draw_mat_props'](layout, context.material)
-
 
 class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_label = "Blending"
@@ -833,7 +822,6 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
 
-
 class ExporterTargetSettingsMixin:
     """Mixin for common exporter setting subpanel functionality.
 
@@ -858,7 +846,6 @@ class ExporterTargetSettingsMixin:
     def draw_header(self, context):
         self.layout.label(text='', icon='SETTINGS')
 
-
 class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "Android Settings"
     arm_target = 'android-hl'  # See ExporterTargetSettingsMixin
@@ -874,7 +861,6 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy
         col.prop(wrd, 'arm_project_android_sdk_min')
         col.prop(wrd, 'arm_project_android_sdk_target')
         col.prop(wrd, 'arm_project_android_sdk_compile')
-
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_label = "Permissions"
@@ -975,7 +961,6 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
         row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
         row.prop(wrd, 'arm_project_android_run_avd')
 
-
 class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "HTML5 Settings"
     arm_target = 'html5'  # See ExporterTargetSettingsMixin
@@ -1035,7 +1020,6 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
         col.prop(wrd, 'arm_project_win_build_log')
         col.prop(wrd, 'arm_project_win_build_cpu')
         col.prop(wrd, 'arm_project_win_build_open')
-
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -2218,19 +2202,28 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
                 layout.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
-
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
-    bl_label = 'Print Traits'
+    bl_label = 'Print All Scenes Traits'
+    bl_description = 'Returns all traits in current blend'
+
     def execute(self, context):
         for s in bpy.data.scenes:
-            print(s.name + ' traits:')
+            print('Scene: {0}'.format(s.name))
             for o in s.objects:
                 for t in o.arm_traitlist:
                     if not t.enabled_prop:
                         continue
-                    tname = t.node_tree_prop.name if t.type_prop == 'Logic Nodes' else t.class_name_prop
-                    print('Object {0} - {1}'.format(o.name, tname))
+                    tname = "undefined"
+                    if t.type_prop == 'Haxe Script' or "Bundled":
+                        tname = t.class_name_prop
+                    if t.type_prop == 'Logic Nodes':
+                        tname = t.node_tree_prop.name
+                    if t.type_prop == 'UI Canvas':
+                        tname = t.canvas_name_prop
+                    if t.type_prop == 'WebAssembly':
+                        tname = t.webassembly_prop
+                    print('Trait: {0} ("{1}")'.format(o.name, tname))
         return{'FINISHED'}
 
 class ARM_PT_MaterialNodePanel(bpy.types.Panel):
@@ -2513,7 +2506,6 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
 
@@ -2536,7 +2528,6 @@ def draw_custom_node_menu(self, context):
             layout.separator()
             layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
 
-
 def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.types.AnyType, prop_condition: str, prop_value: str) -> None:
     """Draws a property row with a checkbox that enables a value field.
     The function fails when prop_condition is not a boolean property.
@@ -2547,7 +2538,6 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub = row.row()
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
-
 
 def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
     """Draw an error box in the given UILayout and return it for
@@ -2564,7 +2554,6 @@ def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
         col.label(text=line, icon='ERROR' if idx == 0 else 'BLANK1')
 
     return box
-
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
@@ -2644,7 +2633,6 @@ def register():
 
     bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
     bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
-
 
 def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
