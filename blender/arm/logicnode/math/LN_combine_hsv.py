@@ -7,7 +7,7 @@ class CombineColorNode(ArmLogicTreeNode):
     formula from // https://stackoverflow.com/a/17243070
     """
     bl_idname = 'LNCombineColorHSVNode'
-    bl_label = 'Combine HSV'
+    bl_label = 'Combine HSVA'
     arm_section = 'color'
     arm_version = 1
 
