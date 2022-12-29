@@ -4,17 +4,20 @@ from arm.logicnode.arm_nodes import *
 class DrawTextAreaStringNode(ArmLogicTreeNode):
     """Draws a string.
 
+    @length property: length of the text text area string can be determined by the amount of lines desired or the amount of characters in a line.
     @input Draw: Activate to draw the string on this frame. The input must
         be (indirectly) called from an `On Render2D` node.
-    @input String: The string to draw.
+    @input String: The string to draw as a text area.
     @input Font File: The filename of the font (including the extension).
         If empty and Zui is _enabled_, the default font is used. If empty
         and Zui is _disabled_, nothing is rendered.
+    
+    @length: value according to specified property above. 
+    @line Spacing: changes the separation between lines.
     @input Font Size: The size of the font in pixels.
-    @input Color: The color of the string.
+    @input Color Font: The color of the string, supports alpha.
+    @input Color Background: The color background of the text area, supports alpha, if no color is wanted used alpha 0.
     @input X/Y: Position of the string, in pixels from the top left corner.
-
-    @output Out: Activated after the string has been drawn.
 
     @see [`kha.graphics2.Graphics.drawString()`](http://kha.tech/api/kha/graphics2/Graphics.html#drawString).
     """
@@ -49,7 +52,7 @@ class DrawTextAreaStringNode(ArmLogicTreeNode):
         self.add_input('ArmStringSocket', 'String')
         self.add_input('ArmStringSocket', 'Font File')
         self.add_input('ArmIntSocket', 'Length', default_value=3)
-        self.add_input('ArmFloatSocket', 'Lines Spacing', default_value=1.0)
+        self.add_input('ArmFloatSocket', 'Line Spacing', default_value=1.0)
         self.add_input('ArmIntSocket', 'Font Size', default_value=16)
         self.add_input('ArmColorSocket', 'Color Font', default_value=[1.0, 1.0, 1.0, 1.0])
         self.add_input('ArmColorSocket', 'Color Background', default_value=[0.0, 0.0, 0.0, 1.0])
@@ -62,5 +65,3 @@ class DrawTextAreaStringNode(ArmLogicTreeNode):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
         layout.prop(self, 'property2')
-
-
