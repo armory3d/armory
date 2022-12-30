@@ -308,10 +308,11 @@ def compile(assets_only=False):
 
     # Custom exporter
     if state.target == "custom":
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
-            for s in item.arm_project_khamake.split(' '):
-                cmd.append(s)
+        if len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
+                for s in item.arm_project_khamake.split(' '):
+                    cmd.append(s)
         state.proc_build = run_proc(cmd, build_done)
     else:
         target_name = state.target
@@ -384,10 +385,11 @@ def compile(assets_only=False):
             if assets_only or compilation_server:
                 cmd.append('--nohaxe')
                 cmd.append('--noproject')
-            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-            if item.arm_project_khamake != "":
-                for s in item.arm_project_khamake.split(" "):
-                    cmd.append(s)
+            if len(wrd.arm_exporterlist) > 0:
+                item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+                if item.arm_project_khamake != "":
+                    for s in item.arm_project_khamake.split(" "):
+                        cmd.append(s)
             state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
             if bpy.app.background:
                 if state.proc_build.returncode == 0:
