@@ -2,16 +2,16 @@ from arm.logicnode.arm_nodes import *
 
 
 class CaseIndexNode(ArmLogicTreeNode):
-    """Compare the given dynamic value with the other inputs for equality
+    """Compare the given `Compare` value with the other inputs for equality
     and return the first match. This is particularly helpful in combination
     with the `Select` node.
 
     @seeNode Select
 
-    @input Dynamic: the value to be compared
+    @input Compare: the value to be compared
     @input Value: values for the dynamic comparison
 
-    @output Value: the index of the first equal value, or `null` if no
+    @output Index: the index of the first equal value, or `null` if no
         equal value was found.
     """
     bl_idname = 'LNCaseIndexNode'
@@ -26,10 +26,10 @@ class CaseIndexNode(ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
-        self.add_input('ArmDynamicSocket', 'Dynamic')
+        self.add_input('ArmDynamicSocket', 'Compare')
         self.add_input_func()
 
-        self.add_output('ArmDynamicSocket', 'Value')
+        self.add_output('ArmIntSocket', 'Index')
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
