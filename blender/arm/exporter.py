@@ -2468,8 +2468,6 @@ Make sure the mesh only has tris/quads.""")
 
         self.export_scene_traits()
 
-        self.export_post_processing()
-
         self.export_canvas_themes()
 
         # Write embedded data references
@@ -2984,17 +2982,6 @@ Make sure the mesh only has tris/quads.""")
         if 'traits' in self.output:
             for out_trait in self.output['traits']:
                 ArmoryExporter.import_traits.append(out_trait['class_name'])
-
-    def export_post_processing(self):
-        rpdat = arm.utils.get_rp()
-
-        if rpdat.rp_bloom:
-            if "post_process" not in self.output:
-                self.output["post_process"] = {}
-
-            self.output["post_process"]["bloom"] = {
-                "radius": self.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius,
-            }
 
     @staticmethod
     def export_canvas_themes():

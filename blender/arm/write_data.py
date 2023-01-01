@@ -470,6 +470,9 @@ class Main {
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
+        if rpdat.rp_bloom:
+            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
+
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
     public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")

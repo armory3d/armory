@@ -12,10 +12,9 @@ class BloomSetNode extends LogicNode {
 		armory.renderpath.Postprocess.bloom_uniforms[1] = inputs[2].get();
 		armory.renderpath.Postprocess.bloom_uniforms[2] = inputs[3].get();
 
-		final rawPostprocess = iron.Scene.active.raw.post_process;
-		if (rawPostprocess != null && rawPostprocess.bloom != null) {
-			rawPostprocess.bloom.radius = inputs[4].get();
-		}
+		#if rp_bloom
+			Main.bloomRadius = Math.max(inputs[4].get(), 0.0);
+		#end
 
 		runOutput(0);
 	}

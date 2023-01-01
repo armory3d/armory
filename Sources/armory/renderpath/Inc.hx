@@ -423,27 +423,21 @@ class Inc {
 	#if rp_bloom
 	public static inline function drawBloom(srcRTName: String, downsampler: Downsampler, upsampler: Upsampler) {
 		if (armory.data.Config.raw.rp_bloom != false) {
-			final rawPostprocess = iron.Scene.active.raw.post_process;
+			// This can result in little jumps in the perceived bloom radius
+			// when resizing the window because numMips might change, but
+			// all implementations using this approach have the same problem
+			// (including Eevee)
+			final minDim = Math.min(path.currentW, path.currentH);
+			final logMinDim = Math.max(1.0, Helper.log2(minDim) + (Main.bloomRadius - 8.0));
+			final numMips = Std.int(logMinDim);
 
-			if (rawPostprocess != null && rawPostprocess.bloom != null) {
-				final radius = rawPostprocess.bloom.radius;
+			// Sample scale for upsampling, 0.5 to use half-texel steps,
+			// use fraction of logMinDim to make the visual jumps
+			// described above less visible
+			Postprocess.bloom_uniforms[3] = 0.5 + logMinDim - numMips;
 
-				// This can result in little jumps in the perceived bloom radius
-				// when resizing the window because numMips might change, but
-				// all implementations using this approach have the same problem
-				// (including Eevee)
-				final minDim = Math.min(path.currentW, path.currentH);
-				final logMinDim = Math.max(1.0, Helper.log2(minDim) + (radius - 8.0));
-				final numMips = Std.int(logMinDim);
-
-				// Sample scale for upsampling, 0.5 to use half-texel steps,
-				// use fraction of logMinDim to make the visual jumps
-				// described above less visible
-				Postprocess.bloom_uniforms[3] = 0.5 + logMinDim - numMips;
-
-				downsampler.dispatch(srcRTName, numMips);
-				upsampler.dispatch(srcRTName, numMips);
-			}
+			downsampler.dispatch(srcRTName, numMips);
+			upsampler.dispatch(srcRTName, numMips);
 		}
 	}
 	#end
