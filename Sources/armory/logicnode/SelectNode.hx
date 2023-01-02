@@ -21,7 +21,7 @@ class SelectNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		if (property0 == "from_index") {
-			var index = inputs[0].get() + 2;
+			var index = inputs[0].get() == null ? -1 : inputs[0].get() + 2;
 
 			// Return default value for invalid index
 			if (index < 2 || index >= inputs.length) {
