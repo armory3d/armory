@@ -2175,8 +2175,15 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
 
         if wrd.arm_tilesheetlist_index >= 0 and len(wrd.arm_tilesheetlist) > 0:
             dat = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
-            layout.prop(dat, "tilesx_prop")
-            layout.prop(dat, "tilesy_prop")
+            layout.prop(dat, "format_prop")
+
+            # Provide different properties for different tile formats
+            if dat.format_prop == "GRID":
+                layout.prop(dat, "tilesx_prop")
+                layout.prop(dat, "tilesy_prop")
+            elif dat.format_prop == "SPARROW":
+                layout.prop(dat, "atlas_file_prop")
+
             layout.prop(dat, "framerate_prop")
 
             layout.label(text='Actions')
@@ -2198,8 +2205,11 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
 
             if dat.arm_tilesheetactionlist_index >= 0 and len(dat.arm_tilesheetactionlist) > 0:
                 adat = dat.arm_tilesheetactionlist[dat.arm_tilesheetactionlist_index]
-                layout.prop(adat, "start_prop")
-                layout.prop(adat, "end_prop")
+                if (dat.format_prop == "GRID"):
+                    layout.prop(adat, "start_prop")
+                    layout.prop(adat, "end_prop")
+                elif (dat.format_prop == "SPARROW"):
+                    layout.prop(adat, "prefix_prop")
                 layout.prop(adat, "loop_prop")
 
 class ArmPrintTraitsButton(bpy.types.Operator):

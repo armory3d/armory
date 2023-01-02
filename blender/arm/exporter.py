@@ -14,6 +14,7 @@ http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 from enum import Enum, unique
 import math
 import os
+import pathlib
 import time
 from typing import Any, Dict, List, Tuple, Union, Optional
 
@@ -2244,9 +2245,11 @@ Make sure the mesh only has tris/quads.""")
         for ts in wrd.arm_tilesheetlist:
             o = {}
             o['name'] = ts.name
+            o['format'] = ts.format_prop
             o['tilesx'] = ts.tilesx_prop
             o['tilesy'] = ts.tilesy_prop
             o['framerate'] = ts.framerate_prop
+            o['atlas_data'] = self.read_file(ts.atlas_file_prop)
             o['actions'] = []
             for tsa in ts.arm_tilesheetactionlist:
                 ao = {}
@@ -2254,8 +2257,17 @@ Make sure the mesh only has tris/quads.""")
                 ao['start'] = tsa.start_prop
                 ao['end'] = tsa.end_prop
                 ao['loop'] = tsa.loop_prop
+                ao['prefix'] = tsa.prefix_prop
                 o['actions'].append(ao)
             self.output['tilesheet_datas'].append(o)
+
+    def read_file(self, path):
+        f = pathlib.Path(bpy.path.abspath(path))
+
+        if f.exists():
+            return f.read_text()
+        else:
+            return ''
 
     def export_world(self):
         """Exports the world of the current scene."""

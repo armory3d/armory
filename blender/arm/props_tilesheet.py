@@ -4,23 +4,31 @@ from bpy.props import *
 class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
     name: StringProperty(
         name="Name",
-        description="A name for this item",
+        description="A name for this action",
         default="Untitled")
+
+    # GRID action properties
 
     start_prop: IntProperty(
         name="Start",
-        description="A name for this item",
+        description="The start frame index for this action",
         default=0)
 
     end_prop: IntProperty(
         name="End",
-        description="A name for this item",
+        description="The end frame index for this action",
         default=0)
 
     loop_prop: BoolProperty(
         name="Loop",
-        description="A name for this item",
+        description="Whether this action loops or not",
         default=True)
+
+    # SPARROW action properties
+
+    prefix_prop: StringProperty(
+        name="Prefix",
+        description="An animation prefix for this action")
 
 class ARM_UL_TilesheetActionList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -136,20 +144,38 @@ class ArmTilesheetListItem(bpy.types.PropertyGroup):
         description="A name for this item",
         default="Untitled")
 
+    format_prop: EnumProperty(
+        name="Format",
+        description="The format to use for the tilesheet",
+        items=(
+            ('GRID', 'Grid', ""),
+            ('SPARROW', 'Sparrow', "")
+        ),
+        default="GRID")
+
+    # GRID format
+
     tilesx_prop: IntProperty(
         name="Tiles X",
-        description="A name for this item",
+        description="The grid width of the tilesheet in tiles",
         default=0)
 
     tilesy_prop: IntProperty(
         name="Tiles Y",
-        description="A name for this item",
+        description="The grid height of the tilesheet in tiles",
         default=0)
 
     framerate_prop: FloatProperty(
         name="Frame Rate",
-        description="A name for this item",
+        description="The framerate of the tilesheet",
         default=4.0)
+
+    # SPARROW format
+
+    atlas_file_prop: StringProperty(
+        name = "Atlas File",
+        description = "A path to an XML file describing the Sparrow spritesheet",
+        subtype = "FILE_PATH")
 
     arm_tilesheetactionlist: CollectionProperty(type=ArmTilesheetActionListItem)
     arm_tilesheetactionlist_index: IntProperty(name="Index for arm_tilesheetactionlist", default=0)
