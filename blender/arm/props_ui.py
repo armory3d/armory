@@ -1785,11 +1785,16 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
 
         col = layout.column()
         col.prop(rpdat, "rp_bloom")
-        col = col.column()
-        col.enabled = rpdat.rp_bloom
-        col.prop(rpdat, 'arm_bloom_threshold')
-        col.prop(rpdat, 'arm_bloom_strength')
-        col.prop(rpdat, 'arm_bloom_radius')
+        _col = col.column()
+        _col.enabled = rpdat.rp_bloom
+        _col.prop(rpdat, 'arm_bloom_follow_blender')
+        if not rpdat.arm_bloom_follow_blender:
+            _col.prop(rpdat, 'arm_bloom_threshold')
+            _col.prop(rpdat, 'arm_bloom_knee')
+            _col.prop(rpdat, 'arm_bloom_radius')
+            _col.prop(rpdat, 'arm_bloom_strength')
+        _col.prop(rpdat, 'arm_bloom_quality')
+        _col.prop(rpdat, 'arm_bloom_anti_flicker')
         layout.separator()
 
         col = layout.column()

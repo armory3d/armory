@@ -386,6 +386,10 @@ void main() {
 	fragColor.rgb *= pow(expo, autoExposureStrength * 2.0);
 #endif
 
+// Clamp color to get rid of INF values that don't work for the tone mapping below
+// The max value is kind of arbitrary (16 bit float max * 0.5), but it should be large enough
+fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
+
 #ifdef _CPostprocess
 
 	#ifdef _CToneCustom

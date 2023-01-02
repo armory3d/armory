@@ -280,7 +280,16 @@ def build():
         if rpdat.rp_bloom:
             assets.add_khafile_def('rp_bloom')
             assets.add_shader_pass('bloom_pass')
-            assets.add_shader_pass('blur_gaus_pass')
+
+            if rpdat.arm_bloom_quality == 'low':
+                wrd.compo_defs += '_BloomQualityLow'
+            elif rpdat.arm_bloom_quality == 'medium':
+                wrd.compo_defs += '_BloomQualityMedium'
+            else:
+                wrd.compo_defs += '_BloomQualityHigh'
+
+            if rpdat.arm_bloom_anti_flicker:
+                wrd.compo_defs += '_BloomAntiFlicker'
 
         if rpdat.rp_ssr:
             wrd.world_defs += '_SSR'

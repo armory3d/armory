@@ -101,10 +101,11 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants)
     arm.lib.make_datas.make(res, shader_name, json_data, fp, defs, make_variants)
 
     path = fp + '/compiled/Shaders'
-    c = json_data['contexts'][0]
-    for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
-        if s in c:
-            shutil.copy(c[s], path + '/' + c[s].split('/')[-1])
+    contexts = json_data['contexts']
+    for ctx in contexts:
+        for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
+            if s in ctx:
+                shutil.copy(ctx[s], path + '/' + ctx[s].split('/')[-1])
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
