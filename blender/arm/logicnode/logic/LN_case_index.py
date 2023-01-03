@@ -3,8 +3,8 @@ from arm.logicnode.arm_nodes import *
 
 class CaseIndexNode(ArmLogicTreeNode):
     """Compare the given `Compare` value with the other inputs for equality
-    and return the first match. This is particularly helpful in combination
-    with the `Select` node.
+    and return the index of the first match. This is particularly helpful
+    in combination with the `Select` node.
 
     @seeNode Select
 
