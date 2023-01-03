@@ -12,4 +12,4 @@ class StringReplaceNode(ArmLogicTreeNode):
         self.add_input('ArmStringSocket', 'Find')
         self.add_input('ArmStringSocket', 'Replace')
         
-        self.add_output('ArmIntSocket', 'String')
+        self.add_output('ArmStringSocket', 'String')
