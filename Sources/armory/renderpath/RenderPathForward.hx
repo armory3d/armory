@@ -509,6 +509,9 @@ class RenderPathForward {
 						path.clearTarget(null, 1.0);
 					}
 					#end
+
+					RenderPathCreator.setTargetMeshes();
+					
 					path.drawMeshes("refraction");
 
 					#if (!kha_opengl)
@@ -521,7 +524,7 @@ class RenderPathForward {
 					path.bindTarget("lbuffer0", "tex1");
 					path.bindTarget("_main", "gbufferD");
 					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("lbuffer1", "lbuffer0");
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 					

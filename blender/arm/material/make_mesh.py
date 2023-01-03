@@ -578,11 +578,16 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
-        else:
+        elif not '_SSRefraction' in wrd.world_defs:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
     
-    if blend:
+    if '_SSRefraction' in wrd.world_defs:
+        if transluc_pass:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
+        else:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
+    elif blend:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
         else:
@@ -590,7 +595,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
-
+    
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
 
@@ -731,7 +736,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
-
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

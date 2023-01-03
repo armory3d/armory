@@ -44,6 +44,8 @@ def get_rpasses(material):
         ar.append('overlay')
     if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending and '_SSRefraction' in wrd.world_defs:
         ar.append('refraction')
+        if rpdat.rp_renderer == 'Forward':
+            ar.append('mesh')
     else:
         ar.append('mesh')
         for con in add_mesh_contexts:

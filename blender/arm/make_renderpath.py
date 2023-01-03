@@ -182,7 +182,7 @@ def build():
     if rpdat.rp_renderer == 'Forward':
         assets.add_khafile_def('rp_forward')
 
-    if rpdat.rp_render_to_texture:
+    if rpdat.rp_render_to_texture:#and not rpdat.rprenderer == 'Forward'
         assets.add_khafile_def('rp_render_to_texture')
 
         if rpdat.rp_compositornodes:
