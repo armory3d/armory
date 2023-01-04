@@ -375,6 +375,28 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
+class ArmEditWasmScriptButton(bpy.types.Operator):
+    bl_idname = 'arm.edit_wasm_script'
+    bl_label = 'Edit Script'
+    bl_description = 'Copy script to project and edit in the text editor'
+    bl_options = {'INTERNAL'}
+
+    is_object: BoolProperty(default=False)
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {'CANCELLED'}
+
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        wasm_path = os.path.join(arm.utils.get_fp(), 'Bundled', item.webassembly_prop + '.wasm')
+        arm.utils.open_editor(wasm_path)
+        return{'FINISHED'}
+
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     """Generate navmesh from selected meshes"""
     bl_idname = 'arm.generate_navmesh'
@@ -862,6 +884,11 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
         elif item.type_prop == 'WebAssembly':
             row.operator("arm.new_wasm", icon="FILE_NEW")
 
+            column = row.column(align=True)
+            column.enabled = item.webassembly_prop != ''
+            
+            column.operator("arm.edit_wasm_script", icon_value=ICON_WASM).is_object = is_object
+
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
 
@@ -934,6 +961,7 @@ def register():
     bpy.utils.register_class(ArmTraitListMoveItem)
     bpy.utils.register_class(ArmEditScriptButton)
     bpy.utils.register_class(ArmEditBundledScriptButton)
+    bpy.utils.register_class(ArmEditWasmScriptButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmEditCanvasButton)
     bpy.utils.register_class(ArmNewScriptDialog)
@@ -966,6 +994,7 @@ def unregister():
     bpy.utils.unregister_class(ArmTraitListMoveItem)
     bpy.utils.unregister_class(ArmEditScriptButton)
     bpy.utils.unregister_class(ArmEditBundledScriptButton)
+    bpy.utils.unregister_class(ArmEditWasmScriptButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmEditCanvasButton)
     bpy.utils.unregister_class(ArmNewScriptDialog)
