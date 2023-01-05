@@ -468,6 +468,7 @@ void main() {
 		#ifdef _VoxelShadow
 		, voxels, voxpos
 		#endif
+		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
@@ -530,6 +531,7 @@ void main() {
 			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
 			, voxels, voxpos
+			#endif
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
