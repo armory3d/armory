@@ -447,6 +447,12 @@ S
 
 	#if rp_voxels
 	public static function initGI(tname = "voxels") {
+		#if arm_config
+		var config = armory.data.Config.raw;
+		if (config.rp_voxels != true || voxelsCreated) return;
+		voxelsCreated = true;
+		#end
+
 		var t = new RenderTargetRaw();
 		t.name = tname;
 

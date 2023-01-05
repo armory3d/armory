@@ -399,9 +399,6 @@ void main() {
 	#ifdef _VoxelShadow
 	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
 	#endif
-	#ifdef _VoxelGIShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
-	#endif
 
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
@@ -467,7 +464,8 @@ void main() {
 		, voxels, voxpos
 		#endif
 		#endif
-		#ifdef _VoxelGIShadow
+		#ifdef _VoxelGI
+		#ifdef _VoxelShadow
 		, voxels, voxpos
 		#endif
 		#ifdef _MicroShadowing
@@ -529,7 +527,8 @@ void main() {
 			, voxels, voxpos
 			#endif
 			#endif
-			#ifdef _VoxelGIShadow
+			#ifdef _VoxelGI
+			#ifdef _VoxelShadow
 			, voxels, voxpos
 			#endif
 			#ifdef _MicroShadowing
