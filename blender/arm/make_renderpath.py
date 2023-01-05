@@ -31,7 +31,6 @@ def add_world_defs():
 
     if rpdat.arm_micro_shadowing:
         wrd.world_defs += '_MicroShadowing'
-        assets.add_khafile_def('rp_microshadowing')
 
     if rpdat.arm_two_sided_area_light:
         wrd.world_defs += '_TwoSidedAreaLight'
