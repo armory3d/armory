@@ -992,7 +992,11 @@ class ArmoryExporter:
                             skelobj.select_set(False)
                             for _o in sel:
                                 _o.select_set(True)
-                            baked_actions.append(action)
+
+                            # Baking creates a new action, but only if it
+                            # was successful
+                            if 'FINISHED' in bake_result:
+                                baked_actions.append(action)
 
                         wrd = bpy.data.worlds['Arm']
                         if wrd.arm_verbose_output:
