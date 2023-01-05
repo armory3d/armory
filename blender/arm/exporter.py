@@ -987,12 +987,24 @@ class ArmoryExporter:
                             for _o in sel:
                                 _o.select_set(False)
                             skelobj.select_set(True)
-                            bpy.ops.nla.bake(frame_start=int(action.frame_range[0]), frame_end=int(action.frame_range[1]), step=1, only_selected=False, visual_keying=True)
+
+                            bake_result = bpy.ops.nla.bake(
+                                frame_start=int(action.frame_range[0]),
+                                frame_end=int(action.frame_range[1]),
+                                step=1,
+                                only_selected=False,
+                                visual_keying=True
+                            )
                             action = skelobj.animation_data.action
+
                             skelobj.select_set(False)
                             for _o in sel:
                                 _o.select_set(True)
-                            baked_actions.append(action)
+
+                            # Baking creates a new action, but only if it
+                            # was successful
+                            if 'FINISHED' in bake_result:
+                                baked_actions.append(action)
 
                         wrd = bpy.data.worlds['Arm']
                         if wrd.arm_verbose_output:
