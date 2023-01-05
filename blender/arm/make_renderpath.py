@@ -196,6 +196,8 @@ def build():
                 wrd.compo_defs += '_CFXAA'
             if rpdat.arm_letterbox:
                 wrd.compo_defs += '_CLetterbox'
+            if rpdat.arm_distort:
+                wrd.compo_defs += '_CDistort'
             if rpdat.arm_grain:
                 wrd.compo_defs += '_CGrain'
             if rpdat.arm_sharpen:

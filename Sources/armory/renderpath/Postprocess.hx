@@ -52,7 +52,8 @@ class Postprocess {
 		160.0,				//7: DoF Focal Length mm
 		128,				//8: DoF F-Stop
 		0,					//9: Tonemapping Method
-		2.0					//10: Film Grain
+		2.0,				//10: Distort
+		2.0					//11: Film Grain
 	];
 
 	public static var tonemapper_uniforms = [
@@ -259,7 +260,7 @@ class Postprocess {
 		case "_PPComp4":
 			v = iron.object.Uniforms.helpVec;
 			v.x = Std.int(camera_uniforms[9]); //Tonemapping
-			v.y = camera_uniforms[10]; //Film Grain
+			v.y = camera_uniforms[11]; //Film Grain
 			v.z = tonemapper_uniforms[0]; //Slope
 		case "_PPComp5":
 			v = iron.object.Uniforms.helpVec;
@@ -276,11 +277,6 @@ class Postprocess {
 			v.x = lenstexture_uniforms[2]; //Lum min
 			v.y = lenstexture_uniforms[3]; //Lum max
 			v.z = lenstexture_uniforms[4]; //Expo
-		case "_PPComp8":
-			v = iron.object.Uniforms.helpVec;
-			v.x = colorgrading_global_uniforms[7][0]; //LUT R
-			v.y = colorgrading_global_uniforms[7][1]; //LUT G
-			v.z = colorgrading_global_uniforms[7][2]; //LUT B
 		case "_PPComp9":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[0]; //Step
@@ -305,6 +301,11 @@ class Postprocess {
 			v = iron.object.Uniforms.helpVec;
 			v.x = chromatic_aberration_uniforms[0]; //CA Strength
 			v.y = chromatic_aberration_uniforms[1]; //CA Samples
+			v.z = 0;
+		case "_PPComp14":
+			v = iron.object.Uniforms.helpVec;
+			v.x = camera_uniforms[10]; //Distort
+			v.y = 0;
 			v.z = 0;
 		}
 

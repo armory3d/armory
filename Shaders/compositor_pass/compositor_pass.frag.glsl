@@ -62,6 +62,7 @@ uniform vec3 PPComp5;
 uniform vec3 PPComp6;
 uniform vec3 PPComp7;
 uniform vec3 PPComp8;
+uniform vec3 PPComp14;
 #endif
 
 // #ifdef _CPos
@@ -81,8 +82,12 @@ uniform float aspectRatio;
 uniform vec2 texStep;
 #endif
 
+#ifdef _CDistort
+uniform float time;
+#else
 #ifdef _CGrain
 uniform float time;
+#endif
 #endif
 
 #ifdef _DynRes
@@ -238,6 +243,19 @@ void main() {
 	else {
 		texCo = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
 	}
+#endif
+
+#ifdef _CDistort
+	// const float compoDistortStrength = 4.0;
+	#ifdef _CPostprocess
+		float uStrength = PPComp14;
+	#else
+		float uStrength = compoDistortStrength;
+	#endif
+	float uX = time * uStrength;
+	texCo.y = texCo.y + (sin(texCo.x*4.0+uX*2.0)*0.01);
+	texCo.x = texCo.x + (cos(texCo.y*4.0+uX*2.0)*0.01);
+	fragColor.rgb = texture(tex, texCo).rgb;
 #endif
 
 #ifdef _CDepth

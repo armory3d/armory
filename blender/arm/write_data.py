@@ -677,6 +677,11 @@ const float autoExposureSpeed = """ + str(rpdat.arm_autoexposure_speed) + """;
 const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[2] * 100) / 100) + """);
 """)
 
+        if rpdat.arm_distort:
+            f.write(
+"""const float compoDistortStrength = """ + str(round(rpdat.arm_distort_strength * 100) / 100) + """;
+""")
+
         if rpdat.arm_grain:
             f.write(
 """const float compoGrainStrength = """ + str(round(rpdat.arm_grain_strength * 100) / 100) + """;
