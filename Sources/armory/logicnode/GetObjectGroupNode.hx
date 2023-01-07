@@ -17,7 +17,7 @@ class GetObjectGroupNode extends LogicNode {
 		var raw = iron.Scene.active.raw;
 		
 		for (g in raw.groups){
-			if(g.object_refs.indexOf(object.name) != -1) return g.name;
+			if(iron.Scene.active.getGroup(g.name).indexOf(object) != -1) return g.name;
 			
 		}
 			
