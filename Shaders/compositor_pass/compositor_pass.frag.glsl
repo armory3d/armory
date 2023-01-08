@@ -255,7 +255,6 @@ void main() {
 	float uX = time * uStrength;
 	texCo.y = texCo.y + (sin(texCo.x*4.0+uX*2.0)*0.01);
 	texCo.x = texCo.x + (cos(texCo.y*4.0+uX*2.0)*0.01);
-	fragColor.rgb = texture(tex, texCo).rgb;
 #endif
 
 #ifdef _CDepth
