@@ -19,8 +19,10 @@ class RemoveTraitObjectNode extends LogicNode {
 		if (cname == null) cname = Type.resolveClass(Main.projectPackage + ".node." + traitName);
 		assert(Error, cname != null, 'No trait with the name "$traitName" found, make sure that the trait is exported!');
 		
-		if(object.getTrait(cname) != null)
-			object.removeTrait(object.getTrait(cname));
+		var trait = object.getTrait(cname);
+		
+		if(trait != null)
+			object.removeTrait(trait);
 
 		runOutput(0);
 	}
