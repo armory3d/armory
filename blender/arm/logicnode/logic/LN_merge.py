@@ -72,7 +72,7 @@ class MergeNode(ArmLogicTreeNode):
         if self.arm_version not in (0, 2):
             raise LookupError()
             
-        if self.arm_version == 1:
+        if self.arm_version == 1 or self.arm_version == 2:
             newnode = node_tree.nodes.new('LNMergeNode')
             newnode.property0 = self.property0
 
@@ -89,5 +89,3 @@ class MergeNode(ArmLogicTreeNode):
                 node_tree.links.new(newnode.outputs[0], link.to_socket)
 
             return newnode
-        elif self.arm_version == 2:
-            return NodeReplacement.Identity(self)

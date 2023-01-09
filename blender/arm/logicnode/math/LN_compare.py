@@ -60,10 +60,8 @@ class CompareNode(ArmLogicTreeNode):
         if self.arm_version not in (0, 2):
             raise LookupError()
 
-        if self.arm_version == 1:
+        if self.arm_version == 1 or self.arm_version == 2:
             return NodeReplacement(
                 'LNGateNode', self.arm_version, 'LNGateNode', 2,
                 in_socket_mapping={0:0, 1:1, 2:2}, out_socket_mapping={0:0, 1:1}
             )
-        elif self.arm_version == 2:
-            return NodeReplacement.Identity(self)
