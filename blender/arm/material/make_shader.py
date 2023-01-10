@@ -97,6 +97,7 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
 
         elif rp == 'refraction':
             con = make_mesh.make(rp, rpasses)
+
         elif rp == 'overlay':
             con = make_overlay.make(rp)
 

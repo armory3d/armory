@@ -89,7 +89,7 @@ void main() {
 		discard;
 	}
 	
-    vec2 enc = g0.rg;
+    	vec2 enc = g0.rg;
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
@@ -122,5 +122,5 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = (textureLod(tex1, texCoord.xy, 0.0).rgb + refractionCol) * intensity;
+	fragColor.rgb = (textureLod(tex1, texCoord.xy, 0.0).rgb + refractionCol * intensity);
 }

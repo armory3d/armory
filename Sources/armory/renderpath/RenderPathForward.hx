@@ -489,7 +489,8 @@ class RenderPathForward {
 
 			#if rp_ssrefr
 			{
-				if (armory.data.Config.raw.rp_ssrefr != false) {
+				if (armory.data.Config.raw.rp_ssrefr != false) 
+				{
 					path.setTarget("gbufferD1");
 					path.bindTarget("_main", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -498,7 +499,7 @@ class RenderPathForward {
 					path.bindTarget("lbuffer0", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
 
-					RenderPathCreator.setTargetMeshes();
+					path.setTarget("lbuffer0");
 
 					#if (rp_background == "Clear")
 					{
@@ -511,27 +512,17 @@ class RenderPathForward {
 					#end
 
 					RenderPathCreator.setTargetMeshes();
-					
 					path.drawMeshes("refraction");
 
-					#if (!kha_opengl)
-					path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
-					path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
-					#end					
-
-					path.setTarget("lbuffer0");
+					path.setTarget("buf");
 					path.bindTarget("refr", "tex");
 					path.bindTarget("lbuffer0", "tex1");
 					path.bindTarget("_main", "gbufferD");
 					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer1", "lbuffer0");
+					path.bindTarget("lbuffer0", "lbuffer0");
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-					
-					#if (!kha_opengl)
-					path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
-					path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
-					#end
 				}
 			}
 			#end
