@@ -580,6 +580,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     arm_letterbox_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_letterbox_size: FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
+    arm_distort: BoolProperty(name="Distort", default=False, update=assets.invalidate_shader_cache)
+    arm_distort_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_sharpen: BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)

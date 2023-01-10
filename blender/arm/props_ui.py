@@ -1861,6 +1861,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
         draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
+        draw_conditional_prop(col, 'Distort', rpdat, 'arm_distort', 'arm_distort_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
         layout.separator()
 
@@ -1882,9 +1883,8 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        col.prop(rpdat, 'arm_lensflare')
         col.prop(rpdat, 'arm_fisheye')
-        layout.separator()
+        col.prop(rpdat, 'arm_lensflare')
 
         col = layout.column()
         col.prop(rpdat, 'arm_lens_texture')
