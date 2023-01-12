@@ -81,7 +81,7 @@ def make(context_id, rpasses):
         elif rpdat.arm_material_model == 'Solid':
             make_forward_solid(con_mesh)
         else:
-            make_forward(con_mesh)
+            make_forward(con_mesh, rpasses)
     elif rid == 'Deferred':
         make_deferred(con_mesh, rpasses)
     elif rid == 'Raytracer':
@@ -505,11 +505,11 @@ def make_forward_solid(con_mesh):
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
 
-def make_forward(con_mesh):
+def make_forward(con_mesh, rpasses):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
-    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
+    parse_opacity = blend or mat_utils.is_transluc(mat_state.material) or 'refraction' in rpasses
 
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag

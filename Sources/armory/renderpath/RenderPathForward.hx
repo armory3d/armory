@@ -514,7 +514,7 @@ class RenderPathForward {
 					RenderPathCreator.setTargetMeshes();
 					path.drawMeshes("refraction");
 
-					path.setTarget("buf");
+					path.setTarget("bufa");
 					path.bindTarget("refr", "tex");
 					path.bindTarget("lbuffer0", "tex1");
 					path.bindTarget("_main", "gbufferD");
