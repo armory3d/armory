@@ -1454,6 +1454,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_skin')
         col = col.column()
         col.enabled = rpdat.arm_skin == 'On'
+        col.prop(rpdat, 'arm_use_armature_deform_only')
         col.prop(rpdat, 'arm_skin_max_bones_auto')
         row = col.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto

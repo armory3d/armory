@@ -613,6 +613,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Skinning', description='Enable skinning', default='On', update=assets.invalidate_shader_cache)
+    arm_use_armature_deform_only: BoolProperty(name="Only Deform Bones", description="Only write deforming bones (and non-deforming ones when they have deforming children)", default=False, update=assets.invalidate_compiled_data)
     arm_skin_max_bones_auto: BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     arm_skin_max_bones: IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     arm_morph_target: EnumProperty(

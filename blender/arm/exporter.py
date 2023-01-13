@@ -241,7 +241,12 @@ class ArmoryExporter:
         return []
 
     def export_bone(self, armature, bone: bpy.types.Bone, o, action: bpy.types.Action):
+        rpdat = arm.utils.get_rp()
         bobject_ref = self.bobject_bone_array.get(bone)
+
+        if rpdat.arm_use_armature_deform_only:
+            if not bone.use_deform:
+                return
 
         if bobject_ref:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
