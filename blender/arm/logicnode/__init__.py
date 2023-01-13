@@ -50,6 +50,7 @@ def init_categories():
     arm_nodes.add_category('String', icon='SORTALPHA', section="values")
     arm_nodes.add_category('Variable', icon='OPTIONS', section="values")
 
+    arm_nodes.add_category('Draw', icon='GREASEPENCIL', section="graphics")
     arm_nodes.add_category('Canvas', icon='RENDERLAYERS', section="graphics",
                            description="Note: To get the canvas, be sure that the node(s) and the canvas (UI) is attached to the same object.")
     arm_nodes.add_category('Postprocess', icon='FREEZE', section="graphics")
