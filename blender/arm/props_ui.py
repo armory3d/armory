@@ -1376,7 +1376,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY", text="")
         else:
-            row.operator("arm.stop", icon="MESH_PLANE", text="")
+            row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
         row.operator("arm.open_editor", icon="DESKTOP", text="")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")
 
