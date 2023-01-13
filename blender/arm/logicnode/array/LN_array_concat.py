@@ -12,3 +12,4 @@ class ArrayConcatNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketArray', 'Array')
 
         self.add_output('ArmNodeSocketArray', 'Array')
+        self.add_output('ArmIntSocket', 'Length')
