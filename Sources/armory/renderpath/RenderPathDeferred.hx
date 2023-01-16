@@ -373,15 +373,6 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "tex1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
 			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";

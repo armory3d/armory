@@ -75,14 +75,14 @@ def make(context_id, rpasses):
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
-    if rid == 'Forward' or blend:
+    if rid == 'Forward' or blend and not 'refraction' in rpasses:
         if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
         elif rpdat.arm_material_model == 'Solid':
             make_forward_solid(con_mesh)
         else:
             make_forward(con_mesh, rpasses)
-    elif rid == 'Deferred':
+    elif rid == 'Deferred' or 'refraction' in rpasses:
         make_deferred(con_mesh, rpasses)
     elif rid == 'Raytracer':
         make_raytracer(con_mesh)
@@ -509,9 +509,9 @@ def make_forward(con_mesh, rpasses):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
-    parse_opacity = blend or mat_utils.is_transluc(mat_state.material) or 'refraction' in rpasses
+    parse_opacity = blend or 'translucent' in rpasses or 'refraction' in rpasses
 
-    make_forward_base(con_mesh, parse_opacity=parse_opacity)
+    make_forward_base(con_mesh, rpasses)
     frag = con_mesh.frag
 
     if '_LTC' in wrd.world_defs:
@@ -530,7 +530,8 @@ def make_forward(con_mesh, rpasses):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
-        mrt = rpdat.rp_ssr  # mrt: multiple render targets
+        """
+        mrt = rpdat.rp_ssr or rpdat.rp_ssrefr #mrt: multiple render targets
         if mrt:
             # Store light gbuffer for post-processing
             frag.add_include('std/gbuffer.glsl')
@@ -538,6 +539,10 @@ def make_forward(con_mesh, rpasses):
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[GBUF_IDX_1] = vec4(n.xy, roughness, metallic);')
+        else:
+        """
+       	if 'refraction' in rpasses:
+            frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, opacity);')
         else:
             frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, 1.0);')
 
@@ -550,18 +555,19 @@ def make_forward(con_mesh, rpasses):
         frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
     
     if '_SSRefraction' in wrd.world_defs:
-        if parse_opacity:
+        if 'refraction' in rpasses:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
         else:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
 
 
-def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
+def make_forward_base(con_mesh, rpasses):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
 
     arm_discard = mat_state.material.arm_discard
-    make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
+    parse_opacity = arm_discard or 'refraction' in rpasses
+    make_base(con_mesh, parse_opacity)
 
     blend = mat_state.material.arm_blending
 
@@ -569,25 +575,20 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if not transluc_pass:
+    if not 'translucent' in rpasses:
         frag.add_out('vec4 fragColor[GBUF_SIZE]')
 
     if parse_opacity or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
-        elif transluc_pass:
+        elif 'translucent' in rpasses:
             frag.write('if (opacity == 1.0) discard;')
-        elif not '_SSRefraction' in wrd.world_defs:
+        else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
-    
-    if '_SSRefraction' in wrd.world_defs:
-        if transluc_pass:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(rior, opacity));')
-        else:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(packFloat2(1.0, 1.0));')
-    elif blend:
+
+    if blend:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
         else:

@@ -93,7 +93,7 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             con = make_depth.make(rp, rpasses, shadowmap=True)
 
         elif rp == 'translucent':
-            con = make_transluc.make(rp)
+            con = make_transluc.make(rp, rpasses)
 
         elif rp == 'refraction':
             con = make_mesh.make(rp, rpasses)
