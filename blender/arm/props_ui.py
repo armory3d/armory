@@ -1365,6 +1365,39 @@ def draw_view3d_object_menu(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
 
+class ARM_PT_TopbarPanel(bpy.types.Panel):
+    bl_label = "Armory Player"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+    bl_options = {'INSTANCED'}
+
+    def draw_header(self, context):
+        row = self.layout.row(align=True)                
+        if state.proc_play is None and state.proc_build is None:
+            row.operator("arm.play", icon="PLAY", text="")
+        else:
+            row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+        row.operator("arm.open_editor", icon="DESKTOP", text="")
+        row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")
+
+    def draw(self, context):
+        col = self.layout.column()
+        wrd = bpy.data.worlds['Arm']
+
+        col.label(text="Armory Launch")
+        col.separator()
+        
+        col.prop(wrd, 'arm_runtime')
+        col.prop(wrd, 'arm_play_camera')
+        col.prop(wrd, 'arm_play_scene')
+        col.prop_search(wrd, 'arm_play_renderpath', wrd, 'arm_rplist', text='Render Path')
+        col.prop(wrd, 'arm_debug_console', text="Debug Console")
+
+def draw_space_topbar(self, context):
+    # for some blender reasons, topbar is instanced twice. this avoids doubling the panel
+    if context.region.alignment == 'RIGHT':
+        self.layout.popover(panel="ARM_PT_TopbarPanel", text="")
+
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
     bl_space_type = "PROPERTIES"
@@ -2580,6 +2613,7 @@ def register():
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.register_class(ARM_PT_TopbarPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
@@ -2635,6 +2669,7 @@ def register():
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
     bpy.types.NODE_MT_context_menu.append(draw_custom_node_menu)
+    bpy.types.TOPBAR_HT_upper_bar.prepend(draw_space_topbar)
 
     bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
     bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
@@ -2643,6 +2678,7 @@ def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
+    bpy.types.TOPBAR_HT_upper_bar.remove(draw_space_topbar)
 
     bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
@@ -2670,6 +2706,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_UL_BindTexturesList)
     bpy.utils.unregister_class(ARM_PG_BindTexturesListItem)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_TopbarPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
