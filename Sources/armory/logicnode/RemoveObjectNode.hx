@@ -26,6 +26,11 @@ class RemoveObjectNode extends LogicNode {
 				#end
 			}
 		}
+		
+		var raw = iron.Scene.active.raw;
+		for (g in raw.groups) 
+			iron.Scene.active.getGroup(g.name).remove(object);
+		
 		object.remove();
 		runOutput(0);
 	}
