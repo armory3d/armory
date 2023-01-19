@@ -821,11 +821,10 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-				
+
 				path.setTarget("gbuffer0"); // Only clear gbuffer0
 				#if (rp_background == "Clear")
 				{
@@ -846,9 +845,11 @@ class RenderPathDeferred {
 
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
+
 				// ---
 				// Deferred light
 				// ---
+
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 				#end
@@ -879,6 +880,7 @@ class RenderPathDeferred {
 					}
 				}
 				#end
+
 				var voxelao_pass = false;
 				#if rp_voxelao
 				if (armory.data.Config.raw.rp_gi != false)

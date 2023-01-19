@@ -17,12 +17,12 @@ else:
 	arm.enable_reload(__name__)
 
 
-def make(context_id, rpasses):
+def make(context_id):
 	con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
 		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
 		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add' })
 
-	make_mesh.make_forward_base(con_transluc, rpasses)
+	make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
 
 	vert = con_transluc.vert
 	frag = con_transluc.frag

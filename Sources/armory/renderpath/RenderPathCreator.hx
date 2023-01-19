@@ -11,6 +11,7 @@ class RenderPathCreator {
 
 	#if (rp_renderer == "Forward")
 	public static var setTargetMeshes: Void->Void = RenderPathForward.setTargetMeshes;
+	public static var setTargetMeshesRefr: Void->Void = RenderPathForward.setTargetMeshesRefr;
 	public static var drawMeshes: Void->Void = RenderPathForward.drawMeshes;
 	public static var applyConfig: Void->Void = RenderPathForward.applyConfig;
 	#elseif (rp_renderer == "Deferred")

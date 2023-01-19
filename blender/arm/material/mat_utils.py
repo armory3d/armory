@@ -42,7 +42,7 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
-    if is_transluc(material) and not material.arm_discard and not material.arm_blending and '_SSRefraction' in wrd.world_defs:
+    if is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
         ar.append('refraction')
     else:
         ar.append('mesh')

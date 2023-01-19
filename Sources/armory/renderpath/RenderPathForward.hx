@@ -18,7 +18,6 @@ class RenderPathForward {
 		{
 			path.setTarget("lbuffer0", [
 			#if rp_ssr "lbuffer1", #end
-			#if rp_ssrefr "gbuffer_refraction" #end
 			]);
 		}
 		#else
@@ -26,6 +25,16 @@ class RenderPathForward {
 			path.setTarget("");
 		}
 		#end
+	}
+
+	public static inline function setTargetMeshesRefr() {
+		//Always keep the order of render targets the same as defined in compiled.inc
+		path.setTarget("gbuffer0", [
+			"gbuffer1",
+			#if rp_gbuffer2 "gbuffer2", #end
+			#if rp_gbuffer_emission "gbuffer_emission", #end
+			#if rp_ssrefr "gbuffer_refraction" #end
+		]);
 	}
 
 	public static function drawMeshes() {
@@ -115,6 +124,34 @@ class RenderPathForward {
 				//holds rior and opacity 
 				var t = new RenderTargetRaw();
 				t.name = "gbuffer_refraction";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+				
+				var t = new RenderTargetRaw();
+				t.name = "gbuffer0";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				t.depth_buffer = "main";
+				path.createRenderTarget(t);
+				
+				var t = new RenderTargetRaw();
+				t.name = "gbuffer1";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+				
+				var t = new RenderTargetRaw();
+				t.name = "gbuffer2";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
@@ -350,7 +387,7 @@ class RenderPathForward {
 			#end
 		}
 		#end
-		
+
 		#if rp_ssrefr
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
@@ -504,12 +541,11 @@ class RenderPathForward {
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-
 				path.setTarget("refr");
 				path.bindTarget("lbuffer0", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-				
-				path.setTarget("lbuffer0"); // Only clear gbuffer0
+
+				path.setTarget("gbuffer0"); //Only clear gbuffer0
 				#if (rp_background == "Clear")
 				{
 					path.clearTarget(-1, 1.0);
@@ -520,15 +556,17 @@ class RenderPathForward {
 				}
 				#end
 
-				RenderPathCreator.setTargetMeshes();
+				RenderPathCreator.setTargetMeshesRefr();
 				path.drawMeshes("refraction");
+				
 				// ---
 				// Deferred light
 				// ---
 
 				path.setTarget("tex");
-				path.bindTarget("lbuffer0", "lbuffer0");
-				path.bindTarget("lbuffer1", "lbuffer1");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+
 
 				#if rp_gbuffer_emission
 				{
@@ -546,6 +584,7 @@ class RenderPathForward {
 					}
 				}
 				#end
+
 				var voxelao_pass = false;
 				#if rp_voxelao
 				if (armory.data.Config.raw.rp_gi != false)
@@ -571,7 +610,7 @@ class RenderPathForward {
 					#end
 				}
 				#end
-
+				
 				#if rp_material_solid
 				path.drawShader("shader_datas/deferred_light_solid/deferred_light");
 				#elseif rp_material_mobile
@@ -584,9 +623,10 @@ class RenderPathForward {
 
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex");
-				path.bindTarget("lbuffer0", "tex1");
+				path.bindTarget("tex", "tex1");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
+				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}

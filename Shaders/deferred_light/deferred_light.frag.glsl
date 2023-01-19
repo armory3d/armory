@@ -430,7 +430,6 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
-
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
@@ -457,7 +456,6 @@ void main() {
 	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
-
 #endif
 
 #ifdef _Clusters
@@ -508,6 +506,4 @@ void main() {
 		);
 	}
 #endif // _Clusters
-
-	fragColor.a = 1.0; // Mark as opaque
 }
