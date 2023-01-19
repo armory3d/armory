@@ -556,7 +556,7 @@ class RenderPathForward {
 				}
 				#end
 
-				RenderPathCreator.setTargetMeshesRefr();
+				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
 				
 				// ---
@@ -564,8 +564,8 @@ class RenderPathForward {
 				// ---
 
 				path.setTarget("tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
+				path.bindTarget("lbuffer0", "gbuffer0");
+				path.bindTarget("lbuffer1", "gbuffer1");
 
 
 				#if rp_gbuffer_emission
@@ -626,7 +626,7 @@ class RenderPathForward {
 				path.bindTarget("tex", "tex1");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("lbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
