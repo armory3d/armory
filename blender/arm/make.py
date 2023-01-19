@@ -78,7 +78,9 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
             done()
 
     print(*cmd)
-    p = subprocess.Popen(cmd)
+    arm_env = os.environ.copy()
+    arm_env["ARM_SDKPATH"] = arm.utils.get_sdk_path()
+    p = subprocess.Popen(cmd, env=arm_env)
 
     if use_thread:
         threading.Thread(target=wait_for_proc, args=(p,)).start()
@@ -303,9 +305,8 @@ def compile(assets_only=False):
     fp = arm.utils.get_fp()
     os.chdir(fp)
 
-    node_path = arm.utils.get_node_path()
-    khamake_path = arm.utils.get_khamake_path()
-    cmd = [node_path, khamake_path]
+    kmake_path = arm.utils.get_kmake_path()
+    cmd = [kmake_path, "--from", arm.utils.get_kha_path()]
 
     # Custom exporter
     if state.target == "custom":
@@ -318,8 +319,11 @@ def compile(assets_only=False):
     else:
         target_name = state.target
         kha_target_name = arm.utils.get_kha_target(target_name)
-        if kha_target_name != '':
-            cmd.append(kha_target_name)
+        if kha_target_name != '' and kha_target_name != 'krom':
+            if (kha_target_name == 'html5'):
+                cmd.append('wasm')
+            else:
+                cmd.append(kha_target_name)
         ffmpeg_path = arm.utils.get_ffmpeg_path()
         if ffmpeg_path not in (None, ''):
             cmd.append('--ffmpeg')
@@ -333,18 +337,18 @@ def compile(assets_only=False):
             cmd.append('--visualstudio')
             cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
 
-        if arm.utils.get_legacy_shaders() or 'ios' in state.target:
-            if 'html5' in state.target or 'ios' in state.target:
-                pass
-            else:
-                cmd.append('--shaderversion')
-                cmd.append('110')
-        elif 'android' in state.target or 'html5' in state.target:
-            cmd.append('--shaderversion')
-            cmd.append('300')
-        else:
-            cmd.append('--shaderversion')
-            cmd.append('330')
+        # if arm.utils.get_legacy_shaders() or 'ios' in state.target:
+        #     if 'html5' in state.target or 'ios' in state.target:
+        #         pass
+        #     else:
+        #         cmd.append('--shaderversion')
+        #         cmd.append('110')
+        # elif 'android' in state.target or 'html5' in state.target:
+        #     cmd.append('--shaderversion')
+        #     cmd.append('300')
+        # else:
+        #     cmd.append('--shaderversion')
+        #     cmd.append('330')
 
         if '_VR' in wrd.world_defs:
             cmd.append('--vr')
@@ -359,9 +363,9 @@ def compile(assets_only=False):
             dxc_path = fp + '/HlslShaders/dxc.exe'
             subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
 
-        if arm.utils.get_khamake_threads() != 1:
-            cmd.append('--parallelAssetConversion')
-            cmd.append(str(arm.utils.get_khamake_threads()))
+        # if arm.utils.get_khamake_threads() != 1:
+        #     cmd.append('--parallelAssetConversion')
+        #     cmd.append(str(arm.utils.get_khamake_threads()))
 
         compilation_server = False
 
@@ -375,28 +379,29 @@ def compile(assets_only=False):
         else:
             cmd.append(arm.utils.build_dir())
 
-        if not wrd.arm_verbose_output:
-            cmd.append("--quiet")
+        # if not wrd.arm_verbose_output:
+        #     cmd.append("--quiet")
 
         #Project needs to be compiled at least once
         #before compilation server can work
-        if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
-            state.proc_build = run_proc(cmd, build_done)
-        else:
-            if assets_only or compilation_server:
-                cmd.append('--nohaxe')
-                cmd.append('--noproject')
-            if len(wrd.arm_exporterlist) > 0:
-                item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-                if item.arm_project_khamake != "":
-                    for s in item.arm_project_khamake.split(" "):
-                        cmd.append(s)
-            state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
-            if bpy.app.background:
-                if state.proc_build.returncode == 0:
-                    build_success()
-                else:
-                    log.error('Build failed')
+        # if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+        #     state.proc_build = run_proc(cmd, build_done)
+        # else:
+        #     if assets_only or compilation_server:
+        #         cmd.append('--nohaxe')
+        #         cmd.append('--noproject')
+        #     if len(wrd.arm_exporterlist) > 0:
+        #         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        #         if item.arm_project_khamake != "":
+        #             for s in item.arm_project_khamake.split(" "):
+        #                 cmd.append(s)
+        #     state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+        #     if bpy.app.background:
+        #         if state.proc_build.returncode == 0:
+        #             build_success()
+        #         else:
+        #             log.error('Build failed')
+        state.proc_build = run_proc(cmd, build_done)
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time

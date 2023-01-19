@@ -129,9 +129,9 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_ios)
     arm_gapi_html5: EnumProperty(
-        items = [('webgl', 'Auto', 'webgl'),
-                 ('webgl', 'WebGL2', 'webgl')],
-        name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'WebGL2', 'opengl')],
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_html5)
 
 class ArmExporterAndroidPermissionListItem(bpy.types.PropertyGroup):
     arm_android_permissions: EnumProperty(

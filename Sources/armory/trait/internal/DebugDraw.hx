@@ -29,7 +29,7 @@ class DebugDraw {
 	var vp: Mat4;
 	var vpID: ConstantLocation;
 
-	var vbData: kha.arrays.Float32Array;
+	var vbData: kha.arrays.ByteArray;
 	var ibData: kha.arrays.Uint32Array;
 
 	static inline var maxLines = 300;
@@ -46,11 +46,11 @@ class DebugDraw {
 		pipeline = new PipelineState();
 		pipeline.inputLayout = [structure];
 		#if arm_deferred
-		pipeline.fragmentShader = kha.Shaders.line_deferred_frag;
+		pipeline.fragmentShader = kha.Shaders.getFragment("line_deferred.frag");
 		#else
-		pipeline.fragmentShader = kha.Shaders.line_frag;
+		pipeline.fragmentShader = kha.Shaders.getFragment("line.frag");
 		#end
-		pipeline.vertexShader = kha.Shaders.line_vert;
+		pipeline.vertexShader = kha.Shaders.getVertex("line.vert");
 		pipeline.depthWrite = true;
 		pipeline.depthMode = CompareMode.Less;
 		pipeline.cullMode = CullMode.None;
@@ -207,7 +207,7 @@ class DebugDraw {
 
 	inline function addVbData(i: Int, data: Array<Float>) {
 		for (offset in 0...6) {
-			vbData.set(i + offset, data[offset]);
+			vbData.setFloat32(i + offset, data[offset]);
 		}
 	}
 }

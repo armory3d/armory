@@ -186,7 +186,7 @@ def get_gapi():
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
-        return 'webgl'
+        return 'opengl'
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
 
@@ -305,9 +305,9 @@ def get_node_path():
         return get_sdk_path() + '/nodejs/node-linux64'
 
 def get_kha_path():
-    if os.path.exists('Kha'):
-        return 'Kha'
-    return get_sdk_path() + '/Kha'
+    if os.path.exists('armorcore'):
+        return 'armorcore'
+    return get_sdk_path() + '/armorcore'
 
 def get_haxe_path():
     if get_os() == 'win':
@@ -317,8 +317,11 @@ def get_haxe_path():
     else:
         return get_kha_path() + '/Tools/linux_x64/haxe'
 
-def get_khamake_path():
-    return get_kha_path() + '/make'
+def get_kmake_path():
+    if get_os() == 'win':
+        return get_kha_path() + '/Kinc/make.bat'
+    else:
+        return get_kha_path() + '/Kinc/make'
 
 def krom_paths():
     sdk_path = get_sdk_path()

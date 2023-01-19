@@ -56,7 +56,7 @@ def add_assets(path: str, quality=1.0, use_data_dir=False, rel_path=False) -> st
 def add_shaders(path: str, rel_path=False) -> str:
     if rel_path:
         path = os.path.relpath(path, arm.utils.get_fp())
-    return 'project.addShaders("' + path.replace('\\', '/').replace('//', '/') + '");\n'
+    return 'project.addShaders("' + path.replace('\\', '/').replace('//', '/') + '", { embed: false });\n'
 
 
 def remove_readonly(func, path, excinfo):
@@ -129,6 +129,8 @@ project.addSources('Sources');
             for lib in libs:
                 if os.path.isdir('Subprojects/' + lib):
                     khafile.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
+
+        assets.add_khafile_def('arm_use_k_images')
 
         if state.target.startswith('krom'):
             assets.add_khafile_def('js-es=6')
@@ -205,27 +207,27 @@ project.addSources('Sources');
             khafile.write("project.addParameter('" + import_traits[i] + "');\n")
             khafile.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
-        noembed = wrd.arm_cache_build and not is_publish and state.target == 'krom'
-        if noembed:
+        embed = False
+        if not embed:
             # Load shaders manually
             assets.add_khafile_def('arm_noembed')
 
-        noembed = False # TODO: always embed shaders for now, check compatibility with haxe compile server
+        khafile.write(add_shaders(sdk_path + "/armorcore/Shaders/*.glsl", rel_path=do_relpath_sdk))
 
         shaders_path = build_dir + '/compiled/Shaders/*.glsl'
         if rel_path:
             shaders_path = os.path.relpath(shaders_path, project_path).replace('\\', '/')
-        khafile.write('project.addShaders("' + shaders_path + '", { noembed: ' + str(noembed).lower() + '});\n')
+        khafile.write('project.addShaders("' + shaders_path + '", { embed: ' + str(embed).lower() + '});\n')
 
         if arm.utils.get_gapi() == 'direct3d11':
             # noprocessing flag - gets renamed to .d3d11
             shaders_path = build_dir + '/compiled/Hlsl/*.glsl'
             if rel_path:
                 shaders_path = os.path.relpath(shaders_path, project_path).replace('\\', '/')
-            khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
+            khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, embed: ' + str(embed).lower() + ' });\n')
 
         # Move assets for published game to /data folder
-        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl')
+        use_data_dir = True
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
@@ -479,6 +481,8 @@ class Main {
 
         f.write("""
     public static function main() {""")
+        f.write("""
+        iron.data.ShaderData.shaderPath = "";""") # Use arm_data_dir
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
