@@ -1,15 +1,15 @@
 """
 Armory Scene Exporter
-http://armory3d.org/
+https://armory3d.org/
 
 Based on Open Game Engine Exchange
-http://opengex.org/
+https://opengex.org/
 Export plugin for Blender by Eric Lengyel
 Copyright 2015, Terathon Software LLC
 
 This software is licensed under the Creative Commons
 Attribution-ShareAlike 3.0 Unported License:
-http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
+https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
 from enum import Enum, unique
 import math
