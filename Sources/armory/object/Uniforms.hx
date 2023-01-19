@@ -4,6 +4,9 @@ import iron.Scene;
 import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
+
+import armory.renderpath.Postprocess;
+
 using StringTools;
 
 // Structure for setting shader uniforms
@@ -163,7 +166,7 @@ class Uniforms {
 				}
 			}
 			#end
-			#if rp_voxelao
+			#if rp_voxels
 			case "_cameraPositionSnap": {
 				v = iron.object.Uniforms.helpVec;
 				var camera = iron.Scene.active.camera;
@@ -210,10 +213,15 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-			#if rp_voxelao
+			#if rp_voxels
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
 				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+			}
+			#end
+			#if rp_bloom
+			case "_bloomSampleScale": {
+				return Postprocess.bloom_uniforms[3];
 			}
 			#end
 		}

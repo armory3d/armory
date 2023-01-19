@@ -7,7 +7,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
     bl_label = 'Quaternion Math'
     bl_description = 'Mathematical operations that can be performed on rotations, when represented as quaternions specifically'
     arm_section = 'quaternions'
-    arm_version = 2
+    arm_version = 3
 
     def ensure_input_socket(self, socket_number, newclass, newname, default_value=None):
         while len(self.inputs) < socket_number:
@@ -186,194 +186,184 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 op.min_inputs = 4
             else:
                 op.min_inputs = 2
-            if len(self.inputs) == 2:
+            if len(self.inputs) == 4:
                 column.enabled = False
-
-
-
-
-
-
         
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 2):
             raise LookupError()
-
-
-        ret=[]
-        if self.property0 == 'GetEuler':
-            newself = node_tree.nodes.new('LNSeparateRotationNode')
-            ret.append(newself)
-            newself.property0='EulerAngles'
-            newself.property2='XZY'
-            newself.property1='Rad'
-        
-            for link in self.inputs[0].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, newself.inputs[0])
-        elif self.property0 == 'FromEuler':
-            newself = node_tree.nodes.new('LNRotationNode')
-            ret.append(newself)
-            preconv = node_tree.nodes.new('LNVectorNode')
-            ret.append(preconv)
-            newself.property0='EulerAngles'
-            newself.property2='XZY'
-            newself.property1='Rad'
-            node_tree.links.new(preconv.outputs[0], newself.inputs[0])
-
-            preconv.inputs[0].default_value = self.inputs[0].default_value
-            for link in self.inputs[0].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, preconv.inputs[0])
-            preconv.inputs[1].default_value = self.inputs[1].default_value
-            for link in self.inputs[1].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, preconv.inputs[1])
-            preconv.inputs[2].default_value = self.inputs[2].default_value
-            for link in self.inputs[2].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, preconv.inputs[2])
-        elif self.property0 == 'ToAxisAngle':
-            newself = node_tree.nodes.new('LNSeparateRotationNode')
-            ret.append(newself)
-            newself.property0='AxisAngle'
-            newself.property1='Rad'
-        
-            for link in self.inputs[0].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, newself.inputs[0])
-        elif self.property0 == 'FromAxisAngle':
-            newself = node_tree.nodes.new('LNRotationNode')
-            ret.append(newself)
-            newself.property0='AxisAngle'
-            newself.property1='Rad'
-
-            newself.inputs[0].default_value = self.inputs[1].default_value
-            for link in self.inputs[1].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, newself.inputs[0])
-            newself.inputs[1].default_value = self.inputs[2].default_value
-            for link in self.inputs[2].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, newself.inputs[1])
-        elif self.property0 in ('FromMat','FromRotationMat'):
-            newself = node_tree.nodes.new('LNSeparateTransformNode')
-            ret.append(newself)
-            for link in self.inputs[1].links:  # 0 or 1
-                node_tree.links.new(link.from_socket, newself.inputs[0])
-
-        elif self.property0 in ('Lerp','Slerp','FromTo'):
-            newself = node_tree.nodes.new('LNRotationMathNode')
-            ret.append(newself)
-            newself.property0 = self.property0
             
-            for in1, in2 in zip(self.inputs, newself.inputs):
-                if in2.bl_idname == 'ArmRotationSocket':
-                    in2.default_value_raw = Rotation.convert_to_quaternion(
-                        in1.default_value,0,
-                        'EulerAngles','Rad','XZY'
-                    )
-                elif in1.bl_idname in ('ArmFloatSocket', 'ArmVectorSocket'):
-                    in2.default_value = in1.default_value
-                for link in in1.links:
-                    node_tree.links.new(link.from_socket, in2)
+        if self.arm_version == 1 or self.arm_version == 2:
+            ret=[]
+            if self.property0 == 'GetEuler':
+                newself = node_tree.nodes.new('LNSeparateRotationNode')
+                ret.append(newself)
+                newself.property0='EulerAngles'
+                newself.property2='XZY'
+                newself.property1='Rad'
+            
+                for link in self.inputs[0].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, newself.inputs[0])
+            elif self.property0 == 'FromEuler':
+                newself = node_tree.nodes.new('LNRotationNode')
+                ret.append(newself)
+                preconv = node_tree.nodes.new('LNVectorNode')
+                ret.append(preconv)
+                newself.property0='EulerAngles'
+                newself.property2='XZY'
+                newself.property1='Rad'
+                node_tree.links.new(preconv.outputs[0], newself.inputs[0])
 
-        else:
-            newself = node_tree.nodes.new('LNQuaternionMathNode')
-            ret.append(newself)
-            newself.property0 = self.property0
-        
-            # convert the inputs… this is going to be hard lmao.
-            i_in_1 = 0
-            i_in_2 = 0
-            while i_in_1 < len(self.inputs):
-                in1 = self.inputs[i_in_1]
-                if in1.bl_idname == 'ArmVectorSocket':
-                    # quaternion input: now two sockets, not one.
-                    convnode = node_tree.nodes.new('LNSeparateRotationNode')
-                    convnode.property0 = 'Quaternion'
-                    ret.append(convnode)
-                    if i_in_2 >= len(newself.inputs):
-                        newself.ensure_input_socket(i_in_2, 'ArmVectorSocket', 'Quaternion %d XYZ'%(i_in_1))
-                        newself.ensure_input_socket(i_in_2+1, 'ArmFloatSocket', 'Quaternion %d W'%(i_in_1), 1.0)
-                    node_tree.links.new(convnode.outputs[0], newself.inputs[i_in_2])
-                    node_tree.links.new(convnode.outputs[1], newself.inputs[i_in_2+1])
+                preconv.inputs[0].default_value = self.inputs[0].default_value
+                for link in self.inputs[0].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, preconv.inputs[0])
+                preconv.inputs[1].default_value = self.inputs[1].default_value
+                for link in self.inputs[1].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, preconv.inputs[1])
+                preconv.inputs[2].default_value = self.inputs[2].default_value
+                for link in self.inputs[2].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, preconv.inputs[2])
+            elif self.property0 == 'ToAxisAngle':
+                newself = node_tree.nodes.new('LNSeparateRotationNode')
+                ret.append(newself)
+                newself.property0='AxisAngle'
+                newself.property1='Rad'
+            
+                for link in self.inputs[0].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, newself.inputs[0])
+            elif self.property0 == 'FromAxisAngle':
+                newself = node_tree.nodes.new('LNRotationNode')
+                ret.append(newself)
+                newself.property0='AxisAngle'
+                newself.property1='Rad'
+
+                newself.inputs[0].default_value = self.inputs[1].default_value
+                for link in self.inputs[1].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, newself.inputs[0])
+                newself.inputs[1].default_value = self.inputs[2].default_value
+                for link in self.inputs[2].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, newself.inputs[1])
+            elif self.property0 in ('FromMat','FromRotationMat'):
+                newself = node_tree.nodes.new('LNSeparateTransformNode')
+                ret.append(newself)
+                for link in self.inputs[1].links:  # 0 or 1
+                    node_tree.links.new(link.from_socket, newself.inputs[0])
+
+            elif self.property0 in ('Lerp','Slerp','FromTo'):
+                newself = node_tree.nodes.new('LNRotationMathNode')
+                ret.append(newself)
+                newself.property0 = self.property0
+                
+                for in1, in2 in zip(self.inputs, newself.inputs):
+                    if in2.bl_idname == 'ArmRotationSocket':
+                        in2.default_value_raw = Rotation.convert_to_quaternion(
+                            in1.default_value,0,
+                            'EulerAngles','Rad','XZY'
+                        )
+                    elif in1.bl_idname in ('ArmFloatSocket', 'ArmVectorSocket'):
+                        in2.default_value = in1.default_value
                     for link in in1.links:
-                        node_tree.links.new(link.from_socket, convnode.inputs[0])
-                    i_in_2 +=2
-                    i_in_1 +=1
-                elif in1.bl_idname == 'ArmFloatSocket':
-                    for link in in1.links:
-                        node_tree.links.new(link.from_socket, newself.inputs[i_in_2])
-                    i_in_1 +=1
-                    i_in_2 +=1
-                else:
-                    raise ValueError('get_replacement_node() for is not LNQuaternionMathNode V1->V2 is not prepared to deal with an input socket of type %s. This is a bug to report to the developers' %in1.bl_idname)
+                        node_tree.links.new(link.from_socket, in2)
 
-        # #### now that the input has been dealt with, let's deal with the output.
-
-        if self.property0 in ('FromEuler','FromMat','FromRotationMat','FromAxisAngle','Lerp','Slerp','FromTo'):
-            # the new self returns a rotation
-            for link in self.outputs[0].links:
-                out_sock_i = int( self.property0.endswith('Mat') )
-                node_tree.links.new(newself.outputs[out_sock_i], link.to_socket)
-        elif self.property0 in ('DotProduct','Module'):
-            # new self returns a float
-            for link in self.outputs[1 + 4*int(self.property1)].links:
-                node_tree.links.new(newself.outputs[1], link.to_socket)
-        elif self.property0 in ('GetEuler', 'ToAxisAngle'):
-            # new self returns misc.
-            for link in self.outputs[0].links:
-                node_tree.links.new(newself.outputs[0], link.to_socket)
-            if self.property0 == 'ToAxisAngle':
+            else:
+                newself = node_tree.nodes.new('LNQuaternionMathNode')
+                ret.append(newself)
+                newself.property0 = self.property0
+            
+                # convert the inputs… this is going to be hard lmao.
+                i_in_1 = 0
+                i_in_2 = 0
+                while i_in_1 < len(self.inputs):
+                    in1 = self.inputs[i_in_1]
+                    if in1.bl_idname == 'ArmVectorSocket':
+                        # quaternion input: now two sockets, not one.
+                        convnode = node_tree.nodes.new('LNSeparateRotationNode')
+                        convnode.property0 = 'Quaternion'
+                        ret.append(convnode)
+                        if i_in_2 >= len(newself.inputs):
+                            newself.ensure_input_socket(i_in_2, 'ArmVectorSocket', 'Quaternion %d XYZ'%(i_in_1))
+                            newself.ensure_input_socket(i_in_2+1, 'ArmFloatSocket', 'Quaternion %d W'%(i_in_1), 1.0)
+                        node_tree.links.new(convnode.outputs[0], newself.inputs[i_in_2])
+                        node_tree.links.new(convnode.outputs[1], newself.inputs[i_in_2+1])
+                        for link in in1.links:
+                            node_tree.links.new(link.from_socket, convnode.inputs[0])
+                        i_in_2 +=2
+                        i_in_1 +=1
+                    elif in1.bl_idname == 'ArmFloatSocket':
+                        for link in in1.links:
+                            node_tree.links.new(link.from_socket, newself.inputs[i_in_2])
+                        i_in_1 +=1
+                        i_in_2 +=1
+                    else:
+                        raise ValueError('get_replacement_node() for is not LNQuaternionMathNode V1->V2 is not prepared to deal with an input socket of type %s. This is a bug to report to the developers' %in1.bl_idname)
+            # #### now that the input has been dealt with, let's deal with the output.
+            if self.property0 in ('FromEuler','FromMat','FromRotationMat','FromAxisAngle','Lerp','Slerp','FromTo'):
+                # the new self returns a rotation
+                for link in self.outputs[0].links:
+                    out_sock_i = int( self.property0.endswith('Mat') )
+                    node_tree.links.new(newself.outputs[out_sock_i], link.to_socket)
+            elif self.property0 in ('DotProduct','Module'):
+                # new self returns a float
                 for link in self.outputs[1 + 4*int(self.property1)].links:
                     node_tree.links.new(newself.outputs[1], link.to_socket)
-            if self.property1:
-                xlinks = self.outputs[1].links
-                ylinks = self.outputs[2].links
-                zlinks = self.outputs[3].links
-                if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
-                    conv = node_tree.nodes.new('LNSeparateVectorNode')
+            elif self.property0 in ('GetEuler', 'ToAxisAngle'):
+                # new self returns misc.
+                for link in self.outputs[0].links:
+                    node_tree.links.new(newself.outputs[0], link.to_socket)
+                if self.property0 == 'ToAxisAngle':
+                    for link in self.outputs[1 + 4*int(self.property1)].links:
+                        node_tree.links.new(newself.outputs[1], link.to_socket)
+                if self.property1:
+                    xlinks = self.outputs[1].links
+                    ylinks = self.outputs[2].links
+                    zlinks = self.outputs[3].links
+                    if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
+                        conv = node_tree.nodes.new('LNSeparateVectorNode')
+                        ret.append(conv)
+                        node_tree.links.new(newself.outputs[0], conv.inputs[0])
+                        for link in xlinks:
+                            node_tree.links.new(conv.outputs[0], link.to_socket)
+                        for link in ylinks:
+                            node_tree.links.new(conv.outputs[1], link.to_socket)
+                        for link in zlinks:
+                            node_tree.links.new(conv.outputs[2], link.to_socket)
+            else:
+                # new self returns a proper quaternion XYZ/W
+                outlinks = self.outputs[0].links
+                if len(outlinks)>0:
+                    conv = node_tree.nodes.new('LNRotationNode')
+                    conv.property0='Quaternion'
                     ret.append(conv)
                     node_tree.links.new(newself.outputs[0], conv.inputs[0])
-                    for link in xlinks:
+                    node_tree.links.new(newself.outputs[1], conv.inputs[1])
+                    for link in outlinks:
                         node_tree.links.new(conv.outputs[0], link.to_socket)
-                    for link in ylinks:
-                        node_tree.links.new(conv.outputs[1], link.to_socket)
-                    for link in zlinks:
-                        node_tree.links.new(conv.outputs[2], link.to_socket)
-        else:
-            # new self returns a proper quaternion XYZ/W
-            outlinks = self.outputs[0].links
-            if len(outlinks)>0:
-                conv = node_tree.nodes.new('LNRotationNode')
-                conv.property0='Quaternion'
-                ret.append(conv)
-                node_tree.links.new(newself.outputs[0], conv.inputs[0])
-                node_tree.links.new(newself.outputs[1], conv.inputs[1])
-                for link in outlinks:
-                    node_tree.links.new(conv.outputs[0], link.to_socket)
-            if self.property1:
-                for link in self.outputs[4].links:  # for W
-                    node_tree.links.new(newself.outputs[1], link.to_socket)
-                xlinks = self.outputs[1].links
-                ylinks = self.outputs[2].links
-                zlinks = self.outputs[3].links
-                if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
-                    conv = node_tree.nodes.new('LNSeparateVectorNode')
-                    ret.append(conv)
-                    node_tree.links.new(newself.outputs[0], conv.inputs[0])
-                    for link in xlinks:
-                        node_tree.links.new(conv.outputs[0], link.to_socket)
-                    for link in ylinks:
-                        node_tree.links.new(conv.outputs[1], link.to_socket)
-                    for link in zlinks:
-                        node_tree.links.new(conv.outputs[2], link.to_socket)
-
-        for node in ret:  # update the labels on the node's displays
-            if node.bl_idname == 'LNSeparateRotationNode':
-                node.on_property_update(None)
-            elif node.bl_idname == 'LNRotationNode':
-                node.on_property_update(None)
-            elif node.bl_idname == 'LNRotationMathNode':
-                node.on_update_operation(None)
-            elif node.bl_idname == 'LNQuaternionMathNode':
-                node.set_enum(node.get_enum())
-        return ret
-
+                if self.property1:
+                    for link in self.outputs[4].links:  # for W
+                        node_tree.links.new(newself.outputs[1], link.to_socket)
+                    xlinks = self.outputs[1].links
+                    ylinks = self.outputs[2].links
+                    zlinks = self.outputs[3].links
+                    if len(xlinks)>0 or len(ylinks)>0 or len(zlinks)>0:
+                        conv = node_tree.nodes.new('LNSeparateVectorNode')
+                        ret.append(conv)
+                        node_tree.links.new(newself.outputs[0], conv.inputs[0])
+                        for link in xlinks:
+                            node_tree.links.new(conv.outputs[0], link.to_socket)
+                        for link in ylinks:
+                            node_tree.links.new(conv.outputs[1], link.to_socket)
+                        for link in zlinks:
+                            node_tree.links.new(conv.outputs[2], link.to_socket)
+            for node in ret: # update the labels on the node's displays
+                if node.bl_idname == 'LNSeparateRotationNode':
+                    node.on_property_update(None)
+                elif node.bl_idname == 'LNRotationNode':
+                    node.on_property_update(None)
+                elif node.bl_idname == 'LNRotationMathNode':
+                    node.on_update_operation(None)
+                elif node.bl_idname == 'LNQuaternionMathNode':
+                    node.set_enum(node.get_enum())
+            return ret
 
     # note: keep property1, so that it is actually readable for node conversion.
     property1: BoolProperty(name='DEPRECATED', default=False)

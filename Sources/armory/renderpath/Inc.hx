@@ -3,6 +3,8 @@ package armory.renderpath;
 import iron.RenderPath;
 import iron.object.LightObject;
 
+import armory.math.Helper;
+
 class Inc {
 	static var path: RenderPath;
 	public static var superSample = 1.0;
@@ -11,7 +13,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxelao && arm_config)
+	#if (rp_voxels && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -353,7 +355,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if rp_voxelao
+		#if rp_voxels
 		if (!voxelsCreated) initGI();
 		#end
 		#end // arm_config
@@ -420,7 +422,29 @@ class Inc {
 	}
 	#end
 
-	#if rp_voxelao
+	#if rp_bloom
+	public static inline function drawBloom(srcRTName: String, downsampler: Downsampler, upsampler: Upsampler) {
+		if (armory.data.Config.raw.rp_bloom != false) {
+			// This can result in little jumps in the perceived bloom radius
+			// when resizing the window because numMips might change, but
+			// all implementations using this approach have the same problem
+			// (including Eevee)
+			final minDim = Math.min(path.currentW, path.currentH);
+			final logMinDim = Math.max(1.0, Helper.log2(minDim) + (Main.bloomRadius - 8.0));
+			final numMips = Std.int(logMinDim);
+
+			// Sample scale for upsampling, 0.5 to use half-texel steps,
+			// use fraction of logMinDim to make the visual jumps
+			// described above less visible
+			Postprocess.bloom_uniforms[3] = 0.5 + logMinDim - numMips;
+
+			downsampler.dispatch(srcRTName, numMips);
+			upsampler.dispatch(srcRTName, numMips);
+		}
+	}
+	#end
+
+	#if rp_voxels
 	public static function initGI(tname = "voxels") {
 		#if arm_config
 		var config = armory.data.Config.raw;

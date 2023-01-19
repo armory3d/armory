@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2022.11'
+arm_version = '2023.1'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -105,6 +105,32 @@ def set_android_build_apk(self, value):
         wrd.arm_project_android_copy_apk = False
         wrd.arm_project_android_run_avd = False
 
+def get_win_build_arch(self):
+    if self.get('arm_project_win_build_arch', -1) == -1:
+        if arm.utils.get_os_is_windows_64():
+            return 0
+        else:
+            return 1
+    else:
+        return self.get('arm_project_win_build_arch', 'x64')
+
+def set_win_build_arch(self, value):
+    self['arm_project_win_build_arch'] = value
+
+def set_win_build(self, value):
+    if arm.utils.get_os_is_windows():
+        self['arm_project_win_build'] = value
+    else:
+        self['arm_project_win_build'] = 0
+    if (self['arm_project_win_build'] == 0) or (self['arm_project_win_build'] == 1):
+        wrd = bpy.data.worlds['Arm']
+        wrd.arm_project_win_build_open = False
+
+def get_win_build(self):
+    if arm.utils.get_os_is_windows():
+        return self.get('arm_project_win_build', 0)
+    else:
+        return 0
 
 def init_properties():
     global arm_version
@@ -184,6 +210,11 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled'),
                ('Auto', 'Auto', 'Auto')],
         name="Zui", default='Auto', description="Include UI library", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_network = EnumProperty(
+        items=[('Disabled', 'Disabled', 'Disabled'),
+               ('Enabled', 'Enabled', 'Enabled'),
+               ('Auto', 'Auto', 'Auto')],
+        name="Networking", default='Auto', description="Include Network library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_audio = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],

@@ -24,7 +24,9 @@ class GetBoneFkIkOnlyNode extends LogicNode {
 
         //Get bone transform in world coordinates
         return bone.is_ik_fk_only;
-
+ 
+        #else
+        return null;
 
 		#end
 	}

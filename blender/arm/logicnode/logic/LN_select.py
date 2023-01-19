@@ -1,7 +1,5 @@
 from bpy.types import NodeSocketInterfaceInt
-
 from arm.logicnode.arm_nodes import *
-
 
 class SelectNode(ArmLogicTreeNode):
     """Selects one of multiple values (of arbitrary types) based on some
@@ -29,7 +27,7 @@ class SelectNode(ArmLogicTreeNode):
     @option X Button: Remove the value with the highest index."""
     bl_idname = 'LNSelectNode'
     bl_label = 'Select'
-    arm_version = 1
+    arm_version = 2
     min_inputs = 2
 
     def update_exec_mode(self, context):
@@ -83,14 +81,16 @@ class SelectNode(ArmLogicTreeNode):
         layout.prop(self, 'property0', text='')
 
         row = layout.row(align=True)
-
         op = row.operator('arm.node_call_func', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
         op.callback_name = 'add_input_func'
 
-        op = row.operator('arm.node_call_func', text='', icon='X', emboss=True)
+        column = row.column(align=True)
+        op = column.operator('arm.node_call_func', text='', icon='X', emboss=True)
         op.node_index = str(id(self))
         op.callback_name = 'remove_input_func'
+        if len(self.inputs) == self.min_inputs:
+            column.enabled = False
 
     def add_input_func(self):
         if self.property0 == 'from_input':
@@ -117,3 +117,9 @@ class SelectNode(ArmLogicTreeNode):
             return self.bl_label
 
         return f'{self.bl_label}: [{self.num_choices}]'
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)

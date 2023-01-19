@@ -36,9 +36,12 @@ class OnMouseNode(ArmLogicTreeNode):
         if self.arm_version not in (0, 1):
             raise LookupError()
 
-        return NodeReplacement(
-            "LNOnMouseNode", self.arm_version,
-            "LNMergedMouseNode", 1,
-            in_socket_mapping={}, out_socket_mapping={0: 0},
-            property_mapping={"property0": "property0", "property1": "property1"}
-        )
+        newnode = node_tree.nodes.new('LNMergedMouseNode')
+
+        newnode.property0 = self.property0.lower()
+        newnode.property1 = self.property1
+
+        NodeReplacement.replace_output_socket(node_tree, self.outputs[0], newnode.outputs[0])
+
+        return newnode
+

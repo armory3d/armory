@@ -3,8 +3,7 @@ import os
 import pstats
 
 import arm
-import arm.log as log
-import arm.utils as utils
+from arm import log, utils
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -35,7 +34,7 @@ class Profile:
             log.debug("Profiling finished")
 
             profile_path = os.path.join(utils.get_sdk_path(), self.filename_out)
-            with open(profile_path, 'w') as profile_file:
+            with open(profile_path, 'w', encoding="utf-8") as profile_file:
                 stats = pstats.Stats(self.pr, stream=profile_file)
                 stats.dump_stats(profile_path)
 

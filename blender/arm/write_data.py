@@ -64,7 +64,7 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 
-def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, is_publish: bool,
+def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, export_network: bool, is_publish: bool,
                     import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -298,6 +298,11 @@ project.addSources('Sources');
             khafile.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=do_relpath_sdk))
             assets.add_khafile_def('arm_ui')
 
+        if export_network:
+            if not os.path.exists('Libraries/network'):
+                khafile.write(add_armory_library(sdk_path, 'lib/network', rel_path=do_relpath_sdk))
+            assets.add_khafile_def('arm_network')
+
         if not wrd.arm_minimize:
             assets.add_khafile_def('arm_json')
 
@@ -466,6 +471,9 @@ class Main {
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
+        if rpdat.rp_bloom:
+            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
+
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
     public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")
@@ -624,11 +632,20 @@ const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 """)
 
         if rpdat.rp_bloom:
+            follow_blender = rpdat.arm_bloom_follow_blender
+            eevee_settings = bpy.context.scene.eevee
+
+            threshold = eevee_settings.bloom_threshold if follow_blender else rpdat.arm_bloom_threshold
+            strength = eevee_settings.bloom_intensity if follow_blender else rpdat.arm_bloom_strength
+            knee = eevee_settings.bloom_knee if follow_blender else rpdat.arm_bloom_knee
+
             f.write(
-"""const float bloomThreshold = """ + str(round(rpdat.arm_bloom_threshold * 100) / 100) + """;
-const float bloomStrength = """ + str(round(rpdat.arm_bloom_strength * 100) / 100) + """;
+"""const float bloomThreshold = """ + str(round(threshold * 100) / 100) + """;
+const float bloomStrength = """ + str(round(strength * 100) / 100) + """;
+const float bloomKnee = """ + str(round(knee * 100) / 100) + """;
 const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) + """;
-""")
+""")  # TODO remove radius if old bloom pass is removed
+
         if rpdat.rp_motionblur != 'Off':
             f.write(
 """const float motionBlurIntensity = """ + str(round(rpdat.arm_motion_blur_intensity * 100) / 100) + """;
@@ -673,6 +690,11 @@ const float autoExposureSpeed = """ + str(rpdat.arm_autoexposure_speed) + """;
             f.write(
 """const float compoLetterboxSize = """ + str(round(rpdat.arm_letterbox_size * 100) / 100) + """;
 const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_letterbox_color[2] * 100) / 100) + """);
+""")
+
+        if rpdat.arm_distort:
+            f.write(
+"""const float compoDistortStrength = """ + str(round(rpdat.arm_distort_strength * 100) / 100) + """;
 """)
 
         if rpdat.arm_grain:

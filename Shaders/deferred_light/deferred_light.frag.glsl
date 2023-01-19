@@ -221,7 +221,7 @@ void main() {
 #endif
 
 #ifdef _Brdf
-	vec2 envBRDF = textureLod(senvmapBrdf, vec2(roughness, 1.0 - dotNV), 0.0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
 
 	// Envmap
@@ -496,6 +496,11 @@ void main() {
 			, lightsArraySpot[li * 2].xyz // spotDir
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
+			#endif
+			#ifdef _VoxelAOvar
+			#ifdef _VoxelShadow
+			, voxels, voxpos
+			#endif
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
