@@ -1143,7 +1143,7 @@ class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_ui')
         layout.prop(wrd, 'arm_network')
 
-        layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', text='Khafile')
+        layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts')
         layout.prop(wrd, 'arm_project_root')
 
 class ArmVirtualInputPanel(bpy.types.Panel):
