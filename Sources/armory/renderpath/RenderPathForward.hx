@@ -566,7 +566,7 @@ class RenderPathForward {
 		// When render to texture is off, lbuffer0 does not exist, so for
 		// now do nothing then and pass an empty uniform to the shader
 		#if rp_render_to_texture
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
 			path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
 			#end
@@ -576,7 +576,7 @@ class RenderPathForward {
 			path.bindTarget("_main", "tex");
 			path.drawShader("shader_datas/copy_pass/copy_pass");
 
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
 			path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
 			#end

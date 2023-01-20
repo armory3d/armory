@@ -77,7 +77,7 @@ class Starter {
 		function loadLibAmmo(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				js.Syntax.code("(1,eval)({0})", b.toString());
-				#if kha_krom
+				#if (kha_krom && !krom_wasm)
 				js.Syntax.code("Ammo({print:function(s){iron.log(s);},instantiateWasm:function(imports,successCallback) {
 					var wasmbin = Krom.loadBlob('ammo.wasm.wasm');
 					var module = new WebAssembly.Module(wasmbin);
@@ -106,7 +106,7 @@ class Starter {
 
 		#if (js && arm_bullet)
 		tasks++;
-		#if kha_krom
+		#if (kha_krom && !krom_wasm)
 		loadLibAmmo("ammo.wasm.js");
 		#else
 		loadLibAmmo("ammo.js");

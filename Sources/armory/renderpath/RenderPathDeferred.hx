@@ -447,7 +447,7 @@ class RenderPathDeferred {
 
 		#if rp_decals
 		{
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
 			path.depthToRenderTarget.set("main", path.renderTargets.get("tex"));
 			#end
@@ -456,7 +456,7 @@ class RenderPathDeferred {
 			path.bindTarget("_main", "gbufferD");
 			path.drawDecals("decal");
 
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
 			path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
 			#end
@@ -553,7 +553,7 @@ class RenderPathDeferred {
 		// ---
 		// Deferred light
 		// ---
-		#if (!kha_opengl)
+		#if (!kha_opengl || krom_wasm)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 		#end
 		path.setTarget("tex");
@@ -653,7 +653,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (!kha_opengl)
+		#if (!kha_opengl || krom_wasm)
 		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 		#end
 
@@ -708,7 +708,7 @@ class RenderPathDeferred {
 
 		#if rp_sss
 		{
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 			#end
 
@@ -724,7 +724,7 @@ class RenderPathDeferred {
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
 
-			#if (!kha_opengl)
+			#if (!kha_opengl || krom_wasm)
 			path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 			#end
 		}
@@ -770,7 +770,7 @@ class RenderPathDeferred {
 			if (armory.data.Config.raw.rp_motionblur != false) {
 				#if (rp_motionblur == "Camera")
 				{
-					#if (!kha_opengl)
+					#if (!kha_opengl || krom_wasm)
 					path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 					#end
 				}
@@ -782,7 +782,7 @@ class RenderPathDeferred {
 					path.bindTarget("_main", "gbufferD");
 					path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
 
-					#if (!kha_opengl)
+					#if (!kha_opengl || krom_wasm)
 					path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 					#end
 				}
@@ -942,7 +942,7 @@ class RenderPathDeferred {
 	}
 
 	public static function setupDepthTexture() {
-		#if (!kha_opengl)
+		#if (!kha_opengl || krom_wasm)
 		path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
 		path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
 		#end
@@ -952,7 +952,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "tex");
 		path.drawShader("shader_datas/copy_pass/copy_pass");
 
-		#if (!kha_opengl)
+		#if (!kha_opengl || krom_wasm)
 		path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
 		path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
 		#end
