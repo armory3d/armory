@@ -768,24 +768,21 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); //Unbind depth so we can read it
+				#end
+			
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-
+				
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer0"); //Unbind depth so we can read it
+				#end
+					
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-
-				path.setTarget("gbuffer0"); // Only clear gbuffer0
-				#if (rp_background == "Clear")
-				{
-					path.clearTarget(-1, 1.0);
-				}
-				#else
-				{
-					path.clearTarget(null, 1.0);
-				}
-				#end
 
 				#if rp_gbuffer2
 				{
@@ -806,6 +803,7 @@ class RenderPathDeferred {
 				#end
 
 				path.setTarget("tex");
+				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 

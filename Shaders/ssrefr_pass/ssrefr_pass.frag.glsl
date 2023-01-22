@@ -61,6 +61,7 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
+	float d;
 	#ifdef _CPostprocess
 	dir *= PPComp9.x;
 	#else
@@ -68,8 +69,8 @@ vec4 rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		float d = getDeltaDepth(hitCoord);
-		if(d > depth)
+		d = getDeltaDepth(hitCoord);
+		if (d > depth)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -84,11 +85,11 @@ void main() {
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if (depth == 1.0) { fragColor = textureLod(tex, texCoord, 0.0); return; }
-	else if (ior == 1.0 || opac == 1.0 || roughness == 1.0) { 
-		discard;
+	if(depth == 1.0 || ior == 1.0 || opac == 1.0) {
+		fragColor = textureLod(tex, texCoord, 0.0);
+		return;
 	}
-	
+
     	vec2 enc = g0.rg;
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
@@ -112,15 +113,13 @@ void main() {
 
 	float refractivity = 1.0 - roughness;
 	#ifdef _CPostprocess
-	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord))  \
-	* (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
-	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) \
-	* (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
+	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = (textureLod(tex1, texCoord.xy, 0.0).rgb * refractionCol * intensity);
+	fragColor.rgb = mix(textureLod(tex1, texCoord.xy, 0.0).rgb, refractionCol * intensity, 1.0 - opac);
 }
