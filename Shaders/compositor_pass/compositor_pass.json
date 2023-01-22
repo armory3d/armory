@@ -44,8 +44,8 @@
 				{
 					"name": "time",
 					"link": "_time",
-					"ifdef": ["_CGrain"]
-				},				
+					"ifdef": ["_CDistort", "_CGrain"]		
+				},
 				{
 					"name": "texStep",
 					"link": "_screenSizeInv",
@@ -224,6 +224,11 @@
 				{
 					"name": "PPComp8",
 					"link": "_PPComp8",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp14",
+					"link": "_PPComp14",
 					"ifdef": ["_CPostprocess"]
 				}
 			],

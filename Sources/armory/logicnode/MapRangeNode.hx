@@ -15,6 +15,8 @@ class MapRangeNode extends LogicNode {
 
 		if (value == null || fromMin == null || fromMax == null || toMin == null || toMax == null) return null;
 
-		return (value - fromMin) * (toMax - fromMax) / (toMin - fromMin) + fromMax;
+		//Implements https://stackoverflow.com/a/5732390
+		var slope = (toMax - toMin) / (fromMax - fromMin);
+		return toMin + slope * (value - fromMin);
 	}
 }

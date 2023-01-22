@@ -27,13 +27,13 @@ class CreateRenderTargetNode extends LogicNode {
 		if(mat == null) return;
 
 		if(! perObject){
-			UniformsManager.removeObjectFromMap(object, Texture);
+			UniformsManager.removeTextureValue(object, mat, inputs[4].get());
 			object = Scene.active.root;
 		}
 
 		var img = Image.createRenderTarget(inputs[5].get(), inputs[6].get(), TextureFormat.RGBA32);
 		UniformsManager.setTextureValue(mat, object, inputs[4].get(), img);
-		
+
 		runOutput(0);
 	}
 }

@@ -617,10 +617,15 @@ def update_trait_collections():
                 col = bpy.data.collections['Trait|' + t.name]
             col.objects.link(o)
 
+
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
 
-def color_to_int(val):
+
+def color_to_int(val) -> int:
+    # Clamp values, otherwise the return value might not fit in 32 bit
+    # (and later cause problems, e.g. in the .arm file reader)
+    val = [max(0.0, min(v, 1.0)) for v in val]
     return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
 
 

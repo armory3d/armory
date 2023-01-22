@@ -2,9 +2,8 @@ import shutil
 import os
 import stat
 import bpy
-
-import arm.log as log
 import arm.utils
+from arm import log
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)
@@ -125,7 +124,7 @@ def remove_readonly(func, path, excinfo):
 def invalidate_shader_cache(self, context):
     # compiled.inc changed, recompile all shaders next time
     global invalidate_enabled
-    if invalidate_enabled == False:
+    if invalidate_enabled is False:
         return
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Shaders'):
@@ -145,7 +144,7 @@ def invalidate_shader_cache(self, context):
 
 def invalidate_compiled_data(self, context):
     global invalidate_enabled
-    if invalidate_enabled == False:
+    if invalidate_enabled is False:
         return
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled'):
@@ -167,12 +166,12 @@ def invalidate_unpacked_data(self, context):
         shutil.rmtree(fp + '/compiled/Assets/unpacked', onerror=remove_readonly)
 
 def invalidate_mesh_cache(self, context):
-    if context.object == None or context.object.data == None:
+    if context.object is None or context.object.data is None:
         return
     context.object.data.arm_cached = False
 
 def invalidate_instance_cache(self, context):
-    if context.object == None or context.object.data == None:
+    if context.object is None or context.object.data is None:
         return
     invalidate_mesh_cache(self, context)
     for slot in context.object.material_slots:

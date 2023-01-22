@@ -23,7 +23,6 @@ import arm.ui_icons as ui_icons
 import arm.utils
 import arm.utils_vs
 
-
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
     assets = arm.reload_module(assets)
@@ -42,7 +41,6 @@ if arm.is_reload(__name__):
     arm.utils_vs = arm.reload_module(arm.utils_vs)
 else:
     arm.enable_reload(__name__)
-
 
 class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
     """Menu in object region."""
@@ -343,7 +341,6 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
         context.material.signature = ''
         return{'FINISHED'}
 
-
 class ARM_OT_NewCustomMaterial(bpy.types.Operator):
     bl_idname = "arm.new_custom_material"
     bl_label = "New Custom Material"
@@ -482,7 +479,6 @@ class ARM_OT_NewCustomMaterial(bpy.types.Operator):
 
         return{'FINISHED'}
 
-
 class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
     uniform_name: StringProperty(
         name='Uniform Name',
@@ -496,7 +492,6 @@ class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
         description='The image to attach to the texture unit',
     )
 
-
 class ARM_UL_BindTexturesList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item: ARM_PG_BindTexturesListItem, icon, active_data, active_propname, index):
         row = layout.row(align=True)
@@ -505,7 +500,6 @@ class ARM_UL_BindTexturesList(bpy.types.UIList):
             row.label(text=item.uniform_name, icon_value=item.image.preview.icon_id)
         else:
             row.label(text='<empty>', icon='ERROR')
-
 
 class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
     bl_idname = "arm_bind_textures_list.new_item"
@@ -525,7 +519,6 @@ class ARM_OT_BindTexturesListNewItem(bpy.types.Operator):
         mat.arm_bind_textures_list.add()
         mat.arm_bind_textures_list_index = len(mat.arm_bind_textures_list) - 1
         return{'FINISHED'}
-
 
 class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
     bl_idname = "arm_bind_textures_list.delete_item"
@@ -555,7 +548,6 @@ class ARM_OT_BindTexturesListDeleteItem(bpy.types.Operator):
         mat.arm_bind_textures_list_index = index
 
         return{'FINISHED'}
-
 
 class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -598,7 +590,6 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_billboard')
 
         layout.operator("arm.invalidate_material_cache")
-
 
 class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
     bl_label = "Bind Textures"
@@ -645,7 +636,6 @@ class ARM_PT_BindTexturesPropsPanel(bpy.types.Panel):
         col.operator("arm_bind_textures_list.new_item", icon='ADD', text="")
         col.operator("arm_bind_textures_list.delete_item", icon='REMOVE', text="")
 
-
 class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
     """Per-material properties for custom render path drivers"""
     bl_label = "Armory Driver Properties"
@@ -677,7 +667,6 @@ class ARM_PT_MaterialDriverPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
         arm.api.drivers[rpdat.rp_driver]['draw_mat_props'](layout, context.material)
-
 
 class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_label = "Blending"
@@ -803,8 +792,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             box = layout.box().column()
             box.prop(item, 'arm_project_target')
-            if item.arm_project_target == 'custom':
-                box.prop(item, 'arm_project_khamake')
+            box.prop(item, 'arm_project_khamake')
             box.prop(item, arm.utils.target_to_gapi(item.arm_project_target))
             box.prop_search(item, "arm_project_rp", wrd, "arm_rplist", text="Render Path")
             box.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', text='Scene')
@@ -834,7 +822,6 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
 
-
 class ExporterTargetSettingsMixin:
     """Mixin for common exporter setting subpanel functionality.
 
@@ -859,7 +846,6 @@ class ExporterTargetSettingsMixin:
     def draw_header(self, context):
         self.layout.label(text='', icon='SETTINGS')
 
-
 class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "Android Settings"
     arm_target = 'android-hl'  # See ExporterTargetSettingsMixin
@@ -875,7 +861,6 @@ class ARM_PT_ArmoryExporterAndroidSettingsPanel(ExporterTargetSettingsMixin, bpy
         col.prop(wrd, 'arm_project_android_sdk_min')
         col.prop(wrd, 'arm_project_android_sdk_target')
         col.prop(wrd, 'arm_project_android_sdk_compile')
-
 
 class ARM_PT_ArmoryExporterAndroidPermissionsPanel(bpy.types.Panel):
     bl_label = "Permissions"
@@ -976,7 +961,6 @@ class ARM_PT_ArmoryExporterAndroidBuildAPKPanel(bpy.types.Panel):
         row.enabled = arm.utils.get_project_android_build_apk() and len(arm.utils.get_android_emulator_name()) > 0
         row.prop(wrd, 'arm_project_android_run_avd')
 
-
 class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "HTML5 Settings"
     arm_target = 'html5'  # See ExporterTargetSettingsMixin
@@ -1036,7 +1020,6 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
         col.prop(wrd, 'arm_project_win_build_log')
         col.prop(wrd, 'arm_project_win_build_cpu')
         col.prop(wrd, 'arm_project_win_build_open')
-
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -1158,7 +1141,9 @@ class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
         if wrd.arm_navigation != 'Disabled':
             layout.prop(wrd, 'arm_navigation_engine')
         layout.prop(wrd, 'arm_ui')
-        layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', text='Khafile')
+        layout.prop(wrd, 'arm_network')
+
+        layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts')
         layout.prop(wrd, 'arm_project_root')
 
 class ArmVirtualInputPanel(bpy.types.Panel):
@@ -1380,6 +1365,39 @@ def draw_view3d_object_menu(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
 
+class ARM_PT_TopbarPanel(bpy.types.Panel):
+    bl_label = "Armory Player"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+    bl_options = {'INSTANCED'}
+
+    def draw_header(self, context):
+        row = self.layout.row(align=True)                
+        if state.proc_play is None and state.proc_build is None:
+            row.operator("arm.play", icon="PLAY", text="")
+        else:
+            row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+        row.operator("arm.open_editor", icon="DESKTOP", text="")
+        row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")
+
+    def draw(self, context):
+        col = self.layout.column()
+        wrd = bpy.data.worlds['Arm']
+
+        col.label(text="Armory Launch")
+        col.separator()
+        
+        col.prop(wrd, 'arm_runtime')
+        col.prop(wrd, 'arm_play_camera')
+        col.prop(wrd, 'arm_play_scene')
+        col.prop_search(wrd, 'arm_play_renderpath', wrd, 'arm_rplist', text='Render Path')
+        col.prop(wrd, 'arm_debug_console', text="Debug Console")
+
+def draw_space_topbar(self, context):
+    # for some blender reasons, topbar is instanced twice. this avoids doubling the panel
+    if context.region.alignment == 'RIGHT':
+        self.layout.popover(panel="ARM_PT_TopbarPanel", text="")
+
 class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
     bl_space_type = "PROPERTIES"
@@ -1469,6 +1487,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_skin')
         col = col.column()
         col.enabled = rpdat.arm_skin == 'On'
+        col.prop(rpdat, 'arm_use_armature_deform_only')
         col.prop(rpdat, 'arm_skin_max_bones_auto')
         row = col.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto
@@ -1812,11 +1831,16 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
 
         col = layout.column()
         col.prop(rpdat, "rp_bloom")
-        col = col.column()
-        col.enabled = rpdat.rp_bloom
-        col.prop(rpdat, 'arm_bloom_threshold')
-        col.prop(rpdat, 'arm_bloom_strength')
-        col.prop(rpdat, 'arm_bloom_radius')
+        _col = col.column()
+        _col.enabled = rpdat.rp_bloom
+        _col.prop(rpdat, 'arm_bloom_follow_blender')
+        if not rpdat.arm_bloom_follow_blender:
+            _col.prop(rpdat, 'arm_bloom_threshold')
+            _col.prop(rpdat, 'arm_bloom_knee')
+            _col.prop(rpdat, 'arm_bloom_radius')
+            _col.prop(rpdat, 'arm_bloom_strength')
+        _col.prop(rpdat, 'arm_bloom_quality')
+        _col.prop(rpdat, 'arm_bloom_anti_flicker')
         layout.separator()
 
         col = layout.column()
@@ -1883,6 +1907,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
         draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
+        draw_conditional_prop(col, 'Distort', rpdat, 'arm_distort', 'arm_distort_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
         layout.separator()
 
@@ -1904,9 +1929,8 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        col.prop(rpdat, 'arm_lensflare')
         col.prop(rpdat, 'arm_fisheye')
-        layout.separator()
+        col.prop(rpdat, 'arm_lensflare')
 
         col = layout.column()
         col.prop(rpdat, 'arm_lens_texture')
@@ -2229,19 +2253,28 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
                 layout.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
-
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
-    bl_label = 'Print Traits'
+    bl_label = 'Print All Scenes Traits'
+    bl_description = 'Returns all traits in current blend'
+
     def execute(self, context):
         for s in bpy.data.scenes:
-            print(s.name + ' traits:')
+            print('Scene: {0}'.format(s.name))
             for o in s.objects:
                 for t in o.arm_traitlist:
                     if not t.enabled_prop:
                         continue
-                    tname = t.node_tree_prop.name if t.type_prop == 'Logic Nodes' else t.class_name_prop
-                    print('Object {0} - {1}'.format(o.name, tname))
+                    tname = "undefined"
+                    if t.type_prop == 'Haxe Script' or "Bundled":
+                        tname = t.class_name_prop
+                    if t.type_prop == 'Logic Nodes':
+                        tname = t.node_tree_prop.name
+                    if t.type_prop == 'UI Canvas':
+                        tname = t.canvas_name_prop
+                    if t.type_prop == 'WebAssembly':
+                        tname = t.webassembly_prop
+                    print('Trait: {0} ("{1}")'.format(o.name, tname))
         return{'FINISHED'}
 
 class ARM_PT_MaterialNodePanel(bpy.types.Panel):
@@ -2524,7 +2557,6 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
 
@@ -2547,7 +2579,6 @@ def draw_custom_node_menu(self, context):
             layout.separator()
             layout.prop(context.active_node, 'arm_material_param', text='Armory: Material Parameter')
 
-
 def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.types.AnyType, prop_condition: str, prop_value: str) -> None:
     """Draws a property row with a checkbox that enables a value field.
     The function fails when prop_condition is not a boolean property.
@@ -2558,7 +2589,6 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub = row.row()
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
-
 
 def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
     """Draw an error box in the given UILayout and return it for
@@ -2575,7 +2605,6 @@ def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
         col.label(text=line, icon='ERROR' if idx == 0 else 'BLANK1')
 
     return box
-
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
@@ -2597,6 +2626,7 @@ def register():
     bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
     bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.register_class(ARM_PT_TopbarPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
     bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
@@ -2652,15 +2682,16 @@ def register():
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
     bpy.types.NODE_MT_context_menu.append(draw_custom_node_menu)
+    bpy.types.TOPBAR_HT_upper_bar.prepend(draw_space_topbar)
 
     bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
     bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
-
 
 def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
+    bpy.types.TOPBAR_HT_upper_bar.remove(draw_space_topbar)
 
     bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
@@ -2688,6 +2719,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_UL_BindTexturesList)
     bpy.utils.unregister_class(ARM_PG_BindTexturesListItem)
     bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_TopbarPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
     bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)

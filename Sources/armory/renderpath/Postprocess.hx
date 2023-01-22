@@ -52,7 +52,8 @@ class Postprocess {
 		160.0,				//7: DoF Focal Length mm
 		128,				//8: DoF F-Stop
 		0,					//9: Tonemapping Method
-		2.0					//10: Film Grain
+		2.0,				//10: Distort
+		2.0					//11: Film Grain
 	];
 
 	public static var tonemapper_uniforms = [
@@ -72,9 +73,10 @@ class Postprocess {
 	];
 
 	public static var bloom_uniforms = [
-		1.0,				//0: Threshold
-		3.5,				//1: Strength
-		3.0					//2: Radius
+		0.8,                     // 0: Threshold
+		0.5,                     // 1: Knee
+		0.05,                    // 2: Strength
+		0.0,                     // 3: Sample scale (value set by renderpath, not used for realtime postprocess)
 	];
 
 	public static var ssao_uniforms = [
@@ -96,8 +98,8 @@ class Postprocess {
 		32					//1: Samples
 	];
 
-	public static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
-        var v:Vec4 = null;
+	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+		var v:Vec4 = null;
 
 		switch link {
 		case "_globalWeight":
@@ -258,7 +260,7 @@ class Postprocess {
 		case "_PPComp4":
 			v = iron.object.Uniforms.helpVec;
 			v.x = Std.int(camera_uniforms[9]); //Tonemapping
-			v.y = camera_uniforms[10]; //Film Grain
+			v.y = camera_uniforms[11]; //Film Grain
 			v.z = tonemapper_uniforms[0]; //Slope
 		case "_PPComp5":
 			v = iron.object.Uniforms.helpVec;
@@ -275,11 +277,6 @@ class Postprocess {
 			v.x = lenstexture_uniforms[2]; //Lum min
 			v.y = lenstexture_uniforms[3]; //Lum max
 			v.z = lenstexture_uniforms[4]; //Expo
-		case "_PPComp8":
-			v = iron.object.Uniforms.helpVec;
-			v.x = colorgrading_global_uniforms[7][0]; //LUT R
-			v.y = colorgrading_global_uniforms[7][1]; //LUT G
-			v.z = colorgrading_global_uniforms[7][2]; //LUT B
 		case "_PPComp9":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[0]; //Step
@@ -289,29 +286,53 @@ class Postprocess {
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[3]; //Falloff
 			v.y = ssr_uniforms[4]; //Jitter
-			v.z = bloom_uniforms[0]; //Bloom Threshold
+			v.z = 0;
 		case "_PPComp11":
 			v = iron.object.Uniforms.helpVec;
-			v.x = bloom_uniforms[1]; //Bloom Strength
-			v.y = bloom_uniforms[2]; //Bloom Radius
-			v.z = ssao_uniforms[0]; //SSAO Strength
+			v.x = bloom_uniforms[2]; // Bloom Strength
+			v.y = 0; // Unused
+			v.z = 0; // Unused
 		case "_PPComp12":
 			v = iron.object.Uniforms.helpVec;
-			v.x = ssao_uniforms[1]; //SSAO Radius
-			v.y = ssao_uniforms[2]; //SSAO Max Steps
-			v.z = 0;
+			v.x = ssao_uniforms[0]; //SSAO Strength
+			v.y = ssao_uniforms[1]; //SSAO Radius
+			v.z = ssao_uniforms[2]; //SSAO Max Steps
 		case "_PPComp13":
 			v = iron.object.Uniforms.helpVec;
 			v.x = chromatic_aberration_uniforms[0]; //CA Strength
 			v.y = chromatic_aberration_uniforms[1]; //CA Samples
+			v.z = 0;
+		case "_PPComp14":
+			v = iron.object.Uniforms.helpVec;
+			v.x = camera_uniforms[10]; //Distort
+			v.y = 0;
 			v.z = 0;
 		}
 
 		return v;
 	}
 
-    public static function init() {
+	public static function vec4Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
+		var v: Vec4 = null;
+
+		switch link {
+		case "_BloomThresholdData":
+			if (Downsampler.currentMipLevel == 0) {
+				// See https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/#3.4
+				v = iron.object.Uniforms.helpVec;
+				v.x = bloom_uniforms[0];
+				v.y = v.x - bloom_uniforms[1];
+				v.z = 2 * bloom_uniforms[1];
+				v.w = 0.25 / (bloom_uniforms[1] + 6.2e-5);
+			}
+		}
+
+		return v;
+	}
+
+	public static function init() {
 		iron.object.Uniforms.externalVec3Links.push(vec3Link);
-    }
+		iron.object.Uniforms.externalVec4Links.push(vec4Link);
+	}
 
 }

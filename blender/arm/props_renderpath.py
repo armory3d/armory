@@ -43,8 +43,11 @@ def update_point_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.C
     rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
     return atlas_sizes_from_min(int(rpdat.rp_shadowmap_cube) * 2)
 
+
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
+    if rpdat is None:
+        rpdat = self.arm_rplist[-1]
     if self.rp_preset == 'Desktop':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
@@ -73,6 +76,8 @@ def update_preset(self, context):
         rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
+        rpdat.arm_bloom_quality = 'medium'
+        rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -109,6 +114,8 @@ def update_preset(self, context):
         rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
+        rpdat.arm_bloom_quality = 'low'
+        rpdat.arm_bloom_anti_flicker = False
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -148,6 +155,8 @@ def update_preset(self, context):
         rpdat.rp_ss_refraction = True
         rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
+        rpdat.arm_bloom_quality = 'high'
+        rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -185,6 +194,8 @@ def update_preset(self, context):
         rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
+        rpdat.arm_bloom_quality = 'low'
+        rpdat.arm_bloom_anti_flicker = False
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
@@ -381,6 +392,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom: BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
+    arm_bloom_follow_blender: BoolProperty(name="Use Blender Settings", description="Use Blender settings instead of Armory settings", default=True)
     rp_motionblur: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Camera', 'Camera', 'Camera'),
@@ -529,9 +541,22 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
     arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
-    arm_bloom_threshold: FloatProperty(name="Threshold", default=1.0, update=assets.invalidate_shader_cache)
-    arm_bloom_strength: FloatProperty(name="Strength", default=3.5, update=assets.invalidate_shader_cache)
-    arm_bloom_radius: FloatProperty(name="Radius", default=3.0, update=assets.invalidate_shader_cache)
+    arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8, update=assets.invalidate_shader_cache)
+    arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)
+    arm_bloom_strength: FloatProperty(name="Strength", description="Strength of the bloom effect", min=0, default=0.05, update=assets.invalidate_shader_cache)
+    arm_bloom_radius: FloatProperty(name="Radius", description="Glow radius (screen-size independent)", min=0, default=6.5, update=assets.invalidate_shader_cache)
+    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker Filter", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True, update=assets.invalidate_shader_cache)
+    arm_bloom_quality: EnumProperty(
+        name="Quality",
+        description="Resampling quality of the bloom pass",
+        items=[
+            ("low", "Low", "Lowest visual quality but best performance"),
+            ("medium", "Medium", "Compromise between quality and performance"),
+            ("high", "High", "Best quality, but slowest")
+        ],
+        default="medium",
+        update=assets.invalidate_shader_cache
+    )
     arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssr_ray_step: FloatProperty(name="Step", default=0.04, update=assets.invalidate_shader_cache)
     arm_ssr_min_ray_step: FloatProperty(name="Step Min", default=0.05, update=assets.invalidate_shader_cache)
@@ -562,6 +587,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     arm_letterbox_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_letterbox_size: FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
+    arm_distort: BoolProperty(name="Distort", default=False, update=assets.invalidate_shader_cache)
+    arm_distort_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_sharpen: BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
@@ -593,6 +620,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Skinning', description='Enable skinning', default='On', update=assets.invalidate_shader_cache)
+    arm_use_armature_deform_only: BoolProperty(name="Only Deform Bones", description="Only write deforming bones (and non-deforming ones when they have deforming children)", default=False, update=assets.invalidate_compiled_data)
     arm_skin_max_bones_auto: BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     arm_skin_max_bones: IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     arm_morph_target: EnumProperty(

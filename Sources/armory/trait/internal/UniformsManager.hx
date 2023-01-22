@@ -26,69 +26,65 @@ class UniformsManager extends Trait{
 
 	public var uniformExists = false;
 
-	public function new(){
+	public function new() {
 		super();
 
 		notifyOnAdd(init);
-
 		notifyOnRemove(removeObject);
 
-		if(! sceneRemoveInitalized){
-
+		if (!sceneRemoveInitalized) {
 			Scene.active.notifyOnRemove(removeScene);
 		}
 	}
 
 	function init() {
-		if(Std.isOfType(object, MeshObject)){
+		if (Std.isOfType(object, MeshObject)) {
 			var materials = cast(object, MeshObject).materials;
 
-			for (material in materials){
+			for (material in materials) {
 
 				var exists = registerShaderUniforms(material);
-				if(exists) {
+				if (exists) {
 					uniformExists = true;
 				}
 			}
 		}
 		#if rp_decals
-		if(Std.isOfType(object, DecalObject)){
+		if (Std.isOfType(object, DecalObject)) {
 			var material = cast(object, DecalObject).material;
 
 			var exists = registerShaderUniforms(material);
-			if(exists) {
+			if (exists) {
 				uniformExists = true;
 			}
-			
+
 		}
 		#end
 	}
 
 	static function removeScene() {
-
 		removeObjectFromAllMaps(Scene.active.root);
 	}
 
 	function removeObject() {
-
-		removeObjectFromAllMaps(object);	
+		removeObjectFromAllMaps(object);
 	}
 
 	// Helper method to register float, vec3 and texture getter functions
-	static function register(type: UniformType){
-		switch (type){
+	static function register(type: UniformType) {
+		switch (type) {
 			case Float:
-				if(! floatsRegistered){
+				if (!floatsRegistered) {
 					floatsRegistered = true;
 					Uniforms.externalFloatLinks.push(floatLink);
 				}
 			case Vector:
-				if (! vectorsRegistered){
+				if (!vectorsRegistered) {
 					vectorsRegistered = true;
 					Uniforms.externalVec3Links.push(vec3Link);
 				}
 			case Texture:
-				if (! texturesRegistered){
+				if (!texturesRegistered) {
 					texturesRegistered = true;
 					Uniforms.externalTextureLinks.push(textureLink);
 				}
@@ -100,27 +96,25 @@ class UniformsManager extends Trait{
 
 		var uniformExist = false;
 
-		if(! floatsMap.exists(Scene.active.root)) floatsMap.set(Scene.active.root, null);
-		if(! vectorsMap.exists(Scene.active.root)) vectorsMap.set(Scene.active.root, null);
-		if(! texturesMap.exists(Scene.active.root)) texturesMap.set(Scene.active.root, null);
+		if (!floatsMap.exists(Scene.active.root)) floatsMap.set(Scene.active.root, null);
+		if (!vectorsMap.exists(Scene.active.root)) vectorsMap.set(Scene.active.root, null);
+		if (!texturesMap.exists(Scene.active.root)) texturesMap.set(Scene.active.root, null);
 
-		for(context in material.shader.raw.contexts){ // For each context in shader
-			for (constant in context.constants){ // For each constant in the context
-				if(constant.is_arm_parameter){ // Check if armory parameter
+		for (context in material.shader.raw.contexts) { // For each context in shader
+			for (constant in context.constants) { // For each constant in the context
+				if (constant.is_arm_parameter) { // Check if armory parameter
 
 					uniformExist = true;
 					var object = Scene.active.root; // Map default uniforms to scene root
 
-					switch (constant.type){
-						case "float":{
+					switch (constant.type) {
+						case "float":
 							var link = constant.link;
 							var value = constant.float;
 							setFloatValue(material, object, link, value);
 							register(Float);
-						}
 
-						case "vec3":{
-
+						case "vec3":
 							var vec = new Vec4();
 							vec.x = constant.vec3.get(0);
 							vec.y = constant.vec3.get(1);
@@ -128,43 +122,35 @@ class UniformsManager extends Trait{
 
 							setVec3Value(material, object, constant.link, vec);
 							register(Vector);
-							
-						}
 					}
 				}
 			}
-			for (texture in context.texture_units){
-				if(texture.is_arm_parameter){ // Check if armory parameter
+			for (texture in context.texture_units) {
+				if (texture.is_arm_parameter) { // Check if armory parameter
 
 					uniformExist = true;
 					var object = Scene.active.root; // Map default texture to scene root
 
-					if(texture.default_image_file == null){
+					if (texture.default_image_file == null) {
 						setTextureValue(material, object, texture.link, null);
 
 					}
-					else{
+					else {
 						iron.data.Data.getImage(texture.default_image_file, function(image: kha.Image) {
 							setTextureValue(material, object, texture.link, image);
-
 						});
-											
 					}
 					register(Texture);
-
 				}
-					
 			}
 		}
-
 		return uniformExist;
-		
 	}
 
-	// Method to set map Object -> Material -> Link -> FLoat 
-	public static function setFloatValue(material: MaterialData, object: Object, link: String, value: Null<kha.FastFloat>){
+	// Method to set map Object -> Material -> Link -> FLoat
+	public static function setFloatValue(material: MaterialData, object: Object, link: String, value: Null<kha.FastFloat>) {
 
-		if(object == null || material == null || link == null) return;
+		if (object == null || material == null || link == null) return;
 
 		var map = floatsMap;
 
@@ -183,10 +169,10 @@ class UniformsManager extends Trait{
 		entry.set(link, value); // parameter name, value
 	}
 
-	// Method to set map Object -> Material -> Link -> Vec3 
-	public static function setVec3Value(material: MaterialData, object: Object, link: String, value: Vec4){
+	// Method to set map Object -> Material -> Link -> Vec3
+	public static function setVec3Value(material: MaterialData, object: Object, link: String, value: Vec4) {
 
-		if(object == null || material == null || link == null) return;
+		if (object == null || material == null || link == null) return;
 
 		var map = vectorsMap;
 
@@ -205,10 +191,10 @@ class UniformsManager extends Trait{
 		entry.set(link, value); // parameter name, value
 	}
 
-	// Method to set map Object -> Material -> Link -> Texture 
-	public static function setTextureValue(material: MaterialData, object: Object, link: String, value: kha.Image){
+	// Method to set map Object -> Material -> Link -> Texture
+	public static function setTextureValue(material: MaterialData, object: Object, link: String, value: kha.Image) {
 
-		if(object == null || material == null || link == null) return;
+		if (object == null || material == null || link == null) return;
 
 		var map = texturesMap;
 
@@ -227,14 +213,22 @@ class UniformsManager extends Trait{
 		entry.set(link, value); // parameter name, value
 	}
 
-	// Mehtod to get object specific material parameter float value
+	// Method to get object specific material parameter float value
 	public static function floatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
-		
-		if(object == null || mat == null) return null;
 
-		if(! floatsMap.exists(object)){
-			object = Scene.active.root;
+		if (object == null || mat == null) return null;
+
+		// First check if float exists per object
+		var res = getObjectFloatLink(object, mat, link);
+		if (res == null) {
+			// If not defined per object, use default scene root
+			res = getObjectFloatLink(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	// Get float link
+	static function getObjectFloatLink(object: Object, mat: MaterialData, link: String): Null<kha.FastFloat> {
 
 		var material = floatsMap.get(object);
 		if (material == null) return null;
@@ -245,14 +239,22 @@ class UniformsManager extends Trait{
 		return entry.get(link);
 	}
 
-	// Mehtod to get object specific material parameter vec3 value
+	// Method to get object specific material parameter vector value
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
-		
-		if(object == null || mat == null) return null;
 
-		if(! vectorsMap.exists(object)){
-			object = Scene.active.root;
+		if (object == null || mat == null) return null;
+
+		// First check if vector exists per object
+		var res = getObjectVec3Link(object, mat, link);
+		if (res == null) {
+			// If not defined per object, use default scene root
+			res = getObjectVec3Link(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	// Get vector link
+	static function getObjectVec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 
 		var material = vectorsMap.get(object);
 		if (material == null) return null;
@@ -263,15 +265,22 @@ class UniformsManager extends Trait{
 		return entry.get(link);
 	}
 
-	// Mehtod to get object specific material parameter texture value
+	// Method to get object specific material parameter texture value
 	public static function textureLink(object: Object, mat: MaterialData, link: String): kha.Image {
-		
-		
-		if(object == null || mat == null) return null;
 
-		if(! texturesMap.exists(object)){
-			object = Scene.active.root;
+		if (object == null || mat == null) return null;
+
+		// First check if texture exists per object
+		var res = getObjectTextureLink(object, mat, link);
+		if (res == null) {
+			// If not defined per object, use default scene root
+			res = getObjectTextureLink(Scene.active.root, mat, link);
 		}
+		return res;
+	}
+
+	// Get texture link
+	static function getObjectTextureLink(object: Object, mat: MaterialData, link: String): kha.Image {
 
 		var material = texturesMap.get(object);
 		if (material == null) return null;
@@ -284,45 +293,79 @@ class UniformsManager extends Trait{
 
 	// Returns complete map of float value material paramets
 	public static function getFloatsMap():Map<Object, Map<MaterialData, Map<String, Null<kha.FastFloat>>>>{
-
 		return floatsMap;
 	}
 
 	// Returns complete map of vec3 value material paramets
 	public static function getVectorsMap():Map<Object, Map<MaterialData, Map<String, Vec4>>>{
-
 		return vectorsMap;
 	}
 
 	// Returns complete map of texture value material paramets
 	public static function getTexturesMap():Map<Object, Map<MaterialData, Map<String, kha.Image>>>{
-
 		return texturesMap;
 	}
 
 	// Remove all object specific material paramenter keys
 	public static function removeObjectFromAllMaps(object: Object) {
-
 		floatsMap.remove(object);
 		vectorsMap.remove(object);
 		texturesMap.remove(object);
-		
 	}
 
 	// Remove object specific material paramenter keys
 	public static function removeObjectFromMap(object: Object, type: UniformType) {
-
-		switch (type){
+		switch (type) {
 			case Float: floatsMap.remove(object);
-
 			case Vector: vectorsMap.remove(object);
-
 			case Texture: texturesMap.remove(object);
 		}
 	}
+
+	public static function removeFloatValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = floatsMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if (!entry.keys().hasNext()) material.remove(mat);
+		if (!material.keys().hasNext()) floatsMap.remove(object);
+	}
+
+	public static function removeVectorValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = vectorsMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if (!entry.keys().hasNext()) material.remove(mat);
+		if (!material.keys().hasNext()) vectorsMap.remove(object);
+	}
+
+	public static function removeTextureValue(object: Object, mat:MaterialData, link: String) {
+
+		var material = texturesMap.get(object);
+		if (material == null) return;
+
+		var entry = material.get(mat);
+		if (entry == null) return;
+
+		entry.remove(link);
+
+		if (!entry.keys().hasNext()) material.remove(mat);
+		if (!material.keys().hasNext()) texturesMap.remove(object);
+	}
 }
 
-@:enum abstract UniformType(Int) from Int to Int {
+enum abstract UniformType(Int) from Int to Int {
 	var Float = 0;
 	var Vector = 1;
 	var Texture = 2;

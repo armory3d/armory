@@ -1,10 +1,6 @@
 package armory.logicnode;
 
-import iron.math.Vec4;
-
 class GetCursorLocationNode extends LogicNode {
-
-	var coords = new Vec4();
 
 	public function new(tree: LogicTree) {
 		super(tree);

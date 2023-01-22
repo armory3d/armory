@@ -128,6 +128,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
             elif mat_state.emission_type == mat_state.EmissionType.SHADED:
                 if '_EmissionShaded' not in wrd.world_defs:
                     wrd.world_defs += '_EmissionShaded'
+                    arm.assets.add_khafile_def('rp_gbuffer_emission')
 
         if parse_opacity:
             curshader.write('opacity = {0};'.format(out_opacity))

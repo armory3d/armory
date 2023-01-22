@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import iron.RenderPath;
 import iron.Scene;
 import iron.math.Vec2;
 import iron.object.CameraObject;
@@ -66,6 +67,9 @@ class DrawCameraNode extends LogicNode {
 	}
 
 	function render(g:kha.graphics4.Graphics) {
+		final rpPaused = RenderPath.active.paused;
+		RenderPath.active.paused = false;
+
 		final sceneCam = iron.Scene.active.camera;
 
 		for (i in 0...cameras.length) {
@@ -81,6 +85,7 @@ class DrawCameraNode extends LogicNode {
 		}
 
 		iron.Scene.active.camera = sceneCam;
+		RenderPath.active.paused = rpPaused;
 	}
 
 	function render2D(g: kha.graphics2.Graphics) {

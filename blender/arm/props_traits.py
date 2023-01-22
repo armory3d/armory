@@ -5,7 +5,7 @@ import subprocess
 from typing import Union
 import webbrowser
 
-from bpy.types import NodeTree
+from bpy.types import Menu, NodeTree
 from bpy.props import *
 import bpy.utils.previews
 
@@ -41,7 +41,6 @@ PROP_TYPES_ENUM = [
     ('Bundled Script', 'Bundled', 'Premade script with common functionality', ICON_BUNDLED, 3),
     ('WebAssembly', 'Wasm', 'WebAssembly', ICON_WASM, 1)
 ]
-
 
 def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
@@ -376,6 +375,28 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
+class ArmEditWasmScriptButton(bpy.types.Operator):
+    bl_idname = 'arm.edit_wasm_script'
+    bl_label = 'Edit Script'
+    bl_description = 'Copy script to project and edit in the text editor'
+    bl_options = {'INTERNAL'}
+
+    is_object: BoolProperty(default=False)
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {'CANCELLED'}
+
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        wasm_path = os.path.join(arm.utils.get_fp(), 'Bundled', item.webassembly_prop + '.wasm')
+        arm.utils.open_editor(wasm_path)
+        return{'FINISHED'}
+
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     """Generate navmesh from selected meshes"""
     bl_idname = 'arm.generate_navmesh'
@@ -644,7 +665,6 @@ class ArmNewWasmButton(bpy.types.Operator):
         webbrowser.open('https://webassembly-studio.kamenokosoft.com/')
         return{'FINISHED'}
 
-
 class ArmRefreshScriptsButton(bpy.types.Operator):
     """Fetch all script names and trait properties."""
     bl_idname = 'arm.refresh_scripts'
@@ -663,7 +683,6 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
         arm.utils.fetch_trait_props()
         arm.utils.fetch_wasm_names()
         return{'FINISHED'}
-
 
 class ArmRefreshObjectScriptsButton(bpy.types.Operator):
     """Fetch all script names and trait properties."""
@@ -786,9 +805,16 @@ class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
 
         return {'INTERFACE'}
 
+class ARM_MT_context_menu(Menu):
+    bl_label = "Trait Specials"
 
-def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene],
-                      is_object: bool) -> None:
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator("arm.copy_traits_to_active", icon='PASTEDOWN')
+        layout.operator("arm.print_traits", icon='CONSOLE')
+
+def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene], is_object: bool) -> None:
     layout.use_property_split = True
     layout.use_property_decorate = False
 
@@ -809,6 +835,10 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
     else:
         op = col.operator("arm_traitlist.delete_item_scene", icon='REMOVE', text="")
     op.is_object = is_object
+
+    col.separator()
+    
+    col.menu("ARM_MT_context_menu", icon='DOWNARROW_HLT', text="")
 
     if len(obj.arm_traitlist) > 1:
         col.separator()
@@ -853,6 +883,11 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
         elif item.type_prop == 'WebAssembly':
             row.operator("arm.new_wasm", icon="FILE_NEW")
+
+            column = row.column(align=True)
+            column.enabled = item.webassembly_prop != ''
+            
+            column.operator("arm.edit_wasm_script", icon_value=ICON_WASM).is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
@@ -917,7 +952,6 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
-
 def register():
     bpy.utils.register_class(ArmTraitListItem)
     bpy.utils.register_class(ARM_UL_TraitList)
@@ -927,6 +961,7 @@ def register():
     bpy.utils.register_class(ArmTraitListMoveItem)
     bpy.utils.register_class(ArmEditScriptButton)
     bpy.utils.register_class(ArmEditBundledScriptButton)
+    bpy.utils.register_class(ArmEditWasmScriptButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmEditCanvasButton)
     bpy.utils.register_class(ArmNewScriptDialog)
@@ -941,15 +976,16 @@ def register():
     bpy.utils.register_class(ARM_PT_TraitPanel)
     bpy.utils.register_class(ARM_PT_SceneTraitPanel)
     bpy.utils.register_class(ARM_OT_CopyTraitsFromActive)
+    bpy.utils.register_class(ARM_MT_context_menu)
 
     bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
 
-
 def unregister():
     bpy.utils.unregister_class(ARM_OT_CopyTraitsFromActive)
+    bpy.utils.unregister_class(ARM_MT_context_menu)
     bpy.utils.unregister_class(ArmTraitListItem)
     bpy.utils.unregister_class(ARM_UL_TraitList)
     bpy.utils.unregister_class(ArmTraitListNewItem)
@@ -958,6 +994,7 @@ def unregister():
     bpy.utils.unregister_class(ArmTraitListMoveItem)
     bpy.utils.unregister_class(ArmEditScriptButton)
     bpy.utils.unregister_class(ArmEditBundledScriptButton)
+    bpy.utils.unregister_class(ArmEditWasmScriptButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmEditCanvasButton)
     bpy.utils.unregister_class(ArmNewScriptDialog)

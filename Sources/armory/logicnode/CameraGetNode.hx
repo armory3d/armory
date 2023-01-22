@@ -17,6 +17,8 @@ class CameraGetNode extends LogicNode {
 			case 6: armory.renderpath.Postprocess.camera_uniforms[6];
 			case 7: armory.renderpath.Postprocess.camera_uniforms[7];
 			case 8: armory.renderpath.Postprocess.camera_uniforms[8];
+			case 9: armory.renderpath.Postprocess.camera_uniforms[9];
+			case 10: armory.renderpath.Postprocess.camera_uniforms[10];
 			default: 0.0;
 		}
 	}

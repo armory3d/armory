@@ -5,8 +5,9 @@ class ArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     """Stores the given array as a variable."""
     bl_idname = 'LNArrayNode'
     bl_label = 'Array Dynamic'
-    arm_version = 1
+    arm_version = 3
     arm_section = 'variable'
+    min_inputs = 0
 
     def __init__(self):
         self.register_id()
@@ -21,11 +22,14 @@ class ArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = self.get_id_str()
         op.socket_type = 'ArmDynamicSocket'
-        op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
-        op2.node_index = self.get_id_str()
+        column = row.column(align=True)
+        op = column.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op.node_index = self.get_id_str()
+        if len(self.inputs) == self.min_inputs:
+            column.enabled = False
 
     def draw_label(self) -> str:
-        if len(self.inputs) == 0:
+        if len(self.inputs) == self.min_inputs:
             return super().draw_label()
 
         return f'{super().draw_label()} [{len(self.inputs)}]'
@@ -37,3 +41,10 @@ class ArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
             inp.hide = self.arm_logic_id != ''
             inp.enabled = self.arm_logic_id == ''
             inp.default_value_raw = master_node.inputs[i].get_default_value()
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 2):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)
+        
