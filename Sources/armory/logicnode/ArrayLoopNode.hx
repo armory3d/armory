@@ -23,6 +23,11 @@ class ArrayLoopNode extends LogicNode {
 				tree.loopBreak = false;
 				break;
 			}
+			
+			if (tree.loopContinue) {
+				tree.loopContinue = false;
+				continue;
+			}
 		}
 		runOutput(3);
 	}
