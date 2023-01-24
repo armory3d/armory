@@ -533,17 +533,6 @@ class RenderPathForward {
 				path.bindTarget("lbuffer0", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("lbuffer0"); //Only clear gbuffer0
-				#if (rp_background == "Clear")
-				{
-					path.clearTarget(-1, 1.0);
-				}
-				#else
-				{
-					path.clearTarget(null, 1.0);
-				}
-				#end
-
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
 
