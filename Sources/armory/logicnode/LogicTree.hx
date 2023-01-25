@@ -15,6 +15,7 @@ class LogicTree extends iron.Trait {
 	#end
 
 	public var loopBreak = false; // Trigger break from loop nodes
+	public var loopContinue = false; // Trigger Continue from loop nodes
 
 	public function new() {
 		super();
