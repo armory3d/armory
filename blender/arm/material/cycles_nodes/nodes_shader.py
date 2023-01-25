@@ -158,7 +158,7 @@ def parse_bsdfglass(node: bpy.types.ShaderNodeBsdfGlass, out_socket: NodeSocket,
         c.write_normal(node.inputs[3])
         state.out_roughness = c.parse_value_input(node.inputs[1])
     if state.parse_opacity:
-        state.out_opacity = '0.0'#by default set this to mix with color at 50%
+        state.out_opacity = '0.0'
         state.out_rior = c.parse_value_input(node.inputs[2])
 
 
