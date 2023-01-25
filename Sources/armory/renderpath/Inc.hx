@@ -433,7 +433,7 @@ class Inc {
 			final minDim = Math.min(path.currentW, path.currentH);
 			final logMinDim = Math.max(1.0, Helper.log2(minDim) + (Main.bloomRadius - 8.0));
 			final numMips = Std.int(logMinDim);
-S
+
 			// Sample scale for upsampling, 0.5 to use half-texel steps,
 			// use fraction of logMinDim to make the visual jumps
 			// described above less visible
