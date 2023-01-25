@@ -151,7 +151,7 @@ void main() {
 	//if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec3 viewNormal = n2;
-	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
+	vec3 viewPos = normalize(getPosView(viewRay, gdepth, cameraProj));
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
 
