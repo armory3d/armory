@@ -1934,7 +1934,12 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
                 col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
                 layout.separator()
 
-        layout.prop(rpdat, 'arm_lut_texture')
+        col = layout.column()
+        col.prop(rpdat, 'arm_lut')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_lut
+        col.prop(rpdat, 'arm_lut_texture')
+        layout.separator()
 
 class ARM_PT_BakePanel(bpy.types.Panel):
     bl_label = "Armory Bake"

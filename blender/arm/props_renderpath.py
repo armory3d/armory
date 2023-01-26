@@ -608,7 +608,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_vignette: BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     arm_vignette_strength: FloatProperty(name="Strength", default=0.7, update=assets.invalidate_shader_cache)
     arm_lensflare: BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
-    arm_lut_texture: StringProperty(name="LUT Texture", description="Color Grading", default="", update=assets.invalidate_shader_cache)
+    arm_lut: BoolProperty(name="LUT Color Grading", description="Color Grading", default=False, update=assets.invalidate_shader_cache)
+    arm_lut_texture: StringProperty(name="Texture", description="LUT filepath", default="luttexture.jpg", update=assets.invalidate_shader_cache)
     arm_skin: EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],

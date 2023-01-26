@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 
+import os
 import bpy
 
 import arm.api
@@ -134,6 +135,8 @@ def add_world_defs():
 
 def build():
     rpdat = arm.utils.get_rp()
+    project_path = arm.utils.get_fp()
+
     if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpath'] != None:
         arm.api.drivers[rpdat.rp_driver]['make_rpath']()
         return
@@ -227,9 +230,12 @@ def build():
             if rpdat.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
                 compo_depth = True
-            if rpdat.arm_lut_texture != '':
-                wrd.compo_defs += '_CLUT'
-                assets.add_embedded_data('luttexture.jpg')
+            if rpdat.arm_lut == True:
+                if os.path.isfile(project_path + '/Bundled/' + rpdat.arm_lut_texture):
+                    wrd.compo_defs += '_CLUT'
+                    assets.add_embedded_data(rpdat.arm_lut_texture)
+                else:
+                    log.warn('Filepath for LUT texture is invalid.')
             if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:
                 wrd.compo_defs += '_CTexStep'
             if '_CDOF' in wrd.compo_defs or '_CFog' in wrd.compo_defs or '_CGlare' in wrd.compo_defs:
