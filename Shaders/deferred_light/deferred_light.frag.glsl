@@ -247,6 +247,12 @@ void main() {
 	vec3 envl = vec3(1.0);
 #endif
 
+#ifdef _Rad
+	vec3 reflectionWorld = reflect(-v, n);
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
+	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+#endif
+
 #ifdef _EnvLDR
 	envl.rgb = pow(envl.rgb, vec3(2.2));
 	#ifdef _Rad
@@ -254,11 +260,6 @@ void main() {
 	#endif
 #endif
 
-#ifdef _Rad
-	vec3 reflectionWorld = reflect(-v, n);
-	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
-	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-#endif
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
@@ -380,8 +381,7 @@ void main() {
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-			if (lPos.w > 0.0)
-			svisibility = shadowTest(
+			if (lPos.w > 0.0) svisibility = shadowTest(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
