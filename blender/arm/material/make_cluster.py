@@ -71,9 +71,7 @@ def write(vert, frag):
         frag.write('\t, lightsArraySpot[li].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
-    if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
-        frag.write('  , voxels, voxpos')
-    if '_voxelGiRefract' in wrd.world_defs:
+    if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
         frag.write('  , voxels, voxpos')
     frag.write(');')
 

@@ -679,9 +679,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
             frag.write('}') # receiveShadow
-        if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
-            frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
-        if '_VoxelGIShadow' in wrd.world_defs:
+        if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
@@ -711,7 +709,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
-        if '_VoxelGIShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
+        if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
             frag.write('  , voxels, voxpos')
         frag.write(');')
 

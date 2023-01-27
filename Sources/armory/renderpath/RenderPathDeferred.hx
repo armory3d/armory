@@ -592,9 +592,6 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		#if rp_gbuffer2_direct
-		path.bindTarget("gbuffer2", "gbuffer2");
-		#end
 
 		#if rp_gbuffer2
 		{
