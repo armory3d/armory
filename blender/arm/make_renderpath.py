@@ -218,11 +218,6 @@ def build():
             if focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'
                 compo_depth = True
-            if rpdat.arm_lens_texture != '':
-                wrd.compo_defs += '_CLensTex'
-                assets.add_embedded_data('lenstexture.jpg')
-                if rpdat.arm_lens_texture_masking:
-                    wrd.compo_defs += '_CLensTexMasking'
             if rpdat.arm_fisheye:
                 wrd.compo_defs += '_CFishEye'
             if rpdat.arm_vignette:
@@ -230,7 +225,15 @@ def build():
             if rpdat.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
                 compo_depth = True
-            if rpdat.arm_lut == True:
+            if rpdat.arm_lens:
+                if os.path.isfile(project_path + '/Bundled/' + rpdat.arm_lens_texture):
+                    wrd.compo_defs += '_CLensTex'
+                    assets.add_embedded_data(rpdat.arm_lens_texture)
+                    if rpdat.arm_lens_texture_masking:
+                        wrd.compo_defs += '_CLensTexMasking'
+                else:
+                    log.warn('Filepath for Lens texture is invalid.')
+            if rpdat.arm_lut:
                 if os.path.isfile(project_path + '/Bundled/' + rpdat.arm_lut_texture):
                     wrd.compo_defs += '_CLUT'
                     assets.add_embedded_data(rpdat.arm_lut_texture)

@@ -1919,8 +1919,12 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         col.prop(rpdat, 'arm_fisheye')
         col.prop(rpdat, 'arm_lensflare')
+        layout.separator()
 
         col = layout.column()
+        col.prop(rpdat, 'arm_lens')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_lens
         col.prop(rpdat, 'arm_lens_texture')
         if rpdat.arm_lens_texture != "":
             col.prop(rpdat, 'arm_lens_texture_masking')
@@ -1933,6 +1937,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
                 sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
                 col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
                 layout.separator()
+        layout.separator()
 
         col = layout.column()
         col.prop(rpdat, 'arm_lut')
