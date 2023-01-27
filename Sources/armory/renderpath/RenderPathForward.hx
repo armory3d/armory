@@ -160,14 +160,13 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel GI")
+			#if (rp_voxels == "Voxel GI")
 			{
 				Inc.initGI("voxelsOpac");
-				Inc.initGI("voxelsNor");
-				#if (rp_gi_bounces)
-				Inc.initGI("voxelsBounce");
-				#end
 			}
+			#end
+			#if (rp_voxels == "Voxel AO")
+			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
 		}
 		#end
@@ -341,11 +340,13 @@ class RenderPathForward {
 		}
 		#end
 
+		// Voxels
 		#if rp_voxels
+		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
 				if (light.transform.diff()) { voxelize = true; break; }
@@ -362,50 +363,32 @@ class RenderPathForward {
 			#end
 
 			if (voxelize) {
-				var res = Inc.getVoxelRes();
-
-				#if (rp_gi == "Voxel GI")
-				var voxtex = "voxelsOpac";
-				#else
 				var voxtex = voxels;
-				#end
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
+
+				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
+
+				#if rp_gbuffer_emission
+				{
+					path.bindTarget("gbuffer_emission", "gbufferEmission");
+				}
+				#end				
+	
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_gi == "Voxel GI")
-				path.bindTarget("voxelsNor", "voxelsNor");
-				for (l in iron.Scene.active.lights) {
-					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
-					var n = "shadowMap";
-					path.bindTarget(n, n);
-					break;
+				#if (rp_shadowmap && rp_voxels == "Voxel GI")
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
 				}
 				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
-				relight = true;
-			}
-
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if light was moved
-			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { relight = true; break; }
-			}
-			#end
-
-			if (relight) {
-				#if (rp_gi == "Voxel GI")
-					Inc.computeVoxelsBegin();
-					Inc.computeVoxels();
-					Inc.computeVoxelsEnd();
-					#if (rp_gi_bounces)
-					voxels = "voxelsBounce";
-					#end
-				#else
-				path.generateMipmaps(voxels); // AO
-				#end
 			}
 		}
 		#end

@@ -57,7 +57,7 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel AO")
+			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
 		}
