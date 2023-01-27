@@ -567,7 +567,7 @@ class RenderPathDeferred {
 				#end				
 	
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_shadowmap && rp_voxels == "Voxel GI")
+				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
