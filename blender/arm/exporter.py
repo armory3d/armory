@@ -1,15 +1,15 @@
 """
 Armory Scene Exporter
-http://armory3d.org/
+https://armory3d.org/
 
 Based on Open Game Engine Exchange
-http://opengex.org/
+https://opengex.org/
 Export plugin for Blender by Eric Lengyel
 Copyright 2015, Terathon Software LLC
 
 This software is licensed under the Creative Commons
 Attribution-ShareAlike 3.0 Unported License:
-http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
+https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
 from enum import Enum, unique
 import math
@@ -241,7 +241,12 @@ class ArmoryExporter:
         return []
 
     def export_bone(self, armature, bone: bpy.types.Bone, o, action: bpy.types.Action):
+        rpdat = arm.utils.get_rp()
         bobject_ref = self.bobject_bone_array.get(bone)
+
+        if rpdat.arm_use_armature_deform_only:
+            if not bone.use_deform:
+                return
 
         if bobject_ref:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
@@ -987,12 +992,24 @@ class ArmoryExporter:
                             for _o in sel:
                                 _o.select_set(False)
                             skelobj.select_set(True)
-                            bpy.ops.nla.bake(frame_start=int(action.frame_range[0]), frame_end=int(action.frame_range[1]), step=1, only_selected=False, visual_keying=True)
+
+                            bake_result = bpy.ops.nla.bake(
+                                frame_start=int(action.frame_range[0]),
+                                frame_end=int(action.frame_range[1]),
+                                step=1,
+                                only_selected=False,
+                                visual_keying=True
+                            )
                             action = skelobj.animation_data.action
+
                             skelobj.select_set(False)
                             for _o in sel:
                                 _o.select_set(True)
-                            baked_actions.append(action)
+
+                            # Baking creates a new action, but only if it
+                            # was successful
+                            if 'FINISHED' in bake_result:
+                                baked_actions.append(action)
 
                         wrd = bpy.data.worlds['Arm']
                         if wrd.arm_verbose_output:
@@ -2318,7 +2335,9 @@ Make sure the mesh only has tris/quads.""")
     def execute(self):
         """Exports the scene."""
         profile_time = time.time()
-        print('Exporting ' + arm.utils.asset_name(self.scene))
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_verbose_output:
+            print('Exporting ' + arm.utils.asset_name(self.scene))
         if self.compress_enabled:
             print('Scene data will be compressed which might take a while.')
 
@@ -2354,7 +2373,6 @@ Make sure the mesh only has tris/quads.""")
         matvars, matslots = self.create_material_variants(self.scene)
 
         # Auto-bones
-        wrd = bpy.data.worlds['Arm']
         rpdat = arm.utils.get_rp()
         if rpdat.arm_skin_max_bones_auto:
             max_bones = 8
@@ -2438,7 +2456,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_tilesheets()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = self.scene.world.name
+                self.output['world_ref'] = arm.utils.safestr(self.scene.world.name)
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -2494,7 +2512,8 @@ Make sure the mesh only has tris/quads.""")
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
 
-        print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
+        if wrd.arm_verbose_output:
+            print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""

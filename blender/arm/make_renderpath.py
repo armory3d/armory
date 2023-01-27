@@ -221,6 +221,8 @@ def build():
                 wrd.compo_defs += '_CFXAA'
             if rpdat.arm_letterbox:
                 wrd.compo_defs += '_CLetterbox'
+            if rpdat.arm_distort:
+                wrd.compo_defs += '_CDistort'
             if rpdat.arm_grain:
                 wrd.compo_defs += '_CGrain'
             if rpdat.arm_sharpen:
@@ -305,7 +307,16 @@ def build():
         if rpdat.rp_bloom:
             assets.add_khafile_def('rp_bloom')
             assets.add_shader_pass('bloom_pass')
-            assets.add_shader_pass('blur_gaus_pass')
+
+            if rpdat.arm_bloom_quality == 'low':
+                wrd.compo_defs += '_BloomQualityLow'
+            elif rpdat.arm_bloom_quality == 'medium':
+                wrd.compo_defs += '_BloomQualityMedium'
+            else:
+                wrd.compo_defs += '_BloomQualityHigh'
+
+            if rpdat.arm_bloom_anti_flicker:
+                wrd.compo_defs += '_BloomAntiFlicker'
 
         if rpdat.rp_ssr:
             assets.add_khafile_def('rp_ssr')

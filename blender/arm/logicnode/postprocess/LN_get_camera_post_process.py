@@ -4,7 +4,7 @@ class CameraGetNode(ArmLogicTreeNode):
     """Returns the post-processing effects of a camera."""
     bl_idname = 'LNCameraGetNode'
     bl_label = 'Get Camera Post Process'
-    arm_version = 1
+    arm_version = 2
 
     def arm_init(self, context):
         self.add_output('ArmFloatSocket', 'F-Stop')
@@ -16,4 +16,11 @@ class CameraGetNode(ArmLogicTreeNode):
         self.add_output('ArmFloatSocket', 'DOF Distance')
         self.add_output('ArmFloatSocket', 'DOF Length')
         self.add_output('ArmFloatSocket', 'DOF F-Stop')
+        self.add_output('ArmFloatSocket', 'Distort')
         self.add_output('ArmFloatSocket', 'Film Grain')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)

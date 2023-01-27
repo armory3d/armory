@@ -8,7 +8,7 @@ class FunctionNode(ArmLogicTreeNode):
     bl_label = 'Function'
     bl_description = 'Creates a reusable function that can be called by the Call Function node'
     arm_section = 'function'
-    arm_version = 1
+    arm_version = 2
     min_outputs = 1
 
     def __init__(self):
@@ -29,6 +29,14 @@ class FunctionNode(ArmLogicTreeNode):
         op.socket_type = 'ArmDynamicSocket'
         op.name_format = "Arg {0}"
         op.index_name_offset = 0
-        op2 = row.operator('arm.node_remove_output', text='', icon='X', emboss=True)
-        op2.node_index = str(id(self))
+        column = row.column(align=True)
+        op = column.operator('arm.node_remove_output', text='', icon='X', emboss=True)
+        op.node_index = str(id(self))
+        if len(self.outputs) == self.min_outputs:
+            column.enabled = False
 
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement.Identity(self)

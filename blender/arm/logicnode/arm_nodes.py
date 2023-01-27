@@ -595,7 +595,8 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
     out_socket_type: StringProperty(name='Out Socket Type', default='ArmDynamicSocket')
     in_name_format: StringProperty(name='In Name Format', default='Input {0}')
     out_name_format: StringProperty(name='Out Name Format', default='Output {0}')
-    in_index_name_offset: IntProperty(name='Index Name Offset', default=0)
+    in_index_name_offset: IntProperty(name='In Name Offset', default=0)
+    out_index_name_offset: IntProperty(name='Out Name Offset', default=0)
 
     def execute(self, context):
         global array_nodes
@@ -612,7 +613,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         assert len(out_socket_types) == len(out_name_formats)
 
         in_format_index = (len(outs) + self.in_index_name_offset) // len(in_socket_types)
-        out_format_index = len(outs) // len(out_socket_types)
+        out_format_index = (len(outs) + self.out_index_name_offset) // len(out_socket_types)
         for socket_type, name_format in zip(in_socket_types, in_name_formats):
             inps.new(socket_type, name_format.format(str(in_format_index)))
         for socket_type, name_format in zip(out_socket_types, out_name_formats):
@@ -625,6 +626,7 @@ class ArmNodeAddInputOutputButton(bpy.types.Operator):
         self.in_name_format = 'Input {0}'
         self.out_name_format = 'Output {0}'
         self.in_index_name_offset = 0
+        self.out_index_name_offset = 0
 
         return{'FINISHED'}
 

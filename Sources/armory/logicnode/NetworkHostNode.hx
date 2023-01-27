@@ -20,10 +20,14 @@ class NetworkHostNode extends LogicNode {
           var max_Conn: Int = inputs[3].get();
           net_Url = "ws://" + net_Domain + ":" + net_Port;
           if (Host.connections[net_Url] != null) return;
-          var server = new Host(net_Domain, net_Port, max_Conn, net_Object);
-          if (Host.connections[net_Url] == null) return;
-          Host.connections[net_Url].start();
-          runOutput(0);
+          try{
+            var server = new Host(net_Domain, net_Port, max_Conn, net_Object);
+            if (Host.connections[net_Url] == null) return;
+            Host.connections[net_Url].start();
+            runOutput(0);
+          } catch(err){
+            trace("Failed to start server with the following error: " + err + ". Check if there is a system process occupying the port.");
+          }
         } else {
           final net_Object: Object = tree.object;
           var net_Domain: String = inputs[1].get();
@@ -33,10 +37,14 @@ class NetworkHostNode extends LogicNode {
           var net_Key: String = inputs[5].get();
           net_Url = "wss://" + net_Domain + ":" + net_Port;
           if (SecureHost.connections[net_Url] != null) return;
-          var server = new SecureHost(net_Domain, net_Port, max_Conn, net_Object, net_Cert, net_Key);
-          if (SecureHost.connections[net_Url] == null) return;
-          SecureHost.connections[net_Url].start();
-          runOutput(0);
+          try{
+            var server = new SecureHost(net_Domain, net_Port, max_Conn, net_Object, net_Cert, net_Key);
+            if (SecureHost.connections[net_Url] == null) return;
+            SecureHost.connections[net_Url].start();
+            runOutput(0);
+          } catch(err){
+            trace("Failed to start server with the following error: " + err + ". Check if there is a system process occupying the port.");
+          }
         }
         #end
       }

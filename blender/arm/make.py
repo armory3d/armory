@@ -77,6 +77,7 @@ def run_proc(cmd, done: Callable) -> subprocess.Popen:
         else:
             done()
 
+    print(*cmd)
     p = subprocess.Popen(cmd)
 
     if use_thread:
@@ -100,10 +101,11 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants)
     arm.lib.make_datas.make(res, shader_name, json_data, fp, defs, make_variants)
 
     path = fp + '/compiled/Shaders'
-    c = json_data['contexts'][0]
-    for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
-        if s in c:
-            shutil.copy(c[s], path + '/' + c[s].split('/')[-1])
+    contexts = json_data['contexts']
+    for ctx in contexts:
+        for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
+            if s in ctx:
+                shutil.copy(ctx[s], path + '/' + ctx[s].split('/')[-1])
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -113,8 +115,8 @@ def export_data(fp, sdk_path):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
-    print('Armory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     if wrd.arm_verbose_output:
+        print(f'Armory v{wrd.arm_version} ({wrd.arm_commit})')
         print(f'Blender: {bpy.app.version_string}, Target: {state.target}, GAPI: {arm.utils.get_gapi()}')
 
     # Clean compiled variants if cache is disabled
@@ -222,10 +224,10 @@ def export_data(fp, sdk_path):
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
 
     if wrd.arm_verbose_output:
-        print('Exported modules:', ', '.join(modules))
-        print('Shader flags:', ' '.join(defs))
-        print('Compositor flags:', ' '.join(cdefs))
-        print('Khafile flags:', ' '.join(assets.khafile_defs))
+        log.info('Exported modules: '+', '.join(modules))
+        log.info('Shader flags: '+', '.join(defs))
+        log.info('Compositor flags: '+', '.join(cdefs))
+        log.info('Khafile flags: '+', '.join(assets.khafile_defs))
 
     # Render path is configurable at runtime
     has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
@@ -301,99 +303,100 @@ def compile(assets_only=False):
     fp = arm.utils.get_fp()
     os.chdir(fp)
 
-    # Set build command
-    target_name = state.target
-
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
     cmd = [node_path, khamake_path]
 
-    kha_target_name = arm.utils.get_kha_target(target_name)
-    if kha_target_name != '':
-        cmd.append(kha_target_name)
-
     # Custom exporter
-    if state.is_export:
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
-            for s in item.arm_project_khamake.split(' '):
-                cmd.append(s)
-
-    ffmpeg_path = arm.utils.get_ffmpeg_path()
-    if ffmpeg_path not in (None, ''):
-        cmd.append('--ffmpeg')
-        cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
-
-    state.export_gapi = arm.utils.get_gapi()
-    cmd.append('-g')
-    cmd.append(state.export_gapi)
-    # Windows - Set Visual Studio Version
-    if state.target.startswith('windows'):
-        cmd.append('--visualstudio')
-        cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
-
-    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
-        if 'html5' in state.target or 'ios' in state.target:
-            pass
-        else:
-            cmd.append('--shaderversion')
-            cmd.append('110')
-    elif 'android' in state.target or 'html5' in state.target:
-        cmd.append('--shaderversion')
-        cmd.append('300')
-    else:
-        cmd.append('--shaderversion')
-        cmd.append('330')
-
-    if '_VR' in wrd.world_defs:
-        cmd.append('--vr')
-        cmd.append('webvr')
-
-    if arm.utils.get_pref_or_default('khamake_debug', False):
-        cmd.append('--debug')
-
-    if arm.utils.get_rp().rp_renderer == 'Raytracer':
-        cmd.append('--raytrace')
-        cmd.append('dxr')
-        dxc_path = fp + '/HlslShaders/dxc.exe'
-        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
-
-    if arm.utils.get_khamake_threads() != 1:
-        cmd.append('--parallelAssetConversion')
-        cmd.append(str(arm.utils.get_khamake_threads()))
-
-    compilation_server = False
-
-    cmd.append('--to')
-    if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
-        cmd.append(arm.utils.build_dir() + '/debug')
-        # Start compilation server
-        if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
-            compilation_server = True
-            arm.lib.server.run_haxe(arm.utils.get_haxe_path())
-    else:
-        cmd.append(arm.utils.build_dir())
-
-    if not wrd.arm_verbose_output:
-        cmd.append("--quiet")
-    else:
-        print("Using project from " + arm.utils.get_fp())
-        print("Running: ", *cmd)
-
-    #Project needs to be compiled at least once
-    #before compilation server can work
-    if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+    if state.target == "custom":
+        if len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
+                for s in item.arm_project_khamake.split(' '):
+                    cmd.append(s)
         state.proc_build = run_proc(cmd, build_done)
     else:
-        if assets_only or compilation_server:
-            cmd.append('--nohaxe')
-            cmd.append('--noproject')
-        state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
-        if bpy.app.background:
-            if state.proc_build.returncode == 0:
-                build_success()
+        target_name = state.target
+        kha_target_name = arm.utils.get_kha_target(target_name)
+        if kha_target_name != '':
+            cmd.append(kha_target_name)
+        ffmpeg_path = arm.utils.get_ffmpeg_path()
+        if ffmpeg_path not in (None, ''):
+            cmd.append('--ffmpeg')
+            cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
+
+        state.export_gapi = arm.utils.get_gapi()
+        cmd.append('-g')
+        cmd.append(state.export_gapi)
+        # Windows - Set Visual Studio Version
+        if state.target.startswith('windows'):
+            cmd.append('--visualstudio')
+            cmd.append(arm.utils_vs.version_to_khamake_id[wrd.arm_project_win_list_vs])
+
+        if arm.utils.get_legacy_shaders() or 'ios' in state.target:
+            if 'html5' in state.target or 'ios' in state.target:
+                pass
             else:
-                log.error('Build failed')
+                cmd.append('--shaderversion')
+                cmd.append('110')
+        elif 'android' in state.target or 'html5' in state.target:
+            cmd.append('--shaderversion')
+            cmd.append('300')
+        else:
+            cmd.append('--shaderversion')
+            cmd.append('330')
+
+        if '_VR' in wrd.world_defs:
+            cmd.append('--vr')
+            cmd.append('webvr')
+
+        if arm.utils.get_pref_or_default('khamake_debug', False):
+            cmd.append('--debug')
+
+        if arm.utils.get_rp().rp_renderer == 'Raytracer':
+            cmd.append('--raytrace')
+            cmd.append('dxr')
+            dxc_path = fp + '/HlslShaders/dxc.exe'
+            subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
+
+        if arm.utils.get_khamake_threads() != 1:
+            cmd.append('--parallelAssetConversion')
+            cmd.append(str(arm.utils.get_khamake_threads()))
+
+        compilation_server = False
+
+        cmd.append('--to')
+        if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
+            cmd.append(arm.utils.build_dir() + '/debug')
+            # Start compilation server
+            if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
+                compilation_server = True
+                arm.lib.server.run_haxe(arm.utils.get_haxe_path())
+        else:
+            cmd.append(arm.utils.build_dir())
+
+        if not wrd.arm_verbose_output:
+            cmd.append("--quiet")
+
+        #Project needs to be compiled at least once
+        #before compilation server can work
+        if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+            state.proc_build = run_proc(cmd, build_done)
+        else:
+            if assets_only or compilation_server:
+                cmd.append('--nohaxe')
+                cmd.append('--noproject')
+            if len(wrd.arm_exporterlist) > 0:
+                item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+                if item.arm_project_khamake != "":
+                    for s in item.arm_project_khamake.split(" "):
+                        cmd.append(s)
+            state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
+            if bpy.app.background:
+                if state.proc_build.returncode == 0:
+                    build_success()
+                else:
+                    log.error('Build failed')
 
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
@@ -440,13 +443,14 @@ def build(target, is_play=False, is_publish=False, is_export=False):
             break
     if write_texts:
         area = bpy.context.area
-        old_type = area.type
-        area.type = 'TEXT_EDITOR'
-        for text in bpy.data.texts:
-            if text.filepath != '' and text.is_dirty and os.path.isfile(text.filepath):
-                area.spaces[0].text = text
-                bpy.ops.text.save()
-        area.type = old_type
+        if area is not None:
+            old_type = area.type
+            area.type = 'TEXT_EDITOR'
+            for text in bpy.data.texts:
+                if text.filepath != '' and text.is_dirty and os.path.isfile(text.filepath):
+                    area.spaces[0].text = text
+                    bpy.ops.text.save()
+            area.type = old_type
 
     # Save internal Haxe scripts
     for text in bpy.data.texts:
@@ -468,6 +472,9 @@ def build(target, is_play=False, is_publish=False, is_export=False):
 
 def play_done():
     """Called if the player was stopped/terminated."""
+    if state.proc_play is not None:
+        if state.proc_play.returncode != 0:
+            log.warn(f'Player exited code {state.proc_play.returncode}')
     state.proc_play = None
     state.redraw_ui = True
     log.clear()
@@ -503,7 +510,8 @@ def compilation_server_done():
         log.error('Build failed, check console')
 
 def build_done():
-    print('Finished in {:0.3f}s'.format(time.time() - profile_time))
+    wrd = bpy.data.worlds['Arm']
+    log.info('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
     if state.proc_build is None:
@@ -577,7 +585,11 @@ def build_success():
             os.chdir(arm.utils.get_fp())
             prefs = arm.utils.get_arm_preferences()
             host = 'localhost'
-            t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp, args=(prefs.html5_server_port, prefs.html5_server_log), daemon=True)
+            t = threading.Thread(name='localserver',
+                target=arm.lib.server.run_tcp,
+                args=(prefs.html5_server_port,
+                prefs.html5_server_log),
+                daemon=True)
             t.start()
             build_dir = arm.utils.build_dir()
             path = '{}/debug/html5/'.format(build_dir)
@@ -588,11 +600,25 @@ def build_success():
                 browsername = getattr(browser,'name')
             elif hasattr(browser,"_name"):
                 browsername = getattr(browser,'_name')
-            if 'ARMORY_PLAY_HTML5' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_HTML5']).safe_substitute({'host': host, 'port': prefs.html5_server_port, 'width': width, 'height': height, 'url': url, 'path': path, 'dir': build_dir, 'browser': browsername})
-                cmd = re.split(' +', template_str)
+            envvar = 'ARMORY_PLAY_HTML5'
+            if envvar in os.environ:
+                envcmd = os.environ[envvar]
+                if len(envcmd) == 0:
+                    log.warn(f"Your {envvar} environment variable is set to an empty string")
+                else:
+                    tplstr = Template(envcmd).safe_substitute({
+                        'host': host,
+                        'port': prefs.html5_server_port, 
+                        'width': width,
+                        'height': height,
+                        'url': url,
+                        'path': path,
+                        'dir': build_dir,
+                        'browser': browsername
+                    })
+                    cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
-                if browsername in (None, ''):
+                if browsername in (None, '', 'default'):
                     webbrowser.open(url)
                     return
                 cmd = [browsername, url]
@@ -605,9 +631,23 @@ def build_success():
             path_resources = path + '-resources'
             pid = os.getpid()
             os.chdir(krom_location)
-            if 'ARMORY_PLAY_KROM' in os.environ:
-                template_str = Template(os.environ['ARMORY_PLAY_KROM']).safe_substitute({'pid': pid,'audio': wrd.arm_audio != 'Disabled', 'location': krom_location, 'krom_path': krom_path, 'path': path, 'resources': path_resources, 'width': width, 'height': height })
-                cmd = re.split(' +', template_str)
+            envvar = 'ARMORY_PLAY_KROM'
+            if envvar in os.environ:
+                envcmd = os.environ[envvar]
+                if len(envcmd) == 0:
+                    log.warn(f"Your {envvar} environment variable is set to an empty string")
+                else:
+                    tplstr = Template(envcmd).safe_substitute({
+                        'pid': pid,
+                        'audio': wrd.arm_audio != 'Disabled',
+                        'location': krom_location,
+                        'krom_path': krom_path,
+                        'path': path,
+                        'resources': path_resources,
+                        'width': width,
+                        'height': height
+                    })
+                    cmd = re.split(' +', tplstr)
             if len(cmd) == 0:
                 cmd = [krom_path, path, path_resources]
                 if arm.utils.get_os() == 'win':
@@ -615,9 +655,13 @@ def build_success():
                     cmd.append(str(pid))
                 if wrd.arm_audio == 'Disabled':
                     cmd.append('--nosound')
-        if wrd.arm_verbose_output:
-            print(*cmd)
-        state.proc_play = run_proc(cmd, play_done)
+        try:
+            state.proc_play = run_proc(cmd, play_done)
+        except:
+            log.warn('Failed to start player')
+            if wrd.arm_runtime == 'Browser':
+                webbrowser.open(url)
+
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
         target_name = arm.utils.get_kha_target(state.target)
@@ -913,4 +957,4 @@ def clean():
     if arm.utils.get_compilation_server():
         arm.lib.server.kill_haxe()
 
-    print('Project cleaned')
+    log.info('Project cleaned')

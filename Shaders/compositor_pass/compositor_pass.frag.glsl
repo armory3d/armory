@@ -62,6 +62,7 @@ uniform vec3 PPComp5;
 uniform vec3 PPComp6;
 uniform vec3 PPComp7;
 uniform vec3 PPComp8;
+uniform vec3 PPComp14;
 #endif
 
 // #ifdef _CPos
@@ -81,8 +82,12 @@ uniform float aspectRatio;
 uniform vec2 texStep;
 #endif
 
+#ifdef _CDistort
+uniform float time;
+#else
 #ifdef _CGrain
 uniform float time;
+#endif
 #endif
 
 #ifdef _DynRes
@@ -240,6 +245,18 @@ void main() {
 	}
 #endif
 
+#ifdef _CDistort
+	// const float compoDistortStrength = 4.0;
+	#ifdef _CPostprocess
+		float uStrength = PPComp14;
+	#else
+		float uStrength = compoDistortStrength;
+	#endif
+	float uX = time * uStrength;
+	texCo.y = texCo.y + (sin(texCo.x*4.0+uX*2.0)*0.01);
+	texCo.x = texCo.x + (cos(texCo.y*4.0+uX*2.0)*0.01);
+#endif
+
 #ifdef _CDepth
 	float depth = textureLod(gbufferD, texCo, 0.0).r * 2.0 - 1.0;
 #endif
@@ -385,6 +402,10 @@ void main() {
 	float expo = 2.0 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
 	fragColor.rgb *= pow(expo, autoExposureStrength * 2.0);
 #endif
+
+// Clamp color to get rid of INF values that don't work for the tone mapping below
+// The max value is kind of arbitrary (16 bit float max * 0.5), but it should be large enough
+fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 
 #ifdef _CPostprocess
 

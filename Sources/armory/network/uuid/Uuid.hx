@@ -17,14 +17,14 @@ class Uuid {
 	public inline static var NIL = '00000000-0000-0000-0000-000000000000';
 
 	public inline static var LOWERCASE_BASE26 = "abcdefghijklmnopqrstuvwxyz";
-	public inline static var UPPERCASE_BASE26 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";   
+	public inline static var UPPERCASE_BASE26 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	public inline static var NO_LOOK_ALIKES_BASE51 = "2346789ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnpqrtwxyz"; // without 1, l, I, 0, O, o, u, v, 5, S, s
 	public inline static var FLICKR_BASE58 = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";  // without similar characters 0/O, 1/I/l
 	public inline static var BASE_70 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-+!@#$^";
 	public inline static var BASE_85 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
 	public inline static var COOKIE_BASE90 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&'()*+-./:<=>?@[]^_`{|}~";
 	public inline static var NANO_ID_ALPHABET = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	
+
 	public inline static var NUMBERS_BIN = "01";
 	public inline static var NUMBERS_OCT = "01234567";
 	public inline static var NUMBERS_DEC = "0123456789";
@@ -35,7 +35,7 @@ class Uuid {
 	static var lastNSecs = 0;
 	static var clockSequenceBuffer:Int = -1;
 	static var regexp:EReg = ~/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
-	
+
 	static var rndSeed:Int64 = Int64.fromFloat(#if js js.lib.Date.now() #else Sys.time()*1000 #end);
 	static var state0 = splitmix64_seed(rndSeed);
 	static var state1 = splitmix64_seed(rndSeed + Std.random(10000) + 1);
@@ -84,7 +84,7 @@ class Uuid {
 	}
 
 	public static function v1(node:Bytes = null, optClockSequence:Int = -1, msecs:Float = -1, optNsecs:Int = -1, ?randomFunc:Void->Int, separator:String = "-", shortUuid:Bool = false, toAlphabet:String = FLICKR_BASE58):String {
-		if ( randomFunc == null) randomFunc = randomByte;
+		if (randomFunc == null) randomFunc = randomByte;
 		var buffer:Bytes = Bytes.alloc(16);
 		if (node == null) {
 			node = Bytes.alloc(6);
@@ -192,16 +192,16 @@ class Uuid {
 	public static function parse(uuid:String, separator:String = "-"):Bytes {
 		return Bytes.ofHex(StringTools.replace(uuid, separator, ''));
 	}
-	
+
 	public static function validate(uuid:String,separator:String = "-"):Bool {
 		if ( separator == "") {
-		  uuid = uuid.substr(0, 8) + "-" + uuid.substr(8, 4) + "-" + uuid.substr(12, 4) + "-" + uuid.substr(16, 4) + "-" + uuid.substr(20, 12);
+			uuid = uuid.substr(0, 8) + "-" + uuid.substr(8, 4) + "-" + uuid.substr(12, 4) + "-" + uuid.substr(16, 4) + "-" + uuid.substr(20, 12);
 		} else if ( separator != "-") {
-		  uuid = StringTools.replace(uuid, separator, '-');
+			uuid = StringTools.replace(uuid, separator, '-');
 		}
 		return regexp.match(uuid);
 	}
-	
+
 	public static function version(uuid:String,separator:String = "-"):Int {
 		uuid = StringTools.replace(uuid, separator, '');
 		return Std.parseInt("0x"+uuid.substr(12,1));
@@ -212,56 +212,56 @@ class Uuid {
 	}
 
 	public static function convert(number:String, fromAlphabet:String, toAlphabet:String ):String {
-        var fromBase:Int = fromAlphabet.length;
-        var toBase:Int  = toAlphabet.length;
-        var len = number.length;
-        var buf:String = "";
-        var numberMap:Vector<Int> = new Vector<Int>(len);
-        var divide:Int = 0, newlen:Int = 0;
-        for(i in 0...len) {
-            numberMap[i] = fromAlphabet.indexOf(number.charAt(i));
-        }
-        do {
-            divide = 0;
-            newlen = 0;
-            for(i in 0...len) {
-                divide = divide * fromBase + numberMap[i];
-                if (divide >= toBase) {
-                    numberMap[newlen++] = Math.floor( divide / toBase);
-                    divide = divide % toBase;
-                } else if (newlen > 0) {
-                    numberMap[newlen++] = 0;
-                }
-            }
-            len = newlen;
-            buf = toAlphabet.charAt(divide) + buf;
-        } while (newlen !=0 );
+		var fromBase:Int = fromAlphabet.length;
+		var toBase:Int  = toAlphabet.length;
+		var len = number.length;
+		var buf:String = "";
+		var numberMap:Vector<Int> = new Vector<Int>(len);
+		var divide:Int = 0, newlen:Int = 0;
+		for (i in 0...len) {
+			numberMap[i] = fromAlphabet.indexOf(number.charAt(i));
+		}
+		do {
+			divide = 0;
+			newlen = 0;
+			for(i in 0...len) {
+				divide = divide * fromBase + numberMap[i];
+				if (divide >= toBase) {
+					numberMap[newlen++] = Math.floor( divide / toBase);
+					divide = divide % toBase;
+				} else if (newlen > 0) {
+					numberMap[newlen++] = 0;
+				}
+			}
+			len = newlen;
+			buf = toAlphabet.charAt(divide) + buf;
+		} while (newlen !=0 );
 
-        return buf;
-	 }
-	 
-	 public static function nanoId(len:Int=21,alphabet:String=NANO_ID_ALPHABET,?randomFunc:Void->Int):String {
+		return buf;
+	}
+
+	public static function nanoId(len:Int=21,alphabet:String=NANO_ID_ALPHABET,?randomFunc:Void->Int):String {
 		if ( randomFunc == null ) randomFunc = randomByte;
 		if ( alphabet == null ) throw "Alphabet cannot be null";
 		if ( alphabet.length == 0 || alphabet.length >= 256 ) throw "Alphabet must contain between 1 and 255 symbols";
 		if ( len <= 0 ) throw "Length must be greater than zero";
 		var mask:Int = (2 <<  Math.floor(Math.log(alphabet.length - 1) / Math.log(2))) - 1;
-		var step:Int =  Math.ceil(1.6 * mask * len / alphabet.length);
+		var step:Int = Math.ceil(1.6 * mask * len / alphabet.length);
 		var sb = new StringBuf();
 		while (sb.length != len) {
 			for(i in 0...step) {
 				var rnd = randomFunc();
 				var aIndex:Int = rnd & mask;
 				if (aIndex < alphabet.length) {
-                    sb.add(alphabet.charAt(aIndex));
-                    if (sb.length == len) break;
-                }
+					sb.add(alphabet.charAt(aIndex));
+					if (sb.length == len) break;
+				}
 			}
 		}
 		return sb.toString();
-	 }
+	}
 
-	 public static function short(toAlphabet:String = FLICKR_BASE58, ?randomFunc:Void->Int):String {
+	public static function short(toAlphabet:String = FLICKR_BASE58, ?randomFunc:Void->Int):String {
 		return Uuid.v4(randomFunc,true,toAlphabet);
-	 }
+	}
 }

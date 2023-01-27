@@ -21,7 +21,7 @@ class DrawToMaterialImageNode extends LogicNode {
 
 		assert(Error, img != null, 'Image $node does not exist or is empty');
 
-		assert(Error, img.depth != null, 'Image is not a render target. Use Create Rernder Target Node to create an image render target');
+		assert(Error, img.depth != null, 'Image is not a render target. Use Create Render Target Node to create an image render target');
 
 		RenderToTexture.ensureEmptyRenderTarget("DrawToMaterialImageNode");
 		img.g2.begin(inputs[4].get(), Color.Transparent);
