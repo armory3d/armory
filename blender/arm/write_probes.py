@@ -227,7 +227,7 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
         mip_count = 7
 
     wrd = bpy.data.worlds['Arm']
-    use_opencl = 'true'
+    use_opencl = 'true' if arm.utils.get_pref_or_default("cmft_use_opencl", True) else 'false'
 
     # cmft doesn't work correctly when passing the number of logical
     # CPUs if there are more logical than physical CPUs on a machine
