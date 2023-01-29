@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import re
 import subprocess
+import time
 
 import bpy
 
@@ -23,6 +24,9 @@ else:
 # The format used for rendering the environment. Choose HDR or JPEG.
 ENVMAP_FORMAT = 'JPEG'
 ENVMAP_EXT = 'hdr' if ENVMAP_FORMAT == 'HDR' else 'jpg'
+
+__cmft_start_time_seconds = 0.0
+__cmft_end_time_seconds = 0.0
 
 
 def add_irr_assets(output_file_irr):
@@ -233,65 +237,78 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
     # CPUs if there are more logical than physical CPUs on a machine
     cpu_count = arm.utils.cpu_count(physical_only=True)
 
-    if arm.utils.get_os() == 'win':
-        cmd = [
-            cmft_path,
-            '--input', scaled_file,
-            '--filter', 'radiance',
-            '--dstFaceSize', str(face_size),
-            '--srcFaceSize', str(face_size),
-            '--excludeBase', 'false',
-            # '--mipCount', str(mip_count),
-            '--glossScale', '8',
-            '--glossBias', '3',
-            '--lightingModel', 'blinnbrdf',
-            '--edgeFixup', 'none',
-            '--numCpuProcessingThreads', str(cpu_count),
-            '--useOpenCL', use_opencl,
-            '--clVendor', 'anyGpuVendor',
-            '--deviceType', 'gpu',
-            '--deviceIndex', '0',
-            '--generateMipChain', 'true',
-            '--inputGammaNumerator', input_gamma_numerator,
-            '--inputGammaDenominator', '1.0',
-            '--outputGammaNumerator', '1.0',
-            '--outputGammaDenominator', '1.0',
-            '--outputNum', '1',
-            '--output0', output_file_rad,
-            '--output0params', 'hdr,rgbe,latlong'
-        ]
-        if not wrd.arm_verbose_output:
-            cmd.append('--silent')
-        print(cmd)
-        subprocess.call(cmd)
-    else:
-        cmd = cmft_path + \
-            ' --input "' + scaled_file + '"' + \
-            ' --filter radiance' + \
-            ' --dstFaceSize ' + str(face_size) + \
-            ' --srcFaceSize ' + str(face_size) + \
-            ' --excludeBase false' + \
-            ' --glossScale 8' + \
-            ' --glossBias 3' + \
-            ' --lightingModel blinnbrdf' + \
-            ' --edgeFixup none' + \
-            ' --numCpuProcessingThreads ' + str(cpu_count) + \
-            ' --useOpenCL ' + use_opencl + \
-            ' --clVendor anyGpuVendor' + \
-            ' --deviceType gpu' + \
-            ' --deviceIndex 0' + \
-            ' --generateMipChain true' + \
-            ' --inputGammaNumerator ' + input_gamma_numerator + \
-            ' --inputGammaDenominator 1.0' + \
-            ' --outputGammaNumerator 1.0' + \
-            ' --outputGammaDenominator 1.0' + \
-            ' --outputNum 1' + \
-            ' --output0 "' + output_file_rad + '"' + \
-            ' --output0params hdr,rgbe,latlong'
-        if not wrd.arm_verbose_output:
-            cmd += ' --silent'
-        print(cmd)
-        subprocess.call([cmd], shell=True)
+    # CMFT might hang with OpenCl enabled, output warning in that case.
+    # See https://github.com/armory3d/armory/issues/2760 for details.
+    global __cmft_start_time_seconds, __cmft_end_time_seconds
+    __cmft_start_time_seconds = time.time()
+
+    try:
+        if arm.utils.get_os() == 'win':
+            cmd = [
+                cmft_path,
+                '--input', scaled_file,
+                '--filter', 'radiance',
+                '--dstFaceSize', str(face_size),
+                '--srcFaceSize', str(face_size),
+                '--excludeBase', 'false',
+                # '--mipCount', str(mip_count),
+                '--glossScale', '8',
+                '--glossBias', '3',
+                '--lightingModel', 'blinnbrdf',
+                '--edgeFixup', 'none',
+                '--numCpuProcessingThreads', str(cpu_count),
+                '--useOpenCL', use_opencl,
+                '--clVendor', 'anyGpuVendor',
+                '--deviceType', 'gpu',
+                '--deviceIndex', '0',
+                '--generateMipChain', 'true',
+                '--inputGammaNumerator', input_gamma_numerator,
+                '--inputGammaDenominator', '1.0',
+                '--outputGammaNumerator', '1.0',
+                '--outputGammaDenominator', '1.0',
+                '--outputNum', '1',
+                '--output0', output_file_rad,
+                '--output0params', 'hdr,rgbe,latlong'
+            ]
+            if not wrd.arm_verbose_output:
+                cmd.append('--silent')
+            print(cmd)
+            subprocess.call(cmd)
+        else:
+            cmd = cmft_path + \
+                ' --input "' + scaled_file + '"' + \
+                ' --filter radiance' + \
+                ' --dstFaceSize ' + str(face_size) + \
+                ' --srcFaceSize ' + str(face_size) + \
+                ' --excludeBase false' + \
+                ' --glossScale 8' + \
+                ' --glossBias 3' + \
+                ' --lightingModel blinnbrdf' + \
+                ' --edgeFixup none' + \
+                ' --numCpuProcessingThreads ' + str(cpu_count) + \
+                ' --useOpenCL ' + use_opencl + \
+                ' --clVendor anyGpuVendor' + \
+                ' --deviceType gpu' + \
+                ' --deviceIndex 0' + \
+                ' --generateMipChain true' + \
+                ' --inputGammaNumerator ' + input_gamma_numerator + \
+                ' --inputGammaDenominator 1.0' + \
+                ' --outputGammaNumerator 1.0' + \
+                ' --outputGammaDenominator 1.0' + \
+                ' --outputNum 1' + \
+                ' --output0 "' + output_file_rad + '"' + \
+                ' --output0params hdr,rgbe,latlong'
+            if not wrd.arm_verbose_output:
+                cmd += ' --silent'
+            print(cmd)
+            subprocess.call([cmd], shell=True)
+
+    except KeyboardInterrupt as e:
+        __cmft_end_time_seconds = time.time()
+        check_last_cmft_time()
+        raise e
+
+    __cmft_end_time_seconds = time.time()
 
     # Remove size extensions in file name
     mip_w = int(face_size * 4)
@@ -430,3 +447,32 @@ def write_color_irradiance(base_name, col):
     arm.utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
+
+
+def check_last_cmft_time():
+    global __cmft_start_time_seconds, __cmft_end_time_seconds
+
+    if __cmft_start_time_seconds <= 0.0:
+        # CMFT was not called
+        return
+
+    if __cmft_end_time_seconds <= 0.0:
+        # Build was aborted and CMFT didn't finish
+        __cmft_end_time_seconds = time.time()
+
+    cmft_duration_seconds = __cmft_end_time_seconds - __cmft_start_time_seconds
+
+    # We could also check here if the user already disabled OpenCL and
+    # then don't show the warning, but this might trick users into
+    # thinking they have fixed their issue even in the case that the
+    # slow runtime isn't caused by using OpenCL
+    if cmft_duration_seconds > 20:
+        log.warn(
+            "Generating the radiance map with CMFT took an unusual amount"
+            f" of time ({cmft_duration_seconds:.2f} s). If the issue persists,"
+            " try disabling \"CMFT: Use OpenCL\" in the Armory add-on preferences."
+            " For more information see https://github.com/armory3d/armory/issues/2760."
+        )
+
+    __cmft_start_time_seconds = 0.0
+    __cmft_end_time_seconds = 0.0
