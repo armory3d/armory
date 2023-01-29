@@ -44,8 +44,6 @@ uniform vec2 cameraPlane;
 #endif
 
 #ifdef _Sun
-uniform vec3 sunDir;
-uniform vec3 sunCol;
 	#ifdef _ShadowMap
 	#ifdef _ShadowMapAtlas
 	#ifndef _SingleAtlas
