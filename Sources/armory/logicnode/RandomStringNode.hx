@@ -8,13 +8,15 @@ class RandomStringNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var length: Int = inputs[0].get();
-		var chars: Array<String> = inputs[1].get();
+		var characters: String = inputs[1].get();
 
-		var string: String = '';
+		var chars: Array<String> = characters.split('');
 
-		while(string.length < length)
-			string += chars[Std.random(chars.length)];
+		var buf = new StringBuf();
 
-		return string;
+		while(buf.length < length)
+			buf.add(chars[Std.random(chars.length)]);
+
+		return buf.toString();
 	}
 }
