@@ -22,6 +22,7 @@ import arm.nodes_logic
 import arm.ui_icons as ui_icons
 import arm.utils
 import arm.utils_vs
+import arm.write_probes
 
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
@@ -39,6 +40,7 @@ if arm.is_reload(__name__):
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
     arm.utils_vs = arm.reload_module(arm.utils_vs)
+    arm.write_probes = arm.reload_module(arm.write_probes)
 else:
     arm.enable_reload(__name__)
 
@@ -1203,7 +1205,10 @@ class ArmoryStopButton(bpy.types.Operator):
         elif state.proc_build != None:
             state.proc_build.terminate()
             state.proc_build = None
-        return{'FINISHED'}
+
+        arm.write_probes.check_last_cmft_time()
+
+        return {'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
     """Build and compile project"""
