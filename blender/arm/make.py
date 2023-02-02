@@ -252,6 +252,17 @@ def export_data(fp, sdk_path):
         # Workaround to also export non-material world shaders
         res['shader_datas'] += make_world.shader_datas
 
+        if rpdat.arm_lens or rpdat.arm_lut:
+            for shader_pass in res["shader_datas"]:
+                for context in shader_pass["contexts"]:
+                    for texture_unit in context["texture_units"]:
+                        # Lens Texture
+                        if rpdat.arm_lens_texture != '' and rpdat.arm_lens_texture != 'lenstexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$lenstexture.jpg":
+                            texture_unit["link"] = f"${rpdat.arm_lens_texture}"
+                        # LUT Colorgrading
+                        if rpdat.arm_lut_texture != '' and rpdat.arm_lut_texture != 'luttexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$luttexture.jpg":
+                            texture_unit["link"] = f"${rpdat.arm_lut_texture}"
+
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
 
     if wrd.arm_debug_console and rpdat.rp_renderer == 'Deferred':
