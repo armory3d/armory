@@ -248,7 +248,7 @@ void main() {
 #ifdef _CDistort
 	// const float compoDistortStrength = 4.0;
 	#ifdef _CPostprocess
-		float uStrength = PPComp14;
+		float uStrength = PPComp14.x;
 	#else
 		float uStrength = compoDistortStrength;
 	#endif
