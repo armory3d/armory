@@ -611,23 +611,29 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('vec3 indirect = shIrradiance(n, shirr);')
         if '_EnvTex' in wrd.world_defs:
             frag.write('indirect /= PI;')
-        frag.write('indirect *= albedo;')
-        if '_Rad' in wrd.world_defs:
-            frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
-            frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-            frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
-            frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
-            frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
-            if '_EnvLDR' in wrd.world_defs:
-                frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
-            frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
-        elif '_EnvCol' in wrd.world_defs:
-            frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-            frag.write('indirect += backgroundCol * f0;')
-    else:
-        frag.write('vec3 indirect = albedo;')
-    frag.write('indirect *= occlusion;')
+    if '_Rad' in wrd.world_defs:
+        frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
+        frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
+        frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
+        frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
+        frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
+    if '_EnvLDR' in wrd.world_defs:
+        frag.write('indirect = pow(indirect, vec3(2.2));')
+        if '_Rad' in wrd.world_defs: 
+            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
+    frag.write('indirect *= albedo;')
+    
+    if '_Brdf' in wrd.world_defs:
+        frag.write('indirect *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+    
+    if '_Rad' in wrd.world_defs:
+        frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
 
+    elif '_EnvCol' in wrd.world_defs:
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
+        frag.write('indirect += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+
+    frag.write('indirect *= occlusion;')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength;')
 
@@ -639,7 +645,33 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
         else:
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-        frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
+
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.write('indirect *= vec3(1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend)));')
+        else:
+            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
+            
+    elif '_VoxelGI' in wrd.world_defs:
+        frag.add_include('std/conetrace.glsl')
+        frag.add_uniform('sampler3D voxels')
+        if '_VoxelGICam' in wrd.world_defs:
+            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
+            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
+        else:
+            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
+
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.write('indirect *= traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend);')
+        else:
+            frag.write('indirect *= traceDiffuse(voxpos, n, voxels).rgb;')
+
+        frag.write('indirect *= voxelgiDiff * basecol.rgb;')
+
+        frag.write('if (specular > 0.0) {')
+        frag.write('	vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, eyeDir, roughness);')
+        frag.write('	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
+        frag.write('	indirect += indirectSpecular * voxelgiSpec * specular;')
+        frag.write('}')
 
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -707,8 +739,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
-        if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
-            frag.write('  , voxels, voxpos')
         if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
             frag.write('  , voxels, voxpos')
         frag.write(');')

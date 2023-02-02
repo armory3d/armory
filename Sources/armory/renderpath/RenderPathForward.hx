@@ -165,14 +165,6 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_voxels == "Voxel GI")
-			{
-				Inc.initGI("voxelsOpac");
-			}
-			#end
-			#if (rp_voxels == "Voxel AO")
-			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
-			#end
 		}
 		#end
 

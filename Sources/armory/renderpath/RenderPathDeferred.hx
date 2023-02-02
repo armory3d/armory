@@ -68,53 +68,45 @@ class RenderPathDeferred {
 		}
 		#end
 
-		{
-			path.createDepthBuffer("main", "DEPTH24");
+		path.createDepthBuffer("main", "DEPTH24");
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer0";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "tex";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "tex";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "buf";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "buf";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer1";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
 		#if rp_gbuffer2
 		{
