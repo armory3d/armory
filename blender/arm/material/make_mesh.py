@@ -685,10 +685,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.write('indirect *= voxelgiEnv;')
 
-        if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-            frag.write('indirect += mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct + indirect, opacity);')	
-            frag.write('direct += mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct + indirect, opacity);')	
-
     if '_SSRS' in wrd.world_defs:
         frag.add_uniform('sampler2D gbufferD')
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
@@ -780,6 +776,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 
+    if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
+        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), indirect, opacity);')	
+        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct, opacity);')	
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

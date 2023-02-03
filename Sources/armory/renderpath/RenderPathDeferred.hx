@@ -23,7 +23,8 @@ class RenderPathDeferred {
 		path.setTarget("gbuffer0", [
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
-			#if rp_gbuffer_emission "gbuffer_emission" #end
+			#if rp_gbuffer_emission "gbuffer_emission", #end
+			#if rp_voxelgi_refract "gbuffer_refraction" #end
 		]);
 	}
 
@@ -62,9 +63,11 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
+
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#else
+			#if rp_voxelgi_refract
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
 			t.width = 0;
@@ -74,6 +77,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
+			#end
 			#end
 		}
 		#end

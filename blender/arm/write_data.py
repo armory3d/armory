@@ -572,7 +572,7 @@ def write_compiledglsl(defs, make_variants):
             gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
             f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-            # Write indices of G-Buffer render targets
+            #Write indices of G-Buffer render targets
             f.write('#define GBUF_IDX_0 0\n')
             f.write('#define GBUF_IDX_1 1\n')
 

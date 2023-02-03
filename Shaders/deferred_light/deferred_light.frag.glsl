@@ -218,7 +218,7 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
+	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
@@ -290,7 +290,7 @@ void main() {
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	                   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
 	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
@@ -307,7 +307,7 @@ void main() {
 
 	#ifdef _VoxelGITemporal
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend +
-							traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
+			       traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
 	#else
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
 	#endif
@@ -491,7 +491,7 @@ void main() {
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
 
 	#ifdef HLSL
-	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; //TODO: krafix bug, needs to generate sampler
 	#endif
 
 	#ifdef _Spot
@@ -543,12 +543,16 @@ void main() {
 		);
 	}
 #endif // _Clusters
-	fragColor.a = 1.0; // Mark as opaque
-
+	fragColor.a = 1.0; //Mark as opaque
 	#ifdef _VoxelGIRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
 	float rior = gr.x;
 	float opac = gr.y;
+	#ifdef _VoxelGITemporal
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac) * voxelBlend +
+			mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac) * (1.0 - voxelBlend);
+	#else
 	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac);
+	#endif
 	#endif
 }

@@ -447,7 +447,7 @@ class Inc {
 		var t = new RenderTargetRaw();
 		t.name = tname;
 
-		#if (rp_gi == "Voxel AO")
+		#if (rp_voxels == "Voxel AO")
 		{
 			t.format = "R8";
 		}
