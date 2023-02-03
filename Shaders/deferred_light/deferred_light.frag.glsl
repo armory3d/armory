@@ -552,4 +552,12 @@ void main() {
 	}
 	fragColor.rgb += color.rgb;
 	*/
+	#ifdef _VoxelGIRefract
+	#ifdef _VoxelGICam
+	vec3 voxposr = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxposr = p / voxelgiHalfExtents;
+	#endif
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, roughness), fragColor.rgb, 0);
+	#endif
 }

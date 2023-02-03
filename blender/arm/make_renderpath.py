@@ -111,6 +111,8 @@ def add_world_defs():
                 wrd.world_defs += '_VoxelGIShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
+            if rpdat.arm_voxelgi_refraction:
+                wrd.world_defs += '_VoxelGIRefract'
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
             if rpdat.arm_voxelgi_shadows:
