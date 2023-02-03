@@ -267,6 +267,9 @@ def make_deferred(con_mesh, rpasses):
     frag.write('#ifdef _EmissionShaded')
     frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  # Alpha channel is unused at the moment
     frag.write('#endif')
+    frag.write('#ifdef _VoxelGIRefract')
+    frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(opacity, rior);')  # Alpha channel is unused at the moment
+    frag.write('#endif')
 
     return con_mesh
 
@@ -780,3 +783,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
+        frag.write('float rior = 1.450;') #if using arm group shader we can't set ior value yet.

@@ -24,6 +24,8 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+uniform sampler2D gbuffer_refration;
+
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
@@ -553,11 +555,14 @@ void main() {
 	fragColor.rgb += color.rgb;
 	*/
 	#ifdef _VoxelGIRefract
+	vec4 riorOpac = textureLod(gbuffer_refraction, texCoord, 0.0);
+	float rior = riorOpac.x;
+	float opacity = riorOpac.y;
 	#ifdef _VoxelGICam
 	vec3 voxposr = (p - eyeSnap) / voxelgiHalfExtents;
 	#else
 	vec3 voxposr = p / voxelgiHalfExtents;
 	#endif
-	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, roughness), fragColor.rgb, 0);
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, roughness, rior), fragColor.rgb, opacity);
 	#endif
 }
