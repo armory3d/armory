@@ -188,14 +188,6 @@ def make_deferred(con_mesh, rpasses):
 
     parse_opacity = is_transluc or arm_discard
 
-    if (parse_opacity or arm_discard):
-        if arm_discard or blend:
-            opac = mat_state.material.arm_discard_opacity
-            frag.write('if (opacity < {0}) discard;'.format(opac))
-        else:
-            opac = '0.9999' # 1.0 - eps
-            frag.write('if (opacity < {0}) discard;'.format(opac))
-
     make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
@@ -203,6 +195,12 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
 
     frag.add_out(f'vec4 fragColor[GBUF_SIZE]')
+    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs:
+        if arm_discard:
+            opac = mat_state.material.arm_discard_opacity
+        else:
+            opac = '0.9999' # 1.0 - eps
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     if '_gbuffer2' in wrd.world_defs:
         if '_Veloc' in wrd.world_defs:
@@ -571,7 +569,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard):
+    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
