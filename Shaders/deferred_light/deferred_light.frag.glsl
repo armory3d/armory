@@ -549,10 +549,10 @@ void main() {
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac) * voxelBlend +
-			mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac) * (1.0 - voxelBlend);
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac) * voxelBlend +
+			mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac) * (1.0 - voxelBlend);
 	#else
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac);
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac);
 	#endif
 	#endif
 }
