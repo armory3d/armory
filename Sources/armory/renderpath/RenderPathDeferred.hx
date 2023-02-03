@@ -75,7 +75,6 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 			#end
 			#end

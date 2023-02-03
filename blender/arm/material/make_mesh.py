@@ -595,7 +595,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     sh = tese if tese is not None else vert
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
-    sh.write('eyeDir = eye - wposition;')
+    sh.write('eyeDir = normalize(eye - wposition);')
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
@@ -777,8 +777,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect += emissionCol;')
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), indirect, opacity);')	
-        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct, opacity);')	
+        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), indirect, opacity);')
+        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
