@@ -336,7 +336,7 @@ def build():
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
-    if rpdat.rp_translucency:
+    if rpdat.rp_translucency and not rpdat.arm_voxelgi_refraction:
         assets.add_khafile_def('rp_translucency')
         assets.add_shader_pass('translucent_resolve')
 
@@ -467,7 +467,7 @@ def get_num_gbuffer_rts_deferred() -> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelGIRefract'):
         if flag in wrd.world_defs:
             num += 1
     return num

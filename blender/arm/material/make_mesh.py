@@ -184,20 +184,23 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses
+    is_transluc = mat_utils.is_transluc(mat_state.material)
+
+    parse_opacity = is_transluc or arm_discard
+
+    if (parse_opacity or arm_discard):
+        if arm_discard or blend:
+            opac = mat_state.material.arm_discard_opacity
+            frag.write('if (opacity < {0}) discard;'.format(opac))
+        else:
+            opac = '0.9999' # 1.0 - eps
+            frag.write('if (opacity < {0}) discard;'.format(opac))
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
     vert = con_mesh.vert
     tese = con_mesh.tese
-
-    if parse_opacity:
-        if arm_discard:
-            opac = mat_state.material.arm_discard_opacity
-        else:
-            opac = '0.9999' # 1.0 - eps
-        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     frag.add_out(f'vec4 fragColor[GBUF_SIZE]')
 
@@ -267,8 +270,12 @@ def make_deferred(con_mesh, rpasses):
     frag.write('#ifdef _EmissionShaded')
     frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  # Alpha channel is unused at the moment
     frag.write('#endif')
+
     frag.write('#ifdef _VoxelGIRefract')
-    frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(opacity, rior);')  # Alpha channel is unused at the moment
+    if parse_opacity:
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+    else:
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
     frag.write('#endif')
 
     return con_mesh
@@ -564,7 +571,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if parse_opacity or arm_discard:
+    if (parse_opacity or arm_discard):
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -655,7 +662,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
 
     frag.write('vec3 direct = vec3(0.0);')
-            
+ 
     if '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
@@ -671,7 +678,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
             frag.write('direct += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
-            
+
         frag.write('if (specular > 0.0) {')
         frag.write('	vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, eyeDir, roughness);')
         frag.write('	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
@@ -679,6 +686,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('}')
 
         frag.write('indirect *= voxelgiEnv;')
+
+        if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
+            frag.write('indirect += mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct + indirect, opacity);')	
+            frag.write('direct += mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct + indirect, opacity);')	
 
     if '_SSRS' in wrd.world_defs:
         frag.add_uniform('sampler2D gbufferD')

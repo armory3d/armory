@@ -24,7 +24,9 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform sampler2D gbuffer_refration;
+#ifdef _VoxelGIRefract
+uniform sampler2D gbuffer_refraction;
+#endif
 
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
@@ -543,26 +545,10 @@ void main() {
 #endif // _Clusters
 	fragColor.a = 1.0; // Mark as opaque
 
-	// Show voxels
-	/*
-	vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	vec3 direction = vec3(0.0, 0.0, -1.0);
-	vec4 color = vec4(0.0f);
-	for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	 	vec3 point = origin + 0.005 * step * direction;
-	 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	}
-	fragColor.rgb += color.rgb;
-	*/
 	#ifdef _VoxelGIRefract
-	vec4 riorOpac = textureLod(gbuffer_refraction, texCoord, 0.0);
-	float rior = riorOpac.x;
-	float opacity = riorOpac.y;
-	#ifdef _VoxelGICam
-	vec3 voxposr = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxposr = p / voxelgiHalfExtents;
-	#endif
-	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, roughness, rior), fragColor.rgb, opacity);
+	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
+	float rior = gr.x;
+	float opac = gr.y;
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, -v, roughness, rior), fragColor.rgb, opac);
 	#endif
 }

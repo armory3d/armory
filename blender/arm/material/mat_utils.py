@@ -35,7 +35,7 @@ def disp_linked(output_node):
 def get_rpasses(material):
 
     ar = []
-
+    wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     has_voxels = arm.utils.voxel_support()
 
@@ -47,7 +47,7 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
+        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending and not rpdat.arm_voxelgi_refraction:
             ar.append('translucent')
         if rpdat.rp_voxels != "Off" and has_voxels:
             ar.append('voxel')

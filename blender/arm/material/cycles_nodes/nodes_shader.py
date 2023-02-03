@@ -35,11 +35,11 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     state.curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[1])
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[1])
     ek1 = mat_state.emission_type
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[2])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     ek2 = mat_state.emission_type
 
     if state.parse_surface:
@@ -52,15 +52,15 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
         mat_state.emission_type = mat_state.EmissionType.get_effective_combination(ek1, ek2)
     if state.parse_opacity:
         state.out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
-
+        state.out_rior = '({0} * {3} + {1} * {2})'.format(rior1, rior2, fac_var, fac_inv_var)
 
 def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket, state: ParserState) -> None:
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc1, rough1, met1, occ1, spec1, opac1, emi1 = c.parse_shader_input(node.inputs[0])
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[0])
     ek1 = mat_state.emission_type
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc2, rough2, met2, occ2, spec2, opac2, emi2 = c.parse_shader_input(node.inputs[1])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
     ek2 = mat_state.emission_type
 
     if state.parse_surface:
@@ -73,7 +73,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
         mat_state.emission_type = mat_state.EmissionType.get_effective_combination(ek1, ek2)
     if state.parse_opacity:
         state.out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
-
+        state.out_rior = '({0} * 0.5 + {1} * 0.5)'.format(rior1, rior2)
 
 def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
@@ -106,8 +106,8 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
-        if len(node.inputs) >= 21:
-            state.out_opacity = c.parse_value_input(node.inputs[21])
+        state.out_opacity = c.parse_value_input(node.inputs[21])
+        state.out_rior = c.parse_value_input(node.inputs[16]);
 
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:
@@ -154,10 +154,12 @@ def parse_emission(node: bpy.types.ShaderNodeEmission, out_socket: NodeSocket, s
 
 def parse_bsdfglass(node: bpy.types.ShaderNodeBsdfGlass, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
+        state.out_basecol = c.parse_vector_input(node.inputs[0])
         c.write_normal(node.inputs[3])
         state.out_roughness = c.parse_value_input(node.inputs[1])
     if state.parse_opacity:
-        state.out_opacity = '(1.0 - {0}.r)'.format(c.parse_vector_input(node.inputs[0]))
+        state.out_opacity = '0.0'
+        state.out_rior = c.parse_value_input(node.inputs[2])
 
 
 def parse_bsdfhair(node: bpy.types.ShaderNodeBsdfHair, out_socket: NodeSocket, state: ParserState) -> None:
@@ -170,10 +172,14 @@ def parse_holdout(node: bpy.types.ShaderNodeHoldout, out_socket: NodeSocket, sta
         state.out_occlusion = '0.0'
 
 
-def parse_bsdfrefraction(node: bpy.types.ShaderNodeBsdfRefraction, out_socket: NodeSocket, state: ParserState) -> None:
-    # c.write_normal(node.inputs[3])
-    pass
-
+def parse_bsdfrefraction(node: bpy.types.ShaderNodeBsdfRefraction, out_socket: NodeSocket, state: ParserState) -> None: 
+    if state.parse_surface:
+        state.out_basecol = c.parse_vector_input(node.inputs[0])
+        c.write_normal(node.inputs[3])
+        state.out_roughness = c.parse_value_input(node.inputs[1])
+    if state.parse_opacity:
+        state.out_opacity = '0.0'
+        state.out_rior = c.parse_value_input(node.inputs[2])
 
 def parse_subsurfacescattering(node: bpy.types.ShaderNodeSubsurfaceScattering, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:

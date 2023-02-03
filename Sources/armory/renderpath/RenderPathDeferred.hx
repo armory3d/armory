@@ -128,9 +128,7 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "taa";
 			t.width = 0;
@@ -209,8 +207,7 @@ class RenderPathDeferred {
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "singleb";
 			t.width = 0;
@@ -235,8 +232,7 @@ class RenderPathDeferred {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -315,9 +311,7 @@ class RenderPathDeferred {
 			t.height = 1;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
 
-		{
 			path.loadShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
@@ -331,16 +325,14 @@ class RenderPathDeferred {
 
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
-			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = "R32"; // R16
-				path.createRenderTarget(t);
-			}
+			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			var t = new RenderTargetRaw();
+			t.name = "half";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = "R32"; // R16
+			path.createRenderTarget(t);	
 		}
 		#end
 
@@ -359,8 +351,7 @@ class RenderPathDeferred {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -594,7 +585,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		path.bindTarget("buffer_refraction", "gbuffer_refraction");
+		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 		#if rp_gbuffer2
 		{
