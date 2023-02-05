@@ -677,10 +677,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
             frag.write('direct += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
 
-        frag.write('if (specular > 0.0) {')
-        frag.write('	vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, eyeDir, roughness);')
-        frag.write('	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
-        frag.write('	indirect += indirectSpecular * voxelgiSpec * specular;')
+        frag.write('if (roughness < 1.0) {')
+        frag.write('	indirect += traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelgiRefl * basecol.rgb;')
+        frag.write('	direct += traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelgiRefl * basecol.rgb;') 
         frag.write('}')
 
         frag.write('indirect *= voxelgiEnv;')

@@ -265,19 +265,19 @@ void main() {
 #endif
 
 	envl.rgb *= albedo;
+#ifndef _VoxelGI
+	#ifdef _Brdf
+		envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	#endif
 
-#ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
-#endif
-
-#ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
-#else
-	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	#ifdef _Rad // Indirect specular
+		envl.rgb *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	#else
+		#ifdef _EnvCol
+		envl.rgb *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
+		#endif
 	#endif
 #endif
-
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
@@ -312,12 +312,24 @@ void main() {
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
 	#endif
 
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb += indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
 
-	if (occspec.y > 0.0) {
-		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, roughness);
-		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
-		fragColor.rgb += indirectSpecular * voxelgiSpec * occspec.y;
+	if (roughness < 1.0) 
+	{
+		vec3 reflection;
+		reflection = traceReflection(voxels, voxpos, n, v, roughness);
+		#ifdef _Brdf
+		reflection *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+		#endif
+
+		#ifdef _Rad // Indirect specular
+			reflection *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+		#else
+			#ifdef _EnvCol
+			reflection *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
+			#endif
+		#endif
+		fragColor.rgb += reflection;
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif
