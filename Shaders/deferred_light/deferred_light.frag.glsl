@@ -317,7 +317,7 @@ void main() {
 	if (roughness < 1.0) 
 	{
 		vec3 reflection;
-		reflection = traceReflection(voxels, voxpos, n, v, roughness);
+		reflection = traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
 		#ifdef _Brdf
 		reflection *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 		#endif
