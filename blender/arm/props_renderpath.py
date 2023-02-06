@@ -526,7 +526,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
     arm_voxelgi_refl: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_weight: FloatProperty(name="Weight", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)

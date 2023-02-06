@@ -1706,7 +1706,8 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_refl')
-        col.prop(rpdat, 'arm_voxelgi_occ')
+        col2.prop(rpdat, 'arm_voxelgi_refr')
+        col.prop(rpdat, 'arm_voxelgi_weight')
         col.prop(rpdat, 'arm_voxelgi_env')
         col.label(text="Ray")
         col.prop(rpdat, 'arm_voxelgi_step')
