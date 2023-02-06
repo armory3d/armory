@@ -265,18 +265,17 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
-
 	envl *= albedo;
 
 #ifdef _Brdf
-	envl += 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl += prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl += backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
+	envl *= backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 	envl *= envmapStrength * occspec.x;
@@ -314,16 +313,16 @@ void main() {
 
 	if (roughness < 1.0) {
 		#ifdef _VoxelGITemporal
-		envl += (traceReflection(voxels, voxpos, n, viewPos, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, viewPos, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
+		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
 		#else
-		envl += traceReflection(voxels, voxpos, n, viewPos, roughness) * voxelgiRefl;
+		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
 		#endif
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 	envl *= voxelgiEnv;
 #endif
 
-fragColor.rgb = envl.rgb;
+fragColor.rgb = envl;
 
 #ifdef _SSAO
 	#ifdef _RTGI
@@ -540,15 +539,19 @@ fragColor.rgb = envl.rgb;
 	}
 #endif // _Clusters
 	fragColor.a = 1.0; //Mark as opaque
+	#ifdef _VoxelGI
 	#ifdef _VoxelGIRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) * voxelgiRefr + fragColor.rgb, fragColor.rgb, opac) * voxelBlend +
-			mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) * voxelgiRefr + fragColor.rgb, fragColor.rgb, opac) * (1.0 - voxelBlend);
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * voxelBlend +
+			traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * (1.0 - voxelBlend)) * voxelgiRefr;
 	#else
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) * voxelgiRefr + fragColor.rgb, fragColor.rgb, opac);
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * voxelgiRefr;
+	#endif
+	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
+	
 	#endif
 	#endif
 }

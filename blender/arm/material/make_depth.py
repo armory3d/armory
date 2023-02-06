@@ -28,7 +28,7 @@ else:
 
 
 def make(context_id, rpasses, shadowmap=False):
-
+    wrd = bpy.data.worlds['Arm']
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
     vs = [{'name': 'pos', 'data': 'short4norm'}]
@@ -51,6 +51,7 @@ def make(context_id, rpasses, shadowmap=False):
 
     if parse_opacity:
         frag.write('float opacity;')
+        frag.write('float rior;')
     
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)
@@ -186,7 +187,7 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if parse_opacity:
+    if parse_opacity and not 'VoxelGIRefract' in wrd.world_defs:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:

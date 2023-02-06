@@ -609,6 +609,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
 
+    if '_MicroShadowing' in wrd.world_defs:
+        frag.write('occlusion = mix(1.0, occlusion, dotNV);') #AO Fresnel
+
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
         frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;')
@@ -633,14 +636,14 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     
 
     if '_Brdf' in wrd.world_defs:
-        frag.write('indirect += 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('indirect *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
 
     if '_Rad' in wrd.world_defs:
-         frag.write('indirect += prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y));')
+         frag.write('indirect *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y);')
 
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('indirect += backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y));')
+        frag.write('indirect *= backgroundCol - (f0 * envBRDF.x + envBRDF.y);')
 
     frag.write('indirect *= occlusion;')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
@@ -664,7 +667,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     
         frag.write('indirect *= voxelgiEnv;')
 
-    if '_VoxelGI' in wrd.world_defs:
+    elif '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
@@ -682,14 +685,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.write('if (roughness < 1.0) {')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	indirect += (traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, eyeDir, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
+            frag.write('	indirect += (traceReflection(voxels, voxpos, n, vVec, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, vVec, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
         else:
-            frag.write('	indirect += traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelgiRefl;')
+            frag.write('	indirect += traceReflection(voxels, voxpos, n, vVec, roughness) * voxelgiRefl;')
 
         frag.write('}')
         frag.write('indirect *= voxelgiEnv;')
 
-    
     frag.write('vec3 direct = indirect;')
 
     if '_SSRS' in wrd.world_defs:
@@ -783,9 +785,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 
-    if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) * voxelgiWeight + indirect, indirect, opacity);')
-        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) * voxelgiWeight + direct, direct, opacity);')
+    if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
+        else:
+            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
+        frag.write('indirect += mix(refraction * voxelgiWeight * indirect, indirect, opacity);')
+        frag.write('direct += mix(refraction * voxelgiWeight * direct, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
@@ -798,4 +804,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior = 1.450;') #if using arm group shader we can't set ior value yet.
+        frag.write('float rior;')

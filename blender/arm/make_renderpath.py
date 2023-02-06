@@ -337,7 +337,7 @@ def build():
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
-    if rpdat.rp_translucency and not rpdat.arm_voxelgi_refraction:
+    if rpdat.rp_translucency and not (rpdat.arm_voxelgi_refraction and rpdat.rp_voxels == "Voxel GI"):
         assets.add_khafile_def('rp_translucency')
         assets.add_shader_pass('translucent_resolve')
 
