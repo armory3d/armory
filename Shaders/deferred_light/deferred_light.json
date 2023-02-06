@@ -230,6 +230,12 @@
 					"link": "_biasLightWorldViewProjectionMatrixSpot2",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot[3]",
+					"link": "_biasLightWorldViewProjectionMatrixSpot3",
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",

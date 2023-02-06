@@ -446,6 +446,12 @@ class Inc {
 	public static function initGI(tname = "voxels") {
 		var t = new RenderTargetRaw();
 		t.name = tname;
+		
+		#if arm_config
+		var config = armory.data.Config.raw;
+		if (config.rp_voxels != true || voxelsCreated) return;
+		voxelsCreated = true;
+		#end
 
 		#if (rp_voxels == "Voxel AO")
 		{

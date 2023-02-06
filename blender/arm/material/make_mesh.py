@@ -656,6 +656,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
 
         if '_VoxelGITemporal' in wrd.world_defs:
+            frag.add_uniform('float voxelBlend', link='_voxelBlend')
+            frag.add_uniform('sampler3D voxelsLast')
             frag.write('indirect *= vec3(1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend)));')
         else:
             frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
@@ -672,13 +674,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
 
         if '_VoxelGITemporal' in wrd.world_defs:
+            frag.add_uniform('float voxelBlend', link='_voxelBlend')
+            frag.add_uniform('sampler3D voxelsLast')
             frag.write('indirect += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * basecol.rgb;')
         else:
             frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
 
         frag.write('if (roughness < 1.0) {')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	indirect += (traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, eyeDir, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
+            frag.write('	indirect += (traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, eyeDir, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
         else:
             frag.write('	indirect += traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelgiRefl;')
 

@@ -131,7 +131,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                     arm.assets.add_khafile_def('rp_gbuffer_emission')
 
         if parse_opacity:
-            curshader.write('opacity = {0};'.format(out_opacity))
+            curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
 
     # Volume
     # parse_volume_input(node.inputs[1])
