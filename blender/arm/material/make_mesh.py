@@ -731,16 +731,16 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                         vert.write('lightPosition = LWVP * spos;')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
-                frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
+                frag.write(f'svisibility = shadowTest({shadowmap_sun}, lPos.xyz / lPos.w - shadowsBias);')
             frag.write('}') # receiveShadow
-        if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
-            frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
-        
-        if '_MicroShadowing' in wrd.world_defs:
-            frag.write('svisibility *= sdotNL + 2.0 * occlusion * occlusion - 1.0;')
+
         if '_SSRS' in wrd.world_defs:
             frag.write('svisibility *= traceShadowSS(sunDir, eyeDir, gbufferD, invVP, eye);')
-       
+        if '_LightClouds' in wrd.word_defs:
+            frag.write('svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));')
+        if '_MicroShadowing' in wrd.world_defs:
+            frag.write('svisibility *= sdotNL + 2.0 * occlusion * occlusion - 1.0;')
+        
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
 

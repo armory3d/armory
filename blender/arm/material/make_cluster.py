@@ -50,6 +50,11 @@ def write(vert, frag):
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
+    
+    if '_SSRS' in wrd.world_defs:
+        frag.add_uniform('sampler2D gbufferD')
+        frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
+        frag.add_uniform('vec3 eye', '_cameraPosition')
 
     frag.write('direct += sampleLight(')
     frag.write('    wposition,')
@@ -75,6 +80,8 @@ def write(vert, frag):
         frag.write('  , voxels, voxpos')
     if '_MicroShadowing' in wrd.world_defs:
         frag.write(', occlusion')
+    if '_SSRS' in wrd.world_defs:
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights

@@ -64,11 +64,8 @@ def add_world_defs():
     if rpdat.rp_shadows:
         wrd.world_defs += '_ShadowMap'
         if rpdat.rp_shadowmap_cascades != '1':
-            if voxelgi:
-                log.warn('Disabling shadow cascades - Voxel GI does not support cascades yet')
-            else:
-                wrd.world_defs += '_CSM'
-                assets.add_khafile_def('arm_csm')
+            wrd.world_defs += '_CSM'
+            assets.add_khafile_def('arm_csm')
         if rpdat.rp_shadowmap_atlas:
             assets.add_khafile_def('arm_shadowmap_atlas')
             wrd.world_defs += '_ShadowMapAtlas'
