@@ -631,16 +631,16 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
     frag.write('indirect *= albedo;')
     
-    if not '_VoxelGI' in wrd.world_defs:
-        if '_Brdf' in wrd.world_defs:
-            frag.write('indirect *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
-    
-        if '_Rad' in wrd.world_defs:
-            frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
 
-        elif '_EnvCol' in wrd.world_defs:
-            frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-            frag.write('indirect += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+    if '_Brdf' in wrd.world_defs:
+        frag.write('indirect += 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+
+    if '_Rad' in wrd.world_defs:
+         frag.write('indirect += prefilteredColor - (f0 * envBRDF.x + envBRDF.y);')
+
+    elif '_EnvCol' in wrd.world_defs:
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
+        frag.write('indirect += backgroundCol - (f0 * envBRDF.x + envBRDF.y);')
 
     frag.write('indirect *= occlusion;')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
@@ -681,15 +681,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('if (roughness < 1.0) {')
         frag.write('	vec3 reflection;')
         frag.write('	reflection += traceReflection(voxels, voxpos, n, eyeDir, roughness) * voxelgiRefl;')
-        if '_Brdf' in wrd.world_defs:
-            frag.write('	reflection *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
-    
-        if '_Rad' in wrd.world_defs:
-            frag.write('	reflection *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y));')
-
-        elif '_EnvCol' in wrd.world_defs:
-            frag.add_uniform('	vec3 backgroundCol', link='_backgroundCol')
-            frag.write('	reflection *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y));')
         frag.write('	direct += reflection;')
         frag.write('	indirect += reflection;')
         frag.write('}')
@@ -788,8 +779,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect += emissionCol;')
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), indirect, opacity);')
-        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior), direct, opacity);')
+        frag.write('indirect = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) + indirect, indirect, opacity);')
+        frag.write('direct = mix(traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) + direct, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

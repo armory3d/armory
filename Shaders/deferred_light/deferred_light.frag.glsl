@@ -221,6 +221,8 @@ void main() {
 	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
+	vec3 viewPos = getPosView(normalize(viewRay), depth, cameraProj);
+	
 
 #ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
@@ -265,17 +267,16 @@ void main() {
 #endif
 
 	envl.rgb *= albedo;
-#ifndef _VoxelGI
-	#ifdef _Brdf
-		envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
-	#endif
 
-	#ifdef _Rad // Indirect specular
-		envl.rgb *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
-	#else
-		#ifdef _EnvCol
-		envl.rgb *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
-		#endif
+#ifdef _Brdf
+	envl.rgb += 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+#endif
+
+#ifdef _Rad // Indirect specular
+	envl.rgb += prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+#else
+	#ifdef _EnvCol
+	envl.rgb += backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 	envl.rgb *= envmapStrength * occspec.x;
@@ -304,33 +305,18 @@ void main() {
 	#else
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-
+	
 	#ifdef _VoxelGITemporal
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend +
-			       traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
 	#else
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
 	#endif
 
 	fragColor.rgb += indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
 
-	if (roughness < 1.0) 
-	{
-		vec3 reflection;
-		reflection = traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
-		#ifdef _Brdf
-		reflection *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
-		#endif
-
-		#ifdef _Rad // Indirect specular
-			reflection *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
-		#else
-			#ifdef _EnvCol
-			reflection *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
-			#endif
-		#endif
-		fragColor.rgb += reflection;
-	}
+	vec3 reflection = vec3(0.0);
+	if (roughness < 1.0)
+		fragColor.rgb += traceReflection(voxels, voxpos, n, -viewPos, roughness) * voxelgiRefl;
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif
 
@@ -356,6 +342,7 @@ void main() {
 		return;
 	}
 #endif
+
 #ifdef _EmissionShaded
 	#ifdef _EmissionShadeless
 	else {
@@ -378,8 +365,7 @@ void main() {
 	float sdotVH = dot(v, sh);
 	float sdotNL = dot(n, sunDir);
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-				   specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -561,10 +547,10 @@ void main() {
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac) * voxelBlend +
-			mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac) * (1.0 - voxelBlend);
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) + fragColor.rgb, fragColor.rgb, opac) * voxelBlend +
+			mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) + fragColor.rgb, fragColor.rgb, opac) * (1.0 - voxelBlend);
 	#else
-	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, v, roughness, rior), fragColor.rgb, opac);
+	fragColor.rgb = mix(traceRefraction(voxels, voxpos, n, viewPos, 0.1, rior) + fragColor.rgb, fragColor.rgb, opac);
 	#endif
 	#endif
 }
