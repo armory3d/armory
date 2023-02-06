@@ -736,7 +736,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         if '_SSRS' in wrd.world_defs:
             frag.write('svisibility *= traceShadowSS(sunDir, eyeDir, gbufferD, invVP, eye);')
-        if '_LightClouds' in wrd.word_defs:
+        if '_LightClouds' in wrd.world_defs:
             frag.write('svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write('svisibility *= sdotNL + 2.0 * occlusion * occlusion - 1.0;')
