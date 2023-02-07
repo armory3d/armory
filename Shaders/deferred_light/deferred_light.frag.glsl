@@ -545,12 +545,12 @@ fragColor.rgb = envl;
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * voxelBlend +
-			traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * (1.0 - voxelBlend)) * voxelgiRefr;
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelBlend +
+			traceRefraction(voxels, voxpos, n, v, 0.1, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
 	#else
-	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * fragColor.rgb * voxelgiRefr;
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelgiRefr;
 	#endif
-	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
+	fragColor.rgb = mix(refraction + fragColor.rgb, fragColor.rgb, opac);
 	
 	#endif
 	#endif
