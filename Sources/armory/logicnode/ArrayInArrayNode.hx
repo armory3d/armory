@@ -8,8 +8,9 @@ class ArrayInArrayNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 		var array: Array<Dynamic> = inputs[0].get();
+		array = array.map(item -> Std.string(item));
 		var value: Dynamic = inputs[1].get();
 
-		return array.indexOf(value) != -1;
+		return array.indexOf(Std.string(value)) != -1;
 	}
 }

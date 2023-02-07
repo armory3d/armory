@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 
+import os
 import bpy
 
 import arm.api
@@ -111,12 +112,17 @@ def add_world_defs():
                 wrd.world_defs += '_VoxelShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
+            if rpdat.arm_voxelgi_refraction:
+                wrd.world_defs += '_VoxelGIRefract'
+                if rpdat.rp_renderer == 'Deferred':
+                    assets.add_khafile_def('rp_voxelgi_refract')
+
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelShadow'
-            if rpdat.arm_voxelgi_occ == 0.0:
-                wrd.world_defs += '_VoxelAONoTrace'
+            if rpdat.arm_voxelgi_weight == 0.0:
+               wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         wrd.world_defs += '_Legacy'
@@ -150,12 +156,15 @@ def add_world_defs():
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
-	#really unsure about these lines.
-    if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+    #really unsure about these lines.
+    if '_Rad' in wrd.world_defs and '_Brdf' not in wrd.world_defs:
         wrd.world_defs += '_Brdf'
+
 
 def build():
     rpdat = arm.utils.get_rp()
+    project_path = arm.utils.get_fp()
+
     if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpath'] != None:
         arm.api.drivers[rpdat.rp_driver]['make_rpath']()
         return
@@ -238,11 +247,6 @@ def build():
             if focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'
                 compo_depth = True
-            if rpdat.arm_lens_texture != '':
-                wrd.compo_defs += '_CLensTex'
-                assets.add_embedded_data('lenstexture.jpg')
-                if rpdat.arm_lens_texture_masking:
-                    wrd.compo_defs += '_CLensTexMasking'
             if rpdat.arm_fisheye:
                 wrd.compo_defs += '_CFishEye'
             if rpdat.arm_vignette:
@@ -250,9 +254,20 @@ def build():
             if rpdat.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
                 compo_depth = True
-            if rpdat.arm_lut_texture != '':
-                wrd.compo_defs += '_CLUT'
-                assets.add_embedded_data('luttexture.jpg')
+            if rpdat.arm_lens:
+                if os.path.isfile(project_path + '/Bundled/' + rpdat.arm_lens_texture):
+                    wrd.compo_defs += '_CLensTex'
+                    assets.add_embedded_data(rpdat.arm_lens_texture)
+                    if rpdat.arm_lens_texture_masking:
+                        wrd.compo_defs += '_CLensTexMasking'
+                else:
+                    log.warn('Filepath for Lens texture is invalid.')
+            if rpdat.arm_lut:
+                if os.path.isfile(project_path + '/Bundled/' + rpdat.arm_lut_texture):
+                    wrd.compo_defs += '_CLUT'
+                    assets.add_embedded_data(rpdat.arm_lut_texture)
+                else:
+                    log.warn('Filepath for LUT texture is invalid.')
             if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:
                 wrd.compo_defs += '_CTexStep'
             if '_CDOF' in wrd.compo_defs or '_CFog' in wrd.compo_defs or '_CGlare' in wrd.compo_defs:
@@ -334,7 +349,7 @@ def build():
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
-    if rpdat.rp_translucency:
+    if rpdat.rp_translucency and not (rpdat.arm_voxelgi_refraction and rpdat.rp_voxels == "Voxel GI"):
         assets.add_khafile_def('rp_translucency')
         assets.add_shader_pass('translucent_resolve')
 
@@ -465,7 +480,7 @@ def get_num_gbuffer_rts() -> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelGIRefract'):
         if flag in wrd.world_defs:
             num += 1
     return num

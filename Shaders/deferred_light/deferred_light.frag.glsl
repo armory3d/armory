@@ -24,6 +24,10 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+#ifdef _VoxelGIRefract
+uniform sampler2D gbuffer_refraction;
+#endif
+
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
@@ -214,9 +218,10 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
+	
 
 #ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
@@ -260,20 +265,20 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
+	envl += albedo;
 
 #ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl *= backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
-
-	envl.rgb *= envmapStrength * occspec.x;
+	envl *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
 	#ifdef _VoxelGICam
@@ -284,13 +289,13 @@ void main() {
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+	                   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
+	envl *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
-
+	envl *= voxelgiEnv;
 #endif
 
 #ifdef _VoxelGI
@@ -299,30 +304,25 @@ void main() {
 	#else
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-
+	
 	#ifdef _VoxelGITemporal
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend +
-							traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
+	envl += (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)).rgb * voxelgiDiff * g1.rgb;
 	#else
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
+	envl += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
-
-	if (occspec.y > 0.0) {
-		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, roughness);
-		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
-		fragColor.rgb += indirectSpecular * voxelgiSpec * occspec.y;
+	if (roughness < 1.0) {
+		#ifdef _VoxelGITemporal
+		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
+		#else
+		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
+		#endif
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
+	envl *= voxelgiEnv;
 #endif
 
-#ifdef _VoxelGI
-	fragColor.rgb += envl * voxelgiEnv;
-#else
-	fragColor.rgb = envl;
-#endif
-
+fragColor.rgb = envl;
 
 #ifdef _SSAO
 	#ifdef _RTGI
@@ -339,6 +339,7 @@ void main() {
 		return;
 	}
 #endif
+
 #ifdef _EmissionShaded
 	#ifdef _EmissionShadeless
 	else {
@@ -361,8 +362,7 @@ void main() {
 	float sdotVH = dot(v, sh);
 	float sdotNL = dot(n, sunDir);
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-				   specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -490,7 +490,7 @@ void main() {
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
 
 	#ifdef HLSL
-	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; //TODO: krafix bug, needs to generate sampler
 	#endif
 
 	#ifdef _Spot
@@ -542,17 +542,19 @@ void main() {
 		);
 	}
 #endif // _Clusters
-//	fragColor.a = 1.0; // Mark as opaque
-
-	// Show voxels
-	/*
-	vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	vec3 direction = vec3(0.0, 0.0, -1.0);
-	vec4 color = vec4(0.0f);
-	for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	 	vec3 point = origin + 0.005 * step * direction;
-	 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	}
-	fragColor.rgb += color.rgb;
-	*/
+	fragColor.a = 1.0; //Mark as opaque
+	#ifdef _VoxelGI
+	#ifdef _VoxelGIRefract
+	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
+	float rior = gr.x;
+	float opac = gr.y;
+	#ifdef _VoxelGITemporal
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelBlend +
+			traceRefraction(voxels, voxpos, n, v, 0.1, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
+	#else
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelgiRefr;
+	#endif
+	fragColor.rgb = mix(refraction + fragColor.rgb, fragColor.rgb, opac);
+	#endif
+	#endif
 }

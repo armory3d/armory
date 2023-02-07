@@ -447,22 +447,22 @@ class Inc {
 
 	#if rp_voxels
 	public static function initGI(tname = "voxels") {
+		var t = new RenderTargetRaw();
+		t.name = tname;
+		
 		#if arm_config
 		var config = armory.data.Config.raw;
 		if (config.rp_voxels != true || voxelsCreated) return;
 		voxelsCreated = true;
 		#end
 
-		var t = new RenderTargetRaw();
-		t.name = tname;
-
-		#if (rp_gi == "Voxel AO")
+		#if (rp_voxels == "Voxel AO")
 		{
 			t.format = "R8";
 		}
 		#else
 		{
-			t.format = "RGBA64";
+			t.format = "RGBA64";//will not work with any other format.
 		}
 		#end
 

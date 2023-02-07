@@ -83,6 +83,8 @@ def build():
                             # Set world def, everything else is handled by write_probes()
                             wrd.world_defs += '_Rad'
 
+    write_probes.check_last_cmft_time()
+
 
 def create_world_shaders(world: bpy.types.World):
     """Creates fragment and vertex shaders for the given world."""

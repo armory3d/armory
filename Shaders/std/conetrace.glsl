@@ -72,14 +72,15 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 c2 = 0.5f * (o1 - o2);
 
 	#ifdef _VoxelCones1
-	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE) * voxelgiOcc;
+	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE) * voxelgiWeight;
 	#endif
 
 	#ifdef _VoxelCones3
 	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE);
-	return (col / 3.0) * voxelgiOcc;
+	return (col / 3.0) * voxelgiWeight;
+
 	#endif
 
 	#ifdef _VoxelCones5
@@ -88,7 +89,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE);
-	return (col / 5.0) * voxelgiOcc;
+	return (col / 5.0) * voxelgiWeight;
 	#endif
 
 	#ifdef _VoxelCones9
@@ -104,24 +105,23 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceCone(voxels, origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE);
 	col += traceCone(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE);
-	return (col / 9.0) * voxelgiOcc;
+	return (col / 9.0) * voxelgiWeight;
 	#endif
 
 	return vec4(0.0);
 }
 
-vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
-	vec3 specularDir = normalize(reflect(-viewDir, normal));
-	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE).xyz;
+vec3 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+	vec3 reflection = reflect(-viewDir, normal);//Not Screen space ! 
+	return traceCone(voxels, pos, reflection, specularAperture, MAX_DISTANCE).xyz * voxelgiWeight;
 }
 
-vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	const float ior = 1.440;
-	const float transmittance = 1.0;
-	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
-	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE).xyz;
+vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float transmission, const float rior) {
+	const float transmittance = 1.0; //TODO add transmission data from shader.
+	vec3 refraction = refract(viewDir, normal, 1.0 / rior);
+	float specularAperture = 0.0174533 * 3.0;
+	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE).xyz * voxelgiWeight;
 }
 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {
@@ -171,9 +171,9 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 c2 = 0.5f * (o1 - o2);
 
 	#ifdef HLSL
-	const float factor = voxelgiOcc * 0.93;
+	const float factor = voxelgiWeight * 0.93;
 	#else
-	const float factor = voxelgiOcc * 0.90;
+	const float factor = voxelgiWeight * 0.90;
 	#endif
 	
 	#ifdef _VoxelCones1
@@ -212,5 +212,4 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 
 	return 0.0;
 }
-
 #endif

@@ -10,6 +10,9 @@
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
+#ifdef _VoxelGI
+#include "std/conetrace.glsl"
+#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -94,6 +97,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, sampler3D voxels, vec3 voxpos
 	#endif
 	#endif
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+		, sampler3D voxels, vec3 voxpos
+	#endif
+	#endif
 	#ifdef _MicroShadowing
 		, float occ
 	#endif
@@ -137,6 +145,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	#endif
+	#endif
+	
+	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
 	direct *= 1.0 - traceShadow(voxels, voxpos, l);
 	#endif

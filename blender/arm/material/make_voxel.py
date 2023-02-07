@@ -28,7 +28,11 @@ def make(context_id):
     return con
 
 def make_gi(context_id):
+<<<<<<< HEAD
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_writes_reds': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_write_alpha': False, 'conservative_raster': True })
+=======
+    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_reds': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_write_alpha': [False], 'conservative_raster': True })
+>>>>>>> GI
     wrd = bpy.data.worlds['Arm']
 
     vert = con_voxel.make_vert()
@@ -223,7 +227,11 @@ def make_gi(context_id):
         geom.write('}')
         geom.write('EndPrimitive();')
 
+<<<<<<< HEAD
     if '_Sun' in wrd.world_defs and '_ShadowMap' in wrd.world_defs:
+=======
+    if '_ShadowMap' in wrd.world_defs:
+>>>>>>> GI
         vert.add_out('vec4 lightPositionGeom')
         vert.add_uniform('mat4 LWVP', link='_biasLightWorldViewProjectionMatrix')
         vert.write('lightPositionGeom = LWVP * vec4(pos.xyz, 1.0);')
@@ -240,12 +248,17 @@ def make_gi(context_id):
             frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
             frag.write('    visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('}')
+<<<<<<< HEAD
         frag.add_uniform('vec3 sunCol', link="_sunColor")
         frag.write('basecol *= visibility * sunCol * emissionCol;')
     else:
         print('Armory Warning: Voxel GI requires sun light and enabled shadows')
         vert.add_out('vec4 lightPositionGeom')
         frag.write('basecol = vec3(0.0);')
+=======
+        frag.write('basecol *= visibility;')
+        frag.write('basecol += emissionCol;')
+>>>>>>> GI
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(min(basecol, vec3(1.0)), 1.0));')

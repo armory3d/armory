@@ -24,7 +24,11 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission", #end
+<<<<<<< HEAD
 			#if rp_ssrefr "gbuffer_refraction" #end
+=======
+			#if rp_voxelgi_refract "gbuffer_refraction" #end
+>>>>>>> GI
 		]);
 	}
 
@@ -63,53 +67,63 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel AO")
+
+			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
+			#else
+			#if rp_voxelgi_refract
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			#end
 			#end
 		}
 		#end
 
-		{
-			path.createDepthBuffer("main", "DEPTH24");
+		path.createDepthBuffer("main", "DEPTH24");
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer0";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "tex";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "tex";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "buf";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "buf";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer1";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
 		#if rp_gbuffer2
 		{
@@ -326,54 +340,6 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling() * 0.5;
 			t.format = "R32"; // R16
 			path.createRenderTarget(t);	
-		}
-		#end
-		
-		#if rp_ssrefr
-		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-
-			//holds rior and opacity 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			//holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
-			t.name = "refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-
-			//holds colors
-			var t = new RenderTargetRaw();
-			t.name = "tex1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			//holds background depth
-			var t = new RenderTargetRaw();
-			t.name = "gbufferD1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "R32";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
 		}
 		#end
 
@@ -601,7 +567,7 @@ class RenderPathDeferred {
 				#end				
 	
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_shadowmap && rp_voxels == "Voxel GI")
+				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
@@ -627,10 +593,9 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		#if rp_gbuffer2_direct
-		path.bindTarget("gbuffer2", "gbuffer2");
+		#if rp_voxelgi_refract
+		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 		#end
-
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
