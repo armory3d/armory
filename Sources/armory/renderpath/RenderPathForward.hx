@@ -178,8 +178,7 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -402,7 +401,9 @@ class RenderPathForward {
 			#end
 		}
 		#end
-
+		
+		path.bindTarget("_main", "gbufferD");
+		
 		#if rp_stereo
 		{
 			path.drawStereo(drawMeshes);

@@ -221,7 +221,6 @@ void main() {
 	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
-	vec3 viewPos = getPosView(normalize(viewRay), depth, cameraProj);
 	
 
 #ifdef _gbuffer2
@@ -265,7 +264,7 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
-	envl *= albedo;
+	envl += albedo;
 
 #ifdef _Brdf
 	envl *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account

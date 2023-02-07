@@ -632,8 +632,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect = pow(indirect, vec3(2.2));')
         if '_Rad' in wrd.world_defs: 
             frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
-    frag.write('indirect *= albedo;')
-    
+
+    #we can't multiply environment by 0 (in case metallic is at max)
+    frag.write('indirect += albedo;')    
 
     if '_Brdf' in wrd.world_defs:
         frag.write('indirect *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
@@ -723,20 +724,18 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 if tese is not None:
                     tese.add_out('vec4 lightPosition')
                     tese.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
-                    tese.write('lightPosition = LVP * vec4(wposition, 1.0);')
+                    tese.write('lightPosition = LVP * vec4(wposition + n * shadowsBias * 100, 1.0);')
                 else:
                     if is_displacement:
                         vert.add_out('vec4 lightPosition')
                         vert.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
-                        vert.write('lightPosition = LVP * vec4(wposition, 1.0);')
+                        vert.write('lightPosition = LVP * vec4(wposition + n * shadowsBias * 100, 1.0);')
                     else:
                         vert.add_out('vec4 lightPosition')
-                        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
-                        vert.write('lightPosition = LWVP * spos;')
-                frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
-                frag.write('const vec2 smSize = shadowmapSize;')
-                frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
-            frag.write('}') # receiveShadow
+                        vert.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
+                        vert.write('lightPosition = LVP * vec4(wposition + n * shadowsBias * 100, 1.0);')
+                frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, lightPosition.xyz / lightPosition.w, shadowsBias);')
+            frag.write('}')
 
         if '_SSRS' in wrd.world_defs:
             frag.write('svisibility *= traceShadowSS(sunDir, eyeDir, gbufferD, invVP, eye);')
@@ -747,7 +746,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
-        # sun
+        #sun
 
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
