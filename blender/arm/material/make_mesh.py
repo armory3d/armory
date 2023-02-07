@@ -199,7 +199,7 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
 
     frag.add_out(f'vec4 fragColor[GBUF_SIZE]')
-    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs:
+    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs and not 'refraction' in rpasses:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -273,12 +273,11 @@ def make_deferred(con_mesh, rpasses):
     frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  #Alpha channel is unused at the moment
     frag.write('#endif')
 
-    frag.write('#ifdef _VoxelGIRefract')
-    if parse_opacity:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
-    else:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
-    frag.write('#endif')
+    if '_VoxelGIRefract' in wrd.world_defs or 'refraction' in rpasses:
+        if parse_opacity:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+        else:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
 
     return con_mesh
 
@@ -777,8 +776,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
-            frag.write('  , voxels, voxpos')
-        if '_VoxelGIShadow' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')

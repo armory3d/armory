@@ -572,8 +572,7 @@ def write_compiledglsl(defs, make_variants):
         gbuffer_size = make_renderpath.get_num_gbuffer_rts()
         f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-<<<<<<< HEAD
-        # Write indices of G-Buffer render targets
+        #Write indices of G-Buffer render targets
         f.write('#define GBUF_IDX_0 0\n')
         f.write('#define GBUF_IDX_1 1\n')
 
@@ -583,37 +582,15 @@ def write_compiledglsl(defs, make_variants):
             f.write('#define GBUF_IDX_2 2\n')
             idx_emission += 1
             idx_refraction += 1
-        
 
         if '_EmissionShaded' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
             idx_refraction += 1
 
-        if '_SSRefraction' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
-
-            f.write("""#if defined(HLSL) || defined(METAL)
-=======
-            #Write indices of G-Buffer render targets
-            f.write('#define GBUF_IDX_0 0\n')
-            f.write('#define GBUF_IDX_1 1\n')
-
-            idx_emission = 2
-            idx_refraction = 2
-            if '_gbuffer2' in wrd.world_defs:
-                f.write('#define GBUF_IDX_2 2\n')
-                idx_emission += 1
-                idx_refraction += 1
-
-            if '_EmissionShaded' in wrd.world_defs:
-                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
-                idx_refraction += 1
-
-            if '_VoxelGIRefract' in wrd.world_defs:
-                f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment
+        if '_VoxelGIRefract' in wrd.world_defs:
+            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment
                 
         f.write("""#if defined(HLSL) || defined(METAL)
->>>>>>> GI
 #define _InvY
 #endif
 """)
@@ -785,14 +762,10 @@ const float compoDOFLength = 160.0;
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
-<<<<<<< HEAD
-const float voxelgiSpec = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
-const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
-=======
 const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_refl * 100) / 100) + """;
 const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 const float voxelgiWeight = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
->>>>>>> GI
+
 const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;

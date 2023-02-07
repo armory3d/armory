@@ -24,11 +24,8 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission", #end
-<<<<<<< HEAD
-			#if rp_ssrefr "gbuffer_refraction" #end
-=======
-			#if rp_voxelgi_refract "gbuffer_refraction" #end
->>>>>>> GI
+			#if (rp_voxelgi_refract || rp_ssrefr) "gbuffer_refraction" #end
+
 		]);
 	}
 
@@ -70,17 +67,6 @@ class RenderPathDeferred {
 
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
-			#else
-			#if rp_voxelgi_refract
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-			#end
 			#end
 		}
 		#end
@@ -370,6 +356,43 @@ class RenderPathDeferred {
 			#end
 		}
 		#end
+		
+		#if (rp_voxelgi_refract || rp_ssrefr) {
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+		
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+			
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
 
 		#if ((rp_motionblur == "Camera") || (rp_motionblur == "Object"))
 		{
@@ -596,6 +619,7 @@ class RenderPathDeferred {
 		#if rp_voxelgi_refract
 		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 		#end
+
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
@@ -776,43 +800,27 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
 				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); //Unbind depth so we can read it
+				path.setDepthFrom("tex", "gbuffer1"); // Re-bind depth
 				#end
-			
+
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-				
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer0"); //Unbind depth so we can read it
-				#end
-					
+
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				#if rp_gbuffer2
-				{
-					path.setTarget("gbuffer2");
-					path.clearTarget(0xff000000);
-				}
-				#end
-
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
-
-				// ---
-				// Deferred light
-				// ---
-
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-				#end
 
 				path.setTarget("tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
+				#if rp_voxelgi_refract
+				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+				#end
 
 				#if rp_gbuffer2
 				{
@@ -838,10 +846,10 @@ class RenderPathDeferred {
 				#end
 
 				var voxelao_pass = false;
-				#if rp_voxelao
-				if (armory.data.Config.raw.rp_gi != false)
+				#if rp_voxels
+				if (armory.data.Config.raw.rp_voxels != false)
 				{
-					#if arm_config
+					#if (arm_config && (rp_voxels == "Voxel AO"))
 					voxelao_pass = true;
 					#end
 					path.bindTarget(voxels, "voxels");
@@ -863,6 +871,12 @@ class RenderPathDeferred {
 				}
 				#end
 
+				#if ((rp_voxelgi_shadows) || (rp_voxelgi_refraction))
+				{
+					path.bindTarget(voxels, "voxels");
+				}
+				#end
+				
 				#if rp_material_solid
 				path.drawShader("shader_datas/deferred_light_solid/deferred_light");
 				#elseif rp_material_mobile
@@ -874,21 +888,20 @@ class RenderPathDeferred {
 				#end
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex");
-				path.bindTarget("tex", "tex1");
+				path.bindTarget("refr", "tex1");
+				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-
+				
 				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer0");
+				path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 				#end
 			}
 		}
 		#end
-
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {

@@ -45,11 +45,7 @@ def make(context_id, rpasses, shadowmap=False):
 
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
 
-<<<<<<< HEAD
-    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard or 'refraction' in rpasses
-=======
     parse_opacity = mat_utils.is_transluc(mat_state.material) or mat_state.material.arm_discard
->>>>>>> GI
 
     parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
 

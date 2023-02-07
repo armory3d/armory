@@ -78,15 +78,12 @@ def write(vert, frag):
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
         frag.write('  , voxels, voxpos')
-<<<<<<< HEAD
     if '_voxelGiRefract' in wrd.world_defs:
         frag.write('  , voxels, voxpos')
-=======
     if '_MicroShadowing' in wrd.world_defs:
         frag.write(', occlusion')
     if '_SSRS' in wrd.world_defs:
         frag.write(', gbufferD, invVP, eye')
->>>>>>> GI
     frag.write(');')
 
     frag.write('}') # for numLights
