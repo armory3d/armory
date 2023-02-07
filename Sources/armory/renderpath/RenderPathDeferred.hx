@@ -818,10 +818,8 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
-				#if rp_voxelgi_refract
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-				#end
-
+				
 				#if rp_gbuffer2
 				{
 					path.bindTarget("gbuffer2", "gbuffer2");
@@ -902,6 +900,7 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {

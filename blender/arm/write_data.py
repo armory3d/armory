@@ -587,7 +587,7 @@ def write_compiledglsl(defs, make_variants):
             f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
             idx_refraction += 1
 
-        if '_VoxelGIRefract' in wrd.world_defs:
+        if '_VoxelGIRefract' in wrd.world_defs or '_SSRefraction' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment
                 
         f.write("""#if defined(HLSL) || defined(METAL)

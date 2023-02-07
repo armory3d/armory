@@ -199,7 +199,7 @@ def make_deferred(con_mesh, rpasses):
     tese = con_mesh.tese
 
     frag.add_out(f'vec4 fragColor[GBUF_SIZE]')
-    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs and not 'refraction' in rpasses:
+    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs and not '_SSRefraction' in wrd.world_defs:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -270,10 +270,10 @@ def make_deferred(con_mesh, rpasses):
     # Even if the material doesn't use emission we need to write to the
     # emission buffer (if used) to prevent undefined behaviour
     frag.write('#ifdef _EmissionShaded')
-    frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  #Alpha channel is unused at the moment
+    frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')#Alpha channel is unused at the moment
     frag.write('#endif')
 
-    if '_VoxelGIRefract' in wrd.world_defs or 'refraction' in rpasses:
+    if '_VoxelGIRefract' in wrd.world_defs or '_SSRefraction' in wrd.world_defs:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
         else:

@@ -480,7 +480,7 @@ def get_num_gbuffer_rts() -> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelGIRefract'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelGIRefract', '_SSRefraction'):
         if flag in wrd.world_defs:
             num += 1
     return num

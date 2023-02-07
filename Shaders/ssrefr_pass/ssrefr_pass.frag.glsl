@@ -30,8 +30,8 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const float numBinarySearchSteps = 8;
-const float maxSteps = 32;
+const float maxSteps = (1 / ss_refractionRayStep);
+const float numBinarySearchSteps = (1 / ss_refractionMinRayStep);
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -52,11 +52,17 @@ vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= ss_refractionMinRayStep;
-		hitCoord -= dir;
+		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if (d < depth)
-			hitCoord += dir;
+		if(d > depth)
+			hitCoord -= dir;
 	}
+	// Ugly discard of hits too far away
+	#ifdef _CPostprocess
+	if (abs(d) > PPComp9.z) return vec4(0.0);
+	#else
+	if (abs(d) > ss_refractionSearchDist) return vec4(0.0);
+	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -70,7 +76,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if (d > depth)
+		if(d > depth)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -85,7 +91,7 @@ void main() {
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if(depth == 1.0) {
+	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
 		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
 		return;
 	}
@@ -98,7 +104,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = normalize(refract(viewPos, viewNormal, 1.0 / rior));
+	vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / rior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -119,7 +125,7 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
-	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb + textureLod(tex1, texCoord.xy, 0.0).rgb;
+	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb + textureLod(tex, texCoord, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = mix(refractionCol * intensity, fragColor.rgb, opac);
+	fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
 }
