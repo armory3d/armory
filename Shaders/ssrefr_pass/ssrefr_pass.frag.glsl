@@ -30,8 +30,8 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const float numBinarySearchSteps = 8;
-const float maxSteps = 32;
+const float numBinarySearchSteps = 7;
+const float maxSteps = 18;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -97,8 +97,8 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
-	vec3 refracted = normalize(refract(-viewPos, viewNormal, 1.0 / rior));
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
