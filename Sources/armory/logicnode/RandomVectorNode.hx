@@ -4,13 +4,13 @@ import iron.math.Vec4;
 
 class RandomVectorNode extends LogicNode {
 
-	var v = new Vec4();
-
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
 	override function get(from: Int): Dynamic {
+		var v = new Vec4();
+		
 		var min: Vec4 = inputs[0].get();
 		var max: Vec4 = inputs[1].get();
 		var x = min.x + (Math.random() * (max.x - min.x));
