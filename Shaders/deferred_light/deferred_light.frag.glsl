@@ -550,7 +550,6 @@ fragColor.rgb = envl;
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelgiRefr;
 	#endif
 	fragColor.rgb = mix(refraction + fragColor.rgb, fragColor.rgb, opac);
-	
 	#endif
 	#endif
 }

@@ -401,9 +401,9 @@ class RenderPathForward {
 			#end
 		}
 		#end
-		
+
 		path.bindTarget("_main", "gbufferD");
-		
+
 		#if rp_stereo
 		{
 			path.drawStereo(drawMeshes);
