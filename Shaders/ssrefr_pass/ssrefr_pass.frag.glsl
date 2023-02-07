@@ -54,7 +54,7 @@ vec4 binarySearch(vec3 dir) {
 		dir *= ss_refractionMinRayStep;
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if (d < depth)
+		if(d < depth)
 			hitCoord -= dir;
 	}
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
@@ -80,17 +80,17 @@ void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.z;
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
-	float ior = unpackFloat2(gr.r).x;
+	float rior = unpackFloat2(gr.r).x;
 	float opac = unpackFloat2(gr.r).y;
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if(depth == 1.0 || ior == 1.0 || opac == 1.0) {
-		fragColor = textureLod(tex, texCoord, 0.0);
+	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
+		fragColor = textureLod(tex1, texCoord, 0.0);
 		return;
 	}
 
-    	vec2 enc = g0.rg;
+	vec2 enc = g0.rg;
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
@@ -98,7 +98,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
-	vec3 refracted = normalize(refract(viewPos, viewNormal, 1.0 / ior));
+	vec3 refracted = normalize(refract(-viewPos, viewNormal, 1.0 / rior));
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -119,7 +119,7 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
-	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
+	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = mix(textureLod(tex1, texCoord.xy, 0.0).rgb, refractionCol, intensity - opac);
+	fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
 }

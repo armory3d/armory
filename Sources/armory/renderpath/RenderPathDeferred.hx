@@ -813,15 +813,15 @@ class RenderPathDeferred {
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer1"); //Unbind depth so we can read it
 				#end
-			
+
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
-				
+
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer0"); //Unbind depth so we can read it
 				#end
-					
+
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -835,10 +835,6 @@ class RenderPathDeferred {
 
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
-
-				// ---
-				// Deferred light
-				// ---
 
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
@@ -909,8 +905,8 @@ class RenderPathDeferred {
 				#end
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex");
-				path.bindTarget("tex", "tex1");
+				path.bindTarget("refr", "tex1");
+				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
