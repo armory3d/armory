@@ -30,8 +30,8 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const float maxSteps = (1 / ss_refractionRayStep);
-const float numBinarySearchSteps = (1 / ss_refractionMinRayStep);
+const float numBinarySearchSteps = 7;
+const float maxSteps = 18;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -104,7 +104,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / rior);
+	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -125,7 +125,7 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
-	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb + textureLod(tex, texCoord, 0.0).rgb;
+	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
 	fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
 }

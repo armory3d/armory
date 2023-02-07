@@ -33,16 +33,6 @@ class RenderPathForward {
 		#end
 	}
 
-	public static inline function setTargetMeshesRefr() {
-		//Always keep the order of render targets the same as defined in compiled.inc
-		path.setTarget("gbuffer0", [
-			"gbuffer1",
-			#if rp_gbuffer2 "gbuffer2", #end
-			#if rp_gbuffer_emission "gbuffer_emission", #end
-			#if rp_ssrefr "gbuffer_refraction" #end
-		]);
-	}
-
 	public static function drawMeshes() {
 		path.drawMeshes("mesh");
 
@@ -136,34 +126,6 @@ class RenderPathForward {
 				t.format = "RGBA64";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
-				
-				var t = new RenderTargetRaw();
-				t.name = "gbuffer0";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				t.depth_buffer = "main";
-				path.createRenderTarget(t);
-				
-				var t = new RenderTargetRaw();
-				t.name = "gbuffer1";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-				
-				var t = new RenderTargetRaw();
-				t.name = "gbuffer2";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
 
 				//holds colors before refractive meshes are drawn
 				var t = new RenderTargetRaw();
@@ -174,25 +136,6 @@ class RenderPathForward {
 				t.format = "RGBA64";
 				t.scale = Inc.getSuperSampling();
 				t.depth_buffer = "main";
-				path.createRenderTarget(t);
-
-				//holds colors
-				var t = new RenderTargetRaw();
-				t.name = "tex1";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-				
-				var t = new RenderTargetRaw();
-				t.name = "tex";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
 				//holds background depth
@@ -442,11 +385,7 @@ class RenderPathForward {
 				#end				
 	
 				path.bindTarget(voxtex, "voxels");
-<<<<<<< HEAD
-				#if (rp_shadowmap && rp_voxels == "Voxel GI")
-=======
 				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
->>>>>>> GI
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
@@ -557,6 +496,7 @@ class RenderPathForward {
 			#end
 
 			#if rp_ssrefr
+			{
 				if (armory.data.Config.raw.rp_ssrefr != false) {
 					path.setTarget("gbufferD1");
 					path.bindTarget("_main", "tex");
@@ -640,6 +580,7 @@ class RenderPathForward {
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				}
+			}
 			#end
 
 			#if rp_bloom

@@ -49,7 +49,7 @@ vec4 binarySearch(vec3 dir) {
 		dir *= ssrMinRayStep;
 		hitCoord -= dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
+		if (ddepth < 0.0 || depth > depth) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
@@ -68,7 +68,8 @@ vec4 rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		float d = getDeltaDepth(hitCoord);
+		if(d > 0.0 && d < depth) return binarySearch(dir);
 	}
 	return vec4(0.0);
 }
