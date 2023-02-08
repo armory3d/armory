@@ -3,8 +3,6 @@
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
 
-uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 in vec2 texCoord;

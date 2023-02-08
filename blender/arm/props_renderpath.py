@@ -602,18 +602,20 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Reinhard', 'Reinhard', 'Reinhard'),
                ('Uncharted', 'Uncharted', 'Uncharted')],
         name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
-    arm_lens_texture: StringProperty(name="Lens Texture", default="")
+    arm_fisheye: BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
+    arm_vignette: BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
+    arm_vignette_strength: FloatProperty(name="Strength", default=0.7, update=assets.invalidate_shader_cache)
+    arm_lensflare: BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
+    arm_lens: BoolProperty(name="Lens Texture", description="Grime Overlay", default=False, update=assets.invalidate_shader_cache)
+    arm_lens_texture: StringProperty(name="Texture", description="Lens filepath", default="lenstexture.jpg", update=assets.invalidate_shader_cache)
     arm_lens_texture_masking: BoolProperty(name="Luminance Masking", description="Luminance masking", default=False, update=assets.invalidate_shader_cache)
     arm_lens_texture_masking_centerMinClip : FloatProperty(name="Center Min Clip", default=0.5, update=assets.invalidate_shader_cache)
     arm_lens_texture_masking_centerMaxClip : FloatProperty(name="Center Max Clip", default=0.1, update=assets.invalidate_shader_cache)
     arm_lens_texture_masking_luminanceMax : FloatProperty(name="Luminance Min", default=0.1, update=assets.invalidate_shader_cache)
     arm_lens_texture_masking_luminanceMin : FloatProperty(name="Luminance Max", default=2.5, update=assets.invalidate_shader_cache)
     arm_lens_texture_masking_brightnessExp : FloatProperty(name="Brightness Exponent", default=2.0, update=assets.invalidate_shader_cache)
-    arm_fisheye: BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
-    arm_vignette: BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
-    arm_vignette_strength: FloatProperty(name="Strength", default=0.7, update=assets.invalidate_shader_cache)
-    arm_lensflare: BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
-    arm_lut_texture: StringProperty(name="LUT Texture", description="Color Grading", default="", update=assets.invalidate_shader_cache)
+    arm_lut: BoolProperty(name="LUT Colorgrading", description="Colorgrading", default=False, update=assets.invalidate_shader_cache)
+    arm_lut_texture: StringProperty(name="Texture", description="LUT filepath", default="luttexture.jpg", update=assets.invalidate_shader_cache)
     arm_skin: EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],

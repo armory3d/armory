@@ -22,6 +22,7 @@ import arm.nodes_logic
 import arm.ui_icons as ui_icons
 import arm.utils
 import arm.utils_vs
+import arm.write_probes
 
 if arm.is_reload(__name__):
     arm.api = arm.reload_module(arm.api)
@@ -39,6 +40,7 @@ if arm.is_reload(__name__):
     ui_icons = arm.reload_module(ui_icons)
     arm.utils = arm.reload_module(arm.utils)
     arm.utils_vs = arm.reload_module(arm.utils_vs)
+    arm.write_probes = arm.reload_module(arm.write_probes)
 else:
     arm.enable_reload(__name__)
 
@@ -1203,7 +1205,10 @@ class ArmoryStopButton(bpy.types.Operator):
         elif state.proc_build != None:
             state.proc_build.terminate()
             state.proc_build = None
-        return{'FINISHED'}
+
+        arm.write_probes.check_last_cmft_time()
+
+        return {'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
     """Build and compile project"""
@@ -1932,8 +1937,12 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         col.prop(rpdat, 'arm_fisheye')
         col.prop(rpdat, 'arm_lensflare')
+        layout.separator()
 
         col = layout.column()
+        col.prop(rpdat, 'arm_lens')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_lens
         col.prop(rpdat, 'arm_lens_texture')
         if rpdat.arm_lens_texture != "":
             col.prop(rpdat, 'arm_lens_texture_masking')
@@ -1946,8 +1955,14 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
                 sub.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
                 col.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
                 layout.separator()
+        layout.separator()
 
-        layout.prop(rpdat, 'arm_lut_texture')
+        col = layout.column()
+        col.prop(rpdat, 'arm_lut')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_lut
+        col.prop(rpdat, 'arm_lut_texture')
+        layout.separator()
 
 class ARM_PT_BakePanel(bpy.types.Panel):
     bl_label = "Armory Bake"
