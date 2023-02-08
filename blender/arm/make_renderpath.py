@@ -56,7 +56,7 @@ def add_world_defs():
     voxelao = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_voxels == 'Voxel AO':
+        if rpdat.rp_voxels:
             voxelao = True
     # Shadows
     if rpdat.rp_shadows:

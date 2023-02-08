@@ -63,7 +63,7 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel AO")
+			#if rp_voxels
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
 		}
@@ -633,7 +633,7 @@ class RenderPathDeferred {
 		#if rp_voxels
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
-			#if (arm_config && (rp_voxels == "Voxel AO"))
+			#if (arm_config && rp_voxels)
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");
@@ -830,7 +830,7 @@ class RenderPathDeferred {
 
 				var voxelao_pass = false;
 				#if rp_voxelao
-				if (armory.data.Config.raw.rp_gi != false)
+				if (armory.data.Config.raw.rp_voxels != false)
 				{
 					#if arm_config
 					voxelao_pass = true;
