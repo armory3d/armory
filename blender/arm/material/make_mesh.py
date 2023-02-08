@@ -634,17 +634,17 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
 
     #we can't multiply environment by 0 (in case metallic is at max)
-    frag.write('indirect += albedo;')    
+    frag.write('indirect *= albedo;')
 
     if '_Brdf' in wrd.world_defs:
         frag.write('indirect *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
 
     if '_Rad' in wrd.world_defs:
-         frag.write('indirect *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y);')
+         frag.write('indirect += prefilteredColor - (f0 * envBRDF.x + envBRDF.y);')
 
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('indirect *= backgroundCol - (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('indirect += backgroundCol - (f0 * envBRDF.x + envBRDF.y);')
 
     frag.write('indirect *= occlusion;')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
@@ -792,8 +792,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
         else:
             frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
-        frag.write('indirect = mix(refraction + indirect, indirect, opacity);')
-        frag.write('direct = mix(refraction + direct, direct, opacity);')
+        frag.write('indirect = mix(refraction * indirect, indirect, opacity);')
+        frag.write('direct = mix(refraction * direct, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
