@@ -199,7 +199,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssrr_half) || (rp_water) || (rp_depth_texture))
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water) || (rp_depth_texture))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -279,7 +279,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssrr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ssgi_half)
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -288,6 +288,7 @@ class RenderPathForward {
 			t.height = 0;
 			t.scale = Inc.getSuperSampling() * 0.5;
 			t.format = "R32"; // R16
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -296,19 +297,8 @@ class RenderPathForward {
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
-		}
-		#end
 
-		#if rp_ssrefr
-		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-		}
-		#end
-
-		#if (rp_ssrefr || rp_ssr)
-		{
-			#if rp_ssrr_half
+			#if rp_ssr_half
 			{
 				var t = new RenderTargetRaw();
 				t.name = "ssra";
@@ -327,6 +317,13 @@ class RenderPathForward {
 				path.createRenderTarget(t);
 			}
 			#end
+		}
+		#end
+
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -440,7 +437,7 @@ class RenderPathForward {
 
 		#if rp_render_to_texture
 		{
-			#if (rp_ssrr_half || rp_ssgi_half)
+			#if (rp_ssr_half || rp_ssgi_half)
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");
@@ -450,11 +447,7 @@ class RenderPathForward {
 			{
 				if (armory.data.Config.raw.rp_ssrefr != false) {
 					path.setTarget("gbufferD1");
-					#if rp_ssrr_half
-					path.bindTarget("half", "tex");
-					#else
 					path.bindTarget("_main", "tex");
-					#end
 					path.drawShader("shader_datas/copy_pass/copy_pass");
 
 					path.setTarget("refr");
@@ -467,11 +460,7 @@ class RenderPathForward {
 					path.setTarget("lbuffer0");
 					path.bindTarget("refr", "tex1");
 					path.bindTarget("lbuffer0", "tex");
-					#if rp_ssrr_half
-					path.bindTarget("half", "gbufferD");
-					#else
 					path.bindTarget("_main", "gbufferD");
-					#end
 					path.bindTarget("gbufferD1", "gbufferD1");
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
@@ -483,7 +472,7 @@ class RenderPathForward {
 			#if rp_ssr
 			{
 				if (armory.data.Config.raw.rp_ssr != false) {
-					#if rp_ssrr_half
+					#if rp_ssr_half
 					var targeta = "ssra";
 					var targetb = "ssrb";
 					#else
@@ -493,7 +482,7 @@ class RenderPathForward {
 
 					path.setTarget(targeta);
 					path.bindTarget("lbuffer0", "tex");
-					#if rp_ssrr_half
+					#if rp_ssr_half
 					path.bindTarget("half", "gbufferD");
 					#else
 					path.bindTarget("_main", "gbufferD");

@@ -317,15 +317,14 @@ def build():
             assets.add_khafile_def('rp_ssr')
             assets.add_shader_pass('ssr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
-    
+            if rpdat.arm_ssr_half_res:
+                assets.add_khafile_def('rp_ssr_half') 
+
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
             assets.add_khafile_def('rp_ssrefr')
             assets.add_shader_pass('ssrefr_pass')
 
-        if rpdat.rp_ssr or rpdat.rp_ss_refraction:
-            if rpdat.arm_ssrr_half_res:
-                assets.add_khafile_def('rp_ssrr_half')    
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
@@ -405,7 +404,7 @@ def build():
         wrd.world_defs += '_SSS'
         assets.add_shader_pass('sss_pass')
 
-    if (rpdat.rp_ssr and rpdat.arm_ssrr_half_res) or (rpdat.rp_ssgi != 'Off' and rpdat.arm_ssgi_half_res):
+    if (rpdat.rp_ssr and rpdat.arm_ssr_half_res) or (rpdat.rp_ssgi != 'Off' and rpdat.arm_ssgi_half_res):
         assets.add_shader_pass('downsample_depth')
 
     if rpdat.rp_motionblur != 'Off':

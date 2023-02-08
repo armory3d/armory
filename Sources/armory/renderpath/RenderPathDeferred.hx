@@ -315,7 +315,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssrr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ssgi_half)
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -367,7 +367,7 @@ class RenderPathDeferred {
 		#end
 
 		#if(rp_ssr || rp_ssrefr)
-		#if rp_ssrr_half 
+		#if rp_ssr_half 
 		{
 			var t = new RenderTargetRaw();
 			t.name = "ssra";
@@ -492,7 +492,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssrr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ssgi_half)
 		path.setTarget("half");
 		path.bindTarget("_main", "texdepth");
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
@@ -786,11 +786,7 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
 				path.setTarget("gbufferD1");
-				#if rp_ssrr_half
-				path.bindTarget("half", "tex");
-				#else
 				path.bindTarget("_main", "tex");
-				#end
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
 				path.setTarget("refr");
@@ -867,11 +863,7 @@ class RenderPathDeferred {
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex1");
 				path.bindTarget("tex", "tex");
-				#if rp_ssrr_half
-				path.bindTarget("half", "gbufferD");
-				#else
 				path.bindTarget("_main", "gbufferD");
-				#end
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
@@ -883,7 +875,7 @@ class RenderPathDeferred {
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
-				#if rp_ssrr_half
+				#if rp_ssr_half
 				var targeta = "ssra";
 				var targetb = "ssrb";
 				#else
@@ -893,11 +885,8 @@ class RenderPathDeferred {
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
-				#if rp_ssrr_half
-				path.bindTarget("half", "gbufferD");
-				#else
 				path.bindTarget("_main", "gbufferD");
-				#end
+
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");

@@ -1805,9 +1805,8 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        col.prop(rpdat, 'arm_ssrr_half_res')
-        col = layout.column()
         col.prop(rpdat, "rp_ssr")
+        col.prop(rpdat, 'arm_ssr_half_res')
         col = col.column()
         col.enabled = rpdat.rp_ssr
         col.prop(rpdat, 'arm_ssr_ray_step')
