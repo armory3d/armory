@@ -147,7 +147,6 @@ class RenderPathForward {
 				t.format = "R32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
-				path.loadShader("shader_datas/deferred_light/deferred_light");
 			}
 			#end
 
@@ -197,19 +196,10 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if (rp_gi == "Voxel GI")
-			{
-				Inc.initGI("voxelsOpac");
-				Inc.initGI("voxelsNor");
-				#if (rp_gi_bounces)
-				Inc.initGI("voxelsBounce");
-				#end
-			}
-			#end
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water) || (rp_depth_texture))
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssrr_half) || (rp_water) || (rp_depth_texture))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -248,7 +238,7 @@ class RenderPathForward {
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-			
+
 			var t = new RenderTargetRaw();
 			t.name = "singlea";
 			t.width = 0;
@@ -266,7 +256,6 @@ class RenderPathForward {
 			t.format = "R8";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			
 		}
 		#end
 
@@ -290,9 +279,8 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssrr_half || rp_ssgi_half)
 		{
-			
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
 			t.name = "half";
@@ -300,8 +288,6 @@ class RenderPathForward {
 			t.height = 0;
 			t.scale = Inc.getSuperSampling() * 0.5;
 			t.format = "R32"; // R16
-			path.createRenderTarget(t);
-			
 		}
 		#end
 
@@ -310,8 +296,19 @@ class RenderPathForward {
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+		}
+		#end
 
-			#if rp_ssr_half
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if (rp_ssrefr || rp_ssr)
+		{
+			#if rp_ssrr_half
 			{
 				var t = new RenderTargetRaw();
 				t.name = "ssra";
@@ -330,14 +327,6 @@ class RenderPathForward {
 				path.createRenderTarget(t);
 			}
 			#end
-		}
-		#end
-
-		#if rp_ssrefr
-		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-			path.loadShader("shader_datas/deferred_light/deferred_light");
 		}
 		#end
 
@@ -366,13 +355,6 @@ class RenderPathForward {
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if light was moved
-			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { voxelize = true; break; }
-			}
-			#end
-
 			#if arm_voxelgi_temporal
 			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
 
@@ -398,15 +380,6 @@ class RenderPathForward {
 				#end				
 	
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_shadowmap && rp_voxels == "Voxel GI")
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
@@ -453,6 +426,8 @@ class RenderPathForward {
 		}
 		#end
 
+		path.bindTarget("_main", "gbufferD");
+
 		#if rp_stereo
 		{
 			path.drawStereo(drawMeshes);
@@ -465,16 +440,50 @@ class RenderPathForward {
 
 		#if rp_render_to_texture
 		{
-			#if (rp_ssr_half || rp_ssgi_half)
+			#if (rp_ssrr_half || rp_ssgi_half)
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");
 			#end
 
+			#if rp_ssrefr
+			{
+				if (armory.data.Config.raw.rp_ssrefr != false) {
+					path.setTarget("gbufferD1");
+					#if rp_ssrr_half
+					path.bindTarget("half", "tex");
+					#else
+					path.bindTarget("_main", "tex");
+					#end
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					path.setTarget("refr");
+					path.bindTarget("lbuffer0", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					RenderPathCreator.setTargetMeshes();
+					path.drawMeshes("refraction");
+
+					path.setTarget("lbuffer0");
+					path.bindTarget("refr", "tex1");
+					path.bindTarget("lbuffer0", "tex");
+					#if rp_ssrr_half
+					path.bindTarget("half", "gbufferD");
+					#else
+					path.bindTarget("_main", "gbufferD");
+					#end
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("lbuffer1", "gbuffer0");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				}
+			}
+			#end
+
 			#if rp_ssr
 			{
 				if (armory.data.Config.raw.rp_ssr != false) {
-					#if rp_ssr_half
+					#if rp_ssrr_half
 					var targeta = "ssra";
 					var targetb = "ssrb";
 					#else
@@ -484,7 +493,7 @@ class RenderPathForward {
 
 					path.setTarget(targeta);
 					path.bindTarget("lbuffer0", "tex");
-					#if rp_ssr_half
+					#if rp_ssrr_half
 					path.bindTarget("half", "gbufferD");
 					#else
 					path.bindTarget("_main", "gbufferD");
@@ -502,93 +511,6 @@ class RenderPathForward {
 					path.bindTarget(targetb, "tex");
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
-				}
-			}
-			#end
-
-			#if rp_ssrefr {
-				if (armory.data.Config.raw.rp_ssrefr != false) {
-					path.setTarget("gbufferD1");
-					path.bindTarget("_main", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("refr");
-					path.bindTarget("lbuffer0", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					RenderPathCreator.setTargetMeshes();
-					path.drawMeshes("refraction");
-
-					// ---
-					// Deferred light
-					// ---
-
-					path.setTarget("tex");
-					path.bindTarget("lbuffer0", "gbuffer0");
-					path.bindTarget("lbuffer1", "gbuffer1");
-
-
-					#if rp_gbuffer_emission
-					{
-						path.bindTarget("gbuffer_emission", "gbufferEmission");
-					}
-					#end
-
-					#if (rp_ssgi != "Off")
-					{
-						if (armory.data.Config.raw.rp_ssgi != false) {
-							path.bindTarget("singlea", "ssaotex");
-						}
-						else {
-							path.bindTarget("empty_white", "ssaotex");
-						}
-					}
-					#end
-
-					var voxelao_pass = false;
-					#if rp_voxelao
-					if (armory.data.Config.raw.rp_gi != false)
-					{
-						#if arm_config
-						voxelao_pass = true;
-						#end
-						path.bindTarget(voxels, "voxels");
-						#if arm_voxelgi_temporal
-						{
-							path.bindTarget(voxelsLast, "voxelsLast");
-						}
-						#end
-					}
-					#end
-
-					#if rp_shadowmap
-					{
-						#if arm_shadowmap_atlas
-						Inc.bindShadowMapAtlas();
-						#else
-						Inc.bindShadowMap();
-						#end
-					}
-					#end
-					
-					#if rp_material_solid
-					path.drawShader("shader_datas/deferred_light_solid/deferred_light");
-					#elseif rp_material_mobile
-					path.drawShader("shader_datas/deferred_light_mobile/deferred_light");
-					#else
-					voxelao_pass ?
-						path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
-						path.drawShader("shader_datas/deferred_light/deferred_light");
-					#end
-
-					path.setTarget("tex");
-					path.bindTarget("refr", "tex1");
-					path.bindTarget("tex", "tex");
-					path.bindTarget("_main", "gbufferD");
-					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer0", "gbuffer0");
-					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				}
 			}
 			#end

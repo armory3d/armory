@@ -54,9 +54,15 @@ vec4 binarySearch(vec3 dir) {
 		dir *= ss_refractionMinRayStep;
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d < depth)
+		if(d > depth)
 			hitCoord -= dir;
 	}
+	// Ugly discard of hits too far away
+	#ifdef _CPostprocess
+	if (abs(d) > PPComp9.z) return vec4(0.0);
+	#else
+	if (abs(d) > ss_refractionSearchDist) return vec4(0.0);
+	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -70,7 +76,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if (d > depth)
+		if(d > depth)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -80,13 +86,13 @@ void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.z;
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
-	float rior = unpackFloat2(gr.r).x;
-	float opac = unpackFloat2(gr.r).y;
+	float rior = gr.x;
+	float opac = gr.y;
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
 	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
-		fragColor = textureLod(tex1, texCoord, 0.0);
+		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
 		return;
 	}
 

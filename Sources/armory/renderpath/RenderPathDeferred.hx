@@ -69,47 +69,46 @@ class RenderPathDeferred {
 		}
 		#end
 
-		{
-			path.createDepthBuffer("main", "DEPTH24");
+		
+		path.createDepthBuffer("main", "DEPTH24");
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer0";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "tex";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "tex";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "buf";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
+		var t = new RenderTargetRaw();
+		t.name = "buf";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer1";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
 		#if rp_gbuffer2
 		{
@@ -316,7 +315,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssrr_half || rp_ssgi_half)
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -355,16 +354,6 @@ class RenderPathDeferred {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			//holds colors
-			var t = new RenderTargetRaw();
-			t.name = "tex1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
 			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -377,31 +366,33 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if(rp_ssr || rp_ssrefr)
+		#if rp_ssrr_half 
+		{
+			var t = new RenderTargetRaw();
+			t.name = "ssra";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "ssrb";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+		#end
+		#end
+
 		#if rp_ssr
 		{
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
-
-			#if rp_ssr_half
-			{
-				var t = new RenderTargetRaw();
-				t.name = "ssra";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = Inc.getHdrFormat();
-				path.createRenderTarget(t);
-
-				var t = new RenderTargetRaw();
-				t.name = "ssrb";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = Inc.getHdrFormat();
-				path.createRenderTarget(t);
-			}
-			#end
 		}
 		#end
 
@@ -501,7 +492,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssrr_half || rp_ssgi_half)
 		path.setTarget("half");
 		path.bindTarget("_main", "texdepth");
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
@@ -569,13 +560,6 @@ class RenderPathDeferred {
 		{
 			var voxelize = path.voxelize();
 
-			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if light was moved
-			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { voxelize = true; break; }
-			}
-			#end
-
 			#if arm_voxelgi_temporal
 			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
 
@@ -601,15 +585,6 @@ class RenderPathDeferred {
 				#end				
 	
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_shadowmap && rp_voxels == "Voxel GI")
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
@@ -810,35 +785,20 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); //Unbind depth so we can read it
-				#end
-
 				path.setTarget("gbufferD1");
+				#if rp_ssrr_half
+				path.bindTarget("half", "tex");
+				#else
 				path.bindTarget("_main", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer0"); //Unbind depth so we can read it
 				#end
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				#if rp_gbuffer2
-				{
-					path.setTarget("gbuffer2");
-					path.clearTarget(0xff000000);
-				}
-				#end
-
 				RenderPathCreator.setTargetMeshes();
 				path.drawMeshes("refraction");
-
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-				#end
 
 				path.setTarget("tex");
 				path.bindTarget("_main", "gbufferD");
@@ -907,15 +867,15 @@ class RenderPathDeferred {
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex1");
 				path.bindTarget("tex", "tex");
+				#if rp_ssrr_half
+				path.bindTarget("half", "gbufferD");
+				#else
 				path.bindTarget("_main", "gbufferD");
+				#end
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-
-				#if (!kha_opengl)
-				path.setDepthFrom("tex", "gbuffer0");
-				#end
 			}
 		}
 		#end
@@ -923,7 +883,7 @@ class RenderPathDeferred {
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
-				#if rp_ssr_half
+				#if rp_ssrr_half
 				var targeta = "ssra";
 				var targetb = "ssrb";
 				#else
@@ -933,7 +893,7 @@ class RenderPathDeferred {
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
-				#if rp_ssr_half
+				#if rp_ssrr_half
 				path.bindTarget("half", "gbufferD");
 				#else
 				path.bindTarget("_main", "gbufferD");
