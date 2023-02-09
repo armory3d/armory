@@ -104,7 +104,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = normalize(refract(-viewPos, viewNormal, 1.0 / rior));
+	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
