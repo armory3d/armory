@@ -221,7 +221,6 @@ def make_gi(context_id):
         geom.write('EndPrimitive();')
 
     if '_ShadowMap' in wrd.world_defs:
-
         vert.add_out('vec4 lightPositionGeom')
         vert.add_uniform('mat4 LWVP', link='_biasLightWorldViewProjectionMatrix')
         vert.write('lightPositionGeom = LWVP * vec4(pos.xyz, 1.0);')

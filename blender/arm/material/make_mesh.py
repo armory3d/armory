@@ -513,9 +513,9 @@ def make_forward(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
     parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
-
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
+    frag.add_out('vec4 fragColor[GBUF_SIZE]')
 
     if '_LTC' in wrd.world_defs:
         frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
@@ -571,7 +571,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs and not '_Refraction' in wrd.world_defs:
+    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs and not '_SSRefraction' in wrd.world_defs:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -580,7 +580,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
-    
+
     if blend:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')

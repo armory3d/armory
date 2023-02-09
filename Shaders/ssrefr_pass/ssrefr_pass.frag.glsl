@@ -30,8 +30,8 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-const float numBinarySearchSteps = 7;
-const float maxSteps = 18;
+#define numBinarySearchSteps 7
+#define maxSteps 18
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -44,24 +44,24 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth2 = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	return depth2;
+	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	return depth;
 }
 
 vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= ss_refractionMinRayStep;
-		hitCoord += dir;
+		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > depth)
-			hitCoord -= dir;
+		if(d < depth)
+			hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
-	if (abs(d) > PPComp9.z) return vec4(0.0);
+	if (abs(d) > PPComp9.z) return vec4(texCoord, 0.0, 1.0);
 	#else
-	if (abs(d) > ss_refractionSearchDist) return vec4(0.0);
+	if (abs(d) > ss_refractionSearchDist) return vec4(texCoord, 0.0, 1.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -117,7 +117,7 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	float refractivity = 1.0 - roughness;
+	float refractivity = 1.0;
 	#ifdef _CPostprocess
 	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
