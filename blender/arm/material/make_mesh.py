@@ -571,7 +571,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs and not '_Refraction' in rpasses:
+    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs and not '_Refraction' in wrd.world_defs:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))

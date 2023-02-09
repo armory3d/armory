@@ -53,11 +53,14 @@ def add_world_defs():
         wrd.world_defs += '_Deferred'
 
     # GI
-    voxelao = False
+    voxelao = voxelgi = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_voxels:
+        if rpdat.rp_voxels == 'Voxel GI':
+            voxelgi = True
+        elif rpdat.rp_voxels == 'Voxel AO':
             voxelao = True
+
     # Shadows
     if rpdat.rp_shadows:
         wrd.world_defs += '_ShadowMap'
@@ -88,7 +91,7 @@ def add_world_defs():
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if voxelao:
+    if voxelao or voxelgi:
         assets.add_khafile_def('arm_voxelgi')
         wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:

@@ -444,7 +444,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
-    rp_voxels: BoolProperty(name="Voxel AO", description="Ambient occlusion", default=False, update=update_renderpath)
+    rp_voxels: EnumProperty(
+        items=[('Off', 'Off', 'Off'),
+               ('Voxel AO', 'Voxel AO', 'Voxel AO'),
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')],
+        name='Voxels', description='Voxels', default='Off', update=update_renderpath)
+
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
@@ -522,6 +527,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
     arm_voxelgi_refl: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="Diffuse intensity", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_weight: FloatProperty(name="Weight", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
