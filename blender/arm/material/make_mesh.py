@@ -515,7 +515,6 @@ def make_forward(con_mesh, rpasses):
     parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
-    frag.add_out('vec4 fragColor[GBUF_SIZE]')
 
     if '_LTC' in wrd.world_defs:
         frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
@@ -533,6 +532,7 @@ def make_forward(con_mesh, rpasses):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
+        frag.add_out('vec4 fragColor[GBUF_SIZE]')
         mrt = rpdat.rp_ssr  # mrt: multiple render targets
         if mrt:
             # Store light gbuffer for post-processing
@@ -790,7 +790,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if mat_state.emission_type != mat_state.EmissionType.NO_EMISSION:
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
-            frag.write('direct = vec3(0.0);')
+            frag.write('direct = vec3(0.0);ffrag')
         frag.write('indirect += emissionCol;')
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
