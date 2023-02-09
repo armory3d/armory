@@ -534,17 +534,16 @@ def make_forward(con_mesh):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
+        frag.write('vec4 fragColor[GBUF_SIZE]')
         mrt = rpdat.rp_ssr  # mrt: multiple render targets
         if mrt:
             # Store light gbuffer for post-processing
-            frag.add_out('vec4 fragColor[2]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
         else:
-            frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
 
         if '_LDR' in wrd.world_defs:
