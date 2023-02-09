@@ -389,11 +389,11 @@ class Inc {
 	}
 
 	public static function drawTranslucency(target: String) {
-		path.setTarget("gbuffer0");
+		path.setTarget("accum");
 		path.clearTarget(0xff000000);
-		path.setTarget("gbuffer1");
+		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
-		path.setTarget("gbuffer0", ["gbuffer1"]);
+		path.setTarget("accum", ["revealage"]);
 
 		#if rp_shadowmap
 		{
@@ -417,8 +417,8 @@ class Inc {
 		}
 		#end
 
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("gbuffer1", "gbuffer1");
+		path.bindTarget("accum", "gbuffer0");
+		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end	

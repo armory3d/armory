@@ -16,10 +16,7 @@ else:
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
-    if rpdat.rp_voxels == 'Voxel GI':
-        con = make_gi(context_id)
-    else:
-        con = make_ao(context_id)
+    con = make_ao(context_id)
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
     assets.fs_equal(con, assets.shader_cons['voxel_frag'])

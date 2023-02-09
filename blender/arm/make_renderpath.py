@@ -53,23 +53,17 @@ def add_world_defs():
         wrd.world_defs += '_Deferred'
 
     # GI
-    voxelgi = False
     voxelao = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_voxels == 'Voxel GI':
-            voxelgi = True
-        elif rpdat.rp_voxels == 'Voxel AO':
+        if rpdat.rp_voxels:
             voxelao = True
     # Shadows
     if rpdat.rp_shadows:
         wrd.world_defs += '_ShadowMap'
         if rpdat.rp_shadowmap_cascades != '1':
-            if voxelgi:
-                log.warn('Disabling shadow cascades - Voxel GI does not support cascades yet')
-            else:
-                wrd.world_defs += '_CSM'
-                assets.add_khafile_def('arm_csm')
+            wrd.world_defs += '_CSM'
+            assets.add_khafile_def('arm_csm')
         if rpdat.rp_shadowmap_atlas:
             assets.add_khafile_def('arm_shadowmap_atlas')
             wrd.world_defs += '_ShadowMapAtlas'
@@ -87,15 +81,14 @@ def add_world_defs():
                 assets.add_khafile_def('arm_shadowmap_atlas_lod')
                 assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
     # SS
-    if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
-        if rpdat.rp_ssgi == 'RTGI':
-            wrd.world_defs += '_RTGI'
+    if rpdat.rp_ssgi == 'RTAO':
+        wrd.world_defs += '_RTGI'
         if rpdat.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if voxelgi or voxelao:
+    if voxelao:
         assets.add_khafile_def('arm_voxelgi')
         wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:
@@ -337,15 +330,13 @@ def build():
             assets.add_shader_pass('ssr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
             if rpdat.arm_ssr_half_res:
-                assets.add_khafile_def('rp_ssr_half')
-                
+                assets.add_khafile_def('rp_ssr_half') 
+
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
             assets.add_khafile_def('rp_ssrefr')
             assets.add_shader_pass('ssrefr_pass')
-            if rpdat.rp_renderer == 'Forward':
-                assets.add_shader_pass('deferred_light')
-                
+
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 

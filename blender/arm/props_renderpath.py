@@ -139,7 +139,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxels = True
         rpdat.rp_voxelgi_resolution = '128'
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
@@ -444,28 +444,19 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
-    rp_voxels: EnumProperty(
-        items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
-               ],
-        name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
+    rp_voxels: BoolProperty(name="Voxel AO", description="Ambient occlusion", default=False, update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
-               ('512', '512', '512'),
-               ('1024', '1024', '1024')],
+               ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
     rp_voxelgi_resolution_z: EnumProperty(
-        items=[('4.0', '4.0', '4.0'),
-               ('2.0', '2.0', '2.0'),
-               ('1.5', '1.5', '1.5'),
+        items=[('2.0', '2.0', '2.0'),
                ('1.0', '1.0', '1.0'),
                ('0.5', '0.5', '0.5'),
-               ('0.25', '0.25', '0.25'),
-               ('0.125', '0.125', '0.125')],
+               ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
@@ -523,7 +514,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')
 
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),

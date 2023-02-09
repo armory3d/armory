@@ -81,10 +81,7 @@ def make(context_id, rpasses):
         elif rpdat.arm_material_model == 'Solid':
             make_forward_solid(con_mesh)
         else:
-            if 'refraction' in rpasses:
-                make_deferred(con_mesh, rpasses)
-            else:
-                make_forward(con_mesh, rpasses)
+            make_forward(con_mesh, rpasses)
     elif rid == 'Deferred':
         make_deferred(con_mesh, rpasses)
     elif rid == 'Raytracer':
@@ -551,6 +548,12 @@ def make_forward(con_mesh, rpasses):
             frag.add_include('std/tonemap.glsl')
             frag.write('fragColor[GBUF_IDX_0].rgb = tonemapFilmic(fragColor[0].rgb);')
 
+    if '_SSRefraction' in wrd.world_defs or '_VoxelGIRefract' in wrd.world_defs:
+        if parse_opacity:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+        else:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
+
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
@@ -568,7 +571,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs:
+    if (parse_opacity or arm_discard) and not '_VoxelGIRefract' in wrd.world_defs and not '_Refraction' in rpasses:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
