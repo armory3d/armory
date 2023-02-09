@@ -265,17 +265,17 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
-	envl += albedo;
+	envl *= albedo;
 
 #ifdef _Brdf
 	envl *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl += prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl *= backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl += backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 	envl *= envmapStrength * occspec.x;
@@ -549,12 +549,11 @@ fragColor.rgb = envl;
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelBlend +
-			traceRefraction(voxels, voxpos, n, v, 0.1, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelBlend + traceRefraction(voxels, voxpos, n, v, 0.1, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
 	#else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelgiRefr;
 	#endif
-	fragColor.rgb = mix(refraction + fragColor.rgb, fragColor.rgb, opac);
+	fragColor.rgb = mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 	#endif
 	#endif
 }
