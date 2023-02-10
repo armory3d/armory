@@ -335,9 +335,9 @@ void main() {
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
-	float sdotNH = dot(n, sh);
-	float sdotVH = dot(v, sh);
-	float sdotNL = dot(n, sunDir);
+	float sdotNH = max(0.0, dot(n, sh));
+	float sdotVH = max(0.0, dot(v, sh));
+	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
 				   specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
