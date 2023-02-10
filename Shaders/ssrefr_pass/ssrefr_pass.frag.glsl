@@ -45,7 +45,8 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 float getDeltaDepth(const vec3 hit) {
 	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	return depth;
+	vec3 viewPos = normalize(getPosView(viewRay ,depth, cameraProj));
+	return viewPos.z - hit.z;
 }
 
 vec4 binarySearch(vec3 dir) {
