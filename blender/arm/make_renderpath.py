@@ -139,7 +139,7 @@ def add_world_defs():
         assets.add_khafile_def('arm_clusters')
 
 	#really unsure about these lines.
-    if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+    if '_Rad' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
         wrd.world_defs += '_Brdf'
 
 def build():
@@ -342,7 +342,8 @@ def build():
 
     if not has_voxels or rpdat.arm_material_model != 'Full':
         rp_voxels = 'Off'
-    if rp_voxels != 'Off':
+
+    if rp_voxels:
         if has_voxels:
             assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
