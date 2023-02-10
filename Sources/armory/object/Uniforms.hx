@@ -216,7 +216,7 @@ class Uniforms {
 			#if rp_voxels
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
-				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+				return (armory.renderpath.RenderPathCreator.voxelFrame % freq + 1) / freq;
 			}
 			#end
 			#if rp_bloom
