@@ -16,7 +16,10 @@ else:
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
-    con = make_ao(context_id)
+    if rpdat.rp_voxels == 'Voxel AO':
+        con = make_ao(context_id)
+    elif rpdat.rp_voxels == 'Voxel GI':
+        con = make_gi(context_id) 
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
     assets.fs_equal(con, assets.shader_cons['voxel_frag'])
@@ -50,7 +53,7 @@ def make_gi(context_id):
                 break
     frag.add_uniform('layout(rgba16) writeonly image3D voxels')
 
-    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+    frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 2.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
@@ -242,7 +245,7 @@ def make_gi(context_id):
 
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(min(basecol, vec3(1.0)), 1.0));')
+    frag.write('imageStore(voxels, ivec3((voxelgiResolution + 2.0) * voxel), vec4(min(basecol, vec3(1.0)), 1.0));')
 
     return con_voxel
 
@@ -314,9 +317,9 @@ def make_ao(context_id):
         frag.write('struct SPIRV_Cross_Input { float3 wpos : TEXCOORD0; };')
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
-        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
-        voxRes = str(rpdat.rp_voxelgi_resolution)
-        voxResZ = str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z)))
+        frag.write('  if (abs(stage_input.wpos.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 2.0) + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
+        voxRes = str(rpdat.rp_voxelgi_resolution + 2)
+        voxResZ = str(int(int(rpdat.rp_voxelgi_resolution + 2) * str(float(rpdat.rp_voxelgi_resolution_z + 2.0))))
         frag.write('  voxels[int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ') * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
@@ -360,7 +363,7 @@ def make_ao(context_id):
         geom.write('}')
         geom.write('EndPrimitive();')
 
-        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
-        frag.write('imageStore(voxels, ivec3(voxelgiResolution * (voxposition * 0.5 + 0.5)), vec4(1.0));')
+        frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 2.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+        frag.write('imageStore(voxels, ivec3((voxelgiResolution + 2) * (voxposition * 0.5 + 0.5)), vec4(1.0));')
 
     return con_voxel
