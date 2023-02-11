@@ -1,14 +1,16 @@
 import bpy
 
+import arm.material.shader as shader
 import arm.utils
 
 if arm.is_reload(__name__):
+    shader = arm.reload_module(shader)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
 
 
-def write(vert, frag):
+def write(vert: shader.Shader, frag: shader.Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     is_mobile = rpdat.arm_material_model == 'Mobile'

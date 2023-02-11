@@ -201,8 +201,8 @@ class ShaderContext:
         self.tese = Shader(self, 'tese')
         return self.tese
 
-class Shader:
 
+class Shader:
     def __init__(self, context, shader_type):
         self.context = context
         self.shader_type = shader_type
