@@ -569,7 +569,12 @@ def write_compiledglsl(defs, make_variants):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
 
+<<<<<<< HEAD
         gbuffer_size = make_renderpath.get_num_gbuffer_rts()
+=======
+        
+        gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
+>>>>>>> GI
         f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
         #Write indices of G-Buffer render targets
@@ -587,9 +592,14 @@ def write_compiledglsl(defs, make_variants):
             f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
             idx_refraction += 1
 
+<<<<<<< HEAD
         if '_VoxelGIRefract' in wrd.world_defs or '_SSRefraction' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment
                 
+=======
+        if '_VoxelGIRefract' in wrd.world_defs:
+            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment        
+>>>>>>> GI
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif

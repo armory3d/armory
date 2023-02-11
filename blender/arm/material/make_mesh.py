@@ -553,11 +553,11 @@ def make_forward(con_mesh, rpasses):
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
         else:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
-
+=
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
-
+=
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
@@ -795,9 +795,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
+            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, 1.0 / rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
         else:
-            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
+            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, 1.0 / rior) * voxelgiRefr;')
         frag.write('indirect = mix(refraction * indirect, indirect, opacity);')
         frag.write('direct = mix(refraction * direct, direct, opacity);')
 

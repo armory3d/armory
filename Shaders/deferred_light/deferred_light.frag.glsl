@@ -221,7 +221,7 @@ void main() {
 	vec3 p = getPos(eye, normalize(eyeLook), normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
-	
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 
 #ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);

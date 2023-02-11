@@ -46,7 +46,7 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    if arm.utils.get_gapi() == 'direct3d11':
+    if arm.utils.get_gapi() == True:#'direct3d11':
         for e in con_voxel.data['vertex_elements']:
             if e['name'] == 'nor':
                 con_voxel.data['vertex_elements'].remove(e)
@@ -246,6 +246,7 @@ def make_gi(context_id):
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3((voxelgiResolution + 2.0) * voxel), vec4(min(basecol, vec3(1.0)), 1.0));')
+
 
     return con_voxel
 
