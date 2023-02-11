@@ -129,7 +129,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	direct *= lightCol;
 
 	#ifdef _MicroShadowing
-	direct *= dotNL + 2.0 * occ * occ - 1.0;
+	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
 	#endif
 
 	#ifdef _SSRS
