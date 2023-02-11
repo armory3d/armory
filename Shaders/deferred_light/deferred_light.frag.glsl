@@ -391,7 +391,8 @@ void main() {
 	#endif
 
 	#ifdef _MicroShadowing
-	svisibility *= sdotNL + 2.0 * occspec.x * occspec.x - 1.0;
+	// See https://advances.realtimerendering.com/other/2016/naughty_dog/NaughtyDog_TechArt_Final.pdf
+	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
 	fragColor.rgb += sdirect * svisibility * sunCol;
