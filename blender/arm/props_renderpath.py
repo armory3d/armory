@@ -448,6 +448,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
+    arm_voxelgi_bounces: EnumProperty(
+        items=[('1', '1', '1'),
+               ('2', '2', '2')],
+        name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),

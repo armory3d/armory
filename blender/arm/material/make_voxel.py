@@ -22,13 +22,13 @@ def make(context_id):
         con = make_ao(context_id)
 
     assets.vs_equal(con, assets.shader_cons['voxel_vert'])
-    assets.fs_equal(con, assets.shader_cons['voxel_frag'])
-    assets.gs_equal(con, assets.shader_cons['voxel_geom'])
+    assets.gs_equal(con, assets.shader_cons['voxel_frag'])
+    assets.fs_equal(con, assets.shader_cons['voxel_geom'])
 
     return con
 
 def make_gi(context_id):
-    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_reds': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_write_alpha': [False], 'conservative_raster': True })
+    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
     wrd = bpy.data.worlds['Arm']
 
     vert = con_voxel.make_vert()
@@ -46,14 +46,10 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    if arm.utils.get_gapi() == True:#'direct3d11':
-        for e in con_voxel.data['vertex_elements']:
-            if e['name'] == 'nor':
-                con_voxel.data['vertex_elements'].remove(e)
-                break
-    frag.add_uniform('layout(rgba16) writeonly image3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxelsNor')
 
-    frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 2.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
@@ -64,9 +60,12 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    frag.write('vec3 emissionCol;') #
+    frag.write('vec3 emissionCol;')
+    parse_opacity = rpdat.arm_voxelgi_refraction
+    if parse_opacity:
+        frag.write('float opacity;')
     frag.write('float dotNV = 0.0;')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
@@ -104,12 +103,16 @@ def make_gi(context_id):
         vert.write_pre = False
 
     vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_uniform('mat3 N', '_normalMatrix')
+
     vert.add_out('vec3 voxpositionGeom')
+    vert.add_out('vec3 wnormalGeom')
+
     vert.add_include('compiled.inc')
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
-        vert.write('vcolorGeom = col.rgb;')
+        vert.write('vcolorGeom = col;')
 
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
@@ -117,13 +120,14 @@ def make_gi(context_id):
 
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
-    else:
-        vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
-    vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
+        vert.write('voxpositionGeom = ((W * pos - vec4(eyeSnap, 1.0)) / vec4(voxelgiHalfExtents, 1.0)).xyz;')
+    else: 
+        vert.write('voxpositionGeom = ((W * pos) / vec4(voxelgiHalfExtents, 1.0)).xyz;')
+    vert.write('wnormalGeom = normalize(N * vec3(nor, 1.0));')
+    # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
     geom.add_out('vec3 voxposition')
-    geom.add_out('vec4 lightPosition')
+    geom.add_out('vec3 wnormal')
     if con_voxel.is_elem('col'):
         geom.add_out('vec3 vcolor')
     if con_voxel.is_elem('tex'):
@@ -133,118 +137,77 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
-    if arm.utils.get_gapi() == 'direct3d11':
-        # No geom shader compiler for hlsl yet
-        geom.noprocessing = True
-        struct_input = 'struct SPIRV_Cross_Input {'
-        struct_output= 'struct SPIRV_Cross_Output {'
-        pos = 0
-        if export_bpos:
-            struct_input += ' float3 bpositionGeom : TEXCOORD' + str(pos) + ';'
-            struct_output += ' float3 bposition : TEXCOORD' + str(pos) + ';'
-            pos += 1
-        struct_input += ' float3 lightPositionGeom : TEXCOORD' + str(pos) + ';'
-        struct_output += ' float3 lightPosition : TEXCOORD' + str(pos) + ';'
-        pos +=1
-        if export_mpos:
-            struct_input += ' float3 mpositionGeom : TEXCOORD' + str(pos) + ';'
-            struct_output += ' float3 mposition : TEXCOORD' + str(pos) + ';'
-            pos += 1
-        if con_voxel.is_elem('tex'):
-            struct_input += ' float2 texCoordGeom : TEXCOORD' + str(pos) + ';'
-            struct_output += ' float2 texCoord : TEXCOORD' + str(pos) + ';'
-            pos += 1
-        if con_voxel.is_elem('col'):
-            struct_input += ' float3 vcolorGeom : TEXCOORD' + str(pos) + ';'
-            struct_output += ' float3 vcolor : TEXCOORD' + str(pos) + ';'
-            pos += 1
-        struct_input += ' float3 voxpositionGeom : TEXCOORD' + str(pos) + ';'
-        struct_output += ' float3 voxposition : TEXCOORD' + str(pos) + ';'
-        pos +=1
-        struct_input += ' float4 gl_Position : SV_POSITION; };'
-        struct_output += ' float4 gl_Position : SV_POSITION; };'
-        geom.write(struct_input)
-        geom.write(struct_output)
-        geom.write('[maxvertexcount(3)]')
-        geom.write('void main(triangle SPIRV_Cross_Input stage_input[3], inout TriangleStream<SPIRV_Cross_Output> output) {')
-        geom.write('  float3 p1 = stage_input[1].voxpositionGeom.xyz - stage_input[0].voxpositionGeom.xyz;')
-        geom.write('  float3 p2 = stage_input[2].voxpositionGeom.xyz - stage_input[0].voxpositionGeom.xyz;')
-        geom.write('  float3 p = abs(cross(p1, p2));')
-        geom.write('  for (int i = 0; i < 3; ++i) {')
-        geom.write('    SPIRV_Cross_Output stage_output;')
-        geom.write('    stage_output.voxposition = stage_input[i].voxpositionGeom;')
-        geom.write('    stage_output.lightPosition = stage_input[i].lightPositionGeom;')
-        if con_voxel.is_elem('col'):
-            geom.write('    stage_output.vcolor = stage_input[i].vcolorGeom;')
-        if con_voxel.is_elem('tex'):
-            geom.write('    stage_output.texCoord = stage_input[i].texCoordGeom;')
-        if export_mpos:
-            geom.write('    stage_output.mposition = stage_input[i].mpositionGeom;')
-        if export_bpos:
-            geom.write('    stage_output.bposition = stage_input[i].bpositionGeom;')
-        geom.write('    if (p.z > p.x && p.z > p.y) {')
-        geom.write('      stage_output.gl_Position = float4(stage_input[i].voxpositionGeom.x, stage_input[i].voxpositionGeom.y, 0.0, 1.0);')
-        geom.write('    }')
-        geom.write('    else if (p.x > p.y && p.x > p.z) {')
-        geom.write('      stage_output.gl_Position = float4(stage_input[i].voxpositionGeom.y, stage_input[i].voxpositionGeom.z, 0.0, 1.0);')
-        geom.write('    }')
-        geom.write('    else {')
-        geom.write('      stage_output.gl_Position = float4(stage_input[i].voxpositionGeom.x, stage_input[i].voxpositionGeom.z, 0.0, 1.0);')
-
-        geom.write('    }')
-        geom.write('    output.Append(stage_output);')
-        geom.write('  }')
-        geom.write('}')
-    else:
-        geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
-        geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
-        geom.write('vec3 p = abs(cross(p1, p2));')
-        geom.write('for (uint i = 0; i < 3; ++i) {')
-        geom.write('    voxposition = voxpositionGeom[i];')
-        geom.write('    lightPosition = lightPositionGeom[i];')
-        if con_voxel.is_elem('col'):
-            geom.write('    vcolor = vcolorGeom[i];')
-        if con_voxel.is_elem('tex'):
-            geom.write('    texCoord = texCoordGeom[i];')
-        if export_mpos:
-            geom.write('    mposition = mpositionGeom[i];')
-        if export_bpos:
-            geom.write('    bposition = bpositionGeom[i];')
-        geom.write('    if (p.z > p.x && p.z > p.y) {')
-        geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
-        geom.write('    }')
-        geom.write('    else if (p.x > p.y && p.x > p.z) {')
-        geom.write('        gl_Position = vec4(voxposition.y, voxposition.z, 0.0, 1.0);')
-        geom.write('    }')
-        geom.write('    else {')
-        geom.write('        gl_Position = vec4(voxposition.x, voxposition.z, 0.0, 1.0);')
-        geom.write('    }')
-        geom.write('    EmitVertex();')
-        geom.write('}')
-        geom.write('EndPrimitive();')
-
-    if '_ShadowMap' in wrd.world_defs:
-        vert.add_out('vec4 lightPositionGeom')
-        vert.add_uniform('mat4 LWVP', link='_biasLightWorldViewProjectionMatrix')
-        vert.write('lightPositionGeom = LWVP * vec4(pos.xyz, 1.0);')
-        frag.add_uniform('sampler2DShadow shadowMap')
-        frag.add_uniform('float shadowsBias', link='_sunShadowsBias')
-        frag.write('float visibility = 1.0;')
-        if '_CSM' in wrd.world_defs:
-            frag.add_include('std/shadows.glsl')
-            frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
-            frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.write('visibility = shadowTestCascade(shadowMap, eye, wposition, shadowsBias);')
-        else:
-            frag.write('if (lightPosition.w > 0.0) {')
-            frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-            frag.write('    visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
-            frag.write('}')
-        frag.write('basecol *= visibility;')
-        frag.write('basecol += emissionCol;')
+    geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+    geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+    geom.write('vec3 p = abs(cross(p1, p2));')
+    geom.write('for (uint i = 0; i < 3; ++i) {')
+    geom.write('    voxposition = voxpositionGeom[i];')
+    geom.write('    wnormal = wnormalGeom[i];')
+    if con_voxel.is_elem('col'):
+        geom.write('    vcolor = vcolorGeom[i];')
+    if con_voxel.is_elem('tex'):
+        geom.write('    texCoord = texCoordGeom[i];')
+    if export_mpos:
+        geom.write('    mposition = mpositionGeom[i];')
+    if export_bpos:
+        geom.write('    bposition = bpositionGeom[i];')
+    geom.write('    if (p.z > p.x && p.z > p.y) {')
+    geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else if (p.x > p.y && p.x > p.z) {')
+    geom.write('        gl_Position = vec4(voxposition.y, voxposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else {')
+    geom.write('        gl_Position = vec4(voxposition.x, voxposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    EmitVertex();')
+    geom.write('}')
+    geom.write('EndPrimitive();')
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('imageStore(voxels, ivec3((voxelgiResolution + 2) * voxel), vec4(min(basecol, vec3(1.0)), 1.0));')
+    frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
+    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+
+    frag.write('val = encNor(wnormal);');
+    frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
+        
+        # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+        # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+            
+        # frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
+        # if parse_opacity:
+        #     frag.write('vec4 val = vec4(color, opacity);')
+        # else:
+        #     frag.write('vec4 val = vec4(color, 1.0);')
+        # frag.write('val *= 255.0;')
+        # frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
+        # frag.write('uint prevStoredVal = 0;')
+        # frag.write('uint currStoredVal;')
+        # # frag.write('int counter = 0;')
+        # # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal && counter < 16) {')
+        # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+        # frag.write('    vec4 rval = convRGBA8ToVec4(currStoredVal & 0xFEFEFEFE);')
+        # frag.write('    uint n = decUnsignedNibble(currStoredVal);')
+        # frag.write('    rval = rval * n + val;')
+        # frag.write('    rval /= ++n;')
+        # frag.write('    rval = round(rval / 2) * 2;')
+        # frag.write('    newVal = encUnsignedNibble(convVec4ToRGBA8(rval), n);')
+        # frag.write('    prevStoredVal = currStoredVal;')
+        # # frag.write('    counter++;')
+        # frag.write('}')
+
+        # frag.write('val.rgb *= 255.0f;')
+        # frag.write('uint newVal = convVec4ToRGBA8(val);')
+        # frag.write('uint prevStoredVal = 0;')
+        # frag.write('uint curStoredVal;')
+        # frag.write('while ((curStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+        # frag.write('    prevStoredVal = curStoredVal;')
+        # frag.write('    vec4 rval = convRGBA8ToVec4(curStoredVal);')
+        # frag.write('    rval.xyz = (rval.xyz * rval.w);')
+        # frag.write('    vec4 curValF = rval + val;')
+        # frag.write('    curValF.xyz /= (curValF.w);')
+        # frag.write('    newVal = convVec4ToRGBA8(curValF);')
+        # frag.write('}')
 
     return con_voxel
 
