@@ -788,9 +788,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
+            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, 1.0 / rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
         else:
-            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
+            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, 1.0 / rior) * voxelgiRefr;')
         frag.write('indirect = mix(refraction * indirect, indirect, opacity);')
         frag.write('direct = mix(refraction * direct, direct, opacity);')
 
