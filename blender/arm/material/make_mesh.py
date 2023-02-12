@@ -579,7 +579,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
     if blend:
-        frag.add_out('vec4 fragColor[GBUF_IDX_1]')
+        frag.add_out('vec4 fragColor[GBUF_SIZE]')
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
         else:
