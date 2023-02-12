@@ -1799,9 +1799,11 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         sub.prop(rpdat, 'arm_ssgi_radius')
         sub.prop(rpdat, 'arm_ssgi_strength')
         sub.prop(rpdat, 'arm_ssgi_max_steps')
-        layout.separator(factor=0.5)
+        layout.separator()
 
-        layout.prop(rpdat, 'arm_micro_shadowing')
+        row = layout.row()
+        row.enabled = rpdat.arm_material_model == 'Full'
+        row.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
 
         col = layout.column()

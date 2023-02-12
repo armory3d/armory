@@ -1,7 +1,19 @@
 import bpy
 
-def write(vert, frag):
+import arm.material.shader as shader
+import arm.utils
+
+if arm.is_reload(__name__):
+    shader = arm.reload_module(shader)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
+def write(vert: shader.Shader, frag: shader.Shader):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
+    is_mobile = rpdat.arm_material_model == 'Mobile'
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     is_single_atlas = '_SingleAtlas' in wrd.world_defs
@@ -71,10 +83,10 @@ def write(vert, frag):
         frag.write('\t, lightsArraySpot[li].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
-    if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
+    if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
         frag.write('  , voxels, voxpos')
-    if '_voxelGiRefract' in wrd.world_defs:
-        frag.write('  , voxels, voxpos')
+    if '_MicroShadowing' in wrd.world_defs and not is_mobile:
+        frag.write('\t, occlusion')
     frag.write(');')
 
     frag.write('}') # for numLights

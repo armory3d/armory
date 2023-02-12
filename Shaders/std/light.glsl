@@ -104,9 +104,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
 	vec3 h = normalize(v + l);
-	float dotNH = dot(n, h);
-	float dotVH = dot(v, h);
-	float dotNL = dot(n, l);
+	float dotNH = max(0.0, dot(n, h));
+	float dotVH = max(0.0, dot(v, h));
+	float dotNL = max(0.0, dot(n, l));
 
 	#ifdef _LTC
 	float theta = acos(dotNV);
@@ -129,7 +129,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	direct *= lightCol;
 
 	#ifdef _MicroShadowing
-	direct *= dotNL + 2.0 * occ * occ - 1.0;
+	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
 	#endif
 
 	#ifdef _SSRS

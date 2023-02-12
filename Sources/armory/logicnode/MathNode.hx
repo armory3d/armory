@@ -15,6 +15,18 @@ class MathNode extends LogicNode {
 		return Math.round(number) / Math.pow(10, precision);
 	}
 
+	public function fract(a: Float): Float {
+		return a - Math.floor(a);
+	}
+
+	public function pingpong(a: Float, b: Float): Float {
+		if (b == 0.0) {
+			return 0.0;
+		} else {
+			return Math.abs(fract((a - b) / (b * 2.0)) * b * 2.0 - b);
+		}
+	}  
+
 	override function get(from: Int): Dynamic {
 		var r = 0.0;
 		switch (property0) {
@@ -84,6 +96,8 @@ class MathNode extends LogicNode {
 					r /= inputs[i].get();
 					i++;
 				}
+			case "Ping-Pong":
+				r = pingpong(inputs[0].get(), inputs[1].get());
 			}
 		// Clamp
 		if (property1) r = r < 0.0 ? 0.0 : (r > 1.0 ? 1.0 : r);
