@@ -136,18 +136,35 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		#endif
 	}
 	else direct = albedo;
+	float dotNH = max(0.0, dot(n, h));
+	float dotVH = max(0.0, dot(v, h));
+	float dotNL = max(0.0, dot(n, l));
 
-	direct *= lightCol;
-    direct *= attenuate(distance(p, lp));
+
+  direct *= lightCol;
+  direct *= attenuate(distance(p, lp));
 	
-    if(!vox) {
+  if(!vox) {
 		#ifdef _MicroShadowing
 		direct *= dotNL + 2.0 * occ * occ - 1.0;
 		#endif
-
 		#ifdef _SSRS
 		direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
 		#endif
+ 
+    #ifdef _MicroShadowing
+    direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+    #endif
+
+    #ifdef _SSRS
+    direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+    #endif
+
+    #ifdef _VoxelAOvar
+    #ifdef _VoxelShadow
+    direct *= 1.0 - traceShadow(voxels, voxpos, l);
+    #endif
+  	#endif
 
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow

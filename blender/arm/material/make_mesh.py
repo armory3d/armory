@@ -787,6 +787,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
             frag.write(', gbufferD, invVP, eye')
+
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:
