@@ -312,7 +312,7 @@ void main() {
 
 	if (roughness < 1.0) {
 		#ifdef _VoxelGITemporal
-		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
+		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
 		#else
 		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
 		#endif
@@ -545,9 +545,9 @@ fragColor.rgb = envl;
 	float rior = gr.x;
 	float opac = gr.y;
 	#ifdef _VoxelGITemporal
-	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelBlend + traceRefraction(voxels, voxpos, n, v, 0.1, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, 1.0, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, 1.0, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
 	#else
-	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 0.1, rior) * voxelgiRefr;
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, 1.0, rior) * voxelgiRefr;
 	#endif
 	fragColor.rgb = mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 	#endif

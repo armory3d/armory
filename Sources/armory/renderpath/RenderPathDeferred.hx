@@ -8,9 +8,9 @@ class RenderPathDeferred {
 	#if (rp_renderer == "Deferred")
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != 'Off')
 	static var voxels = "voxels";
-	static var voxelsLast = "voxels";
+	static var voxelsLast = "voxelsB";
 	#end
 
 	#if rp_bloom
@@ -51,7 +51,29 @@ class RenderPathDeferred {
 
 		#if (rp_translucency)
 		{
-			Inc.initTranslucency();
+			path.createDepthBuffer("main", "DEPTH24");
+
+			var t = new RenderTargetRaw();
+			t.name = "accum";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "revealage";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R16";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+
+			path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 		}
 		#end
 
@@ -542,7 +564,6 @@ class RenderPathDeferred {
 
 			#if arm_voxelgi_temporal
 			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
-
 			if (voxelize) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
@@ -563,8 +584,9 @@ class RenderPathDeferred {
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
 				#end				
-	
-				path.bindTarget(voxtex, "voxels");
+
+				path.bindTarget(voxels, "voxels");
+
 				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
 				{
 					#if arm_shadowmap_atlas
@@ -709,7 +731,50 @@ class RenderPathDeferred {
 
 		#if rp_translucency
 		{
-			Inc.drawTranslucency("tex");
+			var voxelao_pass = false;
+			#if (rp_voxels != 'Off')
+			if (armory.data.Config.raw.rp_voxels != false)
+			{
+				#if (arm_config && (rp_voxels == "Voxel AO"))
+				voxelao_pass = true;
+				#end
+				path.bindTarget(voxels, "voxels");
+				#if arm_voxelgi_temporal
+				{
+					path.bindTarget(voxelsLast, "voxelsLast");
+				}
+				#end
+			}
+			#end
+
+			path.setTarget("accum");
+			path.clearTarget(0xff000000);
+			path.setTarget("revealage");
+			path.clearTarget(0xffffffff);
+			path.setTarget("accum", ["revealage"]);
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
+			path.drawMeshes("translucent");
+			#if rp_render_to_texture
+			{
+				path.setTarget("tex");
+			}
+			#else
+			{
+				path.setTarget("");
+			}
+			#end
+			path.bindTarget("accum", "gbuffer0");
+			path.bindTarget("revealage", "gbuffer1");
+			path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
+			//Inc.drawTranslucency("tex");
 		}
 		#end
 

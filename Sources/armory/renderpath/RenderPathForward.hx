@@ -9,9 +9,9 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != 'Off')
 	static var voxels = "voxels";
-	static var voxelsLast = "voxels";
+	static var voxelsLast = "voxelsB";
 	#end
 
 	#if rp_bloom
