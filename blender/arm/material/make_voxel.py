@@ -53,7 +53,7 @@ def make_gi(context_id):
                 break
     frag.add_uniform('layout(rgba16) writeonly image3D voxels')
 
-    frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 1.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
@@ -135,7 +135,7 @@ def make_gi(context_id):
         geom.add_out('vec3 bposition')
 
     if arm.utils.get_gapi() == 'direct3d11':
-        voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0 + 1.0))
+        voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0 + 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
         else:
@@ -272,11 +272,11 @@ def make_gi(context_id):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition + n * shadowsBias * 10.0, shadowsBias);')
+                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition, shadowsBias);')
             else:
                 vert.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
                 vert.write('lightPos = LVP * vec4(wposition + n * shadowsBias * 100.0, 1.0);')
-                frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, lightPosition.xyz / lightPosition.w, shadowsBias);')
+                frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, wposition, shadowsBias);')
             frag.write('}')
         frag.write('basecol *= svisibility * sunCol;')
 
@@ -409,8 +409,7 @@ def make_gi(context_id):
     
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 1.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
-    frag.write('imageStore(voxels, ivec3((voxelgiResolution + 1.0) * voxel), vec4(min(basecol, vec3(1.0)), opacity));')
+    frag.write('imageStore(voxels, ivec3((voxelgiResolution + 2.0) * voxel), vec4(min(basecol, vec3(1.0)), opacity));')
 
     return con_voxel
 
@@ -445,7 +444,7 @@ def make_ao(context_id):
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
-        voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0 + 1.0))
+        voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0 + 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
         else:
@@ -482,9 +481,9 @@ def make_ao(context_id):
         frag.write('struct SPIRV_Cross_Input { float3 wpos : TEXCOORD0; };')
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
-        frag.write('  if (abs(stage_input.wpos.z) > ' + (rpdat.rp_voxelgi_resolution_z + 1.0) + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
-        voxRes = str(rpdat.rp_voxelgi_resolution + 1.0)
-        voxResZ = str(int(int(rpdat.rp_voxelgi_resolution + 1.0) * float(rpdat.rp_voxelgi_resolution_z + 1.0)))
+        frag.write('  if (abs(stage_input.wpos.z) > ' + (rpdat.rp_voxelgi_resolution_z + 2.0) + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
+        voxRes = str(rpdat.rp_voxelgi_resolution + 2.0)
+        voxResZ = str(int(int(rpdat.rp_voxelgi_resolution + 2.0) * float(rpdat.rp_voxelgi_resolution_z + 2.0)))
         frag.write('  voxels[int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ') * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
@@ -528,7 +527,6 @@ def make_ao(context_id):
         geom.write('}')
         geom.write('EndPrimitive();')
 
-        frag.write('if (abs(voxposition.z) > ' + str(float(rpdat.rp_voxelgi_resolution_z) + 1.0) + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
         frag.write('imageStore(voxels, ivec3((voxelgiResolution + 1.0) * (voxposition * 0.5 + 0.5)), vec4(1.0));')
 
     return con_voxel
