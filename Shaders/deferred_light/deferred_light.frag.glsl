@@ -305,23 +305,26 @@ void main() {
 	#endif
 	
 	#ifdef _VoxelGITemporal
-	envl += (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)).rgb * voxelgiDiff * g1.rgb;
+	fragColor = (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)) * voxelgiDiff * g1;
 	#else
-	envl += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
+	fragColor = traceDiffuse(voxpos, n, voxels) * voxelgiDiff * g1;
 	#endif
 
 	if (roughness < 1.0) {
 		#ifdef _VoxelGITemporal
-		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
+		fragColor.rgb += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
 		#else
-		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
+		fragColor.rgb += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
 		#endif
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
-	envl *= voxelgiEnv;
 #endif
 
+#ifdef _VoxelGI
+fragColor.rgb *= envl;
+#else
 fragColor.rgb = envl;
+#endif
 
 #ifdef _SSAO
 	#ifdef _RTGI

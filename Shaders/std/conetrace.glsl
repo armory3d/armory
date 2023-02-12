@@ -52,7 +52,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset;
 	float diam = dist * aperture;
 	vec3 samplePos;
-	while (sampleCol.a < 1.0 && dist < maxDist) {
+	while (dist < maxDist) {
 		samplePos = dir * dist + origin;
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		vec4 mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip);

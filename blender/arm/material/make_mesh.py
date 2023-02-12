@@ -544,8 +544,10 @@ def make_forward(con_mesh):
             frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[GBUF_IDX_1] = vec4(n.xy, roughness, metallic);')
         else:
-            frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, 1.0);')
-
+            if parse_opacity:
+                frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, opacity);')
+            else:
+                frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, 1.0);')
         if '_LDR' in wrd.world_defs:
             frag.add_include('std/tonemap.glsl')
             frag.write('fragColor[GBUF_IDX_0].rgb = tonemapFilmic(fragColor[0].rgb);')
@@ -675,24 +677,33 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
         else:
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
+        
+        frag.write('vec4 rgba;')
 
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', link='_voxelBlend')
             frag.add_uniform('sampler3D voxelsLast')
-            frag.write('indirect += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * basecol.rgb;')
+            frag.write('rgba = (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)) * voxelgiDiff ;')
         else:
-            frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
+            frag.write('rgba = traceDiffuse(voxpos, n, voxels) * voxelgiDiff;')
+
+        frag.write('rgba.rgb *= basecol;')
 
         frag.write('if (roughness < 1.0) {')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	indirect += (traceReflection(voxels, voxpos, n, vVec, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, vVec, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
+            frag.write('	rgba.rgb += (traceReflection(voxels, voxpos, n, vVec, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, vVec, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
         else:
-            frag.write('	indirect += traceReflection(voxels, voxpos, n, vVec, roughness) * voxelgiRefl;')
+            frag.write('	rgba.rgb += traceReflection(voxels, voxpos, n, vVec, roughness) * voxelgiRefl;')
 
         frag.write('}')
         frag.write('indirect *= voxelgiEnv;')
 
-    frag.write('vec3 direct = indirect;')
+    if '_VoxelGI' in wrd.world_defs:
+        if parse_opacity:
+            frag.write('opacity = rgba.a;')
+
+    frag.write('vec3 direct = indirect * rgba.rgb;')
+    
 
     if '_SSRS' in wrd.world_defs:
         frag.add_uniform('sampler2D gbufferD')
@@ -788,7 +799,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;')#TODO replace roughness with transmission
+            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;') #TODO replace roughness with transmission
         else:
             frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
         frag.write('indirect = mix(refraction * indirect, indirect, opacity);')
