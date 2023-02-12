@@ -66,7 +66,9 @@ def write(vert, frag):
     frag.write('    albedo,')
     frag.write('    roughness,')
     frag.write('    specular,')
-    frag.write('    f0')
+    frag.write('    f0,')
+    frag.write('    false')
+    
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:

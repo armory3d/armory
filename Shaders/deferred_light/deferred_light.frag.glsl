@@ -446,7 +446,7 @@ fragColor.rgb = envl;
 
 #ifdef _SinglePoint
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false
 		#ifdef _ShadowMap
 			, 0, pointBias, true
 		#endif
@@ -505,7 +505,8 @@ fragColor.rgb = envl;
 			albedo,
 			roughness,
 			occspec.y,
-			f0
+			f0,
+			false
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
 				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0

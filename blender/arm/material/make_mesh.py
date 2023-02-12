@@ -605,8 +605,36 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
 
-    frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
-    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+    if '_SinglePoint' in wrd.world_defs:
+        frag.add_uniform('vec3 pointPos', link='_pointPosition')
+        frag.add_uniform('vec3 pointCol', link='_pointColor')
+        if '_Spot' in wrd.world_defs:
+            frag.add_uniform('vec3 spotDir', link='_spotDirection')
+            frag.add_uniform('vec3 spotRight', link='_spotRight')
+            frag.add_uniform('vec4 spotData', link='_spotData')
+        if is_shadows:
+            frag.add_uniform('bool receiveShadow')
+            frag.add_uniform('float pointBias', link='_pointShadowsBias')
+            if '_Spot' in wrd.world_defs:
+                # Skip world matrix, already in world-space
+                frag.add_uniform('mat4 LWVPSpot[1]', link='_biasLightViewProjectionMatrixSpotArray', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
+            else:
+                frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
+                frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
+        frag.write('direct += sampleLight(')
+        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, false')
+        if is_shadows:
+            frag.write('  , 0, pointBias, receiveShadow')
+        if '_Spot' in wrd.world_defs:
+            frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
+        if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
+            frag.write('  , voxels, voxpos')
+        if '_MicroShadowing' in wrd.world_defs:
+            frag.write(', occlusion')
+        if '_SSRS' in wrd.world_defs:
+            frag.write(', gbufferD, invVP, eye')
+        frag.write(');')
 
     if '_MicroShadowing' in wrd.world_defs:
         frag.write('occlusion = mix(1.0, occlusion, dotNV);') #AO Fresnel
@@ -765,7 +793,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('direct += sampleLight(')
-        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
+        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, false')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:

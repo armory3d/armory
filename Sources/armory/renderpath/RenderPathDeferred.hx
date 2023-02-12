@@ -55,7 +55,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
 			#if arm_voxelgi_temporal
@@ -66,17 +66,6 @@ class RenderPathDeferred {
 
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
-			#else
-			#if rp_voxelgi_refract
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-			#end
 			#end
 		}
 		#end
@@ -147,6 +136,19 @@ class RenderPathDeferred {
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_emission";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_voxelgi_refract
+		{
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
@@ -526,7 +528,7 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
@@ -591,6 +593,7 @@ class RenderPathDeferred {
 		#if rp_voxelgi_refract
 		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 		#end
+	
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
@@ -615,7 +618,7 @@ class RenderPathDeferred {
 		#end
 
 		var voxelao_pass = false;
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			#if (arm_config && (rp_voxels == "Voxel AO"))
@@ -637,12 +640,6 @@ class RenderPathDeferred {
 			#else
 			Inc.bindShadowMap();
 			#end
-		}
-		#end
-
-		#if ((rp_voxelgi_shadows) || (rp_voxelgi_refraction))
-		{
-			path.bindTarget(voxels, "voxels");
 		}
 		#end
 
