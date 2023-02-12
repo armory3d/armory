@@ -4,7 +4,7 @@ class MathNode(ArmLogicTreeNode):
     """Mathematical operations on values."""
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
-    arm_version = 2
+    arm_version = 3
 
     @staticmethod
     def get_enum_id_value(obj, prop_name, value):
@@ -37,7 +37,8 @@ class MathNode(ArmLogicTreeNode):
             'Arctan2': 2,
             'Modulo': 2,
             'Less Than': 2,
-            'Greater Than': 2
+            'Greater Than': 2,
+            'Ping-Pong': 2
         }.get(operation_name, 0)
 
     def get_enum(self):
@@ -52,7 +53,7 @@ class MathNode(ArmLogicTreeNode):
             if (self.get_count_in(select_current) == 0):
                 while (len(self.inputs) < 2):
                     self.add_input('ArmFloatSocket', 'Value ' + str(len(self.inputs)))
-            # 2 arguments: Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than
+            # 2 arguments: Max, Min, Power, Arctan2, Modulo, Less Than, Greater Than, Ping-Pong
             if (self.get_count_in(select_current) == 2):
                 while (len(self.inputs) > 2):
                     self.inputs.remove(self.inputs.values()[-1])
@@ -65,6 +66,8 @@ class MathNode(ArmLogicTreeNode):
         self['property0'] = value
         if (self.property0 == 'Round'):
             self.inputs[1].name = 'Precision'
+        elif (self.property0 == 'Ping-Pong'):
+            self.inputs[1].name = 'Scale'
         elif (len(self.inputs) > 1): self.inputs[1].name = 'Value 1'
 
     property0: HaxeEnumProperty(
@@ -93,7 +96,8 @@ class MathNode(ArmLogicTreeNode):
                  ('Ceil', 'Ceil', 'Ceil'),
                  ('Fract', 'Fract', 'Fract'),
                  ('Square Root', 'Square Root', 'Square Root'),
-                 ('Exponent', 'Exponent', 'Exponent')],
+                 ('Exponent', 'Exponent', 'Exponent'),
+                 ('Ping-Pong', 'Ping-Pong', 'The output value is moved between 0.0 and the Scale based on the input value')],
         name='', default='Add', set=set_enum, get=get_enum)
 
     property1: HaxeBoolProperty('property1', name='Clamp', default=False)
