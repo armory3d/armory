@@ -553,11 +553,11 @@ def make_forward(con_mesh, rpasses):
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
         else:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
-=
+
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
-=
+
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
