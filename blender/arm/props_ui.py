@@ -2324,49 +2324,50 @@ class ARM_OT_CopyToBundled(bpy.types.Operator):
 
         # Blend - Images
         for asset in data:
+            # File is saved
             if asset.filepath_from_user() != '':
                 bundled_filepath = project_path + '/Bundled/' + asset.name
                 try:
                     # Exists -> Yes
                     if os.path.isfile(bundled_filepath):
-                        # Override - > Yes
+                        # Override -> Yes
                         if (wrd.arm_copy_override):
+                            # Valid file
                             if asset.has_data:
                                 asset.filepath_raw = bundled_filepath
                                 asset.save()
                                 asset.reload()
                                 # Syntax - Yellow
                                 print(log.colorize(f'Asset name "{asset.name}" already exists, overriding the original', 33), file=sys.stderr)
+                            # Invalid file or corrupted
                             else:
                                 # Syntax - Red 
                                 log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
                                 continue
-                        # Override - > No
+                        # Override -> No
                         else:
                             # Syntax - Yellow
                             print(log.colorize(f'Asset name "{asset.name}" already exists, skipping', 33), file=sys.stderr)
                             continue
                     # Exists -> No
                     else:
-                        if os.path.isfile(bundled_filepath):
-                            # Syntax - Yellow
-                            print(log.colorize(f'Asset name "{asset.name}" already exists, skipping', 33), file=sys.stderr)
-                            continue
+                        # Valid file
+                        if asset.has_data:
+                            asset.filepath_raw = bundled_filepath
+                            asset.save()
+                            asset.reload()
+                            # Syntax - Green
+                            print(log.colorize(f'Asset name "{asset.name}" was successfully copied', 32), file=sys.stderr)
+                        # Invalid file or corrupted
                         else:
-                            if asset.has_data:
-                                asset.filepath_raw = bundled_filepath
-                                asset.save()
-                                asset.reload()
-                                # Syntax - Green
-                                print(log.colorize(f'Asset name "{asset.name}" was successfully copied', 32), file=sys.stderr)
-                            else:
-                                # Syntax - Red
-                                log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
-                                continue
+                            # Syntax - Red
+                            log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
+                            continue
                 except:
                     # Syntax - Red
                     log.error(f'Insufficient write permissions or other issues occurred')
                     continue
+            # File is unsaved
             else:
                 # Syntax - Purple
                 log.warn(f'Asset name "{asset.name}" is either packed or unsaved, skipping')
