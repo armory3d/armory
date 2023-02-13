@@ -46,7 +46,7 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    if arm.utils.get_gapi() == False:#'direct3d11':
+    if arm.utils.get_gapi() == 'direct3d11':
         for e in con_voxel.data['vertex_elements']:
             if e['name'] == 'nor':
                 con_voxel.data['vertex_elements'].remove(e)
@@ -134,7 +134,7 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
-    if arm.utils.get_gapi() == False:#'direct3d11':
+    if arm.utils.get_gapi() == 'direct3d11':
         voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
