@@ -687,8 +687,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('rgba = traceDiffuse(voxpos, n, voxels) * voxelgiDiff;')
 
-        frag.write('rgba.rgb *= basecol;')
-
         frag.write('if (roughness < 1.0) {')
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.write('	rgba.rgb += (traceReflection(voxels, voxpos, n, vVec, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, vVec, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
@@ -696,13 +694,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('	rgba.rgb += traceReflection(voxels, voxpos, n, vVec, roughness) * voxelgiRefl;')
 
         frag.write('}')
-        frag.write('indirect *= voxelgiEnv;')
+        frag.write('rgba.rgb *= voxelgiEnv;')
 
-    if '_VoxelGI' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs and not transluc_pass:
         if parse_opacity:
             frag.write('opacity = rgba.a;')
-
-    frag.write('vec3 direct = indirect * rgba.rgb;')
+        frag.write('vec3 direct = rgba.rgb * indirect;')
+        
+    else:
+        frag.write('vec3 direct = indirect;')
     
 
     if '_SSRS' in wrd.world_defs:
@@ -798,7 +798,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 
-    if '_VoxelGIRefract' in wrd.world_defs and parse_opacity and '_VoxelGI' in wrd.world_defs:
+    if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;') #TODO replace roughness with transmission
         else:
@@ -817,4 +817,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior;')
+        frag.write('float rior = 1.0;')

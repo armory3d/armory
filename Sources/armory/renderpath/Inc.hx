@@ -362,7 +362,7 @@ class Inc {
 		#end // arm_config
 	}
 
-	#if (rp_translucency)
+	#if rp_translucency
 	public static function initTranslucency() {
 		path.createDepthBuffer("main", "DEPTH24");
 

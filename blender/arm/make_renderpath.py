@@ -110,8 +110,7 @@ def add_world_defs():
                 assets.add_khafile_def('rp_voxelgi_relight')
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelGIRefract'
-                if rpdat.rp_renderer == 'Deferred':
-                    assets.add_khafile_def('rp_voxelgi_refract')
+                assets.add_khafile_def('rp_voxelgi_refract')
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
