@@ -24,8 +24,8 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-const int numBinarySearchSteps = 7;
-const int maxSteps = 18;
+#define numBinarySearchSteps 7
+#define maxSteps (1 / ssrRayStep)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -47,40 +47,42 @@ vec4 binarySearch(vec3 dir) {
 	float ddepth;
 	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= 0.5;
+		dir *= ssrMinRayStep;
 		hitCoord -= dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
+		if (ddepth < 0.0 || ddepth < depth) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
 	#else
-		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	if (abs(ddepth) > ssrSearchDist) return vec4(0.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
 	#ifdef _CPostprocess
-		dir *= PPComp9.x;
+	dir *= PPComp9.x;
 	#else
-		dir *= ssrRayStep;
+	dir *= ssrRayStep;
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		float d = getDeltaDepth(hitCoord);
+		if(d > 0.0 && d < depth) return binarySearch(dir);
 	}
 	return vec4(0.0);
 }
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float roughness = unpackFloat(g0.b).y;
+	float roughness = g0.b;
 	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
-	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
-	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
+	vec2 occspec = unpackFloat2(g1.a);
+	if (occspec.y == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
@@ -97,9 +99,9 @@ void main() {
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
-		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
 	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
 	#endif
 
 	// * max(ssrMinRayStep, -viewPos.z)
@@ -110,13 +112,13 @@ void main() {
 
 	float reflectivity = 1.0 - roughness;
 	#ifdef _CPostprocess
-		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
-		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * 0.5;
+	fragColor.rgb = reflCol * intensity;
 }

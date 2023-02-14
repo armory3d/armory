@@ -294,7 +294,6 @@ void main() {
 	envl *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
-	envl *= voxelgiEnv;
 #endif
 
 #ifdef _VoxelGI
@@ -312,9 +311,9 @@ void main() {
 
 	if (roughness < 1.0) {
 		#ifdef _VoxelGITemporal
-		fragColor.rgb += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
+		fragColor.rgb += (traceReflection(voxels, voxpos, n, v) * voxelBlend + traceReflection(voxelsLast, voxpos, n, v) * (1.0 - voxelBlend)) * voxelgiRefl * (1.0 - roughness);
 		#else
-		fragColor.rgb += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
+		fragColor.rgb += traceReflection(voxels, voxpos, n, v) * voxelgiRefl * (1.0 - roughness);
 		#endif
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
