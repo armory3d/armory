@@ -310,7 +310,7 @@ class RenderPathForward {
 		#end
 
 		// Voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
