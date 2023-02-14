@@ -541,7 +541,7 @@ class RenderPathDeferred {
 			#end
 
 			#if arm_voxelgi_temporal
-			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
+			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == RenderPathCreator.voxelFreq / 2 + 1;
 			if (voxelize) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";

@@ -257,34 +257,22 @@ void main() {
 	#ifdef _EnvTex
 		envl /= PI;
 	#endif
-#else
-	vec3 envl = vec3(1.0);
-#endif
-
-#ifdef _Rad
-	vec3 reflectionWorld = reflect(-v, n);
-	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
-	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-#endif
-
-#ifdef _EnvLDR
-	envl.rgb = pow(envl.rgb, vec3(2.2));
-	#ifdef _Rad
-		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-	#endif
-#endif
 	envl *= albedo;
-
-#ifdef _Brdf
-	envl *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
-#endif
-
-#ifdef _Rad // Indirect specular
-	envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
-#else
+	#ifdef _Rad
+		vec3 reflectionWorld = reflect(-v, n);
+		float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
+		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+		envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+		#ifdef _EnvLDR
+			prefilteredColor = pow(prefilteredColor, vec3(2.2));
+		#endif
+	#else
 	#ifdef _EnvCol
-	envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+		envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
+	#endif
+#else
+	vec3 envl = albedo;
 #endif
 	envl *= envmapStrength * occspec.x;
 
@@ -559,7 +547,7 @@ fragColor.rgb = envl;
 	#else
 		vec4 refraction = traceRefraction(voxels, voxpos, n, v, roughness, rior) * voxelgiRefr;
 	#endif
-		fragColor = refraction * fragColor;
+		fragColor = vec4(refraction.rgb * fragColor.rgb, opac);
 	}
 	#endif
 	#endif
