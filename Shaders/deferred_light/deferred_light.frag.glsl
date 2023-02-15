@@ -301,9 +301,9 @@ void main() {
 	#endif
 	
 	#ifdef _VoxelGITemporal
-	fragColor =  (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)) * voxelgiDiff * vec4(g1.rgb, 1.0);
+	fragColor.rgb =  (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
-	fragColor = traceDiffuse(voxpos, n, voxels) * voxelgiDiff * vec4(g1.rgb, 1.0);
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
 	if (occspec.y > 0.0) {
@@ -314,6 +314,20 @@ void main() {
 		#endif
 	}
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
+#endif
+
+
+#ifdef _VoxelGI
+#ifdef _VoxelGIRefract
+if(opac < 1.0) {
+#ifdef _VoxelGITemporal
+	vec4 refraction = (traceRefraction(voxels, voxpos, n, v, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
+#else
+	vec4 refraction = traceRefraction(voxels, voxpos, n, v, roughness, rior) * voxelgiRefr;
+#endif
+	fragColor += refraction;
+}
+#endif
 #endif
 
 #ifdef _VoxelGI
@@ -361,7 +375,6 @@ fragColor.rgb = envl;
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
-
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -539,16 +552,4 @@ fragColor.rgb = envl;
 		);
 	}
 #endif // _Clusters
-	#ifdef _VoxelGI
-	#ifdef _VoxelGIRefract
-	if(opac < 1.0) {
-	#ifdef _VoxelGITemporal
-		vec4 refraction = (traceRefraction(voxels, voxpos, n, v, roughness, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, roughness, rior) * (1.0 - voxelBlend)) * voxelgiRefr;
-	#else
-		vec4 refraction = traceRefraction(voxels, voxpos, n, v, roughness, rior) * voxelgiRefr;
-	#endif
-		fragColor = vec4(refraction.rgb * fragColor.rgb, opac);
-	}
-	#endif
-	#endif
 }

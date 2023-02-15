@@ -82,14 +82,16 @@ def add_world_defs():
             if rpdat.rp_shadowmap_atlas_lod:
                 assets.add_khafile_def('arm_shadowmap_atlas_lod')
                 assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
-    # SS
+    if rpdat.rp_autoexposure:
+        wrd.world_defs += '_AutoExposure'
+
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
             wrd.world_defs += '_RTGI'
+        else:
+            wrd.world_defs += '_RTAO'
         if rpdat.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
-    if rpdat.rp_autoexposure:
-        wrd.world_defs += '_AutoExposure'
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
@@ -303,10 +305,12 @@ def build():
             wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
                 assets.add_shader_pass('ssao_pass')
-                assets.add_shader_pass('blur_edge_pass')
+            elif rpdat.rp_ssgi == 'RTAO':
+                assets.add_shader_pass('rtao_pass')
             else:
-                assets.add_shader_pass('ssgi_pass')
-                assets.add_shader_pass('blur_edge_pass')
+                assets.add_shader_pass('rtgi_pass')
+
+            assets.add_shader_pass('blur_edge_pass')
             if rpdat.arm_ssgi_half_res:
                 assets.add_khafile_def('rp_ssgi_half')
 

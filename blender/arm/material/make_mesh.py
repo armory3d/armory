@@ -699,7 +699,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 1.0;')
         frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
-        frag.write('vec3 sdirect *= lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir)));')
+        frag.write('vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir)));')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
             vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
@@ -781,11 +781,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * voxelBlend)) * voxelgiRefr;') #TODO replace roughness with transmission
+            frag.write('vec4 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * voxelBlend) * voxelgiRefr;') #TODO replace roughness with transmission
         else:
             frag.write('vec4 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
         frag.write('indirect *= refraction.rgb;')
         frag.write('direct *= refraction.rgb;')
+        frag.write('opacity = refraction.a;') 
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

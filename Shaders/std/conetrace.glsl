@@ -11,7 +11,7 @@
 // http://www.seas.upenn.edu/%7Epcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
-const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
+const float MAX_DISTANCE = voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
 
 // uniform sampler3D voxels;

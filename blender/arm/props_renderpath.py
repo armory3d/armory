@@ -71,7 +71,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'SMAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSAO'
+        rpdat.rp_ssgi = 'RTAO'
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
@@ -149,8 +149,8 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAO'
-        rpdat.arm_ssrs = False
+        rpdat.rp_ssgi = 'RTGI'
+        rpdat.arm_ssrs = True
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
         rpdat.arm_ssr_half_res = False
@@ -159,7 +159,7 @@ def update_preset(self, context):
         rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
-        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_rp_resolution = 'Custom'
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
@@ -385,7 +385,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
-        items=[('Off', 'No AO', 'Off'),
+        items=[('Off', 'Off', 'Off'),
                 ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
                 ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
                 ('RTGI', 'RTGI', 'Ray-traced global illumination')
@@ -447,7 +447,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Voxel GI', 'Voxel GI', 'Voxel GI'),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
-        name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
+        name="GI", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
@@ -544,7 +544,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
+    arm_ssgi_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),

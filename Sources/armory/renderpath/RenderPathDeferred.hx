@@ -185,15 +185,15 @@ class RenderPathDeferred {
 		path.loadShader("shader_datas/copy_pass/copy_pass");
 		#end
 
-		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
+		#if (rp_ssgi != "Off")
 		{
-			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-		}
-		#elseif (rp_ssgi == "SSAO")
-		{
-			path.loadShader("shader_datas/ssao_pass/ssao_pass");
+			#if (rp_ssgi == "SSAO")
+				path.loadShader("shader_datas/ssgi_pass/ssao_pass");
+			#elseif (rp_ssgi == "RTAO")
+				path.loadShader("shader_datas/ssgi_pass/rtao_pass");
+			#else (rp_ssgi == "RTGI")
+				path.loadShader("shader_datas/ssgi_pass/rtgi_pass");
+			#end
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -471,33 +471,7 @@ class RenderPathDeferred {
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
 		#end
 
-		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				#if rp_ssgi_half
-				path.bindTarget("half", "gbufferD");
-				#else
-				path.bindTarget("_main", "gbufferD");
-				#end
-				path.bindTarget("gbuffer0", "gbuffer0");
-				#if (rp_ssgi == "RTGI")
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#end
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#elseif (rp_ssgi == "SSAO")
+		#if (rp_ssgi == "SSAO")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
 				path.setTarget("singlea");
@@ -515,8 +489,61 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
+		}		
+		#elseif (rp_ssgi == "RTAO")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				#if rp_ssgi_half
+				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				#if (rp_ssgi == "RTGI")
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#end
+				path.drawShader("shader_datas/rtgi_pass/rtgi_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
 		}
-		#end
+
+		#elseif (rp_ssgi == "RTGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				#if rp_ssgi_half
+				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				#if (rp_ssgi == "RTGI")
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#end
+				path.drawShader("shader_datas/rtgi_pass/rtgi_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#end //SSGI
 
 		#if (rp_shadowmap)
 		// atlasing is exclusive for now
@@ -541,7 +568,7 @@ class RenderPathDeferred {
 			#end
 
 			#if arm_voxelgi_temporal
-			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == RenderPathCreator.voxelFreq / 2 + 1;
+			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
 			if (voxelize) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";

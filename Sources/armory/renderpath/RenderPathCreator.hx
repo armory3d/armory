@@ -58,8 +58,8 @@ class RenderPathCreator {
 	}
 
 	#if rp_voxels
-	public static var voxelFrame = 0;
-	public static var voxelFreq = 7; // Revoxelizing frequency
+	public static var voxelFrame = 1;
+	public static var voxelFreq = 5; // Revoxelizing frequency
 	#end
 
 	// Last target before drawing to framebuffer
