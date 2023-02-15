@@ -224,6 +224,7 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+
 #ifdef _VoxelGI
 #ifdef _VoxelGIRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
@@ -244,9 +245,10 @@ void main() {
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
 
-// Envmap
+	// Envmap
 #ifdef _Irr
 	vec3 envl = shIrradiance(n, shirr);
+
 	#ifdef _gbuffer2
 		if (g2.b < 0.5) {
 			envl = envl;
@@ -254,27 +256,42 @@ void main() {
 			envl = vec3(1.0);
 		}
 	#endif
+
 	#ifdef _EnvTex
 		envl /= PI;
 	#endif
-	envl *= albedo;
-	#ifdef _Rad
-		vec3 reflectionWorld = reflect(-v, n);
-		float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-		envl += prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
-		#ifdef _EnvLDR
-			prefilteredColor = pow(prefilteredColor, vec3(2.2));
-		#endif
-	#else
-	#ifdef _EnvCol
-		envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
-	#endif
-	#endif
 #else
-	vec3 envl = albedo;
+	vec3 envl = vec3(1.0);
 #endif
-	envl *= envmapStrength * occspec.x;
+
+#ifdef _Rad
+	vec3 reflectionWorld = reflect(-v, n);
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
+	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+#endif
+
+#ifdef _EnvLDR
+	envl.rgb = pow(envl.rgb, vec3(2.2));
+	#ifdef _Rad
+		prefilteredColor = pow(prefilteredColor, vec3(2.2));
+	#endif
+#endif
+
+	envl.rgb *= albedo;
+
+#ifdef _Brdf
+	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+#endif
+
+#ifdef _Rad // Indirect specular
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+#else
+	#ifdef _EnvCol
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	#endif
+#endif
+
+	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
 	#ifdef _VoxelGICam
@@ -305,12 +322,10 @@ vec3 voxpos = p / voxelgiHalfExtents;
 #endif
 
 #ifdef _VoxelGITemporal
-diffuse =  (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 #else
 diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 #endif
-
-diffuse += envl * voxelgiEnv;
 
 if(roughness < 1.0 && occspec.y > 0.0)
 #ifdef _VoxelGITemporal
@@ -318,10 +333,9 @@ reflection =  (traceReflection(voxels, voxpos, n, -viewPos, roughness).rgb * vox
 #else
 reflection = traceReflection(voxels, voxpos, n, -viewPos, roughness).rgb * voxelgiRefl;
 #endif
-reflection += envl * voxelgiEnv;
 #endif//VoxelGI
 
-fragColor.rgb = envl * (diffuse + reflection);
+fragColor.rgb = (diffuse * envl) + (reflection * envl);
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -469,7 +483,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
-	) * ;
+	);
 
 	#ifdef _Spot
 	#ifdef _SSS
