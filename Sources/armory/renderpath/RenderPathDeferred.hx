@@ -503,7 +503,7 @@ class RenderPathDeferred {
 				#if (rp_ssgi == "RTGI")
 				path.bindTarget("gbuffer1", "gbuffer1");
 				#end
-				path.drawShader("shader_datas/rtgi_pass/rtgi_pass");
+				path.drawShader("shader_datas/rtao_pass/rtao_pass");
 
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");

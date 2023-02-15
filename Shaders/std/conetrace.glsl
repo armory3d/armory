@@ -110,17 +110,17 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	return vec4(0.0);
 }
 
-vec3 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+vec4 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+	float aperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
 	vec3 reflection = reflect(viewDir, normal);
-	return traceCone(voxels, pos, reflection, specularAperture, MAX_DISTANCE).xyz * voxelgiWeight;
+	return traceCone(voxels, pos, reflection, aperture, MAX_DISTANCE) * voxelgiWeight;
 }
 
-vec4 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float transmission, const float rior) {
+vec4 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float opacity, const float rior) {
 	const float transmittance = 1.0; //TODO add transmission data from shader.
 	vec3 refraction = refract(viewDir, normal, 1.0 / rior);
-	float refractiveAperture = 0.0174533 * 3.0;
-	return transmittance * traceCone(voxels, pos, refraction, refractiveAperture, MAX_DISTANCE) * voxelgiWeight;
+	float aperture = 0.0174533 * 3.0;
+	return transmittance * traceCone(voxels, pos, refraction, aperture, MAX_DISTANCE) * voxelgiWeight;
 }
 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {

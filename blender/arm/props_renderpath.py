@@ -447,7 +447,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Voxel GI', 'Voxel GI', 'Voxel GI'),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
-        name="GI", description="Dynamic global illumination", default='Off', update=update_renderpath)
+        name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
