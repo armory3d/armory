@@ -223,7 +223,6 @@ void main() {
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 
 #ifdef _VoxelGI
 #ifdef _VoxelGIRefract
@@ -329,13 +328,20 @@ diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 
 if(roughness < 1.0 && occspec.y > 0.0)
 #ifdef _VoxelGITemporal
-reflection =  (traceReflection(voxels, voxpos, n, -viewPos, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -viewPos, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
+reflection =  (traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
 #else
-reflection = traceReflection(voxels, voxpos, n, -viewPos, roughness).rgb * voxelgiRefl;
+reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl;
 #endif
 #endif//VoxelGI
 
 fragColor.rgb = (diffuse * envl) + (reflection * envl);
+
+#ifdef _VoxelAOvar
+fragColor.rgb *= voxelgiEnv;
+#endif
+#ifdef _VoxelGI
+fragColor.rgb *= voxelgiEnv;
+#endif
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -374,7 +380,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -483,7 +489,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
-	);
+	) + reflection * occspec.y;
 
 	#ifdef _Spot
 	#ifdef _SSS
@@ -549,7 +555,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			#ifdef _SSRS
 			, gbufferD, invVP, eye
 			#endif
-		);
+		) + specular * occspec.y;
 	}
 #endif // _Clusters
 
