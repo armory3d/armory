@@ -489,7 +489,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
-	) + reflection * occspec.y;
+	) * reflection * occspec.y;
 
 	#ifdef _Spot
 	#ifdef _SSS
@@ -555,7 +555,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			#ifdef _SSRS
 			, gbufferD, invVP, eye
 			#endif
-		) + specular * occspec.y;
+		) * reflection * occspec.y;
 	}
 #endif // _Clusters
 

@@ -776,7 +776,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_SSRS' in wrd.world_defs:
             frag.write(', gbufferD, invVP, eye')
 
-        frag.write(') + reflection * specular;')
+        frag.write(') * reflection * specular;')
         frag.write('direct += sdirect;')
         frag.write('indirect += sdirect;')
     if '_Clusters' in wrd.world_defs:
