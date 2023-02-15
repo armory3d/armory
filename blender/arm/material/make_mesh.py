@@ -623,6 +623,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('vec3 indirect = shIrradiance(n, shirr);')
         if '_EnvTex' in wrd.world_defs:
             frag.write('indirect /= PI;')
+    else:
+        frag.write('vec3 indirect = vec3(0.0)')
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
@@ -685,11 +687,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.write('if (specular > 0.0 && roughness < 1.0)')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	reflection = (traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelBlend + traceReflection(voxelsLast, voxpos, n, -vVec, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl')
+            frag.write('	reflection = (traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelBlend + traceReflection(voxelsLast, voxpos, n, -vVec, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;')
         else:
             frag.write('	reflection = traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelgiRefl;')
     
-    frag.write('vec3 direct = (diffuse * indirect) + (reflection * indirect);')
+    frag.write('vec3 direct = (diffuse + reflection) * indirect;')
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAOVar' in wrd.world_defs:
         frag.write('direct *= voxelgiEnv;')
@@ -702,12 +704,14 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     #TODO add emission
 
+    frag.write('vec3 sdirect;')
+
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 1.0;')
         frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
-        frag.write('vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir))) + reflection) * specular;')
+        frag.write('sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir))) + reflection) * specular;')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
             vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
@@ -763,7 +767,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('vec3 sdirect = sampleLight(')
+        frag.write('sdirect = sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, false')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')

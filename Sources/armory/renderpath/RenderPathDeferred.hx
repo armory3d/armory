@@ -188,11 +188,11 @@ class RenderPathDeferred {
 		#if (rp_ssgi != "Off")
 		{
 			#if (rp_ssgi == "SSAO")
-				path.loadShader("shader_datas/ssgi_pass/ssao_pass");
+			path.loadShader("shader_datas/ssao_pass/ssao_pass");
 			#elseif (rp_ssgi == "RTAO")
-				path.loadShader("shader_datas/ssgi_pass/rtao_pass");
-			#else (rp_ssgi == "RTGI")
-				path.loadShader("shader_datas/ssgi_pass/rtgi_pass");
+			path.loadShader("shader_datas/rtao_pass/rtao_pass");
+			#else
+			path.loadShader("shader_datas/rtgi_pass/rtgi_pass");
 			#end
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
