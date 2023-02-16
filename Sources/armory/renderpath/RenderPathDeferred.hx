@@ -69,8 +69,9 @@ class RenderPathDeferred {
 			#else
 			Inc.initGI("voxelsOpac");
 			Inc.initGI("voxelsNor");
-			#if (rp_gi_bounces)
+			#if (rp_voxelgi_bounces)
 			Inc.initGI("voxelsBounce");
+			Inc.initGI("voxelsVR");
 			#end
 			#end
 		}
@@ -565,7 +566,7 @@ class RenderPathDeferred {
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
-
+			
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
@@ -582,9 +583,7 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
-				var voxtex = voxels;
-				
-				path.clearImage(voxtex, 0x00000000);
+				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 
 				var res = Inc.getVoxelRes();
@@ -594,9 +593,7 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
-				#end				
-
-				path.bindTarget(voxtex, "voxels");
+				#end
 
 				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
 				{
@@ -608,12 +605,21 @@ class RenderPathDeferred {
 				}
 				#end
 
+				path.bindTarget(voxels, "voxels");
+				
+
+				path.bindTarget("voxelsNor", "voxelsNor");
+				#if (rp_voxelgi_bounces != 1)
+				path.bindTarget("voxelsVR", "voxelsVR");
+				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 				
-				#if rp_voxelgi_bounces
-				Inc.computeVoxelsEnd();
+				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))				
+				voxels = "voxelsBounce";
+				Inc.computeVoxelsBounces();
 				#end
+				
 			}
 		}
 		#end

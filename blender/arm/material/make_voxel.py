@@ -46,7 +46,9 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(rgba16) writeonly image3D voxels')
+    frag.add_uniform('layout(rgba16) image3D voxels')
+    frag.add_uniform('layout(rgba16) image3D voxelsNor')
+    frag.add_uniform('layout(rgba16) image3D voxelsVR')#view/roughness
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
@@ -100,9 +102,11 @@ def make_gi(context_id):
         vert.write_pre = False
 
     vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_uniform('mat3 N', '_normalMatrix')
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 wnormalGeom')
     vert.add_include('compiled.inc')
+    
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
@@ -118,10 +122,11 @@ def make_gi(context_id):
     else:
         vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
     vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
+    vert.write('wnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
 
     geom.add_out('vec3 voxposition')
-    geom.add_out('vec4 lightPosition')
     geom.add_out('vec3 wnormal')
+    geom.add_out('vec4 lightPosition')
 
     if con_voxel.is_elem('col'):
         geom.add_out('vec3 vcolor')
@@ -132,7 +137,7 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
-    if arm.utils.get_gapi() == False:#'direct3d11':
+    if arm.utils.get_gapi() == 'direct3d11':
         voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
@@ -164,6 +169,8 @@ def make_gi(context_id):
             pos += 1
         struct_input += ' float3 voxpositionGeom : TEXCOORD' + str(pos) + ';'
         struct_output += ' float3 voxposition : TEXCOORD' + str(pos) + ';'
+        struct_input += ' float3 wnormalGeom : TEXCOORD' + str(pos) + ';'
+        struct_output += ' float3 wnormal : TEXCOORD' + str(pos) + ';'
         pos +=1
         struct_input += ' float4 gl_Position : SV_POSITION; };'
         struct_output += ' float4 gl_Position : SV_POSITION; };'
@@ -177,6 +184,7 @@ def make_gi(context_id):
         geom.write('  for (int i = 0; i < 3; ++i) {')
         geom.write('    SPIRV_Cross_Output stage_output;')
         geom.write('    stage_output.voxposition = stage_input[i].voxpositionGeom;')
+        geom.write('    stage_output.wnormal = stage_input[i].wnormalGeom;')
         geom.write('    stage_output.lightPosition = stage_input[i].lightPositionGeom;')
         if con_voxel.is_elem('col'):
             geom.write('    stage_output.vcolor = stage_input[i].vcolorGeom;')
@@ -199,19 +207,13 @@ def make_gi(context_id):
         geom.write('    output.Append(stage_output);')
         geom.write('  }')
         geom.write('}')
-    else:
-    
-        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-            vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
-    
+    else:    
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
         geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
         geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
+        geom.write('    wnormal = wnormalGeom[i];')
         geom.write('    lightPosition = lightPositionGeom[i];')
         if con_voxel.is_elem('col'):
             geom.write('    vcolor = vcolorGeom[i];')
@@ -405,12 +407,23 @@ def make_gi(context_id):
 
         frag.write('	);')
         frag.write('};')
+    """
+    frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
+    frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
+    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+
+    frag.write('val = encNor(wnormal);');
+    frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
+    """
     
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
-    frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), wnormal);')
-
+    frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')
+    frag.write('#ifdef _VoxelBounces')
+    frag.write('imageStore(voxelsVR, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')
+    frag.write('#endif')
+    
     return con_voxel
 
 def make_ao(context_id):

@@ -334,14 +334,14 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #endif
 #endif//VoxelGI
 
-fragColor.rgb = (diffuse + reflection) * envl;
-
 #ifdef _VoxelAOvar
-fragColor.rgb *= voxelgiEnv;
-#endif
+fragColor.rgb = envl * voxelgiEnv;
+#else
 #ifdef _VoxelGI
-fragColor.rgb *= voxelgiEnv;
+fragColor.rgb = (diffuse + reflection) * voxelgiEnv * envl;
 #endif
+#endif
+
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -380,7 +380,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -568,7 +568,7 @@ if(opac < 1.0) {
 #else
 	vec4 refraction = traceRefraction(voxels, voxpos, n, v, opac, rior);
 #endif
-	fragColor.rgb *= refraction.rgb;
+	fragColor *= refraction;
 }
 // if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif//Refract	
