@@ -279,7 +279,7 @@ def make_gi(context_id):
                 vert.write('lightPos = LVP * vec4(wposition + n * shadowsBias * 100.0, 1.0);')
                 frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, wposition, shadowsBias);')
             frag.write('}')
-        frag.write('basecol += svisibility * sunCol;')
+        frag.write('basecol *= svisibility * sunCol;')
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
@@ -301,7 +301,7 @@ def make_gi(context_id):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('basecol += sampleLight(')
+        frag.write('basecol *= sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, true')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -369,7 +369,7 @@ def make_gi(context_id):
 
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	basecol += sampleLight(')
+        frag.write('	basecol *= sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')

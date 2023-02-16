@@ -333,7 +333,7 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #endif
 #endif//VoxelGI
 
-fragColor.rgb = vec3(1.0);
+fragColor.rgb = g1.rgb;
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -485,7 +485,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
 
@@ -552,11 +552,11 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Clusters
 
 #ifdef _VoxelGI
-fragColor.rgb += (diffuse + reflection) * envl * voxelgiEnv;
+fragColor.rgb += (diffuse + reflection) + envl * voxelgiEnv;
+#elif _VoxelAOvar
+fragColor.rgb += envl * voxelgiEnv;
 #else
-#ifdef _VoxelAOvar
 fragColor.rgb += envl;
-#endif
 #endif
 
 #ifdef _VoxelGI
