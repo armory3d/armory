@@ -309,7 +309,6 @@ void main() {
 	#endif
 #endif
 
-
 vec3 diffuse = vec3(0.0);
 vec3 reflection = vec3(0.0);
  
@@ -334,14 +333,7 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #endif
 #endif//VoxelGI
 
-#ifdef _VoxelAOvar
-fragColor.rgb = envl * voxelgiEnv;
-#else
-#ifdef _VoxelGI
-fragColor.rgb = (diffuse + reflection) * voxelgiEnv * envl;
-#endif
-#endif
-
+fragColor.rgb = vec3(1.0);
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -380,7 +372,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -429,7 +421,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += sdirect * svisibility * sunCol;
+	fragColor.rgb *= sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -465,7 +457,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Sun
 
 #ifdef _SinglePoint
-	fragColor.rgb += sampleLight(
+	fragColor.rgb *= sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false
 		#ifdef _ShadowMap
 			, 0, pointBias, true
@@ -489,7 +481,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
-	) * reflection * occspec.y;
+	);
 
 	#ifdef _Spot
 	#ifdef _SSS
@@ -515,7 +507,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		fragColor.rgb += sampleLight(
+		fragColor.rgb *= sampleLight(
 			p,
 			n,
 			v,
@@ -555,12 +547,19 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			#ifdef _SSRS
 			, gbufferD, invVP, eye
 			#endif
-		) * reflection * occspec.y;
+		);
 	}
 #endif // _Clusters
 
 #ifdef _VoxelGI
+fragColor.rgb += (diffuse + reflection) * envl * voxelgiEnv;
+#else
+#ifdef _VoxelAOvar
+fragColor.rgb += envl;
+#endif
+#endif
 
+#ifdef _VoxelGI
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
 #ifdef _VoxelGITemporal
@@ -568,7 +567,7 @@ if(opac < 1.0) {
 #else
 	vec4 refraction = traceRefraction(voxels, voxpos, n, v, opac, rior);
 #endif
-	fragColor *= refraction;
+	fragColor.rgb *= refraction.rgb;
 }
 // if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif//Refract	

@@ -682,7 +682,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff;')
 
-        if specular > 0.0 and roughness < 1.0:
+        if specular > 0.0 and roughness < 1.0 and not 'translucent' in rpasses:
             if '_VoxelGITemporal' in wrd.world_defs:
                 frag.write('	reflection = (traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelBlend + traceReflection(voxelsLast, voxpos, n, -vVec, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;')
             else:

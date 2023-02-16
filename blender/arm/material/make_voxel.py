@@ -48,7 +48,7 @@ def make_gi(context_id):
     rpdat = arm.utils.get_rp()
     frag.add_uniform('layout(rgba16) image3D voxels')
     frag.add_uniform('layout(rgba16) image3D voxelsNor')
-    frag.add_uniform('layout(rgba16) image3D voxelsVR')#view/roughness
+    frag.add_uniform('layout(rgba16) image3D voxelsVr')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
@@ -279,7 +279,7 @@ def make_gi(context_id):
                 vert.write('lightPos = LVP * vec4(wposition + n * shadowsBias * 100.0, 1.0);')
                 frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, wposition, shadowsBias);')
             frag.write('}')
-        frag.write('basecol *= svisibility * sunCol;')
+        frag.write('basecol += svisibility * sunCol;')
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
@@ -367,7 +367,6 @@ def make_gi(context_id):
                 # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
                 frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
 
-    
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
         frag.write('	basecol += sampleLight(')
@@ -407,23 +406,15 @@ def make_gi(context_id):
 
         frag.write('	);')
         frag.write('};')
-    """
-    frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
-    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
 
-    frag.write('val = encNor(wnormal);');
-    frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
-    """
-    
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
+    frag.write('#ifdef _VoxelsBounce')
     frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')
-    frag.write('#ifdef _VoxelBounces')
-    frag.write('imageStore(voxelsVR, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')
+    frag.write('imageStore(voxelsVr, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')
     frag.write('#endif')
-    
+
     return con_voxel
 
 def make_ao(context_id):

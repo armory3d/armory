@@ -4,7 +4,6 @@ import iron.RenderPath;
 import iron.Scene;
 
 class RenderPathDeferred {
-
 	#if (rp_renderer == "Deferred")
 	static var path: RenderPath;
 
@@ -37,7 +36,6 @@ class RenderPathDeferred {
 	}
 
 	public static function init(_path: RenderPath) {
-
 		path = _path;
 
 		#if kha_metal
@@ -59,20 +57,19 @@ class RenderPathDeferred {
 		{
 			Inc.initGI();
 			#if arm_voxelgi_temporal
-			{
-				Inc.initGI("voxelsB");
-			}
+			Inc.initGI("voxelsB");
 			#end
 
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#else
-			Inc.initGI("voxelsOpac");
+
+			#if (rp_voxelgi_bounces != 1)
 			Inc.initGI("voxelsNor");
-			#if (rp_voxelgi_bounces)
 			Inc.initGI("voxelsBounce");
-			Inc.initGI("voxelsVR");
+			Inc.initGI("voxelsVr"); //view \ roughness
 			#end
+
 			#end
 		}
 		#end
@@ -606,18 +603,17 @@ class RenderPathDeferred {
 				#end
 
 				path.bindTarget(voxels, "voxels");
-				
-
+				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))
+				path.bindTarget("voxelsVr", "voxelsVr");
 				path.bindTarget("voxelsNor", "voxelsNor");
-				#if (rp_voxelgi_bounces != 1)
-				path.bindTarget("voxelsVR", "voxelsVR");
 				#end
+
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
-				
+
 				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))				
+				Inc.computeVoxelsBounces(voxels);
 				voxels = "voxelsBounce";
-				Inc.computeVoxelsBounces();
 				#end
 				
 			}

@@ -99,6 +99,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
 
-    frag.write(') * reflection * specular;')
+    frag.write(');')
 
     frag.write('}') # for numLights

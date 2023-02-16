@@ -13,25 +13,6 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxels == "Voxel GI")
-	static var voxel_sh:kha.compute.Shader = null;
-	static var voxel_ta:kha.compute.TextureUnit;
-	static var voxel_tb:kha.compute.TextureUnit;
-	static var voxel_tc:kha.compute.TextureUnit;
-	static var voxel_td:kha.compute.TextureUnit;
-	static var voxel_te:kha.compute.TextureUnit;
-	static var voxel_ca:kha.compute.ConstantLocation;
-	static var voxel_cb:kha.compute.ConstantLocation;
-	static var voxel_cc:kha.compute.ConstantLocation;
-	static var voxel_cd:kha.compute.ConstantLocation;
-	static var voxel_ce:kha.compute.ConstantLocation;
-	static var voxel_cf:kha.compute.ConstantLocation;
-	static var voxel_cg:kha.compute.ConstantLocation;
-	static var voxel_ch:kha.compute.ConstantLocation;
-	static var voxel_ci:kha.compute.ConstantLocation;
-	static var m = iron.math.Mat4.identity();
-	#end
-
 	#if (rp_voxelgi_bounces != 1)
 	static var bounce_sh:kha.compute.Shader = null;
 	static var bounce_ta:kha.compute.TextureUnit;
@@ -630,49 +611,29 @@ class Inc {
 	#end
 
 	#if (rp_voxelgi_bounces != 1)
-	public static function computeVoxelsBegin() {
-		if (voxel_sh == null) {
-			voxel_sh = path.getComputeShader("voxel_light");
-			voxel_ta = voxel_sh.getTextureUnit("voxelsOpac");
-			voxel_tb = voxel_sh.getTextureUnit("voxelsNor");
-			voxel_tc = voxel_sh.getTextureUnit("voxels");
-			voxel_td = voxel_sh.getTextureUnit("shadowMap");
-			voxel_te = voxel_sh.getTextureUnit("shadowMapCube");
-			
-			voxel_ca = voxel_sh.getConstantLocation("lightPos");
-			voxel_cb = voxel_sh.getConstantLocation("lightColor");
-			voxel_cc = voxel_sh.getConstantLocation("lightType");
-			voxel_cd = voxel_sh.getConstantLocation("lightDir");
-			voxel_ci = voxel_sh.getConstantLocation("spotData");
-			#if (rp_shadowmap)
-			voxel_ce = voxel_sh.getConstantLocation("lightShadow");
-			voxel_cf = voxel_sh.getConstantLocation("lightProj");
-			voxel_cg = voxel_sh.getConstantLocation("LVP");
-			voxel_ch = voxel_sh.getConstantLocation("shadowsBias");
-			#end
-		}
-		path.clearImage("voxels", 0x00000000);
-	}
-
-	public static function computeVoxelsBounces() {
+	public static function computeVoxelsBounces(voxels) {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
+
+		#if (rp_gi_bounces)
 		if (bounce_sh == null) {
 			bounce_sh = path.getComputeShader("voxel_bounce");
 			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
 			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
 			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
-			bounce_td = bounce_sh.getTextureUnit("voxelsVR");
+			bounce_tc = bounce_sh.getTextureUnit("voxelsVr");
 		}
-		//path.clearImage("voxelsBounce", 0x00000000);
+
+		path.clearImage("voxelsBounce", 0x00000000);
 		kha.compute.Compute.setShader(bounce_sh);
 		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
-		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
+		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get(voxels).image);
+		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxelsVr").image);
 		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
-		kha.compute.Compute.setTexture(bounce_td, rts.get("voxelsVR").image, kha.compute.Access.Read);
 		kha.compute.Compute.compute(res, res, res);
 		path.generateMipmaps("voxelsBounce");
+		#end
 	}
 	#end
 }
