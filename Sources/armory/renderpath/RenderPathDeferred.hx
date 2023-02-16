@@ -66,6 +66,12 @@ class RenderPathDeferred {
 
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
+			#else
+			Inc.initGI("voxelsOpac");
+			Inc.initGI("voxelsNor");
+			#if (rp_gi_bounces)
+			Inc.initGI("voxelsBounce");
+			#end
 			#end
 		}
 		#end
@@ -577,7 +583,7 @@ class RenderPathDeferred {
 
 			if (voxelize) {
 				var voxtex = voxels;
-
+				
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 
@@ -590,7 +596,7 @@ class RenderPathDeferred {
 				}
 				#end				
 
-				path.bindTarget(voxels, "voxels");
+				path.bindTarget(voxtex, "voxels");
 
 				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
 				{
@@ -601,8 +607,13 @@ class RenderPathDeferred {
 					#end
 				}
 				#end
+
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
+				
+				#if rp_voxelgi_bounces
+				Inc.computeVoxelsEnd();
+				#end
 			}
 		}
 		#end

@@ -1692,6 +1692,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'rp_voxelgi_relight')
         col2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
+        col2.prop(rpdat, 'arm_voxelgi_bounces')
         col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'rp_voxelgi_resolution_z')

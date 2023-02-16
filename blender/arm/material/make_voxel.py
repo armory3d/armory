@@ -46,11 +46,6 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    if arm.utils.get_gapi() == 'direct3d11':
-        for e in con_voxel.data['vertex_elements']:
-            if e['name'] == 'nor':
-                con_voxel.data['vertex_elements'].remove(e)
-                break
     frag.add_uniform('layout(rgba16) writeonly image3D voxels')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
@@ -106,6 +101,7 @@ def make_gi(context_id):
 
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
+    vert.add_out('vec3 wnormalGeom')
     vert.add_include('compiled.inc')
 
     if con_voxel.is_elem('col'):
@@ -125,6 +121,8 @@ def make_gi(context_id):
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec4 lightPosition')
+    geom.add_out('vec3 wnormal')
+
     if con_voxel.is_elem('col'):
         geom.add_out('vec3 vcolor')
     if con_voxel.is_elem('tex'):
@@ -134,7 +132,7 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
-    if arm.utils.get_gapi() == 'direct3d11':
+    if arm.utils.get_gapi() == False:#'direct3d11':
         voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
@@ -202,6 +200,7 @@ def make_gi(context_id):
         geom.write('  }')
         geom.write('}')
     else:
+    
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
             vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
@@ -409,7 +408,8 @@ def make_gi(context_id):
     
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('imageStore(voxels, ivec3((voxelgiResolution ) * voxel), vec4(min(basecol, vec3(1.0)), opacity));')
+    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
+    frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), wnormal);')
 
     return con_voxel
 

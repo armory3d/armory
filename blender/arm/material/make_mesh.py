@@ -269,12 +269,11 @@ def make_deferred(con_mesh, rpasses):
     frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  # Alpha channel is unused at the moment
     frag.write('#endif')
 
-    frag.write('#ifdef _VoxelGIRefract')
-    if parse_opacity:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
-    else:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
-    frag.write('#endif')
+    if '_VoxelGIRefract' in wrd.world_defs:
+        if parse_opacity:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+        else:
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
 
     return con_mesh
 
@@ -648,6 +647,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength * occlusion;')
+
+    frag.write('vec3 diffuse = vec3(0.0);')
+    frag.write('vec3 reflection = vec3(0.0);')
     
     if '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
@@ -664,10 +666,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
 
-    frag.write('vec3 diffuse = vec3(0.0);')
-    frag.write('vec3 reflection = vec3(0.0);')
-
-    if '_VoxelGI' in wrd.world_defs:
+    elif '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:

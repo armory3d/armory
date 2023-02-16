@@ -13,7 +13,14 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxels && arm_config)
+	#if (rp_voxelgi_bounces)
+	static var bounce_sh:kha.compute.Shader = null;
+	static var bounce_ta:kha.compute.TextureUnit;
+	static var bounce_tb:kha.compute.TextureUnit;
+	static var bounce_tc:kha.compute.TextureUnit;
+	#end
+
+	#if ((rp_voxels != 'Off') && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -488,8 +495,6 @@ class Inc {
 	}
 	#end
 
-	
-
 	public static inline function getCubeSize(): Int {
 		#if (rp_shadowmap_cube == 256)
 		return 256;
@@ -601,6 +606,30 @@ class Inc {
 	static function endShadowsLogicProfile() { shadowsLogicTime += kha.Scheduler.realTime() - startShadowsLogicTime - shadowsRenderTime; }
 	static function endShadowsRenderProfile() { shadowsRenderTime += kha.Scheduler.realTime() - startShadowsRenderTime; }
 	public static function endFrame() { shadowsLogicTime = 0;  shadowsRenderTime = 0; }
+	#end
+	
+	#if (rp_voxels == 'Voxel GI')
+	public static function computeVoxelsEnd() {
+		var rts = path.renderTargets;
+		var res = Inc.getVoxelRes();
+
+		#if (rp_voxelgi_bounces)
+		if (bounce_sh == null) {
+			bounce_sh = path.getComputeShader("voxel_bounce");
+			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
+			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
+			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
+		}
+		//path.clearImage("voxelsBounce", 0x00000000);
+		kha.compute.Compute.setShader(bounce_sh);
+		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
+		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
+		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
+		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
+		kha.compute.Compute.compute(res, res, res);
+		path.generateMipmaps("voxelsBounce");
+		#end
+	}
 	#end
 }
 
@@ -1025,6 +1054,121 @@ class ShadowMapTile {
 			}
 			i--;
 		}
+		
+	#if (rp_voxels == "Voxel GI")
+	public static function computeVoxelsBegin() {
+	 	if (voxel_sh == null) {
+	 		voxel_sh = path.getComputeShader("voxel_light");
+	 		voxel_ta = voxel_sh.getTextureUnit("voxelsOpac");
+	 		voxel_tb = voxel_sh.getTextureUnit("voxelsNor");
+	 		voxel_tc = voxel_sh.getTextureUnit("voxels");
+	 		voxel_td = voxel_sh.getTextureUnit("shadowMap");
+	 		voxel_te = voxel_sh.getTextureUnit("shadowMapSpot");
+	 		voxel_tf = voxel_sh.getTextureUnit("shadowMapPoint");
+			
+	 		voxel_ca = voxel_sh.getConstantLocation("lightPos");
+	 		voxel_cb = voxel_sh.getConstantLocation("lightColor");
+	 		voxel_cc = voxel_sh.getConstantLocation("lightType");
+	 		voxel_cd = voxel_sh.getConstantLocation("lightDir");
+	 		voxel_ci = voxel_sh.getConstantLocation("spotData");
+	 		#if (rp_shadowmap)
+	 		voxel_ce = voxel_sh.getConstantLocation("lightShadow");
+	 		voxel_cf = voxel_sh.getConstantLocation("lightProj");
+	 		voxel_cg = voxel_sh.getConstantLocation("LVP");
+	 		voxel_ch = voxel_sh.getConstantLocation("shadowsBias");
+	 		#end
+	 	}
+	 	path.clearImage("voxels", 0x00000000);
+	}
+	public static function computeVoxels() {
+	 	var rts = path.renderTargets;
+	 	var res = Inc.getVoxelRes();
+	 	var lights = iron.Scene.active.lights;
+	 	for (i in 0...lights.length) {
+	 		var l = lights[i];
+	 		if (!l.visible) continue;
+	 		path.light = l;
+
+	 		kha.compute.Compute.setShader(voxel_sh);
+	 		kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
+	 		kha.compute.Compute.setTexture(voxel_tb, rts.get("voxelsNor").image, kha.compute.Access.Read);
+	 		kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
+
+	 		#if (rp_shadowmap)
+	 		if (l.data.raw.type == "sun") {
+	 			kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
+	 			kha.compute.Compute.setInt(voxel_ce, 1); // lightShadow
+	 		}
+	 		else if (l.data.raw.type == "spot") {
+	 			kha.compute.Compute.setSampledTexture(voxel_te, rts.get("shadowMapSpot[0]").image);
+	 			kha.compute.Compute.setInt(voxel_ce, 2);
+	 		}
+	 		else {
+	 			kha.compute.Compute.setSampledCubeMap(voxel_tf, rts.get("shadowMapPoint[0]").cubeMap);
+	 			kha.compute.Compute.setInt(voxel_ce, 3);
+	 		}
+			
+	// 		// lightProj
+	 		var near = l.data.raw.near_plane;
+	 		var far = l.data.raw.far_plane;
+	 		var a:kha.FastFloat = far + near;
+	 		var b:kha.FastFloat = far - near;
+	 		var f2:kha.FastFloat = 2.0;
+	 		var c:kha.FastFloat = f2 * far * near;
+	 		var vx:kha.FastFloat = a / b;
+	 		var vy:kha.FastFloat = c / b;
+	 		kha.compute.Compute.setFloat2(voxel_cf, vx, vy);
+	// 		// LVP
+	 		m.setFrom(l.VP);
+	 		m.multmat(iron.object.Uniforms.biasMat);
+	 		kha.compute.Compute.setMatrix(voxel_cg, m.self);
+	// 		// shadowsBias
+	 		kha.compute.Compute.setFloat(voxel_ch, l.data.raw.shadows_bias);
+	 		#end
+
+	// 		// lightPos
+	 		kha.compute.Compute.setFloat3(voxel_ca, l.transform.worldx(), l.transform.worldy(), l.transform.worldz());
+	// 		// lightCol
+	 		var f = l.data.raw.strength;
+	 		kha.compute.Compute.setFloat3(voxel_cb, l.data.raw.color[0] * f, l.data.raw.color[1] * f, l.data.raw.color[2] * f);
+	// 		// lightType
+	 		kha.compute.Compute.setInt(voxel_cc, iron.data.LightData.typeToInt(l.data.raw.type));
+	// 		// lightDir
+	 		var v = l.look();
+	 		kha.compute.Compute.setFloat3(voxel_cd, v.x, v.y, v.z);
+	// 		// spotData
+	 		if (l.data.raw.type == "spot") {
+	 			var vx = l.data.raw.spot_size;
+	 			var vy = vx - l.data.raw.spot_blend;
+	 			kha.compute.Compute.setFloat2(voxel_ci, vx, vy);
+	 		}
+
+	 		kha.compute.Compute.compute(res, res, res);
+	 	}
+	}
+	public static function computeVoxelsEnd() {
+		var rts = path.renderTargets;
+		var res = Inc.getVoxelRes();
+		path.generateMipmaps("voxels");
+
+		#if (rp_voxelgi_bounces)
+		if (bounce_sh == null) {
+			bounce_sh = path.getComputeShader("voxel_bounce");
+			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
+			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
+			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
+		}
+		path.clearImage("voxelsBounce", 0x00000000);
+		kha.compute.Compute.setShader(bounce_sh);
+		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
+		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
+ 		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
+		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
+	 	kha.compute.Compute.compute(res, res, res);
+	 	path.generateMipmaps("voxelsBounce");
+	 	#end
+	}
+	#end
 	}
 
 	#if arm_shadowmap_atlas_lod

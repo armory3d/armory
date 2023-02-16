@@ -106,6 +106,9 @@ def add_world_defs():
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
+            if rpdat.arm_voxelgi_bounces != "1":
+                assets.add_khafile_def('rp_voxelgi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
+                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelShadow'
             if rpdat.rp_voxelgi_relight:
