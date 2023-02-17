@@ -35,7 +35,9 @@ def make(context_id, rpasses, shadowmap=False):
     if is_disp:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False] })
+    #con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False] })
+
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()
@@ -187,11 +189,8 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if parse_opacity and not 'VoxelGIRefract' in wrd.world_defs:
-        if mat_state.material.arm_discard:
-            opac = mat_state.material.arm_discard_opacity_shadows
-        else:
-            opac = '1.0'
+    if mat_state.material.arm_discard:
+        opac = mat_state.material.arm_discard_opacity_shadows
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     make_finalize.make(con_depth)

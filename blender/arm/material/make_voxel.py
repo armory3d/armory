@@ -301,7 +301,7 @@ def make_gi(context_id):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('basecol *= sampleLight(')
+        frag.write('basecol += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, true')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -369,7 +369,7 @@ def make_gi(context_id):
 
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	basecol *= sampleLight(')
+        frag.write('	basecol += sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')
@@ -409,7 +409,7 @@ def make_gi(context_id):
 
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
+    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, 1.0));')
     frag.write('#ifdef _VoxelsBounce')
     frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')
     frag.write('imageStore(voxelsVr, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')

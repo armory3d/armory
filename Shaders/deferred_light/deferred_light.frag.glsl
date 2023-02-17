@@ -203,7 +203,6 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
-
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
@@ -275,7 +274,6 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
-
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
@@ -333,7 +331,13 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #endif
 #endif//VoxelGI
 
-fragColor.rgb = g1.rgb;
+#ifdef _VoxelGI
+fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
+#elif _VoxelAOvar
+fragColor.rgb = envl * voxelgiEnv;
+#else
+fragColor.rgb = envl;
+#endif
 
 #ifdef _RTGI
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
@@ -372,7 +376,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -421,7 +425,8 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb *= sdirect * svisibility * sunCol;
+	fragColor.rgb *= svisibility;
+	fragColor.rgb += sdirect * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -550,14 +555,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		);
 	}
 #endif // _Clusters
-
-#ifdef _VoxelGI
-fragColor.rgb += (diffuse + reflection) + envl * voxelgiEnv;
-#elif _VoxelAOvar
-fragColor.rgb += envl * voxelgiEnv;
-#else
-fragColor.rgb += envl;
-#endif
 
 #ifdef _VoxelGI
 #ifdef _VoxelGIRefract
