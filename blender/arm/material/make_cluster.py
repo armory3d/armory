@@ -68,7 +68,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
 
-    frag.write('direct += sampleLight(')
+    frag.write('lightData = sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
     frag.write('    vVec,')
@@ -79,8 +79,10 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0,')
-    frag.write('    false')
-    
+    frag.write('    false,')
+    frag.write('    diffuse,')
+    frag.write('    reflection')
+
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:

@@ -333,10 +333,12 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 
 #ifdef _VoxelGI
 fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
-#elif _VoxelAOvar
+#else
+#ifdef _VoxelAOvar
 fragColor.rgb = envl * voxelgiEnv;
 #else
 fragColor.rgb = envl;
+#endif
 #endif
 
 #ifdef _RTGI
@@ -377,7 +379,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
-
 	#ifdef _ShadowMap
 		#ifdef _CSM
 			svisibility = shadowTestCascade(
@@ -462,8 +463,9 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Sun
 
 #ifdef _SinglePoint
-	fragColor.rgb *= sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false
+	vec4 lightData;
+	lightData = sampleLight(
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false, diffuse, reflection
 		#ifdef _ShadowMap
 			, 0, pointBias, true
 		#endif
@@ -487,12 +489,15 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		, gbufferD, invVP, eye
 		#endif
 	);
-
+	fragColor.rgb *= lightData.a;
+	fragColor.rgb += lightData.rgb;
+	
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
+	
 
 #endif
 
@@ -510,9 +515,10 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	int numPoints = numLights - numSpots;
 	#endif
 
+	vec4 lightData = vec4(0.0);
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		fragColor.rgb *= sampleLight(
+		lightData += sampleLight(
 			p,
 			n,
 			v,
@@ -523,7 +529,9 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			roughness,
 			occspec.y,
 			f0,
-			false
+			false,
+			diffuse,
+			reflection
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
 				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
@@ -554,6 +562,8 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			#endif
 		);
 	}
+	fragColor.rgb *= lightData.a;
+	fragColor.rgb += lightData.rgb;
 #endif // _Clusters
 
 #ifdef _VoxelGI

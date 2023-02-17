@@ -279,7 +279,8 @@ def make_gi(context_id):
                 vert.write('lightPos = LVP * vec4(wposition + n * shadowsBias * 100.0, 1.0);')
                 frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, wposition, shadowsBias);')
             frag.write('}')
-        frag.write('basecol *= svisibility * sunCol;')
+        frag.write('basecol *= svisibility;')
+        frag.write('basecol += sunCol;')
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
@@ -301,8 +302,8 @@ def make_gi(context_id):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('basecol += sampleLight(')
-        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, true')
+        frag.write('vec4 lightData = sampleLight(')
+        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, true, vec3(0.0), vec3(0.0)')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
@@ -320,6 +321,8 @@ def make_gi(context_id):
             frag.write_attrib('vec3 e;');
             frag.write(', d, m, e')
         frag.write(');')
+        frag.write('basecol *= lightData.a;')
+        frag.write('basecol += lightData.rgb;')
 
     if '_Clusters' in wrd.world_defs:
         frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
@@ -366,10 +369,10 @@ def make_gi(context_id):
                     frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
                 # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
                 frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
-
+        frag.write('vec4 lightData = vec4(0.0);')
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	basecol += sampleLight(')
+        frag.write('	lightData = sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')
@@ -380,7 +383,9 @@ def make_gi(context_id):
         frag.write('    roughness,')
         frag.write('    specular,')
         frag.write('    f0,')
-        frag.write('    true')
+        frag.write('    true,')
+        frag.write('    vec3(0.0),')
+        frag.write('    vec3(0.0)')
         if is_shadows:
             frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
         if '_Spot' in wrd.world_defs:
@@ -406,6 +411,8 @@ def make_gi(context_id):
 
         frag.write('	);')
         frag.write('};')
+        frag.write('basecol *= lightData.a;')
+        frag.write('basecol += lightData.rgb;')
 
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')

@@ -84,8 +84,8 @@ uniform sampler2D sltcMag;
 #endif
 #endif
 
-vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
-	const vec3 albedo, const float rough, const float spec, const vec3 f0, const bool vox
+vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
+	const vec3 albedo, const float rough, const float spec, const vec3 f0, const bool vox, const vec3 diffuse, const vec3 reflection
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
 	#endif
@@ -116,39 +116,37 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float dotVH = dot(v, h);
 	float dotNL = dot(n, l);
     vec3 direct;
-    if(!vox) {
-		#ifdef _LTC
-		float theta = acos(dotNV);
-		vec2 tuv = vec2(rough, theta / (0.5 * PI));
-		tuv = tuv * LUT_SCALE + LUT_BIAS;
-		vec4 t = textureLod(sltcMat, tuv, 0.0);
-		mat3 invM = mat3(
-			vec3(1.0, 0.0, t.y),
-			vec3(0.0, t.z, 0.0),
-			vec3(t.w, 0.0, t.x));
-		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
-		ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-		direct = albedo * ltcdiff + ltcspec * spec * 0.05;
-		#else
-		direct = lambertDiffuseBRDF(albedo, dotNL) +
-					  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
-		#endif
-	}
-	else direct = albedo;
+	#ifdef _LTC
+	float theta = acos(dotNV);
+	vec2 tuv = vec2(rough, theta / (0.5 * PI));
+	tuv = tuv * LUT_SCALE + LUT_BIAS;
+	vec4 t = textureLod(sltcMat, tuv, 0.0);
+	mat3 invM = mat3(
+		vec3(1.0, 0.0, t.y),
+		vec3(0.0, t.z, 0.0),
+		vec3(t.w, 0.0, t.x));
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
+	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
+	direct = albedo * ltcdiff + (ltcspec + reflection) * spec * 0.05 + diffuse;
+	#else
+	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + 
+				  (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
+	#endif
 
+	direct = albedo;
 	direct *= lightCol;
 	direct *= attenuate(distance(p, lp));
 
+	#ifdef _MicroShadowing
+	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+	#endif
+
+	#ifdef _SSRS
+	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	#endif
+
 	if(!vox) {
-		#ifdef _MicroShadowing
-		direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
-		#endif
-
-		#ifdef _SSRS
-		direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
-		#endif
-
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
 		direct *= 1.0 - traceShadow(voxels, voxpos, l);
@@ -167,7 +165,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		#endif
 		#endif
 	}
-	
+
 	vec3 svisibility = vec3(1.0, 1.0, 1.0);
 	
 	#ifdef _LTC
@@ -197,7 +195,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 		}
 	#endif
-    return direct * svisibility;
+    return vec4(direct, svisibility);
 	#endif
 
 	#ifdef _Spot
@@ -230,7 +228,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#endif
 			}
 		#endif
-	    return direct * svisibility;
+	    return vec4(direct, svisibility);
 	}
 	#endif
 
@@ -264,7 +262,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 		}
 	#endif
-	return direct * svisibility;
+	return vec4(direct, svisibility);
 }
 
 #endif

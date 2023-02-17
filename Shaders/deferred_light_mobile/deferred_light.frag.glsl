@@ -228,7 +228,7 @@ void main() {
 
 #ifdef _SinglePoint
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false, vec3(0.0), vec3(0.0),
 		#ifdef _ShadowMap
 			, 0, pointBias, true
 		#endif
@@ -254,7 +254,7 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		fragColor.rgb += sampleLight(
+		vec4 lightData = sampleLight(
 			p,
 			n,
 			v,
@@ -264,7 +264,10 @@ void main() {
 			albedo,
 			roughness,
 			occspec.y,
-			f0
+			f0,
+			false,
+			vec3(0.0),
+			vec4(0.0),
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
 				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
@@ -278,6 +281,8 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 		);
+		fragColor.rgb *= lightData.a;
+		fragColor.rgb += lightData.rgb;
 	}
 #endif // _Clusters
 }
