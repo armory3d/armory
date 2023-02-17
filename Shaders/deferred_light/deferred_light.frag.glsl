@@ -290,6 +290,9 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
+vec3 diffuse = vec3(0.0);
+vec3 reflection = vec3(0.0);
+
 #ifdef _VoxelAOvar
 	#ifdef _VoxelGICam
 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
@@ -299,16 +302,13 @@ void main() {
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+	diffuse += 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
 	               traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	envl *= 1.0 - traceAO(voxpos, n, voxels);
+	diffuse += 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
 #endif
-
-vec3 diffuse = vec3(0.0);
-vec3 reflection = vec3(0.0);
  
 #ifdef _VoxelGI
 #ifdef _VoxelGICam
@@ -335,7 +335,7 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
 #else
 #ifdef _VoxelAOvar
-fragColor.rgb = envl * voxelgiEnv;
+fragColor.rgb = diffuse + envl * voxelgiEnv;
 #else
 fragColor.rgb = envl;
 #endif
@@ -379,6 +379,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + diffuse + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) + reflection) * occspec.y;
+
 	#ifdef _ShadowMap
 		#ifdef _CSM
 			svisibility = shadowTestCascade(
@@ -425,7 +426,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// See https://advances.realtimerendering.com/other/2016/naughty_dog/NaughtyDog_TechArt_Final.pdf
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
-
+	
 	fragColor.rgb *= svisibility;
 	fragColor.rgb += sdirect * sunCol;
 
@@ -463,8 +464,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Sun
 
 #ifdef _SinglePoint
-	vec4 lightData;
-	lightData = sampleLight(
+	vec4 lightData = sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false, diffuse, reflection
 		#ifdef _ShadowMap
 			, 0, pointBias, true
@@ -489,15 +489,15 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		, gbufferD, invVP, eye
 		#endif
 	);
-	fragColor.rgb *= lightData.a;
-	fragColor.rgb += lightData.rgb;
-	
+
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
 	
+	fragColor.rgb *= lightData.a;
+	fragColor.rgb += lightData.rgb;
 
 #endif
 
@@ -529,7 +529,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			roughness,
 			occspec.y,
 			f0,
-			false,
+			true,
 			diffuse,
 			reflection
 			#ifdef _ShadowMap

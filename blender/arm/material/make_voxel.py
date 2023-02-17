@@ -322,7 +322,6 @@ def make_gi(context_id):
             frag.write(', d, m, e')
         frag.write(');')
         frag.write('basecol *= lightData.a;')
-        frag.write('basecol += lightData.rgb;')
 
     if '_Clusters' in wrd.world_defs:
         frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
@@ -372,7 +371,7 @@ def make_gi(context_id):
         frag.write('vec4 lightData = vec4(0.0);')
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	lightData = sampleLight(')
+        frag.write('	lightData += sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')
@@ -412,11 +411,11 @@ def make_gi(context_id):
         frag.write('	);')
         frag.write('};')
         frag.write('basecol *= lightData.a;')
-        frag.write('basecol += lightData.rgb;')
 
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, 1.0));')
+
     frag.write('#ifdef _VoxelsBounce')
     frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')
     frag.write('imageStore(voxelsVr, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')

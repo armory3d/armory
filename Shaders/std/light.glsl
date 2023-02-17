@@ -125,48 +125,40 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		vec3(1.0, 0.0, t.y),
 		vec3(0.0, t.z, 0.0),
 		vec3(t.w, 0.0, t.x));
-	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3) + reflection;
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-	direct = albedo * ltcdiff + (ltcspec + reflection) * spec * 0.05 + diffuse;
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3) + diffuse;
+	direct = albedo * ltcdiff + (ltcspec) * spec * 0.05;
 	#else
-	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + 
-				  (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
+	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
 	#endif
 
-	direct = albedo;
 	direct *= lightCol;
 	direct *= attenuate(distance(p, lp));
 
+    float svisibility = 1.0;
+
 	#ifdef _MicroShadowing
-	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+	svisibility *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
 	#endif
 
 	#ifdef _SSRS
-	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	svisibility *= traceShadowSS(l, p, gbufferD, invVP, eye);
 	#endif
 
 	if(!vox) {
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		direct *= 1.0 - traceShadow(voxels, voxpos, l);
+		svisibility *= 1.0 - traceShadow(voxels, voxpos, l);
 		#endif
 	  	#endif
-
-		#ifdef _VoxelAOvar
-		#ifdef _VoxelShadow
-		direct *= 1.0 - traceShadow(voxels, voxpos, l);
-		#endif
-		#endif
 		
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		direct *= 1.0 - traceShadow(voxels, voxpos, l);
+		svisibility *= 1.0 - traceShadow(voxels, voxpos, l);
 		#endif
 		#endif
 	}
-
-	vec3 svisibility = vec3(1.0, 1.0, 1.0);
 	
 	#ifdef _LTC
 	#ifdef _ShadowMap
@@ -200,7 +192,7 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _Spot
 	if (isSpot) {
-		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+		svisibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
 
 		#ifdef _ShadowMap
 			if (receiveShadow) {
@@ -211,7 +203,7 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
 					#ifdef _ShadowMapAtlas
-						direct *= shadowTest(
+						svisibility *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
 							#else
@@ -233,7 +225,7 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _LightIES
-	direct *= iesAttenuation(-l);
+	svisibility *= iesAttenuation(-l);
 	#endif
 
 	#ifdef _ShadowMap
@@ -245,7 +237,7 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 			#ifdef _Clusters
 				#ifdef _ShadowMapAtlas
-				direct *= PCFFakeCube(
+				svisibility *= PCFFakeCube(
 					#ifndef _SingleAtlas
 					shadowMapAtlasPoint
 					#else

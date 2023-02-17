@@ -662,9 +662,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', link='_voxelBlend')
             frag.add_uniform('sampler3D voxelsLast')
-            frag.write('indirect *= vec3(1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend)));')
+            frag.write('diffuse += vec3(1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend)));')
         else:
-            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
+            frag.write('diffuse += vec3(1.0 - traceAO(voxpos, n, voxels));')
 
     elif '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
@@ -688,10 +688,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('	reflection = traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelgiRefl;')
 
-    if '_VoxelGI' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs or 'VoxelAOvar' in wrd.world_defs:
         frag.write('vec3 final = (diffuse + reflection) + indirect * voxelgiEnv;')    
-    elif 'VoxelAOvar' in wrd.world_defs:
-        frag.write('vec3 final = indirect * voxelgiEnv;')    
     else:
         frag.write('vec3 final = indirect;')
 
