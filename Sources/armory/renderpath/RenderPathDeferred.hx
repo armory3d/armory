@@ -67,9 +67,8 @@ class RenderPathDeferred {
 			#if (rp_voxelgi_bounces != 1)
 			Inc.initGI("voxelsNor");
 			Inc.initGI("voxelsBounce");
-			Inc.initGI("voxelsVr"); //view \ roughness
+			Inc.initGI("voxelsVr");//view \ roughness
 			#end
-
 			#end
 		}
 		#end
@@ -601,8 +600,8 @@ class RenderPathDeferred {
 					#end
 				}
 				#end
-
 				path.bindTarget(voxels, "voxels");
+
 				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))
 				path.bindTarget("voxelsVr", "voxelsVr");
 				path.bindTarget("voxelsNor", "voxelsNor");

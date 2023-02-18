@@ -46,9 +46,9 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(rgba16) image3D voxels')
-    frag.add_uniform('layout(rgba16) image3D voxelsNor')
-    frag.add_uniform('layout(rgba16) image3D voxelsVr')
+    frag.add_uniform('layout(rgba16) writeonly image3D voxels')
+    frag.add_uniform('layout(rgba16) writeonly image3D voxelsNor')
+    frag.add_uniform('layout(rgba16) writeonly image3D voxelsVr')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
@@ -412,7 +412,6 @@ def make_gi(context_id):
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
-
     frag.write('#ifdef _VoxelsBounce')
     frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')
     frag.write('imageStore(voxelsVr, ivec3(voxelgiResolution * voxel), vec4(vVec, roughness));')

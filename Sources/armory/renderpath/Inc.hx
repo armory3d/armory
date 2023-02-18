@@ -19,6 +19,7 @@ class Inc {
 	static var bounce_tb:kha.compute.TextureUnit;
 	static var bounce_tc:kha.compute.TextureUnit;
 	static var bounce_td:kha.compute.TextureUnit;
+	static var bounce_te:kha.compute.TextureUnit;
 	#end
 
 	#if ((rp_voxels != 'Off') && arm_config)
@@ -614,22 +615,20 @@ class Inc {
 	public static function computeVoxelsBounces(voxels) {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
-
 		if (bounce_sh == null) {
 			bounce_sh = path.getComputeShader("voxel_bounce");
 			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
 			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
 			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
-			bounce_tc = bounce_sh.getTextureUnit("voxelsVr");
+			bounce_td = bounce_sh.getTextureUnit("voxelsVr");
 		}
-
 		path.clearImage("voxelsBounce", 0x00000000);
 		kha.compute.Compute.setShader(bounce_sh);
 		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
 		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get(voxels).image);
-		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxelsVr").image);
 		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
+		kha.compute.Compute.setSampledTexture(bounce_td, rts.get("voxelsVr").image);
 		kha.compute.Compute.compute(res, res, res);
 		path.generateMipmaps("voxelsBounce");
 	}

@@ -6,7 +6,6 @@
 
 // layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
-
 uniform layout(binding = 0, rgba16) readonly image3D voxelsNor;
 uniform layout(binding = 1) sampler3D voxelsFrom;
 uniform layout(binding = 2, rgba16) writeonly image3D voxelsTo;

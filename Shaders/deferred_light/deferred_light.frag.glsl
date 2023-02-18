@@ -325,7 +325,7 @@ diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 
 if(roughness < 1.0 && occspec.y > 0.0)
 #ifdef _VoxelGITemporal
-reflection =  (traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
+reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
 #else
 reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl;
 #endif
