@@ -283,7 +283,7 @@ def make_gi(context_id):
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias, shadowsBias);')
             frag.write('}')
-        frag.write('basecol += svisibility * sunCol * sdirect;;')
+        frag.write('basecol += svisibility * sunCol * sdirect;')
 
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
@@ -302,7 +302,7 @@ def make_gi(context_id):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('vec4 lightData = sampleLight(')
+        frag.write('basecol += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, true, vec3(0.0), vec3(0.0)')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -321,7 +321,6 @@ def make_gi(context_id):
             frag.write_attrib('vec3 e;');
             frag.write(', d, m, e')
         frag.write(');')
-        frag.write('basecol += lightData.a * lightData.rgb;')
 
     if '_Clusters' in wrd.world_defs:
         frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
@@ -370,7 +369,7 @@ def make_gi(context_id):
                 frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	vec4 lightData = sampleLight(')
+        frag.write('	basecol += sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')
@@ -408,7 +407,6 @@ def make_gi(context_id):
             frag.write(', d, mat4 m, e')
 
         frag.write('	);')
-        frag.write('basecol += lightData.a * lightData.rgb;')
         frag.write('};')
 
     frag.write('basecol += emissionCol;')

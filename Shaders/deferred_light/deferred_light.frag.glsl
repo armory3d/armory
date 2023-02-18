@@ -463,7 +463,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Sun
 
 #ifdef _SinglePoint
-	vec4 lightData = sampleLight(
+	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false, diffuse, reflection
 		#ifdef _ShadowMap
 			, 0, pointBias, true
@@ -494,7 +494,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
-	fragColor.rgb += lightData.a * lightData.rgb;
 #endif
 
 #ifdef _Clusters
@@ -513,7 +512,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		vec4 lightData = sampleLight(
+		fragColor.rgb += sampleLight(
 			p,
 			n,
 			v,
@@ -556,7 +555,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			, gbufferD, invVP, eye
 			#endif
 		);
-		fragColor.rgb += lightData.a * lightData.rgb;
 	}
 #endif // _Clusters
 

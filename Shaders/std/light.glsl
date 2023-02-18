@@ -84,7 +84,7 @@ uniform sampler2D sltcMag;
 #endif
 #endif
 
-vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
+vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
 	const vec3 albedo, const float rough, const float spec, const vec3 f0, const bool vox, const vec3 diffuse, const vec3 reflection
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
@@ -125,83 +125,81 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		vec3(1.0, 0.0, t.y),
 		vec3(0.0, t.z, 0.0),
 		vec3(t.w, 0.0, t.x));
-	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3) + reflection;
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3) + diffuse;
-	direct = albedo * ltcdiff + (ltcspec) * spec * 0.05;
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
+	direct = (albedo + diffuse) * ltcdiff + (ltcspec + reflection) * spec * 0.05;
 	#else
 	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
 	#endif
 
-	direct += lightCol;
-	float svisibility = 1.0;
-	//svisibility *= attenuate(distance(p, lp));
-
-	#ifdef _MicroShadowing
-	svisibility *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
-	#endif
-
-	#ifdef _SSRS
-	svisibility *= traceShadowSS(l, p, gbufferD, invVP, eye);
-	#endif
+	direct *= lightCol;
+	//direct *= attenuate(distance(p, lp));
 
 	if(!vox) {
+		#ifdef _MicroShadowing
+		direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+		#endif
+
+		#ifdef _SSRS
+		direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+		#endif
+
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		svisibility *= 1.0 - traceShadow(voxels, voxpos, l);
+		direct *= 1.0 - traceShadow(voxels, voxpos, l);
 		#endif
 	  	#endif
 		
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		svisibility *= 1.0 - traceShadow(voxels, voxpos, l);
+		direct *= 1.0 - traceShadow(voxels, voxpos, l);
 		#endif
 		#endif
 	}
-	
 	#ifdef _LTC
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
 			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-			svisibility *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			#endif
 			#ifdef _Clusters
 			if (index == 0) {
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-				svisibility *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 1) {
 				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
-				svisibility *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+				direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 2) {
 				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
-				svisibility *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+				direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 3) {
 				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
-				svisibility *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+				direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
 			}
 			#endif
 		}
 	#endif
-    return vec4(direct, svisibility);
+    return direct;
 	#endif
 
 	#ifdef _Spot
 	if (isSpot) {
-		svisibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
 		#ifdef _ShadowMap
 			if (receiveShadow) {
 				#ifdef _SinglePoint
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-				svisibility *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 				#endif
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
 					#ifdef _ShadowMapAtlas
-						svisibility *= shadowTest(
+						direct *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
 							#else
@@ -210,32 +208,32 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 							, lPos.xyz / lPos.w, bias
 						);
 					#else
-							 if (index == 0) svisibility *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-						else if (index == 1) svisibility *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-						else if (index == 2) svisibility *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-						else if (index == 3) svisibility *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+						else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+						else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+						else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
 					#endif
 				#endif
 			}
 		#endif
-	     return vec4(direct, svisibility);
+	    return direct;
 	}
 	#endif
 
 	#ifdef _LightIES
-	svisibility *= iesAttenuation(-l);
+	direct *= iesAttenuation(-l);
 	#endif
 
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
 			#ifndef _Spot
-			svisibility *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+			direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
 			#endif
 			#endif
 			#ifdef _Clusters
 				#ifdef _ShadowMapAtlas
-				svisibility *= PCFFakeCube(
+				direct *= PCFFakeCube(
 					#ifndef _SingleAtlas
 					shadowMapAtlasPoint
 					#else
@@ -244,14 +242,14 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 					, ld, -l, bias, lightProj, n, index
 				);
 				#else
-					 if (index == 0) svisibility *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
-				else if (index == 1) svisibility *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
-				else if (index == 2) svisibility *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
-				else if (index == 3) svisibility *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+					 if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+				else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
+				else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
+				else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
 				#endif
 			#endif
 		}
 	#endif
-	 return vec4(direct, svisibility);
+	return direct;
 }
 #endif
