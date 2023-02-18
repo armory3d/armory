@@ -68,7 +68,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
 
-    frag.write('lightData = sampleLight(')
+    frag.write('final += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
     frag.write('    vVec,')

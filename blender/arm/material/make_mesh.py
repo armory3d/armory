@@ -624,6 +624,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('indirect /= PI;')
     else:
         frag.write('vec3 indirect = vec3(0.0)')
+
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
@@ -688,8 +689,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             frag.write('	reflection = traceReflection(voxels, voxpos, n, -vVec, roughness).rgb * voxelgiRefl;')
 
-    if '_VoxelGI' in wrd.world_defs or 'VoxelAOvar' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs:
         frag.write('vec3 final = (diffuse + reflection) + indirect * voxelgiEnv;')    
+    elif '_VoxelAOvar' in wrd.world_defs:
+        frag.write('vec3 final = diffuse + envl * voxelgiEnv;')
     else:
         frag.write('vec3 final = indirect;')
 
@@ -739,8 +742,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             
             frag.write('}') #receiveShadow
 
-        frag.write('final *= svisibility;')
-        frag.write('final += sdirect * sunCol;')
+        frag.write('final += svisibility * sdirect * sunCol;')
         #sun
 
     if '_SinglePoint' in wrd.world_defs:
@@ -760,7 +762,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('vec4 lightData = sampleLight(')
+        frag.write('final += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, false, diffuse, reflection')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -774,14 +776,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', gbufferD, invVP, eye')
 
         frag.write(');')
-        frag.write('final *= lightData.a;')
-        frag.write('final += lightData.rgb;')
     
     if '_Clusters' in wrd.world_defs:
-        frag.write('vec4 lightData;')
         make_cluster.write(vert, frag)
-        frag.write('final *= lightData.a;')
-        frag.write('final += lightData.rgb;')
 
     if mat_state.emission_type != mat_state.EmissionType.NO_EMISSION:
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
