@@ -133,10 +133,9 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
 	#endif
 
-	direct *= lightCol;
-	direct *= attenuate(distance(p, lp));
-
-    float svisibility = 1.0;
+	direct += lightCol;
+	float svisibility = 1.0;
+	//svisibility *= attenuate(distance(p, lp));
 
 	#ifdef _MicroShadowing
 	svisibility *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
@@ -193,7 +192,6 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _Spot
 	if (isSpot) {
 		svisibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
-
 		#ifdef _ShadowMap
 			if (receiveShadow) {
 				#ifdef _SinglePoint
@@ -220,7 +218,7 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#endif
 			}
 		#endif
-	    return vec4(direct, svisibility);
+	     return vec4(direct, svisibility);
 	}
 	#endif
 
@@ -254,7 +252,6 @@ vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 		}
 	#endif
-	return vec4(direct, svisibility);
+	 return vec4(direct, svisibility);
 }
-
 #endif

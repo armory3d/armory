@@ -255,6 +255,9 @@ def make_gi(context_id):
 
     vert.add_out('vec4 lightPositionGeom')
 
+    frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
+    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+
     if '_Sun' in wrd.world_defs:
         vert.add_uniform('mat4 LWVP', link='_biasLightWorldViewProjectionMatrix')
         vert.write('lightPositionGeom = LWVP * vec4(pos.xyz, 1.0);')
@@ -264,6 +267,7 @@ def make_gi(context_id):
         frag.write('float sdotNL = dot(n, sunDir);')
         frag.write('float sdotNH = dot(n, sh);')
         frag.write('float sdotVH = dot(vVec, sh);')
+        frag.write('vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir))) * specular;')
         if is_shadows:
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
@@ -273,17 +277,13 @@ def make_gi(context_id):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition, shadowsBias);')
+                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition + n * shadowsBias * 10, shadowsBias);')
             else:
                 vert.add_uniform('mat4 LVP', '_biasLightViewProjectionMatrix')
-                vert.write('lightPos = LVP * vec4(wposition + n * shadowsBias * 100.0, 1.0);')
-                frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, wposition, shadowsBias);')
+                frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
+                frag.write('if(lightPosition.w > 0.0) svisibility = shadowTest({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias, shadowsBias);')
             frag.write('}')
-        frag.write('basecol *= svisibility;')
-        frag.write('basecol += sunCol;')
-
-    frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
-    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+        frag.write('basecol += svisibility * sunCol * sdirect;;')
 
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
@@ -321,7 +321,7 @@ def make_gi(context_id):
             frag.write_attrib('vec3 e;');
             frag.write(', d, m, e')
         frag.write(');')
-        frag.write('basecol *= lightData.a;')
+        frag.write('basecol += lightData.a * lightData.rgb;')
 
     if '_Clusters' in wrd.world_defs:
         frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
@@ -368,10 +368,9 @@ def make_gi(context_id):
                     frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
                 # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
                 frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
-        frag.write('vec4 lightData = vec4(0.0);')
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('	int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('	lightData += sampleLight(')
+        frag.write('	vec4 lightData = sampleLight(')
         frag.write('    wposition,')
         frag.write('    n,')
         frag.write('    vVec,')
@@ -409,12 +408,12 @@ def make_gi(context_id):
             frag.write(', d, mat4 m, e')
 
         frag.write('	);')
+        frag.write('basecol += lightData.a * lightData.rgb;')
         frag.write('};')
-        frag.write('basecol *= lightData.a;')
 
     frag.write('basecol += emissionCol;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, 1.0));')
+    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(basecol, opacity));')
 
     frag.write('#ifdef _VoxelsBounce')
     frag.write('imageStore(voxelsNor, ivec3(voxelgiResolution * voxel), vec4(wnormal, 1.0));')

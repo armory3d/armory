@@ -615,7 +615,6 @@ class Inc {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
 
-		#if (rp_gi_bounces)
 		if (bounce_sh == null) {
 			bounce_sh = path.getComputeShader("voxel_bounce");
 			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
@@ -633,7 +632,6 @@ class Inc {
 		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
 		kha.compute.Compute.compute(res, res, res);
 		path.generateMipmaps("voxelsBounce");
-		#end
 	}
 	#end
 }

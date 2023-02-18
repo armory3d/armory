@@ -427,8 +427,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 	
-	fragColor.rgb *= svisibility;
-	fragColor.rgb += sdirect * sunCol;
+	fragColor.rgb += svisibility * sdirect * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -495,10 +494,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
-	
-	fragColor.rgb *= lightData.a;
-	fragColor.rgb += lightData.rgb;
-
+	fragColor.rgb += lightData.a * lightData.rgb;
 #endif
 
 #ifdef _Clusters
@@ -515,10 +511,9 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	int numPoints = numLights - numSpots;
 	#endif
 
-	vec4 lightData = vec4(0.0);
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		lightData += sampleLight(
+		vec4 lightData = sampleLight(
 			p,
 			n,
 			v,
@@ -561,9 +556,8 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			, gbufferD, invVP, eye
 			#endif
 		);
+		fragColor.rgb += lightData.a * lightData.rgb;
 	}
-	fragColor.rgb *= lightData.a;
-	fragColor.rgb += lightData.rgb;
 #endif // _Clusters
 
 #ifdef _VoxelGI
