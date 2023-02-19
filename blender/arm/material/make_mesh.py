@@ -692,7 +692,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs:
         frag.write('vec3 final = (diffuse + reflection) + indirect * voxelgiEnv;')    
     elif '_VoxelAOvar' in wrd.world_defs:
-        frag.write('vec3 final = diffuse + envl * voxelgiEnv;')
+        frag.write('vec3 final = diffuse + indirect * voxelgiEnv;')
     else:
         frag.write('vec3 final = indirect;')
 
@@ -774,7 +774,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
             frag.write(', gbufferD, invVP, eye')
-
         frag.write(');')
     
     if '_Clusters' in wrd.world_defs:

@@ -64,8 +64,10 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#else
 
-			#if (rp_voxelgi_bounces != 1)
 			Inc.initGI("voxelsNor");
+			Inc.initGI("voxelsOpac");
+
+			#if (rp_voxelgi_bounces != 1)
 			Inc.initGI("voxelsBounce");
 			Inc.initGI("voxelsVr");//view \ roughness
 			#end
@@ -559,14 +561,14 @@ class RenderPathDeferred {
 
 		// Voxels
 		#if (rp_voxels != 'Off')
+		var relight = false;
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
-			
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if light was moved
+			//Relight if light was moved
 			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { voxelize = true; break; }
+				if (light.transform.diff()) { relight = true; break; }
 			}
 			#end
 
@@ -579,19 +581,19 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
-				path.clearImage(voxels, 0x00000000);
+				#if (rp_voxels == "Voxels GI")
+				var voxtex = "voxelsOpac";
+				#else
+				var voxtex = voxels;
+				#end
+
+				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end
-
-				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
+				#if rp_shadowmap
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();
@@ -600,22 +602,34 @@ class RenderPathDeferred {
 					#end
 				}
 				#end
-				path.bindTarget(voxels, "voxels");
+
+				#if rp_gbuffer_emission
+				{
+					path.bindTarget("gbuffer_emission", "gbufferEmission");
+				}
+				#end
+
+				path.bindTarget(voxtex, "voxels");
 
 				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))
 				path.bindTarget("voxelsVr", "voxelsVr");
-				path.bindTarget("voxelsNor", "voxelsNor");
 				#end
 
 				path.drawMeshes("voxel");
-				path.generateMipmaps(voxels);
+				path.generateMipmaps(voxtex);
 
 				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))				
-				Inc.computeVoxelsBounces(voxels);
 				voxels = "voxelsBounce";
 				#end
-				
+				relight = true;
 			}
+			#if (rp_voxels == "Voxel GI")
+			if(relight) {
+				Inc.computeVoxelsBegin();
+				Inc.computeVoxels();
+				Inc.computeVoxelsEnd();
+			}
+			#end
 		}
 		#end
 
