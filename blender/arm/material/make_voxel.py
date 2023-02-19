@@ -46,9 +46,9 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(rgba16) image3D voxels')
-    frag.add_uniform('layout(rgba16) image3D voxelsNor')
-    frag.add_uniform('layout(rgba16) image3D voxelsVr')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxelsNor')
+    frag.add_uniform('layout(rgb16) uimage3D voxelsVr')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
@@ -138,12 +138,12 @@ def make_gi(context_id):
         geom.add_out('vec3 bposition')
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    #frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
-    #frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
-    frag.write('imageStore(voxels, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(basecol, 1.0));')
-    #frag.write('val = encNor(wnormal);');
-    frag.write('imageStore(voxelsNor, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(wnormal, 1.0));')
-    #frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
+    frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
+    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+    #frag.write('imageStore(voxels, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(basecol, 1.0));')
+    frag.write('val = encNor(wnormal);')
+    #frag.write('imageStore(voxelsNor, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(wnormal, 1.0));')
+    frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
 
     return con_voxel
 
