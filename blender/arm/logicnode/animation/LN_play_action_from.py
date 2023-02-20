@@ -19,7 +19,7 @@ class PlayActionFromNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNPlayActionFromNode'
     bl_label = 'Play Action From'
-    arm_version = 3
+    arm_version = 4
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
@@ -30,6 +30,7 @@ class PlayActionFromNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Blend', default_value = 0.25)
         self.add_input('ArmFloatSocket', 'Speed', default_value = 1.0)
         self.add_input('ArmBoolSocket', 'Loop', default_value = False)
+        self.add_input('ArmBoolSocket', 'Reverse', default_value = False)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
