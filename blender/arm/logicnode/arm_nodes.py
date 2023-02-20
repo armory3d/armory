@@ -24,6 +24,8 @@ if arm.is_reload(__name__):
     from arm.logicnode.replacement import NodeReplacement
     arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
+    arm.logicnode.arm_sockets = arm.reload_module(arm.logicnode.arm_sockets)
+    from arm.logicnode.arm_sockets import ArmCustomSocket
 else:
     arm.enable_reload(__name__)
 
@@ -75,7 +77,7 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     @classmethod
     def poll(cls, ntree):
-        return ntree.bl_idname == 'ArmLogicTreeType'
+        return ntree.bl_idname == 'ArmLogicTreeType' or 'ArmGroupTree'
 
     @classmethod
     def on_register(cls):
@@ -86,6 +88,17 @@ class ArmLogicTreeNode(bpy.types.Node):
     @classmethod
     def on_unregister(cls):
         pass
+
+    @classmethod
+    def absolute_location(cls, node):
+        """Gets the absolute location of the node including frames and parent nodes."""
+        locx, locy = node.location[:]
+        if node.parent:
+            locx += node.parent.location.x
+            locy += node.parent.location.y
+            return cls.absolute_location(node.parent)
+        else:
+            return locx, locy
 
     def get_tree(self) -> bpy.types.NodeTree:
         return self.id_data
@@ -244,6 +257,83 @@ class ArmLogicTreeNode(bpy.types.Node):
 
         return socket
 
+    def get_socket_index(self, socket:bpy.types.NodeSocket) -> int:
+        """Gets the scket index of a socket in this node."""
+
+        index = 0
+        if socket.is_output:
+            for output in self.outputs:
+                if output == socket:
+                    return index
+                index = index + 1
+        else:
+            for input in self.inputs:
+                if input == socket:
+                    return index
+                index = index + 1
+        return -1
+
+    def insert_input(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Insert a new input socket to the node at a particular index.
+
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+
+        socket = self.add_input(socket_type, socket_name, default_value, is_var)
+        self.inputs.move(len(self.inputs) - 1, socket_index)
+        return socket
+
+    def insert_output(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Insert a new output socket to the node at a particular index.
+
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+
+        socket = self.add_output(socket_type, socket_name, default_value, is_var)
+        self.outputs.move(len(self.outputs) - 1, socket_index)
+        return socket
+
+    def change_input_socket(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Change an input socket type retaining the previous socket links
+        
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+
+        links = self.inputs[socket_index].links
+        from_sockets = []
+        for link in links:
+            from_sockets.append(link.from_socket)
+        self.inputs.remove(self.inputs[socket_index])
+        current_socket = self.insert_input(socket_type, socket_index, socket_name, default_value, is_var)
+        tree = self.get_tree()
+        for from_socket in from_sockets:
+            tree.links.new(from_socket, current_socket)
+        return current_socket
+
+    def change_output_socket(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
+        """Change an output socket type retaining the previous socket links
+        
+        If `is_var` is true, a dot is placed inside the socket to denote
+        that this socket can be used for variable access (see
+        SetVariable node).
+        """
+
+        links = self.outputs[socket_index].links
+        to_sockets = []
+        for link in links:
+            to_sockets.append(link.to_socket)
+        self.outputs.remove(self.outputs[socket_index])
+        current_socket = self.insert_output(socket_type, socket_index, socket_name, default_value, is_var)
+        tree = self.get_tree()
+        for to_socket in to_sockets:
+            tree.links.new(current_socket, to_socket)
+        return current_socket
 
 class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
     """A mixin class for variable nodes. This class adds functionality
