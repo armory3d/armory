@@ -34,6 +34,9 @@ class ArmLogicTree(bpy.types.NodeTree):
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
 
+    def update(self):
+        pass
+
 
 class ARM_MT_NodeAddOverride(bpy.types.Menu):
     """
