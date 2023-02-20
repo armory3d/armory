@@ -2,6 +2,7 @@ from typing import Any, Callable
 import webbrowser
 
 import bpy
+import blf
 from bpy.props import BoolProperty, StringProperty
 
 import arm.logicnode.arm_nodes as arm_nodes
@@ -330,6 +331,35 @@ class ARM_UL_interface_sockets(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.template_node_socket(color=color)
 
+class DrawNodeBreadCrumbs():
+    """A class to draw node tree breadcrumbs or context path"""
+    draw_handler = None
+
+    @classmethod
+    def convert_array_to_string(cls, arr):
+        return ' > '.join(arr)
+
+    @classmethod
+    def draw(cls, context):
+        if  context.space_data.edit_tree and context.space_data.node_tree.bl_idname == "ArmLogicTreeType":
+            height = context.area.height
+            path_data = [path.node_tree.name for path in context.space_data.path]
+            str = cls.convert_array_to_string(path_data)
+            blf.position(0, 20, height-60, 0)
+            blf.size(0, 15, 72)
+            blf.draw(0, str)
+
+    @classmethod
+    def register_draw(cls):
+        if cls.draw_handler is not None:
+            cls.unregister_draw()
+        cls.draw_handler = bpy.types.SpaceNodeEditor.draw_handler_add(cls.draw, tuple([bpy.context]), 'WINDOW', 'POST_PIXEL')
+
+    @classmethod
+    def unregister_draw(cls):
+        if cls.draw_handler is not None:
+            bpy.types.SpaceNodeEditor.draw_handler_remove(cls.draw_handler, 'WINDOW')
+            cls.draw_handler = None
 
 def register():
     arm.logicnode.arm_nodes.register()
@@ -353,12 +383,13 @@ def register():
     bpy.utils.register_class(ARM_PT_NodeDevelopment)
 
     arm.logicnode.init_categories()
+    DrawNodeBreadCrumbs.register_draw()
     register_nodes()
 
 
 def unregister():
     unregister_nodes()
-
+    DrawNodeBreadCrumbs.unregister_draw()
     # Ensure that globals are reset if the addon is enabled again in the same Blender session
     arm_nodes.reset_globals()
 
