@@ -312,6 +312,21 @@ class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
     def poll(cls, context):
         return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
+class ARM_UL_interface_sockets(bpy.types.UIList):
+    """UI List of input and output sockets"""
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        socket = item
+        color = socket.draw_color(context, context.active_node)
+
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            row = layout.row(align=True)
+
+            row.template_node_socket(color=color)
+            row.prop(socket, "display_label", text="", emboss=False, icon_value=icon)
+        elif self.layout_type == 'GRID':
+            layout.alignment = 'CENTER'
+            layout.template_node_socket(color=color)
+
 
 def register():
     arm.logicnode.arm_nodes.register()
@@ -327,6 +342,7 @@ def register():
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
+    bpy.utils.register_class(ARM_UL_interface_sockets)
 
     # Register panels in correct order
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
@@ -355,6 +371,7 @@ def unregister():
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
+    bpy.utils.unregister_class(ARM_UL_interface_sockets)
 
     arm.logicnode.arm_node_group.unregister()
     arm.logicnode.arm_sockets.unregister()
