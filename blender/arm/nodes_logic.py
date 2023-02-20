@@ -7,6 +7,7 @@ from bpy.props import BoolProperty, StringProperty
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
 import arm.logicnode.tree_variables
+import arm.logicnode.arm_node_group
 import arm.logicnode
 import arm.props_traits
 import arm.ui_icons as ui_icons
@@ -315,6 +316,7 @@ class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
 def register():
     arm.logicnode.arm_nodes.register()
     arm.logicnode.arm_sockets.register()
+    arm.logicnode.arm_node_group.register()
 
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ArmOpenNodeHaxeSource)
@@ -354,5 +356,6 @@ def unregister():
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
 
+    arm.logicnode.arm_node_group.unregister()
     arm.logicnode.arm_sockets.unregister()
     arm.logicnode.arm_nodes.unregister()
