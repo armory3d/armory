@@ -738,9 +738,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
             
             frag.write('}') #receiveShadow
-
-        frag.write('final *= svisibility;')
-        frag.write('final += sdirect * sunCol;')
+        frag.write('final += svisibility * sdirect * sunCol;')
         #sun
 
     if '_SinglePoint' in wrd.world_defs:
@@ -760,7 +758,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('vec4 lightData = sampleLight(')
+        frag.write('final += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, false, diffuse, reflection')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -774,8 +772,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', gbufferD, invVP, eye')
 
         frag.write(');')
-        frag.write('final *= lightData.a;')
-        frag.write('final += lightData.rgb;')
     
     if '_Clusters' in wrd.world_defs:
         frag.write('vec4 lightData;')
@@ -790,7 +786,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec4 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * voxelBlend) * voxelgiRefr;') #TODO replace roughness with transmission
+            frag.write('vec4 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * voxelBlend) * voxelgiRefr;') #TODO replace roughness (not used) with transmission
         else:
             frag.write('vec4 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
         frag.write('final *= refraction.rgb;')

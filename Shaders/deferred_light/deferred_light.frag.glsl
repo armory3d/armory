@@ -290,7 +290,7 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-vec3 diffuse = vec3(0.0);
+vec3 diffuse = vec3(0.0, 0.0, 0.0);
 vec3 reflection = vec3(0.0);
 
 #ifdef _VoxelAOvar
@@ -302,10 +302,10 @@ vec3 reflection = vec3(0.0);
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	diffuse += 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+	envl += 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
 	               traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	diffuse += 1.0 - traceAO(voxpos, n, voxels);
+	envl += 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
 #endif
@@ -335,7 +335,7 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
 #else
 #ifdef _VoxelAOvar
-fragColor.rgb = diffuse + envl * voxelgiEnv;
+fragColor.rgb = envl * voxelgiEnv;
 #else
 fragColor.rgb = envl;
 #endif

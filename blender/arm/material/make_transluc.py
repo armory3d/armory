@@ -38,7 +38,7 @@ def make(context_id):
 	if '_VoxelAOvar' in wrd.world_defs:
 		frag.write('indirect *= 0.25;')
 
-	frag.write('vec4 premultipliedReflect = vec4(vec3(final * 0.5) * opacity, opacity);')
+	frag.write('vec4 premultipliedReflect = vec4(final.rgb * 0.5 * opacity, opacity);')
 	frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
 	frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
 	frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
