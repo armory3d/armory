@@ -645,7 +645,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength;')
 
-    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
+    if '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
@@ -723,7 +723,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
-        if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
+        if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write('  , occlusion')
