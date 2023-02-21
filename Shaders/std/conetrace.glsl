@@ -116,6 +116,12 @@ vec4 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const 
 	return traceCone(voxels, pos, reflection, aperture, MAX_DISTANCE) * voxelgiWeight;
 }
 
+vec4 traceFineReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+	float aperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265) / 2;
+	vec3 reflection = reflect(viewDir, normal);
+	return traceCone(voxels, pos, reflection, aperture, MAX_DISTANCE) * voxelgiWeight;
+}
+
 vec4 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float opacity, const float rior) {
 	const float transmittance = 1.0; //TODO add transmission data from shader.
 	vec3 refraction = refract(viewDir, normal, 1.0 / rior);

@@ -281,10 +281,10 @@ void main() {
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb *= prefilteredColor * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb *= backgroundCol * (1.0 - (f0 * envBRDF.x + envBRDF.y)); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
@@ -327,7 +327,7 @@ if(roughness < 1.0 && occspec.y > 0.0)
 #ifdef _VoxelGITemporal
 reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
 #else
-reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl;
+reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb) * occspec.y;// traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelgiRefl;
 #endif
 #endif//VoxelGI
 
