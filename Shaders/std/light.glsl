@@ -116,7 +116,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float dotVH = dot(v, h);
 	float dotNL = dot(n, l);
     vec3 direct = 1.0 * lightCol;
-	//direct *= attenuate(distance(p, lp));
+	direct *= attenuate(distance(p, lp));
 	if(!vox) {
 		#ifdef _LTC
 		float theta = acos(dotNV);
