@@ -11,7 +11,7 @@ class GroupInputsNode(ArmLogicTreeNode):
     bl_idname = 'LNGroupInputsNode'
     bl_label = 'Group Input Node'
     arm_section = 'group'
-    arm_version = 2
+    arm_version = 3
 
     def __init__(self):
         self.register_id()
@@ -198,3 +198,9 @@ class GroupInputsNode(ArmLogicTreeNode):
         props = up_down_col.operator('arm.node_call_func', icon='TRIA_DOWN', text="")
         props.node_index = self.get_id_str()
         props.callback_name = 'move_socket_down'
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1, 2):
+            raise LookupError()
+
+        return NodeReplacement.Identity(self)

@@ -9,7 +9,7 @@ class CallGroupNode(ArmLogicTreeNode):
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
     arm_section = 'group'
-    arm_version = 2
+    arm_version = 3
 
     def __init__(self):
         self.register_id()
@@ -121,3 +121,9 @@ class CallGroupNode(ArmLogicTreeNode):
         row_ops.enabled = not self.group_tree is None
         op = row_ops.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
         op.node_index = self.get_id_str()
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1, 2):
+            raise LookupError()
+
+        return NodeReplacement.Identity(self)
