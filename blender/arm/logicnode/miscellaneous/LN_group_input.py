@@ -203,4 +203,4 @@ class GroupInputsNode(ArmLogicTreeNode):
         if self.arm_version not in (0, 1, 2):
             raise LookupError()
 
-        return NodeReplacement.Identity(self)
+        return node_tree.nodes.new('LNGroupInputsNode')
