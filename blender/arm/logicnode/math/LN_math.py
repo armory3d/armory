@@ -130,9 +130,9 @@ class MathNode(ArmLogicTreeNode):
 
     def draw_label(self) -> str:
         return f'{self.bl_label}: {self.property0}'
-    
-   def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)
