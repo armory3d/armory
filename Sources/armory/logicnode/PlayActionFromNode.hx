@@ -4,6 +4,7 @@ import iron.object.Animation;
 import iron.object.Object;
 import iron.Scene;
 import kha.arrays.Float32Array;
+import iron.object.ObjectAnimation;
 
 class PlayActionFromNode extends LogicNode {
 
@@ -91,7 +92,7 @@ class PlayActionFromNode extends LogicNode {
 				var oaction = null;
 				var tracks = [];
 
-				var oactions = animation.getOactions();
+				var oactions = cast(animation, ObjectAnimation).oactions;
 
 				for (a in oactions)
 					if (a.objects[0].name == actionR) isnew = false;
