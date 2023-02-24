@@ -1,3 +1,9 @@
+# Some parts of this code is reused from project Sverchok. 
+# https://https://github.com/nortikin/sverchok/blob/master/core/node_group.py
+#
+# SPDX-License-Identifier: GPL3
+# License-Filename: LICENSE
+
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from itertools import zip_longest, chain, cycle, islice
