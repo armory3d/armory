@@ -31,9 +31,9 @@ socket_colors = {
     'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
     'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
     'ArmAnySocket': (0.9, 0.9, 0.9, 1),
-    'ArmNodeSocketAnimTree': (0.3, 0.1, 0.0, 1),
-    'ArmFactorSocket': (0.631, 0.631, 0.631, 1),
-    'ArmBlendSpaceSocket': (0.631, 0.631, 0.631, 1)
+    'ArmNodeSocketAnimTree': (0.3, 0.1, 0.0, 1.0),
+    'ArmFactorSocket': (0.631, 0.631, 0.631, 1.0),
+    'ArmBlendSpaceSocket': (0.631, 0.631, 0.631, 1.0)
 }
 
 
@@ -753,11 +753,15 @@ ArmObjectSocketInterface = _make_socket_interface('ArmObjectSocketInterface', 'A
 ArmStringSocketInterface = _make_socket_interface('ArmStringSocketInterface', 'ArmStringSocket')
 ArmVectorSocketInterface = _make_socket_interface('ArmVectorSocketInterface', 'ArmVectorSocket')
 ArmAnySocketInterface = _make_socket_interface('ArmAnySocketInterface', 'ArmAnySocket')
-
+ArmAnimTreeSocketInterface = _make_socket_interface('ArmAnimTreeSocketInterface', 'ArmNodeSocketAnimTree')
+ArmFactorSocketInterface = _make_socket_interface('ArmFactorSocketInterface', 'ArmFactorSocket')
+ArmBlendSpaceSocketInterface = _make_socket_interface('ArmBlendSpaceSocketInterface', 'ArmBlendSpaceSocket')
 
 __REG_CLASSES = (
     ArmActionSocketInterface,
     ArmAnimSocketInterface,
+    ArmAnimTreeSocketInterface,
+    ArmFactorSocketInterface,
     ArmRotationSocketInterface,
     ArmArraySocketInterface,
     ArmBoolSocketInterface,
@@ -769,6 +773,7 @@ __REG_CLASSES = (
     ArmStringSocketInterface,
     ArmVectorSocketInterface,
     ArmAnySocketInterface,
+    ArmBlendSpaceSocketInterface,
 
     ArmActionSocket,
     ArmAnimActionSocket,
