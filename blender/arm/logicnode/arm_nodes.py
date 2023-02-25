@@ -978,6 +978,12 @@ def is_logic_node_context(context: bpy.context) -> bool:
     """Return whether the given bpy context is inside a logic node editor."""
     return context.space_data.type == 'NODE_EDITOR' and context.space_data.tree_type == 'ArmLogicTreeType'
 
+def is_logic_node_edit_context(context: bpy.context) -> bool:
+    """Return whether the given bpy context is inside a logic node editor and tree is being edited."""
+    if context.space_data.type == 'NODE_EDITOR' and context.space_data.tree_type == 'ArmLogicTreeType':
+        return context.space_data.edit_tree
+    return False
+
 
 def reset_globals():
     global nodes
