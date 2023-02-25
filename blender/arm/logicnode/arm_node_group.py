@@ -253,9 +253,10 @@ class ArmUngroupGroupTree(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_node and hasattr(context.active_node, 'group_tree'):
-            if context.active_node.group_tree is not None:
-                return True
+        if context.space_data.type == 'NODE_EDITOR':
+            if context.active_node and hasattr(context.active_node, 'group_tree'):
+                if context.active_node.group_tree is not None:
+                    return True
         return False
 
     def execute(self, context):
@@ -316,7 +317,9 @@ class ArmAddCallGroupNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
+        if context.space_data.type == 'NODE_EDITOR':
+            return context.space_data.edit_tree and context.space_data.tree_type == 'ArmLogicTreeType'
+        return False
 
     def execute(self, context):
         tree = context.space_data.path[-1].node_tree
