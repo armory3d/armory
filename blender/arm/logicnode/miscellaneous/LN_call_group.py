@@ -9,58 +9,121 @@ class CallGroupNode(ArmLogicTreeNode):
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
     arm_section = 'group'
-    arm_version = 2
+    arm_version = 3
 
-    @property
-    def property0(self):
-        return arm.utils.safesrc(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(self.property0_.name)
-
-    def update_inputs(self, node, context):
-        for output in node.outputs:
-            _, c_socket = arm.node_utils.output_get_connected_node(output)
-            if c_socket is not None:
-                self.add_input(c_socket.bl_idname, c_socket.name)
-            else:
-                self.add_input('ArmAnySocket', '')
-
-    def update_outputs(self, node, context):
-        for inp in node.inputs:
-            _, c_socket = arm.node_utils.input_get_connected_node(inp)
-            if c_socket is not None:
-                self.add_output(c_socket.bl_idname, c_socket.name)
-            else:
-                self.add_output('ArmAnySocket', '')
-
-    def update_sockets(self, context):
-        for inp in self.inputs:
-            self.inputs.remove(inp)
-        for output in self.outputs:
-            self.outputs.remove(output)
-        if self.property0_ is not None:
-            for node in self.property0_.nodes:
-                if node.bl_idname == 'LNGroupInputsNode':
-                    self.update_inputs(node, context)
-                    break
-            for node in self.property0_.nodes:
-                if node.bl_idname == 'LNGroupOutputsNode':
-                    self.update_outputs(node, context)
-                    break
-
-    property0_: HaxePointerProperty('property0', name='Group', type=bpy.types.NodeTree, update=update_sockets)
+    def __init__(self):
+        self.register_id()
 
     def arm_init(self, context):
         pass
 
-    def draw_buttons(self, context, layout):
-        layout.prop_search(self, 'property0_', bpy.data, 'node_groups', icon='NONE', text='')
+    # Function to add input sockets and re-link sockets
+    def update_inputs(self, tree, node, in_links):
+        count = 0
+        for output in node.outputs:
+            _, c_socket = arm.node_utils.output_get_connected_node(output)
+            if c_socket is not None:
+                current_socket = self.add_input(c_socket.bl_idname, output.name)
+                if(count < len(in_links)):
+                    for link in in_links[count]:
+                        tree.links.new(link, current_socket)
+            else:
+                current_socket = self.add_input('ArmAnySocket', output.name)
+                current_socket.display_label = output.name
+                if(count < len(in_links)):
+                    for link in in_links[count]:
+                        tree.links.new(link, current_socket)
+            count = count + 1
 
-    @classmethod
-    def update_all(cls):
-        """Called by group input and group output nodes when all call
-        node inputs should update their sockets.
-        """
-        for tree in bpy.data.node_groups:
-            if tree.bl_idname == "ArmLogicTreeType":
-                for node in tree.nodes:
-                    if isinstance(node, cls):
-                        node.update_sockets(bpy.context)
+    # Function to add output sockets and re-link sockets
+    def update_outputs(self, tree, node, out_links):
+        count = 0
+        for input in node.inputs:
+            _, c_socket = arm.node_utils.input_get_connected_node(input)
+            if c_socket is not None:
+                current_socket = self.add_output(c_socket.bl_idname, input.name)
+                if(count < len(out_links)):
+                    for link in out_links[count]:
+                        nlink = tree.links.new(current_socket, link)
+                        nlink.is_valid = True
+                        nlink.is_muted = False
+            else:
+                current_socket = self.add_output('ArmAnySocket', input.name)
+                current_socket.display_label = input.name
+                if(count < len(out_links)):
+                    for link in out_links[count]:
+                        tree.links.new(current_socket, link)
+            count = count + 1
+    
+    def remove_tree(self):
+        self.group_tree = None
+
+    def update_sockets(self, context):
+        # List to store from and to sockets of connected nodes
+        from_socket_list = []
+        to_socket_list = []
+        tree = self.get_tree()
+
+        # Loop through each input socket
+        for inp in self.inputs:
+            link_per_socket = []
+            #Loop through each link to the socket
+            for link in inp.links:
+                link_per_socket.append(link.from_socket)
+            from_socket_list.append(link_per_socket)
+        
+        # Loop through each output socket
+        for out in self.outputs:
+            link_per_socket = []
+            # Loop through each link to the socket
+            for link in out.links:
+                link_per_socket.append(link.to_socket)
+            to_socket_list.append(link_per_socket)
+
+        # Remove all input sockets
+        for inp in self.inputs:
+            self.inputs.remove(inp)
+        # Remove all output sockets
+        for output in self.outputs:
+            self.outputs.remove(output)
+        # Search for Group Input/Output
+        if self.group_tree is not None:
+            for node in self.group_tree.nodes:
+                if node.bl_idname == 'LNGroupInputsNode':
+                    # Update input sockets
+                    self.update_inputs(tree, node, from_socket_list)
+                    break
+            for node in self.group_tree.nodes:
+                if node.bl_idname == 'LNGroupOutputsNode':
+                    # Update output sockets
+                    self.update_outputs(tree, node, to_socket_list)
+                    break
+
+    # Prperty to store group tree pointer
+    group_tree: PointerProperty(name='Group', type=bpy.types.NodeTree, update=update_sockets)
+
+    # Draw node UI
+    def draw_buttons(self, context, layout):
+        col = layout.column()
+        row_name = col.row(align=True)
+        row_add = col.row(align=True)
+        row_ops = col.row()
+        op = row_add.operator('arm.add_group_tree', icon='PLUS', text='New Group')
+        op.node_index = self.get_id_str()
+        op = row_name.operator('arm.search_group_tree', text='', icon='VIEWZOOM')
+        op.node_index = self.get_id_str()
+        if self.group_tree:
+            row_name.prop(self.group_tree, 'name', text='')
+            row_name.prop(self.group_tree, 'use_fake_user', text='')
+            op = row_name.operator('arm.node_call_func', icon='X', text='')
+            op.node_index = self.get_id_str()
+            op.callback_name = 'remove_tree'
+        row_ops.enabled = not self.group_tree is None
+        op = row_ops.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
+        op.node_index = self.get_id_str()
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1, 2):
+            raise LookupError()
+
+        return node_tree.nodes.new('LNCallGroupNode')

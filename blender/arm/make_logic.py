@@ -64,12 +64,6 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     group_name = arm.node_utils.get_export_tree_name(node_group, do_warn=True)
     file = path + group_name + '.hx'
 
-    # Import referenced node group
-    for node in node_group.nodes:
-        if node.bl_idname == 'LNCallGroupNode':
-            prop = getattr(node, 'property0')
-            ArmoryExporter.import_traits.append(prop)
-
     if node_group.arm_cached and os.path.isfile(file):
         return
 
@@ -163,7 +157,7 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
 
     # Check and parse group nodes if they exist
     if node.bl_idname == 'LNCallGroupNode':
-        prop = node.property0_
+        prop = node.group_tree
         group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
         link_group = True
 
