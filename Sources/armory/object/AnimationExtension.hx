@@ -215,8 +215,8 @@ class OneShotOperator {
 		if(doneOneShot != null) doneOneShot();
 	}
 
-	inline function getBlendOutFrame(blendOutTime: FastFloat): Int {
-		var frameTime = Scene.active.raw.frame_time;
+	function getBlendOutFrame(blendOutTime: FastFloat): Int {
+		var frameTime: FastFloat = Scene.active.raw.frame_time;
 		return totalFrames - Std.int(blendOutTime / frameTime);
 	}
 

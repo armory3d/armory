@@ -43,7 +43,7 @@ class BlendSpaceNode extends LogicNode {
 		ready = true;
 	}
 
-	public function getBlendWeights(): Map<Int, Float> {
+	public function getBlendWeights(): Map<Int, FastFloat> {
 		var vecs = [];
 		var sampleVec = new Vec2();
 
@@ -68,7 +68,7 @@ class BlendSpaceNode extends LogicNode {
 		var weightsIndex = getBlendWeights();
 
 		var indices: Array<Int> = [];
-		var weights: Array<Float> = [];
+		var weights: Array<FastFloat> = [];
 		
 		for(key in weightsIndex.keys()){
 			indices.push(key);
