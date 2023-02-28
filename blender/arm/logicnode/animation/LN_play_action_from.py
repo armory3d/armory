@@ -30,6 +30,7 @@ class PlayActionFromNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Blend', default_value = 0.25)
         self.add_input('ArmFloatSocket', 'Speed', default_value = 1.0)
         self.add_input('ArmBoolSocket', 'Loop', default_value = False)
+        self.add_input('ArmBoolSocket', 'Reverse', default_value = False)
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketAction', 'Done')
