@@ -480,7 +480,7 @@ class ArmoryExporter:
         instance objects that use the armdefault material.
         """
         for ps in bpy.data.particles:
-            if ps.render_type != 'OBJECT' or ps.instance_object is None:
+            if ps.render_type != 'OBJECT' or ps.instance_object is None or not ps.instance_object.arm_export:
                 continue
 
             po = ps.instance_object
@@ -503,7 +503,7 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
-        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT':
+        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
             return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
@@ -611,7 +611,7 @@ class ArmoryExporter:
         particle_sys: bpy.types.ParticleSettings
         for particle_sys in bpy.data.particles:
             bobject = particle_sys.instance_object
-            if bobject is None or particle_sys.render_type != 'OBJECT':
+            if bobject is None or particle_sys.render_type != 'OBJECT' or not bobject.arm_export:
                 continue
 
             for slot in bobject.material_slots:
