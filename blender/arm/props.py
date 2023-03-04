@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2023.2'
+arm_version = '2023.3'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -222,6 +222,7 @@ def init_properties():
     bpy.types.World.arm_khafile = PointerProperty(name="Append Khafile", description="Source appended to the project's khafile.js after it is generated", update=assets.invalidate_compiler_cache, type=bpy.types.Text)
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_copy_override = BoolProperty(name="Copy Override", description="Overrides any existing files when copying", default=False, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minimize = BoolProperty(name="Binary Scene Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_no_traces = BoolProperty(name="No Traces", description="Don't compile trace calls in the program when publishing", default=False)

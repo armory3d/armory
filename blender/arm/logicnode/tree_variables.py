@@ -33,8 +33,7 @@ class ARM_PT_Variables(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        tree: bpy.types.NodeTree = context.space_data.node_tree
-
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         node = context.active_node
         if node is None or node.arm_logic_id == '':
             layout.operator('arm.variable_promote_node', icon='PLUS')
@@ -92,9 +91,9 @@ class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+        if not arm.logicnode.arm_nodes.is_logic_node_edit_context(context):
             return False
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         if tree is None:
             return False
 
@@ -113,7 +112,7 @@ class ARM_OT_TreeVariablePromoteNode(bpy.types.Operator):
 
     def execute(self, context):
         node: arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin = context.active_node
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
 
         var_type = node.bl_idname
         var_item = ARM_PG_TreeVarListItem.create_new(tree, self.var_name, var_type)
@@ -146,9 +145,9 @@ class ARM_OT_TreeVariableMakeLocalNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+        if not arm.logicnode.arm_nodes.is_logic_node_edit_context(context):
             return False
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         if tree is None:
             return False
 
@@ -180,9 +179,9 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+        if not arm.logicnode.arm_nodes.is_logic_node_edit_context(context):
             return False
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         if tree is None or len(tree.arm_treevariableslist) == 0:
             return False
 
@@ -201,7 +200,7 @@ class ARM_OT_TreeVariableVariableAssignToNode(bpy.types.Operator):
 
     def execute(self, context):
         node: arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin = context.active_node
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
 
         var_item = tree.arm_treevariableslist[tree.arm_treevariableslist_index]
 
@@ -232,7 +231,7 @@ class ARM_OT_TreeVariableListMoveItem(bpy.types.Operator):
     )
 
     def execute(self, context):
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         index = tree.arm_treevariableslist_index
 
         max_index = len(tree.arm_treevariableslist) - 1
@@ -262,9 +261,9 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+        if not arm.logicnode.arm_nodes.is_logic_node_edit_context(context):
             return False
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         return tree is not None and len(tree.arm_treevariableslist) > 0
 
     def invoke(self, context, event):
@@ -285,8 +284,8 @@ class ARM_OT_AddVarGetterNode(bpy.types.Operator):
 
     @staticmethod
     def create_getter_node(context, node_type: str, node_id: str) -> arm.logicnode.arm_nodes.ArmLogicTreeNode:
-        tree: bpy.types.NodeTree = context.space_data.node_tree
-        nodes = context.space_data.node_tree.nodes
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
+        nodes = context.space_data.path[-1].node_tree.nodes
 
         node = nodes.new(node_type)
         node.location = context.space_data.cursor_location
@@ -312,9 +311,9 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not arm.logicnode.arm_nodes.is_logic_node_context(context):
+        if not arm.logicnode.arm_nodes.is_logic_node_edit_context(context):
             return False
-        tree: bpy.types.NodeTree = context.space_data.node_tree
+        tree: bpy.types.NodeTree = context.space_data.path[-1].node_tree
         return tree is not None and len(tree.arm_treevariableslist) > 0
 
     def invoke(self, context, event):
@@ -332,14 +331,14 @@ class ARM_OT_AddVarSetterNode(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        nodes = context.space_data.node_tree.nodes
+        nodes = context.space_data.path[-1].node_tree.nodes
 
         node = ARM_OT_AddVarGetterNode.create_getter_node(context, self.node_type, self.node_id)
 
         setter_node = nodes.new('LNSetVariableNode')
         setter_node.location = context.space_data.cursor_location
 
-        links = context.space_data.node_tree.links
+        links = context.space_data.path[-1].node_tree.links
         links.new(node.outputs[0], setter_node.inputs[1])
 
         self.getter_node_ref = node
@@ -351,7 +350,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
     def _set_name(self, value: str):
         old_name = self._get_name()
 
-        tree = bpy.context.space_data.node_tree
+        tree = bpy.context.space_data.path[-1].node_tree
         lst = tree.arm_treevariableslist
 
         if value == '':
@@ -375,7 +374,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
         # Can be None if color is set before tree is initialized (upon
         # updating old files to newer SDK for example)
         if space is not None:
-            for node in space.node_tree.nodes:
+            for node in space.path[-1].node_tree.nodes:
                 if node.arm_logic_id == self.name:
                     node.use_custom_color = True
                     node.color = self.color

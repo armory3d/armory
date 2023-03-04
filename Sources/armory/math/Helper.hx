@@ -1,5 +1,6 @@
 package armory.math;
 
+import kha.FastFloat;
 import iron.math.Vec4;
 
 class Helper {
@@ -17,6 +18,22 @@ class Helper {
 				  vb.z * vn.y * va.x -
 				  vn.z * va.y * vb.x;
 		return Math.atan2(det, dot);
+	}
+
+	/**
+		Returns a copy of the current vector summed by delta towards the target vector without passing it.
+	**/
+	public static function moveTowards(current: Vec4, target: Vec4, delta: FastFloat): Vec4 {
+		var v1 = current.clone();
+		var v2 = target.clone();
+
+		var diff = v2.clone().sub(v1);
+		var length = diff.length();
+
+		if (length <= delta || length == 0.0) v1.setFrom(v2);
+		else v1.add(diff.mult(1.0 / length * delta));
+
+		return v1;
 	}
 
 	/**

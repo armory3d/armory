@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import iron.math.Quat;
 import iron.object.Object;
 import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
@@ -16,7 +17,7 @@ class ApplyForceAtLocationNode extends LogicNode {
 		var object: Object = inputs[1].get();
 		var force: Vec4 = inputs[2].get();
 		var localForce: Bool = inputs.length > 3 ? inputs[3].get() : false;
-        	var location: Vec4 = inputs[4].get();
+		var location: Vec4 = new Vec4().setFrom(inputs[4].get());
 		var localLoc: Bool = inputs.length > 5 ? inputs[5].get() : false;
 
 		if (object == null || force == null || location == null) return;
@@ -24,8 +25,8 @@ class ApplyForceAtLocationNode extends LogicNode {
 #if arm_physics
 		var rb: RigidBody = object.getTrait(RigidBody);
 
-		if (localLoc) {
-			location.applyQuat(object.transform.rot);
+		if (!localLoc) {
+			location.sub(object.transform.world.getLoc());
 		}
 
 		!localForce ? rb.applyForce(force, location) : rb.applyForce(object.transform.worldVecToOrientation(force), location);

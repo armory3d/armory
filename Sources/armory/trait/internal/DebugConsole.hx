@@ -27,6 +27,7 @@ class DebugConsole extends Trait {
 
 	public static var visible = true;
 	public static var traceWithPosition = true;
+	public static var fpsAvg = 0.0;
 
 	static var ui: Zui;
 	var scaleFactor = 1.0;
@@ -177,9 +178,62 @@ class DebugConsole extends Trait {
 	}
 
 	function render2D(g: kha.graphics2.Graphics) {
-		if (!visible) return;
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
+
+		var avg = Math.round(frameTimeAvg * 10000) / 10;
+		fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
+
+		totalTime += frameTime;
+		renderPathTime += iron.App.renderPathTime;
+		frames++;
+		if (totalTime > 1.0) {
+			hwin.redraws = 1;
+			var t = totalTime / frames;
+			// Second frame
+			if (frameTimeAvg > 0) {
+				if (t < frameTimeAvgMin || frameTimeAvgMin == 0) frameTimeAvgMin = t;
+				if (t > frameTimeAvgMax || frameTimeAvgMax == 0) frameTimeAvgMax = t;
+			}
+
+			frameTimeAvg = t;
+
+			if (benchmark) {
+				benchFrames++;
+				if (benchFrames > 10) benchTime += t;
+				if (benchFrames == 20) trace(Std.int((benchTime / 10) * 1000000) / 1000); // ms
+			}
+
+			renderPathTimeAvg = renderPathTime / frames;
+			updateTimeAvg = updateTime / frames;
+			animTimeAvg = animTime / frames;
+			physTimeAvg = physTime / frames;
+
+			#if arm_shadowmap_atlas
+			smaLogicTimeAvg = smaLogicTime / frames;
+			smaLogicTime = 0;
+
+			smaRenderTimeAvg = smaRenderTime / frames;
+			smaRenderTime = 0;
+			#end
+
+			totalTime = 0;
+			renderPathTime = 0;
+			updateTime = 0;
+			animTime = 0;
+			physTime = 0;
+			frames = 0;
+
+			if (htab.position == 2) {
+				g.end();
+				updateGraph(); // Profile tab selected
+				g.begin(false);
+			}
+		}
+		frameTime = Scheduler.realTime() - lastTime;
+		lastTime = Scheduler.realTime();
+
+		if (!visible) return;
 		var ww = Std.int(280 * scaleFactor * getScale());
 		// RIGHT
 		var wx = iron.App.w() - ww;
@@ -489,8 +543,6 @@ class DebugConsole extends Trait {
 				}
 			}
 
-			var avg = Math.round(frameTimeAvg * 10000) / 10;
-			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.tab(htab, '$avg ms')) {
 
 				if (ui.panel(Id.handle({selected: true}), "Performance")) {
@@ -898,55 +950,6 @@ class DebugConsole extends Trait {
 
 		ui.end(bindG);
 		if (bindG) g.begin(false);
-
-		totalTime += frameTime;
-		renderPathTime += iron.App.renderPathTime;
-		frames++;
-		if (totalTime > 1.0) {
-			hwin.redraws = 1;
-			var t = totalTime / frames;
-			// Second frame
-			if (frameTimeAvg > 0) {
-				if (t < frameTimeAvgMin || frameTimeAvgMin == 0) frameTimeAvgMin = t;
-				if (t > frameTimeAvgMax || frameTimeAvgMax == 0) frameTimeAvgMax = t;
-			}
-
-			frameTimeAvg = t;
-
-			if (benchmark) {
-				benchFrames++;
-				if (benchFrames > 10) benchTime += t;
-				if (benchFrames == 20) trace(Std.int((benchTime / 10) * 1000000) / 1000); // ms
-			}
-
-			renderPathTimeAvg = renderPathTime / frames;
-			updateTimeAvg = updateTime / frames;
-			animTimeAvg = animTime / frames;
-			physTimeAvg = physTime / frames;
-
-			#if arm_shadowmap_atlas
-			smaLogicTimeAvg = smaLogicTime / frames;
-			smaLogicTime = 0;
-
-			smaRenderTimeAvg = smaRenderTime / frames;
-			smaRenderTime = 0;
-			#end
-
-			totalTime = 0;
-			renderPathTime = 0;
-			updateTime = 0;
-			animTime = 0;
-			physTime = 0;
-			frames = 0;
-
-			if (htab.position == 2) {
-				g.end();
-				updateGraph(); // Profile tab selected
-				g.begin(false);
-			}
-		}
-		frameTime = Scheduler.realTime() - lastTime;
-		lastTime = Scheduler.realTime();
 	}
 
 	function update() {
@@ -989,6 +992,10 @@ class DebugConsole extends Trait {
 
 	public static function getPosition(): PositionStateEnum {
 		return positionConsole;
+	}
+
+	public static function getFramerate(): Float {
+		return fpsAvg;
 	}
 #end
 }
