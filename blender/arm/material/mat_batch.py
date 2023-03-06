@@ -33,8 +33,27 @@ def get_signature(mat):
         sign = traverse_tree(output_node, '')
         # Append flags
         sign += '1' if mat.arm_cast_shadow else '0'
+        sign += '1' if mat.arm_ignore_irradiance else '0'
+        if mat.arm_two_sided:
+            sign += '2'
+        elif mat.arm_cull_mode == 'Clockwise':
+            sign += '1'
+        else:
+            sign += '0'
+        sign += str(mat.arm_material_id)
+        sign += '1' if mat.arm_depth_read else '0'
         sign += '1' if mat.arm_overlay else '0'
-        sign += '1' if mat.arm_cull_mode == 'Clockwise' else '0'
+        sign += '1' if mat.arm_decal else '0'
+        if mat.arm_discard:
+            sign += '1'
+            sign += str(round(mat.arm_discard_opacity, 2))
+            sign += str(round(mat.arm_discard_opacity_shadows, 2))
+        else:
+            sign += '000'
+        sign += mat.arm_custom_material if mat.arm_custom_material != '' else '0'
+        sign += mat.arm_skip_context if mat.arm_skip_context != '' else '0'
+        sign += '1' if mat.arm_particle_fade else '0'
+        sign += mat.arm_billboard
         return sign
 
 def traverse_tree2(node, ar):
