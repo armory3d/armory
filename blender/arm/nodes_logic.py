@@ -248,11 +248,11 @@ class ArmOpenNodeWikiEntry(bpy.types.Operator):
             if len(context.selected_nodes) == 1:
                 node = context.selected_nodes[0]
                 if node.bl_idname.startswith('LN') and node.arm_version is not None:
-                    wiki_id = ArmOpenNodeWikiEntry.to_wiki_id(node.__module__.rsplit('.', 2).pop())
+                    anchor = node.bl_label.lower().replace(" ", "-")
 
                     category = arm_nodes.eval_node_category(node)
                     category_section = arm_nodes.get_category(category).category_section
-                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{wiki_id}')
+                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{anchor}')
         return{'FINISHED'}
 
 
