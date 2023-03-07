@@ -232,28 +232,23 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
 
 
 class ArmOpenNodeWikiEntry(bpy.types.Operator):
-    """Open the node's documentation in the wiki"""
+    """Open the logic node's documentation in the Armory wiki"""
     bl_idname = 'arm.open_node_documentation'
     bl_label = 'Open Node Documentation'
-
-    @staticmethod
-    def to_wiki_id(node_name):
-        """Convert from the conventional node name to its wiki counterpart's anchor or id.
-        Expected node_name format: LN_[a-z_]+
-        """
-        return node_name.replace('_', '-')[3:]
 
     def execute(self, context):
         if context.selected_nodes is not None:
             if len(context.selected_nodes) == 1:
                 node = context.selected_nodes[0]
                 if node.bl_idname.startswith('LN') and node.arm_version is not None:
-                    wiki_id = ArmOpenNodeWikiEntry.to_wiki_id(node.__module__.rsplit('.', 2).pop())
+                    anchor = node.bl_label.lower().replace(" ", "-")
 
                     category = arm_nodes.eval_node_category(node)
                     category_section = arm_nodes.get_category(category).category_section
-                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{wiki_id}')
-        return{'FINISHED'}
+
+                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{anchor}')
+
+        return {'FINISHED'}
 
 
 class ARM_PT_NodeDevelopment(bpy.types.Panel):
