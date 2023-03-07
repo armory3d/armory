@@ -24,7 +24,7 @@ class NetworkHostNode(ArmLogicTreeNode):
     )
 
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Domain',  default_value="127.0.0.1")
         self.add_input('ArmIntSocket', 'Port',  default_value=8001)
