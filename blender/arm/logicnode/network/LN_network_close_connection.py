@@ -23,7 +23,7 @@ class NetworkCloseConnectionNode(ArmLogicTreeNode):
         name='', default='client')
 
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmDynamicSocket', 'Connection')
 
