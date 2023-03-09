@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 from arm.logicnode.arm_nodes import *
 
 class OnActionMarkerNode(ArmLogicTreeNode):
