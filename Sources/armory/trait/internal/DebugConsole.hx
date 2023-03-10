@@ -879,8 +879,17 @@ class DebugConsole extends Trait {
 			}
 
 			if (watchNodes.length > 0 && ui.tab(htab, "Watch")) {
+				var lineCounter = 0;
 				for (n in watchNodes) {
-					ui.text(n.tree.object.name + "." + n.tree.name + "." + n.name + " = " + n.get(0));
+					if (ui.panel(Id.handle({selected: true}).nest(lineCounter), n.tree.object.name + "." + n.tree.name + "." + n.name + " : ")){
+						ui.indent();
+						ui.g.color = ui.t.SEPARATOR_COL;
+						ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
+						ui.g.color = 0xffffffff;
+						ui.text(Std.string(n.get(0)));
+						ui.unindent();
+					}
+					lineCounter++;
 				}
 			}
 
