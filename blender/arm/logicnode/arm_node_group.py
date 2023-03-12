@@ -333,15 +333,30 @@ class ArmAddCallGroupNode(bpy.types.Operator):
     bl_idname = 'arm.add_call_group_node'
     bl_label = "Add call group node"
 
+    node_ref = None
+
     @classmethod
     def poll(cls, context):
         if context.space_data.type == 'NODE_EDITOR':
             return context.space_data.edit_tree and context.space_data.tree_type == 'ArmLogicTreeType'
         return False
 
+    def invoke(self, context, event):
+        context.window_manager.modal_handler_add(self)
+        self.execute(context)
+        return {'RUNNING_MODAL'}
+
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':
+            self.node_ref.location = context.space_data.cursor_location
+        elif event.type == 'LEFTMOUSE':  # Confirm
+            return {'FINISHED'}
+        return {'RUNNING_MODAL'}
+
     def execute(self, context):
         tree = context.space_data.path[-1].node_tree
-        tree.nodes.new('LNCallGroupNode')
+        self.node_ref = tree.nodes.new('LNCallGroupNode')
+        self.node_ref.location = context.space_data.cursor_location
         return {'FINISHED'}
 
 class ARM_PT_LogicGroupPanel(bpy.types.Panel):
