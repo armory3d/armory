@@ -310,6 +310,7 @@ void main() {
 	envl += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
+	/*
 	if (roughness < 1.0) {
 		#ifdef _VoxelGITemporal
 		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
@@ -317,6 +318,7 @@ void main() {
 		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
 		#endif
 	}
+	*/
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 	envl *= voxelgiEnv;
 #endif
@@ -538,6 +540,7 @@ fragColor.rgb = envl;
 	}
 #endif // _Clusters
 	fragColor.a = 1.0; //Mark as opaque
+	/*
 	#ifdef _VoxelGI
 	#ifdef _VoxelGIRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
@@ -551,4 +554,5 @@ fragColor.rgb = envl;
 	fragColor.rgb = mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 	#endif
 	#endif
+	*/
 }

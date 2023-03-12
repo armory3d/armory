@@ -382,7 +382,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (!voxelsCreated) initGI();
 		#end
 		#end // arm_config
@@ -488,7 +488,7 @@ class Inc {
 			t.format = "RGBA64";//will not work with any other format.
 		}
 		#else
-			t.format = "RGBA64";
+			t.format = "R32";
 		#end
 
 		var res = getVoxelRes();

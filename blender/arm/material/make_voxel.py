@@ -64,6 +64,7 @@ def make_gi(context_id):
     parse_opacity = rpdat.arm_voxelgi_refraction
     if parse_opacity:
         frag.write('float opacity;')
+        frag.write('float rior;')
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
