@@ -305,12 +305,15 @@ class ArmLogicTreeNode(bpy.types.Node):
         SetVariable node).
         """
 
-        links = self.inputs[socket_index].links
+        old_socket = self.inputs[socket_index]
+        links = old_socket.links
         from_sockets = []
         for link in links:
             from_sockets.append(link.from_socket)
-        self.inputs.remove(self.inputs[socket_index])
         current_socket = self.insert_input(socket_type, socket_index, socket_name, default_value, is_var)
+        if default_value is None:
+            old_socket.copy_defaults(current_socket)
+        self.inputs.remove(old_socket)
         tree = self.get_tree()
         for from_socket in from_sockets:
             tree.links.new(from_socket, current_socket)

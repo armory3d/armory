@@ -18,13 +18,15 @@ class CallGroupNode(ArmLogicTreeNode):
         pass
 
     # Function to add input sockets and re-link sockets
-    def update_inputs(self, tree, node, in_links):
+    def update_inputs(self, tree, node, inp_sockets, in_links):
         count = 0
         for output in node.outputs:
             _, c_socket = arm.node_utils.output_get_connected_node(output)
             if c_socket is not None:
                 current_socket = self.add_input(c_socket.bl_idname, output.name)
                 if(count < len(in_links)):
+                    # Preserve default values in input sockets
+                    inp_sockets[count].copy_defaults(current_socket)
                     for link in in_links[count]:
                         tree.links.new(link, current_socket)
             else:
@@ -62,6 +64,7 @@ class CallGroupNode(ArmLogicTreeNode):
         # List to store from and to sockets of connected nodes
         from_socket_list = []
         to_socket_list = []
+        inp_socket_list = []
         tree = self.get_tree()
 
         # Loop through each input socket
@@ -71,7 +74,8 @@ class CallGroupNode(ArmLogicTreeNode):
             for link in inp.links:
                 link_per_socket.append(link.from_socket)
             from_socket_list.append(link_per_socket)
-        
+            inp_socket_list.append(inp)
+
         # Loop through each output socket
         for out in self.outputs:
             link_per_socket = []
@@ -80,9 +84,6 @@ class CallGroupNode(ArmLogicTreeNode):
                 link_per_socket.append(link.to_socket)
             to_socket_list.append(link_per_socket)
 
-        # Remove all input sockets
-        for inp in self.inputs:
-            self.inputs.remove(inp)
         # Remove all output sockets
         for output in self.outputs:
             self.outputs.remove(output)
@@ -91,13 +92,16 @@ class CallGroupNode(ArmLogicTreeNode):
             for node in self.group_tree.nodes:
                 if node.bl_idname == 'LNGroupInputsNode':
                     # Update input sockets
-                    self.update_inputs(tree, node, from_socket_list)
+                    self.update_inputs(tree, node, inp_socket_list, from_socket_list)
                     break
             for node in self.group_tree.nodes:
                 if node.bl_idname == 'LNGroupOutputsNode':
                     # Update output sockets
                     self.update_outputs(tree, node, to_socket_list)
                     break
+        #Remove all old input sockets after setting defaults
+        for inp in inp_socket_list:
+            self.inputs.remove(inp)
 
     # Prperty to store group tree pointer
     group_tree: PointerProperty(name='Group', type=bpy.types.NodeTree, update=update_sockets)
