@@ -164,6 +164,12 @@ class GroupOutputsNode(ArmLogicTreeNode):
         if self.active_input > len(self.inputs) - 1:
             self.active_input = len(self.inputs) - 1
 
+    # Handle deletion of group input node
+    def free(self):
+        call_group_nodes = self.get_call_group_nodes()
+        for node in call_group_nodes:
+            node.outputs.clear()
+
     # Draw node UI
     def draw_buttons(self, context, layout):
         if self.mute:
