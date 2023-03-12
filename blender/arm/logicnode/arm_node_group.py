@@ -84,6 +84,24 @@ class ArmEditGroupTree(bpy.types.Operator):
         sub_tree.group_node_name = group_node.name
         return {'FINISHED'}
 
+class ArmCopyGroupTree(bpy.types.Operator):
+    """Create a copy of this group tree and use it"""
+    bl_idname = 'arm.copy_group_tree'
+    bl_label = 'Copy group tree'
+    node_index: StringProperty(name='Node Index', default='')
+
+    def execute(self, context):
+        global array_nodes
+        group_node = array_nodes[self.node_index]
+        group_tree = group_node.group_tree
+        [setattr(n, 'copy_override', True) for n in group_tree.nodes
+        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        new_group_tree = group_node.group_tree.copy()
+        [setattr(n, 'copy_override', False) for n in group_tree.nodes
+        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        group_node.group_tree = new_group_tree
+        return {'FINISHED'}
+
 class ArmSearchGroupTree(bpy.types.Operator):
     """Browse group trees to be linked"""
     bl_idname = 'arm.search_group_tree'
@@ -93,7 +111,7 @@ class ArmSearchGroupTree(bpy.types.Operator):
 
     def available_trees(self, context):
         linkable_trees = filter(lambda t: hasattr(t, 'can_be_linked') and t.can_be_linked(), bpy.data.node_groups)
-        return [(t.name, t.name, '') for t in linkable_trees]
+        return [(t.name, ('0 ' if t.users == 0 else '') + t.name, '') for t in linkable_trees]
 
     tree_name: bpy.props.EnumProperty(items=available_trees)
 
@@ -346,6 +364,7 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
 REG_CLASSES = (
     ArmGroupTree,
     ArmEditGroupTree,
+    ArmCopyGroupTree,
     ArmSearchGroupTree,
     ArmAddGroupTree,
     ArmAddGroupTreeFromSelected,

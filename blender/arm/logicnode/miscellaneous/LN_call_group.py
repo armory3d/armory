@@ -102,18 +102,29 @@ class CallGroupNode(ArmLogicTreeNode):
     # Prperty to store group tree pointer
     group_tree: PointerProperty(name='Group', type=bpy.types.NodeTree, update=update_sockets)
 
+    def draw_label(self) -> str:
+        if self.group_tree is not None:
+            return f'Group: {self.group_tree.name}'
+        return self.bl_label
+
     # Draw node UI
     def draw_buttons(self, context, layout):
         col = layout.column()
         row_name = col.row(align=True)
         row_add = col.row(align=True)
         row_ops = col.row()
-        op = row_add.operator('arm.add_group_tree', icon='PLUS', text='New Group')
-        op.node_index = self.get_id_str()
+        if self.group_tree is None:
+            op = row_add.operator('arm.add_group_tree', icon='PLUS', text='New Group')
+            op.node_index = self.get_id_str()
         op = row_name.operator('arm.search_group_tree', text='', icon='VIEWZOOM')
         op.node_index = self.get_id_str()
         if self.group_tree:
             row_name.prop(self.group_tree, 'name', text='')
+            row_copy = row_name.split(align=True)
+            row_copy.alignment = 'CENTER'
+            fake_user = 1 if self.group_tree.use_fake_user else 0
+            op = row_copy.operator('arm.copy_group_tree', text=str(self.group_tree.users - fake_user))
+            op.node_index = self.get_id_str()
             row_name.prop(self.group_tree, 'use_fake_user', text='')
             op = row_name.operator('arm.node_call_func', icon='X', text='')
             op.node_index = self.get_id_str()
