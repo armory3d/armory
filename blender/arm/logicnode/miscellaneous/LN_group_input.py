@@ -22,6 +22,9 @@ class GroupInputsNode(ArmLogicTreeNode):
     # Flag to store invalid links
     invalid_link: BoolProperty(name='invalid_link', description='', default=False)
 
+    # Override copy prevention in certain situations such as copying entire group
+    copy_override: BoolProperty(name='copy override', description='', default=False)
+
     def init(self, context):
         tree = bpy.context.space_data.edit_tree
         node_count = 0
@@ -36,8 +39,10 @@ class GroupInputsNode(ArmLogicTreeNode):
 
     # Prevent copying of group node
     def copy(self, node):
-        self.mute = True
-        self.outputs.clear()
+        if not self.copy_override:
+            self.mute = True
+            self.outputs.clear()
+        self.copy_override = False
 
     def arm_init(self, context):
         if not self.mute:
