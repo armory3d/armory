@@ -89,6 +89,7 @@ def add_world_defs():
         wrd.world_defs += '_AutoExposure'
 
     if voxelao:
+        wrd.world_defs += '_VoxelAOvar' # Write a shader variant
         assets.add_khafile_def('arm_voxelgi')
         wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:
@@ -99,12 +100,10 @@ def add_world_defs():
                 assets.add_khafile_def('arm_voxelgi_temporal')
                 wrd.world_defs += '_VoxelGITemporal'
 
-        elif voxelao:
-            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelShadow'
-            if rpdat.arm_voxelgi_occ == 0.0:
-                wrd.world_defs += '_VoxelAONoTrace'
+        if rpdat.arm_voxelgi_shadows:
+            wrd.world_defs += '_VoxelShadow'
+        if rpdat.arm_voxelgi_occ == 0.0:
+            wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         wrd.world_defs += '_Legacy'
@@ -139,7 +138,7 @@ def add_world_defs():
         assets.add_khafile_def('arm_clusters')
 
 	#really unsure about these lines.
-    if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+    if '_Rad' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
         wrd.world_defs += '_Brdf'
 
 def build():

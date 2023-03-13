@@ -384,8 +384,8 @@ class Inc {
 		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
-		
-	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
+
+		path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
 	public static function drawTranslucency(target: String) {
