@@ -2,7 +2,7 @@
 	"contexts": [
 		{
 			"name": "ssr_pass",
-			"depth_write": false,
+			"depth_write": true,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [

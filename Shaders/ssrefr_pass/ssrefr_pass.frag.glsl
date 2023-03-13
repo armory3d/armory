@@ -31,7 +31,7 @@ float depth;
 vec3 viewPos;
 
 const float numBinarySearchSteps = 7;
-const float maxSteps = 18;
+#define maxSteps (1.0 / ss_refractionRayStep)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -45,7 +45,8 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 float getDeltaDepth(const vec3 hit) {
 	float depth2 = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	return depth2;
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	return viewPos.z - hit.z;
 }
 
 vec4 binarySearch(vec3 dir) {
@@ -76,7 +77,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > depth)
+		if(d < depth)
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -92,7 +93,7 @@ void main() {
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
 	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
-		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
+		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
 		return;
 	}
 
@@ -104,7 +105,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
+	vec3 refracted = normalize(refract(-viewPos, viewNormal, 1.0 / rior));
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -117,7 +118,7 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	float refractivity = 1.0 - roughness;
+	float refractivity = 0.9;//value for falloff
 	#ifdef _CPostprocess
 	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
@@ -125,7 +126,7 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
-	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb * textureLod(tex, texCoord, 0.0).rgb;
+	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
-	fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
+	fragColor.rgb = refractionCol * intensity * 0.5;
 }
