@@ -8,9 +8,6 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelGI
-#include "std/conetrace.glsl"
-#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -35,9 +32,6 @@ uniform sampler2D gbuffer_refraction;
 	uniform sampler2D gbufferEmission;
 #endif
 
-#ifdef _VoxelGI
-uniform sampler3D voxels;
-#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 #endif
@@ -297,40 +291,14 @@ void main() {
 	envl *= voxelgiEnv;
 #endif
 
-#ifdef _VoxelGI
-	#ifdef _VoxelGICam
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
-	#endif
-	
-	#ifdef _VoxelGITemporal
-	envl += (traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend)).rgb * voxelgiDiff * g1.rgb;
-	#else
-	envl += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
-	#endif
-
-	/*
-	if (roughness < 1.0) {
-		#ifdef _VoxelGITemporal
-		envl += (traceReflection(voxels, voxpos, n, v, roughness) * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;
-		#else
-		envl += traceReflection(voxels, voxpos, n, v, roughness) * voxelgiRefl;
-		#endif
-	}
-	*/
-	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
-	envl *= voxelgiEnv;
-#endif
-
 fragColor.rgb = envl;
 
 #ifdef _SSAO
-	#ifdef _RTGI
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	#else
+	//#ifdef _RTGI
+	//fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	//#else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	#endif
+	//#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -460,11 +428,6 @@ fragColor.rgb = envl;
 		, voxels, voxpos
 		#endif
 		#endif
-		#ifdef _VoxelGI
-		#ifdef _VoxelShadow
-		, voxels, voxpos
-		#endif
-		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
@@ -521,11 +484,6 @@ fragColor.rgb = envl;
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelAOvar
-			#ifdef _VoxelShadow
-			, voxels, voxpos
-			#endif
-			#endif
-			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
 			, voxels, voxpos
 			#endif

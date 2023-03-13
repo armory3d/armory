@@ -338,7 +338,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.scale = Inc.getSuperSampling() * 0.5;
 			t.format = "R32"; // R16
-			path.createRenderTarget(t);	
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -529,7 +529,8 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if rp_voxels
+		#if (rp_voxels != "Off")
+		var relight = false;
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
@@ -551,7 +552,11 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
+				#if (rp_voxels == "Voxels GI")
 				var voxtex = "voxelsOpac";
+				#else
+				var voxtex = voxels;
+				#end
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
@@ -563,23 +568,23 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
-				#end				
-	
+				#end
+
 				path.bindTarget("voxelsOpac", "voxelsOpac");
 				path.bindTarget("voxelsNor", "voxelsNor");
 				path.bindTarget("voxels", "voxels");
-				
-				#if (rp_shadowmap && (rp_voxels == "Voxel GI"))
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
+
 				path.drawMeshes("voxel");
+
+				relight = true;
+			}
+			if(relight) {
+				#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxels();
+				#else
+				path.generateMipmaps(voxels);
+				#end
+
 			}
 		}
 		#end
