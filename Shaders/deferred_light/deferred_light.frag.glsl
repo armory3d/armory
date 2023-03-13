@@ -326,7 +326,7 @@ void main() {
 
 #ifdef _SSAO
 	#ifdef _RTGI
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	#else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	#endif
