@@ -118,7 +118,7 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	float refractivity = 0.9;//value for falloff
+	float refractivity = 0.999;//value for falloff
 	#ifdef _CPostprocess
 	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
