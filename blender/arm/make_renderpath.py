@@ -341,8 +341,8 @@ def build():
     has_voxels = arm.utils.voxel_support()
 
     if not has_voxels or rpdat.arm_material_model != 'Full':
-        rp_voxels = 'Off'
-    if rp_voxels != 'Off':
+        rp_voxels = False
+    if rp_voxels:
         if has_voxels:
             assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
