@@ -114,41 +114,6 @@ class RenderPathForward {
 				path.createRenderTarget(t);
 			}
 			#end
-			
-			#if rp_ssrefr
-			{
-				//holds rior and opacity 
-				var t = new RenderTargetRaw();
-				t.name = "gbuffer_refraction";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-
-				//holds colors before refractive meshes are drawn
-				var t = new RenderTargetRaw();
-				t.name = "refr";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				t.depth_buffer = "main";
-				path.createRenderTarget(t);
-
-				//holds background depth
-				var t = new RenderTargetRaw();
-				t.name = "gbufferD1";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "R32";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-			}
-			#end
 
 			#if rp_compositornodes
 			{
@@ -282,12 +247,13 @@ class RenderPathForward {
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			//holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "half";
 			t.width = 0;
 			t.height = 0;
-			t.scale = Inc.getSuperSampling() * 0.5;
-			t.format = "R32"; // R16
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 		#end
@@ -324,6 +290,37 @@ class RenderPathForward {
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
+
+			//holds rior and opacity
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			//holds colors before refractive meshes are drawn
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+
+			//holds background depth
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
