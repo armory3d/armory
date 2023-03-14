@@ -561,7 +561,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.04, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.15, update=assets.invalidate_shader_cache)
     arm_ss_refraction_min_ray_step: FloatProperty(name="Step Min", default=0.5, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)

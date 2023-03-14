@@ -93,7 +93,7 @@ void main() {
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
 	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
-		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
+		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
 		return;
 	}
 
