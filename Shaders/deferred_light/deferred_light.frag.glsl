@@ -277,14 +277,14 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb += 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb *= backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
@@ -302,10 +302,10 @@ vec3 reflection = vec3(0.0);
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	diffuse += 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
 	               traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	diffuse += 1.0 - traceAO(voxpos, n, voxels);
+	envl *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
 #endif
@@ -318,9 +318,9 @@ vec3 voxpos = p / voxelgiHalfExtents;
 #endif
 
 #ifdef _VoxelGITemporal
-diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+diffuse += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 #else
-diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
+diffuse += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 #endif
 
 if(roughness < 1.0 && occspec.y > 0.0)
@@ -334,17 +334,11 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #ifdef _VoxelGI
 fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
 #else
-#ifdef _VoxelAOvar
-fragColor.rgb = diffuse + envl * voxelgiEnv;
-#else
 fragColor.rgb = envl;
 #endif
-#endif
 
-#ifdef _RTGI
-fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-#endif
-#ifdef _RTAO
+
+#ifdef _SSAO
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif
 
@@ -464,7 +458,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 #ifdef _SinglePoint
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false, diffuse, reflection
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
 			, 0, pointBias, true
 		#endif
@@ -522,10 +516,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 			albedo,
 			roughness,
 			occspec.y,
-			f0,
-			true,
-			diffuse,
-			reflection
+			f0
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
 				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0

@@ -659,6 +659,17 @@ class Inc {
 	 	var rts = path.renderTargets;
 	 	var res = Inc.getVoxelRes();
 	 	var lights = iron.Scene.active.lights;
+
+		#if rp_shadowmap
+		{
+			#if arm_shadowmap_atlas
+			Inc.bindShadowMapAtlas();
+			#else
+			Inc.bindShadowMap();
+			#end
+		}
+		#end
+
 	 	for (i in 0...lights.length) {
 	 		var l = lights[i];
 	 		if (!l.visible) continue;
@@ -669,7 +680,7 @@ class Inc {
 	 		kha.compute.Compute.setTexture(voxel_tb, rts.get("voxelsNor").image, kha.compute.Access.Read);
 	 		kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
 
-			#if (rp_shadowmap)
+			#if rp_shadowmap
 	 		if (l.data.raw.type == "sun") {
 	 			kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
 	 			kha.compute.Compute.setInt(voxel_ce, 1); //lightShadow

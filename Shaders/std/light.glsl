@@ -85,7 +85,7 @@ uniform sampler2D sltcMag;
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
-	const vec3 albedo, const float rough, const float spec, const vec3 f0, const bool vox, const vec3 diffuse, const vec3 reflection
+	const vec3 albedo, const float rough, const float spec, const vec3 f0
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
 	#endif
@@ -128,35 +128,34 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
 	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-	direct = (albedo + diffuse) * ltcdiff + (ltcspec + reflection) * spec * 0.05;
+	direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
-	direct = lambertDiffuseBRDF(albedo, dotNL) + diffuse + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) + reflection) * spec;
+	direct = lambertDiffuseBRDF(albedo, dotNL) + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH)) * spec;
 	#endif
 
 	direct *= lightCol;
-	//direct *= attenuate(distance(p, lp));
+	direct *= attenuate(distance(p, lp));
 
-	if(!vox) {
-		#ifdef _MicroShadowing
-		direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
-		#endif
+	#ifdef _MicroShadowing
+	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+	#endif
 
-		#ifdef _SSRS
-		direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
-		#endif
+	#ifdef _SSRS
+	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	#endif
 
-		#ifdef _VoxelAOvar
-		#ifdef _VoxelShadow
-		direct *= 1.0 - traceShadow(voxels, voxpos, l);
-		#endif
-	  	#endif
-		
-		#ifdef _VoxelGI
-		#ifdef _VoxelShadow
-		direct *= 1.0 - traceShadow(voxels, voxpos, l);
-		#endif
-		#endif
-	}
+	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	#endif
+	#endif
+
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	#endif
+	#endif
+
 	#ifdef _LTC
 	#ifdef _ShadowMap
 		if (receiveShadow) {
