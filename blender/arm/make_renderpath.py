@@ -307,12 +307,14 @@ def build():
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':
-            wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
+                wrd.world_defs += '_SSAO'
                 assets.add_shader_pass('ssao_pass')
             elif rpdat.rp_ssgi == 'RTAO':
+                wrd.world_defs += '_RTAO'
                 assets.add_shader_pass('rtao_pass')
             else:
+                wrd.world_defs += '_RTGI'
                 assets.add_shader_pass('rtgi_pass')
 
             assets.add_shader_pass('blur_edge_pass')

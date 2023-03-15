@@ -122,7 +122,13 @@ float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const flo
 
 vec3 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
 	float reflectiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	vec3 reflection = normalize(reflect(-viewDir, normal));
+	vec3 reflection = normalize(reflect(viewDir, normal));
+	return traceCone(voxels, pos, reflection, reflectiveAperture, MAX_DISTANCE, normal).xyz;
+}
+
+vec3 traceFineReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {//NVIDIA VXGI Trick: add another reflection pass with smaller aperture
+	float reflectiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265) / 4;
+	vec3 reflection = normalize(reflect(viewDir, normal));
 	return traceCone(voxels, pos, reflection, reflectiveAperture, MAX_DISTANCE, normal).xyz;
 }
 

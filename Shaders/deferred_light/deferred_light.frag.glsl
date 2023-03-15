@@ -69,6 +69,12 @@ uniform vec3 backgroundCol;
 #ifdef _SSAO
 uniform sampler2D ssaotex;
 #endif
+#ifdef _RTAO
+uniform sampler2D ssaotex;
+#endif
+#ifdef _RTGI
+uniform sampler2D ssaotex;
+#endif
 
 #ifdef _SSS
 uniform vec2 lightPlane;
@@ -308,6 +314,7 @@ vec3 reflection = vec3(0.0);
 	envl *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
+	envl *= voxelgiEnv;
 #endif
  
 #ifdef _VoxelGI
@@ -323,11 +330,11 @@ diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpo
 diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 #endif
 
-if(roughness < 1.0 && occspec.y > 0.0)
+if(roughness < 1.0)
 #ifdef _VoxelGITemporal
-reflection = (traceReflection(voxels, voxpos, n, v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
+reflection = ((traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl) * voxelBlend + (traceReflection(voxelsLast, voxpos, n, -v, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -v, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend)) * voxelgiRefl;
 #else
-reflection = traceReflection(voxels, voxpos, n, v, roughness).rgb * voxelgiRefl;
+reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl;
 #endif
 #endif//VoxelGI
 
@@ -341,6 +348,13 @@ fragColor.rgb = envl;
 #ifdef _SSAO
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif
+#ifdef _RTAO
+fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+#endif
+#ifdef _RTGI
+fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+#endif
+
 
 #ifdef _EmissionShadeless
 	if (matid == 1) { // pure emissive material, color stored in basecol

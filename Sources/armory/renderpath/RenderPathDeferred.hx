@@ -532,9 +532,7 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				#end
 				path.bindTarget("gbuffer0", "gbuffer0");
-				#if (rp_ssgi == "RTGI")
 				path.bindTarget("gbuffer1", "gbuffer1");
-				#end
 				path.drawShader("shader_datas/rtgi_pass/rtgi_pass");
 
 				path.setTarget("singleb");
