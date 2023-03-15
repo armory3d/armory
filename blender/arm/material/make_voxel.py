@@ -137,6 +137,43 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
+    geom.ins = vert.outs
+    frag.ins = geom.outs
+
+    frag.add_include('compiled.inc')
+    frag.add_include('std/math.glsl')
+    frag.add_include('std/imageatomic.glsl')
+    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+
+    vert.add_include('compiled.inc')
+    vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_out('vec3 voxpositionGeom')
+
+    if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
+        vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
+    else:
+        vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
+
+    geom.add_out('vec3 voxposition')
+    geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+    geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+    geom.write('vec3 p = abs(cross(p1, p2));')
+    geom.write('for (uint i = 0; i < 3; ++i) {')
+    geom.write('    voxposition = voxpositionGeom[i];')
+    geom.write('    if (p.z > p.x && p.z > p.y) {')
+    geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else if (p.x > p.y && p.x > p.z) {')
+    geom.write('        gl_Position = vec4(voxposition.y, voxposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else {')
+    geom.write('        gl_Position = vec4(voxposition.x, voxposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    EmitVertex();')
+    geom.write('}')
+    geom.write('EndPrimitive();')
+
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
     #frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
     #frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
