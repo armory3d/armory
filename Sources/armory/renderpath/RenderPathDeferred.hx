@@ -560,16 +560,18 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if (rp_voxels != 'Off')
+		#if rp_voxels
 		var relight = false;
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			//Relight if light was moved
-			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { relight = true; break; }
-			}
+			for (light in iron.Scene.active.lights)
+				if (light.transform.diff()) {
+					relight = true;
+					break;
+				}
 			#end
 
 			#if arm_voxelgi_temporal
@@ -593,34 +595,9 @@ class RenderPathDeferred {
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
-
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end
-
 				path.bindTarget(voxtex, "voxels");
-
-				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))
-				path.bindTarget("voxelsVr", "voxelsVr");
-				#end
-
 				path.drawMeshes("voxel");
-				path.generateMipmaps(voxtex);
-
-				#if ((rp_voxelgi_bounces != 1) && (rp_voxels == 'Voxel GI'))				
-				voxels = "voxelsBounce";
-				#end
+				path.generateMipmaps(voxels);
 				relight = true;
 			}
 			#if (rp_voxels == "Voxel GI")

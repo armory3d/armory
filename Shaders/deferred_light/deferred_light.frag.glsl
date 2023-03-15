@@ -318,16 +318,16 @@ vec3 voxpos = p / voxelgiHalfExtents;
 #endif
 
 #ifdef _VoxelGITemporal
-diffuse += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 #else
-diffuse += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
+diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
 #endif
 
 if(roughness < 1.0 && occspec.y > 0.0)
 #ifdef _VoxelGITemporal
-reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, -v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
+reflection = (traceReflection(voxels, voxpos, n, v, roughness).rgb * voxelBlend + traceReflection(voxels, voxpos, n, v, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl;
 #else
-reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl;
+reflection = traceReflection(voxels, voxpos, n, v, roughness).rgb * voxelgiRefl;
 #endif
 #endif//VoxelGI
 
@@ -553,11 +553,11 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
 #ifdef _VoxelGITemporal
-	vec4 refraction = (traceRefraction(voxels, voxpos, n, v, opac, rior) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, opac, rior) * (1.0 - voxelBlend));
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, rior, roughness) * (1.0 - voxelBlend));
 #else
-	vec4 refraction = traceRefraction(voxels, voxpos, n, v, opac, rior);
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness);
 #endif
-	fragColor.rgb *= refraction.rgb;
+	fragColor.rgb = mix(refraction.rgb, fragColor.rgb, opac);
 }
 // if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif//Refract	

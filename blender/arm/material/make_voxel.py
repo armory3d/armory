@@ -46,9 +46,8 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(location = 1, rgba8) image3D voxels')
-    frag.add_uniform('layout(location = 2, rgba8) image3D voxelsNor')
-    frag.add_uniform('layout(rgba8) image3D voxelsVr')
+    frag.add_uniform('layout(rgba8) image3D voxels')
+    frag.add_uniform('layout(rgba8) image3D voxelsNor')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
@@ -106,7 +105,6 @@ def make_gi(context_id):
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 wnormalGeom')
     vert.add_include('compiled.inc')
-    
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')

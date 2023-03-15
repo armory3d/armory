@@ -752,7 +752,7 @@ const float compoDOFLength = 160.0;
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const float voxelgiWeight = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
+const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
 const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
