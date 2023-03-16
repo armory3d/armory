@@ -639,7 +639,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
     arm_particles: EnumProperty(
-        items=[('On', 'On', 'On'),
+        items=[('GPU', 'GPU', 'GPU'),
+                ('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Particles', description='Enable particle simulation', default='On', update=assets.invalidate_shader_cache)
     # Material override flags

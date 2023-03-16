@@ -70,7 +70,7 @@ void main() {
 
     col.rgb *= visibility * lightColor * dotNL;
     col = clamp(col, vec4(0.0), vec4(1.0));
-    
+
     imageStore(voxels, ivec3(gl_GlobalInvocationID.xyz), col);
     //imageAtomicAdd(voxels, ivec3(gl_GlobalInvocationID.xyz), convVec4ToRGBA8(col * 255));
 }

@@ -516,6 +516,7 @@ class RenderPathDeferred {
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
 		}
+		#end //SSGI
 
 		#if (rp_shadowmap)
 		// atlasing is exclusive for now

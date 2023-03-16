@@ -146,6 +146,7 @@ def make_gi(context_id):
     vert.add_include('compiled.inc')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
+    vert.add_out('vec3 voxnormalGeom')
 
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
@@ -159,6 +160,7 @@ def make_gi(context_id):
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
+    geom.write('    wnormal = voxnormalGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
     geom.write('    }')
@@ -173,12 +175,8 @@ def make_gi(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
-    #frag.write('uint val = convVec4ToRGBA8(vec4(basecol, 1.0) * 255);')
-    #frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
     frag.write('imageStore(voxels, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(basecol, 1.0));')
-    #frag.write('val = encNor(wnormal);')
     frag.write('imageStore(voxelsNor, ivec3((voxelgiResolution ) * (voxposition * 0.5 + 0.5)), vec4(wnormal, 1.0));')
-    #frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
 
     return con_voxel
 

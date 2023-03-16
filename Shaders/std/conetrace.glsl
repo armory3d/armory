@@ -134,7 +134,7 @@ vec3 traceFineReflection(sampler3D voxels, const vec3 pos, const vec3 normal, co
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness) {
 	const float transmittance = 1.0;
-	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness * 0.5), 0.0174533 * 3.0, 3.14159265);
 	vec3 refraction = normalize(refract(-viewDir, normal, 1.0 / ior));
 	return transmittance * traceCone(voxels, pos, refraction, refractiveAperture, MAX_DISTANCE, normal).xyz;
 }
