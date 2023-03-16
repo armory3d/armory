@@ -196,8 +196,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssao_pass/ssao_pass");
 			#elseif (rp_ssgi == "RTAO")
 			path.loadShader("shader_datas/rtao_pass/rtao_pass");
-			#else
-			path.loadShader("shader_datas/rtgi_pass/rtgi_pass");
 			#end
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
@@ -505,9 +503,6 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				#end
 				path.bindTarget("gbuffer0", "gbuffer0");
-				#if (rp_ssgi == "RTGI")
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#end
 				path.drawShader("shader_datas/rtao_pass/rtao_pass");
 
 				path.setTarget("singleb");
@@ -521,32 +516,6 @@ class RenderPathDeferred {
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
 		}
-
-		#elseif (rp_ssgi == "RTGI")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				#if rp_ssgi_half
-				path.bindTarget("half", "gbufferD");
-				#else
-				path.bindTarget("_main", "gbufferD");
-				#end
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
-				path.drawShader("shader_datas/rtgi_pass/rtgi_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#end //SSGI
 
 		#if (rp_shadowmap)
 		// atlasing is exclusive for now

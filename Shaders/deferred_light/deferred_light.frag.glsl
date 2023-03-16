@@ -72,9 +72,6 @@ uniform sampler2D ssaotex;
 #ifdef _RTAO
 uniform sampler2D ssaotex;
 #endif
-#ifdef _RTGI
-uniform sampler2D ssaotex;
-#endif
 
 #ifdef _SSS
 uniform vec2 lightPlane;
@@ -351,10 +348,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #ifdef _RTAO
 fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif
-#ifdef _RTGI
-fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-#endif
-
 
 #ifdef _EmissionShadeless
 	if (matid == 1) { // pure emissive material, color stored in basecol

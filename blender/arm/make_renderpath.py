@@ -85,11 +85,8 @@ def add_world_defs():
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
-        if rpdat.rp_ssgi == 'RTGI':
-            wrd.world_defs += '_RTGI'
-        else:
-            wrd.world_defs += '_RTAO'
+    if rpdat.rp_ssgi == 'RTAO':
+        wrd.world_defs += '_RTAO'
         if rpdat.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
 
@@ -313,9 +310,6 @@ def build():
             elif rpdat.rp_ssgi == 'RTAO':
                 wrd.world_defs += '_RTAO'
                 assets.add_shader_pass('rtao_pass')
-            else:
-                wrd.world_defs += '_RTGI'
-                assets.add_shader_pass('rtgi_pass')
 
             assets.add_shader_pass('blur_edge_pass')
             if rpdat.arm_ssgi_half_res:

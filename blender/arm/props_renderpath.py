@@ -71,7 +71,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'SMAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAO'
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
@@ -149,7 +149,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTGI'
+        rpdat.rp_ssgi = 'RTAI=O'
         rpdat.arm_ssrs = True
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
@@ -387,8 +387,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                 ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
-                ('RTGI', 'RTGI', 'Ray-traced global illumination')
+                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom: BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
