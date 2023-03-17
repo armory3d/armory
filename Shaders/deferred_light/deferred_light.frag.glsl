@@ -337,7 +337,11 @@ reflection = traceReflection(voxels, voxpos, n, -v, roughness).rgb * voxelgiRefl
 #ifdef _VoxelGI
 fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
 #else
+#ifdef _VoxelAOvar
 fragColor.rgb = envl * voxelgiEnv;
+#else
+fragColor.rgb = envl;
+#endif
 #endif
 
 
