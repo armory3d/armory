@@ -69,7 +69,6 @@ class RenderPathDeferred {
 
 			#if (rp_voxelgi_bounces != 1)
 			Inc.initGI("voxelsBounce");
-			Inc.initGI("voxelsVr");//view \ roughness
 			#end
 			#end
 		}
@@ -573,6 +572,9 @@ class RenderPathDeferred {
 				Inc.computeVoxelsBegin();
 				Inc.computeVoxels();
 				Inc.computeVoxelsEnd();
+				#if(rp_voxelgi_bounces != 1)
+				voxels = "voxelsBounce";
+				#end
 			}
 			#end
 		}

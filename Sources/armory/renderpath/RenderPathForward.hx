@@ -22,11 +22,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+				#if rp_ssr "lbuffer1", #end
+				#if rp_voxelgi_refract "gbuffer_refraction" #end
+			]);
 		}
 		#else
 		{
@@ -76,6 +75,19 @@ class RenderPathForward {
 			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
 			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
 			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
+		}
+		#end
+
+		#if rp_voxelgi_refract
+		{
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -157,13 +169,21 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
 			#if arm_voxelgi_temporal
-			{
-				Inc.initGI("voxelsB");
-			}
+			Inc.initGI("voxelsB");
+			#end
+
+			#if (rp_voxels == "Voxel GI")
+
+			Inc.initGI("voxelsNor");
+			Inc.initGI("voxelsOpac");
+
+			#if (rp_voxelgi_bounces != 1)
+			Inc.initGI("voxelsBounce");
+			#end
 			#end
 		}
 		#end
@@ -310,7 +330,8 @@ class RenderPathForward {
 		#end
 
 		// Voxels
-		#if (rp_voxels != 'Off')
+		#if rp_voxels
+		var relight = true;
 		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
@@ -318,7 +339,7 @@ class RenderPathForward {
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			// Relight if light was moved
 			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { voxelize = true; break; }
+				if (light.transform.diff()) { relight = true; break; }
 			}
 			#end
 
@@ -332,6 +353,7 @@ class RenderPathForward {
 			#end
 
 			if (voxelize) {
+
 				var voxtex = voxels;
 
 				path.clearImage(voxtex, 0x00000000);
@@ -358,7 +380,18 @@ class RenderPathForward {
 				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
+				relight = true;
 			}
+			#if (rp_voxels == "Voxel GI")
+			if(relight) {
+				Inc.computeVoxelsBegin();
+				Inc.computeVoxels();
+				Inc.computeVoxelsEnd();
+				#if(rp_voxelgi_bounces != 1)
+				voxels = "voxelsBounce";
+				#end
+			}
+			#end
 		}
 		#end
 
