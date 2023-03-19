@@ -295,6 +295,7 @@ void main() {
 
 vec3 diffuse = vec3(0.0);
 vec3 reflection = vec3(0.0);
+float ao = 1.0;
 
 #ifdef _VoxelAOvar
 	#ifdef _VoxelGICam
@@ -305,40 +306,51 @@ vec3 reflection = vec3(0.0);
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+	ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
 	               traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	envl *= 1.0 - traceAO(voxpos, n, voxels);
+	ao *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
+	ao *= voxelgiEnv;
 #endif
  
 #ifdef _VoxelGI
-#ifdef _VoxelGICam
-vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-#else
-vec3 voxpos = p / voxelgiHalfExtents;
-#endif
+	#ifdef _VoxelGICam
+	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxpos = p / voxelgiHalfExtents;
+	#endif
 
-#ifdef _VoxelGITemporal
-diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
-#else
-diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
-#endif
+	#ifndef _VoxelAONoTrace
+	#ifdef _VoxelGITemporal
+	ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+				 traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	#else
+	ao *= 1.0 - traceAO(voxpos, n, voxels);
+	#endif
+	#endif
+	ao *= voxelgiEnv;
 
-if(roughness < 1.0)
-#ifdef _VoxelGITemporal
-reflection = (((traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, -v, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -v, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend))) * voxelgiRefl * occspec.y;
-#else
-reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelgiRefl * occspec.y;
-#endif
+	#ifdef _VoxelGITemporal
+	diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	#else
+	diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * g1.rgb;
+	#endif
+
+	if(roughness < 1.0 && occspec.y > 0.0)
+	#ifdef _VoxelGITemporal
+	reflection = (((traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, -v, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -v, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend))) * voxelgiRefl * occspec.y;
+	#else
+	reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelgiRefl * occspec.y;
+	#endif
 #endif//VoxelGI
 
 #ifdef _VoxelGI
-fragColor.rgb = (diffuse + reflection) + envl * voxelgiEnv;
+fragColor.rgb = (diffuse + reflection) + envl * ao;
 #else
 #ifdef _VoxelAOvar
-fragColor.rgb = envl * voxelgiEnv;
+fragColor.rgb = envl * ao;
 #else
 fragColor.rgb = envl;
 #endif
@@ -567,7 +579,7 @@ if(opac < 1.0) {
 #else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness);
 #endif
-	fragColor.rgb = mix(refraction.rgb + fragColor.rgb, fragColor.rgb, opac);
+	fragColor.rgb = refraction.rgb;
 }
 // if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 #endif//Refract	

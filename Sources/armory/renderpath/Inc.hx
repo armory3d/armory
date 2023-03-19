@@ -487,7 +487,7 @@ class Inc {
 		}
 		#else
 		{
-			t.format = "RGBA64";//will not work with any other format. i.e RGBA32
+			t.format = getHdrFormat();
 		}
 		#end
 
