@@ -522,6 +522,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	ao *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
+
 	ao *= voxelgiEnv;
 #endif
 
@@ -559,24 +560,23 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	reflection = (traceReflection(voxels, voxpos, n, -v, roughness).rgb + traceFineReflection(voxels, voxpos, n, -v, roughness).rgb) * voxelgiRefl * occspec.y;
 	#endif
 	#ifdef _VoxelGIRefract
-	vec3 refraction;
 	if(opac < 1.0) {
 		#ifdef _VoxelGITemporal
-		refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, rior, roughness) * (1.0 - voxelBlend));
+		vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness) * voxelBlend + traceRefraction(voxelsLast, voxpos, n, v, rior, roughness) * (1.0 - voxelBlend));
 		#else
-		refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness);
+		vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness);
 		#endif
-		fragColor.rgb = mix(fragColor.rgb * refraction + reflection + envl, diffuse + reflection + envl, opac) * ao;
+		fragColor.rgb += mix(fragColor.rgb * refraction + reflection + envl, diffuse + reflection + envl, opac) * ao;
 	}
-	else fragColor.rgb = (diffuse + reflection + envl) * ao;
+	else fragColor.rgb += (diffuse + reflection + envl) * ao;
 	#else
-	fragColor.rgb = (diffuse + reflection + envl) * ao;
+	fragColor.rgb += (diffuse + reflection + envl) * ao;
 	#endif
 #else
 #ifdef _VoxelAOvar
-	fragColor.rgb = envl * ao;
+	fragColor.rgb += envl * ao;
 #else
-	fragColor.rgb = envl;
+	fragColor.rgb += envl;
 #endif
 #endif
 }
