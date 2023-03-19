@@ -487,7 +487,7 @@ class Inc {
 		}
 		#else
 		{
-			t.format = getHdrFormat();
+			t.format = "RGBA64";
 		}
 		#end
 

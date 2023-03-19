@@ -48,8 +48,6 @@ vec3 tangent(const vec3 n) {
 
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const vec3 normal) {
 	dir = normalize(dir);
-	// origin -= dir * dot(dir, normal) * VOXEL_SIZE;
-	// uvec3 indices = faceIndices(dir);
 	vec4 sampleCol = vec4(0.0);
 	float dist = 0.04 * voxelgiOffset;
 	float diam = dist * aperture;
@@ -134,8 +132,8 @@ vec3 traceFineReflection(sampler3D voxels, const vec3 pos, const vec3 normal, co
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness) {
 	const float transmittance = 1.0;
-	float refractiveAperture = 0.0174533 * 3.0;
-	vec3 refraction = refract(-viewDir, normal, 1.0 / ior);
+	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
 	return transmittance * traceCone(voxels, pos, refraction, refractiveAperture, MAX_DISTANCE, normal).xyz;
 }
 

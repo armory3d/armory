@@ -539,8 +539,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-				traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
 	ao *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif

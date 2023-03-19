@@ -520,7 +520,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')
 
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
@@ -531,7 +531,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_refl: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_weight: FloatProperty(name="Weight", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
