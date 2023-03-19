@@ -589,13 +589,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
+    frag.write_attrib('float dotNV = max(dot(n, eyeDir), 0.0);')
 
     sh = tese if tese is not None else vert
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
-    sh.write('eyeDir = eye - wposition;')
+    sh.write('eyeDir = normalize(eye - wposition);')
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
@@ -628,7 +627,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-        frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
+        frag.write('vec3 reflectionWorld = reflect(-eyeDir, n);')
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
     if '_EnvLDR' in wrd.world_defs:
@@ -649,57 +648,20 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength * occlusion;')
 
-    frag.write('vec3 diffuse = vec3(0.0);')
-    frag.write('vec3 reflection = vec3(0.0);')
-    frag.write('float ao = 1.0;')
-
-    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        frag.add_include('std/conetrace.glsl')
-        frag.add_uniform('sampler3D voxels')
-        if '_VoxelGICam' in wrd.world_defs:
-            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
-            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.add_uniform('float voxelBlend', link='_voxelBlend')
-            frag.add_uniform('sampler3D voxelsLast')
-            frag.write('ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));')
-        else:
-            frag.write('ao *= 1.0 - traceAO(voxpos, n, voxels);')
-        frag.write('ao *= voxelgiEnv;')
-
-    if '_VoxelGI' in wrd.world_defs:
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * basecol * voxelgiDiff ;')
-        else:
-            frag.write('diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff;')
-
-        frag.write('if(specular > 0.0 && roughness < 1.0)')
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	(((traceReflection(voxels, voxpos, n, -vVec, roughness).rgb + traceFineReflection(voxels, voxpos, n, -vVec, roughness).rgb) * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, -vVec, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -vVec, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend))) * voxelgiRefl;')
-        else:
-            frag.write('	(traceReflection(voxels, voxpos, n, -vVec, roughness).rgb + traceFineReflection(voxels, voxpos, n, -vVec, roughness).rgb) * voxelgiRefl;')
-
-    if '_VoxelGI' in wrd.world_defs:
-        frag.write('vec3 final = (diffuse + reflection) + indirect * ao;')
-    elif '_VoxelAO' in wrd.world_defs:
-        frag.write('vec3 final = indirect * ao;')
-    else:
-        frag.write('vec3 final = indirect;')
-
     if '_SSRS' in wrd.world_defs:
         frag.add_uniform('sampler2D gbufferD')
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
+
+    frag.write('vec3 final = vec3(0.0);')
 
     #TODO add emission
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 1.0;')
-        frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
-        frag.write('vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, dot(n, normalize(vVec + sunDir)), dotNV, dot(vVec, normalize(vVec + sunDir))) * specular;')
+        frag.write('float sdotNL = max(0.0, dot(n, sunDir));')
+        frag.write('vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, dot(n, normalize(eyeDir + sunDir)), dotNV, dot(eyeDir, normalize(eyeDir + sunDir))) * specular;')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
             vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
@@ -724,7 +686,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('}')
 
             if '_SSRS' in wrd.world_defs:
-                frag.write('svisibility *= traceShadowSS(sunDir, vVec, gbufferD, invVP, eye);')
+                frag.write('svisibility *= traceShadowSS(sunDir, eyeDir, gbufferD, invVP, eye);')
             if '_LightClouds' in wrd.world_defs:
                 frag.write('svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));')
             if '_MicroShadowing' in wrd.world_defs:
@@ -755,7 +717,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('final += sampleLight(')
-        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
+        frag.write('  wposition, n, eyeDir, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
@@ -776,12 +738,54 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('final = vec3(0.0);')
         frag.write('final *= emissionCol;')
 
+    frag.write('vec3 diffuse;')
+    frag.write('vec3 reflection;')
+    frag.write('float ao = 1.0;')
+
+    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
+        frag.add_include('std/conetrace.glsl')
+        frag.add_uniform('sampler3D voxels')
+        if '_VoxelGICam' in wrd.world_defs:
+            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
+            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
+        else:
+            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.add_uniform('float voxelBlend', link='_voxelBlend')
+            frag.add_uniform('sampler3D voxelsLast')
+            frag.write('ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));')
+        else:
+            frag.write('ao *= 1.0 - traceAO(voxpos, n, voxels);')
+        frag.write('ao *= voxelgiEnv;')
+
+    if '_VoxelGI' in wrd.world_defs:
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.write('diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * basecol * voxelgiDiff ;')
+        else:
+            frag.write('diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff;')
+
+        frag.write('if(specular > 0.0 && roughness < 1.0)')
+        if '_VoxelGITemporal' in wrd.world_defs:
+            frag.write(' reflection = (((traceReflection(voxels, voxpos, n, -eyeDir, roughness).rgb + traceFineReflection(voxels, voxpos, n, -eyeDir, roughness).rgb) * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, -eyeDir, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -eyeDir, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend))) * voxelgiRefl;')
+        else:
+            frag.write(' reflection = (traceReflection(voxels, voxpos, n, -eyeDir, roughness).rgb + traceFineReflection(voxels, voxpos, n, -eyeDir, roughness).rgb) * voxelgiRefl;')
+
     if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, vVec, roughness, rior) * voxelBlend) * voxelgiRefr;') #TODO replace roughness with transmission
+            frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) * (1.0 - voxelBlend) + traceRefraction(voxelsLast, voxpos, n, eyeDir, roughness, rior) * voxelBlend) * voxelgiRefr;')
         else:
-            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, vVec, roughness, rior) * voxelgiRefr;')
-        frag.write('final = mix(refraction, final, opacity);')#FIXME refraction
+            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, eyeDir, roughness, rior) * voxelgiRefr;')
+
+    if '_VoxelGI' in wrd.world_defs:
+        if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
+            frag.write('final = mix(reflection + refraction * final + indirect, (diffuse + reflection + indirect), opacity) * ao;')
+        else:
+            frag.write('final = (diffuse + reflection + indirect) * ao;')
+    elif '_VoxelAO' in wrd.world_defs:
+        frag.write('final = indirect * ao;')
+    else:
+        frag.write('final = indirect;')
+
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -793,4 +797,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior = 1.0;')
+        frag.write('float rior = 1.45;')#FIXME: make arm material accept ior value.
