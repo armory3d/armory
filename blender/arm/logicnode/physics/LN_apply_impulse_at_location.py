@@ -11,7 +11,7 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
     @input Impulse On Local Axis: if `true`, interpret the impulse vector as in
         object space
     @input Location: the location where to apply the impulse
-    @input Location On Local Axis: if `true`, use the location relative
+    @input Relative Location: if `true`, use the location relative
         to the objects location, otherwise use world coordinates
     """
     bl_idname = 'LNApplyImpulseAtLocationNode'
@@ -25,6 +25,6 @@ class ApplyImpulseAtLocationNode(ArmLogicTreeNode):
         self.add_input('ArmVectorSocket', 'Impulse')
         self.add_input('ArmBoolSocket', 'Impulse On Local Axis')
         self.add_input('ArmVectorSocket', 'Location')
-        self.add_input('ArmBoolSocket', 'Location On Local Axis')
+        self.add_input('ArmBoolSocket', 'Relative Location')
 
         self.add_output('ArmNodeSocketAction', 'Out')

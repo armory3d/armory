@@ -365,7 +365,19 @@ class ArmAnySocket(ArmCustomSocket):
     bl_label = 'Any Socket'
     arm_socket_type = 'NONE'
 
-    display_label: StringProperty()
+    # Callback function when socket label is changed
+    def on_disp_label_update(self, context):
+        node = self.node
+        if node.bl_idname == 'LNGroupInputsNode' or node.bl_idname == 'LNGroupOutputsNode':
+            if not node.invalid_link:
+                node.socket_name_update(self)
+                self.on_node_update()
+                self.name = self.display_label
+
+    display_label: StringProperty(
+        name='display_label',
+        description='Property to store socket display name',
+        update=on_disp_label_update)
 
     display_color: FloatVectorProperty(
         name='Color',
@@ -383,8 +395,6 @@ class ArmAnySocket(ArmCustomSocket):
         return self.display_color
 
     def on_node_update(self):
-        super().on_node_update()
-
         # Cache name and color of connected socket
         if self.is_output:
             c_node, c_socket = arm.node_utils.output_get_connected_node(self)
@@ -392,10 +402,10 @@ class ArmAnySocket(ArmCustomSocket):
             c_node, c_socket = arm.node_utils.input_get_connected_node(self)
 
         if c_node is None:
-            self.display_label = ''
             self.display_color = socket_colors[self.__class__.bl_idname]
         else:
-            self.display_label = c_socket.name
+            if self.display_label == '':
+                self.display_label = c_socket.name
             self.display_color = c_socket.draw_color(bpy.context, c_node)
 
 

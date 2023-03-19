@@ -2,11 +2,13 @@ from typing import Any, Callable
 import webbrowser
 
 import bpy
+import blf
 from bpy.props import BoolProperty, StringProperty
 
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
 import arm.logicnode.tree_variables
+import arm.logicnode.arm_node_group
 import arm.logicnode
 import arm.props_traits
 import arm.ui_icons as ui_icons
@@ -32,6 +34,9 @@ class ArmLogicTree(bpy.types.NodeTree):
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
     bl_icon = 'DECORATE'
+
+    def update(self):
+        pass
 
 
 class ARM_MT_NodeAddOverride(bpy.types.Menu):
@@ -227,28 +232,23 @@ class ArmOpenNodePythonSource(bpy.types.Operator):
 
 
 class ArmOpenNodeWikiEntry(bpy.types.Operator):
-    """Open the node's documentation in the wiki"""
+    """Open the logic node's documentation in the Armory wiki"""
     bl_idname = 'arm.open_node_documentation'
     bl_label = 'Open Node Documentation'
-
-    @staticmethod
-    def to_wiki_id(node_name):
-        """Convert from the conventional node name to its wiki counterpart's anchor or id.
-        Expected node_name format: LN_[a-z_]+
-        """
-        return node_name.replace('_', '-')[3:]
 
     def execute(self, context):
         if context.selected_nodes is not None:
             if len(context.selected_nodes) == 1:
                 node = context.selected_nodes[0]
                 if node.bl_idname.startswith('LN') and node.arm_version is not None:
-                    wiki_id = ArmOpenNodeWikiEntry.to_wiki_id(node.__module__.rsplit('.', 2).pop())
+                    anchor = node.bl_label.lower().replace(" ", "-")
 
                     category = arm_nodes.eval_node_category(node)
                     category_section = arm_nodes.get_category(category).category_section
-                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{wiki_id}')
-        return{'FINISHED'}
+
+                    webbrowser.open(f'https://github.com/armory3d/armory/wiki/reference_{category_section}#{anchor}')
+
+        return {'FINISHED'}
 
 
 class ARM_PT_NodeDevelopment(bpy.types.Panel):
@@ -311,10 +311,55 @@ class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
     def poll(cls, context):
         return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
+class ARM_UL_interface_sockets(bpy.types.UIList):
+    """UI List of input and output sockets"""
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        socket = item
+        color = socket.draw_color(context, context.active_node)
+
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            row = layout.row(align=True)
+
+            row.template_node_socket(color=color)
+            row.prop(socket, "display_label", text="", emboss=False, icon_value=icon)
+        elif self.layout_type == 'GRID':
+            layout.alignment = 'CENTER'
+            layout.template_node_socket(color=color)
+
+class DrawNodeBreadCrumbs():
+    """A class to draw node tree breadcrumbs or context path"""
+    draw_handler = None
+
+    @classmethod
+    def convert_array_to_string(cls, arr):
+        return ' > '.join(arr)
+
+    @classmethod
+    def draw(cls, context):
+        if  context.space_data.edit_tree and context.space_data.node_tree.bl_idname == "ArmLogicTreeType":
+            height = context.area.height
+            path_data = [path.node_tree.name for path in context.space_data.path]
+            str = cls.convert_array_to_string(path_data)
+            blf.position(0, 20, height-60, 0)
+            blf.size(0, 15, 72)
+            blf.draw(0, str)
+
+    @classmethod
+    def register_draw(cls):
+        if cls.draw_handler is not None:
+            cls.unregister_draw()
+        cls.draw_handler = bpy.types.SpaceNodeEditor.draw_handler_add(cls.draw, tuple([bpy.context]), 'WINDOW', 'POST_PIXEL')
+
+    @classmethod
+    def unregister_draw(cls):
+        if cls.draw_handler is not None:
+            bpy.types.SpaceNodeEditor.draw_handler_remove(cls.draw_handler, 'WINDOW')
+            cls.draw_handler = None
 
 def register():
     arm.logicnode.arm_nodes.register()
     arm.logicnode.arm_sockets.register()
+    arm.logicnode.arm_node_group.register()
 
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ArmOpenNodeHaxeSource)
@@ -325,6 +370,7 @@ def register():
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
     bpy.utils.register_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_OT_AddNodeOverride)
+    bpy.utils.register_class(ARM_UL_interface_sockets)
 
     # Register panels in correct order
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
@@ -332,12 +378,13 @@ def register():
     bpy.utils.register_class(ARM_PT_NodeDevelopment)
 
     arm.logicnode.init_categories()
+    DrawNodeBreadCrumbs.register_draw()
     register_nodes()
 
 
 def unregister():
     unregister_nodes()
-
+    DrawNodeBreadCrumbs.unregister_draw()
     # Ensure that globals are reset if the addon is enabled again in the same Blender session
     arm_nodes.reset_globals()
 
@@ -353,6 +400,8 @@ def unregister():
     bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
     bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
+    bpy.utils.unregister_class(ARM_UL_interface_sockets)
 
+    arm.logicnode.arm_node_group.unregister()
     arm.logicnode.arm_sockets.unregister()
     arm.logicnode.arm_nodes.unregister()

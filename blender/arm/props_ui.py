@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import shutil
 import textwrap
 
@@ -1054,6 +1055,7 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         col = layout.column(heading='Debug', align=True)
         col.prop(wrd, 'arm_verbose_output')
         col.prop(wrd, 'arm_cache_build')
+        col.prop(wrd, 'arm_clear_on_compile')
         col.prop(wrd, 'arm_assert_level')
         col.prop(wrd, 'arm_assert_quit')
 
@@ -1072,6 +1074,10 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         col = layout.column(heading='Quality')
         col.prop(wrd, 'arm_texture_quality')
         col.prop(wrd, 'arm_sound_quality')
+
+        col = layout.column(heading='External Assets')
+        col.prop(wrd, 'arm_copy_override')
+        col.operator('arm.copy_to_bundled', icon='IMAGE_DATA')
 
 class ARM_PT_ProjectFlagsDebugConsolePanel(bpy.types.Panel):
     bl_label = "Debug Console"
@@ -1173,6 +1179,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
+        wrd = bpy.data.worlds['Arm']
+
         if state.proc_build is not None:
             return {"CANCELLED"}
 
@@ -1189,6 +1197,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.play()
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -1247,6 +1257,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
                 break
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.build(item.arm_project_target, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
@@ -1293,6 +1305,8 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
 
         make.clean()
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.build(item.arm_project_target, is_publish=True, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
@@ -2312,6 +2326,71 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')
 
+class ARM_OT_CopyToBundled(bpy.types.Operator):
+    bl_label = 'Copy To Bundled'
+    bl_idname = 'arm.copy_to_bundled'
+    bl_description = ('Copies and repaths external image assets to project Bundled folder')
+
+    def execute(self, context):
+        self.copy_to_bundled(bpy.data.images)
+        return {'FINISHED'}
+
+    @classmethod
+    def copy_to_bundled(self, data):
+        wrd = bpy.data.worlds['Arm']
+        project_path = arm.utils.get_fp()
+
+        # Blend - Images
+        for asset in data:
+            # File is saved
+            if asset.filepath_from_user() != '':
+                bundled_filepath = project_path + '/Bundled/' + asset.name
+                try:
+                    # Exists -> Yes
+                    if os.path.isfile(bundled_filepath):
+                        # Override -> Yes
+                        if (wrd.arm_copy_override):
+                            # Valid file
+                            if asset.has_data:
+                                asset.filepath_raw = bundled_filepath
+                                asset.save()
+                                asset.reload()
+                                # Syntax - Yellow
+                                print(log.colorize(f'Asset name "{asset.name}" already exists, overriding the original', 33), file=sys.stderr)
+                            # Invalid file or corrupted
+                            else:
+                                # Syntax - Red 
+                                log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
+                                continue
+                        # Override -> No
+                        else:
+                            # Syntax - Yellow
+                            print(log.colorize(f'Asset name "{asset.name}" already exists, skipping', 33), file=sys.stderr)
+                            continue
+                    # Exists -> No
+                    else:
+                        # Valid file
+                        if asset.has_data:
+                            asset.filepath_raw = bundled_filepath
+                            asset.save()
+                            asset.reload()
+                            # Syntax - Green
+                            print(log.colorize(f'Asset name "{asset.name}" was successfully copied', 32), file=sys.stderr)
+                        # Invalid file or corrupted
+                        else:
+                            # Syntax - Red
+                            log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
+                            continue
+                except:
+                    # Syntax - Red
+                    log.error(f'Insufficient write permissions or other issues occurred')
+                    continue
+            # File is unsaved
+            else:
+                # Syntax - Purple
+                log.warn(f'Asset name "{asset.name}" is either packed or unsaved, skipping')
+                continue
+
 class ARM_OT_ShowFileVersionInfo(bpy.types.Operator):
     bl_label = 'Show old file version info'
     bl_idname = 'arm.show_old_file_version_info'
@@ -2679,6 +2758,7 @@ def register():
     bpy.utils.register_class(ArmPrintTraitsButton)
     bpy.utils.register_class(ARM_PT_MaterialNodePanel)
     bpy.utils.register_class(ARM_OT_UpdateFileSDK)
+    bpy.utils.register_class(ARM_OT_CopyToBundled)
     bpy.utils.register_class(ARM_OT_ShowFileVersionInfo)
     bpy.utils.register_class(ARM_OT_ShowNodeUpdateErrors)
     bpy.utils.register_class(ARM_OT_DiscardPopup)
@@ -2712,6 +2792,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
     bpy.utils.unregister_class(ARM_OT_DiscardPopup)
     bpy.utils.unregister_class(ARM_OT_ShowNodeUpdateErrors)
+    bpy.utils.unregister_class(ARM_OT_CopyToBundled)
     bpy.utils.unregister_class(ARM_OT_ShowFileVersionInfo)
     bpy.utils.unregister_class(ARM_OT_UpdateFileSDK)
     bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)

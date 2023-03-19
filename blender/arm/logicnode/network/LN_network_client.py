@@ -8,7 +8,7 @@ class NetworkClientNode(ArmLogicTreeNode):
     arm_version = 1
 
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Url', default_value="ws://127.0.0.1:8001")
 

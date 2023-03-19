@@ -211,7 +211,7 @@ def replace_all():
     replacement_errors.clear()
 
     for tree in bpy.data.node_groups:
-        if tree.bl_idname == "ArmLogicTreeType":
+        if tree.bl_idname == "ArmLogicTreeType" or tree.bl_idname == 'ArmGroupTree':
             # Use list() to make a "static" copy. It's possible to iterate over it because nodes which get removed
             # from the tree leave python objects in the list
             for node in list(tree.nodes):
@@ -292,7 +292,7 @@ def node_compat_sdk2108():
     their new equivalents.
     """
     for tree in bpy.data.node_groups:
-        if tree.bl_idname == "ArmLogicTreeType":
+        if tree.bl_idname == "ArmLogicTreeType" or tree.bl_idname == 'ArmGroupTree':
             for node in list(tree.nodes):
                 # Don't raise exceptions for invalid unregistered nodes, this
                 # function didn't cause the registration problem if there is one
