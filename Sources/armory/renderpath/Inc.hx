@@ -734,7 +734,6 @@ class Inc {
 	public static function computeVoxelsEnd() {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
-
 		#if (rp_voxels_bounces != 1)
 		if (bounce_sh == null) {
 			bounce_sh = path.getComputeShader("voxel_bounce");

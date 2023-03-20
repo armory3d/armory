@@ -564,9 +564,10 @@ class RenderPathDeferred {
 
 				path.bindTarget(voxtex, "voxels");
 				path.drawMeshes("voxel");
-				path.generateMipmaps(voxels);
+				path.generateMipmaps(voxtex);
 				relight = true;
 			}
+
 			#if (rp_voxels == "Voxel GI")
 			if(relight) {
 				Inc.computeVoxelsBegin();

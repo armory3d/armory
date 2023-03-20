@@ -517,13 +517,13 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	ao *= 1.0 - traceAO(voxpos, n, voxels);
+	envl *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
 
-	ao *= voxelgiEnv;
+	envl *= voxelgiEnv;
 #endif
 
 #ifdef _VoxelGI
@@ -565,17 +565,17 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		#else
 		vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness);
 		#endif
-		fragColor.rgb += mix(fragColor.rgb * refraction + reflection + envl, diffuse + reflection + envl, opac) * ao;
+		fragColor.rgb += mix(fragColor.rgb * refraction + reflection + envl, diffuse + reflection + envl * voxelgiEnv, opac);
 	}
-	else fragColor.rgb += (diffuse + reflection + envl) * ao;
+	else fragColor.rgb += (diffuse + reflection + envl * voxelgiEnv);
 	#else
-	fragColor.rgb += (diffuse + reflection + envl) * ao;
+	fragColor.rgb += (diffuse + reflection + envl * voxelgiEnv);
 	#endif
 #else
 #ifdef _VoxelAOvar
-	fragColor.rgb += envl * ao;
-#else
 	fragColor.rgb += envl;
+#else
+	fragColor.rgb = envl;
 #endif
 #endif
 }

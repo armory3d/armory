@@ -23,7 +23,7 @@ uniform mat4 LVP;
 
 uniform layout(binding = 1, rgba8) readonly image3D voxelsOpac;
 uniform layout(binding = 2, rgba8) readonly image3D voxelsNor;
-uniform layout(binding = 3, rgba8) image3D voxels;
+uniform layout(binding = 3, rgba16) image3D voxels;
 #ifdef _ShadowMap
 uniform layout(binding = 4) sampler2D shadowMap;
 uniform layout(binding = 5) samplerCube shadowMapCube;
@@ -72,5 +72,4 @@ void main() {
     col = clamp(col, vec4(0.0), vec4(1.0));
 
     imageStore(voxels, ivec3(gl_GlobalInvocationID.xyz), col);
-    //imageAtomicAdd(voxels, ivec3(gl_GlobalInvocationID.xyz), convVec4ToRGBA8(col * 255));
 }
