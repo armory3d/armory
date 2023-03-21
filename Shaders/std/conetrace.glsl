@@ -11,17 +11,17 @@
 // http://www.seas.upenn.edu/%7Epcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
-const float MAX_DISTANCE = voxelgiRange;
+const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
 
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
 
-// vec3 orthogonal(const vec3 u) {
-// 	// Pass normalized u
-// 	const vec3 v = vec3(0.99146, 0.11664, 0.05832); // Pick any normalized vector
-// 	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
-// }
+vec3 orthogonal(const vec3 u) {
+	// Pass normalized u
+	const vec3 v = vec3(0.99146, 0.11664, 0.05832); // Pick any normalized vector
+	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
+}
 
 vec3 tangent(const vec3 n) {
 	vec3 t1 = cross(n, vec3(0, 0, 1));
@@ -29,7 +29,6 @@ vec3 tangent(const vec3 n) {
 	if (length(t1) > length(t2)) return normalize(t1);
 	else return normalize(t2);
 }
-
 
 // uvec3 faceIndices(const vec3 dir) {
 // 	uvec3 ret;
@@ -48,6 +47,8 @@ vec3 tangent(const vec3 n) {
 
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const vec3 normal) {
 	dir = normalize(dir);
+	// origin -= dir * dot(dir, normal) * VOXEL_SIZE;
+	// uvec3 indices = faceIndices(dir);
 	vec4 sampleCol = vec4(0.0);
 	float dist = 0.04 * voxelgiOffset;
 	float diam = dist * aperture;
@@ -74,7 +75,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 o2 = normalize(cross(o1, normal));
 	vec3 c1 = 0.5f * (o1 + o2);
 	vec3 c2 = 0.5f * (o1 - o2);
-	
+
 	#ifdef _VoxelCones1
 	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal) * voxelgiOcc;
 	#endif
@@ -94,7 +95,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal);
 	return (col / 5.0) * voxelgiOcc;
 	#endif
-	
+
 	#ifdef _VoxelCones9
 	// Normal direction
 	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal);
@@ -114,27 +115,17 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	return vec4(0.0);
 }
 
-float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const float aperture, const float targetDistance, const vec3 normal) {
-	return traceCone(voxels, origin + normal * 0.04 * voxelgiOffset, dir, aperture, targetDistance, normal).a;
-}
-
 vec3 traceReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	float reflectiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	vec3 reflection = reflect(viewDir, normal);
-	return traceCone(voxels, pos, reflection, reflectiveAperture, MAX_DISTANCE, normal).xyz;
-}
-
-vec3 traceFineReflection(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {//NVIDIA VXGI Trick: add another reflection pass with smaller aperture
-	float reflectiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265) / 4;
-	vec3 reflection = reflect(viewDir, normal);
-	return traceCone(voxels, pos, reflection, reflectiveAperture, MAX_DISTANCE, normal).xyz;
+	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+	vec3 specularDir = reflect(-viewDir, normal);
+	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, normal).xyz;
 }
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness) {
-	const float transmittance = 1.0;
-	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
-	return transmittance * traceCone(voxels, pos, refraction, refractiveAperture, MAX_DISTANCE, normal).xyz;
+ 	const float transmittance = 1.0;
+ 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
+ 	float refractionAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+ 	return transmittance * traceCone(voxels, pos, refraction, refractionAperture, MAX_DISTANCE, normal).xyz;
 }
 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {
@@ -188,7 +179,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	#else
 	const float factor = voxelgiOcc * 0.90;
 	#endif
-	
+
 	#ifdef _VoxelCones1
 	return traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE) * factor;
 	#endif
@@ -208,7 +199,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceConeAO(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE);
 	return (col / 5.0) * factor;
 	#endif
-	
+
 	#ifdef _VoxelCones9
 	float col = traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE);
@@ -225,4 +216,5 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 
 	return 0.0;
 }
+
 #endif

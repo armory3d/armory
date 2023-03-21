@@ -29,11 +29,13 @@ def make(context_id):
 
 def make_gi(context_id):
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_reds': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_write_alpha': [False], 'conservative_raster': True })
+
     wrd = bpy.data.worlds['Arm']
 
     vert = con_voxel.make_vert()
     frag = con_voxel.make_frag()
     geom = con_voxel.make_geom()
+
     tesc = None
     tese = None
     geom.ins = vert.outs
@@ -60,10 +62,13 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    frag.write('vec3 emissionCol = vec3(0.0);') #
-    frag.write('float opacity = 1.0;');
+    parse_opacity = rpdat.arm_voxelgi_refraction
+    if parse_opacity:
+        frag.write('float opacity;')
+        frag.write('float rior;')
+    frag.write('vec3 emissionCol = vec3(0.0);')
     frag.write('float dotNV = 0.0;')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
@@ -102,13 +107,15 @@ def make_gi(context_id):
 
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
+
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 wnormalGeom')
+
     vert.add_include('compiled.inc')
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
-        vert.write('vcolorGeom = col.rgb;')
+        vert.write('vcolorGeom = col;')
 
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
@@ -119,13 +126,11 @@ def make_gi(context_id):
         vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
     else:
         vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
-    vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
-    vert.write('wnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
+    vert.write('wnormalGeom = normalize(N * vec3(nor.xy, 1.0));')
+    # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec3 wnormal')
-    geom.add_out('vec4 lightPosition')
-
     if con_voxel.is_elem('col'):
         geom.add_out('vec3 vcolor')
     if con_voxel.is_elem('tex'):
@@ -135,32 +140,20 @@ def make_gi(context_id):
     if export_bpos:
         geom.add_out('vec3 bposition')
 
-    geom.ins = vert.outs
-    frag.ins = geom.outs
-
-    frag.add_include('compiled.inc')
-    frag.add_include('std/math.glsl')
-    frag.add_include('std/imageatomic.glsl')
-    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
-
-    vert.add_include('compiled.inc')
-    vert.add_uniform('mat4 W', '_worldMatrix')
-    vert.add_out('vec3 voxpositionGeom')
-    vert.add_out('vec3 voxnormalGeom')
-
-    if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-        vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
-    else:
-        vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
-
-    geom.add_out('vec3 voxposition')
     geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
     geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
-    geom.write('    wnormal = voxnormalGeom[i];')
+    geom.write('    wnormal = wnormalGeom[i];')
+    if con_voxel.is_elem('col'):
+        geom.write('    vcolor = vcolorGeom[i];')
+    if con_voxel.is_elem('tex'):
+        geom.write('    texCoord = texCoordGeom[i];')
+    if export_mpos:
+        geom.write('    mposition = mpositionGeom[i];')
+    if export_bpos:
+        geom.write('    bposition = bpositionGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
     geom.write('    }')

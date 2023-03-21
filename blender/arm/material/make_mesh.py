@@ -740,7 +740,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.write('vec3 diffuse;')
     frag.write('vec3 reflection;')
-    frag.write('float ao = 1.0;')
 
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
@@ -753,11 +752,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', link='_voxelBlend')
             frag.add_uniform('sampler3D voxelsLast')
-            frag.write('ao *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));')
+            frag.write('indirect *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));')
         else:
-            frag.write('ao *= 1.0 - traceAO(voxpos, n, voxels);')
+            frag.write('indirect *= 1.0 - traceAO(voxpos, n, voxels);')
 
-        frag.write('ao *= voxelgiEnv;')
+        frag.write('indirect *= voxelgiEnv;')
 
     if '_VoxelGI' in wrd.world_defs:
         if '_VoxelGITemporal' in wrd.world_defs:
@@ -767,9 +766,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.write('if(specular > 0.0 && roughness < 1.0)')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write(' reflection = (((traceReflection(voxels, voxpos, n, -eyeDir, roughness).rgb + traceFineReflection(voxels, voxpos, n, -eyeDir, roughness).rgb) * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, -eyeDir, roughness).rgb  + traceFineReflection(voxelsLast, voxpos, n, -eyeDir, roughness).rgb * voxelgiRefl * (1.0 - voxelBlend))) * voxelgiRefl * specular;')
+            frag.write(' reflection = (((traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, eyeDir, roughness).rgb * (1.0 - voxelBlend))) * voxelgiRefl * specular;')
         else:
-            frag.write(' reflection = (traceReflection(voxels, voxpos, n, -eyeDir, roughness).rgb + traceFineReflection(voxels, voxpos, n, -eyeDir, roughness).rgb) * voxelgiRefl;')
+            frag.write(' reflection = traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelgiRefl;')
 
     if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
@@ -779,11 +778,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-            frag.write('final += mix(reflection + refraction * final + indirect, (diffuse + reflection + indirect), opacity) * ao;')
+            frag.write('final += mix(refraction * (reflection + diffuse + indirect * voxelgiEnv), diffuse + reflection + indirect * voxelgiEnv, opacity);')
         else:
-            frag.write('final += (diffuse + reflection + indirect) * ao;')
+            frag.write('final += (diffuse + reflection + indirect * voxelgiEnv);')
     elif '_VoxelAO' in wrd.world_defs:
-        frag.write('final += indirect * ao;')
+        frag.write('final += indirect * voxelgiEnv;')
     else:
         frag.write('final += indirect;')
 
