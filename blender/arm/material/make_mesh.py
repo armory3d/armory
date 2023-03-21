@@ -762,13 +762,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_VoxelGITemporal' in wrd.world_defs:
             frag.write('diffuse = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * basecol * voxelgiDiff ;')
         else:
-            frag.write('diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff;')
+            frag.write('diffuse = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol;')
 
-        frag.write('if(specular > 0.0 && roughness < 1.0)')
+        frag.write('if(roughness < 1.0 && specular > 0.0)')
         if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write(' reflection = (((traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, eyeDir, roughness).rgb * (1.0 - voxelBlend))) * voxelgiRefl * specular;')
+            frag.write(' reflection = ((traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelBlend) + (traceReflection(voxelsLast, voxpos, n, eyeDir, roughness).rgb * (1.0 - voxelBlend))) * voxelgiRefl * specular;')
         else:
-            frag.write(' reflection = traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelgiRefl;')
+            frag.write(' reflection = traceReflection(voxels, voxpos, n, eyeDir, roughness).rgb * voxelgiRefl * specular;')
 
     if '_VoxelGIRefract' in wrd.world_defs and '_VoxelGI' in wrd.world_defs and parse_opacity:
         if '_VoxelGITemporal' in wrd.world_defs:
@@ -778,11 +778,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if '_VoxelGIRefract' in wrd.world_defs and parse_opacity:
-            frag.write('final += mix(refraction * (reflection + diffuse + indirect * voxelgiEnv), diffuse + reflection + indirect * voxelgiEnv, opacity);')
+            frag.write('final += mix(refraction * (reflection + diffuse + indirect), diffuse + reflection + indirect, opacity);')
         else:
-            frag.write('final += (diffuse + reflection + indirect * voxelgiEnv);')
+            frag.write('final += (diffuse + reflection + indirect);')
     elif '_VoxelAO' in wrd.world_defs:
-        frag.write('final += indirect * voxelgiEnv;')
+        frag.write('final += indirect;')
     else:
         frag.write('final += indirect;')
 
