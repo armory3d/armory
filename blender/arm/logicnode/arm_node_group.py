@@ -164,7 +164,9 @@ class ArmAddGroupTree(bpy.types.Operator):
         group_node.group_tree = sub_tree  # link sub tree to group node
         sub_tree.nodes.new('LNGroupInputsNode').location = (-250, 0)  # create node for putting data into sub tree
         sub_tree.nodes.new('LNGroupOutputsNode').location = (250, 0)  # create node for getting data from sub tree
-        return bpy.ops.arm.edit_group_tree(node_index=self.node_index)
+        context.space_data.path.append(sub_tree, node=group_node)
+        sub_tree.group_node_name = group_node.name
+        return {'FINISHED'}
 
 class ArmAddGroupTreeFromSelected(bpy.types.Operator):
     """Select nodes group node and placing them into sub tree"""
