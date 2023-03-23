@@ -76,13 +76,28 @@ class ArmEditGroupTree(bpy.types.Operator):
     bl_label = 'Edit group tree'
     node_index: StringProperty(name='Node Index', default='')
 
+    def custom_poll(self, context):
+        if not self.node_index == '':
+            return True
+        if context.space_data.type == 'NODE_EDITOR':
+            if context.active_node and hasattr(context.active_node, 'group_tree'):
+                if context.active_node.group_tree is not None:
+                    return True
+        return False
+
     def execute(self, context):
-        global array_nodes
-        group_node = array_nodes[self.node_index]
-        sub_tree: ArmLogicTree = group_node.group_tree
-        context.space_data.path.append(sub_tree, node=group_node)
-        sub_tree.group_node_name = group_node.name
-        return {'FINISHED'}
+        if self.custom_poll(context):
+            global array_nodes
+            if not self.node_index == '':
+                group_node = array_nodes[self.node_index]
+            else:
+                group_node = context.active_node
+            sub_tree: ArmLogicTree = group_node.group_tree
+            context.space_data.path.append(sub_tree, node=group_node)
+            sub_tree.group_node_name = group_node.name
+            self.node_index = ''
+            return {'FINISHED'}
+        return {'CANCELLED'}
 
 class ArmCopyGroupTree(bpy.types.Operator):
     """Create a copy of this group tree and use it"""
