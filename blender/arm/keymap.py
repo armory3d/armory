@@ -28,6 +28,24 @@ def register():
     km.keymap_items.new("tlm.clean_lightmaps", type='F7', value='PRESS')
     arm_keymaps.append(km)
 
+    km = addon_keyconfig.keymaps.new(name='Node Editor', space_type='NODE_EDITOR')
+
+    # shift+G: Create a new node call group node
+    km.keymap_items.new('arm.add_call_group_node', 'G', 'PRESS', shift=True)
+
+    # ctrl+G: make node group from selected
+    km.keymap_items.new('arm.add_group_tree_from_selected', 'G', 'PRESS', ctrl=True)
+
+    # TAB: enter node groups depending on selection
+    km.keymap_items.new('arm.edit_group_tree', 'TAB', 'PRESS')
+
+    # ctrl+TAB: exit node groups depending on selectio
+    km.keymap_items.new('node.tree_path_parent', 'TAB', 'PRESS', ctrl=True)
+
+    # alt+G: ungroup node tree
+    km.keymap_items.new('arm.ungroup_group_tree', 'G', 'PRESS', alt=True)
+    arm_keymaps.append(km)
+
 
 def unregister():
     wm = bpy.context.window_manager
