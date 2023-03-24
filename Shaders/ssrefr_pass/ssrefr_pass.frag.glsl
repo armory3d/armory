@@ -17,8 +17,6 @@ uniform sampler2D gbuffer_refraction; //ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
-uniform vec3 eye;
-uniform vec3 eyeLook;
 
 #ifdef _CPostprocess
 uniform vec3 PPComp9;
@@ -30,8 +28,8 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-#define numBinarySearchSteps 7
 #define maxSteps 18
+#define numBinarySearchSteps 7
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -44,14 +42,15 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	return depth;
+	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = normalize(-getPosView(viewRay, depth, cameraProj));
+	return viewPos.z - hit.z;
 }
 
 vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= ss_refractionMinRayStep;
+		dir *= 0.5;
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
 		if(d < depth)
@@ -76,8 +75,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > depth)
-			return binarySearch(dir);
+		if(d > depth) return binarySearch(hitCoord);
 	}
 	return vec4(texCoord, 0.0, 1.0);
 }
@@ -86,12 +84,12 @@ void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.z;
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
-	float rior = gr.x;
+	float ior = gr.x;
 	float opac = gr.y;
 
 	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-	if(depth == 1.0 || rior == 1.0 || opac == 1.0) {
+	if(depth == 1.0 || ior == 1.0 || opac == 1.0) {
 		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
 		return;
 	}
@@ -103,8 +101,8 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
+	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
+	vec3 refracted = refract(-viewPos, viewNormal, 1.0 / ior);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

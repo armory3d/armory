@@ -653,7 +653,6 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
-const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
@@ -661,7 +660,6 @@ const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """
         if rpdat.rp_ss_refraction:
             f.write(
 """const float ss_refractionRayStep = """ + str(round(rpdat.arm_ss_refraction_ray_step * 100) / 100) + """;
-const float ss_refractionMinRayStep = """ + str(round(rpdat.arm_ss_refraction_min_ray_step * 100) / 100) + """;
 const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
 const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
 const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
