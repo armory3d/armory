@@ -117,6 +117,28 @@ class ArmCopyGroupTree(bpy.types.Operator):
         group_node.group_tree = new_group_tree
         return {'FINISHED'}
 
+class ArmUnlinkGroupTree(bpy.types.Operator):
+    """Unlink node-group (Shift + Click to set users to zero, data will then not be saved)"""
+    bl_idname = 'arm.unlink_group_tree'
+    bl_label = 'Unlink group tree'
+    node_index: StringProperty(name='Node Index', default='')
+
+    def invoke(self, context, event):
+        self.clear = False
+        if event.shift:
+            self.clear = True
+        self.execute(context)
+        return {'FINISHED'}
+
+    def execute(self, context):
+        global array_nodes
+        group_node = array_nodes[self.node_index]
+        group_tree = group_node.group_tree
+        group_node.group_tree = None
+        if self.clear:
+            group_tree.user_clear()
+        return {'FINISHED'}
+
 class ArmSearchGroupTree(bpy.types.Operator):
     """Browse group trees to be linked"""
     bl_idname = 'arm.search_group_tree'
@@ -126,7 +148,7 @@ class ArmSearchGroupTree(bpy.types.Operator):
 
     def available_trees(self, context):
         linkable_trees = filter(lambda t: hasattr(t, 'can_be_linked') and t.can_be_linked(), bpy.data.node_groups)
-        return [(t.name, ('0 ' if t.users == 0 else '') + t.name, '') for t in linkable_trees]
+        return [(t.name, ('0 ' if t.users == 0 else 'F ' if t.use_fake_user  else '') + t.name, '') for t in linkable_trees]
 
     tree_name: bpy.props.EnumProperty(items=available_trees)
 
@@ -387,16 +409,26 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
     def poll(cls, context):
         return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
+    def has_active_node(self, context):
+        if context.active_node and hasattr(context.active_node, 'group_tree'):
+            if context.active_node.group_tree is not None:
+                return True
+        return False
+
     def draw(self, context):
         layout = self.layout
         layout.operator('arm.add_call_group_node', icon='ADD')
         layout.operator('arm.add_group_tree_from_selected', icon='NODETREE')
         layout.operator('arm.ungroup_group_tree', icon='NODETREE')
+        row = layout.row()
+        row.enabled = self.has_active_node(context)
+        row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
 
 REG_CLASSES = (
     ArmGroupTree,
     ArmEditGroupTree,
     ArmCopyGroupTree,
+    ArmUnlinkGroupTree,
     ArmSearchGroupTree,
     ArmAddGroupTree,
     ArmAddGroupTreeFromSelected,
