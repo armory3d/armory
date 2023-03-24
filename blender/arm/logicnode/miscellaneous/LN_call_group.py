@@ -130,9 +130,8 @@ class CallGroupNode(ArmLogicTreeNode):
             op = row_copy.operator('arm.copy_group_tree', text=str(self.group_tree.users - fake_user))
             op.node_index = self.get_id_str()
             row_name.prop(self.group_tree, 'use_fake_user', text='')
-            op = row_name.operator('arm.node_call_func', icon='X', text='')
+            op = row_name.operator('arm.unlink_group_tree', icon='X', text='')
             op.node_index = self.get_id_str()
-            op.callback_name = 'remove_tree'
         row_ops.enabled = not self.group_tree is None
         op = row_ops.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
         op.node_index = self.get_id_str()
