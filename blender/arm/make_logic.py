@@ -155,13 +155,6 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         else:
             return None
 
-    # Check and parse group nodes if they exist
-    if node.bl_idname == 'LNCallGroupNode':
-        prop = node.group_tree
-        if prop is not None:
-            group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
-            link_group = True
-
     # Get node name
     name = arm.node_utils.get_export_node_name(node)
     if name_prefix is not None:
