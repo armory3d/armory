@@ -5,7 +5,7 @@ class KeyboardNode(ArmLogicTreeNode):
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
     arm_section = 'keyboard'
-    arm_version = 1
+    arm_version = 2
 
     property0: HaxeEnumProperty(
         'property0',
@@ -61,6 +61,7 @@ class KeyboardNode(ArmLogicTreeNode):
                  ('shift', 'shift', 'shift'),
                  ('control', 'control', 'control'),
                  ('alt', 'alt', 'alt'),
+                 ('capslock', 'capslock', 'capslock'),
                  ('escape', 'escape', 'escape'),
                  ('delete', 'delete', 'delete'),
                  ('back', 'back', 'back'),
@@ -80,3 +81,9 @@ class KeyboardNode(ArmLogicTreeNode):
 
     def draw_label(self) -> str:
         return f'{self.bl_label}: {self.property1}'
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)

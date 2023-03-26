@@ -64,12 +64,6 @@ def build_node_tree(node_group: 'arm.nodes_logic.ArmLogicTree'):
     group_name = arm.node_utils.get_export_tree_name(node_group, do_warn=True)
     file = path + group_name + '.hx'
 
-    # Import referenced node group
-    for node in node_group.nodes:
-        if node.bl_idname == 'LNCallGroupNode':
-            prop = getattr(node, 'property0')
-            ArmoryExporter.import_traits.append(prop)
-
     if node_group.arm_cached and os.path.isfile(file):
         return
 
@@ -136,12 +130,12 @@ def build_node_group_tree(node_group: 'arm.nodes_logic.ArmLogicTree', f: TextIO,
     # Get names of group input and out nodes if they exist
     for node in node_group.nodes:
         if node.bl_idname == 'LNGroupInputsNode':
-            group_input_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+            group_input_name = group_node_name + '_' + tree_name + arm.node_utils.get_export_node_name(node)
         if node.bl_idname == 'LNGroupOutputsNode':
-            group_output_name = tree_name + group_node_name + arm.node_utils.get_export_node_name(node)
+            group_output_name = group_node_name + '_' + tree_name + arm.node_utils.get_export_node_name(node)
 
     for node in root_nodes:
-        build_node(node, f, tree_name + group_node_name)
+        build_node(node, f, group_node_name + '_' + tree_name)
     node_group.arm_cached = True
     return group_input_name, group_output_name
 
@@ -161,16 +155,17 @@ def build_node(node: bpy.types.Node, f: TextIO, name_prefix: str = None) -> Opti
         else:
             return None
 
-    # Check and parse group nodes if they exist
-    if node.bl_idname == 'LNCallGroupNode':
-        prop = node.property0_
-        group_input_name, group_output_name = build_node_group_tree(prop, f, arm.node_utils.get_export_node_name(node))
-        link_group = True
-
     # Get node name
     name = arm.node_utils.get_export_node_name(node)
     if name_prefix is not None:
         name = name_prefix + name
+
+    # Check and parse group nodes if they exist
+    if node.bl_idname == 'LNCallGroupNode':
+        prop = node.group_tree
+        if prop is not None:
+            group_input_name, group_output_name = build_node_group_tree(prop, f, name)
+            link_group = True
 
     # Link tree variable nodes using IDs
     if node.arm_logic_id != '':

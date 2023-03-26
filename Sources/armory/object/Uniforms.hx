@@ -214,11 +214,10 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-
-			#if rp_voxels
+			#if (rp_voxels != 'Off')
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
-				return (armory.renderpath.RenderPathCreator.voxelFrame % freq + 1) / freq;
+				return armory.renderpath.RenderPathCreator.voxelFrame % freq / freq;
 			}
 			#end
 

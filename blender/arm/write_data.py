@@ -623,11 +623,11 @@ const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
 
-        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTAO':
             f.write(
 """const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
-const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
-const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
+const float ssgiRayStep = """ + str(rpdat.arm_ssgi_step) + """;
+const float ssgiStrength = """ + str(rpdat.arm_ssgi_strength) + """;
 """)
 
         if rpdat.rp_bloom:
@@ -756,7 +756,7 @@ const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_voxels:
+        if rpdat.rp_voxels != 'Off':
             halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
@@ -764,13 +764,18 @@ const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext
 const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
 const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_refl * 100) / 100) + """;
 const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
-const float voxelgiWeight = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
-
-const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
+const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
+""")
+        if rpdat.rp_voxels == 'Voxel GI':
+            f.write("""
+const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
+const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_refl * 100) / 100) + """;
+const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 """)
 
         if rpdat.rp_sss:

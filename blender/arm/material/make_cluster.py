@@ -1,7 +1,19 @@
 import bpy
 
-def write(vert, frag):
+import arm.material.shader as shader
+import arm.utils
+
+if arm.is_reload(__name__):
+    shader = arm.reload_module(shader)
+    arm.utils = arm.reload_module(arm.utils)
+else:
+    arm.enable_reload(__name__)
+
+
+def write(vert: shader.Shader, frag: shader.Shader):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
+    is_mobile = rpdat.arm_material_model == 'Mobile'
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     is_single_atlas = '_SingleAtlas' in wrd.world_defs
@@ -56,7 +68,7 @@ def write(vert, frag):
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
 
-    frag.write('direct += sampleLight(')
+    frag.write('final += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
     frag.write('    vVec,')
@@ -67,6 +79,7 @@ def write(vert, frag):
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0')
+
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:
@@ -84,6 +97,9 @@ def write(vert, frag):
         frag.write(', occlusion')
     if '_SSRS' in wrd.world_defs:
         frag.write(', gbufferD, invVP, eye')
+    if '_MicroShadowing' in wrd.world_defs and not is_mobile:
+        frag.write('\t, occlusion')
+
     frag.write(');')
 
     frag.write('}') # for numLights

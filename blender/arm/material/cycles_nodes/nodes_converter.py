@@ -94,7 +94,7 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
     # The last entry is included twice so that the interpolation
     # between indices works (no out of bounds error)
     cols_var = c.node_name(node.name).upper() + '_COLS'
-    cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+    cols_entries = ', '.join(f'vec4({elem.color[0]}, {elem.color[1]}, {elem.color[2]}, {elem.color[3]})' for elem in elems)
     cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
     state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
 

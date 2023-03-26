@@ -13,7 +13,7 @@ class NetworkHttpRequestNode(ArmLogicTreeNode):
                  ('get', 'Get', 'Http get request')],
         name='', default='post')
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Request')
 

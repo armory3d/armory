@@ -19,7 +19,7 @@ class NetworkMessageParserNode(ArmLogicTreeNode):
         name='', default='string')
 
 
-    def init(self, context):
+    def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'API')
         self.add_input('ArmDynamicSocket', 'Data')

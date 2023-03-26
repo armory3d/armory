@@ -18,7 +18,7 @@ class RpConfigNode extends LogicNode {
 			on ? armory.data.Config.raw.rp_ssr = true : armory.data.Config.raw.rp_ssr = false;
         case "Bloom":
 			on ? armory.data.Config.raw.rp_bloom = true : armory.data.Config.raw.rp_bloom = false;
-        case "GI":
+        case "Voxels":
 			on ? armory.data.Config.raw.rp_voxels = true : armory.data.Config.raw.rp_voxels = false;
 		case "Motion Blur":
 			on ? armory.data.Config.raw.rp_motionblur = true : armory.data.Config.raw.rp_motionblur = false;

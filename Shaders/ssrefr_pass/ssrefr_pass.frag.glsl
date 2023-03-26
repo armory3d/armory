@@ -30,8 +30,13 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
+<<<<<<< HEAD
 #define numBinarySearchSteps 7
 #define maxSteps 18
+=======
+const float numBinarySearchSteps = 7;
+#define maxSteps (1.0 / ss_refractionRayStep)
+>>>>>>> voxels_final
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -44,8 +49,13 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
+<<<<<<< HEAD
 	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = normalize(getPosView(viewRay ,depth, cameraProj));
+=======
+	float depth2 = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+>>>>>>> voxels_final
 	return viewPos.z - hit.z;
 }
 
@@ -53,6 +63,7 @@ vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= ss_refractionMinRayStep;
+<<<<<<< HEAD
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
 		if(d < depth)
@@ -63,6 +74,18 @@ vec4 binarySearch(vec3 dir) {
 	if (abs(d) > PPComp9.z) return vec4(texCoord, 0.0, 1.0);
 	#else
 	if (abs(d) > ss_refractionSearchDist) return vec4(texCoord, 0.0, 1.0);
+=======
+		hitCoord += dir;
+		d = getDeltaDepth(hitCoord);
+		if(d > depth)
+			hitCoord -= dir;
+	}
+	// Ugly discard of hits too far away
+	#ifdef _CPostprocess
+	if (abs(d) > PPComp9.z) return vec4(0.0);
+	#else
+	if (abs(d) > ss_refractionSearchDist) return vec4(0.0);
+>>>>>>> voxels_final
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -77,7 +100,11 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
+<<<<<<< HEAD
 		if(d > depth)
+=======
+		if(d < depth)
+>>>>>>> voxels_final
 			return binarySearch(dir);
 	}
 	return vec4(texCoord, 0.0, 1.0);
@@ -104,8 +131,13 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
+<<<<<<< HEAD
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / rior);
+=======
+	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
+	vec3 refracted = refract(-viewPos, viewNormal, 1.0 / rior);
+>>>>>>> voxels_final
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -118,7 +150,11 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
+<<<<<<< HEAD
 	float refractivity = 1.0;
+=======
+	float refractivity = 0.999;//value for falloff
+>>>>>>> voxels_final
 	#ifdef _CPostprocess
 	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
@@ -128,5 +164,9 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol = clamp(refractionCol, 0.0, 1.0);
+<<<<<<< HEAD
 	fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
+=======
+	fragColor.rgb = refractionCol * intensity;
+>>>>>>> voxels_final
 }

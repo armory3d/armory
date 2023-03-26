@@ -83,15 +83,15 @@ def add_world_defs():
             if rpdat.rp_shadowmap_atlas_lod:
                 assets.add_khafile_def('arm_shadowmap_atlas_lod')
                 assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
-    # SS
-    if rpdat.rp_ssgi == 'RTAO':
-        wrd.world_defs += '_RTGI'
-        if rpdat.arm_ssgi_rays == '9':
-            wrd.world_defs += '_SSGICone9'
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if voxelao or voxelgi:
+    if rpdat.rp_ssgi == 'RTAO':
+        wrd.world_defs += '_RTAO'
+        if rpdat.arm_ssgi_rays == '9':
+            wrd.world_defs += '_SSGICone9'
+
+    if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
         wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:
@@ -104,14 +104,17 @@ def add_world_defs():
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
+            assets.add_khafile_def('rp_voxelgi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
+            if rpdat.arm_voxelgi_bounces != "1":
+                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelGIRefract'
-                if rpdat.rp_renderer == 'Deferred':
-                    assets.add_khafile_def('rp_voxelgi_refract')
+                assets.add_khafile_def('rp_voxelgi_refract')
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
@@ -152,7 +155,6 @@ def add_world_defs():
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
-    #really unsure about these lines.
     if '_Rad' in wrd.world_defs and '_Brdf' not in wrd.world_defs:
         wrd.world_defs += '_Brdf'
 
@@ -303,13 +305,14 @@ def build():
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':
-            wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
+                wrd.world_defs += '_SSAO'
                 assets.add_shader_pass('ssao_pass')
-                assets.add_shader_pass('blur_edge_pass')
-            else:
-                assets.add_shader_pass('ssgi_pass')
-                assets.add_shader_pass('blur_edge_pass')
+            elif rpdat.rp_ssgi == 'RTAO':
+                wrd.world_defs += '_RTAO'
+                assets.add_shader_pass('rtao_pass')
+
+            assets.add_shader_pass('blur_edge_pass')
             if rpdat.arm_ssgi_half_res:
                 assets.add_khafile_def('rp_ssgi_half')
 

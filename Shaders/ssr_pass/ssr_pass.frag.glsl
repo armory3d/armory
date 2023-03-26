@@ -25,7 +25,7 @@ vec3 hitCoord;
 float depth;
 
 #define numBinarySearchSteps 7
-#define maxSteps (1 / ssrRayStep)
+#define maxSteps 24
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -38,8 +38,8 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	float depth2 = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = getPosView(viewRay, depth2, cameraProj);
 	return viewPos.z - hit.z;
 }
 
@@ -76,11 +76,12 @@ vec4 rayCast(vec3 dir) {
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float roughness = unpackFloat(g0.b).y;
+	float roughness = g0.b;
 	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
-	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
-	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
+	vec2 occspec = unpackFloat2(g1.a);
+	if (occspec.y == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }

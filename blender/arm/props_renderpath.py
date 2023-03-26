@@ -149,9 +149,9 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAO'
-        rpdat.arm_ssrs = False
-        rpdat.arm_micro_shadowing = False
+        rpdat.rp_ssgi = 'RTAI=O'
+        rpdat.arm_ssrs = True
+        rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
         rpdat.rp_ss_refraction = True
         rpdat.arm_ssr_half_res = False
@@ -160,7 +160,7 @@ def update_preset(self, context):
         rpdat.arm_bloom_anti_flicker = True
         rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
-        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_rp_resolution = 'Custom'
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
@@ -387,10 +387,9 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
-        items=[('Off', 'No AO', 'Off'),
+        items=[('Off', 'Off', 'Off'),
                 ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
-                ('RTGI', 'RTGI', 'Ray-traced global illumination')
+                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom: BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
@@ -446,10 +445,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI')],
-        name='Voxels', description='Voxels', default='Off', update=update_renderpath)
-
+               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
+               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ],
+        name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
@@ -465,7 +464,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
-    arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Micro shadowing based on ambient occlusion", default=False, update=assets.invalidate_shader_cache)
+    arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
                ('Linear', 'Linear', 'Linear'),
@@ -507,10 +506,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_camera: BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_voxelgi_bounces: EnumProperty(
-        items=[('1', '1', '1'),
+        items=[
+        	   ('1', '1', '1'),
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
-
     arm_samples_per_pixel: EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),
@@ -519,6 +518,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')
 
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
@@ -530,7 +530,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_diff: FloatProperty(name="Diffuse", description="Diffuse intensity", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_weight: FloatProperty(name="Weight", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
@@ -546,7 +546,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
+    arm_ssgi_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),
@@ -643,7 +643,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
     arm_particles: EnumProperty(
-        items=[('On', 'On', 'On'),
+        items=[('GPU', 'GPU', 'GPU'),
+                ('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Particles', description='Enable particle simulation', default='On', update=assets.invalidate_shader_cache)
     # Material override flags
