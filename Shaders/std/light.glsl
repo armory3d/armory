@@ -112,10 +112,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
 	vec3 h = normalize(v + l);
-	float dotNH = dot(n, h);
-	float dotVH = dot(v, h);
-	float dotNL = dot(n, l);
-    vec3 direct;
+	float dotNH = max(0.0, dot(n, h));
+	float dotVH = max(0.0, dot(v, h));
+	float dotNL = max(0.0, dot(n, l));
+
 	#ifdef _LTC
 	float theta = acos(dotNV);
 	vec2 tuv = vec2(rough, theta / (0.5 * PI));
@@ -128,9 +128,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
 	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-	direct = albedo * ltcdiff + ltcspec * spec * 0.05;
+	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
-	direct = lambertDiffuseBRDF(albedo, dotNL) + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH)) * spec;
+	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + (specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH)) * spec;
 	#endif
 
 	direct *= lightCol;

@@ -1821,7 +1821,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         sub.prop(rpdat, 'arm_ssgi_radius')
         sub.prop(rpdat, 'arm_ssgi_strength')
         sub.prop(rpdat, 'arm_ssgi_max_steps')
-        
+
         layout.separator()
 
         row = layout.row()
@@ -1835,7 +1835,6 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col = col.column()
         col.enabled = rpdat.rp_ssr
         col.prop(rpdat, 'arm_ssr_ray_step')
-        col.prop(rpdat, 'arm_ssr_min_ray_step')
         col.prop(rpdat, 'arm_ssr_search_dist')
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
@@ -1846,7 +1845,6 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col = col.column()
         col.enabled = rpdat.rp_ss_refraction
         col.prop(rpdat, 'arm_ss_refraction_ray_step')
-        col.prop(rpdat, 'arm_ss_refraction_min_ray_step')
         col.prop(rpdat, 'arm_ss_refraction_search_dist')
         col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
         col.prop(rpdat, 'arm_ss_refraction_jitter')

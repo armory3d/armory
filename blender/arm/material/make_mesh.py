@@ -584,10 +584,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
     if blend:
-<<<<<<< HEAD
-=======
         frag.add_out('vec4 fragColor[GBUF_SIZE]')
->>>>>>> voxels_final
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
         else:
@@ -658,50 +655,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     frag.write('indirect *= envmapStrength;')
-
-    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        frag.add_include('std/conetrace.glsl')
-        frag.add_uniform('sampler3D voxels')
-        if '_VoxelGICam' in wrd.world_defs:
-            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
-            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.add_uniform('float voxelBlend', link='_voxelBlend')
-            frag.add_uniform('sampler3D voxelsLast')
-            frag.write('indirect *= vec3(1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend)));')
-        else:
-            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
-    
-        frag.write('indirect *= voxelgiEnv;')
-
-    elif '_VoxelGI' in wrd.world_defs:
-        frag.add_include('std/conetrace.glsl')
-        frag.add_uniform('sampler3D voxels')
-        if '_VoxelGICam' in wrd.world_defs:
-            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
-            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.add_uniform('float voxelBlend', link='_voxelBlend')
-            frag.add_uniform('sampler3D voxelsLast')
-            frag.write('indirect += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * basecol.rgb;')
-        else:
-            frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * basecol.rgb;')
-
-        frag.write('if (roughness < 1.0) {')
-        if '_VoxelGITemporal' in wrd.world_defs:
-            frag.write('	indirect += (traceReflection(voxels, voxpos, n, vVec, roughness) * voxelBlend + traceReflection(voxelsLast, voxpos, n, vVec, roughness) * (1.0 - voxelBlend)) * voxelgiRefl;')
-        else:
-            frag.write('	indirect += traceReflection(voxels, voxpos, n, vVec, roughness) * voxelgiRefl;')
-
-        frag.write('}')
-        frag.write('indirect *= voxelgiEnv;')
-
     frag.write('vec3 direct = indirect;')
 
     if '_SSRS' in wrd.world_defs:

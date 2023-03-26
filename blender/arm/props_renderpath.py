@@ -149,8 +149,8 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAI=O'
-        rpdat.arm_ssrs = True
+        rpdat.rp_ssgi = 'RTAO'
+        rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
         rpdat.rp_ss_refraction = True
@@ -389,8 +389,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                 ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
-               ],
+                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
+              ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom: BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     arm_bloom_follow_blender: BoolProperty(name="Use Blender Settings", description="Use Blender settings instead of Armory settings", default=True)
@@ -571,13 +571,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         update=assets.invalidate_shader_cache
     )
     arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssr_ray_step: FloatProperty(name="Step", default=0.04, update=assets.invalidate_shader_cache)
-    arm_ssr_min_ray_step: FloatProperty(name="Step Min", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ssr_ray_step: FloatProperty(name="Step", default=0.5, update=assets.invalidate_shader_cache)
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.04, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_min_ray_step: FloatProperty(name="Step Min", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.5, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
