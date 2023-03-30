@@ -34,19 +34,19 @@ class PhysicsConvexCastOnNode extends LogicNode {
 
 #if arm_physics
 		if (vfrom != null && vto != null) {
+			var rb = convex.getTrait(RigidBody);
 			var physics = armory.trait.physics.PhysicsWorld.active;
 			var hit = physics.convexSweepTest(rb, vfrom, vto, rot, mask);
 			if(hit != null) {
-				hitPos.setFrom(hit.pos);
-
+				hitPos = new Vec4().setFrom(hit.pos);
 				var d = Vec4.distance(vfrom, vto);
 				var v = new Vec4();
 				v.subvecs(vto, vfrom).normalize();
 				v.mult(d * hit.hitFraction);
 				v.add(vfrom);
-				convexPos.setFrom(v)
+				convexPos = new Vec4().setFrom(v);
 
-				hitNormal.setFrom(physics.hitNormalWorld);
+				hitNormal = new Vec4().setFrom(physics.hitNormalWorld);
 			}
 		}
 #end
