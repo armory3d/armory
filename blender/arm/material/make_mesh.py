@@ -128,6 +128,7 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs is not None:
             vattr_written = write_vertex_attribs(vert)
 
+    vert.add_include('compiled.inc')
     frag.add_include('compiled.inc')
 
     attribs_written = False
@@ -295,6 +296,7 @@ def make_forward_mobile(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
+    vert.add_include('compiled.inc')
     frag.add_include('compiled.inc')
 
     arm_discard = mat_state.material.arm_discard
@@ -460,6 +462,7 @@ def make_forward_solid(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     frag.ins = vert.outs
 
+    vert.add_include('compiled.inc')
     frag.add_include('compiled.inc')
 
     arm_discard = mat_state.material.arm_discard
