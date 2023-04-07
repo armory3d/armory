@@ -39,9 +39,9 @@ def make(context_id):
 
     frag.add_out('vec4 fragColor')
     if blend and parse_opacity:
-        frag.write('fragColor = vec4(basecol, opacity);')
+        frag.write('fragColor = vec4(basecol + emissionCol, opacity);')
     else:
-        frag.write('fragColor = vec4(basecol, 1.0);')
+        frag.write('fragColor = vec4(basecol + emissionCol, 1.0);')
 
     frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 

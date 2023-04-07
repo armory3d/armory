@@ -360,6 +360,9 @@ class ArmoryExporter:
                         # Missing target entry for array_index or something else
                         raise
 
+                    if data_path.startswith('delta_'):
+                        out_anim['has_delta'] = True
+
                     out_anim['tracks'].append(out_track)
 
                 if len(unresolved_data_paths) > 0:

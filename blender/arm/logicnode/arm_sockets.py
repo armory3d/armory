@@ -59,6 +59,10 @@ class ArmCustomSocket(NodeSocket):
         """Called when the update() method of the corresponding node is called."""
         pass
 
+    def copy_defaults(self, socket):
+        """Called when this socket default values are to be copied to the given socket"""
+        pass
+
 
 class ArmActionSocket(ArmCustomSocket):
     bl_idname = 'ArmNodeSocketAction'
@@ -104,6 +108,10 @@ class ArmAnimActionSocket(ArmCustomSocket):
 
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
+
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 
 class ArmRotationSocket(ArmCustomSocket):
@@ -288,6 +296,17 @@ class ArmRotationSocket(ArmCustomSocket):
         update = _on_update_socket
     )
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_mode = self.default_value_mode
+            socket.default_value_unit = self.default_value_unit
+            socket.default_value_order = self.default_value_order
+            socket.default_value_s0 = self.default_value_s0
+            socket.default_value_s1 = self.default_value_s1
+            socket.default_value_s2 = self.default_value_s2
+            socket.default_value_s3 = self.default_value_s3
+            socket.default_value_raw = self.default_value_raw
+
 
 class ArmArraySocket(ArmCustomSocket):
     bl_idname = 'ArmNodeSocketArray'
@@ -321,6 +340,10 @@ class ArmBoolSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
+
 
 class ArmColorSocket(ArmCustomSocket):
     bl_idname = 'ArmColorSocket'
@@ -346,6 +369,10 @@ class ArmColorSocket(ArmCustomSocket):
 
     def get_default_value(self):
         return self.default_value_raw
+
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 
 class ArmDynamicSocket(ArmCustomSocket):
@@ -430,6 +457,9 @@ class ArmFloatSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 class ArmIntSocket(ArmCustomSocket):
     bl_idname = 'ArmIntSocket'
@@ -451,6 +481,9 @@ class ArmIntSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 class ArmObjectSocket(ArmCustomSocket):
     bl_idname = 'ArmNodeSocketObject'
@@ -485,7 +518,9 @@ class ArmObjectSocket(ArmCustomSocket):
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
 
-
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 class ArmStringSocket(ArmCustomSocket):
     bl_idname = 'ArmStringSocket'
@@ -507,6 +542,9 @@ class ArmStringSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 class ArmVectorSocket(ArmCustomSocket):
     bl_idname = 'ArmVectorSocket'
@@ -535,6 +573,9 @@ class ArmVectorSocket(ArmCustomSocket):
     def get_default_value(self):
         return self.default_value_raw
 
+    def copy_defaults(self, socket):
+        if socket.bl_idname == self.bl_idname:
+            socket.default_value_raw = self.default_value_raw
 
 def draw_socket_layout(socket: bpy.types.NodeSocket, layout: bpy.types.UILayout, prop_name='default_value_raw'):
     if not socket.is_output and not socket.is_linked:

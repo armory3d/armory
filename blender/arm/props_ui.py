@@ -1055,6 +1055,7 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         col = layout.column(heading='Debug', align=True)
         col.prop(wrd, 'arm_verbose_output')
         col.prop(wrd, 'arm_cache_build')
+        col.prop(wrd, 'arm_clear_on_compile')
         col.prop(wrd, 'arm_assert_level')
         col.prop(wrd, 'arm_assert_quit')
 
@@ -1178,6 +1179,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         return self.execute(context)
 
     def execute(self, context):
+        wrd = bpy.data.worlds['Arm']
+
         if state.proc_build is not None:
             return {"CANCELLED"}
 
@@ -1194,6 +1197,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.play()
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -1252,6 +1257,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
                 break
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.build(item.arm_project_target, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
@@ -1298,6 +1305,8 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
 
         make.clean()
         assets.invalidate_enabled = False
+        if wrd.arm_clear_on_compile:
+            os.system("cls")
         make.build(item.arm_project_target, is_publish=True, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index

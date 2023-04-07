@@ -52,7 +52,8 @@ class ParserState:
         self.parse_displacement = True
         self.basecol_only = False
 
-        self.procedurals_written = False
+        self.procedurals_written: set[Shader] = set()
+
         # Already exported radiance/irradiance (currently we can only convert
         # an already existing texture as radiance/irradiance)
         self.radiance_written = False

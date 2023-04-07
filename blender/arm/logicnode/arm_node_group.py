@@ -76,12 +76,67 @@ class ArmEditGroupTree(bpy.types.Operator):
     bl_label = 'Edit group tree'
     node_index: StringProperty(name='Node Index', default='')
 
+    def custom_poll(self, context):
+        if not self.node_index == '':
+            return True
+        if context.space_data.type == 'NODE_EDITOR':
+            if context.active_node and hasattr(context.active_node, 'group_tree'):
+                if context.active_node.group_tree is not None:
+                    return True
+        return False
+
+    def execute(self, context):
+        if self.custom_poll(context):
+            global array_nodes
+            if not self.node_index == '':
+                group_node = array_nodes[self.node_index]
+            else:
+                group_node = context.active_node
+            sub_tree: ArmLogicTree = group_node.group_tree
+            context.space_data.path.append(sub_tree, node=group_node)
+            sub_tree.group_node_name = group_node.name
+            self.node_index = ''
+            return {'FINISHED'}
+        return {'CANCELLED'}
+
+class ArmCopyGroupTree(bpy.types.Operator):
+    """Create a copy of this group tree and use it"""
+    bl_idname = 'arm.copy_group_tree'
+    bl_label = 'Copy group tree'
+    node_index: StringProperty(name='Node Index', default='')
+
     def execute(self, context):
         global array_nodes
         group_node = array_nodes[self.node_index]
-        sub_tree: ArmLogicTree = group_node.group_tree
-        context.space_data.path.append(sub_tree, node=group_node)
-        sub_tree.group_node_name = group_node.name
+        group_tree = group_node.group_tree
+        [setattr(n, 'copy_override', True) for n in group_tree.nodes
+        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        new_group_tree = group_node.group_tree.copy()
+        [setattr(n, 'copy_override', False) for n in group_tree.nodes
+        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        group_node.group_tree = new_group_tree
+        return {'FINISHED'}
+
+class ArmUnlinkGroupTree(bpy.types.Operator):
+    """Unlink node-group (Shift + Click to set users to zero, data will then not be saved)"""
+    bl_idname = 'arm.unlink_group_tree'
+    bl_label = 'Unlink group tree'
+    node_index: StringProperty(name='Node Index', default='')
+
+    def invoke(self, context, event):
+        self.clear = False
+        if event.shift:
+            self.clear = True
+        self.execute(context)
+        return {'FINISHED'}
+
+    def execute(self, context):
+        global array_nodes
+        group_node = array_nodes[self.node_index]
+        group_tree = group_node.group_tree
+        group_node.group_tree = None
+        if self.clear:
+            group_tree.user_clear()
         return {'FINISHED'}
 
 class ArmSearchGroupTree(bpy.types.Operator):
@@ -93,7 +148,7 @@ class ArmSearchGroupTree(bpy.types.Operator):
 
     def available_trees(self, context):
         linkable_trees = filter(lambda t: hasattr(t, 'can_be_linked') and t.can_be_linked(), bpy.data.node_groups)
-        return [(t.name, t.name, '') for t in linkable_trees]
+        return [(t.name, ('0 ' if t.users == 0 else 'F ' if t.use_fake_user  else '') + t.name, '') for t in linkable_trees]
 
     tree_name: bpy.props.EnumProperty(items=available_trees)
 
@@ -131,7 +186,9 @@ class ArmAddGroupTree(bpy.types.Operator):
         group_node.group_tree = sub_tree  # link sub tree to group node
         sub_tree.nodes.new('LNGroupInputsNode').location = (-250, 0)  # create node for putting data into sub tree
         sub_tree.nodes.new('LNGroupOutputsNode').location = (250, 0)  # create node for getting data from sub tree
-        return bpy.ops.arm.edit_group_tree(node_index=self.node_index)
+        context.space_data.path.append(sub_tree, node=group_node)
+        sub_tree.group_node_name = group_node.name
+        return {'FINISHED'}
 
 class ArmAddGroupTreeFromSelected(bpy.types.Operator):
     """Select nodes group node and placing them into sub tree"""
@@ -315,15 +372,30 @@ class ArmAddCallGroupNode(bpy.types.Operator):
     bl_idname = 'arm.add_call_group_node'
     bl_label = "Add call group node"
 
+    node_ref = None
+
     @classmethod
     def poll(cls, context):
         if context.space_data.type == 'NODE_EDITOR':
             return context.space_data.edit_tree and context.space_data.tree_type == 'ArmLogicTreeType'
         return False
 
+    def invoke(self, context, event):
+        context.window_manager.modal_handler_add(self)
+        self.execute(context)
+        return {'RUNNING_MODAL'}
+
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':
+            self.node_ref.location = context.space_data.cursor_location
+        elif event.type == 'LEFTMOUSE':  # Confirm
+            return {'FINISHED'}
+        return {'RUNNING_MODAL'}
+
     def execute(self, context):
         tree = context.space_data.path[-1].node_tree
-        tree.nodes.new('LNCallGroupNode')
+        self.node_ref = tree.nodes.new('LNCallGroupNode')
+        self.node_ref.location = context.space_data.cursor_location
         return {'FINISHED'}
 
 class ARM_PT_LogicGroupPanel(bpy.types.Panel):
@@ -337,15 +409,26 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
     def poll(cls, context):
         return context.space_data.tree_type == 'ArmLogicTreeType' and context.space_data.edit_tree
 
+    def has_active_node(self, context):
+        if context.active_node and hasattr(context.active_node, 'group_tree'):
+            if context.active_node.group_tree is not None:
+                return True
+        return False
+
     def draw(self, context):
         layout = self.layout
         layout.operator('arm.add_call_group_node', icon='ADD')
         layout.operator('arm.add_group_tree_from_selected', icon='NODETREE')
         layout.operator('arm.ungroup_group_tree', icon='NODETREE')
+        row = layout.row()
+        row.enabled = self.has_active_node(context)
+        row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
 
 REG_CLASSES = (
     ArmGroupTree,
     ArmEditGroupTree,
+    ArmCopyGroupTree,
+    ArmUnlinkGroupTree,
     ArmSearchGroupTree,
     ArmAddGroupTree,
     ArmAddGroupTreeFromSelected,

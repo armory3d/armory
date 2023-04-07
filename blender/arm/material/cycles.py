@@ -100,7 +100,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     }
     state.sample_bump = False
     state.sample_bump_res = ''
-    state.procedurals_written = False
     wrd = bpy.data.worlds['Arm']
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
@@ -578,10 +577,10 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
 
 
 def write_procedurals():
-    if not state.procedurals_written:
+    if state.curshader not in state.procedurals_written:
         state.curshader.add_function(c_functions.str_tex_proc)
-        state.procedurals_written = True
-    return
+        state.procedurals_written.add(state.curshader)
+
 
 def glsl_type(socket_type: str):
     """Socket to glsl type."""

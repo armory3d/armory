@@ -22,7 +22,10 @@ class GroupOutputsNode(ArmLogicTreeNode):
     # Flag to store invalid links
     invalid_link: BoolProperty(name='invalid_link', description='', default=False)
 
-    def arm_init(self, context):
+    # Override copy prevention in certain situations such as copying entire group
+    copy_override: BoolProperty(name='copy override', description='', default=False)
+
+    def init(self, context):
         tree = bpy.context.space_data.edit_tree
         node_count = 0
         for node in tree.nodes:
@@ -36,8 +39,10 @@ class GroupOutputsNode(ArmLogicTreeNode):
 
     # Prevent copying of group node
     def copy(self, node):
-        self.mute = True
-        self.inputs.clear()
+        if not self.copy_override:
+            self.mute = True
+            self.inputs.clear()
+        self.copy_override = False
 
     def arm_init(self, context):
         if not self.mute:
@@ -158,6 +163,12 @@ class GroupOutputsNode(ArmLogicTreeNode):
             node.outputs.remove(node.outputs[self.active_input])
         if self.active_input > len(self.inputs) - 1:
             self.active_input = len(self.inputs) - 1
+
+    # Handle deletion of group input node
+    def free(self):
+        call_group_nodes = self.get_call_group_nodes()
+        for node in call_group_nodes:
+            node.outputs.clear()
 
     # Draw node UI
     def draw_buttons(self, context, layout):
