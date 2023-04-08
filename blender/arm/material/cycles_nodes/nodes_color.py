@@ -60,7 +60,7 @@ def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSoc
 
     # Store factor in variable for linked factor input
     if node.inputs[0].is_linked:
-        fac = c.node_name(node.name) + '_fac'
+        fac = c.node_name(node.name) + '_fac' + state.get_parser_pass_suffix()
         state.curshader.write('float {0} = {1};'.format(fac, c.parse_value_input(node.inputs[0])))
     else:
         fac = c.parse_value_input(node.inputs[0])

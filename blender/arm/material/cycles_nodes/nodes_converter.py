@@ -6,7 +6,7 @@ import arm
 import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
-from arm.material.parser_state import ParserState
+from arm.material.parser_state import ParserPass, ParserState
 from arm.material.shader import floatstr, vec3str
 
 if arm.is_reload(__name__):
@@ -94,11 +94,13 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
     # The last entry is included twice so that the interpolation
     # between indices works (no out of bounds error)
     cols_var = c.node_name(node.name).upper() + '_COLS'
-    cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
-    cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
-    state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
 
-    fac_var = c.node_name(node.name) + '_fac'
+    if state.current_pass == ParserPass.REGULAR:
+        cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+        cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
+        state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+
+    fac_var = c.node_name(node.name) + '_fac' + state.get_parser_pass_suffix()
     state.curshader.write(f'float {fac_var} = {fac};')
 
     # Get index of the nearest left element relative to the factor
@@ -106,7 +108,7 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
     index += ' + '.join([f'(({fac_var} > {elems[i].position}) ? 1 : 0)' for i in range(1, len(elems))])
 
     # Write index
-    index_var = c.node_name(node.name) + '_i'
+    index_var = c.node_name(node.name) + '_i' + state.get_parser_pass_suffix()
     state.curshader.write(f'int {index_var} = {index};')
 
     if interp == 'CONSTANT':
@@ -116,11 +118,12 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
     else:
         # Write factor array
         facs_var = c.node_name(node.name).upper() + '_FACS'
-        facs_entries = ', '.join(str(elem.position) for elem in elems)
-        # Add one more entry at the rightmost position so that the
-        # interpolation between indices works (no out of bounds error)
-        facs_entries += ', 1.0'
-        state.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
+        if state.current_pass == ParserPass.REGULAR:
+            facs_entries = ', '.join(str(elem.position) for elem in elems)
+            # Add one more entry at the rightmost position so that the
+            # interpolation between indices works (no out of bounds error)
+            facs_entries += ', 1.0'
+            state.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
 
         # Mix color
         prev_stop_fac = f'{facs_var}[{index_var}]'
@@ -362,7 +365,7 @@ def parse_separate_color(node: bpy.types.ShaderNodeSeparateColor, out_socket: bp
 def parse_sephsv(node: bpy.types.ShaderNodeSeparateHSV, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
     state.curshader.add_function(c_functions.str_hue_sat)
 
-    hsv_var = c.node_name(node.name) + '_hsv'
+    hsv_var = c.node_name(node.name) + '_hsv' + state.get_parser_pass_suffix()
     if not state.curshader.contains(hsv_var):  # Already written if a second output is parsed
         state.curshader.write(f'const vec3 {hsv_var} = rgb_to_hsv({c.parse_vector_input(node.inputs["Color"])}.rgb);')
 

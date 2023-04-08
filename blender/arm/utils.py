@@ -190,6 +190,30 @@ def get_gapi():
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
 
+def is_gapi_gl_es() -> bool:
+    """Return whether the currently targeted graphics API is using OpenGL ES."""
+    wrd = bpy.data.worlds['Arm']
+
+    if state.is_export:
+        item_exporter = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+
+        # See Khamake's ShaderCompiler.findType() and krafix::Target.es in krafix.cpp ("target.es")
+        if state.target == 'android-hl':
+            return item_exporter.arm_gapi_android == 'opengl'
+        if state.target == 'ios-hl':
+            return item_exporter.arm_gapi_ios == 'opengl'
+        elif state.target == 'html5':
+            return True
+        return False
+
+    else:
+        return wrd.arm_runtime == 'Browser'
+
+
+def is_gapi_flipped_y() -> bool:
+    return state.target == 'html5' or get_gapi() == 'direct3d11'
+
+
 def get_rp() -> arm.props_renderpath.ArmRPListItem:
     wrd = bpy.data.worlds['Arm']
     if not state.is_export and wrd.arm_play_renderpath != '':
@@ -979,7 +1003,8 @@ def get_kha_target(target_name): # TODO: remove
         return ''
     return target_name
 
-def target_to_gapi(arm_project_target):
+
+def target_to_gapi(arm_project_target: str) -> str:
     # TODO: align target names
     if arm_project_target == 'krom':
         return 'arm_gapi_' + arm.utils.get_os()
@@ -1003,6 +1028,7 @@ def target_to_gapi(arm_project_target):
         return 'arm_gapi_html5'
     else: # html5, custom
         return 'arm_gapi_' + arm_project_target
+
 
 def check_default_props():
     wrd = bpy.data.worlds['Arm']

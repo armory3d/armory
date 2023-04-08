@@ -1,13 +1,16 @@
 from bpy.props import *
-from bpy.types import Node
+from bpy.types import Node, NodeSocket
 
 import arm
 from arm.material.arm_nodes.arm_nodes import add_node
+from arm.material.parser_state import ParserState
 from arm.material.shader import Shader
 
 if arm.is_reload(__name__):
     arm.material.arm_nodes.arm_nodes = arm.reload_module(arm.material.arm_nodes.arm_nodes)
     from arm.material.arm_nodes.arm_nodes import add_node
+    arm.material.parser_state = arm.reload_module(arm.material.parser_state)
+    from arm.material.parser_state import ParserState
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import Shader
 else:
@@ -72,29 +75,33 @@ class ShaderDataNode(Node):
         self.outputs.new('NodeSocketFloat', 'Float')
         self.outputs.new('NodeSocketInt', 'Int')
 
-    def parse(self, frag: Shader, vert: Shader) -> str:
+    def __parse(self, out_socket: NodeSocket, state: ParserState) -> str:
         if self.input_type == "uniform":
-            frag.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
-            vert.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
+            state.frag.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
+            state.vert.add_uniform(f'{self.variable_type} {self.variable_name}', link=self.variable_name)
 
             if self.variable_type == "sampler2D":
-                frag.add_uniform('vec2 screenSize', link='_screenSize')
+                state.frag.add_uniform('vec2 screenSize', link='_screenSize')
                 return f'textureLod({self.variable_name}, gl_FragCoord.xy / screenSize, 0.0).rgb'
 
             return self.variable_name
 
         else:
             if self.input_source == "frag":
-                frag.add_in(f'{self.variable_type} {self.variable_name}')
+                state.frag.add_in(f'{self.variable_type} {self.variable_name}')
                 return self.variable_name
 
             # Reroute input from vertex shader to fragment shader (input must exist!)
             else:
-                vert.add_out(f'{self.variable_type} out_{self.variable_name}')
-                frag.add_in(f'{self.variable_type} out_{self.variable_name}')
+                state.vert.add_out(f'{self.variable_type} out_{self.variable_name}')
+                state.frag.add_in(f'{self.variable_type} out_{self.variable_name}')
 
-                vert.write(f'out_{self.variable_name} = {self.variable_name};')
+                state.vert.write(f'out_{self.variable_name} = {self.variable_name};')
                 return 'out_' + self.variable_name
+
+    @staticmethod
+    def parse(node: 'ShaderDataNode', out_socket: NodeSocket, state: ParserState) -> str:
+        return node.__parse(out_socket, state)
 
 
 add_node(ShaderDataNode, category='Armory')
