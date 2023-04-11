@@ -15,6 +15,7 @@ class VectorClampToSizeNode(ArmLogicTreeNode):
     property0: HaxeEnumProperty(
         'property0',
         name='Clamping Mode', default='length',
+        description='Whether to clamp the length of the vector or the value of each individual component',
         items=[
             ('length', 'Length', 'Clamp the length (magnitude) of the vector'),
             ('components', 'Components', 'Clamp the individual components of the vector'),
