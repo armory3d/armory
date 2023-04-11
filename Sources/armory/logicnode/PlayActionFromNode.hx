@@ -90,7 +90,7 @@ class PlayActionFromNode extends LogicNode {
 			else {
 				
 				var oaction = null;
-				var tracks = [];
+				var tracks: Array<iron.data.SceneFormat.TTrack> = [];
 
 				var oactions = cast(animation, ObjectAnimation).oactions;
 
