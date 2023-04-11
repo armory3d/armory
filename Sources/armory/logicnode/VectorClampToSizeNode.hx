@@ -15,7 +15,7 @@ class VectorClampToSizeNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-		v = inputs[0].get().clone();
+		v = (inputs[0].get(): Vec4).clone();
 		var fmin: kha.FastFloat = inputs[1].get();
 		var fmax: kha.FastFloat = inputs[2].get();
 
