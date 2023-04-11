@@ -1,6 +1,6 @@
 """
-This module contains a list of all Blender nodes that Armory supports,
-including Armory-related metadata.
+This module contains a list of all material nodes that Armory supports
+(excluding output nodes), as well as Armory-related metadata.
 """
 from enum import IntEnum, unique
 from dataclasses import dataclass
