@@ -674,15 +674,15 @@ def node_need_reevaluation_for_screenspace_derivative(node: bpy.types.Node) -> b
         return False
 
     # ComputeDXDYVariant.DYNAMIC
-    needs_reevaluation = False
     for inp in node.inputs:
         c_node, _ = arm.node_utils.input_get_connected_node(inp)
         if c_node is None:
             continue
 
-        needs_reevaluation |= node_need_reevaluation_for_screenspace_derivative(c_node)
+        if node_need_reevaluation_for_screenspace_derivative(c_node):
+            return True
 
-    return needs_reevaluation
+    return False
 
 
 def dfdx_fine(val: str) -> str:

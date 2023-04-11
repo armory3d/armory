@@ -210,10 +210,6 @@ def is_gapi_gl_es() -> bool:
         return wrd.arm_runtime == 'Browser'
 
 
-def is_gapi_flipped_y() -> bool:
-    return state.target == 'html5' or get_gapi() == 'direct3d11'
-
-
 def get_rp() -> arm.props_renderpath.ArmRPListItem:
     wrd = bpy.data.worlds['Arm']
     if not state.is_export and wrd.arm_play_renderpath != '':

@@ -64,8 +64,6 @@ class ParserState:
         self.tesc: Shader = None
         self.tese: Shader = None
 
-        self.temp_var_counter = 0
-
         # Group stack (last in the list = innermost group)
         self.parents: List[bpy.types.Node] = []
 
