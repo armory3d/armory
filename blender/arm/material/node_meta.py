@@ -56,7 +56,7 @@ class MaterialNodeMeta:
     parse_func: Callable[[Any, bpy.types.NodeSocket, arm.material.parser_state.ParserState], Optional[str]]
     """The function used to parse this node and to translate it to GLSL output code."""
 
-    compute_dxdy_offset: ComputeDXDYVariant = ComputeDXDYVariant.DYNAMIC
+    compute_dxdy_variants: ComputeDXDYVariant = ComputeDXDYVariant.DYNAMIC
     """Specifies when this node should compute dx/dy variants
     if the ParserState is in the dx/dy offset pass.
     """
@@ -93,61 +93,61 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     # --- nodes_input
     'ATTRIBUTE': MaterialNodeMeta(
         parse_func=nodes_input.parse_attribute,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'CAMERA': MaterialNodeMeta(
         parse_func=nodes_input.parse_camera,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'FRESNEL': MaterialNodeMeta(
         parse_func=nodes_input.parse_fresnel,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'HAIR_INFO': MaterialNodeMeta(parse_func=nodes_input.parse_hairinfo),
     'LAYER_WEIGHT': MaterialNodeMeta(
         parse_func=nodes_input.parse_layerweight,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'LIGHT_PATH': MaterialNodeMeta(
         parse_func=nodes_input.parse_lightpath,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'NEW_GEOMETRY': MaterialNodeMeta(
         parse_func=nodes_input.parse_geometry,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'OBJECT_INFO': MaterialNodeMeta(
         parse_func=nodes_input.parse_objectinfo,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'PARTICLE_INFO': MaterialNodeMeta(
         parse_func=nodes_input.parse_particleinfo,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'RGB': MaterialNodeMeta(
         parse_func=nodes_input.parse_rgb,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'TANGENT': MaterialNodeMeta(
         parse_func=nodes_input.parse_tangent,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'TEX_COORD': MaterialNodeMeta(
         parse_func=nodes_input.parse_texcoord,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'UVMAP': MaterialNodeMeta(
         parse_func=nodes_input.parse_uvmap,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     ),
     'VALUE': MaterialNodeMeta(
         parse_func=nodes_input.parse_value,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'VERTEX_COLOR': MaterialNodeMeta(parse_func=nodes_input.parse_vertex_color),
     'WIREFRAME': MaterialNodeMeta(
         parse_func=nodes_input.parse_wireframe,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
 
     # --- nodes_shader
@@ -164,7 +164,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'EMISSION': MaterialNodeMeta(parse_func=nodes_shader.parse_emission),
     'HOLDOUT': MaterialNodeMeta(
         parse_func=nodes_shader.parse_holdout,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'MIX_SHADER': MaterialNodeMeta(parse_func=nodes_shader.parse_mixshader),
     'SUBSURFACE_SCATTERING': MaterialNodeMeta(parse_func=nodes_shader.parse_subsurfacescattering),
@@ -180,7 +180,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'TEX_NOISE': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_noise),
     'TEX_POINTDENSITY': MaterialNodeMeta(
         parse_func=nodes_texture.parse_tex_pointdensity,
-        compute_dxdy_offset=ComputeDXDYVariant.NEVER
+        compute_dxdy_variants=ComputeDXDYVariant.NEVER
     ),
     'TEX_SKY': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_sky),
     'TEX_VORONOI': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_voronoi),
@@ -199,7 +199,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     # --- arm_nodes
     'ArmShaderDataNode': MaterialNodeMeta(
         parse_func=shader_data_node.ShaderDataNode.parse,
-        compute_dxdy_offset=ComputeDXDYVariant.ALWAYS
+        compute_dxdy_variants=ComputeDXDYVariant.ALWAYS
     )
 }
 

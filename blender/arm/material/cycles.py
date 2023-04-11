@@ -666,7 +666,7 @@ def node_need_reevaluation_for_screenspace_derivative(node: bpy.types.Node) -> b
     if state.current_pass not in (ParserPass.DX_SCREEN_SPACE, ParserPass.DY_SCREEN_SPACE):
         return False
 
-    should_compute_offset = node_meta.get_node_meta(node).compute_dxdy_offset
+    should_compute_offset = node_meta.get_node_meta(node).compute_dxdy_variants
 
     if should_compute_offset == node_meta.ComputeDXDYVariant.ALWAYS:
         return True
