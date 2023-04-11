@@ -24,8 +24,11 @@ else:
 
     @unique
     class ParserPass(IntEnum):
-        """In some situations, a node tree needs to be parsed multiple times
-        in different contexts called _passes_.
+        """In some situations, a node tree (or a subtree of that) needs
+        to be parsed multiple times in different contexts called _passes_.
+        Nodes can output different code in reaction to the parser state's
+        current pass; for more information on the individual passes
+        please refer to below enum items.
         """
         REGULAR = 0
         """The tree is parsed to generate regular shader code."""
@@ -84,8 +87,9 @@ class ParserState:
         self.normal_parsed = False
 
         self.dxdy_varying_input_value = False
-        """Whether the result of the previously parsed node is a value to which
-        a dx/dy offset should be applied if required by the parser pass.
+        """Whether the result of the previously parsed node differs
+        between fragments and represents an input value to which to apply
+        dx/dy offsets (if required by the parser pass).
         """
 
         # Shader output values
