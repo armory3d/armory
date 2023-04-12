@@ -29,7 +29,7 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
 
     prefix = '' if node.inputs[0].is_linked else 'const '
     fac = c.parse_value_input(node.inputs[0])
-    fac_var = c.node_name(node.name) + '_fac'
+    fac_var = c.node_name(node.name) + '_fac' + state.get_parser_pass_suffix()
     fac_inv_var = c.node_name(node.name) + '_fac_inv'
     state.curshader.write('{0}float {1} = clamp({2}, 0.0, 1.0);'.format(prefix, fac_var, fac))
     state.curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))

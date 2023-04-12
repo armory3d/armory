@@ -16,7 +16,7 @@
 #
 import os
 import shutil
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import bpy
 
@@ -24,10 +24,11 @@ import arm.assets
 import arm.log as log
 import arm.make_state
 import arm.material.cycles_functions as c_functions
-from arm.material.cycles_nodes import *
+import arm.material.node_meta as node_meta
 import arm.material.mat_state as mat_state
-from arm.material.parser_state import ParserState, ParserContext
+from arm.material.parser_state import ParserState, ParserContext, ParserPass
 from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
+import arm.node_utils
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -36,12 +37,14 @@ if arm.is_reload(__name__):
     arm.make_state = arm.reload_module(arm.make_state)
     c_functions = arm.reload_module(c_functions)
     arm.material.cycles_nodes = arm.reload_module(arm.material.cycles_nodes)
+    node_meta = arm.reload_module(node_meta)
     from arm.material.cycles_nodes import *
     mat_state = arm.reload_module(mat_state)
     arm.material.parser_state = arm.reload_module(arm.material.parser_state)
-    from arm.material.parser_state import ParserState, ParserContext
+    from arm.material.parser_state import ParserState, ParserContext, ParserPass
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import Shader, ShaderContext, floatstr, vec3str
+    arm.node_utils = arm.reload_module(arm.node_utils)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
@@ -98,8 +101,6 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         'velocity': False,
         'angular_velocity': False
     }
-    state.sample_bump = False
-    state.sample_bump_res = ''
     wrd = bpy.data.worlds['Arm']
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
@@ -210,30 +211,27 @@ def parse_shader_input(inp: bpy.types.NodeSocket) -> Tuple[str, ...]:
 
 
 def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[str, ...]:
-    # Use switch-like lookup via dictionary
-    # (better performance, better code readability)
-    # 'NODE_TYPE': parser_function
-    node_parser_funcs: Dict[str, Callable] = {
-        'MIX_SHADER': nodes_shader.parse_mixshader,
-        'ADD_SHADER': nodes_shader.parse_addshader,
-        'BSDF_PRINCIPLED': nodes_shader.parse_bsdfprincipled,
-        'BSDF_DIFFUSE': nodes_shader.parse_bsdfdiffuse,
-        'BSDF_GLOSSY': nodes_shader.parse_bsdfglossy,
-        'AMBIENT_OCCLUSION': nodes_shader.parse_ambientocclusion,
-        'BSDF_ANISOTROPIC': nodes_shader.parse_bsdfanisotropic,
-        'EMISSION': nodes_shader.parse_emission,
-        'BSDF_GLASS': nodes_shader.parse_bsdfglass,
-        'HOLDOUT': nodes_shader.parse_holdout,
-        'SUBSURFACE_SCATTERING': nodes_shader.parse_subsurfacescattering,
-        'BSDF_TRANSLUCENT': nodes_shader.parse_bsdftranslucent,
-        'BSDF_TRANSPARENT': nodes_shader.parse_bsdftransparent,
-        'BSDF_VELVET': nodes_shader.parse_bsdfvelvet,
-    }
+    supported_node_types = (
+        'MIX_SHADER',
+        'ADD_SHADER',
+        'BSDF_PRINCIPLED',
+        'BSDF_DIFFUSE',
+        'BSDF_GLOSSY',
+        'AMBIENT_OCCLUSION',
+        'BSDF_ANISOTROPIC',
+        'EMISSION',
+        'BSDF_GLASS',
+        'HOLDOUT',
+        'SUBSURFACE_SCATTERING',
+        'BSDF_TRANSLUCENT',
+        'BSDF_TRANSPARENT',
+        'BSDF_VELVET',
+    )
 
     state.reset_outs()
 
-    if node.type in node_parser_funcs:
-        node_parser_funcs[node.type](node, socket, state)
+    if node.type in supported_node_types:
+        node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     elif node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
@@ -269,7 +267,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(state.frag, state.vert)
+            node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     else:
         log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
@@ -318,60 +316,60 @@ def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
 
 def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Parses the vector/color output value from the given node and socket."""
-    node_parser_funcs: Dict[str, Callable] = {
-        'ATTRIBUTE': nodes_input.parse_attribute,
+    supported_node_types = (
+        'ATTRIBUTE',
 
         # RGB outputs
-        'RGB': nodes_input.parse_rgb,
-        'TEX_BRICK': nodes_texture.parse_tex_brick,
-        'TEX_CHECKER': nodes_texture.parse_tex_checker,
-        'TEX_ENVIRONMENT': nodes_texture.parse_tex_environment,
-        'TEX_GRADIENT': nodes_texture.parse_tex_gradient,
-        'TEX_IMAGE': nodes_texture.parse_tex_image,
-        'TEX_MAGIC': nodes_texture.parse_tex_magic,
-        'TEX_MUSGRAVE': nodes_texture.parse_tex_musgrave,
-        'TEX_NOISE': nodes_texture.parse_tex_noise,
-        'TEX_POINTDENSITY': nodes_texture.parse_tex_pointdensity,
-        'TEX_SKY': nodes_texture.parse_tex_sky,
-        'TEX_VORONOI': nodes_texture.parse_tex_voronoi,
-        'TEX_WAVE': nodes_texture.parse_tex_wave,
-        'VERTEX_COLOR': nodes_input.parse_vertex_color,
-        'BRIGHTCONTRAST': nodes_color.parse_brightcontrast,
-        'GAMMA': nodes_color.parse_gamma,
-        'HUE_SAT': nodes_color.parse_huesat,
-        'INVERT': nodes_color.parse_invert,
-        'MIX_RGB': nodes_color.parse_mixrgb,
-        'BLACKBODY': nodes_converter.parse_blackbody,
-        'VALTORGB': nodes_converter.parse_valtorgb,  # ColorRamp
-        'CURVE_VEC': nodes_vector.parse_curvevec,  # Vector Curves
-        'CURVE_RGB': nodes_color.parse_curvergb,
-        'COMBINE_COLOR': nodes_converter.parse_combine_color,
-        'COMBHSV': nodes_converter.parse_combhsv,
-        'COMBRGB': nodes_converter.parse_combrgb,
-        'WAVELENGTH': nodes_converter.parse_wavelength,
+        'RGB',
+        'TEX_BRICK',
+        'TEX_CHECKER',
+        'TEX_ENVIRONMENT',
+        'TEX_GRADIENT',
+        'TEX_IMAGE',
+        'TEX_MAGIC',
+        'TEX_MUSGRAVE',
+        'TEX_NOISE',
+        'TEX_POINTDENSITY',
+        'TEX_SKY',
+        'TEX_VORONOI',
+        'TEX_WAVE',
+        'VERTEX_COLOR',
+        'BRIGHTCONTRAST',
+        'GAMMA',
+        'HUE_SAT',
+        'INVERT',
+        'MIX_RGB',
+        'BLACKBODY',
+        'VALTORGB',
+        'CURVE_VEC',
+        'CURVE_RGB',
+        'COMBINE_COLOR',
+        'COMBHSV',
+        'COMBRGB',
+        'WAVELENGTH',
 
         # Vector outputs
-        'CAMERA': nodes_input.parse_camera,
-        'NEW_GEOMETRY': nodes_input.parse_geometry,
-        'HAIR_INFO': nodes_input.parse_hairinfo,
-        'OBJECT_INFO': nodes_input.parse_objectinfo,
-        'PARTICLE_INFO': nodes_input.parse_particleinfo,
-        'TANGENT': nodes_input.parse_tangent,
-        'TEX_COORD': nodes_input.parse_texcoord,
-        'UVMAP': nodes_input.parse_uvmap,
-        'BUMP': nodes_vector.parse_bump,
-        'MAPPING': nodes_vector.parse_mapping,
-        'NORMAL': nodes_vector.parse_normal,
-        'NORMAL_MAP': nodes_vector.parse_normalmap,
-        'VECT_TRANSFORM': nodes_vector.parse_vectortransform,
-        'COMBXYZ': nodes_converter.parse_combxyz,
-        'VECT_MATH': nodes_converter.parse_vectormath,
-        'DISPLACEMENT': nodes_vector.parse_displacement,
-        'VECTOR_ROTATE': nodes_vector.parse_vectorrotate,
-    }
+        'CAMERA',
+        'NEW_GEOMETRY',
+        'HAIR_INFO',
+        'OBJECT_INFO',
+        'PARTICLE_INFO',
+        'TANGENT',
+        'TEX_COORD',
+        'UVMAP',
+        'BUMP',
+        'MAPPING',
+        'NORMAL',
+        'NORMAL_MAP',
+        'VECT_TRANSFORM',
+        'COMBXYZ',
+        'VECT_MATH',
+        'DISPLACEMENT',
+        'VECTOR_ROTATE',
+    )
 
-    if node.type in node_parser_funcs:
-        return node_parser_funcs[node.type](node, socket, state)
+    if node.type in supported_node_types:
+        return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     elif node.type == 'GROUP':
         return parse_group(node, socket)
@@ -381,7 +379,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(state.frag, state.vert)
+            node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return "vec3(0, 0, 0)"
@@ -440,44 +438,44 @@ def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:
 
 
 def parse_value(node, socket):
-    node_parser_funcs: Dict[str, Callable] = {
-        'ATTRIBUTE': nodes_input.parse_attribute,
-        'CAMERA': nodes_input.parse_camera,
-        'FRESNEL': nodes_input.parse_fresnel,
-        'NEW_GEOMETRY': nodes_input.parse_geometry,
-        'HAIR_INFO': nodes_input.parse_hairinfo,
-        'LAYER_WEIGHT': nodes_input.parse_layerweight,
-        'LIGHT_PATH': nodes_input.parse_lightpath,
-        'OBJECT_INFO': nodes_input.parse_objectinfo,
-        'PARTICLE_INFO': nodes_input.parse_particleinfo,
-        'VALUE': nodes_input.parse_value,
-        'WIREFRAME': nodes_input.parse_wireframe,
-        'TEX_BRICK': nodes_texture.parse_tex_brick,
-        'TEX_CHECKER': nodes_texture.parse_tex_checker,
-        'TEX_GRADIENT': nodes_texture.parse_tex_gradient,
-        'TEX_IMAGE': nodes_texture.parse_tex_image,
-        'TEX_MAGIC': nodes_texture.parse_tex_magic,
-        'TEX_MUSGRAVE': nodes_texture.parse_tex_musgrave,
-        'TEX_NOISE': nodes_texture.parse_tex_noise,
-        'TEX_POINTDENSITY': nodes_texture.parse_tex_pointdensity,
-        'TEX_VORONOI': nodes_texture.parse_tex_voronoi,
-        'TEX_WAVE': nodes_texture.parse_tex_wave,
-        'LIGHT_FALLOFF': nodes_color.parse_lightfalloff,
-        'NORMAL': nodes_vector.parse_normal,
-        'CLAMP': nodes_converter.parse_clamp,
-        'VALTORGB': nodes_converter.parse_valtorgb,
-        'MATH': nodes_converter.parse_math,
-        'RGBTOBW': nodes_converter.parse_rgbtobw,
-        'SEPARATE_COLOR': nodes_converter.parse_separate_color,
-        'SEPHSV': nodes_converter.parse_sephsv,
-        'SEPRGB': nodes_converter.parse_seprgb,
-        'SEPXYZ': nodes_converter.parse_sepxyz,
-        'VECT_MATH': nodes_converter.parse_vectormath,
-        'MAP_RANGE': nodes_converter.parse_maprange,
-    }
+    supported_node_types = (
+        'ATTRIBUTE',
+        'CAMERA',
+        'FRESNEL',
+        'NEW_GEOMETRY',
+        'HAIR_INFO',
+        'LAYER_WEIGHT',
+        'LIGHT_PATH',
+        'OBJECT_INFO',
+        'PARTICLE_INFO',
+        'VALUE',
+        'WIREFRAME',
+        'TEX_BRICK',
+        'TEX_CHECKER',
+        'TEX_GRADIENT',
+        'TEX_IMAGE',
+        'TEX_MAGIC',
+        'TEX_MUSGRAVE',
+        'TEX_NOISE',
+        'TEX_POINTDENSITY',
+        'TEX_VORONOI',
+        'TEX_WAVE',
+        'LIGHT_FALLOFF',
+        'NORMAL',
+        'CLAMP',
+        'VALTORGB',
+        'MATH',
+        'RGBTOBW',
+        'SEPARATE_COLOR',
+        'SEPHSV',
+        'SEPRGB',
+        'SEPXYZ',
+        'VECT_MATH',
+        'MAP_RANGE',
+    )
 
-    if node.type in node_parser_funcs:
-        return node_parser_funcs[node.type](node, socket, state)
+    if node.type in supported_node_types:
+        return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     elif node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
@@ -494,7 +492,7 @@ def parse_value(node, socket):
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            return node.parse(state.frag, state.vert)
+            node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return '0.0'
@@ -504,22 +502,22 @@ def vector_curve(name, fac, points):
     curshader = state.curshader
 
     # Write Ys array
-    ys_var = name + '_ys'
+    ys_var = name + '_ys' + state.get_parser_pass_suffix()
     curshader.write('float {0}[{1}];'.format(ys_var, len(points))) # TODO: Make const
     for i in range(0, len(points)):
         curshader.write('{0}[{1}] = {2};'.format(ys_var, i, points[i].location[1]))
     # Get index
-    fac_var = name + '_fac'
+    fac_var = name + '_fac' + state.get_parser_pass_suffix()
     curshader.write('float {0} = {1};'.format(fac_var, fac))
     index = '0'
     for i in range(1, len(points)):
         index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, points[i].location[0])
     # Write index
-    index_var = name + '_i'
+    index_var = name + '_i' + state.get_parser_pass_suffix()
     curshader.write('int {0} = {1};'.format(index_var, index))
     # Linear
     # Write Xs array
-    facs_var = name + '_xs'
+    facs_var = name + '_xs' + state.get_parser_pass_suffix()
     curshader.write('float {0}[{1}];'.format(facs_var, len(points))) # TODO: Make const
     for i in range(0, len(points)):
         curshader.write('{0}[{1}] = {2};'.format(facs_var, i, points[i].location[0]))
@@ -547,6 +545,10 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
     """Write the parsed result of the given node link to the shader."""
     res_var = res_var_name(link.from_node, link.from_socket)
 
+    need_dxdy_offset = node_need_reevaluation_for_screenspace_derivative(link.from_node)
+    if need_dxdy_offset:
+        res_var += state.get_parser_pass_suffix()
+
     # Unparsed node
     if not is_parsed(res_var):
         state.parsed.add(res_var)
@@ -568,6 +570,10 @@ def write_result(link: bpy.types.NodeLink) -> Optional[str]:
                 state.curshader.add_const('float', res_var, res)
             else:
                 state.curshader.write(f'float {res_var} = {res};')
+
+        if state.dxdy_varying_input_value:
+            state.curshader.write(f'{res_var} = {apply_screenspace_derivative_offset_if_required(res_var)};')
+            state.dxdy_varying_input_value = False
 
     # Normal map already parsed, return
     elif link.from_node.type == 'NORMAL_MAP':
@@ -597,13 +603,19 @@ def to_uniform(inp: bpy.types.NodeSocket):
 def store_var_name(node: bpy.types.Node):
     return node_name(node.name) + '_store'
 
+
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
     curshader = state.curshader
 
     tex_store = store_var_name(node)
+
+    if node_need_reevaluation_for_screenspace_derivative(node):
+        tex_store += state.get_parser_pass_suffix()
+
     if is_parsed(tex_store):
         return tex_store
     state.parsed.add(tex_store)
+
     if is_arm_mat_param is None:
         mat_bind_texture(tex)
     state.con.add_elem('tex', 'short2norm')
@@ -630,52 +642,58 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_v
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
         else:
             curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
-    if state.sample_bump:
-        state.sample_bump_res = tex_store
-        curshader.write('float {0}_1 = textureOffset({1}, {2}.xy, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_2 = textureOffset({1}, {2}.xy, ivec2(2, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_3 = textureOffset({1}, {2}.xy, ivec2(0, -2)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_4 = textureOffset({1}, {2}.xy, ivec2(0, 2)).r;'.format(tex_store, tex_name, uv_name))
-        state.sample_bump = False
+
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
+
     return tex_store
 
 
-def write_bump(node: bpy.types.Node, out_socket: bpy.types.NodeSocket, res: str, scl=0.001):
-    """Sample texture values around the current texture coordinate for bump mapping. The result of the sampling is
-    stored in 4 variables named after state.sample_bump_res with _[0-3] appended."""
-    state.sample_bump_res = store_var_name(node) + '_bump'
+def apply_screenspace_derivative_offset_if_required(coords: str) -> str:
+    """Apply screen-space derivative offsets to the given coordinates,
+    if required by the current ParserPass.
+    """
+    # Derivative functions are only available in fragment shaders
+    if state.curshader.shader_type == 'frag':
+        if state.current_pass == ParserPass.DX_SCREEN_SPACE:
+            coords = f'({coords}) + {dfdx_fine(coords)}'
+        elif state.current_pass == ParserPass.DY_SCREEN_SPACE:
+            coords = f'({coords}) + {dfdy_fine(coords)}'
 
-    # Testing.. get function parts..
-    ar = res.split('(', 1)
-    pre = ar[0] + '('
-    if ',' in ar[1]:
-        ar2 = ar[1].split(',', 1)
-        co = ar2[0]
-        post = ',' + ar2[1]
-    else:
-        co = ar[1][:-1]
-        post = ')'
+    return '(' + coords + ')'
 
-    coordinate_offsets = (
-        f'vec3(-{scl}, 0.0, 0.0)',
-        f'vec3({scl}, 0.0, {scl})',
-        f'vec3(0.0, -{scl}, 0.0)',
-        f'vec3(0.0, {scl}, -{scl})'
-    )
 
-    needs_conversion_bw = glsl_type(out_socket.type) == "vec3"
-    curshader = state.curshader
-    for i in range(1, 5):
-        if needs_conversion_bw:
-            vec_var = f'{state.sample_bump_res}_vec{i}'
-            curshader.write(f'vec3 {vec_var} = {pre}{co} + {coordinate_offsets[i - 1]}{post};')
-            curshader.write(f'float {state.sample_bump_res}_{i} = {rgb_to_bw(vec_var)};')
-        else:
-            curshader.write(f'float {state.sample_bump_res}_{i} = {pre}{co} + {coordinate_offsets[i - 1]}{post};')
+def node_need_reevaluation_for_screenspace_derivative(node: bpy.types.Node) -> bool:
+    if state.current_pass not in (ParserPass.DX_SCREEN_SPACE, ParserPass.DY_SCREEN_SPACE):
+        return False
 
-    state.sample_bump = False
+    should_compute_offset = node_meta.get_node_meta(node).compute_dxdy_variants
+
+    if should_compute_offset == node_meta.ComputeDXDYVariant.ALWAYS:
+        return True
+    elif should_compute_offset == node_meta.ComputeDXDYVariant.NEVER:
+        return False
+
+    # ComputeDXDYVariant.DYNAMIC
+    needs_reevaluation = False
+    for inp in node.inputs:
+        c_node, _ = arm.node_utils.input_get_connected_node(inp)
+        if c_node is None:
+            continue
+
+        needs_reevaluation |= node_need_reevaluation_for_screenspace_derivative(c_node)
+
+    return needs_reevaluation
+
+
+def dfdx_fine(val: str) -> str:
+    # GL_ARB_derivative_control is unavailable in OpenGL ES (= no fine/coarse variants),
+    # OES_standard_derivatives is automatically enabled in kha.SystemImpl
+    return f'dFdx({val})' if arm.utils.is_gapi_gl_es() else f'dFdxFine({val})'
+
+
+def dfdy_fine(val: str) -> str:
+    return f'dFdy({val})' if arm.utils.is_gapi_gl_es() else f'dFdyFine({val})'
 
 
 def to_vec1(v):
