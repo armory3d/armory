@@ -8,7 +8,7 @@ import arm.assets as assets
 import arm.log as log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
-from arm.material.parser_state import ParserState, ParserContext
+from arm.material.parser_state import ParserState, ParserContext, ParserPass
 from arm.material.shader import floatstr, vec3str
 import arm.utils
 import arm.write_probes as write_probes
@@ -19,7 +19,7 @@ if arm.is_reload(__name__):
     c = arm.reload_module(c)
     c_functions = arm.reload_module(c_functions)
     arm.material.parser_state = arm.reload_module(arm.material.parser_state)
-    from arm.material.parser_state import ParserState, ParserContext
+    from arm.material.parser_state import ParserState, ParserContext, ParserPass
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import floatstr, vec3str
     arm.utils = arm.reload_module(arm.utils)
@@ -48,9 +48,6 @@ def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.No
         scale = c.parse_value_input(node.inputs[4])
         res = 'tex_brick_f({0} * {1})'.format(co, scale)
 
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
-
     return res
 
 
@@ -72,9 +69,6 @@ def parse_tex_checker(node: bpy.types.ShaderNodeTexChecker, out_socket: bpy.type
     else:
         scale = c.parse_value_input(node.inputs[3])
         res = 'tex_checker_f({0}, {1})'.format(co, scale)
-
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
 
     return res
 
@@ -108,9 +102,6 @@ def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.ty
     else:
         res = f'(clamp({f}, 0.0, 1.0))'
 
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
-
     return res
 
 
@@ -119,12 +110,17 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
     use_color_out = out_socket == node.outputs[0]
 
     if state.context == ParserContext.OBJECT:
+        tex_store = c.store_var_name(node)
+
+        if c.node_need_reevaluation_for_screenspace_derivative(node):
+            tex_store += state.get_parser_pass_suffix()
+
         # Already fetched
-        if c.is_parsed(c.store_var_name(node)):
+        if c.is_parsed(tex_store):
             if use_color_out:
-                return f'{c.store_var_name(node)}.rgb'
+                return f'{tex_store}.rgb'
             else:
-                return f'{c.store_var_name(node)}.a'
+                return f'{tex_store}.a'
 
         tex_name = c.node_name(node.name)
         tex = c.make_texture_from_image_node(node, tex_name)
@@ -159,8 +155,6 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
 
         # Pink color for missing texture
         else:
-            tex_store = c.store_var_name(node)
-
             if use_color_out:
                 state.parsed.add(tex_store)
                 state.curshader.write_textures += 1
@@ -248,9 +242,6 @@ def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.No
     else:
         res = f'tex_magic_f({co} * {scale} * 4.0)'
 
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res, 0.1)
-
     return res
 
 
@@ -267,9 +258,6 @@ def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.ty
     # distortion = c.parse_value_input(node.inputs[3])
 
     res = f'tex_musgrave_f({co} * {scale} * 0.5)'
-
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
 
     return res
 
@@ -297,9 +285,6 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     # Fac
     else:
         res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
-
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res, 0.1)
 
     return res
 
@@ -566,9 +551,6 @@ def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.type
     else:
         res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5}).x'.format(co, randomness, m, outp, scale, exp)
 
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
-
     return res
 
 
@@ -598,8 +580,5 @@ def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.Node
     # Fac
     else:
         res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
-
-    if state.sample_bump:
-        c.write_bump(node, out_socket, res)
 
     return res

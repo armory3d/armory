@@ -3,19 +3,22 @@ from typing import Union
 import bpy
 from mathutils import Euler, Vector
 
-import arm
+import arm.log
 import arm.material.cycles as c
 import arm.material.cycles_functions as c_functions
-from arm.material.parser_state import ParserState
+from arm.material.parser_state import ParserState, ParserPass
 from arm.material.shader import floatstr, vec3str
+import arm.utils as utils
 
 if arm.is_reload(__name__):
+    arm.log = arm.reload_module(arm.log)
     c = arm.reload_module(c)
     c_functions = arm.reload_module(c_functions)
     arm.material.parser_state = arm.reload_module(arm.material.parser_state)
-    from arm.material.parser_state import ParserState
+    from arm.material.parser_state import ParserState, ParserPass
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import floatstr, vec3str
+    utils = arm.reload_module(utils)
 else:
     arm.enable_reload(__name__)
 
@@ -33,27 +36,44 @@ def parse_curvevec(node: bpy.types.ShaderNodeVectorCurve, out_socket: bpy.types.
 
 
 def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    if state.curshader.shader_type != 'frag':
+        arm.log.warn("Bump node not supported outside of fragment shaders")
+        return 'vec3(0.0)'
+
     # Interpolation strength
     strength = c.parse_value_input(node.inputs[0])
     # Height multiplier
     # distance = c.parse_value_input(node.inputs[1])
-    state.sample_bump = True
     height = c.parse_value_input(node.inputs[2])
-    state.sample_bump = False
-    nor = c.parse_vector_input(node.inputs[3])
-    if state.sample_bump_res != '':
+
+    state.current_pass = ParserPass.DX_SCREEN_SPACE
+    height_dx = c.parse_value_input(node.inputs[2])
+    state.current_pass = ParserPass.DY_SCREEN_SPACE
+    height_dy = c.parse_value_input(node.inputs[2])
+    state.current_pass = ParserPass.REGULAR
+
+    # nor = c.parse_vector_input(node.inputs[3])
+
+    if height_dx != height or height_dy != height:
+        tangent = f'{c.dfdx_fine("wposition")} + n * ({height_dx} - {height})'
+        bitangent = f'{c.dfdy_fine("wposition")} + n * ({height_dy} - {height})'
+
+        # Cross-product operand order, dFdy is flipped on d3d11
+        bitangent_first = utils.get_gapi() == 'direct3d11'
+
         if node.invert:
-            ext = ('1', '2', '3', '4')
+            bitangent_first = not bitangent_first
+
+        if bitangent_first:
+            # We need to normalize twice, once for the correct "weight" of the strength,
+            # once for having a normalized output vector (lerping vectors does not preserve magnitude)
+            res = f'normalize(mix(n, normalize(cross({bitangent}, {tangent})), {strength}))'
         else:
-            ext = ('2', '1', '4', '3')
-        state.curshader.write('float {0}_fh1 = {0}_{1} - {0}_{2}; float {0}_fh2 = {0}_{3} - {0}_{4};'.format(state.sample_bump_res, ext[0], ext[1], ext[2], ext[3]))
-        state.curshader.write('{0}_fh1 *= ({1}) * 3.0; {0}_fh2 *= ({1}) * 3.0;'.format(state.sample_bump_res, strength))
-        state.curshader.write('vec3 {0}_a = normalize(vec3(2.0, 0.0, {0}_fh1));'.format(state.sample_bump_res))
-        state.curshader.write('vec3 {0}_b = normalize(vec3(0.0, 2.0, {0}_fh2));'.format(state.sample_bump_res))
-        res = 'normalize(mat3({0}_a, {0}_b, normalize(vec3({0}_fh1, {0}_fh2, 2.0))) * n)'.format(state.sample_bump_res)
-        state.sample_bump_res = ''
+            res = f'normalize(mix(n, normalize(cross({tangent}, {bitangent})), {strength}))'
+
     else:
         res = 'n'
+
     return res
 
 
@@ -98,7 +118,7 @@ def parse_mapping(node: bpy.types.ShaderNodeMapping, out_socket: bpy.types.NodeS
     out = calc_location(out) if node.vector_type == 'TEXTURE' else calc_scale(out)
 
     if input_rotation.is_linked or input_rotation.default_value != Euler((0, 0, 0)):
-        var_name = c.node_name(node.name) + "_rotation"
+        var_name = c.node_name(node.name) + "_rotation" + state.get_parser_pass_suffix()
         if node.vector_type == 'TEXTURE':
             state.curshader.write(f'mat3 {var_name}X = mat3(1.0, 0.0, 0.0, 0.0, cos({rotation}.x), sin({rotation}.x), 0.0, -sin({rotation}.x), cos({rotation}.x));')
             state.curshader.write(f'mat3 {var_name}Y = mat3(cos({rotation}.y), 0.0, -sin({rotation}.y), 0.0, 1.0, 0.0, sin({rotation}.y), 0.0, cos({rotation}.y));')
