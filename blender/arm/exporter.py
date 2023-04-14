@@ -2424,7 +2424,8 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                self.export_collection(collection)
+                if self.scene.user_of_id(collection):
+                    self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
