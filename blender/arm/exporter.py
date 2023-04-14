@@ -1870,14 +1870,7 @@ Make sure the mesh only has tris/quads.""")
             if bobject.parent is None or bobject.parent.name not in collection.objects:
                 asset_name = arm.utils.asset_name(bobject)
 
-                # Collection is in the same file
-                if collection.library is None:
-                    # Only export linked objects (from other scenes for example),
-                    # all other objects (in scene_objects) are already exported.
-                    if bobject.name not in scene_objects:
-                        self.process_bobject(bobject)
-                        self.export_object(bobject)
-                else:
+                if collection.library:
                     # Add external linked objects
                     # Iron differentiates objects based on their names,
                     # so errors will happen if two objects with the
