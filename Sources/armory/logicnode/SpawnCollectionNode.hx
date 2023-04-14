@@ -73,7 +73,6 @@ class SpawnCollectionNode extends LogicNode {
 						values: transform.toFloat32Array()
 					}
 				};
-				raw.objects.push(rawOwnerObject);
 
 				iron.Scene.active.createObject(rawOwnerObject, raw, null, null,
 					(created: Object) -> {
