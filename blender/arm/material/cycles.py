@@ -266,7 +266,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     else:
         log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
@@ -378,7 +378,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return "vec3(0, 0, 0)"
@@ -491,7 +491,7 @@ def parse_value(node, socket):
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return '0.0'
