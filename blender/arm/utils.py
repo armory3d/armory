@@ -86,7 +86,10 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.file_format = file_format
     if file_format == 'PNG':
         ren.image_settings.color_mode = 'RGBA'
+    orig_image_colorspace = image.colorspace_settings.name
+    image.colorspace_settings.name = 'Non-Color'
     image.save_render(path, scene=bpy.context.scene)
+    image.colorspace_settings.name = orig_image_colorspace
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
