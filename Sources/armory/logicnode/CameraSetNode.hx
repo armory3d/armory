@@ -19,6 +19,8 @@ class CameraSetNode extends LogicNode {
 		armory.renderpath.Postprocess.camera_uniforms[9] = inputs[10].get();//Tonemapping Method
 		armory.renderpath.Postprocess.camera_uniforms[10] = inputs[11].get();//Distort
 		armory.renderpath.Postprocess.camera_uniforms[11] = inputs[12].get();//Film Grain
+		armory.renderpath.Postprocess.camera_uniforms[12] = inputs[13].get();//Sharpen
+		armory.renderpath.Postprocess.camera_uniforms[13] = inputs[14].get();//Vignette
 
 		runOutput(0);
 	}
