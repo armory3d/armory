@@ -88,8 +88,8 @@ def add_world_defs():
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if voxelao:
-        assets.add_khafile_def('arm_voxelgi')
+    has_voxels = arm.utils.voxel_support()
+    if rpdat.rp_voxels and has_voxels and rpdat.arm_material_model == 'Full':
         wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
@@ -98,13 +98,11 @@ def add_world_defs():
             if rpdat.arm_voxelgi_temporal:
                 assets.add_khafile_def('arm_voxelgi_temporal')
                 wrd.world_defs += '_VoxelGITemporal'
-
-        elif voxelao:
-            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelShadow'
-            if rpdat.arm_voxelgi_occ == 0.0:
-                wrd.world_defs += '_VoxelAONoTrace'
+        wrd.world_defs += '_VoxelAOvar' # Write a shader variant
+        if rpdat.arm_voxelgi_shadows:
+            wrd.world_defs += '_VoxelShadow'
+        if rpdat.arm_voxelgi_occ == 0.0:
+            wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         wrd.world_defs += '_Legacy'
@@ -336,22 +334,13 @@ def build():
         assets.add_khafile_def('arm_vr')
         wrd.world_defs += '_VR'
 
-    rp_voxels = rpdat.rp_voxels
     has_voxels = arm.utils.voxel_support()
-
-    if not has_voxels or rpdat.arm_material_model != 'Full':
-        rp_voxels = 'Off'
-
-    if rp_voxels:
-        if has_voxels:
-            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
-            assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
-            assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
-            if rpdat.arm_voxelgi_shadows:
-                assets.add_khafile_def('rp_voxelgi_shadows')
-        else:
-            log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
-
+    if rpdat.rp_voxels and has_voxels:
+        assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
+        assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
+        assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
+        if rpdat.arm_voxelgi_shadows:
+            assets.add_khafile_def('rp_voxelgi_shadows')
     if rpdat.arm_rp_resolution == 'Custom':
         assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))
 

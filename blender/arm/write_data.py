@@ -435,7 +435,7 @@ def write_config(resx, resy):
         'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
-        'rp_voxels': rpdat.rp_voxels != "Off",
+        'rp_voxels': rpdat.rp_voxels,
         'rp_dynres': rpdat.rp_dynres
     }
 
@@ -583,7 +583,6 @@ def write_compiledglsl(defs, make_variants):
             idx_emission += 1
             idx_refraction += 1
         
-
         if '_EmissionShaded' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
             idx_refraction += 1
@@ -591,7 +590,7 @@ def write_compiledglsl(defs, make_variants):
         if '_SSRefraction' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
-            f.write("""#if defined(HLSL) || defined(METAL)
+        f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif
 """)
