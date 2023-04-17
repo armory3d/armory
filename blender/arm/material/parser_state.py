@@ -64,6 +64,8 @@ class ParserState:
         self.tesc: Shader = None
         self.tese: Shader = None
 
+        self.temp_var_counter = 0
+
         # Group stack (last in the list = innermost group)
         self.parents: List[bpy.types.Node] = []
 
@@ -97,6 +99,7 @@ class ParserState:
         self.out_occlusion: floatstr = '1.0'
         self.out_specular: floatstr = '1.0'
         self.out_opacity: floatstr = '1.0'
+        self.out_rior: floatstr = '1.450'
         self.out_emission_col: vec3str = 'vec3(0.0)'
 
     def reset_outs(self):
@@ -107,11 +110,13 @@ class ParserState:
         self.out_occlusion = '1.0'
         self.out_specular = '1.0'
         self.out_opacity = '1.0'
+        self.out_rior = '1.450'
         self.out_emission_col = 'vec3(0.0)'
 
-    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str]:
+    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str]:
         """Return the shader output values as a tuple."""
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,
+                self.out_opacity, self.out_rior, self.out_emission_col)
                 self.out_opacity, self.out_emission_col)
 
     def get_parser_pass_suffix(self) -> str:

@@ -1525,6 +1525,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_culling')
         col.prop(rpdat, 'rp_pp')
 
+
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
     bl_space_type = "PROPERTIES"
@@ -1688,14 +1689,14 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_RenderPathPanel"
-
+    
     def draw_header(self, context):
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
-        self.layout.prop(rpdat, "rp_voxelao", text="")
-
+        self.layout.prop(rpdat, "rp_voxels", text="")
+    
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1705,7 +1706,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
-        layout.enabled = rpdat.rp_voxelao
+        layout.enabled = rpdat.rp_voxels
         layout.prop(rpdat, 'arm_voxelgi_shadows')
         layout.prop(rpdat, 'arm_voxelgi_cones')
         layout.prop(rpdat, 'rp_voxelgi_resolution')
@@ -1821,14 +1822,23 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
 
         col = layout.column()
         col.prop(rpdat, "rp_ssr")
+        col.prop(rpdat, 'arm_ssr_half_res')
         col = col.column()
         col.enabled = rpdat.rp_ssr
-        col.prop(rpdat, 'arm_ssr_half_res')
         col.prop(rpdat, 'arm_ssr_ray_step')
-        col.prop(rpdat, 'arm_ssr_min_ray_step')
         col.prop(rpdat, 'arm_ssr_search_dist')
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, "rp_ss_refraction")
+        col = col.column()
+        col.enabled = rpdat.rp_ss_refraction
+        col.prop(rpdat, 'arm_ss_refraction_ray_step')
+        col.prop(rpdat, 'arm_ss_refraction_search_dist')
+        col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
+        col.prop(rpdat, 'arm_ss_refraction_jitter')
         layout.separator()
 
         col = layout.column()
