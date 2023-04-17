@@ -24,8 +24,8 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-#define numBinarySearchSteps 7
-#define maxSteps 18
+const int numBinarySearchSteps = 7;
+const int maxSteps = 18;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);

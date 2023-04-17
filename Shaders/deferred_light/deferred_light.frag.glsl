@@ -31,9 +31,6 @@ uniform sampler2D gbuffer1;
 	uniform sampler2D gbufferEmission;
 #endif
 
-#ifdef _VoxelGI
-uniform sampler3D voxels;
-#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 #endif
@@ -252,7 +249,6 @@ void main() {
 	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
-	envl.rgb *= albedo;
 
 #ifdef _EnvLDR
 	envl.rgb = pow(envl.rgb, vec3(2.2));
@@ -260,6 +256,8 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
+
+	envl.rgb *= albedo;
 
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
@@ -293,43 +291,15 @@ void main() {
 
 #endif
 
-#ifdef _VoxelGI
-	#ifdef _VoxelGICam
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
-	#endif
-
-	#ifdef _VoxelGITemporal
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend +
-							traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
-	#else
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
-	#endif
-
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
-
-	if (occspec.y > 0.0) {
-		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, roughness);
-		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
-		fragColor.rgb += indirectSpecular * voxelgiSpec * occspec.y;
-	}
-	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
-#endif
-
-#ifdef _VoxelGI
-	fragColor.rgb += envl * voxelgiEnv;
+#ifdef _VoxelAOvar
+	fragColor.rgb += envl;
 #else
 	fragColor.rgb = envl;
 #endif
 
 
 #ifdef _SSAO
-	#ifdef _RTGI
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	#else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -465,11 +435,6 @@ void main() {
 		, voxels, voxpos
 		#endif
 		#endif
-		#ifdef _VoxelGI
-		#ifdef _VoxelShadow
-		, voxels, voxpos
-		#endif
-		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
@@ -525,11 +490,6 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelAOvar
-			#ifdef _VoxelShadow
-			, voxels, voxpos
-			#endif
-			#endif
-			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
 			, voxels, voxpos
 			#endif

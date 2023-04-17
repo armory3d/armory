@@ -171,7 +171,7 @@ class CustomParticleNode(Node):
                 vertshdr.write(f'                         sin({rot}.z) * sin({rot}.x) + cos({rot}.z) * sin({rot}.y) * cos({rot}.x), -cos({rot}.z) * sin({rot}.x) + sin({rot}.z) * sin({rot}.y) * cos({rot}.x), cos({rot}.y) * cos({rot}.x));')
 
             vertshdr.write('spos.xyz = part_rot_mat * spos.xyz;')
-            if ((part_con.data['name'] == 'mesh' or part_con.data['name'] == 'translucent' or part_con.data['name'] == 'refraction')):
+            if (part_con.data['name'] == 'mesh' or part_con.data['name'] == 'translucent' or part_con.data['name'] == 'refraction'):
                 vertshdr.write('wnormal = transpose(inverse(part_rot_mat)) * wnormal;')
 
         if self.posX or self.posY or self.posZ:

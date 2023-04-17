@@ -17,7 +17,7 @@
 					"link": "_screenSize"
 				}
 			],
-			"vertex_shader": "../include/pass_viewray2.vert.glsl",
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
 			"fragment_shader": "translucent_resolve.frag.glsl"
 		}
 	]

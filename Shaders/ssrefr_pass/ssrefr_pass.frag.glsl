@@ -28,8 +28,9 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-#define maxSteps 18
-#define numBinarySearchSteps 7
+
+const int numBinarySearchSteps = 7;
+const int maxSteps = 18;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);

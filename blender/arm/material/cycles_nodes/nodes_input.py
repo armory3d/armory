@@ -10,7 +10,6 @@ import arm.material.mat_state as mat_state
 from arm.material.parser_state import ParserState, ParserContext
 from arm.material.shader import floatstr, vec3str
 import arm.utils
-import arm.material.mat_utils as mat_utils
 
 if arm.is_reload(__name__):
     log = arm.reload_module(log)

@@ -384,7 +384,7 @@ class Inc {
 		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
-		
+
 	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
@@ -521,9 +521,7 @@ class Inc {
 	}
 
 	public static inline function getVoxelRes(): Int {
-		#if (rp_voxelgi_resolution == 1024)
-		return 1024;
-		#elseif (rp_voxelgi_resolution == 512)
+		#if (rp_voxelgi_resolution == 512)
 		return 512;
 		#elseif (rp_voxelgi_resolution == 256)
 		return 256;
@@ -539,13 +537,7 @@ class Inc {
 	}
 
 	public static inline function getVoxelResZ(): Float {
-		#if (rp_voxelgi_resolution_z == 4.0)
-		return 4.0;
-		#elseif (rp_voxelgi_resolution_z == 2.0)
-		return 2.0;
-		#elseif (rp_voxelgi_resolution_z == 1.5)
-		return 1.5;
-		#elseif (rp_voxelgi_resolution_z == 1.0)
+		#if (rp_voxelgi_resolution_z == 1.0)
 		return 1.0;
 		#elseif (rp_voxelgi_resolution_z == 0.5)
 		return 0.5;
