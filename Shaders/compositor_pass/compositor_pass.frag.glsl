@@ -178,7 +178,7 @@ float vignette() {
 	#ifdef _CPostprocess
 		float uStrength = PPComp14.z;
 	#else
-		float uStrength = compoSharpenStrength;
+		float uStrength = compoVignetteStrength;
 	#endif
 	return (1.0 - uStrength) + uStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
