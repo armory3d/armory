@@ -267,7 +267,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     else:
         log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
@@ -379,7 +379,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return "vec3(0, 0, 0)"
@@ -492,7 +492,7 @@ def parse_value(node, socket):
 
     elif node.type == 'CUSTOM':
         if node.bl_idname == 'ArmShaderDataNode':
-            node_meta.get_node_meta(node).parse_func(node, socket, state)
+            return node_meta.get_node_meta(node).parse_func(node, socket, state)
 
     log.warn(f'Node tree "{tree_name()}": material node type {node.type} not supported')
     return '0.0'
@@ -675,15 +675,15 @@ def node_need_reevaluation_for_screenspace_derivative(node: bpy.types.Node) -> b
         return False
 
     # ComputeDXDYVariant.DYNAMIC
-    needs_reevaluation = False
     for inp in node.inputs:
         c_node, _ = arm.node_utils.input_get_connected_node(inp)
         if c_node is None:
             continue
 
-        needs_reevaluation |= node_need_reevaluation_for_screenspace_derivative(c_node)
+        if node_need_reevaluation_for_screenspace_derivative(c_node):
+            return True
 
-    return needs_reevaluation
+    return False
 
 
 def dfdx_fine(val: str) -> str:
