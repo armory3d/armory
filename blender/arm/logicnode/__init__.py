@@ -45,6 +45,7 @@ def init_categories():
     arm_nodes.add_category('Physics', icon='PHYSICS', section="motion")
 
     arm_nodes.add_category('Array', icon='LIGHTPROBE_GRID', section="values")
+    arm_nodes.add_category('Map', icon='SHORTDISPLAY', section="values")
     arm_nodes.add_category('Math', icon='FORCE_HARMONIC', section="values")
     arm_nodes.add_category('Random', icon='SEQ_HISTOGRAM', section="values")
     arm_nodes.add_category('String', icon='SORTALPHA', section="values")
