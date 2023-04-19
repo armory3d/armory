@@ -175,7 +175,12 @@ vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
 
 #ifdef _CVignette
 float vignette() {
-	return (1.0 - compoVignetteStrength) + compoVignetteStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+	#ifdef _CPostprocess
+		float uStrength = PPComp14.z;
+	#else
+		float uStrength = compoVignetteStrength;
+	#endif
+	return (1.0 - uStrength) + uStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 #endif
 
@@ -246,7 +251,6 @@ void main() {
 #endif
 
 #ifdef _CDistort
-	// const float compoDistortStrength = 4.0;
 	#ifdef _CPostprocess
 		float uStrength = PPComp14.x;
 	#else
@@ -336,12 +340,17 @@ void main() {
 #endif
 	
 #ifdef _CSharpen
+	#ifdef _CPostprocess
+		float uStrength = PPComp14.y;
+	#else
+		float uStrength = compoSharpenStrength;
+	#endif
 	vec3 col1 = textureLod(tex, texCo + vec2(-texStep.x, -texStep.y) * 1.5, 0.0).rgb;
 	vec3 col2 = textureLod(tex, texCo + vec2(texStep.x, -texStep.y) * 1.5, 0.0).rgb;
 	vec3 col3 = textureLod(tex, texCo + vec2(-texStep.x, texStep.y) * 1.5, 0.0).rgb;
 	vec3 col4 = textureLod(tex, texCo + vec2(texStep.x, texStep.y) * 1.5, 0.0).rgb;
 	vec3 colavg = (col1 + col2 + col3 + col4) * 0.25;
-	fragColor.rgb += (fragColor.rgb - colavg) * compoSharpenStrength;
+	fragColor.rgb += (fragColor.rgb - colavg) * uStrength;
 #endif
 
 #ifdef _CFog
@@ -372,7 +381,6 @@ void main() {
 #endif
 
 #ifdef _CGrain
-	// const float compoGrainStrength = 4.0;
 	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * (time * 10.0);
 	#ifdef _CPostprocess
 		fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * PPComp4.y;
