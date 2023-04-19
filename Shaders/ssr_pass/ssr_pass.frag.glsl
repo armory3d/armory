@@ -25,7 +25,7 @@ vec3 hitCoord;
 float depth;
 
 const int numBinarySearchSteps = 7;
-const int maxSteps = 24;
+#define maxSteps (1.0 / ssrRayStep)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -96,7 +96,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	vec3 reflected = reflect(viewPos, viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

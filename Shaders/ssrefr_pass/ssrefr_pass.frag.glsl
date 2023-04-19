@@ -30,7 +30,7 @@ vec3 viewPos;
 
 
 const int numBinarySearchSteps = 7;
-const int maxSteps = 18;
+#define maxSteps (1.0 / ss_refractionRayStep)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
