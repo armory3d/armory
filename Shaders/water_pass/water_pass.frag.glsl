@@ -36,7 +36,7 @@ out vec4 fragColor;
 
 #ifdef _SSR
 vec3 hitCoord;
-float depth;
+float gdepth;
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = 18;
@@ -52,25 +52,24 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	gdepth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
 	return viewPos.z - hit.z;
 }
 
 vec4 binarySearch(vec3 dir) {
 	float d;
-	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
+		if (d < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
-	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
+	if (abs(d) > PPComp9.z) return vec4(0.0);
 	#else
-	if (abs(ddepth) > ssrSearchDist) return vec4(0.0);
+	if (abs(d) > ssrSearchDist) return vec4(0.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -85,13 +84,14 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > 0.0 && d > depth) return binarySearch(dir);
+		if(d > 0.0 && d < gdepth) return binarySearch(dir);
 	}
 	return vec4(0.0);
 }
+#endif
 
 void main() {
-	float gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (gdepth == 1.0) {
 		fragColor = vec4(0.0);
 		return;

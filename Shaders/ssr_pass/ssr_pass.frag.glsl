@@ -25,7 +25,7 @@ vec3 hitCoord;
 float depth;
 
 const int numBinarySearchSteps = 7;
-const int maxSteps = 18;
+const int maxSteps = 24;
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -38,7 +38,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
 }
@@ -50,7 +50,8 @@ vec4 binarySearch(vec3 dir) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
-		if (d < 0.0) hitCoord += dir;
+		if (d < 0.0)
+			hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
@@ -71,7 +72,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		float d = getDeltaDepth(hitCoord);
-		if(d > 0.0 && d >= depth) return binarySearch(hitCoord);
+		if(d > 0.0 && d < depth) return binarySearch(hitCoord);
 	}
 	return vec4(0.0);
 }
@@ -84,8 +85,8 @@ void main() {
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
-	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	if (depth == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -94,7 +95,7 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
 

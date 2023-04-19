@@ -366,33 +366,30 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if(rp_ssr || rp_ssrefr)
-		#if rp_ssr_half 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "ssra";
-			t.width = 0;
-			t.height = 0;
-			t.scale = Inc.getSuperSampling() * 0.5;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-
-			var t = new RenderTargetRaw();
-			t.name = "ssrb";
-			t.width = 0;
-			t.height = 0;
-			t.scale = Inc.getSuperSampling() * 0.5;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-		}
-		#end
-		#end
-
 		#if rp_ssr
 		{
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			#if rp_ssr_half
+			{
+				var t = new RenderTargetRaw();
+				t.name = "ssra";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+
+				var t = new RenderTargetRaw();
+				t.name = "ssrb";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			#end
 		}
 		#end
 
@@ -760,10 +757,6 @@ class RenderPathDeferred {
 
 		#if rp_sss
 		{
-			#if (!kha_opengl)
-			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-			#end
-
 			path.setTarget("buf");
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
@@ -775,20 +768,18 @@ class RenderPathDeferred {
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
-
-			#if (!kha_opengl)
-			path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
-			#end
 		}
 		#end
 
 		#if rp_ssrefr
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false) {
+				//save depth
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
+				//save render
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -872,6 +863,10 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (!kha_opengl)
+		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+		#end
+
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
@@ -885,7 +880,11 @@ class RenderPathDeferred {
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
+				#if rp_ssr_half
+				path.bindTarget("half", "gbufferD");
+				#else
 				path.bindTarget("_main", "gbufferD");
+				#end
 
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
