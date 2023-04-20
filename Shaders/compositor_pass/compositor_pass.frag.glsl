@@ -63,6 +63,7 @@ uniform vec3 PPComp6;
 uniform vec3 PPComp7;
 uniform vec3 PPComp8;
 uniform vec3 PPComp14;
+uniform vec4 PPComp15;
 #endif
 
 // #ifdef _CPos
@@ -223,10 +224,17 @@ void main() {
 #endif
 
 #ifdef _CLetterbox
-    if(texCo.y  < compoLetterboxSize || texCo.y > (1.0 - compoLetterboxSize) ) {
-		fragColor.rgb = compoLetterboxColor;
-        return;
-    }
+	#ifdef _CPostprocess
+		vec3 uColor = vec3(PPComp15.x, PPComp15.y, PPComp15.z);
+		float uSize = PPComp15.w;
+	#else
+		vec3 uColor = compoLetterboxColor;
+		float uSize = compoLetterboxSize;
+	#endif
+	if (texCo.y < uSize || texCo.y > (1.0 - uSize)) {
+		fragColor.rgb = uColor;
+		return;
+	}
 #endif
 
 #ifdef _CFishEye

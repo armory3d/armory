@@ -66,6 +66,11 @@ class Postprocess {
 		1.0 				//4: White Clip
 	];
 
+	public static var letterbox_uniforms = [
+		[0.0, 0.0, 0.0], 	//0: Colors
+		[0.1] 				//1: Size
+	];
+
 	public static var ssr_uniforms = [
 		0.04,				//0: Step
 		0.05,				//1: StepMin
@@ -327,6 +332,12 @@ class Postprocess {
 				v.z = 2 * bloom_uniforms[1];
 				v.w = 0.25 / (bloom_uniforms[1] + 6.2e-5);
 			}
+		case "_PPComp15":
+			v = iron.object.Uniforms.helpVec;
+			v.x = letterbox_uniforms[0][0]; //Color
+			v.y = letterbox_uniforms[0][1];
+			v.z = letterbox_uniforms[0][2];
+			v.w = letterbox_uniforms[1][0]; //Size
 		}
 
 		return v;
