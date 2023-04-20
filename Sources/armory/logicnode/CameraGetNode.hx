@@ -20,6 +20,8 @@ class CameraGetNode extends LogicNode {
 			case 9: armory.renderpath.Postprocess.camera_uniforms[9];//Tonemapping Method
 			case 10: armory.renderpath.Postprocess.camera_uniforms[10];//Distort
 			case 11: armory.renderpath.Postprocess.camera_uniforms[11];//Film Grain
+			case 12: armory.renderpath.Postprocess.camera_uniforms[12];//Sharpen
+			case 13: armory.renderpath.Postprocess.camera_uniforms[13];//Vignette
 			default: 0.0;
 		}
 	}

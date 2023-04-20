@@ -78,7 +78,7 @@ def make(context_id, rpasses, shadowmap=False):
             if(con_depth.is_elem('ipos')):
                 vert.write('wposition = vec4(W * spos).xyz;')
                 if(con_depth.is_elem('irot')):
-                    vert.write('wnormal = transpose(inverse(mirot)) * wnormal;')
+                    vert.write('wnormal = normalize(N * mirot * vec3(nor.xy, pos.w));')
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
