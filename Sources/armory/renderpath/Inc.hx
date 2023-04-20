@@ -465,20 +465,6 @@ class Inc {
 		t.is_image = true;
 		t.mipmaps = true;
 		path.createRenderTarget(t);
-
-		#if arm_voxelgi_temporal
-		{
-			var tB = new RenderTargetRaw();
-			tB.name = t.name + "B";
-			tB.format = t.format;
-			tB.width = t.width;
-			tB.height = t.height;
-			tB.depth = t.depth;
-			tB.is_image = t.is_image;
-			tB.mipmaps = t.mipmaps;
-			path.createRenderTarget(tB);
-		}
-		#end
 	}
 	#end
 
