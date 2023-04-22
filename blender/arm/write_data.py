@@ -568,7 +568,7 @@ def write_compiledglsl(defs, make_variants):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
 
-        gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
+        gbuffer_size = make_renderpath.get_num_gbuffer_rts()
         f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
         # Write indices of G-Buffer render targets
@@ -650,7 +650,6 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
-const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
@@ -746,7 +745,7 @@ const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_voxelao:
+        if rpdat.rp_voxels:
             halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
