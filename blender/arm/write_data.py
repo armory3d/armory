@@ -432,9 +432,10 @@ def write_config(resx, resy):
         'rp_shadowmap_cascade': rp_shadowmap_cascade,
         'rp_ssgi': rpdat.rp_ssgi != 'Off',
         'rp_ssr': rpdat.rp_ssr != 'Off',
+        'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
-        'rp_gi': rpdat.rp_voxelao,
+        'rp_voxels': rpdat.rp_voxels,
         'rp_dynres': rpdat.rp_dynres
     }
 
@@ -465,7 +466,7 @@ class Main {
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
-        if rpdat.rp_voxelao:
+        if rpdat.rp_voxels:
             f.write("""
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
@@ -581,6 +582,7 @@ def write_compiledglsl(defs, make_variants):
             f.write('#define GBUF_IDX_2 2\n')
             idx_emission += 1
             idx_refraction += 1
+        
         if '_EmissionShaded' in wrd.world_defs:
             f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
             idx_refraction += 1
@@ -653,6 +655,13 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
+""")
+        if rpdat.rp_ss_refraction:
+            f.write(
+"""const float ss_refractionRayStep = """ + str(round(rpdat.arm_ss_refraction_ray_step * 100) / 100) + """;
+const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
+const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
+const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
 """)
 
         if rpdat.arm_ssrs:
@@ -751,6 +760,7 @@ const float compoDOFLength = 160.0;
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;

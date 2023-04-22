@@ -65,7 +65,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Off'
+        rpdat.rp_voxels = False
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -103,7 +103,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Off'
+        rpdat.rp_voxels = False
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -184,7 +184,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Off'
+        rpdat.rp_voxels = False
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -387,7 +387,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
-        items=[('Off', 'No AO', 'Off'),
+        items=[('Off', 'Off', 'Off'),
                 ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
                 ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
                ],

@@ -88,9 +88,19 @@ def add_world_defs():
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    if voxelao:
-        assets.add_khafile_def('arm_voxelgi')
-        wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
+    if rpdat.rp_ssgi == 'RTAO':
+        wrd.world_defs += '_RTAO'
+        if rpdat.arm_ssgi_rays == '9':
+            wrd.world_defs += '_SSGICone9'
+
+    has_voxels = arm.utils.voxel_support()
+    if rpdat.rp_voxels and has_voxels and rpdat.arm_material_model == 'Full':
+        wrd.world_defs += '_VoxelAOvar' # Write a shader variant
+        if rpdat.arm_voxelgi_shadows:
+            wrd.world_defs += '_VoxelShadow'
+        if rpdat.arm_voxelgi_occ == 0.0:
+            wrd.world_defs += '_VoxelAONoTrace'
+
         if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
             if rpdat.arm_voxelgi_camera:
@@ -98,13 +108,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_temporal:
                 assets.add_khafile_def('arm_voxelgi_temporal')
                 wrd.world_defs += '_VoxelGITemporal'
-
-        elif voxelao:
-            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelShadow'
-            if rpdat.arm_voxelgi_occ == 0.0:
-                wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         wrd.world_defs += '_Legacy'
