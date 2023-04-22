@@ -753,7 +753,8 @@ class RenderPathDeferred {
 
 		#if rp_ssrefr
 		{
-			if (armory.data.Config.raw.rp_ssrefr != false) {
+			if (armory.data.Config.raw.rp_ssrefr != false)
+			{
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
