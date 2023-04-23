@@ -162,7 +162,11 @@ def export_data(fp, sdk_path):
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
         os.makedirs(build_dir + '/compiled/Assets')
-    # have a "zoo" collection in the current scene
+
+    # Make all 'MESH' and 'EMPTY' objects visible to the depsgraph (we pass
+    # this to the exporter further below) with a temporary "zoo" collection
+    # in the current scene. We do this to ensure that (among other things)
+    # modifiers are applied to all exported objects.
     export_coll = bpy.data.collections.new("export_coll")
     bpy.context.scene.collection.children.link(export_coll)
     export_coll_names = set(export_coll.all_objects.keys())
@@ -175,7 +179,7 @@ def export_data(fp, sdk_path):
                     export_coll.objects.link(o)
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()
-    bpy.data.collections.remove(export_coll) # destroy "zoo" collection
+    bpy.data.collections.remove(export_coll)  # Destroy the "zoo" collection
 
     for scene in bpy.data.scenes:
         if scene.arm_export:
