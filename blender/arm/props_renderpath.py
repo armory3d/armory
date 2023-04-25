@@ -282,7 +282,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Desktop")
 
-    rp_driver_list: CollectionProperty(type=bpy.types.PropertyGroup)
     rp_driver: StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
     rp_renderer: EnumProperty(
         items=[('Forward', 'Forward Clustered', 'Forward'),
@@ -748,6 +747,7 @@ def register():
     bpy.utils.register_class(ArmRPListMoveItem)
 
     bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
+    bpy.types.World.rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
 
 def unregister():
