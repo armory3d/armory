@@ -140,8 +140,7 @@ def get_export_tree_name(tree: bpy.types.NodeTree, do_warn=False) -> str:
     export_name = arm.utils.safesrc(tree.name[0].upper() + tree.name[1:])
 
     if export_name != tree.name:
-        arm.log.warn('Logic node tree and generated trait names differ! Node'
-                     f' tree: "{tree.name}", trait: "{export_name}"')
+        arm.log.warn(f'The logic node tree "{tree.name}" had to be temporarily renamed to "{export_name}" on export due to Haxe limitations. Referencing the corresponding trait by its logic node tree name may not work as expected.')
 
     return export_name
 
