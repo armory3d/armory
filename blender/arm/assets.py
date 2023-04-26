@@ -66,7 +66,6 @@ def add(asset_file):
     for f in assets:
         f_file_base = os.path.basename(f)
         if f_file_base == asset_file_base:
-            log.warn(f'Asset name "{asset_file_base}" already exists, skipping')
             return
 
     assets.append(asset_file)
