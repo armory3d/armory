@@ -662,7 +662,7 @@ class ArmNewWasmButton(bpy.types.Operator):
     bl_label = 'New Module'
 
     def execute(self, context):
-        webbrowser.open('https://webassembly-studio.kamenokosoft.com/')
+        webbrowser.open('https://esmbly.github.io/WebAssemblyStudio/')
         return{'FINISHED'}
 
 class ArmRefreshScriptsButton(bpy.types.Operator):
