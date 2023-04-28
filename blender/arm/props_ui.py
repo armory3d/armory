@@ -2690,6 +2690,23 @@ def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
 
     return box
 
+
+def draw_multiline_with_icon(layout: bpy.types.UILayout, layout_width_px: int, icon: str, text: str) -> bpy.types.UILayout:
+    """Draw a multiline string with an icon in the given UILayout
+    and return it for further optional modification.
+    The text is wrapped according to the given layout width.
+    """
+    textwrap_width = max(0, layout_width_px // 6)
+    lines = textwrap.wrap(text, width=textwrap_width, break_long_words=True)
+
+    col = layout.column(align=True)
+    col.scale_y = 0.8
+    for idx, line in enumerate(lines):
+        col.label(text=line, icon=icon if idx == 0 else 'BLANK1')
+
+    return col
+
+
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
     bpy.utils.register_class(ARM_PT_ModifiersPropsPanel)

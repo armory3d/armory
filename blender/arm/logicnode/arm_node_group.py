@@ -16,10 +16,14 @@ from bpy.props import *
 import arm
 import arm.logicnode.arm_nodes as arm_nodes
 from arm.logicnode.arm_nodes import ArmLogicTreeNode
+import arm.utils
+import arm.props_ui
 
 if arm.is_reload(__name__):
     arm_nodes = arm.reload_module(arm_nodes)
     from arm.logicnode.arm_nodes import ArmLogicTreeNode
+    arm.utils = arm.reload_module(arm.utils)
+    arm.props_ui = arm.reload_module(arm.props_ui)
 else:
     arm.enable_reload(__name__)
 
@@ -303,10 +307,33 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
                     to_node = to_tree.nodes[from_to_node_names[from_node.name]]
                 to_node.parent = to_tree.nodes[new_frame_names[from_node.parent.name]]
 
+
+class TreeVarNameConflictItem(bpy.types.PropertyGroup):
+    """Represents two conflicting tree variables with the same name"""
+    name: StringProperty(
+        description='The name of the conflicting tree variables'
+    )
+    action: EnumProperty(
+        name='Conflict Resolution Action',
+        description='How to resolve the tree variable conflict',
+        default='rename',
+        items=[
+            ('rename', 'Rename', 'Automatically rename the group\'s tree variable'),
+            ('merge', 'Merge', 'Merge the conflicting tree variables'),
+        ]
+    )
+    needs_rename: BoolProperty(
+        description='If true, the conflict needs to be resolved by renaming'
+    )
+
+
 class ArmUngroupGroupTree(bpy.types.Operator):
     """Put sub nodes into current layout and delete current group node"""
     bl_idname = 'arm.ungroup_group_tree'
     bl_label = "Ungroup group tree"
+    bl_options = {'UNDO'}  # Required to "un-rename" node's arm_logic_id in case of tree variable conflicts
+
+    conflicts: CollectionProperty(type=TreeVarNameConflictItem)
 
     @classmethod
     def poll(cls, context):
@@ -316,12 +343,79 @@ class ArmUngroupGroupTree(bpy.types.Operator):
                     return True
         return False
 
+    def invoke(self, context, event):
+        group_node = context.active_node
+        group_tree = group_node.group_tree
+        dest_tree = group_node.get_tree()
+
+        # name -> type
+        group_tree_variables = {}
+        dest_tree_variables = {}
+
+        for var in group_tree.arm_treevariableslist:
+            group_tree_variables[var.name] = var.node_type
+        for var in dest_tree.arm_treevariableslist:
+            dest_tree_variables[var.name] = var.node_type
+
+        # Check for conflicting tree variables
+        self.conflicts.clear()  # Might still contain values from previous invocation
+        conflicting_var_names = group_tree_variables.keys() & dest_tree_variables.keys()
+        user_can_choose = False
+        for conflicting_var_name in conflicting_var_names:
+            conflict_item = self.conflicts.add()
+            conflict_item.name = conflicting_var_name
+
+            # Tree variable types differ, cannot merge
+            conflict_item.needs_rename = group_tree_variables[conflicting_var_name] != dest_tree_variables[conflicting_var_name]
+            user_can_choose |= not conflict_item.needs_rename
+
+        # If there are no conflicts or all conflicts _must_ be resolved
+        # via renaming there's no reason to ask the user
+        if user_can_choose:
+            wm = context.window_manager
+            return wm.invoke_props_dialog(self, width=400)
+
+        return self.execute(context)
+
+    def draw(self, context):
+        layout = self.layout
+
+        arm.props_ui.draw_multiline_with_icon(
+            layout, layout_width_px=400,
+            icon='ERROR',
+            text=(
+                'The group\'s logic tree contains tree variables whose names'
+                ' are identical to tree variable names in the enclosing tree.'
+            )
+        )
+        layout.label(icon='BLANK1', text='Please choose how to resolve the naming conflicts (press ESC to cancel):')
+        layout.separator()
+
+        conflict_item: TreeVarNameConflictItem
+        for conflict_item in self.conflicts:
+            split = layout.split(factor=0.6)
+            split.alignment = 'RIGHT'
+            split.label(text=conflict_item.name)
+
+            if conflict_item.needs_rename:
+                row = split.row()
+                row.label(text="Needs rename")
+            else:
+                row = split.row()
+                row.prop(conflict_item, "action", expand=True)
+
+        layout.separator()  # Add space above Blender's "OK" button
+
     def execute(self, context):
         """Similar to AddGroupTreeFromSelected operator but in backward direction (from sub tree to tree)"""
 
         # go to sub tree, select all except input and output groups and mark nodes to be copied
         group_node = context.active_node
         sub_tree = group_node.group_tree
+
+        if len(self.conflicts) > 0:
+            self._resolve_conflicts(sub_tree, group_node.get_tree())
+
         bpy.ops.arm.edit_group_tree(node_index=group_node.get_id_str())
         [setattr(n, 'select', False) for n in sub_tree.nodes]
         group_nodes_filter = filter(lambda n: n.bl_idname not in {'LNGroupInputsNode', 'LNGroupOutputsNode'}, sub_tree.nodes)
@@ -366,6 +460,35 @@ class ArmUngroupGroupTree(bpy.types.Operator):
         tree.update()
 
         return {'FINISHED'}
+
+    def _resolve_conflicts(self, group_tree: bpy.types.NodeTree, dest_tree: bpy.types.NodeTree):
+        rename_conflict_names = {}  # old variable name -> new variable name
+        for conflict_item in self.conflicts:
+            if conflict_item.needs_rename or conflict_item.action == 'rename':
+                # Initialize as empty, will be set further below
+                rename_conflict_names[conflict_item.name] = ''
+
+        for var_item in group_tree.arm_treevariableslist:
+            if var_item.name in rename_conflict_names:
+                # Create a renamed variable in the destination tree and ensure
+                # its name doesn't conflict with either tree
+                new_name = group_tree.name + '.' + var_item.name
+
+                dest_var = dest_tree.arm_treevariableslist.add()
+                dest_varname = arm.utils.unique_name_in_lists(
+                    item_lists=[group_tree.arm_treevariableslist, dest_tree.arm_treevariableslist],
+                    name_attr='name', wanted_name=new_name, ignore_item=dest_var
+                )
+                dest_var['_name'] = dest_varname
+                rename_conflict_names[var_item.name] = dest_varname
+                dest_var.node_type = var_item.node_type
+                dest_var.color = var_item.color
+
+        # Update the logic ids so that copying the nodes to the new tree
+        # pastes them with references to the newly created dest_var
+        for node in group_tree.nodes:
+            node.arm_logic_id = rename_conflict_names.get(node.arm_logic_id, node.arm_logic_id)
+
 
 class ArmAddCallGroupNode(bpy.types.Operator):
     """Create A Call Group Node"""
@@ -432,6 +555,7 @@ REG_CLASSES = (
     ArmSearchGroupTree,
     ArmAddGroupTree,
     ArmAddGroupTreeFromSelected,
+    TreeVarNameConflictItem,
     ArmUngroupGroupTree,
     ArmAddCallGroupNode,
     ARM_PT_LogicGroupPanel
