@@ -85,7 +85,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > 0.0 && d > depth) return binarySearch(dir);
+		if(d > 0.0) return binarySearch(dir);
 	}
 	return vec4(0.0);
 }
