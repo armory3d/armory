@@ -38,16 +38,16 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
 }
 
+/*
 vec4 binarySearch(vec3 dir) {
 	float d;
-	vec3 start = hitCoord;
-	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= 0.5;
+	for (int i = 0; i < 64; i++) {
+		dir *= 0.05;
 		hitCoord -= dir;
 		d = getDeltaDepth(hitCoord);
 		if (d < 0.0)
@@ -61,6 +61,7 @@ vec4 binarySearch(vec3 dir) {
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
+*/
 
 vec4 rayCast(vec3 dir) {
 	float d;
@@ -72,7 +73,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		float d = getDeltaDepth(hitCoord);
-		if(d > 0.0 && d < depth) return binarySearch(hitCoord);
+		if(d > 0.0 && d < depth) return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 	}
 	return vec4(0.0);
 }

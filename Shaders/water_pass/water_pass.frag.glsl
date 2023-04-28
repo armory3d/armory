@@ -57,6 +57,7 @@ float getDeltaDepth(const vec3 hit) {
 	return viewPos.z - hit.z;
 }
 
+/*
 vec4 binarySearch(vec3 dir) {
 	float d;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
@@ -73,6 +74,7 @@ vec4 binarySearch(vec3 dir) {
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
+*/
 
 vec4 rayCast(vec3 dir) {
 	float d;
@@ -84,7 +86,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		d = getDeltaDepth(hitCoord);
-		if(d > 0.0 && d < gdepth) return binarySearch(dir);
+		if(d > 0.0 && d < gdepth) return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 	}
 	return vec4(0.0);
 }
