@@ -427,18 +427,37 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
 
             self.is_master_node = False  # Ignore this node in get_master_node below
             if self.__class__.get_master_node(target_tree, self.arm_logic_id) is None:
-                var_item = lst.add()
-                var_item['_name'] = arm.utils.unique_str_for_list(
-                    items=lst, name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
-                )
-                var_item.node_type = self.bl_idname
-                var_item.color = arm.utils.get_random_color_rgb()
 
-                target_tree.arm_treevariableslist_index = len(lst) - 1
-                arm.make_state.redraw_ui = True
+                # copy() is not only called when manually copying/pasting
+                # nodes, but also when duplicating logic trees.
+                # In that case, Blender duplicates the arm_treevariableslist
+                # property, so all tree variables already exist before
+                # adding a single node to the new tree. In turn, each
+                # tree variable exists without a master node before
+                # the first node referencing that variable is copied over
+                # to the new tree.
+                # For this reason, despite having no master node, we need
+                # to check whether the tree variable already exists.
+                target_tree_has_variable = False
+                for item in lst:
+                    if item.name == self.arm_logic_id:
+                        target_tree_has_variable = True
+                        break
+
+                if not target_tree_has_variable:
+                    var_item = lst.add()
+                    var_item['_name'] = arm.utils.unique_name_in_lists(
+                        item_lists=[lst], name_attr='name', wanted_name=self.arm_logic_id, ignore_item=var_item
+                    )
+                    var_item.node_type = self.bl_idname
+                    var_item.color = arm.utils.get_random_color_rgb()
+
+                    target_tree.arm_treevariableslist_index = len(lst) - 1
+                    arm.make_state.redraw_ui = True
 
                 self.is_master_node = True
             else:
+                # Use existing variable
                 for item in lst:
                     if item.name == self.arm_logic_id:
                         self.color = item.color
