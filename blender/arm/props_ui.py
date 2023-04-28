@@ -1391,7 +1391,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_options = {'INSTANCED'}
 
     def draw_header(self, context):
-        row = self.layout.row(align=True)                
+        row = self.layout.row(align=True)
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY", text="")
         else:
@@ -1405,7 +1405,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
 
         col.label(text="Armory Launch")
         col.separator()
-        
+
         col.prop(wrd, 'arm_runtime')
         col.prop(wrd, 'arm_play_camera')
         col.prop(wrd, 'arm_play_scene')
@@ -2350,7 +2350,7 @@ class ARM_OT_CopyToBundled(bpy.types.Operator):
                                 print(log.colorize(f'Asset name "{asset.name}" already exists, overriding the original', 33), file=sys.stderr)
                             # Invalid file or corrupted
                             else:
-                                # Syntax - Red 
+                                # Syntax - Red
                                 log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
                                 continue
                         # Override -> No
@@ -2673,6 +2673,7 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub = row.row()
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
+
 
 def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
     """Draw an error box in the given UILayout and return it for

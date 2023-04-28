@@ -1,18 +1,16 @@
-# Some parts of this code is reused from project Sverchok. 
-# https://https://github.com/nortikin/sverchok/blob/master/core/node_group.py
+# Some parts of this code is reused from project Sverchok.
+# https://github.com/nortikin/sverchok/blob/master/core/node_group.py
 #
 # SPDX-License-Identifier: GPL3
 # License-Filename: LICENSE
+from functools import reduce
+from typing import List, Set, Dict
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty
-from itertools import zip_longest, chain, cycle, islice
-from functools import reduce
+from bpy.props import *
+import bpy.types
 from mathutils import Vector
 
-from typing import List, Set, Dict, Optional
-import bpy.types
-from bpy.props import *
 import arm
 import arm.logicnode.arm_nodes as arm_nodes
 from arm.logicnode.arm_nodes import ArmLogicTreeNode
@@ -29,11 +27,12 @@ else:
 
 array_nodes = arm.logicnode.arm_nodes.array_nodes
 
+
 class ArmGroupTree(bpy.types.NodeTree):
-    """Separate tree class for sub trees"""
+    """Separate tree class for subtrees"""
     bl_idname = 'ArmGroupTree'
     bl_icon = 'NODETREE'
-    bl_label = 'Group tree'
+    bl_label = 'Group Tree'
 
     # should be updated by "Go to edit group tree" operator
     group_node_name: bpy.props.StringProperty(options={'SKIP_SAVE'})
@@ -44,9 +43,9 @@ class ArmGroupTree(bpy.types.NodeTree):
 
     def upstream_trees(self) -> List['ArmGroupTree']:
         """
-        Returns all the tree sub trees (in case if there are group nodes)
-        and sub trees of sub trees and so on
-        The method can help predict if linking new sub tree can lead to cyclic linking
+        Returns all the tree subtrees (in case if there are group nodes)
+        and subtrees of subtrees and so on
+        The method can help predict if linking new subtree can lead to cyclic linking
         """
         next_group_nodes = [node for node in self.nodes if node.bl_idname == 'LNCallGroupNode']
         trees = [self]
@@ -70,14 +69,15 @@ class ArmGroupTree(bpy.types.NodeTree):
         current_tree_downstream_trees = {p.node_tree.name for p in bpy.context.space_data.path}
         shared_trees = tested_tree_upstream_trees & current_tree_downstream_trees
         return not shared_trees
-    
+
     def update(self):
         pass
 
+
 class ArmEditGroupTree(bpy.types.Operator):
-    """Go into sub tree to edit"""
+    """Go into subtree to edit"""
     bl_idname = 'arm.edit_group_tree'
-    bl_label = 'Edit group tree'
+    bl_label = 'Edit Group Tree'
     node_index: StringProperty(name='Node Index', default='')
 
     def custom_poll(self, context):
@@ -103,28 +103,28 @@ class ArmEditGroupTree(bpy.types.Operator):
             return {'FINISHED'}
         return {'CANCELLED'}
 
+
 class ArmCopyGroupTree(bpy.types.Operator):
     """Create a copy of this group tree and use it"""
     bl_idname = 'arm.copy_group_tree'
-    bl_label = 'Copy group tree'
+    bl_label = 'Copy Group Tree'
     node_index: StringProperty(name='Node Index', default='')
 
     def execute(self, context):
         global array_nodes
         group_node = array_nodes[self.node_index]
         group_tree = group_node.group_tree
-        [setattr(n, 'copy_override', True) for n in group_tree.nodes
-        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        [setattr(n, 'copy_override', True) for n in group_tree.nodes if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
         new_group_tree = group_node.group_tree.copy()
-        [setattr(n, 'copy_override', False) for n in group_tree.nodes
-        if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        [setattr(n, 'copy_override', False) for n in group_tree.nodes if n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
         group_node.group_tree = new_group_tree
         return {'FINISHED'}
+
 
 class ArmUnlinkGroupTree(bpy.types.Operator):
     """Unlink node-group (Shift + Click to set users to zero, data will then not be saved)"""
     bl_idname = 'arm.unlink_group_tree'
-    bl_label = 'Unlink group tree'
+    bl_label = 'Unlink Group Tree'
     node_index: StringProperty(name='Node Index', default='')
 
     def invoke(self, context, event):
@@ -143,10 +143,11 @@ class ArmUnlinkGroupTree(bpy.types.Operator):
             group_tree.user_clear()
         return {'FINISHED'}
 
+
 class ArmSearchGroupTree(bpy.types.Operator):
     """Browse group trees to be linked"""
     bl_idname = 'arm.search_group_tree'
-    bl_label = 'Search group tree'
+    bl_label = 'Search Group Tree'
     bl_property = 'tree_name'
     node_index: StringProperty(name='Node Index', default='')
 
@@ -167,10 +168,11 @@ class ArmSearchGroupTree(bpy.types.Operator):
         context.window_manager.invoke_search_popup(self)
         return {'FINISHED'}
 
+
 class ArmAddGroupTree(bpy.types.Operator):
-    """Create empty sub tree for group node"""
+    """Create empty subtree for group node"""
     bl_idname = "arm.add_group_tree"
-    bl_label = "Add group tree"
+    bl_label = "Add Group Tree"
     node_index: StringProperty(name='Node Index', default='')
 
     @classmethod
@@ -182,22 +184,23 @@ class ArmAddGroupTree(bpy.types.Operator):
         return False
 
     def execute(self, context):
-        """Link new sub tree to group node, create input and output nodes in sub tree and go to edit one"""
+        """Link new subtree to group node, create input and output nodes in subtree and go to edit one"""
         global array_nodes
-        sub_tree = bpy.data.node_groups.new('Armory group', 'ArmGroupTree')  # creating sub tree
+        sub_tree = bpy.data.node_groups.new('Armory group', 'ArmGroupTree')  # creating subtree
         sub_tree.use_fake_user = True
         group_node = array_nodes[self.node_index]
-        group_node.group_tree = sub_tree  # link sub tree to group node
-        sub_tree.nodes.new('LNGroupInputsNode').location = (-250, 0)  # create node for putting data into sub tree
-        sub_tree.nodes.new('LNGroupOutputsNode').location = (250, 0)  # create node for getting data from sub tree
+        group_node.group_tree = sub_tree  # link subtree to group node
+        sub_tree.nodes.new('LNGroupInputsNode').location = (-250, 0)  # create node for putting data into subtree
+        sub_tree.nodes.new('LNGroupOutputsNode').location = (250, 0)  # create node for getting data from subtree
         context.space_data.path.append(sub_tree, node=group_node)
         sub_tree.group_node_name = group_node.name
         return {'FINISHED'}
 
+
 class ArmAddGroupTreeFromSelected(bpy.types.Operator):
-    """Select nodes group node and placing them into sub tree"""
+    """Select nodes group node and placing them into subtree"""
     bl_idname = "arm.add_group_tree_from_selected"
-    bl_label = "Add group tree from selected"
+    bl_label = "Create Group Tree from Selected"
 
     @classmethod
     def poll(cls, context):
@@ -225,14 +228,12 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
         sub_tree: ArmGroupTree = bpy.data.node_groups.new('Armory group', 'ArmGroupTree')
 
         # deselect group nodes if selected
-        [setattr(n, 'select', False) for n in base_tree.nodes
-        if n.select and n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        [setattr(n, 'select', False) for n in base_tree.nodes if n.select and n.bl_idname in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
 
-        # Frames can't be just copied because they does not have absolute location, but they can be recreated
+        # Frames can't be just copied because they do not have absolute location, but they can be recreated
         frame_names = {n.name for n in base_tree.nodes if n.select and n.bl_idname == 'NodeFrame'}
         [setattr(n, 'select', False) for n in base_tree.nodes if n.bl_idname == 'NodeFrame']
 
-        
         # copy and past nodes into group tree
         bpy.ops.node.clipboard_copy()
         context.space_data.path.append(sub_tree)
@@ -268,8 +269,7 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
         # delete selected nodes and copied frames without children
         [base_tree.nodes.remove(n) for n in self.filter_selected_nodes(base_tree)]
         with_children_frames = {n.parent.name for n in base_tree.nodes if n.parent}
-        [base_tree.nodes.remove(n) for n in base_tree.nodes
-        if n.name in frame_names and n.name not in with_children_frames]
+        [base_tree.nodes.remove(n) for n in base_tree.nodes if n.name in frame_names and n.name not in with_children_frames]
 
         # enter the group tree
         bpy.ops.arm.edit_group_tree(node_index=group_node.get_id_str())
@@ -278,7 +278,7 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
 
     @staticmethod
     def filter_selected_nodes(tree) -> list:
-        """Avoiding selecting nodes which should not be copied into sub tree"""
+        """Avoiding selecting nodes which should not be copied into subtree"""
         return [n for n in tree.nodes if n.select and n.bl_idname not in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
 
     @staticmethod
@@ -330,7 +330,7 @@ class TreeVarNameConflictItem(bpy.types.PropertyGroup):
 class ArmUngroupGroupTree(bpy.types.Operator):
     """Put sub nodes into current layout and delete current group node"""
     bl_idname = 'arm.ungroup_group_tree'
-    bl_label = "Ungroup group tree"
+    bl_label = "Ungroup Group Tree"
     bl_options = {'UNDO'}  # Required to "un-rename" node's arm_logic_id in case of tree variable conflicts
 
     conflicts: CollectionProperty(type=TreeVarNameConflictItem)
@@ -407,9 +407,9 @@ class ArmUngroupGroupTree(bpy.types.Operator):
         layout.separator()  # Add space above Blender's "OK" button
 
     def execute(self, context):
-        """Similar to AddGroupTreeFromSelected operator but in backward direction (from sub tree to tree)"""
+        """Similar to AddGroupTreeFromSelected operator but in backward direction (from subtree to tree)"""
 
-        # go to sub tree, select all except input and output groups and mark nodes to be copied
+        # go to subtree, select all except input and output groups and mark nodes to be copied
         group_node = context.active_node
         sub_tree = group_node.group_tree
 
@@ -429,7 +429,7 @@ class ArmUngroupGroupTree(bpy.types.Operator):
             if 'sub_node_name' in node:
                 del node['sub_node_name']
 
-        # Frames can't be just copied because they does not have absolute location, but they can be recreated
+        # Frames can't be just copied because they do not have absolute location, but they can be recreated
         frame_names = {n.name for n in sub_tree.nodes if n.select and n.bl_idname == 'NodeFrame'}
         [setattr(n, 'select', False) for n in sub_tree.nodes if n.bl_idname == 'NodeFrame']
 
@@ -449,7 +449,7 @@ class ArmUngroupGroupTree(bpy.types.Operator):
             node_name_mapping = {n['sub_node_name']: n.name for n in tree.nodes if 'sub_node_name' in n}
             ArmAddGroupTreeFromSelected.recreate_frames(sub_tree, tree, frame_names, node_name_mapping)
         else:
-            context.space_data.path.pop()  # should exit from sub tree anywhere
+            context.space_data.path.pop()  # should exit from subtree anywhere
 
         # delete group node
         tree.nodes.remove(group_node)
@@ -493,7 +493,7 @@ class ArmUngroupGroupTree(bpy.types.Operator):
 class ArmAddCallGroupNode(bpy.types.Operator):
     """Create A Call Group Node"""
     bl_idname = 'arm.add_call_group_node'
-    bl_label = "Add call group node"
+    bl_label = "Add 'Call Node Group' Node"
 
     node_ref = None
 
@@ -521,6 +521,7 @@ class ArmAddCallGroupNode(bpy.types.Operator):
         self.node_ref.location = context.space_data.cursor_location
         return {'FINISHED'}
 
+
 class ARM_PT_LogicGroupPanel(bpy.types.Panel):
     bl_label = 'Armory Logic Group'
     bl_idname = 'ARM_PT_LogicGroupPanel'
@@ -545,7 +546,8 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
         layout.operator('arm.ungroup_group_tree', icon='NODETREE')
         row = layout.row()
         row.enabled = self.has_active_node(context)
-        row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
+        row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit Tree')
+
 
 REG_CLASSES = (
     ArmGroupTree,

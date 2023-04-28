@@ -299,7 +299,7 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def change_input_socket(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
         """Change an input socket type retaining the previous socket links
-        
+
         If `is_var` is true, a dot is placed inside the socket to denote
         that this socket can be used for variable access (see
         SetVariable node).
@@ -321,7 +321,7 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def change_output_socket(self, socket_type: str, socket_index: int, socket_name: str, default_value: Any = None, is_var: bool = False) -> bpy.types.NodeSocket:
         """Change an output socket type retaining the previous socket links
-        
+
         If `is_var` is true, a dot is placed inside the socket to denote
         that this socket can be used for variable access (see
         SetVariable node).
