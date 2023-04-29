@@ -1391,7 +1391,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_options = {'INSTANCED'}
 
     def draw_header(self, context):
-        row = self.layout.row(align=True)                
+        row = self.layout.row(align=True)
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY", text="")
         else:
@@ -1405,7 +1405,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
 
         col.label(text="Armory Launch")
         col.separator()
-        
+
         col.prop(wrd, 'arm_runtime')
         col.prop(wrd, 'arm_play_camera')
         col.prop(wrd, 'arm_play_scene')
@@ -2350,7 +2350,7 @@ class ARM_OT_CopyToBundled(bpy.types.Operator):
                                 print(log.colorize(f'Asset name "{asset.name}" already exists, overriding the original', 33), file=sys.stderr)
                             # Invalid file or corrupted
                             else:
-                                # Syntax - Red 
+                                # Syntax - Red
                                 log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
                                 continue
                         # Override -> No
@@ -2674,6 +2674,7 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
 
+
 def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
     """Draw an error box in the given UILayout and return it for
     further optional modification. The text is wrapped automatically
@@ -2689,6 +2690,23 @@ def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
         col.label(text=line, icon='ERROR' if idx == 0 else 'BLANK1')
 
     return box
+
+
+def draw_multiline_with_icon(layout: bpy.types.UILayout, layout_width_px: int, icon: str, text: str) -> bpy.types.UILayout:
+    """Draw a multiline string with an icon in the given UILayout
+    and return it for further optional modification.
+    The text is wrapped according to the given layout width.
+    """
+    textwrap_width = max(0, layout_width_px // 6)
+    lines = textwrap.wrap(text, width=textwrap_width, break_long_words=True)
+
+    col = layout.column(align=True)
+    col.scale_y = 0.8
+    for idx, line in enumerate(lines):
+        col.label(text=line, icon=icon if idx == 0 else 'BLANK1')
+
+    return col
+
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)

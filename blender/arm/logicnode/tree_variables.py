@@ -357,7 +357,7 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
             # Don't allow empty variable names
             new_name = old_name
         else:
-            new_name = arm.utils.unique_str_for_list(items=lst, name_attr='name', wanted_name=value, ignore_item=self)
+            new_name = arm.utils.unique_name_in_lists(item_lists=[lst], name_attr='name', wanted_name=value, ignore_item=self)
 
         self['_name'] = new_name
 
@@ -409,8 +409,8 @@ class ARM_PG_TreeVarListItem(bpy.types.PropertyGroup):
         lst = tree.arm_treevariableslist
 
         var_item: ARM_PG_TreeVarListItem = lst.add()
-        var_item['_name'] = arm.utils.unique_str_for_list(
-            items=lst, name_attr='name', wanted_name=item_name, ignore_item=var_item
+        var_item['_name'] = arm.utils.unique_name_in_lists(
+            item_lists=[lst], name_attr='name', wanted_name=item_name, ignore_item=var_item
         )
         var_item.node_type = item_type
         var_item.color = arm.utils.get_random_color_rgb()
