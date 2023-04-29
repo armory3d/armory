@@ -177,11 +177,11 @@ vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
 #ifdef _CVignette
 float vignette() {
 	#ifdef _CPostprocess
-		float uStrength = PPComp14.z;
+		float strengthVignette = PPComp14.z;
 	#else
-		float uStrength = compoVignetteStrength;
+		float strengthVignette = compoVignetteStrength;
 	#endif
-	return (1.0 - uStrength) + uStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+	return (1.0 - strengthVignette) + strengthVignette * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 #endif
 
@@ -260,11 +260,11 @@ void main() {
 
 #ifdef _CDistort
 	#ifdef _CPostprocess
-		float uStrength = PPComp14.x;
+		float strengthDistort = PPComp14.x;
 	#else
-		float uStrength = compoDistortStrength;
+		float strengthDistort = compoDistortStrength;
 	#endif
-	float uX = time * uStrength;
+	float uX = time * strengthDistort;
 	texCo.y = texCo.y + (sin(texCo.x*4.0+uX*2.0)*0.01);
 	texCo.x = texCo.x + (cos(texCo.y*4.0+uX*2.0)*0.01);
 #endif
@@ -349,16 +349,16 @@ void main() {
 	
 #ifdef _CSharpen
 	#ifdef _CPostprocess
-		float uStrength = PPComp14.y;
+		float strengthSharpen = PPComp14.y;
 	#else
-		float uStrength = compoSharpenStrength;
+		float strengthSharpen = compoSharpenStrength;
 	#endif
 	vec3 col1 = textureLod(tex, texCo + vec2(-texStep.x, -texStep.y) * 1.5, 0.0).rgb;
 	vec3 col2 = textureLod(tex, texCo + vec2(texStep.x, -texStep.y) * 1.5, 0.0).rgb;
 	vec3 col3 = textureLod(tex, texCo + vec2(-texStep.x, texStep.y) * 1.5, 0.0).rgb;
 	vec3 col4 = textureLod(tex, texCo + vec2(texStep.x, texStep.y) * 1.5, 0.0).rgb;
 	vec3 colavg = (col1 + col2 + col3 + col4) * 0.25;
-	fragColor.rgb += (fragColor.rgb - colavg) * uStrength;
+	fragColor.rgb += (fragColor.rgb - colavg) * strengthSharpen;
 #endif
 
 #ifdef _CFog
