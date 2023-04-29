@@ -187,28 +187,28 @@ float vignette() {
 
 #ifdef _CGlare
 // Based on lense flare implementation by musk
-// https://www.shadertoy.com/view/4sX3Rs 
+// https://www.shadertoy.com/view/4sX3Rs
 vec3 lensflare(vec2 uv, vec2 pos) {
 	vec2 uvd = uv * (length(uv));
 	float f2 = max(1.0/(1.0+32.0*pow(length(uvd+0.8*pos),2.0)),0.0)*0.25;
 	float f22 = max(1.0/(1.0+32.0*pow(length(uvd+0.85*pos),2.0)),0.0)*0.23;
 	float f23 = max(1.0/(1.0+32.0*pow(length(uvd+0.9*pos),2.0)),0.0)*0.21;
-	
+
 	vec2 uvx = mix(uv, uvd, -0.5);
 	float f4 = max(0.01-pow(length(uvx+0.4*pos),2.4),0.0)*6.0;
 	float f42 = max(0.01-pow(length(uvx+0.45*pos),2.4),0.0)*5.0;
 	float f43 = max(0.01-pow(length(uvx+0.5*pos),2.4),0.0)*3.0;
-	
+
 	uvx = mix(uv, uvd, -0.4);
 	float f5 = max(0.01-pow(length(uvx+0.2*pos),5.5),0.0)*2.0;
 	float f52 = max(0.01-pow(length(uvx+0.4*pos),5.5),0.0)*2.0;
 	float f53 = max(0.01-pow(length(uvx+0.6*pos),5.5),0.0)*2.0;
-	
+
 	uvx = mix(uv, uvd, -0.5);
 	float f6 = max(0.01-pow(length(uvx-0.3*pos),1.6),0.0)*6.0;
 	float f62 = max(0.01-pow(length(uvx-0.325*pos),1.6),0.0)*3.0;
 	float f63 = max(0.01-pow(length(uvx-0.35*pos),1.6),0.0)*5.0;
-	
+
 	vec3 c = vec3(0.0);
 	c.r += f2 + f4 + f5 + f6;
 	c.g += f22 + f42 + f52 + f62;
@@ -277,13 +277,13 @@ void main() {
 	const float FXAA_REDUCE_MIN = 1.0 / 128.0;
 	const float FXAA_REDUCE_MUL = 1.0 / 8.0;
 	const float FXAA_SPAN_MAX = 8.0;
-	
+
 	vec2 tcrgbNW = (texCo + vec2(-1.0, -1.0) * texStep);
 	vec2 tcrgbNE = (texCo + vec2(1.0, -1.0) * texStep);
 	vec2 tcrgbSW = (texCo + vec2(-1.0, 1.0) * texStep);
 	vec2 tcrgbSE = (texCo + vec2(1.0, 1.0) * texStep);
 	vec2 tcrgbM = vec2(texCo);
-	
+
 	vec3 rgbNW = textureLod(tex, tcrgbNW, 0.0).rgb;
 	vec3 rgbNE = textureLod(tex, tcrgbNE, 0.0).rgb;
 	vec3 rgbSW = textureLod(tex, tcrgbSW, 0.0).rgb;
@@ -297,32 +297,32 @@ void main() {
 	float lumaM  = dot(rgbM,  luma);
 	float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
 	float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-	
+
 	vec2 dir;
 	dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
 	dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-	
+
 	float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
 						  (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
-	
+
 	float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
 	dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
 			  max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
 			  dir * rcpDirMin)) * texStep;
-			  
+
 	vec3 rgbA = 0.5 * (
 		textureLod(tex, texCo + dir * (1.0 / 3.0 - 0.5), 0.0).rgb +
 		textureLod(tex, texCo + dir * (2.0 / 3.0 - 0.5), 0.0).rgb);
 	vec3 rgbB = rgbA * 0.5 + 0.25 * (
 		textureLod(tex, texCo + dir * -0.5, 0.0).rgb +
 		textureLod(tex, texCo + dir * 0.5, 0.0).rgb);
-	
+
 	float lumaB = dot(rgbB, luma);
 	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor = vec4(rgbA, 1.0);
 	else fragColor = vec4(rgbB, 1.0);
 
 #else
-	
+
 	#ifdef _CDOF
 		#ifdef _CPostprocess
 
@@ -346,7 +346,7 @@ void main() {
 	#endif
 
 #endif
-	
+
 #ifdef _CSharpen
 	#ifdef _CPostprocess
 		float strengthSharpen = PPComp14.y;
@@ -396,7 +396,7 @@ void main() {
 		fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 	#endif
 #endif
-	
+
 #ifdef _CGrainStatic
 	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * 10.0;
 	fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * 0.09;
@@ -452,7 +452,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 			vec4 vh = vec4(fragColor.rgb, 1);
 			vec4 va = (1.425 * vh) + 0.05;
 			vec4 vf = ((vh * va + 0.004) / ((vh * (va + 0.55) + 0.0491))) - 0.0821;
-			fragColor.rgb = vf.rgb / vf.www; 
+			fragColor.rgb = vf.rgb / vf.www;
 		} else if (PPComp4.x == 8){ //False Colors for luminance control
 
 			vec4 c = vec4(fragColor.r,fragColor.g,fragColor.b,0); //Linear without gamma
@@ -475,7 +475,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 			} else {
 				fragColor.rgb = mix(midLumColor, maxLumColor, luminance);
 			}
-			
+
 		} else {
 			fragColor.rgb = vec3(0,1,0); //ERROR
 		}
@@ -505,7 +505,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 		fragColor.rgb = clamp((fragColor.rgb * (1 * fragColor.rgb + 1)) / (fragColor.rgb * (1 * fragColor.rgb + 1 ) + 1), 0.0, 1.0);
 	#endif
 #endif
-	
+
 #ifdef _CBW
 	// fragColor.rgb = vec3(clamp(dot(fragColor.rgb, fragColor.rgb), 0.0, 1.0));
 	fragColor.rgb = vec3((fragColor.r * 0.3 + fragColor.g * 0.59 + fragColor.b * 0.11) / 3.0) * 2.5;
@@ -567,11 +567,11 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 		vec2 ToneWeights = vec2(globalWeight.y, globalWeight.z);
 
 		fragColor.rgb = FinalizeColorCorrection(
-			fragColor.rgb, 
-			CCSaturation, 
-			CCContrast, 
-			CCGamma, 
-			CCGain, 
+			fragColor.rgb,
+			CCSaturation,
+			CCContrast,
+			CCGamma,
+			CCGain,
 			CCOffset,
 			ToneWeights
 		);
@@ -598,7 +598,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 			float luminanceMin = compoLuminanceMin;
 			float brightnessExp = compoBrightnessExponent;
 		#endif
-		
+
 		float center = smoothstep(centerMaxClip, centerMinClip, length(texCo - 0.5));
 		float luminance = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
 		float brightnessMap = smoothstep(luminanceMax, luminanceMin, luminance * center);
