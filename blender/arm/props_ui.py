@@ -1695,7 +1695,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
-        self.layout.prop(rpdat, "rp_voxels", text="")
+        self.layout.prop(rpdat, "rp_voxelao", text="")
     
     def draw(self, context):
         layout = self.layout
@@ -1706,7 +1706,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
-        layout.enabled = rpdat.rp_voxels
+        layout.enabled = rpdat.rp_voxelao
         layout.prop(rpdat, 'arm_voxelgi_shadows')
         layout.prop(rpdat, 'arm_voxelgi_cones')
         layout.prop(rpdat, 'rp_voxelgi_resolution')
