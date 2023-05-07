@@ -53,7 +53,9 @@ class Postprocess {
 		128,				//8: DoF F-Stop
 		0,					//9: Tonemapping Method
 		2.0,				//10: Distort
-		2.0					//11: Film Grain
+		2.0,				//11: Film Grain
+		0.25,				//12: Sharpen
+		0.7					//13: Vignette
 	];
 
 	public static var tonemapper_uniforms = [
@@ -62,6 +64,11 @@ class Postprocess {
 		1.0, 				//2: Shoulder
 		1.0, 				//3: Black Clip
 		1.0 				//4: White Clip
+	];
+
+	public static var letterbox_uniforms = [
+		[0.0, 0.0, 0.0], 	//0: Colors
+		[0.1] 				//1: Size
 	];
 
 	public static var ssr_uniforms = [
@@ -305,8 +312,8 @@ class Postprocess {
 		case "_PPComp14":
 			v = iron.object.Uniforms.helpVec;
 			v.x = camera_uniforms[10]; //Distort
-			v.y = 0;
-			v.z = 0;
+			v.y = camera_uniforms[12]; //Sharpen
+			v.z = camera_uniforms[13]; //Vignette
 		}
 
 		return v;
@@ -325,6 +332,12 @@ class Postprocess {
 				v.z = 2 * bloom_uniforms[1];
 				v.w = 0.25 / (bloom_uniforms[1] + 6.2e-5);
 			}
+		case "_PPComp15":
+			v = iron.object.Uniforms.helpVec;
+			v.x = letterbox_uniforms[0][0]; //Color
+			v.y = letterbox_uniforms[0][1];
+			v.z = letterbox_uniforms[0][2];
+			v.w = letterbox_uniforms[1][0]; //Size
 		}
 
 		return v;
