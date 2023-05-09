@@ -1391,7 +1391,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_options = {'INSTANCED'}
 
     def draw_header(self, context):
-        row = self.layout.row(align=True)                
+        row = self.layout.row(align=True)
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY", text="")
         else:
@@ -1405,7 +1405,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
 
         col.label(text="Armory Launch")
         col.separator()
-        
+
         col.prop(wrd, 'arm_runtime')
         col.prop(wrd, 'arm_play_camera')
         col.prop(wrd, 'arm_play_scene')
@@ -1689,6 +1689,13 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_RenderPathPanel"
 
+    def draw_header(self, context):
+        wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+            return
+        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+        self.layout.prop(rpdat, "rp_voxelao", text="")
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1719,10 +1726,9 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2 = col.column()
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
-        col2.prop(rpdat, 'arm_voxelgi_refl')
+        col2.prop(rpdat, 'arm_voxelgi_spec')
         col2.prop(rpdat, 'arm_voxelgi_refr')
-        col.prop(rpdat, 'arm_voxelgi_weight')
-        col.prop(rpdat, 'arm_voxelgi_env')
+        col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
@@ -1819,7 +1825,6 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         sub.prop(rpdat, 'arm_ssgi_radius')
         sub.prop(rpdat, 'arm_ssgi_strength')
         sub.prop(rpdat, 'arm_ssgi_max_steps')
-        
         layout.separator()
 
         row = layout.row()
@@ -1922,10 +1927,10 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
-        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
-        draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
         draw_conditional_prop(col, 'Distort', rpdat, 'arm_distort', 'arm_distort_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
+        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
+        draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
         layout.separator()
 
         col = layout.column()
@@ -2358,7 +2363,7 @@ class ARM_OT_CopyToBundled(bpy.types.Operator):
                                 print(log.colorize(f'Asset name "{asset.name}" already exists, overriding the original', 33), file=sys.stderr)
                             # Invalid file or corrupted
                             else:
-                                # Syntax - Red 
+                                # Syntax - Red
                                 log.error(f'Asset name "{asset.name}" has no data to save or copy, skipping')
                                 continue
                         # Override -> No
@@ -2682,6 +2687,7 @@ def draw_conditional_prop(layout: bpy.types.UILayout, heading: str, data: bpy.ty
     sub.enabled = getattr(data, prop_condition)
     sub.prop(data, prop_value, expand=True)
 
+
 def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
     """Draw an error box in the given UILayout and return it for
     further optional modification. The text is wrapped automatically
@@ -2697,6 +2703,23 @@ def draw_error_box(layout: bpy.types.UILayout, text: str) -> bpy.types.UILayout:
         col.label(text=line, icon='ERROR' if idx == 0 else 'BLANK1')
 
     return box
+
+
+def draw_multiline_with_icon(layout: bpy.types.UILayout, layout_width_px: int, icon: str, text: str) -> bpy.types.UILayout:
+    """Draw a multiline string with an icon in the given UILayout
+    and return it for further optional modification.
+    The text is wrapped according to the given layout width.
+    """
+    textwrap_width = max(0, layout_width_px // 6)
+    lines = textwrap.wrap(text, width=textwrap_width, break_long_words=True)
+
+    col = layout.column(align=True)
+    col.scale_y = 0.8
+    for idx, line in enumerate(lines):
+        col.label(text=line, icon=icon if idx == 0 else 'BLANK1')
+
+    return col
+
 
 def register():
     bpy.utils.register_class(ARM_PT_ObjectPropsPanel)

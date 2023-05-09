@@ -4,11 +4,14 @@ import iron.RenderPath;
 import iron.Scene;
 
 class RenderPathDeferred {
+
 	#if (rp_renderer == "Deferred")
+
 	static var path: RenderPath;
 
-	#if (rp_voxels != 'Off')
+	#if rp_voxels
 	static var voxels = "voxels";
+	static var voxelsLast = "voxels";
 	#end
 
 	#if rp_bloom
@@ -35,7 +38,9 @@ class RenderPathDeferred {
 	}
 
 	public static function init(_path: RenderPath) {
+
 		path = _path;
+
 		#if kha_metal
 		{
 			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
@@ -181,13 +186,15 @@ class RenderPathDeferred {
 		path.loadShader("shader_datas/copy_pass/copy_pass");
 		#end
 
-		#if (rp_ssgi != "Off")
+		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
-			#if (rp_ssgi == "SSAO")
+			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+		}
+		#elseif (rp_ssgi == "SSAO")
+		{
 			path.loadShader("shader_datas/ssao_pass/ssao_pass");
-			#elseif (rp_ssgi == "RTAO")
-			path.loadShader("shader_datas/rtao_pass/rtao_pass");
-			#end
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -260,6 +267,7 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 			path.loadShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 			path.loadShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
+
 			#if (rp_antialiasing == "TAA")
 			{
 				path.loadShader("shader_datas/taa_pass/taa_pass");
@@ -403,6 +411,7 @@ class RenderPathDeferred {
 
 	@:access(iron.RenderPath)
 	public static function commands() {
+
 		path.setTarget("gbuffer0"); // Only clear gbuffer0
 		#if (rp_background == "Clear")
 		{
@@ -465,7 +474,30 @@ class RenderPathDeferred {
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
 		#end
 
-		#if (rp_ssgi == "SSAO")
+		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				#if rp_ssgi_half
+				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#elseif (rp_ssgi == "SSAO")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
 				path.setTarget("singlea");
@@ -483,31 +515,8 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
-		}		
-		#elseif (rp_ssgi == "RTAO")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				#if rp_ssgi_half
-				path.bindTarget("half", "gbufferD");
-				#else
-				path.bindTarget("_main", "gbufferD");
-				#end
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/rtao_pass/rtao_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
 		}
-		#end //SSGI
+		#end
 
 		#if (rp_shadowmap)
 		// atlasing is exclusive for now
@@ -666,13 +675,18 @@ class RenderPathDeferred {
 		#end
 
 		var voxelao_pass = false;
-		#if (rp_voxels != 'Off')
-		if (armory.data.Config.raw.rp_voxels != false)
+		#if (rp_voxels != "Off")
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (arm_config && (rp_voxels == "Voxel AO"))
+			#if arm_config
 			voxelao_pass = true;
 			#end
-			path.bindTarget("voxels", "voxels");
+			path.bindTarget(voxels, "voxels");
+			#if arm_voxelgi_temporal
+			{
+				path.bindTarget(voxelsLast, "voxelsLast");
+			}
+			#end
 		}
 		#end
 
@@ -801,7 +815,9 @@ class RenderPathDeferred {
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
 
-
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+			#end
 		}
 		#end
 
@@ -818,7 +834,6 @@ class RenderPathDeferred {
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
-
 				#if rp_ssr_half
 				path.bindTarget("half", "gbufferD");
 				#else

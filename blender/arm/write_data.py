@@ -434,7 +434,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
-        'rp_voxels': rpdat.rp_voxels != "Off",
+        'rp_gi': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
     }
 
@@ -567,7 +567,6 @@ def write_compiledglsl(defs, make_variants):
             if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
-
         
         gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
         f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
@@ -588,7 +587,8 @@ def write_compiledglsl(defs, make_variants):
             idx_refraction += 1
 
         if '_VoxelGIRefract' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')  # Alpha channel is unused at the moment        
+            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
+
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif
@@ -622,11 +622,11 @@ const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
 
-        if rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
             f.write(
 """const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
-const float ssgiRayStep = """ + str(rpdat.arm_ssgi_step) + """;
-const float ssgiStrength = """ + str(rpdat.arm_ssgi_strength) + """;
+const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
+const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
 
         if rpdat.rp_bloom:
@@ -651,6 +651,7 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
+const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
@@ -751,8 +752,7 @@ const float compoDOFLength = 160.0;
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_weight * 100) / 100) + """;
-const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
+const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
@@ -764,7 +764,6 @@ const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) +
 const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_refl * 100) / 100) + """;
 const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 """)
-
         if rpdat.rp_sss:
             f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")
 

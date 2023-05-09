@@ -73,13 +73,15 @@ def add_world_defs():
             if rpdat.rp_shadowmap_atlas_lod:
                 assets.add_khafile_def('arm_shadowmap_atlas_lod')
                 assets.add_khafile_def('rp_shadowmap_atlas_lod_subdivisions={0}'.format(int(rpdat.rp_shadowmap_atlas_lod_subdivisions)))
-    if rpdat.rp_autoexposure:
-        wrd.world_defs += '_AutoExposure'
 
-    if rpdat.rp_ssgi == 'RTAO':
-        wrd.world_defs += '_RTAO'
+    # SS
+    if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI':
+            wrd.world_defs += '_RTGI'
         if rpdat.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
+    if rpdat.rp_autoexposure:
+        wrd.world_defs += '_AutoExposure'
 
     # GI
     voxelgi = False
@@ -93,11 +95,10 @@ def add_world_defs():
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
-        wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
-        if rpdat.arm_voxelgi_revoxelize:
-            assets.add_khafile_def('arm_voxelgi_revox')
-            if rpdat.arm_voxelgi_camera:
-                wrd.world_defs += '_VoxelCam'
+        wrd.world_defs += '_VoxelCam'
+
+        if rpdat.arm_voxelgi_shadows:
+            wrd.world_defs += '_VoxelShadow'
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
@@ -106,8 +107,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_bounces != "1":
                 wrd.world_defs += '_VoxelsBounce'
                 assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
             if rpdat.arm_voxelgi_refraction:
@@ -116,9 +115,7 @@ def add_world_defs():
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelShadow'
-            if rpdat.arm_voxelgi_weight == 0.0:
+            if rpdat.arm_voxelgi_occ == 0.0:
                 wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() or 'ios' in state.target:
@@ -302,15 +299,14 @@ def build():
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':
+            wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
-                wrd.world_defs += '_SSAO'
                 assets.add_shader_pass('ssao_pass')
-            elif rpdat.rp_ssgi == 'RTAO':
-                wrd.world_defs += '_RTAO'
-                assets.add_shader_pass('rtao_pass')
-
-            assets.add_shader_pass('blur_edge_pass')
-            if rpdat.arm_ssgi_half_res:
+                assets.add_shader_pass('blur_edge_pass')
+            else:
+                assets.add_shader_pass('ssgi_pass')
+                assets.add_shader_pass('blur_edge_pass')
+           if rpdat.arm_ssgi_half_res:
                 assets.add_khafile_def('rp_ssgi_half')
 
         if rpdat.rp_bloom:
@@ -338,7 +334,7 @@ def build():
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
-    if rpdat.rp_translucency and not (rpdat.arm_voxelgi_refraction and rpdat.rp_voxels == "Voxel GI"):
+    if rpdat.rp_translucency:
         assets.add_khafile_def('rp_translucency')
         assets.add_shader_pass('translucent_resolve')
 
@@ -347,20 +343,13 @@ def build():
         assets.add_khafile_def('arm_vr')
         wrd.world_defs += '_VR'
 
-    rp_voxels = rpdat.rp_voxels
     has_voxels = arm.utils.voxel_support()
 
-    if not has_voxels or rpdat.arm_material_model != 'Full':
-        rp_voxels = 'Off'
-    if rp_voxels != 'Off':
-        if has_voxels:
-            assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
-            assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
-            assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
-            if rpdat.arm_voxelgi_shadows:
-                assets.add_khafile_def('rp_voxelgi_shadows')
-        else:
-            log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
+    has_voxels = arm.utils.voxel_support()
+    if rpdat.rp_voxels != "Off" and has_voxels and rpdat.arm_material_model == 'Full':
+        assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
+        assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
+        assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
 
     if rpdat.arm_rp_resolution == 'Custom':
         assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))
@@ -368,7 +357,6 @@ def build():
     if rpdat.rp_renderer == 'Deferred':
         if rpdat.arm_material_model == 'Full':
             assets.add_shader_pass('deferred_light')
-
         else: # mobile, solid
             assets.add_shader_pass('deferred_light_' + rpdat.arm_material_model.lower())
             assets.add_khafile_def('rp_material_' + rpdat.arm_material_model.lower())
@@ -454,8 +442,7 @@ def build():
 
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
-
-    gbuffer2 = '_IgnoreIrr' in wrd.world_defs or '_Veloc' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'

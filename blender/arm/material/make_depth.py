@@ -28,16 +28,14 @@ else:
 
 
 def make(context_id, rpasses, shadowmap=False):
-    wrd = bpy.data.worlds['Arm']
+
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
     vs = [{'name': 'pos', 'data': 'short4norm'}]
     if is_disp:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    #con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False] })
-
-    con_depth = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False] })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()
@@ -48,7 +46,7 @@ def make(context_id, rpasses, shadowmap=False):
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     vert.add_include('compiled.inc')
 
-    parse_opacity = mat_utils.is_transluc(mat_state.material) or mat_state.material.arm_discard
+    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
 
     parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
 
@@ -190,9 +188,12 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if mat_state.material.arm_discard:
-        opac = mat_state.material.arm_discard_opacity_shadows
-        frag.write('if (opacity < {0}) discard;'.format(opac))
+    if parse_opacity:
+        if mat_state.material.arm_discard:
+            opac = mat_state.material.arm_discard_opacity_shadows
+        else:
+            opac = '1.0'
+       frag.write('if (opacity < {0}) discard;'.format(opac))
 
     make_finalize.make(con_depth)
 

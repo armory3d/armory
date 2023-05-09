@@ -4,7 +4,7 @@ class CameraSetNode(ArmLogicTreeNode):
     """Set the post-processing effects of a camera."""
     bl_idname = 'LNCameraSetNode'
     bl_label = 'Set Camera Post Process'
-    arm_version = 3
+    arm_version = 4
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
@@ -20,16 +20,20 @@ class CameraSetNode(ArmLogicTreeNode):
         self.add_input('ArmBoolSocket', 'Tonemapping', default_value=False)#9
         self.add_input('ArmFloatSocket', 'Distort', default_value=2.0)#10
         self.add_input('ArmFloatSocket', 'Film Grain', default_value=2.0)#11
+        self.add_input('ArmFloatSocket', 'Sharpen', default_value=0.25)#12
+        self.add_input('ArmFloatSocket', 'Vignette', default_value=0.7)#13
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 2):
+        if self.arm_version not in range(0, 4):
             raise LookupError()
+        elif self.arm_version == 1:
+            newnode = node_tree.nodes.new('LNCameraSetNode')
 
-        newnode = node_tree.nodes.new('LNCameraSetNode')
+            for link in self.inputs[10].links:
+                node_tree.links.new(newnode.inputs[10], link.to_socket)
 
-        for link in self.inputs[10].links:
-            node_tree.links.new(newnode.inputs[10], link.to_socket)
-
-        return newnode
+            return newnode
+        else:
+            return NodeReplacement.Identity(self)

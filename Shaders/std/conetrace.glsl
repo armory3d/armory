@@ -17,11 +17,11 @@ const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
 
-vec3 orthogonal(const vec3 u) {
-	// Pass normalized u
-	const vec3 v = vec3(0.99146, 0.11664, 0.05832); // Pick any normalized vector
-	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
-}
+// vec3 orthogonal(const vec3 u) {
+// 	// Pass normalized u
+// 	const vec3 v = vec3(0.99146, 0.11664, 0.05832); // Pick any normalized vector
+// 	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
+// }
 
 vec3 tangent(const vec3 n) {
 	vec3 t1 = cross(n, vec3(0, 0, 1));

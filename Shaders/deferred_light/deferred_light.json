@@ -13,8 +13,7 @@
 				},
 				{
 					"name": "eyeSnap",
-					"link": "_cameraPositionSnap",
-					"ifdef": ["_VoxelCam"]
+					"link": "_cameraPositionSnap"
 				},
 				{
 					"name": "clipmap_to_update",
@@ -23,6 +22,11 @@
 				{
 					"name": "clipmapSize",
 					"link": "_clipmapSize"
+				},
+				{
+					"name": "voxelBlend",
+					"link": "_voxelBlend",
+					"ifdef": ["_VoxelGITemporal"]
 				},
 				{
 					"name": "eyeLook",
@@ -101,6 +105,15 @@
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
+<<<<<<< HEAD
+=======
+					"name": "LWVP",
+					"link": "_biasLightWorldViewProjectionMatrixSun",
+					"ifndef": ["_CSM"],
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+>>>>>>> 5b0e1903be6feab6a42dd8cc431fc00cc8f46311
 					"name": "casData",
 					"link": "_cascadeData",
 					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
@@ -201,12 +214,15 @@
 					"ifdef": ["_SinglePoint", "_Spot"]
 				},
 				{
+<<<<<<< HEAD
 					"name": "LWVP",
 					"link": "_biasLightWorldViewProjectionMatrixSun",
 					"ifndef": ["_CSM"],
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
+=======
+>>>>>>> 5b0e1903be6feab6a42dd8cc431fc00cc8f46311
 					"name": "LWVPSpotArray",
 					"link": "_biasLightWorldViewProjectionMatrixSpotArray",
 					"ifdef": ["_Clusters", "_ShadowMap", "_Spot"]

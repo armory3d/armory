@@ -9,8 +9,9 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if (rp_voxels != 'Off')
+	#if rp_voxels
 	static var voxels = "voxels";
+	static var voxelsLast = "voxels";
 	#end
 
 	#if rp_bloom
@@ -408,10 +409,13 @@ class RenderPathForward {
 		#if rp_voxels
 		{
 			path.bindTarget(voxels, "voxels");
+			#if arm_voxelgi_temporal
+			{
+				path.bindTarget(voxelsLast, "voxelsLast");
+			}
+			#end
 		}
 		#end
-
-		path.bindTarget("_main", "gbufferD");
 
 		#if rp_stereo
 		{

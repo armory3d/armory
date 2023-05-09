@@ -8,7 +8,6 @@ import iron.math.Vec3;
 
 import armory.renderpath.Postprocess;
 import armory.renderpath.Voxels;
-import armory.renderpath.Inc;
 
 using StringTools;
 
@@ -203,6 +202,7 @@ class Uniforms {
 			}
 			#end
 		}
+
 		return v;
 	}
 
@@ -235,7 +235,6 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-
 			#if rp_bloom
 			case "_bloomSampleScale": {
 				return Postprocess.bloom_uniforms[3];
@@ -244,6 +243,10 @@ class Uniforms {
 			#if (rp_voxels != 'Off')
 			case "_clipmapSize": {
 				return Main.voxelgiVoxelSize * Math.pow(2, Voxels.clipmap_to_update - 1);
+			}
+			case "_voxelBlend": { // Blend current and last voxels
+				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
+				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
 			}
 			#end
 		}

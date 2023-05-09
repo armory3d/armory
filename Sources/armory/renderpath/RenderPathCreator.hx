@@ -2,7 +2,6 @@
 package armory.renderpath;
 
 import iron.RenderPath;
-import armory.renderpath.Inc;
 
 class RenderPathCreator {
 
@@ -58,13 +57,6 @@ class RenderPathCreator {
 		return path;
 	}
 
-	#if (rp_voxels != 'Off')
-	public static var voxelFrame = 0;
-	public static var voxelFreq = 6; // Revoxelizing frequency
-	public static var CLIPMAP_COUNT = 6;
-	public static var clipmap_to_update = 0;
-	public static var clipmapsize = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-	public static var totalClipmapSize = Main.voxelgiHalfExtents * (1 + 2 + 3 + 4 + 5);
 	#end
 
 	// Last target before drawing to framebuffer

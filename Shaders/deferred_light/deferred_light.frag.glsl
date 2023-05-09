@@ -44,6 +44,8 @@ uniform sampler3D voxels;
 uniform vec3 eyeSnap;
 #endif
 #ifdef _VoxelAOvar
+uniform int clipmap_to_update;
+uniform float clipmapSize;
 uniform sampler3D voxels;
 uniform vec3 eyeSnap;
 #endif
@@ -68,9 +70,6 @@ uniform vec3 backgroundCol;
 #endif
 
 #ifdef _SSAO
-uniform sampler2D ssaotex;
-#endif
-#ifdef _RTAO
 uniform sampler2D ssaotex;
 #endif
 
@@ -207,6 +206,7 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
+
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
@@ -249,6 +249,7 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
+
 	vec3 envl = shIrradiance(n, shirr);
 
 	#ifdef _gbuffer2
@@ -278,38 +279,33 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
+
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	envl.rgb += 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb *= prefilteredColor - (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb *= backgroundCol - (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
-	#ifdef _VoxelCam
 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
-	#endif
-
 	#ifndef _VoxelAONoTrace
-	#ifdef _VoxelTemporal
-	envl *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-				traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	#ifdef _VoxelGITemporal
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
+					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
-	envl *= 1.0 - traceAO(voxpos, n, voxels);
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
 	#endif
 	#endif
-	envl *= voxelgiEnv;
 #endif
 
 #ifdef _VoxelGI
@@ -334,20 +330,20 @@ void main() {
 	*/
 	// Show SSAO
 	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
-
 #endif
 
 #ifdef _VoxelGI
-fragColor.rgb += envl * voxelgiEnv;
+	fragColor.rgb += envl;
 #else
-fragColor.rgb = envl;
+	fragColor.rgb = envl;
 #endif
 
 #ifdef _SSAO
-fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-#endif
-#ifdef _RTAO
-fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #ifdef _RTGI
+	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	// #else
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -357,7 +353,6 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 		return;
 	}
 #endif
-
 #ifdef _EmissionShaded
 	#ifdef _EmissionShadeless
 	else {
@@ -394,10 +389,10 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 				#else
 				shadowMap
 				#endif
-				,eye, p + n * shadowsBias * 10, shadowsBias
+				, eye, p + n * shadowsBias * 10, shadowsBias
 			);
 		#else
-			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100.0, 1.0);
+			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 			if (lPos.w > 0.0) svisibility = shadowTest(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
@@ -408,9 +403,15 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 				#else
 				shadowMap
 				#endif
-				,lPos.xyz / lPos.w, shadowsBias
+				, lPos.xyz / lPos.w, shadowsBias
 			);
 		#endif
+	#endif
+
+	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	#endif
 	#endif
 
 	#ifdef _SSRS
@@ -429,7 +430,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += svisibility * sdirect * sunCol;
+	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -465,6 +466,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 #endif // _Sun
 
 #ifdef _SinglePoint
+
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
@@ -493,9 +495,10 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb *= fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
+
 #endif
 
 #ifdef _Clusters
@@ -504,7 +507,7 @@ fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
 
 	#ifdef HLSL
-	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; //TODO: krafix bug, needs to generate sampler
+	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
 	#endif
 
 	#ifdef _Spot

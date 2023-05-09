@@ -6,13 +6,13 @@ import iron.object.LightObject;
 import armory.math.Helper;
 
 class Inc {
+
 	static var path: RenderPath;
 	public static var superSample = 1.0;
 
 	static var pointIndex = 0;
 	static var spotIndex = 0;
 	static var lastFrame = -1;
-
 	
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh:kha.compute.Shader = null;
@@ -250,9 +250,8 @@ class Inc {
 		#if arm_debug
 		endShadowsLogicProfile();
 		#end
-		#end //rp_shadowmap
+		#end // rp_shadowmap
 	}
-
 	#else
 	public static function bindShadowMap() {
 		for (l in iron.Scene.active.lights) {
@@ -330,9 +329,8 @@ class Inc {
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
 			if (!l.visible) continue;
+
 			path.light = l;
-			var rts = path.renderTargets;
-			var res = Inc.getVoxelRes();
 			var shadowmap = Inc.getShadowMap(l);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
@@ -390,7 +388,7 @@ class Inc {
 		#end // arm_config
 	}
 
-	#if rp_translucency
+	#if (rp_translucency)
 	public static function initTranslucency() {
 		path.createDepthBuffer("main", "DEPTH24");
 
@@ -553,20 +551,12 @@ class Inc {
 	}
 
 	public static inline function getVoxelResZ(): Float {
-		#if (rp_voxelgi_resolution_z == 4.0)
-		return 4.0;
-		#elseif (rp_voxelgi_resolution_z == 2.0)
-		return 2.0;
-		#elseif (rp_voxelgi_resolution_z == 1.5)
-		return 1.5;
-		#elseif (rp_voxelgi_resolution_z == 1.0)
+		#if (rp_voxelgi_resolution_z == 1.0)
 		return 1.0;
 		#elseif (rp_voxelgi_resolution_z == 0.5)
 		return 0.5;
 		#elseif (rp_voxelgi_resolution_z == 0.25)
 		return 0.25;
-		#elseif (rp_voxelgi_resolution_z == 0.125)
-		return 0.125;
 		#else
 		return 0.0;
 		#end
@@ -591,7 +581,7 @@ class Inc {
 		return null;
 		#end
 	}
-	
+
 	#if arm_debug
 	public static var shadowsLogicTime = 0.0;
 	public static var shadowsRenderTime = 0.0;
