@@ -1,0 +1,41 @@
+{
+	"contexts": [
+		{
+			"name": "ssr_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3"
+				},
+				{
+					"name": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "PPComp9",
+					"link": "_PPComp9",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp10",
+					"link": "_PPComp10",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass_viewray2.vert.glsl",
+			"fragment_shader": "ssr_pass.frag.glsl"
+		}
+	]
+}

@@ -1,0 +1,66 @@
+{
+	"contexts": [
+		{
+			"name": "blur_pass_x",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2xInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		{
+			"name": "blur_pass_y",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2yInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		
+		
+		{
+			"name": "blur_pass_x2",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2x2Inv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		{
+			"name": "blur_pass_y2",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2y2Inv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		}
+	]
+}

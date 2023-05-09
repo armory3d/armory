@@ -1,0 +1,84 @@
+{
+	"contexts": [
+		{
+			"name": "blur_adaptive_pass_x",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2xInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2yInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		
+		
+		{
+			"name": "blur_adaptive_pass_x2",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2x2Inv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y3",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2y3Inv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y3_blend",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"links": [
+				{
+					"name": "dirInv",
+					"link": "_vec2y3Inv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		}
+	]
+}
