@@ -245,8 +245,8 @@ class Uniforms {
 				return Main.voxelgiVoxelSize * Math.pow(2, Voxels.clipmap_to_update - 1);
 			}
 			case "_voxelBlend": { // Blend current and last voxels
-				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
-				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+				var freq = Voxels.voxelFreq;
+				return (Voxels.voxelFrame % freq) / freq;
 			}
 			#end
 		}

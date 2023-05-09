@@ -539,11 +539,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
-<<<<<<< HEAD
-    arm_ssgi_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
-=======
     arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
->>>>>>> 5b0e1903be6feab6a42dd8cc431fc00cc8f46311
     arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),

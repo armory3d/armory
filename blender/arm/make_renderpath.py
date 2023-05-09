@@ -306,7 +306,7 @@ def build():
             else:
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')
-           if rpdat.arm_ssgi_half_res:
+            if rpdat.arm_ssgi_half_res:
                 assets.add_khafile_def('rp_ssgi_half')
 
         if rpdat.rp_bloom:

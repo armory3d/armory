@@ -1718,10 +1718,6 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'rp_voxelgi_resolution_z')
         col.prop(rpdat, 'arm_voxelgi_dimensions')
-        col.prop(rpdat, 'arm_voxelgi_revoxelize')
-        col2 = col.column()
-        col2.enabled = rpdat.arm_voxelgi_revoxelize
-        col2.prop(rpdat, 'arm_voxelgi_camera')
         col.label(text="Light")
         col2 = col.column()
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'

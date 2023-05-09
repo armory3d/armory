@@ -57,8 +57,6 @@ class RenderPathCreator {
 		return path;
 	}
 
-	#end
-
 	// Last target before drawing to framebuffer
 	public static var finalTarget: RenderTarget = null;
 }

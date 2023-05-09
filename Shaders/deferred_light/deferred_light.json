@@ -105,15 +105,12 @@
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
-<<<<<<< HEAD
-=======
 					"name": "LWVP",
 					"link": "_biasLightWorldViewProjectionMatrixSun",
 					"ifndef": ["_CSM"],
 					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
->>>>>>> 5b0e1903be6feab6a42dd8cc431fc00cc8f46311
 					"name": "casData",
 					"link": "_cascadeData",
 					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
@@ -214,15 +211,6 @@
 					"ifdef": ["_SinglePoint", "_Spot"]
 				},
 				{
-<<<<<<< HEAD
-					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrixSun",
-					"ifndef": ["_CSM"],
-					"ifdef": ["_Sun", "_ShadowMap"]
-				},
-				{
-=======
->>>>>>> 5b0e1903be6feab6a42dd8cc431fc00cc8f46311
 					"name": "LWVPSpotArray",
 					"link": "_biasLightWorldViewProjectionMatrixSpotArray",
 					"ifdef": ["_Clusters", "_ShadowMap", "_Spot"]

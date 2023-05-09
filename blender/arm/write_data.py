@@ -761,7 +761,7 @@ const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) 
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""
 const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
-const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_refl * 100) / 100) + """;
+const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 """)
         if rpdat.rp_sss:

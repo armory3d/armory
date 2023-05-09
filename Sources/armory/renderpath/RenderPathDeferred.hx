@@ -9,7 +9,7 @@ class RenderPathDeferred {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
@@ -530,7 +530,7 @@ class RenderPathDeferred {
 		// Voxels
 		#if (rp_voxels != 'Off')
 		var relight = false;
-		if (armory.data.Config.raw.rp_voxels != false)
+		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var voxelize = path.voxelize();
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))

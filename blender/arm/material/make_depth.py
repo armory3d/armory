@@ -193,7 +193,7 @@ def make(context_id, rpasses, shadowmap=False):
             opac = mat_state.material.arm_discard_opacity_shadows
         else:
             opac = '1.0'
-       frag.write('if (opacity < {0}) discard;'.format(opac))
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     make_finalize.make(con_depth)
 
