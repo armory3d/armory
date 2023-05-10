@@ -7,7 +7,7 @@ import armory.renderpath.RenderToTexture;
 import kha.graphics2.VerTextAlignment;
 import kha.graphics2.HorTextAlignment;
 
-using kha.graphics2.GraphicsExtension;
+using zui.GraphicsExtension;
 
 #if arm_ui
 import armory.ui.Canvas;

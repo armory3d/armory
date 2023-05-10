@@ -4,7 +4,7 @@ import iron.math.Vec4;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
-using kha.graphics2.GraphicsExtension;
+using zui.GraphicsExtension;
 
 class DrawEllipseNode extends LogicNode {
 

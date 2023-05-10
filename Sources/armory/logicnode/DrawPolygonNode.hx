@@ -4,7 +4,7 @@ import kha.Color;
 import kha.math.Vector2;
 import armory.renderpath.RenderToTexture;
 
-using kha.graphics2.GraphicsExtension;
+using zui.GraphicsExtension;
 
 class DrawPolygonNode extends LogicNode {
 	static inline var numStaticInputs = 6;
