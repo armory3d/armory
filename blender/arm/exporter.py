@@ -138,8 +138,8 @@ class ArmoryExporter:
         self.world_array = []
         self.particle_system_array = {}
 
-        # `True` if there is at least one spawned camera in the scene
-        self.camera_spawned = False
+        self.has_spawning_camera = False
+        """Whether there is at least one camera in the scene that spawns by default"""
 
         self.material_to_object_dict = {}
         # If no material is assigned, provide default to mimic cycles
@@ -870,10 +870,8 @@ class ArmoryExporter:
                 out_object['data_ref'] = self.probe_array[objref]["structName"]
 
             elif object_type is NodeType.CAMERA:
-                if 'spawn' in out_object and not out_object['spawn']:
-                    self.camera_spawned |= False
-                else:
-                    self.camera_spawned = True
+                if out_object.get('spawn', True):  # Also spawn object if 'spawn' attr doesn't exist
+                    self.has_spawning_camera = True
 
                 if objref not in self.camera_array:
                     self.camera_array[objref] = {"structName" : objname, "objectTable" : [bobject]}
@@ -2471,7 +2469,6 @@ Make sure the mesh only has tris/quads.""")
         # Create Viewport camera
         if bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
             self.create_default_camera(is_viewport_camera=True)
-            self.camera_spawned = True
 
         elif self.scene.camera is not None and self.scene.camera.type != 'CAMERA':
             # Blender doesn't directly allow to set arbitrary objects as cameras,
@@ -2479,14 +2476,10 @@ Make sure the mesh only has tris/quads.""")
             # cause cases like this to happen
             log.warn(f'Camera "{self.scene.camera.name}" in scene "{self.scene.name}" is not a camera object, using default camera')
             self.create_default_camera()
-            self.camera_spawned = True
 
-        # No camera found
-        if not self.camera_spawned:
-            log.warn( f'Scene "{self.scene.name}" is missing a camera')
-
-        # No camera found, create a default one
-        if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
+        # No camera found, create default one
+        if not self.has_spawning_camera:
+            log.warn(f'Scene "{self.scene.name}" is missing a camera, using default camera')
             self.create_default_camera()
 
         self.export_scene_traits()
@@ -2565,6 +2558,7 @@ Make sure the mesh only has tris/quads.""")
 
         self.output['objects'].append(out_object)
         self.output['camera_ref'] = 'DefaultCamera'
+        self.has_spawning_camera = True
 
     @staticmethod
     def get_export_tangents(mesh):
