@@ -39,9 +39,10 @@ uniform sampler2D gbuffer_refraction;
 
 #ifdef _VoxelGI
 uniform int clipmap_to_update;
-uniform float clipmapSize;
 uniform sampler3D voxels;
-uniform vec3 eyeSnap;
+uniform float voxelSize;
+uniform vec3 levelPos;
+uniform mat4 worldViewProj;
 #endif
 #ifdef _VoxelAOvar
 uniform int clipmap_to_update;
@@ -309,13 +310,12 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec3 P = (p - eyeSnap);
-	vec3 voxpos = P / ((1 << clipmap_to_update) * voxelgiHalfExtents);
+	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
 
-	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmapSize, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels, voxelSize, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
 
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmapSize, clipmap_to_update).rgb) * voxelgiRefl * occspec.y;
+		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, voxelSize, clipmap_to_update).rgb) * voxelgiRefl * occspec.y;
 
 	// Show voxels
 	/*
@@ -563,8 +563,8 @@ void main() {
 
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
-	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmapSize, clipmap_to_update);
-	fragColor.rgb += mix(fragColor.rgb * refraction, fragColor.rgb, opac);
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, voxelSize, clipmap_to_update);
+	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }
 #endif
 }

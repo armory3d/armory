@@ -48,7 +48,7 @@ vec3 tangent(const vec3 n) {
 #define BORDER_OFFSET 0.1
 #define BORDER_WIDTH 0.5
 
-vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const vec3 normal, const float voxelSize, const int clipmap_to_update) {
+vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const float voxelSize, const int clipmap_to_update) {
 	dir = normalize(dir);
 	// origin -= dir * dot(dir, normal) * VOXEL_SIZE;
 	// uvec3 indices = faceIndices(dir);
@@ -59,7 +59,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 	// Step until alpha > 1 or out of bounds
 	while (sampleCol.a < 1.0 && dist < maxDist) {
-		samplePos = (dir * dist + origin);
+		samplePos = dir * dist + origin;
 		// Choose mip level based on the diameter of the cone
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		samplePos = samplePos * 0.5 + 0.5;
@@ -72,7 +72,6 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		dist += max(diam / 2, VOXEL_SIZE); // Step size
 		diam = dist * aperture;
 	}
-	//sampleCol.rgb *= voxelgiStep / voxelSize;
 	return sampleCol;
 }
 
@@ -85,38 +84,38 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 	vec3 c2 = 0.5f * (o1 - o2);
 
 	#ifdef _VoxelCones1
-	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update) * voxelgiOcc;
+	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, voxelSize, clipmap_to_update) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones3
-	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
+	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
 	return (col / 3.0) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones5
 	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
 	return (col / 5.0) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones9
 	// Normal direction
-	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
+	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
 	// 4 side cones
-	col += traceCone(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
 	// 4 corners
-	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
-	col += traceCone(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	col += traceCone(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
 	return (col / 9.0) * voxelgiOcc;
 	#endif
 
@@ -126,14 +125,14 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness, const float voxelSize, const int clipmap_to_update) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
-	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update).xyz;
+	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, voxelSize, clipmap_to_update).xyz;
 }
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness, const float voxelSize, const int clipmap_to_update) {
  	const float transmittance = 1.0;
  	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
  	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
- 	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, normal, voxelSize, clipmap_to_update).xyz;
+ 	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, voxelSize, clipmap_to_update).xyz;
 }
 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {

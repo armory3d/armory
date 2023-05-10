@@ -114,12 +114,13 @@ def make_gi(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-    vert.add_uniform('float clipmapSize', '_clipmapSize')
-
-    vert.write('vec3 P = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap);')
+    vert.add_uniform('vec3 levelPos', '_levelPos')
+    vert.add_uniform('mat4 worldViewProj', '_worldViewProjectionMatrix')
+    vert.add_uniform('float voxelSize', '_voxelSize')
     vert.add_uniform('int clipmap_to_update', '_clipmap_to_update')
-    vert.write('voxpositionGeom = P / ((1 << clipmap_to_update) * voxelgiHalfExtents);')
+
+    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / 4 / voxelSize;')
+    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec3 voxnormal')
@@ -139,8 +140,6 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    voxnormal = voxnormalGeom[i];')
-    if '_Sun' in wrd.world_defs:
-        geom.write('    lightPosition = lightPositionGeom[i];')
     if con_voxel.is_elem('col'):
         geom.write('    vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
@@ -162,46 +161,12 @@ def make_gi(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    is_shadows = '_ShadowMap' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    shadowmap_sun = 'shadowMap'
-    if is_shadows_atlas:
-        is_single_atlas = '_SingleAtlas' in wrd.world_defs
-        shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
-
-    if '_Sun' in wrd.world_defs:
-        frag.add_uniform('vec3 sunCol', '_sunColor')
-        frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('float svisibility = 1.0;')
-        frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
-        if is_shadows:
-            vert.add_out('vec4 lightPositionGeom')
-            geom.add_out('vec4 lightPosition')
-            vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
-            vert.write('lightPositionGeom = LWVP * pos;')
-            frag.add_uniform('bool receiveShadow')
-            frag.add_uniform(f'sampler2DShadow {shadowmap_sun}')
-            frag.add_uniform('float shadowsBias', '_sunShadowsBias')
-            frag.write('if (receiveShadow) {')
-            frag.write('if (lightPosition.w > 0.0) {')
-            frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-            if '_Legacy' in wrd.world_defs:
-                frag.write(f'    svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias);')
-            else:
-                frag.write(f'    svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
-            frag.write('}')
-            frag.write('}') # receiveShadow
-        frag.write('basecol *= svisibility * sunCol;// * sdotNL;')
-
-
-
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
-
-
+    frag.write('uvw.y = uvw.y + clipmap_to_update;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
-    frag.write('writecoord.y = writecoord.y + clipmap_to_update * voxelgiResolution.x;//) / 6;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
+    frag.write('imageStore(voxelsNor, ivec3(writecoord), vec4(min(voxnormal, vec3(1.0)), 1.0));')
 
     return con_voxel
 
@@ -244,7 +209,6 @@ def make_ao(context_id):
         vert.write('  stage_output.svpos.w = 1.0;')
         vert.write('  return stage_output;')
         vert.write('}')
-
         geom.write('struct SPIRV_Cross_Input { float4 svpos : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Output { float3 wpos : TEXCOORD0; float4 svpos : SV_POSITION; };')
         geom.write('[maxvertexcount(3)]')

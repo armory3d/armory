@@ -185,8 +185,7 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses
-
+    parse_opacity = arm_discard or mat_utils.is_transluc(mat_state.material)
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 

@@ -169,8 +169,8 @@ class Uniforms {
 			}
 			#end
 
-			#if rp_voxels
-			case "_cameraPositionSnap": {
+			#if (rp_voxels != "Off")
+			case "_levelPos": {
 				/* This snipet is served by CHATGPT */
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
@@ -179,7 +179,7 @@ class Uniforms {
 				var voxelDist = Vec3.distance(voxelPos, viewerPos);
 				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
 
-				var clipmapLevelSize = Main.voxelgiVoxelSize * Math.pow(2, clipmapLevel - 1);
+				var clipmapLevelSize = Voxels.voxelsize;
 				var e = Main.voxelgiHalfExtents;
 				var l = camera.lookWorld();
 				voxelPos.x += l.x * e * 0.9;
@@ -241,8 +241,9 @@ class Uniforms {
 			}
 			#end
 			#if (rp_voxels != 'Off')
-			case "_clipmapSize": {
-				return Main.voxelgiVoxelSize * Math.pow(2, Voxels.clipmap_to_update - 1);
+			case "_voxelSize": {
+				Voxels.voxelsize = (Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)));
+				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = Voxels.voxelFreq;

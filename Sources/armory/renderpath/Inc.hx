@@ -31,6 +31,7 @@ class Inc {
 	static var voxel_cg:kha.compute.ConstantLocation;
 	static var voxel_ch:kha.compute.ConstantLocation;
 	static var voxel_ci:kha.compute.ConstantLocation;
+	static var voxel_cj:kha.compute.ConstantLocation;
 	static var m = iron.math.Mat4.identity();
 	#end
 	#if (rp_voxels_bounces != 1)
@@ -485,7 +486,7 @@ class Inc {
 		}
 		#else
 		{
-			t.format = "RGBA64";
+			t.format = "RGBA64";//RGBA32 yields no data !
 		}
 		#end
 
@@ -617,6 +618,7 @@ class Inc {
 	 		voxel_cc = voxel_sh.getConstantLocation("lightType");
 	 		voxel_cd = voxel_sh.getConstantLocation("lightDir");
 	 		voxel_ci = voxel_sh.getConstantLocation("spotData");
+	 		voxel_cj = voxel_sh.getConstantLocation("clipmap_to_update");
 	 		#if (rp_shadowmap)
 	 		voxel_ce = voxel_sh.getConstantLocation("lightShadow");
 	 		voxel_cf = voxel_sh.getConstantLocation("lightProj");
@@ -701,6 +703,8 @@ class Inc {
 	 			var vy = vx - l.data.raw.spot_blend;
 	 			kha.compute.Compute.setFloat2(voxel_ci, vx, vy);
 	 		}
+	 		kha.compute.Compute.setInt(voxel_cj, armory.renderpath.Voxels.clipmap_to_update);
+
 			kha.compute.Compute.compute(res, res, res);
 		}
 	}

@@ -1,9 +1,9 @@
 #version 450
 
 // layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
-layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 #include "std/shadows.glsl"
@@ -14,6 +14,7 @@ uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
 uniform vec2 spotData;
+uniform int clipmap_to_update;
 #ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
@@ -21,13 +22,13 @@ uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
 
-uniform layout(binding = 0, rgba16) readonly image3D voxelsOpac;
-// uniform layout(binding = 1, r32ui) readonly uimage3D voxelsNor;
-uniform layout(binding = 1, rgba16) image3D voxels;
+uniform layout(binding = 0, rgba8) readonly image3D voxelsOpac;
+uniform layout(binding = 1, rgba8) readonly image3D voxelsNor;
+uniform layout(binding = 2, r32ui) uimage3D voxels;
 #ifdef _ShadowMap
-uniform layout(binding = 2) sampler2DShadow shadowMap;
-uniform layout(binding = 3) sampler2DShadow shadowMapSpot;
-uniform layout(binding = 4) samplerCubeShadow shadowMapPoint;
+uniform layout(binding = 3) sampler2DShadow shadowMap;
+uniform layout(binding = 4) sampler2DShadow shadowMapSpot;
+uniform layout(binding = 5) samplerCubeShadow shadowMapPoint;
 #endif
 
 void main() {
@@ -39,10 +40,9 @@ void main() {
 	const vec3 hres = voxelgiResolution / 2;
 	vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
 
-	// uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
-	// vec3 wnormal = normalize(decNor(unor));
-
-	// wposition -= wnormal * 0.01; // Offset
+	vec3 wnormal = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).rgb;
+	//vec3 wnormal = normalize(decNor(unor));
+	//wposition -= wnormal * 0.01; // Offset
 
 	float visibility;
 	vec3 lp = lightPos - wposition;
@@ -50,8 +50,8 @@ void main() {
 	if (lightType == 0) { l = lightDir; visibility = 1.0; }
 	else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
 
-	// float dotNL = max(dot(wnormal, l), 0.0);
-	// if (dotNL == 0.0) return;
+	float dotNL = max(dot(wnormal, l), 0.0);
+	if (dotNL == 0.0) return;
 
 #ifdef _ShadowMap
 	if (lightShadow == 1) {
@@ -76,8 +76,8 @@ void main() {
 		}
 	}
 
-	col.rgb += visibility * lightColor;// * dotNL;
+	col.rgb *= visibility * lightColor * dotNL;
 	col = clamp(col, vec4(0.0), vec4(1.0));
 
-	imageStore(voxels, ivec3(gl_GlobalInvocationID.xyz), col);
+	imageAtomicMax(voxels, ivec3(gl_GlobalInvocationID.xyz), convVec4ToRGBA8(col * 255));
 }

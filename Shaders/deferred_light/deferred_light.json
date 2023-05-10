@@ -12,16 +12,20 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeSnap",
-					"link": "_cameraPositionSnap"
+					"name": "levelPos",
+					"link": "_levelPos"
+				},
+				{
+					"name": "worldViewProj",
+					"name": "_worldViewProjectionMatrix"
 				},
 				{
 					"name": "clipmap_to_update",
 					"link": "_clipmap_to_update"
 				},
 				{
-					"name": "clipmapSize",
-					"link": "_clipmapSize"
+					"name": "voxelSize",
+					"link": "_voxelSize"
 				},
 				{
 					"name": "voxelBlend",
