@@ -193,7 +193,7 @@ def make_deferred(con_mesh, rpasses):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if parse_opacity:
+    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:

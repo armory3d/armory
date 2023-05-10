@@ -115,9 +115,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.add_uniform('vec3 levelPos', '_levelPos')
-    vert.add_uniform('mat4 worldViewProj', '_worldViewProjectionMatrix')
     vert.add_uniform('float voxelSize', '_voxelSize')
-    vert.add_uniform('int clipmap_to_update', '_clipmap_to_update')
 
     vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / 4 / voxelSize;')
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
@@ -161,6 +159,8 @@ def make_gi(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
+
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
     frag.write('uvw.y = uvw.y + clipmap_to_update;')
@@ -181,6 +181,9 @@ def make_ao(context_id):
     tesc = None
     tese = None
 
+    vert.add_uniform('vec3 levelPos', '_levelPos')
+    vert.add_uniform('float voxelSize', '_voxelSize')
+
     if arm.utils.get_gapi() == 'direct3d11':
         for e in con_voxel.data['vertex_elements']:
             if e['name'] == 'nor':
@@ -194,18 +197,12 @@ def make_ao(context_id):
 
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write('uniform float4x4 W;')
-        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-            vert.write('uniform float3 eyeSnap;')
+
         vert.write('struct SPIRV_Cross_Input { float4 pos : TEXCOORD0; };')
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
-        voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
-        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
-        else:
-            vert.write('  stage_output.svpos.xyz = mul(float4(stage_input.pos.xyz, 1.0), W).xyz / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
+        vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - levelPos) / 4 / voxelSize;')
         vert.write('  stage_output.svpos.w = 1.0;')
         vert.write('  return stage_output;')
         vert.write('}')
@@ -237,10 +234,16 @@ def make_ao(context_id):
         frag.write('struct SPIRV_Cross_Input { float3 wpos : TEXCOORD0; };')
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
-        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
+        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y * 6) > 1) return;')
         voxRes = str(rpdat.rp_voxelgi_resolution)
         voxResZ = str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z)))
-        frag.write('  voxels[int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ') * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
+
+        frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
+        frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
+        frag.write('uvw.y = uvw.y + clipmap_to_update;')
+        frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
+
+        frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
     else:
@@ -257,11 +260,9 @@ def make_ao(context_id):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 voxpositionGeom')
 
-        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-            vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
+        vert.add_uniform('vec3 levelPos', '_levelPos')
+        vert.add_uniform('float voxelSize', '_voxelSize')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / 4 / voxelSize;')
 
         geom.add_out('vec3 voxposition')
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
@@ -282,7 +283,13 @@ def make_ao(context_id):
         geom.write('}')
         geom.write('EndPrimitive();')
 
-        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
-        frag.write('imageStore(voxels, ivec3(voxelgiResolution * (voxposition * 0.5 + 0.5)), vec4(1.0));')
+        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
+
+        frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
+        frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
+        frag.write('uvw.y = uvw.y + clipmap_to_update;')
+        frag.write('vec3 writecoord = uvw * voxelgiResolution;')
+
+        frag.write('imageStore(voxels, ivec3(writecoord), vec4(1.0));')
 
     return con_voxel
