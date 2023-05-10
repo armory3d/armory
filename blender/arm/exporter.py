@@ -2473,6 +2473,14 @@ Make sure the mesh only has tris/quads.""")
             self.create_default_camera(is_viewport_camera=True)
             self.camera_spawned = True
 
+        elif self.scene.camera is not None and self.scene.camera.type != 'CAMERA':
+            # Blender doesn't directly allow to set arbitrary objects as cameras,
+            # but there is a `Set Active Object as Camera` operator which might
+            # cause cases like this to happen
+            log.warn(f'Camera "{self.scene.camera.name}" in scene "{self.scene.name}" is not a camera object, using default camera')
+            self.create_default_camera()
+            self.camera_spawned = True
+
         # No camera found
         if not self.camera_spawned:
             log.warn( f'Scene "{self.scene.name}" is missing a camera')
