@@ -8,6 +8,7 @@ import iron.math.Vec3;
 
 import armory.renderpath.Postprocess;
 import armory.renderpath.Voxels;
+import armory.renderpath.Inc;
 
 using StringTools;
 
@@ -242,7 +243,7 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelSize": {
-				Voxels.voxelsize = (Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)));
+				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)))) * 4 * Inc.getVoxelRes() / (Main.voxelgiHalfExtents * 2);
 				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels

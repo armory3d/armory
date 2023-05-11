@@ -138,6 +138,8 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    voxnormal = voxnormalGeom[i];')
+    if '_Sun' in wrd.world_defs:
+        geom.write('lightPosition = lightPositionGeom[i];')
     if con_voxel.is_elem('col'):
         geom.write('    vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
@@ -160,6 +162,40 @@ def make_gi(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
+
+
+    frag.add_include('std/light.glsl')
+    is_shadows = '_ShadowMap' in wrd.world_defs
+    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
+    shadowmap_sun = 'shadowMap'
+    if is_shadows_atlas:
+        shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
+        frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
+
+    if '_Sun' in wrd.world_defs:
+        frag.add_out('vec3 eyeDir')
+        frag.add_uniform('vec3 eye', '_cameraPosition')
+        frag.write('eyeDir = eye - voxposition;')
+        frag.add_uniform('vec3 sunCol', '_sunColor')
+        frag.add_uniform('vec3 sunDir', '_sunDirection')
+        frag.write('float svisibility = 1.0;')
+        frag.write('vec3 sh = normalize(eyeDir + sunDir);')
+        frag.write('float sdotNL = dot(n, sunDir);')
+        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
+        vert.add_out('vec4 lightPositionGeom')
+        vert.write('lightPositionGeom = LWVP * pos;')
+        geom.add_out('vec4 lightPosition')
+        if is_shadows:
+            frag.add_uniform('bool receiveShadow')
+            frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
+            frag.add_uniform('float shadowsBias', '_sunShadowsBias')
+            frag.write('if (receiveShadow) {')
+            frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
+            frag.write('    const vec2 smSize = shadowmapSize;')
+            frag.write(f'   svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
+            frag.write('}') # receiveShadow
+        frag.write('basecol += svisibility * sunCol * sdotNL;')
 
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
