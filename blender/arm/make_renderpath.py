@@ -95,10 +95,13 @@ def add_world_defs():
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
-        wrd.world_defs += '_VoxelCam'
 
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelShadow'
+
+        if rpdat.arm_voxelgi_temporal:
+            wrd.world_defs += '_VoxelTemporal'
+            assets.add_khafile_def('arm_voxelgi_temporal')
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'

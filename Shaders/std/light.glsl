@@ -146,13 +146,13 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmap_to_update);
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmap_to_update);
 	#endif
 	#endif
 

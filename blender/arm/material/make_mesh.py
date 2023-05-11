@@ -643,12 +643,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
-        if '_VoxelGICam' in wrd.world_defs:
-            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
-            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
-        else:
-            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-        frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
+        frag.add_uniform('vec3 levelPos', link='_levelPos')
+        frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
+        frag.add_uniform('float voxelSize', '_voxelSize')
+
+        frag.write('vec3 voxpos = (wposition - levelPos) / voxelSize;')
+        frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels, clipmap_to_update));')
 
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -711,7 +711,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('direct += sampleLight(')
-        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
+        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, clipmap_to_update')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:

@@ -1,7 +1,7 @@
 #version 450
 
 // layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
-layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 #include "compiled.inc"
 #include "std/math.glsl"
@@ -24,7 +24,7 @@ uniform mat4 LVP;
 
 uniform layout(binding = 0, rgba8) readonly image3D voxelsOpac;
 uniform layout(binding = 1, rgba8) readonly image3D voxelsNor;
-uniform layout(binding = 2, r32ui) uimage3D voxels;
+uniform layout(binding = 2, rgba8) image3D voxels;
 #ifdef _ShadowMap
 uniform layout(binding = 3) sampler2DShadow shadowMap;
 uniform layout(binding = 4) sampler2DShadow shadowMapSpot;
@@ -79,5 +79,5 @@ void main() {
 	col.rgb *= visibility * lightColor * dotNL;
 	col = clamp(col, vec4(0.0), vec4(1.0));
 
-	imageAtomicMax(voxels, ivec3(gl_GlobalInvocationID.xyz), convVec4ToRGBA8(col * 255));
+	imageStore(voxels, ivec3(gl_GlobalInvocationID.xyz), col);
 }

@@ -328,9 +328,9 @@ class RenderPathForward {
 		// Voxels
 		#if (rp_voxels != 'Off')
 		var relight = false;
-		if (armory.data.Config.raw.rp_voxels != false)
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			var voxelize = path.voxelize();
+			/*
 			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
 			//Relight if light was moved
 			for (light in iron.Scene.active.lights)
@@ -339,41 +339,37 @@ class RenderPathForward {
 					break;
 				}
 			#end
+			*/
 
-			if (voxelize) {
-				#if (rp_voxels == "Voxels GI")
-				var voxtex = "voxelsOpac";
-				#else
-				var voxtex = "voxels";
+			#if arm_voxelgi_temporal
+			#if (rp_voxels == "Voxel GI")
+			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+			#else
+			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+			#end
+			#end
+
+			#if(rp_voxels == "Voxel GI")
+			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
+			#else
+			var voxtex = voxels;
+			#end
+
+			Voxels.voxelize(voxtex);
+
+			#if (rp_voxels == "Voxel GI")
+				Inc.computeVoxelsBegin();
+				Inc.computeVoxels(voxtex, voxels);
+				Inc.computeVoxelsEnd(voxels, voxelsBounce);
+				#if(rp_voxelgi_bounces != 1)
+				voxels = voxelsBounce;
+				voxelsLast = voxelsBounceLast;
 				#end
-
-				path.clearImage(voxtex, 0x00000000);
-				path.setTarget("");
-
-				var res = Inc.getVoxelRes();
-				path.setViewport(res, res);
-
-				path.bindTarget(voxtex, "voxels");
-				#if (rp_voxels == "Voxel GI")
-				path.bindTarget("voxelsNor", "voxelsNor");
-				#end
-				path.drawMeshes("voxel");
-
-				relight = true;
-			}
-
-			if(relight) {
-				#if (rp_voxels == "Voxel GI")
-					Inc.computeVoxelsBegin();
-					Inc.computeVoxels();
-					Inc.computeVoxelsEnd();
-					#if(rp_voxelgi_bounces != 1)
-					voxels = "voxelsBounce";
-					#end
-				#else
-				path.generateMipmaps(voxels);
-				#end
-			}
+			#else
+			path.generateMipmaps(voxels);
+			#end
 		}
 		#end
 

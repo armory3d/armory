@@ -38,17 +38,16 @@ uniform sampler2D gbuffer_refraction;
 #endif
 
 #ifdef _VoxelGI
-uniform int clipmap_to_update;
 uniform sampler3D voxels;
+uniform int clipmap_to_update;
 uniform float voxelSize;
 uniform vec3 levelPos;
-uniform mat4 worldViewProj;
 #endif
 #ifdef _VoxelAOvar
-uniform int clipmap_to_update;
-uniform float clipmapSize;
 uniform sampler3D voxels;
-uniform vec3 eyeSnap;
+uniform int clipmap_to_update;
+uniform float voxelSize;
+uniform vec3 levelPos;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -298,13 +297,12 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmap_to_update) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmap_to_update) * (1.0 - voxelBlend));
 	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmap_to_update);
 	#endif
 	#endif
 #endif
@@ -312,10 +310,10 @@ void main() {
 #ifdef _VoxelGI
 	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
 
-	fragColor.rgb = traceDiffuse(voxpos, n, voxels, voxelSize, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
 
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, voxelSize, clipmap_to_update).rgb) * voxelgiRefl * occspec.y;
+		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb) * voxelgiRefl * occspec.y;
 
 	// Show voxels
 	/*
@@ -410,7 +408,7 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmap_to_update);
 	#endif
 	#endif
 
@@ -563,7 +561,7 @@ void main() {
 
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
-	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, voxelSize, clipmap_to_update);
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update);
 	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }
 #endif

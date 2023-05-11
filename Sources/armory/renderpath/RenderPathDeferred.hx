@@ -12,6 +12,8 @@ class RenderPathDeferred {
 	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
+	static var voxelsBounce = "voxelsBounce";
+	static var voxelsBounceLast = "voxelsBounce";
 	#end
 
 	#if rp_bloom
@@ -544,24 +546,30 @@ class RenderPathDeferred {
 			*/
 
 			#if arm_voxelgi_temporal
+			#if (rp_voxels == "Voxel GI")
+			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+			#else
 			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			#end
+			#end
 
 			#if(rp_voxels == "Voxel GI")
-			var voxtex = "voxelsOpac";
+			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
 			#else
 			var voxtex = voxels;
 			#end
 
-			Voxels.voxelize();
+			Voxels.voxelize(voxtex);
 
 			#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxelsBegin();
-				Inc.computeVoxels();
-				Inc.computeVoxelsEnd();
+				Inc.computeVoxels(voxtex, voxels);
+				Inc.computeVoxelsEnd(voxels, voxelsBounce);
 				#if(rp_voxelgi_bounces != 1)
-				voxels = "voxelsBounce";
+				voxels = voxelsBounce;
+				voxelsLast = voxelsBounceLast;
 				#end
 			#else
 			path.generateMipmaps(voxels);
