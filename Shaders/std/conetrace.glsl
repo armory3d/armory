@@ -105,7 +105,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 
 	#ifdef _VoxelCones9
 	// Normal direction
-	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, voxelSize, clipmap_to_update);
+	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, clipmap_to_update);
 	// 4 side cones
 	col += traceCone(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, clipmap_to_update);
 	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, clipmap_to_update);
