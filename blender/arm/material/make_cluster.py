@@ -73,8 +73,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('    albedo,')
     frag.write('    roughness,')
     frag.write('    specular,')
-    frag.write('    f0,')
-    frag.write('    clipmap_to_update')
+    frag.write('    f0')
 
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
@@ -85,8 +84,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, lightsArraySpot[li].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
-    if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
-        frag.write('\t, voxels, voxpos')
+    if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
+        frag.write('\t, voxels, voxpos, clipmap_to_update')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     frag.write(');')

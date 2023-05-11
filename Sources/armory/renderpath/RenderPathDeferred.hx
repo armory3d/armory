@@ -561,7 +561,7 @@ class RenderPathDeferred {
 			var voxtex = voxels;
 			#end
 
-			Voxels.voxelize(voxtex);
+			Voxels.voxelize();
 
 			#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxelsBegin();

@@ -309,12 +309,18 @@ void main() {
 
 #ifdef _VoxelGI
 	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
-
+	#ifdef _VoxelGITemporal
+	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	#else
 	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
+	#endif
 
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb) * voxelgiRefl * occspec.y;
-
+		#ifdef _VoxelGITemporal
+		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
+		#else
+		fragColor.rgb += traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelgiRefl * occspec.y;
+		#endif
 	// Show voxels
 	/*
 	vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
@@ -561,7 +567,11 @@ void main() {
 
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
+	#ifdef _VoxelTemporal
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * voxelBlend + traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * (1.0 - voxelBlend));
+	#else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update);
+	#endif
 	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }
 #endif
