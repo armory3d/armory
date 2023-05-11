@@ -32,15 +32,16 @@ uniform layout(binding = 5) samplerCubeShadow shadowMapPoint;
 #endif
 
 void main() {
+	vec3 texCoord = (gl_GlobalInvocationID.xyz / vec3(voxelgiResolution >> clipmap_to_update)) + vec3(0.5 / (voxelgiResolution >> clipmap_to_update));
 
-	vec4 col = imageLoad(voxelsOpac, ivec3(gl_GlobalInvocationID.xyz));
+	vec4 col = imageLoad(voxelsOpac, ivec3(texCoord));
 	//vec4 col = convRGBA8ToVec4(ucol);
 	if (col.a == 0.0) return;
 
 	const vec3 hres = voxelgiResolution / 2;
-	vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
+	vec3 wposition = (texCoord - 0.5) * voxelgiHalfExtents * 2;
 
-	vec3 wnormal = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).rgb;
+	vec3 wnormal = imageLoad(voxelsNor, ivec3(texCoord)).rgb;
 	//vec3 wnormal = normalize(decNor(unor));
 	//wposition -= wnormal * 0.01; // Offset
 
@@ -79,5 +80,5 @@ void main() {
 	col.rgb *= visibility * lightColor * dotNL;
 	col = clamp(col, vec4(0.0), vec4(1.0));
 
-	imageStore(voxels, ivec3(gl_GlobalInvocationID.xyz), col);
+	imageStore(voxels, ivec3(texCoord), col);
 }

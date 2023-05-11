@@ -117,7 +117,7 @@ def make_gi(context_id):
     vert.add_uniform('vec3 levelPos', '_levelPos')
     vert.add_uniform('float voxelSize', '_voxelSize')
 
-    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / 4 / voxelSize;')
+    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / voxelSize;')
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
@@ -238,7 +238,7 @@ def make_ao(context_id):
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
-        vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - levelPos) / 4 / voxelSize;')
+        vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - levelPos) / voxelSize;')
         vert.write('  stage_output.svpos.w = 1.0;')
         vert.write('  return stage_output;')
         vert.write('}')
@@ -298,7 +298,7 @@ def make_ao(context_id):
 
         vert.add_uniform('vec3 levelPos', '_levelPos')
         vert.add_uniform('float voxelSize', '_voxelSize')
-        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / 4 / voxelSize;')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / voxelSize;')
 
         geom.add_out('vec3 voxposition')
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')

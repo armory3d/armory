@@ -297,7 +297,7 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
-	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
+	vec3 voxpos = (p - levelPos) / voxelSize;
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmap_to_update) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmap_to_update) * (1.0 - voxelBlend));
@@ -308,7 +308,7 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec3 voxpos = (p - levelPos) / 4 / voxelSize;
+	vec3 voxpos = (p - levelPos) / voxelSize;
 	#ifdef _VoxelGITemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
@@ -486,7 +486,7 @@ void main() {
 		#endif
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		, voxels, voxpos
+		, voxels, voxpos, clipmap_to_update
 		#endif
 		#endif
 		#ifdef _MicroShadowing
@@ -546,7 +546,7 @@ void main() {
 			#endif
 			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos
+			, voxels, voxpos, clipmap_to_update
 			#endif
 			#endif
 			#ifdef _VoxelGI
@@ -568,9 +568,9 @@ void main() {
 #ifdef _VoxelGIRefract
 if(opac < 1.0) {
 	#ifdef _VoxelTemporal
-	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * voxelBlend + traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * (1.0 - voxelBlend));
+	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * voxelBlend + traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * (1.0 - voxelBlend)) * voxelgiRefr;
 	#else
-	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update);
+	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * voxelgiRefr;
 	#endif
 	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }

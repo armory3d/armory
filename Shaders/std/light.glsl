@@ -94,7 +94,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-		, sampler3D voxels, vec3 voxpos
+		, sampler3D voxels, vec3 voxpos, int clipmap_to_update
 	#endif
 	#endif
 	#ifdef _VoxelGI

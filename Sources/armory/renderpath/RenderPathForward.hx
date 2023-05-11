@@ -342,23 +342,33 @@ class RenderPathForward {
 			*/
 
 			#if arm_voxelgi_temporal
+			/*
 			#if (rp_voxels == "Voxel GI")
 			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
 			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
 			#else
+			*/
 			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			#end
-			#end
+			//#end
 
+			/*
 			#if(rp_voxels == "Voxel GI")
+			#if arm_voxelgi_temporal
 			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
+			#else
+			var voxtex = "voxelsOpac";
+			#end
 			#else
 			var voxtex = voxels;
 			#end
+			*/
 
-			Voxels.voxelize(voxtex);
+			Voxels.voxelize(voxels);
+			path.generateMipmaps(voxels);
 
+			/*
 			#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxelsBegin();
 				Inc.computeVoxels(voxtex, voxels);
@@ -370,6 +380,7 @@ class RenderPathForward {
 			#else
 			path.generateMipmaps(voxels);
 			#end
+			*/
 		}
 		#end
 
