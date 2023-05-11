@@ -9,7 +9,7 @@ class LetterboxGetNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		return switch (from) {
 			case 0: armory.renderpath.Postprocess.letterbox_uniforms[0];
-			case 1: armory.renderpath.Postprocess.letterbox_uniforms[1];
+			case 1: armory.renderpath.Postprocess.letterbox_uniforms[1][0];
 			default: 0.0;
 		}
 	}

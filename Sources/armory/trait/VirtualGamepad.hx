@@ -126,13 +126,13 @@ class VirtualGamepad extends Trait {
 
 		g.color = 0xffaaaaaa;
 
-		kha.graphics2.GraphicsExtension.fillCircle(g, leftPadX, leftPadY, r);
-		kha.graphics2.GraphicsExtension.fillCircle(g, rightPadX, rightPadY, r);
+		zui.GraphicsExtension.fillCircle(g, leftPadX, leftPadY, r);
+		zui.GraphicsExtension.fillCircle(g, rightPadX, rightPadY, r);
 
 		var r2 = Std.int(r / 2.2);
 		g.color = 0xffffff44;
-		kha.graphics2.GraphicsExtension.fillCircle(g, leftPadX + leftStickX, leftPadY + leftStickY, r2);
-		kha.graphics2.GraphicsExtension.fillCircle(g, rightPadX + rightStickX, rightPadY + rightStickY, r2);
+		zui.GraphicsExtension.fillCircle(g, leftPadX + leftStickX, leftPadY + leftStickY, r2);
+		zui.GraphicsExtension.fillCircle(g, rightPadX + rightStickX, rightPadY + rightStickY, r2);
 
 		g.color = 0xffffffff;
 	}
