@@ -129,7 +129,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA32";
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -554,7 +554,9 @@ class RenderPathDeferred {
 			*/
 			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-			#end
+			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0)
+				armory.renderpath.Voxels.voxelize(voxels);
+			#else
 			//#end
 
 			/*
@@ -569,9 +571,8 @@ class RenderPathDeferred {
 			#end
 			*/
 
-			Voxels.voxelize(voxels);
-			path.generateMipmaps(voxels);
-
+			Voxels.voxelize("voxels");
+			#end
 			/*
 			#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxelsBegin();

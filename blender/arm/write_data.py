@@ -567,27 +567,28 @@ def write_compiledglsl(defs, make_variants):
             if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
-        
-        gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
-        f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-        #Write indices of G-Buffer render targets
-        f.write('#define GBUF_IDX_0 0\n')
-        f.write('#define GBUF_IDX_1 1\n')
+        if rpdat.rp_renderer == 'Deferred':
+            gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
+            f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-        idx_emission = 2
-        idx_refraction = 2
-        if '_gbuffer2' in wrd.world_defs:
-            f.write('#define GBUF_IDX_2 2\n')
-            idx_emission += 1
-            idx_refraction += 1
+            #Write indices of G-Buffer render targets
+            f.write('#define GBUF_IDX_0 0\n')
+            f.write('#define GBUF_IDX_1 1\n')
 
-        if '_EmissionShaded' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
-            idx_refraction += 1
+            idx_emission = 2
+            idx_refraction = 2
+            if '_gbuffer2' in wrd.world_defs:
+                f.write('#define GBUF_IDX_2 2\n')
+                idx_emission += 1
+                idx_refraction += 1
 
-        if '_VoxelGIRefract' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
+            if '_EmissionShaded' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
+                idx_refraction += 1
+
+            if '_VoxelRefract' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
@@ -751,7 +752,6 @@ const float compoDOFLength = 160.0;
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const float voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;

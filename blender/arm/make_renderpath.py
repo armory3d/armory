@@ -113,7 +113,7 @@ def add_world_defs():
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
             if rpdat.arm_voxelgi_refraction:
-                wrd.world_defs += '_VoxelGIRefract'
+                wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')
 
         elif voxelao:
@@ -459,7 +459,7 @@ def get_num_gbuffer_rts_deferred() -> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelGIRefract'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_VoxelRefract'):
         if flag in wrd.world_defs:
             num += 1
     return num

@@ -24,7 +24,6 @@ class RenderPathForward {
 		{
 			path.setTarget("lbuffer0", [
 				#if rp_ssr "lbuffer1", #end
-				#if rp_voxelgi_refract "gbuffer_refraction" #end
 			]);
 		}
 		#else
@@ -75,19 +74,6 @@ class RenderPathForward {
 			path.loadShader("shader_datas/clear_color_pass/clear_color_pass");
 			path.loadShader("shader_datas/clear_depth_pass/clear_depth_pass");
 			path.clearShader = "shader_datas/clear_color_depth_pass/clear_color_depth_pass";
-		}
-		#end
-
-		#if rp_voxelgi_refract
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
 		}
 		#end
 
@@ -147,7 +133,7 @@ class RenderPathForward {
 				t.name = "buf";
 				t.width = 0;
 				t.height = 0;
-				t.format = "RGBA32";
+				t.format = Inc.getHdrFormat();
 				t.displayp = Inc.getDisplayp();
 				t.scale = Inc.getSuperSampling();
 				t.depth_buffer = "main";
@@ -413,7 +399,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != "Off")
 		{
 			path.bindTarget(voxels, "voxels");
 			#if arm_voxelgi_temporal

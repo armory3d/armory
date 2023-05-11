@@ -12,11 +12,11 @@ class Voxels {
 	public static var clipmap_to_update = 0;
 	public static var voxelsize = 0.0;
 
-	public static function voxelize(voxtex)
+	public static function voxelize(voxels)
 	{
 		var path = RenderPath.active;
 
-		path.clearImage(voxtex, 0x00000000);
+		path.clearImage(voxels, 0x00000000);
 
 		if(path != null)
 		{
@@ -25,7 +25,7 @@ class Voxels {
 				path.setTarget("");
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
-				path.bindTarget(voxtex, "voxels");
+				path.bindTarget(voxels, "voxels");
 				#if (rp_voxels == "Voxel GI")
 				path.bindTarget("voxelsNor", "voxelsNor");
 				#end
@@ -33,5 +33,7 @@ class Voxels {
 				Voxels.clipmap_to_update = (Voxels.clipmap_to_update + 1) % Voxels.CLIPMAP_COUNT;
 			}
 		}
+
+		path.generateMipmaps(voxels);
 	}
 }

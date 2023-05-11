@@ -24,10 +24,8 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-#ifdef _VoxelGI
-#ifdef _VoxelGIRefract
+#ifdef _VoxelRefract
 uniform sampler2D gbuffer_refraction;
-#endif
 #endif
 
 #ifdef _gbuffer2
@@ -227,12 +225,10 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
-#ifdef _VoxelGI
-#ifdef _VoxelGIRefract
+#ifdef _VoxelRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
 	float rior = gr.x;
 	float opac = gr.y;
-#endif
 #endif
 
 #ifdef _gbuffer2
@@ -309,14 +305,14 @@ void main() {
 
 #ifdef _VoxelGI
 	vec3 voxpos = (p - levelPos) / voxelSize;
-	#ifdef _VoxelGITemporal
+	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
 	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
 	if(roughness < 1.0 && occspec.y > 0.0)
-		#ifdef _VoxelGITemporal
+		#ifdef _VoxelTemporal
 		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
 		#else
 		fragColor.rgb += traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelgiRefl * occspec.y;
@@ -413,6 +409,12 @@ void main() {
 	#endif
 
 	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmap_to_update);
+	#endif
+	#endif
+
+	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
 	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmap_to_update);
 	#endif
@@ -565,7 +567,7 @@ void main() {
 #endif // _Clusters
 	fragColor.a = 1.0;
 
-#ifdef _VoxelGIRefract
+#ifdef _VoxelRefract
 if(opac < 1.0) {
 	#ifdef _VoxelTemporal
 	vec3 refraction = (traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * voxelBlend + traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmap_to_update) * (1.0 - voxelBlend)) * voxelgiRefr;

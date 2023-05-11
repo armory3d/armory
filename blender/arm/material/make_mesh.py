@@ -193,7 +193,7 @@ def make_deferred(con_mesh, rpasses):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if parse_opacity and not '_VoxelGIRefract' in wrd.world_defs:
+    if parse_opacity and not '_VoxelRefract' in wrd.world_defs:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -269,7 +269,7 @@ def make_deferred(con_mesh, rpasses):
     frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  # Alpha channel is unused at the moment
     frag.write('#endif')
 
-    if '_VoxelGIRefract' in wrd.world_defs:
+    if '_VoxelRefract' in wrd.world_defs:
         if parse_opacity:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
         else:
@@ -556,7 +556,6 @@ def make_forward(con_mesh):
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
 
-
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
@@ -754,12 +753,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 
-    if '_VoxelRefract' in wrd.world_defs:
+    if '_VoxelRefract' in wrd.world_defs and parse_opacity:
         if '_VoxelTemporal' in wrd.world_defs:
             frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmap_to_update) * voxelBlend + traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmap_to_update) * (1.0 - voxelBlend)) * voxelgiRefr;')
         else:
-            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmap_to_update);')
-        frag.write('fragColor.rgb = mix(refraction, fragColor.rgb, opacity')
+            frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmap_to_update) * voxelgiRefr;')
+        frag.write('indirect = mix(refraction, indirect, opacity);')
+        frag.write('direct = mix(refraction, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
