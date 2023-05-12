@@ -53,7 +53,7 @@ class OneShotActionNode extends LogicNode {
 
 	public function initOneShot() {
 		
-		if( animationObject == null){
+		if(animationObject == null){
 			#if arm_skin
 			animationBone.deRegisterAction(property0);
 			sampler = new ActionSampler(inputs[4].get(), 1.0, false, true);
@@ -89,7 +89,12 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		if(!ready) init();
+		if(ready) {
+			initOneShot();
+		}
+		else {
+			init();
+		}
 		var restart = inputs[5].get();
 		var blendOut = inputs[7].get();
 		var blendIn = inputs[6].get();
