@@ -45,9 +45,8 @@ def update_point_atlas_size_options(scene: bpy.types.Scene, context: bpy.types.C
 
 
 def update_preset(self, context):
-    rpdat = arm.utils.get_rp()
-    if rpdat is None:
-        rpdat = self.arm_rplist[-1]
+    rpdat = self.arm_rplist[-1]
+
     if self.rp_preset == 'Desktop':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
