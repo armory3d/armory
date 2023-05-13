@@ -100,6 +100,9 @@ class OneShotActionNode extends LogicNode {
 	override function run(from:Int) {
 
 		var restart = inputs[5].get();
+		var blendIn = inputs[6].get();
+		var blendOut = inputs[7].get();
+		var boneLayer: Null<Int> = inputs[8].get();
 
 		if(ready) {
 			if(restart || reset) initOneShot();
@@ -107,10 +110,6 @@ class OneShotActionNode extends LogicNode {
 		else {
 			init();
 		}
-		
-		var blendOut = inputs[7].get();
-		var blendIn = inputs[6].get();
-		var boneLayer: Null<Int> = inputs[8].get();
 
 		if(from == 0) {
 			oneShotOp.startOneShotAction(blendIn, blendOut, restart, done, boneLayer);
