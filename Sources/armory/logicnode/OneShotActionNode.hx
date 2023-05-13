@@ -25,6 +25,8 @@ class OneShotActionNode extends LogicNode {
 	var tempMatsBone: Array<Mat4>;
 	var ready = false;
 	var result: Dynamic;
+	var oldActionName: String = "";
+	var reset = true;
 
 	var oneShotOp: OneShotOperator;
 
@@ -52,11 +54,16 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	public function initOneShot() {
-		
+
+		var actionName: String = inputs[4].get();
+
+		//Do not re-intialize same action
+		if(oldActionName == actionName) return;
+
 		if(animationObject == null){
 			#if arm_skin
 			animationBone.deRegisterAction(property0);
-			sampler = new ActionSampler(inputs[4].get(), 1.0, false, true);
+			sampler = new ActionSampler(actionName, 1.0, false, true);
 			animationBone.registerAction(property0, sampler);
 			oneShotOp = new OneShotOperator(animationBone, sampler);
 			result = resultBone;
@@ -64,11 +71,13 @@ class OneShotActionNode extends LogicNode {
 		}
 		else {
 			animationObject.deRegisterAction(property0);
-			sampler = new ActionSampler(inputs[4].get(), 1.0, false, true);
+			sampler = new ActionSampler(actionName, 1.0, false, true);
 			animationObject.registerAction(property0, sampler);
 			oneShotOp = new OneShotOperator(animationObject, sampler);
 			result = resultObject;
 		}
+
+		oldActionName = actionName;
 	}
 
 	public function resultBone(resultMats: Array<Mat4>) {
@@ -89,29 +98,35 @@ class OneShotActionNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+
+		var restart = inputs[5].get();
+
 		if(ready) {
-			initOneShot();
+			if(restart || reset) initOneShot();
 		}
 		else {
 			init();
 		}
-		var restart = inputs[5].get();
+		
 		var blendOut = inputs[7].get();
 		var blendIn = inputs[6].get();
 		var boneLayer: Null<Int> = inputs[8].get();
 
 		if(from == 0) {
 			oneShotOp.startOneShotAction(blendIn, blendOut, restart, done, boneLayer);
+			reset = false;
 		}
 
 		if(from == 1){
 			oneShotOp.stopOneShotAction();
+			reset = true;
 		}
 
 		runOutput(0);
 	}
 
 	function done() {
+		reset = true;
 		runOutput(1);
 	}
 }
