@@ -11,7 +11,7 @@ class EvaluateRootMotionNode(ArmLogicTreeNode):
             items = [('X', 'X', 'X'),
                      ('Y', 'Y', 'Y'),
                      ('Z', 'Z', 'Z')],
-            name='Root Motion Lock axis', default='Z')
+            name='', default='Z')
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Reset')
@@ -23,4 +23,5 @@ class EvaluateRootMotionNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAnimTree', 'Result')
 
     def draw_buttons(self, context, layout):
+        layout.label(text='Root Motion Lock axis:')
         layout.prop(self, 'property0')

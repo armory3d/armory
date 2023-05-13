@@ -4,6 +4,7 @@ class SetActionPausedNode(ArmLogicTreeNode):
     """Sets the action paused state of the given object."""
     bl_idname = 'LNSetActionPausedNode'
     bl_label = 'Set Action Paused'
+    bl_width_default = 200
     arm_version = 2
 
     def arm_init(self, context):

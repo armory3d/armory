@@ -4,6 +4,7 @@ class RestartActionNode(ArmLogicTreeNode):
     """Restarts the action"""
     bl_idname = 'LNRestartActionNode'
     bl_label = 'Restart Action'
+    bl_width_default = 200
     arm_version = 2
 
     def arm_init(self, context):

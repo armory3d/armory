@@ -4,6 +4,7 @@ class OneShotActionNode(ArmLogicTreeNode):
     """Introduce one loop of animation in the current tree."""
     bl_idname = 'LNOneShotActionNode'
     bl_label = 'One Shot Action'
+    bl_width_default = 250
     arm_version = 1
 
     property0: HaxeStringProperty('property0', name = 'Action ID', default = '')

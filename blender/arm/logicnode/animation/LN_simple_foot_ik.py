@@ -26,11 +26,13 @@ class SimpleFootIKNode(ArmLogicTreeNode):
     arm_version = 1
     arm_section = 'armature'
 
-    property0: HaxeStringProperty('property0', name = 'Left Foot Name', default = '')
-    property1: HaxeStringProperty('property1', name = 'Right Foot Name', default = '')
+    property0: HaxeStringProperty('property0', name = '', default = '')
+    property1: HaxeStringProperty('property1', name = '', default = '')
 
     def draw_buttons(self, context, layout):
+        layout.label(text='Left Foot Name:')
         layout.prop(self, 'property0')
+        layout.label(text='Right Foot Name:')
         layout.prop(self, 'property1')
 
     def arm_init(self, context):

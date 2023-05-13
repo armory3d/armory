@@ -4,6 +4,7 @@ class OnActionMarkerNode(ArmLogicTreeNode):
     """Activates the output when the object action reaches the action marker."""
     bl_idname = 'LNOnActionMarkerNode'
     bl_label = 'On Action Marker'
+    bl_width_default = 250
     arm_version = 2
 
     property0: HaxeStringProperty('property0', name='Action ID', default='')

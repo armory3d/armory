@@ -6,10 +6,10 @@ class AnimationStateNode(ArmLogicTreeNode):
     bl_label = 'Get Action State'
     arm_version = 2
 
-    property0: HaxeStringProperty('property0', name='Action ID', default='')
+    property0: HaxeStringProperty('property0', name='', default='')
 
     def arm_init(self, context):
-        self.add_input('ArmNodeSocketObject', 'Object')        
+        self.add_input('ArmNodeSocketObject', 'Object')
 
         self.add_output('ArmStringSocket', 'Action Name')
         self.add_output('ArmIntSocket', 'Frame')
@@ -17,6 +17,7 @@ class AnimationStateNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'On Complete')
     
     def draw_buttons(self, context, layout):
+        layout.label(text='Action ID:')
         layout.prop(self, 'property0')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):

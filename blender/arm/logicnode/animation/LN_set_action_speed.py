@@ -4,6 +4,7 @@ class SetActionSpeedNode(ArmLogicTreeNode):
     """Sets the current action playback speed of the given object."""
     bl_idname = 'LNSetActionSpeedNode'
     bl_label = 'Set Action Speed'
+    bl_width_default = 200
     arm_version = 2
 
     def arm_init(self, context):

@@ -6,7 +6,7 @@ class AnimActionNode(ArmLogicTreeNode):
     bl_label = 'Action'
     arm_version = 2
 
-    property0: HaxeStringProperty('property0', name = 'Action ID', default = '')
+    property0: HaxeStringProperty('property0', name = '', default = '')
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
@@ -16,6 +16,7 @@ class AnimActionNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAnimTree', 'Action')
     
     def draw_buttons(self, context, layout):
+        layout.label(text='Action ID:')
         layout.prop(self, 'property0')
     
     def draw_label(self) -> str:
