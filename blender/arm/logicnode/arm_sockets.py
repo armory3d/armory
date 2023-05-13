@@ -107,7 +107,8 @@ class ArmAnimActionSocket(ArmCustomSocket):
         elif self.is_linked:
             layout.label(text=self.name)
         else:
-            layout.prop_search(self, 'default_value_raw', bpy.data, 'actions', icon='NONE', text='')
+            row = layout.row(align=True)
+            layout.prop_search(self, 'default_value_raw', bpy.data, 'actions', icon='NONE', text=self.name)
 
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
