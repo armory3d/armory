@@ -188,13 +188,13 @@ class Uniforms {
 				viewerPos.y += l.y;
 				viewerPos.z += l.z;
 
-				var f = clipmapLevelSize;
-				voxelPos.x = Math.floor((viewerPos.x + l.x) / f);
-				voxelPos.y = Math.floor((viewerPos.y + l.y) / f);
-				voxelPos.z = Math.floor((viewerPos.z + l.z) / f);
+				var f = Main.voxelgiVoxelSize;
+				voxelPos.x = Math.floor(viewerPos.x / f) * f;
+				voxelPos.y = Math.floor(viewerPos.y / f) * f;
+				voxelPos.z = Math.floor(viewerPos.z / f) * f;
 
 				v = iron.object.Uniforms.helpVec;
-				v.set(viewerPos.x, viewerPos.y, viewerPos.z);
+				v.set(voxelPos.x, voxelPos.y, voxelPos.z);
 			}
 			#end
 		}

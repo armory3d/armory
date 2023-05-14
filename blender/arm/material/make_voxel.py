@@ -115,9 +115,9 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
-    vert.add_uniform('float voxelSize', '_voxelSize')
+    vert.add_uniform('float climapLevelSize', '_clipmapLevelSize')
 
-    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelSize;')
+    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / climapLevelSize;')
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
@@ -199,6 +199,7 @@ def make_gi(context_id):
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
+
     frag.write('uvw.y = uvw.y + clipmap_to_update;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
