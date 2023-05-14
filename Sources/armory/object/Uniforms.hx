@@ -180,7 +180,6 @@ class Uniforms {
 				var voxelDist = Vec3.distance(voxelPos, viewerPos);
 				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
 
-				var clipmapLevelSize = Main.voxelgiHalfExtents * 2 * Math.pow(2.0, clipmapLevel-1);
 				var e = Main.voxelgiHalfExtents;
 				var l = camera.lookWorld();
 
@@ -188,10 +187,10 @@ class Uniforms {
 				viewerPos.y += l.y;
 				viewerPos.z += l.z;
 
-				var f = Main.voxelgiVoxelSize;
-				voxelPos.x = Math.floor(viewerPos.x / f);
-				voxelPos.y = Math.floor(viewerPos.y / f);
-				voxelPos.z = Math.floor(viewerPos.z / f);
+				var f = Main.voxelgiVoxelSize / (Inc.getVoxelRes() * Math.pow(2.0, clipmapLevel-1));
+				voxelPos.x = Math.floor(viewerPos.x / f) * f;
+				voxelPos.y = Math.floor(viewerPos.y / f) * f;
+				voxelPos.z = Math.floor(viewerPos.z / f) * f;
 
 				v = iron.object.Uniforms.helpVec;
 				v.set(voxelPos.x, voxelPos.y, voxelPos.z);
@@ -238,7 +237,7 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelSize": {
-				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update))));
+				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)))) * 4;
 				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels

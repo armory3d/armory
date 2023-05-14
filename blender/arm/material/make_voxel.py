@@ -197,7 +197,7 @@ def make_gi(context_id):
         frag.write('basecol += svisibility * sunCol;// * sdotNL;')
 
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
-    frag.write('if(abs(voxposition.y) < clipmap_to_update / 6) return;')
+    #frag.write('if(abs(voxposition.y) < clipmap_to_update / 6 || abs(voxposition.y) > (clipmap_to_update+1) / 6) return;')
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
 
