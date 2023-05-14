@@ -194,7 +194,7 @@ def make_gi(context_id):
             frag.write('    const vec2 smSize = shadowmapSize;')
             frag.write(f'   svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('}') # receiveShadow
-        frag.write('basecol += svisibility * sunCol;// * sdotNL;')
+        frag.write('basecol *= svisibility * sunCol;// * sdotNL;')
 
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition;')

@@ -34,7 +34,6 @@ class Voxels {
 				Voxels.clipmap_to_update = (Voxels.clipmap_to_update + 1) % Voxels.CLIPMAP_COUNT;
 			}
 		}
-
 		path.generateMipmaps(voxels);
 	}
 }

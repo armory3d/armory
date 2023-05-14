@@ -179,8 +179,6 @@ class Uniforms {
 
 				var voxelDist = Vec3.distance(voxelPos, viewerPos);
 				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
-
-				var e = Main.voxelgiHalfExtents;
 				var l = camera.lookWorld();
 
 				viewerPos.x += l.x;
