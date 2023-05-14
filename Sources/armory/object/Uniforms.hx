@@ -237,7 +237,7 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelSize": {
-				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)))) * 4;
+				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update))));
 				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels

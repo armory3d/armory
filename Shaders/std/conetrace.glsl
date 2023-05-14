@@ -69,7 +69,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
-		dist += max(diam / 2, float(voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution * (1 << clipmap_to_update)))); // Step size
+		dist += max(diam / 2, float(2 / (voxelgiResolution * (1 << clipmap_to_update)))); // Step size
 		diam = dist * aperture;
 	}
 	return sampleCol;
@@ -125,7 +125,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness, const int clipmap_to_update) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
-	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, clipmap_to_update).xyz;
+	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, clipmap_to_update).xyz * voxelgiOcc;
 }
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness, const int clipmap_to_update) {
@@ -149,7 +149,7 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		float mipSample = textureLod(voxels, samplePos, mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2, VOXEL_SIZE);
+		dist += max(diam / 2, float(2 / (voxelgiResolution * (1 << clipmap_to_update))));
 		diam = dist * aperture;
 	}
 	return sampleCol;
@@ -168,7 +168,7 @@ float traceConeAOShadow(sampler3D voxels, const vec3 origin, vec3 dir, const flo
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		float mipSample = textureLod(voxels, samplePos, mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2, VOXEL_SIZE);
+		dist += max(diam / 2, float(2 / (voxelgiResolution * (1 << clipmap_to_update))));
 		diam = dist * aperture;
 	}
 	return sampleCol;
