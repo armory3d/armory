@@ -199,7 +199,6 @@ def make_gi(context_id):
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
-
     frag.write('uvw.y = uvw.y + clipmap_to_update;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')

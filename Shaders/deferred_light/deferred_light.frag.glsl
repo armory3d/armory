@@ -40,12 +40,14 @@ uniform sampler3D voxels;
 uniform int clipmap_to_update;
 uniform float voxelSize;
 uniform vec3 eyeSnap;
+uniform float clipmapLevelSize;
 #endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 uniform int clipmap_to_update;
 uniform float voxelSize;
 uniform vec3 eyeSnap;
+uniform float clipmapLevelSize;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -304,7 +306,7 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec3 voxpos = (p - eyeSnap) / voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
