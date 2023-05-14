@@ -467,7 +467,7 @@ class Main {
 
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
-    public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
+    public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions * (1 + 2 + 3 + 4 + 5)) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
         if rpdat.rp_bloom:

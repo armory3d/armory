@@ -114,10 +114,10 @@ def make_gi(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    vert.add_uniform('vec3 levelPos', '_levelPos')
+    vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
     vert.add_uniform('float voxelSize', '_voxelSize')
 
-    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / voxelSize;')
+    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelSize;')
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
@@ -161,8 +161,7 @@ def make_gi(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
-
+    frag.write('if (abs(voxposition.z) > 1 || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
@@ -195,10 +194,11 @@ def make_gi(context_id):
             frag.write('    const vec2 smSize = shadowmapSize;')
             frag.write(f'   svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('}') # receiveShadow
-        frag.write('basecol += svisibility * sunCol * sdotNL;')
+        frag.write('basecol += svisibility * sunCol;// * sdotNL;')
 
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
-    frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
+    frag.write('vec3 uvw = voxposition;')
+    frag.write('uvw = uvw * 0.5 + 0.5;')
     frag.write('uvw.y = uvw.y + clipmap_to_update;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
@@ -217,7 +217,7 @@ def make_ao(context_id):
     tesc = None
     tese = None
 
-    vert.add_uniform('vec3 levelPos', '_levelPos')
+    vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
     vert.add_uniform('float voxelSize', '_voxelSize')
 
     if arm.utils.get_gapi() == 'direct3d11':
@@ -238,7 +238,7 @@ def make_ao(context_id):
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
-        vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - levelPos) / voxelSize;')
+        vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / voxelSize;')
         vert.write('  stage_output.svpos.w = 1.0;')
         vert.write('  return stage_output;')
         vert.write('}')
@@ -296,9 +296,10 @@ def make_ao(context_id):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 voxpositionGeom')
 
-        vert.add_uniform('vec3 levelPos', '_levelPos')
+
+        vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
         vert.add_uniform('float voxelSize', '_voxelSize')
-        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - levelPos) / voxelSize;')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelSize;')
 
         geom.add_out('vec3 voxposition')
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')

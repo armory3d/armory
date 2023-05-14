@@ -171,7 +171,7 @@ class Uniforms {
 			#end
 
 			#if (rp_voxels != "Off")
-			case "_levelPos": {
+			case "_eyeSnap": {
 				/* This snipet is served by CHATGPT */
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
@@ -183,23 +183,18 @@ class Uniforms {
 				var clipmapLevelSize = Main.voxelgiHalfExtents * 2 * Math.pow(2.0, clipmapLevel-1);
 				var e = Main.voxelgiHalfExtents;
 				var l = camera.lookWorld();
-				voxelPos.x += l.x * e * 0.9;
-				voxelPos.y += l.y * e * 0.9;
-				voxelPos.z += l.z * e * 0.9;
 
-				var f = Voxels.voxelsize * 8;
-				voxelPos.x = Math.floor(voxelPos.x / f) * f;
-				voxelPos.y = Math.floor(voxelPos.y / f) * f;
-				voxelPos.z = Math.floor(voxelPos.z / f) * f;
+				viewerPos.x += l.x;
+				viewerPos.y += l.y;
+				viewerPos.z += l.z;
 
-				var levelIndex = clipmapLevel - 1;
-				var levelPos = new iron.math.Vec3(
-					Math.floor(voxelPos.x / clipmapLevelSize),
-					Math.floor(voxelPos.y / clipmapLevelSize),
-					Math.floor(voxelPos.z / clipmapLevelSize)
-				);
+				var f = clipmapLevelSize;
+				voxelPos.x = Math.floor((viewerPos.x + l.x) / f);
+				voxelPos.y = Math.floor((viewerPos.y + l.y) / f);
+				voxelPos.z = Math.floor((viewerPos.z + l.z) / f);
+
 				v = iron.object.Uniforms.helpVec;
-				v.set(levelPos.x, levelPos.y, levelPos.z);
+				v.set(viewerPos.x, viewerPos.y, viewerPos.z);
 			}
 			#end
 		}
@@ -243,12 +238,16 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelSize": {
-				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update))));
+				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update)))) * 4;
 				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = Voxels.voxelFreq;
 				return (Voxels.voxelFrame % freq) / freq;
+			}
+			case "_clipmapLevelSize": {
+				Voxels.clipmapLevelSize = Main.voxelgiHalfExtents * 2 * Math.pow(2.0, Voxels.clipmap_to_update);
+				return Voxels.clipmapLevelSize;
 			}
 			#end
 		}

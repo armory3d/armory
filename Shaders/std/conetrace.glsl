@@ -62,14 +62,14 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		samplePos = dir * dist + origin;
 		// Choose mip level based on the diameter of the cone
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
-		samplePos = samplePos * 0.5 + 0.5;
-		samplePos.y = (samplePos.y + clipmap_to_update) / 6;
+		vec3 coords = samplePos * 0.5 + 0.5;
+		coords.y = (coords.y + clipmap_to_update) / 6;
 
-		vec4 mipSample = textureLod(voxels, samplePos, mip);
+		vec4 mipSample = textureLod(voxels, coords, mip);
 
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
-		dist += max(diam / 2, VOXEL_SIZE); // Step size
+		dist += max(diam / 2, float(voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution * (1 << clipmap_to_update)))); // Step size
 		diam = dist * aperture;
 	}
 	return sampleCol;
