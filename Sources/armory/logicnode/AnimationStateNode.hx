@@ -23,7 +23,7 @@ class AnimationStateNode extends LogicNode {
 		assert(Error, animation != null, "Object does not have animations");
 		sampler = animation.activeActions.get(property0);
 		if(sampler == null) return;
-		sampler.notifyOnComplete(function (){runOutput(3);});
+		sampler.notifyOnComplete(function (){runOutput(0);});
 		tree.removeUpdate(init);
 		
 	}
@@ -31,9 +31,12 @@ class AnimationStateNode extends LogicNode {
 	override function get(from: Int): Dynamic {
 		if(sampler == null) return null;
 		return switch (from) {
-			case 0: sampler.action;
-			case 1: sampler.offset;
-			case 2: sampler.paused;
+			case 1: sampler.actionDataInit;
+			case 2: sampler.action;
+			case 3: sampler.offset;
+			case 4: sampler.paused;
+			case 5: sampler.speed;
+			case 6: sampler.totalFrames;
 			default: null;
 		}
 	}

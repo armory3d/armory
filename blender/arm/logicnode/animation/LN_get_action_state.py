@@ -11,11 +11,14 @@ class AnimationStateNode(ArmLogicTreeNode):
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('ArmStringSocket', 'Action Name')
-        self.add_output('ArmIntSocket', 'Frame')
-        self.add_output('ArmBoolSocket', 'Is Paused')
         self.add_output('ArmNodeSocketAction', 'On Complete')
-    
+        self.add_output('ArmBoolSocket', 'Initialized')
+        self.add_output('ArmStringSocket', 'Action Name')
+        self.add_output('ArmIntSocket', 'Current Frame')
+        self.add_output('ArmBoolSocket', 'Is Paused')
+        self.add_output('ArmFloatSocket', 'Speed')
+        self.add_output('ArmIntSocket', 'Total Frames')
+
     def draw_buttons(self, context, layout):
         layout.label(text='Action ID:')
         layout.prop(self, 'property0')
