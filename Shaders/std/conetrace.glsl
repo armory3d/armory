@@ -69,10 +69,10 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
-		dist += max(diam / 2, float(2 / (voxelgiResolution * (1 << clipmap_to_update)))); // Step size
+		dist += max(diam / 2, float(voxelgiHalfExtents * 2 * (1+ 2 + 3 + 4 + 5) / (voxelgiResolution * (1 << clipmap_to_update)))); // Step size
 		diam = dist * aperture;
 	}
-	sampleCol.rgb *= float(voxelgiHalfExtents * 2 / (voxelgiResolution * (1 << clipmap_to_update)));
+	sampleCol.rgb *= float(voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution * (1 << clipmap_to_update)));
 	return sampleCol;
 }
 
