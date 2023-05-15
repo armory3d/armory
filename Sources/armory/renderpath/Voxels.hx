@@ -17,11 +17,13 @@ class Voxels {
 	{
 		var path = RenderPath.active;
 
-		path.clearImage(voxels, 0x00000000);
+        
+		if(clipmap_to_update == 0)
+		    path.clearImage(voxels, 0x00000000);
 
 		if(path != null)
 		{
-			for(i in 0...6)
+			//for(i in 0...6)
 			{
 				path.setTarget("");
 				var res = Inc.getVoxelRes();
@@ -31,9 +33,10 @@ class Voxels {
 				path.bindTarget("voxelsNor", "voxelsNor");
 				#end
 				path.drawMeshes("voxel");
-				Voxels.clipmap_to_update = (Voxels.clipmap_to_update + 1) % Voxels.CLIPMAP_COUNT;
+			//	Voxels.clipmap_to_update = (Voxels.clipmap_to_update + 1) % Voxels.CLIPMAP_COUNT;
 			}
 		}
-		path.generateMipmaps(voxels);
+		if(clipmap_to_update == 0)
+	    	path.generateMipmaps(voxels);
 	}
 }

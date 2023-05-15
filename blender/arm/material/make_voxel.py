@@ -199,7 +199,7 @@ def make_gi(context_id):
     frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
-
+    frag.write('uvw.y = uvw.y + clipmap_to_update;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
     frag.write('imageStore(voxelsNor, ivec3(writecoord), vec4(min(voxnormal, vec3(1.0)), 1.0));')
@@ -276,6 +276,7 @@ def make_ao(context_id):
 
         frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
+        frag.write('uvw.y = uvw.y + clipmap_to_update;')
         frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
 
         frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
@@ -323,6 +324,7 @@ def make_ao(context_id):
 
         frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
+        frag.write('uvw.y = uvw.y + clipmap_to_update;')
         frag.write('vec3 writecoord = uvw * voxelgiResolution;')
 
         frag.write('imageStore(voxels, ivec3(writecoord), vec4(1.0));')

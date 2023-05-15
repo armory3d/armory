@@ -235,7 +235,13 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelSize": {
-				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, Voxels.clipmap_to_update))));
+				var camera = iron.Scene.active.camera;
+				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				var voxelPos = new iron.math.Vec3(0, 0, 0);
+
+				var voxelDist = Vec3.distance(voxelPos, viewerPos);
+				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
+				Voxels.voxelsize = ((Main.voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5)) / (armory.renderpath.Inc.getVoxelRes() * (Math.pow(2, clipmapLevel))));
 				return Voxels.voxelsize;
 			}
 			case "_voxelBlend": { // Blend current and last voxels
