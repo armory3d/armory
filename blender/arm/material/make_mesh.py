@@ -534,30 +534,35 @@ def make_forward(con_mesh, rpasses):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
-        mrt = rpdat.rp_ssr  # mrt: multiple render targets
-        if mrt:
+        mrt = 1
+        if rpdat.rp_ssr:
+            mrt += 1
+        if rpdat.rp_ss_refraction:
+            mrt += 1
+        if mrt > 1:
             # Store light gbuffer for post-processing
+            frag.add_out('vec4 fragColor[{0}]'.format(mrt))
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-            frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-            frag.write('fragColor[GBUF_IDX_1] = vec4(n.xy, roughness, metallic);')
+            frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
+            frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
+
+            if "_SSRefraction" in wrd.world_defs:
+                if 'refraction' in rpasses:
+                    frag.write('fragColor[{0}] = vec4(rior, opacity, 0.0, 0.0);'.format(mrt-1))
+                else:
+                    frag.write('fragColor[{0}] = vec4(1.0, 1.0, 0.0, 0.0);'.format(mrt-1))
         else:
-            frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, 1.0);')
+            frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
 
         if '_LDR' in wrd.world_defs:
             frag.add_include('std/tonemap.glsl')
-            frag.write('fragColor[GBUF_IDX_0].rgb = tonemapFilmic(fragColor[0].rgb);')
-
-    if '_SSRefraction' in wrd.world_defs:
-        if 'refraction' in rpasses:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
-        else:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
+            frag.write('fragColor[0].rgb = tonemapFilmic(fragColor[0].rgb);')
 
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
-        frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
+        frag.write('fragColor[0].rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
@@ -572,11 +577,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if not transluc_pass:
-        frag.add_out('vec4 fragColor[GBUF_SIZE]')
-    rpasses = mat_utils.get_rpasses(mat_state.material)
-
-    if (parse_opacity or arm_discard) and not 'refraction' in rpasses:
+    if (parse_opacity or arm_discard) and not '_SSRefraction' in wrd.world_defs:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -588,10 +589,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     
     if blend:
         if parse_opacity:
-            frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, opacity);')
+            frag.write('fragColor[0] = vec4(basecol, opacity);')
         else:
             #frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
-            frag.write('fragColor[GBUF_IDX_0] = vec4(basecol, 1.0);')
+            frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
     

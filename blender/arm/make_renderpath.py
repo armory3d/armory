@@ -443,7 +443,7 @@ def build():
         callback()
 
 
-def get_num_gbuffer_rts() -> int:
+def get_num_gbuffer_rts_deferred() -> int:
     """Return the number of render targets required for the G-Buffer."""
     wrd = bpy.data.worlds['Arm']
 
