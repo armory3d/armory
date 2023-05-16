@@ -2,6 +2,11 @@ package armory.renderpath;
 
 import iron.RenderPath;
 import iron.object.LightObject;
+import kha.compute.Compute;
+import kha.compute.ConstantLocation;
+import kha.compute.Shader;
+import kha.compute.TextureUnit;
+import kha.compute.Access;
 
 import armory.math.Helper;
 
@@ -14,34 +19,32 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 	
-	/*
 	#if (rp_voxels == "Voxel GI")
-	static var voxel_sh:kha.compute.Shader = null;
-	static var voxel_ta:kha.compute.TextureUnit;
-	static var voxel_tb:kha.compute.TextureUnit;
-	static var voxel_tc:kha.compute.TextureUnit;
-	static var voxel_td:kha.compute.TextureUnit;
-	static var voxel_te:kha.compute.TextureUnit;
-	static var voxel_tf:kha.compute.TextureUnit;
-	static var voxel_ca:kha.compute.ConstantLocation;
-	static var voxel_cb:kha.compute.ConstantLocation;
-	static var voxel_cc:kha.compute.ConstantLocation;
-	static var voxel_cd:kha.compute.ConstantLocation;
-	static var voxel_ce:kha.compute.ConstantLocation;
-	static var voxel_cf:kha.compute.ConstantLocation;
-	static var voxel_cg:kha.compute.ConstantLocation;
-	static var voxel_ch:kha.compute.ConstantLocation;
-	static var voxel_ci:kha.compute.ConstantLocation;
-	static var voxel_cj:kha.compute.ConstantLocation;
+	static var voxel_sh: kha.compute.Shader = null;
+	static var voxel_ta: TextureUnit;
+	static var voxel_tb: TextureUnit;
+	static var voxel_tc: TextureUnit;
+	static var voxel_td: TextureUnit;
+	static var voxel_te: TextureUnit;
+	static var voxel_tf: TextureUnit;
+	static var voxel_ca: ConstantLocation;
+	static var voxel_cb: ConstantLocation;
+	static var voxel_cc: ConstantLocation;
+	static var voxel_cd: ConstantLocation;
+	static var voxel_ce: ConstantLocation;
+	static var voxel_cf: ConstantLocation;
+	static var voxel_cg: ConstantLocation;
+	static var voxel_ch: ConstantLocation;
+	static var voxel_ci: ConstantLocation;
+	static var voxel_cj: ConstantLocation;
 	static var m = iron.math.Mat4.identity();
 	#end
 	#if (rp_voxels_bounces != 1)
-	static var bounce_sh:kha.compute.Shader = null;
-	static var bounce_ta:kha.compute.TextureUnit;
-	static var bounce_tb:kha.compute.TextureUnit;
-	static var bounce_tc:kha.compute.TextureUnit;
+	static var bounce_sh: kha.compute.Shader = null;
+	static var bounce_ta: TextureUnit;
+	static var bounce_tb: TextureUnit;
+	static var bounce_tc: TextureUnit;
 	#end
-	*/
 
 	#if ((rp_voxels != 'Off') && arm_config)
 	static var voxelsCreated = false;
@@ -616,7 +619,6 @@ class Inc {
 	public static function endFrame() { shadowsLogicTime = 0;  shadowsRenderTime = 0; }
 	#end
 
-	/*
 	#if (rp_voxels == "Voxel GI")
 	public static function computeVoxelsBegin() {
 		if (voxel_sh == null) {
@@ -656,9 +658,9 @@ class Inc {
 	 		path.light = l;
 
 	 		kha.compute.Compute.setShader(voxel_sh);
- 			kha.compute.Compute.setTexture(voxel_ta, rts.get(voxelsOpac).image, kha.compute.Access.Read);
+ 			kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
 	 		kha.compute.Compute.setTexture(voxel_tb, rts.get("voxelsNor").image, kha.compute.Access.Read);
-	 		kha.compute.Compute.setTexture(voxel_tc, rts.get(voxels).image, kha.compute.Access.Write);
+	 		kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
 
 			#if rp_shadowmap
 	 		if (l.data.raw.type == "sun") {
@@ -738,7 +740,6 @@ class Inc {
 		#end
 	}
 	#end
-	*/
 }
 
 #if arm_shadowmap_atlas

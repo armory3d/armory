@@ -177,15 +177,24 @@ class Uniforms {
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var l = camera.lookWorld();
 
-				viewerPos.x += l.x;
-				viewerPos.y += l.y;
-				viewerPos.z += l.z;
+				var e = Main.voxelgiHalfExtents;
 
-				var f = Main.voxelgiVoxelSize * 32;
+				viewerPos.x += l.x * e * 0.9;
+				viewerPos.y += l.y * e * 0.9;
+				viewerPos.z += l.z * e * 0.9;
+
+				var camera = iron.Scene.active.camera;
+				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				var voxelPos = new iron.math.Vec3(0, 0, 0);
+				var voxelDist = Vec3.distance(voxelPos, viewerPos);
+				var clipmapLevel = Math.floor(Math.log(voxelDist / (Main.voxelgiDimensions / Inc.getVoxelRes()))) + 1;
+
+				var f = Main.voxelgiDimensions * 8;
 				var eyeSnap = new Vec3();
-				eyeSnap.x = Math.floor(viewerPos.x / f) * f;
-				eyeSnap.y = Math.floor(viewerPos.y / f) * f;
-				eyeSnap.z = Math.floor(viewerPos.z / f) * f;
+
+				eyeSnap.x = Math.floor(viewerPos.x / f);
+				eyeSnap.y = Math.floor(viewerPos.y / f);
+				eyeSnap.z = Math.floor(viewerPos.z / f);
 
 				v = iron.object.Uniforms.helpVec;
 				v.set(eyeSnap.x, eyeSnap.y, eyeSnap.z);
@@ -240,7 +249,7 @@ class Uniforms {
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var voxelPos = new iron.math.Vec3(0, 0, 0);
 				var voxelDist = Vec3.distance(voxelPos, viewerPos);
-				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
+				var clipmapLevel = Math.floor(Math.log(voxelDist / (Main.voxelgiDimensions / Inc.getVoxelRes()))) + 1;
 
 				return Main.voxelgiHalfExtents * Math.pow(2.0, clipmapLevel-1) * 2;
 			}

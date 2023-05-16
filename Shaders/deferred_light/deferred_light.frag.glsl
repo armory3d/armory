@@ -306,24 +306,23 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec3 diffuse, specular;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 	#ifdef _VoxelTemporal
-	diffuse = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
-	diffuse = traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmap_to_update).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
 	if(roughness < 1.0 && occspec.y > 0.0)
 		#ifdef _VoxelTemporal
-		specular += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
+		fragColor.rgb += (traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
 		#else
-		specular += traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelgiRefl * occspec.y;
+		fragColor.rgb += traceSpecular(voxels, voxpos, n, v, roughness, clipmap_to_update).rgb * voxelgiRefl * occspec.y;
 		#endif
 #endif
 
 #ifdef _VoxelGI
-	fragColor.rgb = envl + diffuse + specular;
+	fragColor.rgb += envl;
 #else
 	fragColor.rgb = envl;
 #endif
@@ -368,7 +367,7 @@ void main() {
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo + diffuse, sdotNL) + (specularBRDF(f0 + specular, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM

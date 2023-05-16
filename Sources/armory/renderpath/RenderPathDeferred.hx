@@ -559,21 +559,19 @@ class RenderPathDeferred {
 			#else
 			//#end
 
-			/*
 			#if(rp_voxels == "Voxel GI")
 			#if arm_voxelgi_temporal
 			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
 			#else
-			var voxtex = "voxelsOpac";
+			var voxtex = "voxels";
 			#end
 			#else
 			var voxtex = voxels;
 			#end
-			*/
 
-			Voxels.voxelize("voxels");
+			Voxels.voxelize(voxtex);
 			#end
-			/*
+
 			#if (rp_voxels == "Voxel GI")
 				Inc.computeVoxelsBegin();
 				Inc.computeVoxels(voxtex, voxels);
@@ -585,7 +583,6 @@ class RenderPathDeferred {
 			#else
 			path.generateMipmaps(voxels);
 			#end
-			*/
 		}
 		#end
 
