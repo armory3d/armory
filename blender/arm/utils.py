@@ -1,5 +1,6 @@
 from enum import Enum, unique
 import glob
+import itertools
 import json
 import locale
 import os
@@ -9,7 +10,7 @@ import re
 import shlex
 import shutil
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import webbrowser
 
 import numpy as np
@@ -652,12 +653,12 @@ def color_to_int(val) -> int:
     return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
 
 
-def unique_str_for_list(items: list, name_attr: str, wanted_name: str, ignore_item: Optional[Any] = None) -> str:
-    """Creates a unique name that no item in the given list already has.
+def unique_name_in_lists(item_lists: Iterable[list], name_attr: str, wanted_name: str, ignore_item: Optional[Any] = None) -> str:
+    """Creates a unique name that no item in the given lists already has.
     The format follows Blender's behaviour when handling duplicate
     object names.
 
-    @param items The list of items (any type).
+    @param item_lists An iterable of item lists (any type).
     @param name_attr The attribute of the items that holds the name.
     @param wanted_name The name that should be preferably returned, if
         no name collision occurs.
@@ -665,7 +666,7 @@ def unique_str_for_list(items: list, name_attr: str, wanted_name: str, ignore_it
         comparing names.
     """
     def _has_collision(name: str) -> bool:
-        for item in items:
+        for item in itertools.chain(*item_lists):
             if item == ignore_item:
                 continue
             if getattr(item, name_attr) == name:

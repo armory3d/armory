@@ -3,7 +3,7 @@ package armory.logicnode;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
-using kha.graphics2.GraphicsExtension;
+using zui.GraphicsExtension;
 
 class DrawArcNode extends LogicNode {
 

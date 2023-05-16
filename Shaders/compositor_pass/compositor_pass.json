@@ -230,6 +230,11 @@
 					"name": "PPComp14",
 					"link": "_PPComp14",
 					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp15",
+					"link": "_PPComp15",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

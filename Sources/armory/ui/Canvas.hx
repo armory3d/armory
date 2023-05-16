@@ -2,7 +2,7 @@ package armory.ui;
 
 import zui.Zui;
 
-using kha.graphics2.GraphicsExtension;
+using zui.GraphicsExtension;
 
 @:access(zui.Zui)
 class Canvas {
