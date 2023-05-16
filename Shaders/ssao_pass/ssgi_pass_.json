@@ -1,0 +1,35 @@
+{
+	"contexts": [
+		{
+			"name": "ssgi_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "ssgi_pass.frag.glsl"
+		}
+	]
+}

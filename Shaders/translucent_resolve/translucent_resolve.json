@@ -1,0 +1,24 @@
+{
+	"contexts": [
+		{
+			"name": "translucent_resolve",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "source_alpha",
+			"blend_destination": "inverse_source_alpha",
+			"blend_operation": "add",
+			"alpha_blend_source": "source_alpha",
+			"alpha_blend_destination": "inverse_source_alpha",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "texSize",
+					"link": "_screenSize"
+				}
+			],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "translucent_resolve.frag.glsl"
+		}
+	]
+}
