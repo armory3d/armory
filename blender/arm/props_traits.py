@@ -656,14 +656,16 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     def draw(self, context):
         self.layout.prop(self, "canvas_name")
 
+
 class ArmNewWasmButton(bpy.types.Operator):
     """Create new WebAssembly module"""
     bl_idname = 'arm.new_wasm'
     bl_label = 'New Module'
 
     def execute(self, context):
-        webbrowser.open('https://webassembly-studio.kamenokosoft.com/')
-        return{'FINISHED'}
+        webbrowser.open('https://esmbly.github.io/WebAssemblyStudio/')
+        return {'FINISHED'}
+
 
 class ArmRefreshScriptsButton(bpy.types.Operator):
     """Fetch all script names and trait properties."""
@@ -837,7 +839,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
     op.is_object = is_object
 
     col.separator()
-    
+
     col.menu("ARM_MT_context_menu", icon='DOWNARROW_HLT', text="")
 
     if len(obj.arm_traitlist) > 1:
@@ -887,7 +889,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
             column = row.column(align=True)
             column.enabled = item.webassembly_prop != ''
-            
+
             column.operator("arm.edit_wasm_script", icon_value=ICON_WASM).is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
