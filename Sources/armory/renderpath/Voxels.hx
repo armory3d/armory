@@ -10,8 +10,6 @@ class Voxels {
 	public static var voxelFreq = 6; // Revoxelizing frequency
 	public static var CLIPMAP_COUNT = 6;
 	public static var clipmap_to_update = 0;
-	public static var voxelsize = 0.0;
-	public static var clipmapLevelSize = 0.0;
 
 	public static function voxelize(voxels)
 	{

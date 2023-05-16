@@ -175,25 +175,20 @@ class Uniforms {
 				/* This snipet is served by CHATGPT */
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var voxelPos = new iron.math.Vec3(0, 0, 0);
-
-				var voxelDist = Vec3.distance(voxelPos, viewerPos);
-				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
 				var l = camera.lookWorld();
 
-				var e = Main.voxelgiHalfExtents;
+				viewerPos.x += l.x;
+				viewerPos.y += l.y;
+				viewerPos.z += l.z;
 
-				viewerPos.x += Math.floor(l.x / e) * e;
-				viewerPos.y += Math.floor(l.y / e) * e;
-				viewerPos.z += Math.floor(l.z / e) * e;
-
-				var f = Main.voxelgiVoxelSize * 8;
-				voxelPos.x = Math.floor(viewerPos.x / f) * f;
-				voxelPos.y = Math.floor(viewerPos.y / f) * f;
-				voxelPos.z = Math.floor(viewerPos.z / f) * f;
+				var f = Main.voxelgiVoxelSize * 32;
+				var eyeSnap = new Vec3();
+				eyeSnap.x = Math.floor(viewerPos.x / f) * f;
+				eyeSnap.y = Math.floor(viewerPos.y / f) * f;
+				eyeSnap.z = Math.floor(viewerPos.z / f) * f;
 
 				v = iron.object.Uniforms.helpVec;
-				v.set(voxelPos.x, voxelPos.y, voxelPos.z);
+				v.set(eyeSnap.x, eyeSnap.y, eyeSnap.z);
 			}
 			#end
 		}
@@ -236,16 +231,6 @@ class Uniforms {
 			}
 			#end
 			#if (rp_voxels != 'Off')
-			case "_voxelSize": {
-				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var voxelPos = new iron.math.Vec3(0, 0, 0);
-				var voxelDist = Vec3.distance(voxelPos, viewerPos);
-				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
-				Voxels.voxelsize = 2 / (Inc.getVoxelRes() * Math.pow(2, clipmapLevel-1));
-
-				return Voxels.voxelsize;
-			}
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = Voxels.voxelFreq;
 				return (Voxels.voxelFrame % freq) / freq;
@@ -254,12 +239,10 @@ class Uniforms {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var voxelPos = new iron.math.Vec3(0, 0, 0);
-
 				var voxelDist = Vec3.distance(voxelPos, viewerPos);
 				var clipmapLevel = Math.floor(Math.log(voxelDist / Main.voxelgiVoxelSize)) + 1;
 
-				Voxels.clipmapLevelSize = Main.voxelgiHalfExtents * Math.pow(2.0, clipmapLevel-1) * 4;
-				return Voxels.clipmapLevelSize;
+				return Main.voxelgiHalfExtents * Math.pow(2.0, clipmapLevel-1) * 2;
 			}
 			#end
 		}
