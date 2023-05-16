@@ -548,7 +548,7 @@ def make_forward(con_mesh, rpasses):
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
 
-            if mrt > 2 in wrd.world_defs:
+            if mrt > 2:
                 if 'refraction' in rpasses:
                     frag.write('fragColor[{0}] = vec4(rior, opacity, 0.0, 0.0);'.format(mrt-1))
                 else:
