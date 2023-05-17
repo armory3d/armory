@@ -171,29 +171,23 @@ class Uniforms {
 			#end
 
 			#if (rp_voxels != "Off")
-			case "_eyeSnap": {
-				/* This snipet is served by CHATGPT */
+			case "_cameraPositionSnap": {
+				v = iron.object.Uniforms.helpVec;
 				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var l = camera.lookWorld();
 				var e = Main.voxelgiHalfExtents;
-				var eyeSnap = new Vec3();
-
-				viewerPos.x += l.x * e * 0.9;
-				viewerPos.y += l.y * e * 0.9;
-				viewerPos.z += l.z * e * 0.9;
-
-				var s = Main.voxelgiDimensions / Inc.getVoxelRes();
-
-				v = iron.object.Uniforms.helpVec;
-				v.set(viewerPos.x / s, viewerPos.y / s, viewerPos.z / s);
+				v.x += l.x * e * 0.9;
+				v.y += l.y * e * 0.9;
+				var f = Main.voxelgiHalfExtents * 2 / Inc.getVoxelRes(); // Snaps to 3 mip-maps range
+				v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
 			}
 			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var f = Main.voxelgiDimensions / Inc.getVoxelRes();
+				var d = Main.voxelgiHalfExtents * 2 / Inc.getVoxelRes();
 				v = iron.object.Uniforms.helpVec;
-				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
+				v.set(Math.floor(viewerPos.x / d) * d, Math.floor(viewerPos.y / d) * d, Math.floor(viewerPos.z / d) * d);
 			}
 			#end
 		}

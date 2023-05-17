@@ -13,7 +13,7 @@
 				},
 				{
 					"name": "eyeSnap",
-					"link": "_eyeSnap"
+					"link": "_cameraPositionSnap"
 				},
 				{
 					"name": "clipmap_to_update",
