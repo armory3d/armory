@@ -16,25 +16,17 @@
 					"link": "_eyeSnap"
 				},
 				{
-					"name": "WVP",
-					"name": "_worldViewProjectionMatrix"
-				},
-				{
 					"name": "clipmap_to_update",
 					"link": "_clipmap_to_update"
 				},
 				{
-					"name": "clipmapLevelSize",
-					"link": "_clipmapLevelSize"
-				},
-				{
-					"name": "voxelSize",
-					"link": "_voxelSize"
+					"name": "viewerPos",
+					"link": "_viewerPos"
 				},
 				{
 					"name": "voxelBlend",
 					"link": "_voxelBlend",
-					"ifdef": ["_VoxelGITemporal"]
+					"ifdef": ["_VoxelTemporal"]
 				},
 				{
 					"name": "eyeLook",

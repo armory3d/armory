@@ -1,7 +1,7 @@
 #version 450
 
 // layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
-layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 #include "compiled.inc"
 #include "std/math.glsl"
@@ -77,7 +77,7 @@ void main() {
 		}
 	}
 
-	col.rgb *= visibility * lightColor * dotNL;
+	col.rgb *= visibility * lightColor;// * dotNL;
 	col = clamp(col, vec4(0.0), vec4(1.0));
 
 	imageStore(voxels, ivec3(texCoord), col);

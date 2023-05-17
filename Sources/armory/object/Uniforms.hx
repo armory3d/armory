@@ -176,28 +176,22 @@ class Uniforms {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var l = camera.lookWorld();
-
-				var e = Main.voxelgiHalfExtents;
-
-				viewerPos.x += l.x * e * 0.9;
-				viewerPos.y += l.y * e * 0.9;
-				viewerPos.z += l.z * e * 0.9;
-
-				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var voxelPos = new iron.math.Vec3(0, 0, 0);
-				var voxelDist = Vec3.distance(voxelPos, viewerPos);
-				var clipmapLevel = Math.floor(Math.log(voxelDist / (Main.voxelgiDimensions / Inc.getVoxelRes()))) + 1;
-
-				var f = Main.voxelgiDimensions * 8;
+				var f = Main.voxelgiHalfExtents;
 				var eyeSnap = new Vec3();
 
-				eyeSnap.x = Math.floor(viewerPos.x / f);
-				eyeSnap.y = Math.floor(viewerPos.y / f);
-				eyeSnap.z = Math.floor(viewerPos.z / f);
+				viewerPos.x *= l.x;
+				viewerPos.y *= l.y;
+				viewerPos.z *= l.z;
 
 				v = iron.object.Uniforms.helpVec;
-				v.set(eyeSnap.x, eyeSnap.y, eyeSnap.z);
+				v.set(eyeSnap.x / f, eyeSnap.y / f, eyeSnap.z / f);
+			}
+			case "_viewerPos": {
+				var camera = iron.Scene.active.camera;
+				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				var f = Main.voxelgiHalfExtents;
+				v = iron.object.Uniforms.helpVec;
+				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
 			}
 			#end
 		}
@@ -245,13 +239,7 @@ class Uniforms {
 				return (Voxels.voxelFrame % freq) / freq;
 			}
 			case "_clipmapLevelSize": {
-				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var voxelPos = new iron.math.Vec3(0, 0, 0);
-				var voxelDist = Vec3.distance(voxelPos, viewerPos);
-				var clipmapLevel = Math.floor(Math.log(voxelDist / (Main.voxelgiDimensions / Inc.getVoxelRes()))) + 1;
-
-				return Main.voxelgiHalfExtents * Math.pow(2.0, clipmapLevel-1) * 2;
+				return Main.voxelgiHalfExtents * Math.pow(2.0, Voxels.clipmap_to_update) * 2;
 			}
 			#end
 		}

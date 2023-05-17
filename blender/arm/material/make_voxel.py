@@ -49,8 +49,8 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(rgba8) image3D voxels')
-    frag.add_uniform('layout(rgba8) image3D voxelsNor')
+    frag.add_uniform('layout(binding = 0, rgba8) image3D voxels')
+    frag.add_uniform('layout(binding = 1, rgba8) image3D voxelsNor')
 
     frag.write('vec3 basecol;')
     frag.write('float roughness;') #
@@ -115,9 +115,13 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
-    vert.add_uniform('float climapLevelSize', '_clipmapLevelSize')
+    vert.add_uniform('vec3 viewerPos', '_viewerPos')
 
-    vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / climapLevelSize;')
+    vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
+    vert.write('float dist = distance(viewerPos, P);')
+    vert.write('float clipmapLevel = log2(dist / voxelgiResolution.x);')
+    vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * 2 * pow(2.0, clipmapLevel);')
+    vert.write('voxpositionGeom = (P + eyeSnap) / clipmapLevelSize;')
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
@@ -138,8 +142,6 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    voxnormal = voxnormalGeom[i];')
-    if '_Sun' in wrd.world_defs:
-        geom.write('lightPosition = lightPositionGeom[i];')
     if con_voxel.is_elem('col'):
         geom.write('    vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
@@ -161,42 +163,8 @@ def make_gi(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    #frag.write('if (abs(voxposition.z) > 1 || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+    frag.write('if (abs(voxposition.z) > 1 || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
 
-    frag.add_include('std/light.glsl')
-    is_shadows = '_ShadowMap' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
-    is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
-    shadowmap_sun = 'shadowMap'
-    if is_shadows_atlas:
-        shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
-        frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
-
-    if '_Sun' in wrd.world_defs:
-        frag.add_out('vec3 eyeDir')
-        frag.add_uniform('vec3 eye', '_cameraPosition')
-        frag.write('eyeDir = eye - voxposition;')
-        frag.add_uniform('vec3 sunCol', '_sunColor')
-        frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('float svisibility = 1.0;')
-        frag.write('vec3 sh = normalize(eyeDir + sunDir);')
-        frag.write('float sdotNL = dot(n, sunDir);')
-        vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrixSun')
-        vert.add_out('vec4 lightPositionGeom')
-        vert.write('lightPositionGeom = LWVP * pos;')
-        geom.add_out('vec4 lightPosition')
-        if is_shadows:
-            frag.add_uniform('bool receiveShadow')
-            frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
-            frag.add_uniform('float shadowsBias', '_sunShadowsBias')
-            frag.write('if (receiveShadow) {')
-            frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-            frag.write('    const vec2 smSize = shadowmapSize;')
-            frag.write(f'   svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
-            frag.write('}') # receiveShadow
-        frag.write('basecol *= svisibility * sunCol;// * sdotNL;')
-
-    frag.add_uniform('int clipmap_to_update', '_clipmap_to_update')
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')

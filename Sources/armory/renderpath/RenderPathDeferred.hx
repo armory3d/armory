@@ -552,19 +552,16 @@ class RenderPathDeferred {
 			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
 			#else
 			*/
+
 			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0)
 				armory.renderpath.Voxels.voxelize(voxels);
-			#else
-			//#end
 
-			#if(rp_voxels == "Voxel GI")
-			#if arm_voxelgi_temporal
-			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
 			#else
+
+			#if (rp_voxels == "Voxel GI")
 			var voxtex = "voxels";
-			#end
 			#else
 			var voxtex = voxels;
 			#end
@@ -572,13 +569,14 @@ class RenderPathDeferred {
 			Voxels.voxelize(voxtex);
 			#end
 
+
 			#if (rp_voxels == "Voxel GI")
-				Inc.computeVoxelsBegin();
-				Inc.computeVoxels(voxtex, voxels);
-				Inc.computeVoxelsEnd(voxels, voxelsBounce);
+				//Inc.computeVoxelsBegin();
+				//Inc.computeVoxels(voxtex, voxels);
+				//Inc.computeVoxelsEnd(voxels, voxelsBounce);
 				#if(rp_voxelgi_bounces != 1)
-				voxels = voxelsBounce;
-				voxelsLast = voxelsBounceLast;
+				//voxels = voxelsBounce;
+				//voxelsLast = voxelsBounceLast;
 				#end
 			#else
 			path.generateMipmaps(voxels);
