@@ -306,9 +306,9 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
-	float clipmapLevel = log2(dist / voxelgiResolution.x);
+	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 voxpos = (p - eyeSnap) / 4 / clipmapLevelSize;
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else

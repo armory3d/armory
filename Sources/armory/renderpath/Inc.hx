@@ -492,7 +492,7 @@ class Inc {
 		}
 		#else
 		{
-			t.format = "RGBA64";//RGBA32 yields no data !
+			t.format = "RGBA64";
 		}
 		#end
 
