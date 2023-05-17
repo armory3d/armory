@@ -64,8 +64,8 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
-		dist += max(diam / 2, float(2 * voxelgiHalfExtents * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel-1))));
 		diam = dist * aperture;
+		dist += max(diam / 2,  float(2 / (voxelgiResolution * pow(2.0, clipmapLevel))));
 	}
 	return sampleCol;
 }
@@ -144,7 +144,7 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		float mipSample = textureLod(voxels, samplePos, mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2,  float(voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution * pow(2.0, clipmapLevel))));
+		dist += max(diam / 2,  float(2 / (voxelgiResolution * pow(2.0, clipmapLevel))));
 		diam = dist * aperture;
 	}
 	return sampleCol;
@@ -163,7 +163,7 @@ float traceConeAOShadow(sampler3D voxels, const vec3 origin, vec3 dir, const flo
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		float mipSample = textureLod(voxels, samplePos, mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2,  float(voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / voxelgiResolution));
+		dist += max(diam / 2, float(2 / (voxelgiResolution * pow(2.0, clipmapLevel))));
 		diam = dist * aperture;
 	}
 	return sampleCol;

@@ -176,20 +176,22 @@ class Uniforms {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var l = camera.lookWorld();
-				var f = Main.voxelgiHalfExtents;
+				var e = Main.voxelgiHalfExtents;
 				var eyeSnap = new Vec3();
 
-				viewerPos.x *= l.x;
-				viewerPos.y *= l.y;
-				viewerPos.z *= l.z;
+				viewerPos.x += l.x * e * 0.9;
+				viewerPos.y += l.y * e * 0.9;
+				viewerPos.z += l.z * e * 0.9;
+
+				var s = Main.voxelgiDimensions / Inc.getVoxelRes();
 
 				v = iron.object.Uniforms.helpVec;
-				v.set(eyeSnap.x / f, eyeSnap.y / f, eyeSnap.z / f);
+				v.set(viewerPos.x / s, viewerPos.y / s, viewerPos.z / s);
 			}
 			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var f = Main.voxelgiHalfExtents;
+				var f = Main.voxelgiDimensions / Inc.getVoxelRes();
 				v = iron.object.Uniforms.helpVec;
 				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
 			}
