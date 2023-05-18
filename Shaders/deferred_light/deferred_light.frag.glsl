@@ -294,7 +294,8 @@ void main() {
 	float dist = distance(viewerPos, p);
 	float clipmapLevel = log2(dist / voxelgiResolution.x);
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 +4 + 5) / voxelgiResolution.x;
+	vec3 voxpos = (p - eyeSnap) / voxelSize;
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));

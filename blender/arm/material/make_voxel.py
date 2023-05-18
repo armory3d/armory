@@ -114,7 +114,7 @@ def make_gi(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    vert.add_uniform('vec3 eyeSnap', '_eyeSnap')
+    vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')

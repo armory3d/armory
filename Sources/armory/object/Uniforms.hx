@@ -174,19 +174,22 @@ class Uniforms {
 			case "_cameraPositionSnap": {
 				v = iron.object.Uniforms.helpVec;
 				var camera = iron.Scene.active.camera;
-				v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 				var l = camera.lookWorld();
-				v.x += l.x;
-				v.y += l.y;
-				var f = Main.voxelgiDimensions / (Inc.getVoxelRes());
-				v.set(Math.floor(v.x / f), Math.floor(v.y / f), Math.floor(v.z / f));
+
+				var f = Main.voxelgiHalfExtents;
+				viewerPos.x += l.x * f;
+				viewerPos.y += l.y * f;
+				viewerPos.z += l.z * f;
+				var f = Main.voxelgiHalfExtents / Inc.getVoxelRes();
+				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
 			}
 			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var f = Main.voxelgiDimensions / (Inc.getVoxelRes() * 8);
+				var f = Main.voxelgiHalfExtents;
 				v = iron.object.Uniforms.helpVec;
-				v.set(Math.floor(viewerPos.x / f), Math.floor(viewerPos.y / f), Math.floor(viewerPos.z / f));
+				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
 			}
 			#end
 		}
