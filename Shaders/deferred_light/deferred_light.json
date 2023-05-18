@@ -24,6 +24,10 @@
 					"link": "_viewerPos"
 				},
 				{
+					"name": "viewMatrix",
+					"link": "_viewMatrix3"
+				},
+				{
 					"name": "voxelBlend",
 					"link": "_voxelBlend",
 					"ifdef": ["_VoxelTemporal"]

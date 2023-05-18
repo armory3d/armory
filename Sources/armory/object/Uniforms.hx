@@ -171,19 +171,6 @@ class Uniforms {
 			#end
 
 			#if (rp_voxels != "Off")
-			case "_cameraPositionSnap": {
-				v = iron.object.Uniforms.helpVec;
-				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var l = camera.lookWorld();
-
-				var f = Main.voxelgiHalfExtents;
-				viewerPos.x += l.x * f;
-				viewerPos.y += l.y * f;
-				viewerPos.z += l.z * f;
-				var f = Main.voxelgiHalfExtents / Inc.getVoxelRes();
-				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
-			}
 			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
