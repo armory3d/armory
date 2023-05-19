@@ -39,7 +39,7 @@ uniform sampler2D gbuffer_refraction;
 uniform sampler3D voxels;
 uniform vec3 eyeSnap;
 uniform vec3 viewerPos;
-uniform mat3 viewMatrix;
+uniform mat4 viewMatrix;
 #endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
@@ -309,10 +309,12 @@ void main() {
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
 	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
-	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	vec3 eyeSnap = (viewerPos - lookDirection) / (voxelgiHalfExtents * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution * pow(2.0, clipmapLevel)));
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 voxpos = (p - eyeSnap) / 4 / clipmapLevelSize;
+	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x * 2;
+	vec3 lookDirection = viewMatrix[2].xyz;
+	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel));
+	vec3 viewerPosition = vec3(viewMatrix[3]);
+	vec3 eyeSnap = (viewerPos - lookDirection) / voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;

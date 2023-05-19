@@ -25,7 +25,7 @@
 				},
 				{
 					"name": "viewMatrix",
-					"link": "_viewMatrix3"
+					"link": "_viewMatrix"
 				},
 				{
 					"name": "voxelBlend",
