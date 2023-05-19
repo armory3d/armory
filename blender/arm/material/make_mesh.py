@@ -81,7 +81,7 @@ def make(context_id, rpasses):
         elif rpdat.arm_material_model == 'Solid':
             make_forward_solid(con_mesh)
         else:
-            make_forward(con_mesh, rpasses)
+            make_forward(con_mesh)
     elif rid == 'Deferred':
         make_deferred(con_mesh, rpasses)
     elif rid == 'Raytracer':
@@ -122,7 +122,7 @@ def make_base(con_mesh, parse_opacity):
             make_tess.tesc_levels(tesc, rpdat.arm_tess_mesh_inner, rpdat.arm_tess_mesh_outer)
             make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
             make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
-            
+
     # No displacement
     else:
         frag.ins = vert.outs
@@ -187,6 +187,7 @@ def make_deferred(con_mesh, rpasses):
 
     arm_discard = mat_state.material.arm_discard
     parse_opacity = arm_discard or 'translucent' in rpasses or 'refraction' in rpasses
+
     make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
@@ -380,9 +381,9 @@ def make_forward_mobile(con_mesh):
                 frag.write('if (lightPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 if '_Legacy' in wrd.world_defs:
-                    frag.write(f'svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias);')
+                    frag.write(f'    svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias);')
                 else:
-                    frag.write(f'svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
+                    frag.write(f'    svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
                 frag.write('}')
             frag.write('}') # receiveShadow
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
@@ -509,7 +510,7 @@ def make_forward_solid(con_mesh):
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
 
-def make_forward(con_mesh, rpasses):
+def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
@@ -549,11 +550,12 @@ def make_forward(con_mesh, rpasses):
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
 
             if mrt > 2:
-                if 'refraction' in rpasses:
+                if parse_opacity:
                     frag.write('fragColor[{0}] = vec4(rior, opacity, 0.0, 0.0);'.format(mrt-1))
                 else:
                     frag.write('fragColor[{0}] = vec4(1.0, 1.0, 0.0, 0.0);'.format(mrt-1))
         else:
+            frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
 
         if '_LDR' in wrd.world_defs:
@@ -563,6 +565,7 @@ def make_forward(con_mesh, rpasses):
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
+
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
@@ -586,18 +589,16 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         else:
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
-    
+
     if blend:
+        frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
             frag.write('fragColor[0] = vec4(basecol, opacity);')
         else:
-            #frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
+            # frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
             frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
-    
-    # Pack gbuffer
-    frag.add_include('std/gbuffer.glsl')
 
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
@@ -699,8 +700,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('}') # receiveShadow
         if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
-        if '_VoxelGIShadow' in wrd.world_defs:
-            frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
 
@@ -740,6 +739,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
+
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

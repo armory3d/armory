@@ -6,6 +6,7 @@ import iron.object.LightObject;
 import armory.math.Helper;
 
 class Inc {
+
 	static var path: RenderPath;
 	public static var superSample = 1.0;
 
@@ -223,9 +224,8 @@ class Inc {
 		#if arm_debug
 		endShadowsLogicProfile();
 		#end
-		#end //rp_shadowmap
+		#end // rp_shadowmap
 	}
-
 	#else
 	public static function bindShadowMap() {
 		for (l in iron.Scene.active.lights) {
@@ -365,6 +365,7 @@ class Inc {
 	#if (rp_translucency)
 	public static function initTranslucency() {
 		path.createDepthBuffer("main", "DEPTH24");
+
 		var t = new RenderTargetRaw();
 		t.name = "accum";
 		t.width = 0;
@@ -385,7 +386,7 @@ class Inc {
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 
-	    path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
+		path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
 	public static function drawTranslucency(target: String) {
@@ -406,9 +407,8 @@ class Inc {
 		#end
 
 		path.drawMeshes("translucent");
-
-	       	#if rp_render_to_texture
-	       	{
+		#if rp_render_to_texture
+		{
 			path.setTarget(target);
 		}
 		#else
@@ -421,7 +421,7 @@ class Inc {
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
-	#end	
+	#end
 
 	#if rp_bloom
 	public static inline function drawBloom(srcRTName: String, downsampler: Downsampler, upsampler: Upsampler) {
@@ -449,14 +449,14 @@ class Inc {
 	public static function initGI(tname = "voxels") {
 		#if arm_config
 		var config = armory.data.Config.raw;
-		if (config.rp_voxels != true || voxelsCreated) return;
+		if (config.rp_gi != true || voxelsCreated) return;
 		voxelsCreated = true;
 		#end
 
 		var t = new RenderTargetRaw();
 		t.name = tname;
 		t.format = "R8";
-		
+
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
 		t.width = res;
@@ -465,10 +465,22 @@ class Inc {
 		t.is_image = true;
 		t.mipmaps = true;
 		path.createRenderTarget(t);
+
+		#if arm_voxelgi_temporal
+		{
+			var tB = new RenderTargetRaw();
+			tB.name = t.name + "B";
+			tB.format = t.format;
+			tB.width = t.width;
+			tB.height = t.height;
+			tB.depth = t.depth;
+			tB.is_image = t.is_image;
+			tB.mipmaps = t.mipmaps;
+			path.createRenderTarget(tB);
+		}
+		#end
 	}
 	#end
-
-	
 
 	public static inline function getCubeSize(): Int {
 		#if (rp_shadowmap_cube == 256)
@@ -555,7 +567,7 @@ class Inc {
 		return null;
 		#end
 	}
-	
+
 	#if arm_debug
 	public static var shadowsLogicTime = 0.0;
 	public static var shadowsRenderTime = 0.0;

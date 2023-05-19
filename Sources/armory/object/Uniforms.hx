@@ -181,6 +181,7 @@ class Uniforms {
 			}
 			#end
 		}
+
 		return v;
 	}
 

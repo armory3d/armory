@@ -31,6 +31,7 @@ def make(context_id):
     is_transluc = mat_utils.is_transluc(mat)
     parse_opacity = (blend and is_transluc) or arm_discard
     make_mesh.make_base(con_overlay, parse_opacity=parse_opacity)
+
     frag = con_overlay.frag
 
     if arm_discard:

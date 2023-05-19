@@ -222,6 +222,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
 def finalize(frag: Shader, vert: Shader):
     """Checks the given fragment shader for completeness and adds
     variable initializations if required.
+
     TODO: Merge with make_finalize?
     """
     if frag.contains('pos') and not frag.contains('vec3 pos'):

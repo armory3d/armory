@@ -9,8 +9,6 @@ uniform sampler2D gbuffer1; // revealage
 
 uniform vec2 texSize;
 
-uniform sampler2D accum;
-uniform sampler2D revealage;
 in vec2 texCoord;
 out vec4 fragColor;
 

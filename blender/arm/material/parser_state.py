@@ -116,6 +116,7 @@ class ParserState:
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,
                 self.out_opacity, self.out_rior, self.out_emission_col)
 
+
     def get_parser_pass_suffix(self) -> str:
         """Return a suffix for the current parser pass that can be appended
         to shader variables to avoid compilation errors due to redefinitions.

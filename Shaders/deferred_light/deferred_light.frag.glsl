@@ -8,9 +8,6 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelGI
-#include "std/conetrace.glsl"
-#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -227,9 +224,11 @@ void main() {
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
 
-// Envmap
+	// Envmap
 #ifdef _Irr
+
 	vec3 envl = shIrradiance(n, shirr);
+
 	#ifdef _gbuffer2
 		if (g2.b < 0.5) {
 			envl = envl;
@@ -237,6 +236,7 @@ void main() {
 			envl = vec3(1.0);
 		}
 	#endif
+
 	#ifdef _EnvTex
 		envl /= PI;
 	#endif
@@ -274,6 +274,7 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelAOvar
+
 	#ifdef _VoxelGICam
 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
 	#else
@@ -291,15 +292,14 @@ void main() {
 
 #endif
 
-#ifdef _VoxelAOvar
-	fragColor.rgb += envl;
-#else
 	fragColor.rgb = envl;
-#endif
-
 
 #ifdef _SSAO
+	// #ifdef _RTGI
+	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -321,9 +321,17 @@ void main() {
 #endif
 
 	// Show voxels
+	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	// vec3 direction = vec3(0.0, 0.0, -1.0);
+	// vec4 color = vec4(0.0f);
+	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	// 	vec3 point = origin + 0.005 * step * direction;
+	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	// }
+	// fragColor.rgb += color.rgb;
 
-	//Show SSAO
-	//fragColor.rgb = texture(ssaotex, texCoord).rrr;
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
@@ -350,8 +358,7 @@ void main() {
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-			if (lPos.w > 0.0)
-			svisibility = shadowTest(
+			if (lPos.w > 0.0) svisibility = shadowTest(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
@@ -365,9 +372,11 @@ void main() {
 			);
 		#endif
 	#endif
-	
+
+	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
 	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	#endif
 	#endif
 
 	#ifdef _SSRS
@@ -422,6 +431,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
+
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
@@ -448,6 +458,7 @@ void main() {
 	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
 	#endif
+
 #endif
 
 #ifdef _Clusters
@@ -503,17 +514,6 @@ void main() {
 		);
 	}
 #endif // _Clusters
-//	fragColor.a = 1.0; // Mark as opaque
 
-	// Show voxels
-	/*
-	vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	vec3 direction = vec3(0.0, 0.0, -1.0);
-	vec4 color = vec4(0.0f);
-	for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	 	vec3 point = origin + 0.005 * step * direction;
-	 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	}
-	fragColor.rgb += color.rgb;
-	*/
+	fragColor.a = 1.0; // Mark as opaque
 }

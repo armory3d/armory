@@ -4,6 +4,7 @@ import iron.RenderPath;
 import iron.Scene;
 
 class RenderPathForward {
+
 	#if (rp_renderer == "Forward")
 
 	static var path: RenderPath;
@@ -21,10 +22,11 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			path.setTarget("lbuffer0", [
-			#if rp_ssr "lbuffer1", #end
-			#if rp_ssrefr "gbuffer_refraction" #end
-			]);
+			#if rp_ssr
+			path.setTarget("lbuffer0", ["lbuffer1"]);
+			#else
+			path.setTarget("lbuffer0");
+			#end
 		}
 		#else
 		{
@@ -65,7 +67,9 @@ class RenderPathForward {
 	}
 
 	public static function init(_path: RenderPath) {
+
 		path = _path;
+
 		#if kha_metal
 		{
 			path.loadShader("shader_datas/clear_color_depth_pass/clear_color_depth_pass");
@@ -332,6 +336,7 @@ class RenderPathForward {
 	}
 
 	public static function commands() {
+
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -342,9 +347,7 @@ class RenderPathForward {
 		}
 		#end
 
-		// Voxels
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_voxels != false)
 		{
 			var voxelize = path.voxelize();
 
@@ -358,20 +361,12 @@ class RenderPathForward {
 			#end
 
 			if (voxelize) {
+				var res = Inc.getVoxelRes();
 				var voxtex = voxels;
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
-
-				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
-
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end				
-	
 				path.bindTarget(voxtex, "voxels");
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
@@ -650,7 +645,7 @@ class RenderPathForward {
 			#end
 		#end // rp_render_to_texture
 
-		RenderPathCreator.setTargetMeshes();
+		setTargetMeshes();
 		path.bindTarget("depthtex", "depthtex");
 	}
 	#end

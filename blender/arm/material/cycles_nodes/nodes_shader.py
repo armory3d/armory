@@ -35,7 +35,7 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     state.curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[1])
+    bc1, rough1, met1, occ1, spec1, opac1, rior1, emi1 = c.parse_shader_input(node.inputs[0])
     ek1 = mat_state.emission_type
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
@@ -107,7 +107,8 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
         state.out_opacity = c.parse_value_input(node.inputs[21])
-        state.out_rior = c.parse_value_input(node.inputs[16]);
+        if len(node.inputs) >= 21: #do we need to test that ?
+            state.out_opacity = c.parse_value_input(node.inputs[21])
 
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:

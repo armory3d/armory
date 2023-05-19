@@ -6,6 +6,7 @@ import iron.Scene;
 class RenderPathDeferred {
 
 	#if (rp_renderer == "Deferred")
+
 	static var path: RenderPath;
 
 	#if rp_voxels
@@ -253,6 +254,7 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 			path.loadShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 			path.loadShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
+
 			#if (rp_antialiasing == "TAA")
 			{
 				path.loadShader("shader_datas/taa_pass/taa_pass");
@@ -371,6 +373,7 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+
 			#if rp_ssr_half
 			{
 				var t = new RenderTargetRaw();
@@ -505,9 +508,6 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				#end
 				path.bindTarget("gbuffer0", "gbuffer0");
-				#if (rp_ssgi == "RTGI")
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
 				path.setTarget("singleb");
@@ -553,7 +553,7 @@ class RenderPathDeferred {
 
 		// Voxels
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_voxels != false)
+		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var voxelize = path.voxelize();
 
@@ -567,28 +567,18 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
+				var res = Inc.getVoxelRes();
 				var voxtex = voxels;
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
-
-				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
-
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end				
-	
 				path.bindTarget(voxtex, "voxels");
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
 		}
-
 		#end
-
 		// ---
 		// Deferred light
 		// ---
@@ -599,9 +589,6 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		#if rp_gbuffer2_direct
-		path.bindTarget("gbuffer2", "gbuffer2");
-		#end
 
 		#if rp_gbuffer2
 		{
@@ -628,9 +615,9 @@ class RenderPathDeferred {
 
 		var voxelao_pass = false;
 		#if rp_voxels
-		if (armory.data.Config.raw.rp_voxels != false)
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (arm_config && rp_voxels)
+			#if arm_config
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");
@@ -649,12 +636,6 @@ class RenderPathDeferred {
 			#else
 			Inc.bindShadowMap();
 			#end
-		}
-		#end
-
-		#if ((rp_voxelgi_shadows) || (rp_voxelgi_refraction))
-		{
-			path.bindTarget(voxels, "voxels");
 		}
 		#end
 
@@ -757,6 +738,10 @@ class RenderPathDeferred {
 
 		#if rp_sss
 		{
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+			#end
+
 			path.setTarget("buf");
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
@@ -773,7 +758,8 @@ class RenderPathDeferred {
 
 		#if rp_ssrefr
 		{
-			if (armory.data.Config.raw.rp_ssrefr != false) {
+			if (armory.data.Config.raw.rp_ssrefr != false)
+			{
 				//save depth
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
