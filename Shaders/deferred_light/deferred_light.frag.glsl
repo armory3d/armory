@@ -37,14 +37,13 @@ uniform sampler2D gbuffer_refraction;
 
 #ifdef _VoxelGI
 uniform sampler3D voxels;
-uniform vec3 eyeSnap;
 uniform vec3 viewerPos;
 uniform mat4 viewMatrix;
 #endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
-uniform vec3 eyeSnap;
 uniform vec3 viewerPos;
+uniform mat4 viewMatrix;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -293,10 +292,13 @@ void main() {
 
 #ifdef _VoxelAOvar
 	float dist = distance(viewerPos, p);
-	float clipmapLevel = log2(dist / voxelgiResolution.x);
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 +4 + 5) / voxelgiResolution.x;
-	vec3 voxpos = (p - eyeSnap) / voxelSize;
+	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x * 2 * voxelgiResolution.x / voxelgiHalfExtents.x;
+	vec3 lookDirection = viewMatrix[2].xyz;
+	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel));
+	vec3 viewerPosition = vec3(viewMatrix[3]);
+	vec3 eyeSnap = (viewerPos - lookDirection) / voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
@@ -309,7 +311,7 @@ void main() {
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
 	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x * 2;
+	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x * 2 * voxelgiResolution.x / voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel));
 	vec3 viewerPosition = vec3(viewMatrix[3]);
@@ -411,13 +413,13 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmap_to_update);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmap_to_update);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
 	#endif
 	#endif
 
