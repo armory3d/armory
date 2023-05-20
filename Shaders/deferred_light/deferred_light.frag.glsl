@@ -311,10 +311,9 @@ void main() {
 	float dist = distance(viewerPos, p);
 	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = (voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5)) / voxelgiResolution.x;
-	vec3 viewerPosition = vec3(viewMatrix[3]);
-	vec3 eyeSnap = (viewerPos - lookDirection);
+	vec3 lookDirection = normalize(viewMatrix[2].xyz);
+	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6) / voxelgiResolution.x;
+	vec3 eyeSnap = viewerPos - lookDirection;
 	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
 
 	#ifdef _VoxelTemporal
