@@ -314,7 +314,7 @@ void main() {
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
 	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6) / voxelgiResolution.x;
 	vec3 eyeSnap = viewerPos - lookDirection;
-	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
+	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize * dist);
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
