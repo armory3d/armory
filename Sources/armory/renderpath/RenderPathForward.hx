@@ -266,16 +266,6 @@ class RenderPathForward {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			//holds rior and opacity
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
 			//holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
 			t.name = "refr";
@@ -452,7 +442,6 @@ class RenderPathForward {
 					path.bindTarget("_main", "gbufferD");
 					path.bindTarget("gbufferD1", "gbufferD1");
 					path.bindTarget("lbuffer1", "gbuffer0");
-					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				}
 			}

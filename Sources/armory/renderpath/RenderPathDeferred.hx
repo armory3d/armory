@@ -70,7 +70,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		
 		path.createDepthBuffer("main", "DEPTH24");
 
 		var t = new RenderTargetRaw();
