@@ -296,9 +296,8 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x * 2 * voxelgiResolution.x / voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel));
-	vec3 viewerPosition = vec3(viewMatrix[3]);
-	vec3 eyeSnap = (viewerPos - lookDirection) / voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 eyeSnap = (viewerPos - lookDirection);
+	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
@@ -315,8 +314,8 @@ void main() {
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x * pow(2.0, clipmapLevel));
 	vec3 viewerPosition = vec3(viewMatrix[3]);
-	vec3 eyeSnap = (viewerPos - lookDirection) / voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 eyeSnap = (viewerPos - lookDirection);
+	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
