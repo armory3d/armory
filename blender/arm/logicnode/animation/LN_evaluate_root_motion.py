@@ -11,7 +11,7 @@ class EvaluateRootMotionNode(ArmLogicTreeNode):
             items = [('X', 'X', 'X'),
                      ('Y', 'Y', 'Y'),
                      ('Z', 'Z', 'Z')],
-            name='', default='Z')
+            name='', default='Y')
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Reset')
