@@ -32,25 +32,30 @@ def parse_maprange(node: bpy.types.ShaderNodeMapRange, out_socket: bpy.types.Nod
     toMax = c.parse_value_input(node.inputs[4])
 
     if interp == "LINEAR":
-
         state.curshader.add_function(c_functions.str_map_range_linear)
-        return f'map_range_linear({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+        out = f'map_range_linear({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
 
     elif interp == "STEPPED":
-
         steps = float(c.parse_value_input(node.inputs[5]))
         state.curshader.add_function(c_functions.str_map_range_stepped)
-        return f'map_range_stepped({value}, {fromMin}, {fromMax}, {toMin}, {toMax}, {steps})'
+        out = f'map_range_stepped({value}, {fromMin}, {fromMax}, {toMin}, {toMax}, {steps})'
 
     elif interp == "SMOOTHSTEP":
-
         state.curshader.add_function(c_functions.str_map_range_smoothstep)
-        return f'map_range_smoothstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+        out = f'map_range_smoothstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
 
     elif interp == "SMOOTHERSTEP":
-
         state.curshader.add_function(c_functions.str_map_range_smootherstep)
-        return f'map_range_smootherstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+        out = f'map_range_smootherstep({value}, {fromMin}, {fromMax}, {toMin}, {toMax})'
+
+    else:
+        log.warn(f'Interpolation mode {interp} not supported for Map Range node')
+        return '0.0'
+
+    if node.clamp:
+        out = f'clamp({out}, {toMin}, {toMax})'
+
+    return out
 
 def parse_blackbody(node: bpy.types.ShaderNodeBlackbody, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
 
