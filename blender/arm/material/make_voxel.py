@@ -120,7 +120,7 @@ def make_gi(context_id):
     vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6);')
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = distance(viewerPos, P);')
-    vert.write('clipmapLevelGeom = round(log2(dist / maxClipmapSize));')
+    vert.write('clipmapLevelGeom = round(log2(dist / voxelgiResolution.x));')
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
     vert.write('vec3 lookDirection = normalize(viewMatrix[2].xyz);')
     vert.write('float voxelSize = maxClipmapSize / clipmapLevelSize;')
@@ -256,7 +256,7 @@ def make_gi(context_id):
             frag.write('basecol *= visibility * pointCol;')
 
     frag.write('vec3 uvw = voxposition;')
-    #frag.write('if(abs(voxposition.x) < clipmapLevel / 6 || abs(voxposition.y) < clipmapLevel / 6 || abs(voxposition.z) < clipmapLevel / 6) return;')
+    frag.write('if(abs(voxposition.x) < clipmapLevel / 6 || abs(voxposition.y) < clipmapLevel / 6 || abs(voxposition.z) < clipmapLevel / 6) return;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
