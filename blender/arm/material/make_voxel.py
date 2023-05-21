@@ -117,7 +117,7 @@ def make_gi(context_id):
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
     vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
     vert.add_out('float clipmapLevelGeom')
-    vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6);')
+    vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);')
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = distance(viewerPos, P);')
     vert.write('clipmapLevelGeom = round(log2(dist / voxelgiResolution.x));')
@@ -256,7 +256,8 @@ def make_gi(context_id):
             frag.write('basecol *= visibility * pointCol;')
 
     frag.write('vec3 uvw = voxposition;')
-    frag.write('if(abs(voxposition.x) < clipmapLevel / 6 || abs(voxposition.y) < clipmapLevel / 6 || abs(voxposition.z) < clipmapLevel / 6) return;')
+    #frag.write('if(clipmapLevel > 0)')
+    #frag.write('    if(abs(voxposition.x) < (clipmapLevel-1) / 10 || abs(voxposition.y) < (clipmapLevel-1) / 10 || abs(voxposition.z) < (clipmapLevel-1) / 10) return;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')

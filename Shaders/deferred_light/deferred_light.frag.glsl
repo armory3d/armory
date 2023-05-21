@@ -308,7 +308,7 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	float maxClipmapLevel = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6);
+	float maxClipmapLevel = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);
 	float dist = distance(viewerPos, p);
 	float clipmapLevel = round(log2(dist / voxelgiResolution.x));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
