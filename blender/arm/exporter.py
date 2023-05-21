@@ -256,6 +256,7 @@ class ArmoryExporter:
             o['name'] = bobject_ref["structName"]
             self.export_bone_transform(armature, bone, o, action)
             self.export_bone_layers(armature, bone, o)
+            o['bone_length'] = bone.length
 
         o['children'] = []
         for sub_bobject in bone.children:
