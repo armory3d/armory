@@ -308,13 +308,14 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
+	float maxClipmapLevel = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6);
 	float dist = distance(viewerPos, p);
-	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0.0);
+	float clipmapLevel = round(log2(dist / maxClipmapLevel));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	float voxelSize = voxelgiHalfExtents.x * 2.0 * (1.0 + 2.0 + 3.0 + 4.0 + 5.0 + 6.0) / voxelgiResolution.x;
+	float voxelSize = maxClipmapLevel / clipmapLevelSize;
 	vec3 eyeSnap = viewerPos - lookDirection;
-	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
+	vec3 voxpos = (p - eyeSnap) / voxelSize;
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
