@@ -310,7 +310,7 @@ void main() {
 #ifdef _VoxelGI
 	float maxClipmapLevel = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);
 	float dist = distance(viewerPos, p);
-	float clipmapLevel = round(log2(dist / voxelgiResolution.x));
+	int clipmapLevel = int(log2(dist / voxelgiResolution.x));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
 	float voxelSize = maxClipmapLevel / clipmapLevelSize;
@@ -485,12 +485,12 @@ void main() {
 		#endif
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		, voxels, voxpos
+		, voxels, voxpos, clipmapLevel
 		#endif
 		#endif
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		, voxels, voxpos, clipmap_to_update
+		, voxels, voxpos, clipmapLevel
 		#endif
 		#endif
 		#ifdef _MicroShadowing
