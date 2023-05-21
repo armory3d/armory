@@ -502,6 +502,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap Count", description="Exponential multiplier for voxelization bounds", default=5, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(

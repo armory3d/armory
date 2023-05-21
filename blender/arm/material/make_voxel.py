@@ -116,8 +116,8 @@ def make_gi(context_id):
 
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
     vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
+    vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
 
-    vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);')
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = distance(viewerPos, P);')
     vert.write('int clipmapLevel = int(log2(dist / voxelgiResolution.x));')
@@ -291,10 +291,11 @@ def make_ao(context_id):
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
+
         vert.add_uniform('vec3 viewerPos', '_viewerPos')
         vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
+        vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
 
-        vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);')
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
         vert.write('int clipmapLevel = int(log2(dist / voxelgiResolution.x));')
@@ -303,6 +304,7 @@ def make_ao(context_id):
         vert.write('float voxelSize = maxClipmapSize / clipmapLevelSize;')
         vert.write('vec3 eyeSnap = viewerPos - lookDirection;')
         vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize;')
+
         vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
         vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / (clipmapLevelSize * voxelSize);')
@@ -343,7 +345,6 @@ def make_ao(context_id):
 
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
-
         frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
@@ -363,8 +364,8 @@ def make_ao(context_id):
 
         vert.add_uniform('vec3 viewerPos', '_viewerPos')
         vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
+        vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
 
-        vert.write('float maxClipmapSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);')
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
         vert.write('int clipmapLevel = int(log2(dist / voxelgiResolution.x));')

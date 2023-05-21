@@ -223,8 +223,12 @@ class Uniforms {
 				var freq = Voxels.voxelFreq;
 				return (Voxels.voxelFrame % freq) / freq;
 			}
-			case "_clipmapLevelSize": {
-				return Main.voxelgiHalfExtents * Math.pow(2.0, Voxels.clipmap_to_update) * 2;
+			case "_maxClipmapSize": {
+				var clipmapSize = 0;
+				for (i in 1...Main.voxelgiClipmapCount+1)
+					clipmapSize += Main.voxelgiHalfExtents * 2 * i;
+
+				return clipmapSize;
 			}
 			#end
 		}

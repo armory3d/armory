@@ -115,6 +115,7 @@ def add_world_defs():
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')
+            assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count))
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant

@@ -39,11 +39,13 @@ uniform sampler2D gbuffer_refraction;
 uniform sampler3D voxels;
 uniform vec3 viewerPos;
 uniform mat4 viewMatrix;
+uniform float maxClipmapSize;
 #endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 uniform vec3 viewerPos;
 uniform mat4 viewMatrix;
+uniform float maxClipmapSize;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -292,12 +294,12 @@ void main() {
 
 #ifdef _VoxelAOvar
 	float dist = distance(viewerPos, p);
-	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+	int clipmapLevel = int(log2(dist / voxelgiResolution.x));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5) / (voxelgiResolution.x);
-	vec3 eyeSnap = (viewerPos - lookDirection);
-	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize * voxelSize);
+	vec3 lookDirection = normalize(viewMatrix[2].xyz);
+	float voxelSize = maxClipmapSize / clipmapLevelSize;
+	vec3 eyeSnap = viewerPos - lookDirection;
+	vec3 voxpos = (p - eyeSnap) / voxelSize;
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
@@ -308,12 +310,11 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	float maxClipmapLevel = voxelgiHalfExtents.x * 2 * (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10);
 	float dist = distance(viewerPos, p);
 	int clipmapLevel = int(log2(dist / voxelgiResolution.x));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	float voxelSize = maxClipmapLevel / clipmapLevelSize;
+	float voxelSize = maxClipmapSize/ clipmapLevelSize;
 	vec3 eyeSnap = viewerPos - lookDirection;
 	vec3 voxpos = (p - eyeSnap) / voxelSize;
 

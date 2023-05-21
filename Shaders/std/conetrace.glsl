@@ -52,7 +52,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 	dir = normalize(dir);
 	vec4 sampleCol = vec4(0.0);
 	float voxelSize = VOXEL_SIZE * pow(2.0, clipmapLevel);
-	float dist = 1.5 * voxelSize * voxelgiOffset;
+	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset;
 	float diam = dist * aperture;
 	vec3 samplePos;
 
@@ -67,7 +67,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
 		diam = dist * aperture;
-		dist += max(diam / 2,  voxelSize);
+		dist += max(diam / 2,  VOXEL_SIZE);
 	}
 	return sampleCol;
 }
@@ -119,7 +119,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 	return vec4(0.0);
 }
 
-vec4 traceSpecular(sampler3D voxels, const vec3 origin, const vec3 normal, const vec3 viewDir, const float roughness, const float clipmapLevel) {
+vec4 traceSpecular(sampler3D voxels, const vec3 normal, const vec3 origin, const vec3 viewDir, const float roughness, const float clipmapLevel) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
 

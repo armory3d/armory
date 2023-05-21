@@ -513,7 +513,6 @@ class Inc {
 		tB.depth = t.depth;
 		tB.is_image = t.is_image;
 		tB.mipmaps = t.mipmaps;
-
 		path.createRenderTarget(tB);
 		#end
 	}

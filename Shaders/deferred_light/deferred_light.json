@@ -12,12 +12,8 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeSnap",
-					"link": "_cameraPositionSnap"
-				},
-				{
-					"name": "clipmap_to_update",
-					"link": "_clipmap_to_update"
+					"name": "maxClipmapSize",
+					"link": "_maxClipmapSize"
 				},
 				{
 					"name": "viewerPos",
