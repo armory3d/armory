@@ -368,6 +368,21 @@ class SimpleBiPedalIK {
 		object.transform.loc.set(0, 0, res);
 	}
 
+	/**
+	 * Update position of the foot
+	 * @param animMats Input bone transforms
+	 * @param heightOffset Height of the player mesh relative to hit height
+	 * @param footOffset Height of the foot bone relative to hit height
+	 * @param hitPointLeft Hit point left foot
+	 * @param hitPointRight Hit point right foot
+	 * @param offsetThreshold Threshold to stop IK if distnace between left and right hit points are greater than this value
+	 * @param interpSpeed Interpolation speed
+	 * @param poleLeft Pole target for left foot
+	 * @param poleRight Pole target for right foot
+	 * @param influence Influence of IK
+	 * @param layerMask Bone layer for IK blending
+	**/
+
 	public function updatePosition(animMats: Array<Mat4>, heightOffset: FastFloat, footOffset: FastFloat, hitPointLeft: Null<Vec4>, hitPointRight: Null<Vec4>, offsetThreshold: FastFloat, interpSpeed: FastFloat, poleLeft: Null<Vec4> = null, poleRight: Null<Vec4> = null, influence : FastFloat = 1.0, layerMask: Int = -1){
 
 		if(hitPointRight == null || hitPointLeft == null) {
