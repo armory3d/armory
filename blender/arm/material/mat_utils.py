@@ -47,7 +47,7 @@ def get_rpasses(material):
     else:
         ar.append('mesh')
         for con in add_mesh_contexts:
-            ar.append(con)           
+            ar.append(con)
         if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
             ar.append('translucent')
         if rpdat.rp_voxelao and has_voxels:

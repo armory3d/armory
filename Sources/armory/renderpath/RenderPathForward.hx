@@ -22,11 +22,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+				#if rp_ssr "lbuffer1",  #end
+				#if rp_ssrefr "gbuffer_refraction" #end]
+			);
 		}
 		#else
 		{
@@ -272,7 +271,7 @@ class RenderPathForward {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
+			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
@@ -284,6 +283,16 @@ class RenderPathForward {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			//holds background depth
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -442,6 +451,7 @@ class RenderPathForward {
 					path.bindTarget("_main", "gbufferD");
 					path.bindTarget("gbufferD1", "gbufferD1");
 					path.bindTarget("lbuffer1", "gbuffer0");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				}
 			}

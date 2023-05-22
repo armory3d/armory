@@ -551,9 +551,9 @@ def make_forward(con_mesh):
 
             if mrt > 2:
                 if parse_opacity:
-                    frag.write('fragColor[{0}] = vec4(rior, opacity, 0.0, 0.0);'.format(mrt-1))
+                    frag.write('fragColor[2] = vec4(rior, opacity, 0.0, 0.0);')
                 else:
-                    frag.write('fragColor[{0}] = vec4(1.0, 1.0, 0.0, 0.0);'.format(mrt-1))
+                    frag.write('fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
         else:
             frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
