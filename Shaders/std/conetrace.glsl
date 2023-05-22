@@ -123,47 +123,7 @@ vec4 traceSpecular(sampler3D voxels, const vec3 normal, const vec3 origin, const
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
 
-	const float angleMix = 0.5f;
-	vec3 o1 = normalize(tangent(specularDir));
-	vec3 o2 = normalize(cross(o1, specularDir));
-	vec3 c1 = 0.5f * (o1 + o2);
-	vec3 c2 = 0.5f * (o1 - o2);
-
-	#ifdef _VoxelCones1
 	return traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel) * voxelgiOcc;
-	#endif
-
-	#ifdef _VoxelCones3
-	vec4 col = traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -o1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, c2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	return (col / 3.0) * voxelgiOcc;
-	#endif
-
-	#ifdef _VoxelCones5
-	vec4 col = traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -o1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -o2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, c1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, c2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	return (col / 5.0) * voxelgiOcc;
-	#endif
-
-	#ifdef _VoxelCones9
-	// Normal direction
-	vec4 col = traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel);
-	// 4 side cones
-	col += traceCone(voxels, origin, mix(specularDir, o1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -o1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, o2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -o2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	// 4 corners
-	col += traceCone(voxels, origin, mix(specularDir, c1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -c1, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, c2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	col += traceCone(voxels, origin, mix(specularDir, -c2, angleMix), specularAperture, MAX_DISTANCE, clipmapLevel);
-	return (col / 9.0) * voxelgiOcc;
-	#endif
 }
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness, const float clipmapLevel) {

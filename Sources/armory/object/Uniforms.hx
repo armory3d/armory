@@ -174,9 +174,8 @@ class Uniforms {
 			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
 				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var f = 1.0;//Main.voxelgiHalfExtents;
 				v = iron.object.Uniforms.helpVec;
-				v.set(Math.floor(viewerPos.x / f) * f, Math.floor(viewerPos.y / f) * f, Math.floor(viewerPos.z / f) * f);
+				v.set(viewerPos.x, viewerPos.y, viewerPos.z);
 			}
 			#end
 		}
