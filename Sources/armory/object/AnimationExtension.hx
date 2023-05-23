@@ -28,7 +28,7 @@ class AnimationExtension {
 			i++;
 		}
 
-		boneAnimation.solveIK(effector, goal, precision, maxIterations, chainLenght, pole, rollAngle, actionMats);
+		boneAnimation.solveIK(actionMats, effector, goal, precision, maxIterations, chainLenght, pole, rollAngle);
 		boneAnimation.blendAction(matsBlend, actionMats, actionMats, influence, layerMask, threshold);
 	}
 
@@ -42,7 +42,7 @@ class AnimationExtension {
 			i++;
 		}
 
-		boneAnimation.solveTwoBoneIK(effector, goal, pole, rollAngle, actionMats);
+		boneAnimation.solveTwoBoneIK(actionMats, effector, goal, pole, rollAngle);
 		boneAnimation.blendAction(matsBlend, actionMats, actionMats, influence, layerMask, threshold);
 	}
 
@@ -402,7 +402,7 @@ class SimpleBiPedalIK {
 		}
 
 		if(hitPointLeft != null){
-			var leftFootLoc = boneAnimation.getAbsWorldMat(leftBone, animMats).getLoc();
+			var leftFootLoc = boneAnimation.getAbsWorldMat(animMats, leftBone).getLoc();
 			var leftZ = hitPointLeft.z;
 			if(leftFootLoc.z - footOffset < leftZ){
 				var goal = new Vec4(leftFootLoc.x, leftFootLoc.y, leftZ + footOffset);
@@ -411,7 +411,7 @@ class SimpleBiPedalIK {
 		}
 
 		if(hitPointRight != null){
-			var rightFootLoc = boneAnimation.getAbsWorldMat(rightBone, animMats).getLoc();
+			var rightFootLoc = boneAnimation.getAbsWorldMat(animMats, rightBone).getLoc();
 			var rightZ = hitPointRight.z;
 			if(rightFootLoc.z - footOffset < rightZ){
 				var goal = new Vec4(rightFootLoc.x, rightFootLoc.y, rightZ + footOffset);
@@ -424,25 +424,25 @@ class SimpleBiPedalIK {
 	public function updateRotation(animMats: Array<Mat4>, defaultFootVecLeft: Vec4, defaultFootVecRight: Vec4, groundNormalLeft: Null<Vec4>, groundNormalRight: Null<Vec4>){
 		
 		if(groundNormalLeft != null){
-			var m = boneAnimation.getAbsWorldMat(leftBone, animMats);
+			var m = boneAnimation.getAbsWorldMat(animMats, leftBone);
 			var leftMat = Mat4.identity().setFrom(m);
 			var currentLeftLook = leftMat.look().normalize();
 			var quatLeft = new Quat().fromTo(new Vec4(0, 0, 1), groundNormalLeft.normalize()).normalize();
 			var requiredVecLeft = defaultFootVecLeft.applyQuat(quatLeft).normalize();
 			var requiredQuatLeft = new Quat().fromTo(currentLeftLook, requiredVecLeft).normalize();
 			applyScaledQuat(leftMat, requiredQuatLeft);
-			boneAnimation.setBoneMatFromWorldMat(leftMat, leftBone, animMats);
+			boneAnimation.setBoneMatFromWorldMat(animMats, leftMat, leftBone);
 		}
 
 		if(groundNormalRight != null){
-			var m = boneAnimation.getAbsWorldMat(rightBone, animMats);
+			var m = boneAnimation.getAbsWorldMat(animMats, rightBone);
 			var rightMat = Mat4.identity().setFrom(m);
 			var currentRightLook = rightMat.look().normalize();
 			var quatRight = new Quat().fromTo(new Vec4(0, 0, 1), groundNormalRight.normalize()).normalize();
 			var requiredVecRight = defaultFootVecRight.applyQuat(quatRight).normalize();
 			var requiredQuatRight = new Quat().fromTo(currentRightLook, requiredVecRight).normalize();
 			applyScaledQuat(rightMat, requiredQuatRight);
-			boneAnimation.setBoneMatFromWorldMat(rightMat, rightBone, animMats);
+			boneAnimation.setBoneMatFromWorldMat(animMats, rightMat, rightBone);
 		}
 		
 	}

@@ -94,8 +94,8 @@ class SimpleFootIKNode extends LogicNode {
 				rightFootDir = vecArray[3];
 			}
 
-			var leftBoneLoc = animation.getAbsWorldMat(leftBone, animMats).getLoc();
-			var rightBoneLoc = animation.getAbsWorldMat(rightBone, animMats).getLoc();
+			var leftBoneLoc = animation.getAbsWorldMat(animMats, leftBone).getLoc();
+			var rightBoneLoc = animation.getAbsWorldMat(animMats, rightBone).getLoc();
 
 			var physics = armory.trait.physics.PhysicsWorld.active;
 

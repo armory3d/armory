@@ -44,7 +44,7 @@ class BoneFKNode extends LogicNode {
 			var bone = animation.getBone(boneName);
 
 			//Set the bone local transform from world transform
-			animation.setBoneMatFromWorldMat(transform, bone, animMats);
+			animation.setBoneMatFromWorldMat(animMats, transform, bone);
 		}
 
 	}
