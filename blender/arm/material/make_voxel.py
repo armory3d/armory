@@ -370,9 +370,9 @@ def make_ao(context_id):
         vert.write('int clipmapLevel = int(log2(dist / maxClipmapSize));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
         vert.write('vec3 lookDirection = normalize(viewMatrix[2].xyz);')
-        vert.write('float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;')
-        vert.write('vec3 eyeSnap = floor((viewerPos - lookDirection / voxelSize) * voxelSize);')
-        vert.write('voxpositionGeom = (P + eyeSnap) * voxelSize;')
+        vert.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x;')
+        vert.write('vec3 eyeSnap = floor((viewerPos - lookDirection * clipmapLevelSize / voxelSize) * voxelSize);')
+        vert.write('voxpositionGeom = (P - eyeSnap) * voxelSize;')
 
         geom.add_out('vec3 voxposition')
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')

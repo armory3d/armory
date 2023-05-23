@@ -313,13 +313,12 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
-	/*This comes from chatgpt */
 	int clipmapLevel = int(log(dist / maxClipmapSize));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;
-	vec3 eyeSnap = floor((viewerPos - lookDirection / voxelSize) * voxelSize);
-	vec3 voxpos = (p + eyeSnap) * voxelSize;
+	float voxelSize = clipmapLevelSize / voxelgiResolution.x;
+	vec3 eyeSnap = floor((viewerPos - lookDirection * clipmapLevelSize / voxelSize) * voxelSize);
+	vec3 voxpos = (p - eyeSnap) * voxelSize;
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
