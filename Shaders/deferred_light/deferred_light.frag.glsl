@@ -294,12 +294,13 @@ void main() {
 
 #ifdef _VoxelAOvar
 	float dist = distance(viewerPos, p);
-	int clipmapLevel = int(log2(dist / voxelgiResolution.x));
+	/*This comes from chatgpt */
+	int clipmapLevel = int(log(dist / maxClipmapSize));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	float voxelSize = maxClipmapSize / clipmapLevelSize;
-	vec3 eyeSnap = viewerPos - lookDirection;
-	vec3 voxpos = (p - eyeSnap) / voxelSize;
+	float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;
+	vec3 eyeSnap = floor((viewerPos - lookDirection / voxelSize) * voxelSize);
+	vec3 voxpos = (p + eyeSnap) * voxelSize;
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
@@ -312,20 +313,12 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
-
 	/*This comes from chatgpt */
-	// Calculate the base clipmap level based on the distance
-	float baseClipmapLevel = log2(dist / voxelgiResolution.x);
-	// Round the base clipmap level to the nearest integer
-	int clipmapLevel = int(baseClipmapLevel + 0.5);
-	// Ensure that the clipmap level stays within the valid range
-	clipmapLevel = clamp(clipmapLevel, 0, int(log2(maxClipmapSize)));
-
+	int clipmapLevel = int(log(dist / maxClipmapSize));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
-	float voxelSize = clipmapLevelSize / maxClipmapSize;
-	vec3 eyeSnap = floor((viewerPos - lookDirection * clipmapLevelSize) / voxelSize * voxelSize);
+	float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;
+	vec3 eyeSnap = floor((viewerPos - lookDirection / voxelSize) * voxelSize);
 	vec3 voxpos = (p + eyeSnap) * voxelSize;
 
 	#ifdef _VoxelTemporal

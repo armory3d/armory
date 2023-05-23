@@ -16,8 +16,8 @@ class Voxels {
 		var path = RenderPath.active;
 
         
-		if(clipmap_to_update == 0)
-		    path.clearImage(voxels, 0x00000000);
+		//if(clipmap_to_update == 0)
+		path.clearImage(voxels, 0x00000000);
 
 		if(path != null)
 		{
@@ -35,6 +35,6 @@ class Voxels {
 			}
 		}
 		//if(clipmap_to_update == 0)
-	    //	path.generateMipmaps(voxels);
+	    path.generateMipmaps(voxels);
 	}
 }

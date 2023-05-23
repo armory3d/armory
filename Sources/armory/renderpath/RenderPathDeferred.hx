@@ -579,7 +579,7 @@ class RenderPathDeferred {
 				//voxelsLast = voxelsBounceLast;
 				#end
 			#else
-			path.generateMipmaps(voxels);
+			//path.generateMipmaps(voxels);
 			#end
 		}
 		#end
