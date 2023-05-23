@@ -313,7 +313,7 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = distance(viewerPos, p);
-	int clipmapLevel = int(log(dist / maxClipmapSize));
+	int clipmapLevel = int(log2(dist / maxClipmapSize));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = normalize(viewMatrix[2].xyz);
 	float voxelSize = clipmapLevelSize / voxelgiResolution.x;
