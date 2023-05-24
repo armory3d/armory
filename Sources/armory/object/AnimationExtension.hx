@@ -260,17 +260,12 @@ class SwitchActionOperator {
 	var boneAnimation: BoneAnimation;
 	var objectAnimation: ObjectAnimation;
 	var isArmature: Bool;
-	var restart: Bool;
-	var blendTime: FastFloat;
-	var frameTime: FastFloat;
 	var boneLayer: Null<Int>;
 	var done: Null<Void -> Void> = null;
 	// Internal
 	var isDone: Bool = true;
-	var totalFrames: Int;
 	var blendFactor: FastFloat = 0;
 	var tween: TAnim = null;
-	var blendOutFrame : Int;
 	
 	public function new(animation: Animation) {
 		
@@ -295,7 +290,7 @@ class SwitchActionOperator {
 		objectAnimation.blendActionObject(action1, action2, resultMats, blendFactor);
 	}
 
-	public function switchAction(toAction: SelectAction, duration: FastFloat, restrat: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
+	public function switchAction(toAction: SelectAction, duration: FastFloat, restart: Bool = false, done: Null<Void -> Void> = null, boneLayer: Null<Int> = null) {
 
 		this.done = done;
 		this.boneLayer = boneLayer;
