@@ -297,7 +297,7 @@ void main() {
 	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;
+	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
 	vec3 eyeSnap = normalize(viewerPos + lookDirection);// * clipmapLevelSize;// / voxelSize) * voxelSize;
 	vec3 voxpos = (p + eyeSnap) * voxelSize;
 
@@ -315,14 +315,14 @@ void main() {
 	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize * 2 / voxelgiResolution.x;
+	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
 	vec3 eyeSnap = normalize(viewerPos + lookDirection);// * clipmapLevelSize;// / voxelSize) * voxelSize;
 	vec3 voxpos = (p + eyeSnap) * voxelSize;
 
 	#ifdef _VoxelTemporal
-	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
-	fragColor.rgb = traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
 	#endif
 
 	if(roughness < 1.0 && occspec.y > 0.0)
