@@ -308,6 +308,8 @@ def build():
             assets.add_khafile_def('rp_ssr')
             assets.add_shader_pass('ssr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
+            if rpdat.arm_ssr_half_res:
+                assets.add_khafile_def('rp_ssr_half')
 
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
