@@ -395,7 +395,6 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
-
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -405,7 +404,6 @@ class Inc {
 			#end
 		}
 		#end
-
 		path.drawMeshes("translucent");
 		#if rp_render_to_texture
 		{
@@ -416,7 +414,6 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
-
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
