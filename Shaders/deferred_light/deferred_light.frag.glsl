@@ -298,8 +298,8 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = normalize(viewerPos + lookDirection);// * clipmapLevelSize;// / voxelSize) * voxelSize;
-	vec3 voxpos = (p + eyeSnap) * voxelSize;
+	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
@@ -316,8 +316,8 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = normalize(viewerPos + lookDirection);// * clipmapLevelSize;// / voxelSize) * voxelSize;
-	vec3 voxpos = (p + eyeSnap) * voxelSize;
+	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 
 	#ifdef _VoxelTemporal
 	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
