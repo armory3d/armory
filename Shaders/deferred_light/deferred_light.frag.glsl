@@ -552,12 +552,12 @@ void main() {
 			#endif
 			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos, clipmap_to_update
+			, voxels, voxpos, clipmapLevel
 			#endif
 			#endif
 			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
-			, voxels, voxpos
+			, voxels, voxpos, clipmapLevel
 			#endif
 			#endif
 			#ifdef _MicroShadowing

@@ -253,10 +253,82 @@ def make_gi(context_id):
             frag.write('}')
             frag.write('basecol *= visibility * pointCol;')
 
+    if '_Clusters' in wrd.world_defs:
+        is_shadows = '_ShadowMap' in wrd.world_defs
+        is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+        is_single_atlas = '_SingleAtlas' in wrd.world_defs
+        frag.add_include_front('std/clusters.glsl')
+        frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+        frag.add_uniform('vec2 cameraPlane', link='_cameraPlane')
+        frag.add_uniform('vec4 lightsArray[maxLights * 3]', link='_lightsArray')
+        frag.add_uniform('sampler2D clustersData', link='_clustersData')
+        if is_shadows:
+            frag.add_uniform('bool receiveShadow')
+            frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
+            frag.add_include('std/shadows.glsl')
+            if is_shadows_atlas:
+                if not is_single_atlas:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlasPoint')
+                    frag.add_uniform('sampler2DShadow shadowMapAtlasSpot')
+                else:
+                    frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
+                    frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
+                frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray')
+            else:
+                frag.add_uniform('samplerCubeShadow shadowMapPoint[4]')
+                frag.add_uniform('sampler2DShadow shadowMapSpot[4]')
+            frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray')
+
+        frag.write('float viewz = linearize(gl_FragCoord.z, cameraProj);')
+        frag.write('int clusterI = getClusterI((voxposition.xy) * 0.5 + 0.5, viewz, cameraPlane);')
+        frag.write('int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);')
+
+        frag.add_uniform('vec4 lightsArraySpot[maxLights * 2]', link='_lightsArraySpot')
+        frag.write('int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);')
+        frag.write('int numPoints = numLights - numSpots;')
+
+        frag.write('#ifdef HLSL')
+        frag.write('viewz += texture(clustersData, vec2(0.0)).r * 1e-9;') # TODO: krafix bug, needs to generate sampler
+        frag.write('#endif')
+
+        frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
+        frag.write('float visibility = 1.0;')
+        frag.write('    int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
+        frag.write('    if(lightsArray[li * 3 + 2].y == 0.0) {')#point light
+        if is_shadows_atlas:
+            if not is_single_atlas:
+                frag.write('    visibility *= texture(shadowMapAtlasPoint, vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+            else:
+                frag.write('    visibility *= texture(shadowMapAtlas, vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+        else:
+            frag.write('if (li == 0) visibility *= texture(shadowMapPoint[0], vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('if (li == 1) visibility *= texture(shadowMapPoint[1], vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('if (li == 2) visibility *= texture(shadowMapPoint[2], vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('if (li == 3) visibility *= texture(shadowMapPoint[3], vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
+
+        frag.write('}')
+        frag.write('    else {')#spot light
+        frag.write('        vec4 lightPosition = LWVPSpotArray[li * 3] * vec4(voxposition, 1.0);')
+        frag.write('        vec3 lPos = lightPosition.xyz / lightPosition.w;')
+        if is_shadows_atlas:
+            if not is_single_atlas:
+                frag.write('        visibility *= texture(shadowMapAtlaSpot, vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+            else:
+                frag.write('        visibility *= texture(shadowMapAtla, vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+        else:
+            frag.write('    if (li == 0) visibility *= texture(shadowMapSpot[0], vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('    if (li == 1) visibility *= texture(shadowMapSpot[1], vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('    if (li == 2) visibility *= texture(shadowMapSpot[2], vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+            frag.write('    if (li == 3) visibility *= texture(shadowMapSpot[3], vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
+
+        frag.write('    }')
+        frag.write('basecol *= visibility * lightsArray[li * 3 + 1].xyz;')
+        frag.write('}')
+
     frag.write('vec3 uvw = voxposition;')
     frag.write('uvw = uvw * 0.5 + 0.5;')
     frag.write('vec3 writecoord = uvw * voxelgiResolution;')
-    frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol+emissionCol, vec3(1.0)), 1.0));')
+    frag.write('imageStore(voxels, ivec3(writecoord), vec4(min(basecol + emissionCol, vec3(1.0)), 1.0));')
 
     return con_voxel
 
