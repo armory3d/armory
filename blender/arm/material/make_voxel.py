@@ -124,7 +124,7 @@ def make_gi(context_id):
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
     vert.write('vec3 lookDirection = viewMatrix[2].xyz;')
     vert.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;')
-    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;')
+    vert.write('vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
@@ -246,10 +246,11 @@ def make_gi(context_id):
                 frag.write('#ifdef _InvY')
                 frag.write('l.y = -l.y;')
                 frag.write('#endif')
+                frag.write('visibility = attenuate(distance(ld, voxposition));')
                 if '_Legacy' in wrd.world_defs:
-                    frag.write('visibility = float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 20)).r > compare);')
+                    frag.write('visibility *= float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 20)).r > compare);')
                 else:
-                    frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
+                    frag.write('visibility *= texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
             frag.write('}')
             frag.write('basecol *= visibility * pointCol;')
 
@@ -279,7 +280,7 @@ def make_gi(context_id):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]')
             frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray')
 
-        frag.write('float viewz = linearize(gl_FragCoord.z, cameraProj);')
+        frag.write('float viewz = linearize(voxposition.z, cameraProj);')
         frag.write('int clusterI = getClusterI((voxposition.xy) * 0.5 + 0.5, viewz, cameraPlane);')
         frag.write('int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);')
 
@@ -294,7 +295,8 @@ def make_gi(context_id):
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('float visibility = 1.0;')
         frag.write('    int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-        frag.write('    if(lightsArray[li * 3 + 2].y == 0.0) {')#point light
+        frag.write('    if(lightsArray[li * 3 + 2].y == 0.0) {') #point light
+        frag.write('    visibility = attenuate(distance(lightsArray[li * 3].xyz, voxposition));')
         if is_shadows_atlas:
             if not is_single_atlas:
                 frag.write('    visibility *= texture(shadowMapAtlasPoint, vec4(-normalize(lightsArray[li * 3].xyz - voxposition), lpToDepth(lightsArray[li * 3].xyz, lightProj) - lightsArray[li * 3 + 2].x)).r;')
@@ -375,7 +377,7 @@ def make_ao(context_id):
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
         vert.write('vec3 lookDirection = viewMatrix[2].xyz;')
         vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;')
+        vert.write('vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz - eyeSnap) / (clipmapLevelSize * voxelSize);')
@@ -443,7 +445,7 @@ def make_ao(context_id):
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
         vert.write('vec3 lookDirection = viewMatrix[2].xyz;')
         vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;')
+        vert.write('vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         geom.add_out('vec3 voxposition')

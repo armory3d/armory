@@ -298,7 +298,7 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
+	vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 
 	#ifndef _VoxelAONoTrace
@@ -308,35 +308,6 @@ void main() {
 	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);
 	#endif
 	#endif
-#endif
-
-#ifdef _VoxelGI
-	float dist = distance(viewerPos, p);
-	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
-
-	#ifdef _VoxelTemporal
-	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
-	#else
-	fragColor.rgb = traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
-	#endif
-
-	if(roughness < 1.0 && occspec.y > 0.0)
-		#ifdef _VoxelTemporal
-		fragColor.rgb += (traceSpecular(voxels, n, voxpos, v, roughness, clipmapLevel).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
-		#else
-		fragColor.rgb += traceSpecular(voxels,  n, voxpos, v, roughness, clipmapLevel).rgb * voxelgiRefl * occspec.y;
-		#endif
-#endif
-
-#ifdef _VoxelGI
-	fragColor.rgb += envl;
-#else
-	fragColor.rgb = envl;
 #endif
 
 #ifdef _SSAO
@@ -440,7 +411,8 @@ void main() {
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += sdirect * svisibility * sunCol;
+	fragColor.rgb += sdirect * sunCol;
+	fragColor.rgb *= svisibility;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -476,8 +448,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
-
-	fragColor.rgb += sampleLight(
+	vec4 lightData = sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
 			, 0, pointBias, true
@@ -503,6 +474,9 @@ void main() {
 		#endif
 	);
 
+	fragColor.rgb += lightData.rgb;
+	fragColor.rgb *= lightData.a;
+
 	#ifdef _Spot
 	#ifdef _SSS
 	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
@@ -527,7 +501,7 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		fragColor.rgb += sampleLight(
+		vec4 lightData = sampleLight(
 			p,
 			n,
 			v,
@@ -567,9 +541,36 @@ void main() {
 			, gbufferD, invVP, eye
 			#endif
 		);
+		fragColor.rgb += lightData.rgb;
+		fragColor.rgb *= lightData.a;
 	}
 #endif // _Clusters
-	fragColor.a = 1.0;
+
+#ifdef _VoxelGI
+	float dist = distance(viewerPos, p);
+	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
+	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
+	vec3 lookDirection = viewMatrix[2].xyz;
+	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
+	vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;
+	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+
+	#ifdef _VoxelTemporal
+	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	#else
+	fragColor.rgb += traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
+	#endif
+
+	if(roughness < 1.0 && occspec.y > 0.0)
+		#ifdef _VoxelTemporal
+		fragColor.rgb += (traceSpecular(voxels, n, voxpos, v, roughness, clipmapLevel).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
+		#else
+		fragColor.rgb += traceSpecular(voxels,  n, voxpos, v, roughness, clipmapLevel).rgb * voxelgiRefl * occspec.y;
+		#endif
+#endif
+
+	fragColor.rgb += envl;
+
 
 #ifdef _VoxelRefract
 if(opac < 1.0) {
@@ -581,4 +582,5 @@ if(opac < 1.0) {
 	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }
 #endif
+	fragColor.a = 1.0;
 }

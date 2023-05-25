@@ -84,7 +84,7 @@ uniform sampler2D sltcMag;
 #endif
 #endif
 
-vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
+vec4 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
 	const vec3 albedo, const float rough, const float spec, const vec3 f0
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
@@ -133,26 +133,26 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
+	float shadow = attenuate(distance(p, lp));
 
 	#ifdef _MicroShadowing
-	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
+	shadow *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
 	#endif
 
 	#ifdef _SSRS
-	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	shadow *= traceShadowSS(l, p, gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
+	shadow *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
+	shadow *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
 	#endif
 	#endif
 
@@ -161,45 +161,45 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		if (receiveShadow) {
 			#ifdef _SinglePoint
 			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+			shadow *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			#endif
 			#ifdef _Clusters
 			if (index == 0) {
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				shadow *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 1) {
 				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+				shadow *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 2) {
 				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+				shadow *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
 			}
 			else if (index == 3) {
 				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+				shadow *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
 			}
 			#endif
 		}
 	#endif
-	return direct;
+	return vec4(direct, shadow);
 	#endif
 
 	#ifdef _Spot
 	if (isSpot) {
-		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+		shadow *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
 
 		#ifdef _ShadowMap
 			if (receiveShadow) {
 				#ifdef _SinglePoint
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				shadow *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 				#endif
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
 					#ifdef _ShadowMapAtlas
-						direct *= shadowTest(
+						shadow *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
 							#else
@@ -208,32 +208,32 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 							, lPos.xyz / lPos.w, bias
 						);
 					#else
-							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-						else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-						else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-						else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+							 if (index == 0) shadow *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+						else if (index == 1) shadow *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+						else if (index == 2) shadow *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+						else if (index == 3) shadow *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
 					#endif
 				#endif
 			}
 		#endif
-		return direct;
+		return vec4(direct, shadow);
 	}
 	#endif
 
 	#ifdef _LightIES
-	direct *= iesAttenuation(-l);
+	shadow *= iesAttenuation(-l);
 	#endif
 
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
 			#ifndef _Spot
-			direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+			shadow *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
 			#endif
 			#endif
 			#ifdef _Clusters
 				#ifdef _ShadowMapAtlas
-				direct *= PCFFakeCube(
+				shadow *= PCFFakeCube(
 					#ifndef _SingleAtlas
 					shadowMapAtlasPoint
 					#else
@@ -242,16 +242,16 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 					, ld, -l, bias, lightProj, n, index
 				);
 				#else
-					 if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
-				else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
-				else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
-				else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+					 if (index == 0) shadow *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+				else if (index == 1) shadow *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
+				else if (index == 2) shadow *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
+				else if (index == 3) shadow *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
 				#endif
 			#endif
 		}
 	#endif
 
-	return direct;
+	return vec4(direct, shadow);
 }
 
 #endif
