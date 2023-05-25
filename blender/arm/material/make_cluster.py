@@ -63,7 +63,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
 
-    frag.write('direct += sampleLight(')
+    frag.write('vec4 lightData = sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
     frag.write('    vVec,')
@@ -85,9 +85,11 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
-        frag.write('\t, voxels, voxpos, clipmap_to_update')
+        frag.write('\t, voxels, voxpos, clipmapLevel')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     frag.write(');')
+    frag.write('direct += lightData.rgb;')
+    frag.write('direct *= lightData.a;')
 
     frag.write('}') # for numLights

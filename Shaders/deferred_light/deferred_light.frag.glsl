@@ -225,6 +225,26 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
+#ifdef _VoxelGI
+float dist = distance(viewerPos, p);
+int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
+float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
+vec3 lookDirection = viewMatrix[2].xyz;
+float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
+vec3 eyeSnap = floor((normalize(viewerPos + lookDirection)) / voxelSize) * voxelSize;
+vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+#endif
+
+#ifdef _VoxelAOvar
+float dist = distance(viewerPos, p);
+int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
+float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
+vec3 lookDirection = viewMatrix[2].xyz;
+float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
+vec3 eyeSnap = floor((normalize(viewerPos + lookDirection)) / voxelSize) * voxelSize;
+vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+#endif
+
 #ifdef _VoxelRefract
 	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
 	float rior = gr.x;
@@ -291,24 +311,6 @@ void main() {
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
-
-#ifdef _VoxelAOvar
-	float dist = distance(viewerPos, p);
-	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
-
-	#ifndef _VoxelAONoTrace
-	#ifdef _VoxelTemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
-	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);
-	#endif
-	#endif
-#endif
 
 #ifdef _SSAO
 	// #ifdef _RTGI
@@ -547,26 +549,27 @@ void main() {
 #endif // _Clusters
 
 #ifdef _VoxelGI
-	float dist = distance(viewerPos, p);
-	int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
-	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;
-	vec3 eyeSnap = floor((normalize(viewerPos + lookDirection) * clipmapLevelSize) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
-
 	#ifdef _VoxelTemporal
 	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
 	fragColor.rgb += traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
 	#endif
-
 	if(roughness < 1.0 && occspec.y > 0.0)
 		#ifdef _VoxelTemporal
 		fragColor.rgb += (traceSpecular(voxels, n, voxpos, v, roughness, clipmapLevel).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
 		#else
 		fragColor.rgb += traceSpecular(voxels,  n, voxpos, v, roughness, clipmapLevel).rgb * voxelgiRefl * occspec.y;
 		#endif
+#endif
+
+#ifdef _VoxelAOvar
+	#ifndef _VoxelAONoTrace
+	#ifdef _VoxelTemporal
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
+	#else
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);
+	#endif
+	#endif
 #endif
 
 	fragColor.rgb += envl;
