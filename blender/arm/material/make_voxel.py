@@ -125,7 +125,7 @@ def make_gi(context_id):
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
     vert.write('vec3 lookDirection = viewMatrix[2].xyz;')
     vert.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;')
-    vert.write('vec3 eyeSnap = floor((normalize(viewerPos + lookDirection)) / voxelSize) * voxelSize;')
+    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
@@ -390,8 +390,11 @@ def make_ao(context_id):
         vert.write('  stage_output.svpos.w = 1.0;')
         vert.write('  return stage_output;')
         vert.write('}')
+
         geom.write('struct SPIRV_Cross_Input { float4 svpos : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Output { float3 wpos : TEXCOORD0; float4 svpos : SV_POSITION; };')
+        geom.write('struct SPIRV_Cross_Input { flat int clipmapLevelGeom : SV_POSITION; };')
+        geom.write('struct SPIRV_Cross_Input { fllat int clipmapLevel : SV_POSITION; };')
         geom.write('[maxvertexcount(3)]')
         geom.write('void main(triangle SPIRV_Cross_Input stage_input[3], inout TriangleStream<SPIRV_Cross_Output> output) {')
         geom.write('  float3 p1 = stage_input[1].svpos.xyz - stage_input[0].svpos.xyz;')
@@ -400,6 +403,7 @@ def make_ao(context_id):
         geom.write('  for (int i = 0; i < 3; ++i) {')
         geom.write('    SPIRV_Cross_Output stage_output;')
         geom.write('    stage_output.wpos = stage_input[i].svpos.xyz;')
+        geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevelGeom;')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('      stage_output.svpos = float4(stage_input[i].svpos.x, stage_input[i].svpos.y, 0.0, 1.0);')
         geom.write('    }')
@@ -457,11 +461,14 @@ def make_ao(context_id):
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         geom.add_out('vec3 voxposition')
+        geom.add_out('flat int clipmapLevel')
+
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
         geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
         geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
+        geom.write('    clipmapLevel = clipmapLevelGeom[i];')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
         geom.write('    }')

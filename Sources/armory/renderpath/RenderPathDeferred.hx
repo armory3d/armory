@@ -546,27 +546,11 @@ class RenderPathDeferred {
 			*/
 
 			#if arm_voxelgi_temporal
-			/*
-			#if (rp_voxels == "Voxel GI")
-			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
-			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
-			#else
-			*/
-
 			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0)
-				armory.renderpath.Voxels.voxelize(voxels);
-
+			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) Voxels.voxelize(voxels);
 			#else
-
-			#if (rp_voxels == "Voxel GI")
-			var voxtex = "voxels";
-			#else
-			var voxtex = voxels;
-			#end
-
-			Voxels.voxelize(voxtex);
+			Voxels.voxelize(voxels);
 			#end
 
 
