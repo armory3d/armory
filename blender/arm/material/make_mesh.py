@@ -642,9 +642,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('vec3 viewerPos', '_viewerPos')
         frag.add_uniform('mat4 viewMatrix', '_viewMatrix')
+        frag.add_uniform('float maxClipmapSize', '_maxClipmapSize')
+
         frag.add_uniform('sampler3D voxels')
         frag.write('float dist = distance(viewerPos, wposition);')
-        frag.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));')
+        frag.write('int clipmapLevel = int(max(log2(dist / maxClipmapLevel), 0));')
         frag.write('float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;')
         frag.write('vec3 lookDirection = viewMatrix[2].xyz;')
         frag.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;')
