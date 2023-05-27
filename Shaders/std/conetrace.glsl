@@ -71,9 +71,9 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 	return sampleCol;
 }
 
-vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const float roughness, const float clipmapLevel) {
+vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const float clipmapLevel) {
 	const float angleMix = 0.5f;
-	const float aperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+	const float aperture = 0.55785173935;
 	vec3 o1 = normalize(tangent(normal));
 	vec3 o2 = normalize(cross(o1, normal));
 	vec3 c1 = 0.5f * (o1 + o2);

@@ -550,9 +550,9 @@ void main() {
 
 #ifdef _VoxelGI
 	#ifdef _VoxelTemporal
-	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
+	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * g1.rgb;
 	#else
-	fragColor.rgb += traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
+	fragColor.rgb += traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelgiDiff * g1.rgb;
 	#endif
 	if(roughness < 1.0 && occspec.y > 0.0)
 		#ifdef _VoxelTemporal

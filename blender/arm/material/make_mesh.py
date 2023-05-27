@@ -646,12 +646,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.add_uniform('sampler3D voxels')
         frag.write('float dist = distance(viewerPos, wposition);')
-        frag.write('int clipmapLevel = int(max(log2(dist / maxClipmapLevel), 0));')
+        frag.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));')
         frag.write('float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;')
         frag.write('vec3 lookDirection = viewMatrix[2].xyz;')
-        frag.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 2;')
-        frag.write('vec3 eyeSnap = floor((normalize(viewerPos + lookDirection)) / voxelSize) * voxelSize;')
-        frag.write('vec3 voxpos = (wposition - eyeSnap) / clipmapLevelSize;')
+        frag.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x;')
+        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection * clipmapLevelSize) / voxelSize) * voxelSize;')
+        frag.write('vec3 voxpos = (wposition + eyeSnap) * voxelSize;')
 
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -745,9 +745,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', '_voxelBlend')
-            frag.write('indirect += (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * basecol;')
+            frag.write('indirect += (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * basecol;')
         else:
-            frag.write('indirect += traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * basecol;')
+            frag.write('indirect += traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelgiDiff * basecol;')
 
         frag.write('if (roughness < 1.0 && specular > 0.0)')
         if '_VoxelTemporal' in wrd.world_defs:
