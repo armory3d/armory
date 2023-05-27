@@ -120,7 +120,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 
 vec4 traceSpecular(sampler3D voxels, const vec3 normal, const vec3 origin, const vec3 viewDir, const float roughness, const float clipmapLevel) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
-	vec3 specularDir = normalize(reflect(-viewDir, normal));
+	vec3 specularDir = reflect(-viewDir, normal);
 
 	return traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel) * voxelgiOcc;
 }
