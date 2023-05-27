@@ -241,7 +241,7 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize / voxelgiResolution.x;
-	vec3 eyeSnap = normalize(viewerPos + lookDirection);// * clipmapLevelSize;// / voxelSize) * voxelSize;
+	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 voxpos = (p + eyeSnap) * voxelSize;
 #endif
 
