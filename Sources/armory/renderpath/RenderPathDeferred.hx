@@ -550,7 +550,7 @@ class RenderPathDeferred {
 			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) Voxels.voxelize(voxels);
 			#else
-			Voxels.voxelize(voxels);
+			Voxels.voxelize("voxels");
 			#end
 
 
