@@ -141,8 +141,9 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 	vec3 samplePos;
 	while (sampleCol < 1.0 && dist < maxDist) {
 		samplePos = dir * dist + origin;
+		samplePos = samplePos * 0.5 + 0.5;
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
-		float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, mip).r;
+		float mipSample = textureLod(voxels, samplePos, mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
 		dist += max(diam / 2,  voxelSize);
 		diam = dist * aperture;
