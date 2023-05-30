@@ -586,4 +586,5 @@ if(opac < 1.0) {
 }
 #endif
 	fragColor.a = 1.0;
+	//fragColor.rgb *= p_fade;
 }
