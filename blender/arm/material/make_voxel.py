@@ -68,7 +68,7 @@ def make_gi(context_id):
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
-    if particle and rpdat.arm_particles == 'On' and False:
+    if particle and rpdat.arm_particles == 'On':
         # make_particle.write(vert, particle_info=cycles.particle_info)
         frag.write_pre = True
         frag.write('const float p_index = 0;')
@@ -125,8 +125,8 @@ def make_gi(context_id):
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
     vert.write('vec3 lookDirection = viewMatrix[2].xyz;')
     vert.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 16;')
-    vert.write('vec3 eyeSnap = floor(normalize(lookDirection * clipmapLevelSize + viewerPos) / voxelSize) * voxelSize;')
-    vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
+    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection * clipmapLevelSize) / voxelSize) * voxelSize;')
+    vert.write('voxpositionGeom = (P + eyeSnap) / clipmapLevelSize;')
 
     vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 

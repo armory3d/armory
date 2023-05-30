@@ -232,7 +232,7 @@ void main() {
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize / voxelgiResolution.x * 16;
 	vec3 eyeSnap = floor(normalize(lookDirection * clipmapLevelSize + viewerPos) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 voxpos = (p + eyeSnap) / clipmapLevelSize;
 #endif
 
 #ifdef _VoxelAOvar
@@ -582,7 +582,7 @@ if(opac < 1.0) {
 	#else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmapLevel) * voxelgiRefr;
 	#endif
-	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
+	fragColor.rgb += mix(refraction + fragColor.rgb, fragColor.rgb, opac);
 }
 #endif
 	fragColor.a = 1.0;

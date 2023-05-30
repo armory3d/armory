@@ -193,7 +193,7 @@ def make_deferred(con_mesh, rpasses):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if parse_opacity and not '_VoxelRefract' in wrd.world_defs:
+    if (parse_opacity and not '_VoxelRefract' in wrd.world_defs) or arm_discard:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -554,7 +554,7 @@ def make_forward(con_mesh):
 
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
-        frag.write('fragColor[0].rgb *= p_fade;')
+        frag.write('fragColor[0] *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
@@ -569,7 +569,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if parse_opacity or arm_discard and not '_VoxelRefract' in wrd.world_defs:
+    if (parse_opacity and not '_VoxelRefract' in wrd.world_defs) or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -646,12 +646,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
         frag.add_uniform('sampler3D voxels')
         frag.write('float dist = distance(viewerPos, wposition);')
-        frag.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));')
+        frag.write('int clipmapLevel = int(max(log2(dist / maxClipmapSize), 0));')
         frag.write('float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;')
         frag.write('vec3 lookDirection = viewMatrix[2].xyz;')
-        frag.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x;')
+        frag.write('float voxelSize = clipmapLevelSize  / voxelgiResolution.x * 16;')
         frag.write('vec3 eyeSnap = floor(normalize(viewerPos + lookDirection * clipmapLevelSize) / voxelSize) * voxelSize;')
-        frag.write('vec3 voxpos = (wposition + eyeSnap) * voxelSize;')
+        frag.write('vec3 voxpos = (wposition - eyeSnap) / clipmapLevelSize;')
 
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -761,8 +761,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * voxelBlend + traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * (1.0 - voxelBlend)) * voxelgiRefr;')
         else:
             frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * voxelgiRefr;')
-        frag.write('indirect = mix(refraction, indirect, opacity);')
-        frag.write('direct = mix(refraction, direct, opacity);')
+        frag.write('indirect = mix(refraction + indirect, indirect, opacity);')
+        frag.write('direct = mix(refraction + direct, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
