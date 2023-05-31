@@ -230,8 +230,8 @@ void main() {
 	int clipmapLevel = int(max(log2(dist / maxClipmapSize), 0));
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
-	float voxelSize = clipmapLevelSize / voxelgiResolution.x * 16;
-	vec3 eyeSnap = normalize(viewerPos + lookDirection);
+	float voxelSize = clipmapLevelSize / voxelgiResolution.x * 8;
+	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
@@ -241,7 +241,7 @@ void main() {
 	float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
 	vec3 lookDirection = viewMatrix[2].xyz;
 	float voxelSize = clipmapLevelSize / voxelgiResolution.x * 16;
-	vec3 eyeSnap = floor(normalize(lookDirection * clipmapLevelSize + viewerPos) / voxelSize) * voxelSize;
+	vec3 eyeSnap = floor(normalize(viewerPos + lookDirection) / voxelSize) * voxelSize;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
@@ -582,7 +582,7 @@ if(opac < 1.0) {
 	#else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmapLevel) * voxelgiRefr;
 	#endif
-	fragColor.rgb += mix(refraction + fragColor.rgb, fragColor.rgb, opac);
+	fragColor.rgb += mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 }
 #endif
 	fragColor.a = 1.0;

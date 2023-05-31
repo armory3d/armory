@@ -20,6 +20,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 	
+	/*
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh: kha.compute.Shader = null;
 	static var voxel_ta: TextureUnit;
@@ -46,6 +47,7 @@ class Inc {
 	static var bounce_tb: TextureUnit;
 	static var bounce_tc: TextureUnit;
 	#end
+	*/
 
 	#if ((rp_voxels != 'Off') && arm_config)
 	static var voxelsCreated = false;
@@ -619,6 +621,7 @@ class Inc {
 	public static function endFrame() { shadowsLogicTime = 0;  shadowsRenderTime = 0; }
 	#end
 
+	/*
 	#if (rp_voxels == "Voxel GI")
 	public static function computeVoxelsBegin() {
 		if (voxel_sh == null) {
@@ -737,6 +740,7 @@ class Inc {
 		#end
 	}
 	#end
+	*/
 }
 
 #if arm_shadowmap_atlas

@@ -761,8 +761,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 refraction = (traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * voxelBlend + traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * (1.0 - voxelBlend)) * voxelgiRefr;')
         else:
             frag.write('vec3 refraction = traceRefraction(voxels, voxpos, n, eyeDir, rior, roughness, clipmapLevel) * voxelgiRefr;')
-        frag.write('indirect = mix(refraction + indirect, indirect, opacity);')
-        frag.write('direct = mix(refraction + direct, direct, opacity);')
+        frag.write('indirect = mix(refraction * indirect, indirect, opacity);')
+        frag.write('direct = mix(refraction * direct, direct, opacity);')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

@@ -233,8 +233,8 @@ class Uniforms {
 	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
 		switch (link) {
 			#if (rp_voxels != 'Off')
-			case "_clipmap_to_update": {
-				return Voxels.clipmap_to_update;
+			case "_clipmapCount": {
+				return Main.voxelgiClipmapCount;
 			}
 			#end
 		}
