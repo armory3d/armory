@@ -101,7 +101,7 @@ def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSoc
     elif blend == 'COLOR':
         out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
     elif blend == 'SOFT_LIGHT':
-        out_col = '((1.0 - {2}) * {0} + {2} * ((vec3(1.0) - {0}) * {1} * {0} + {0} * (vec3(1.0) - (vec3(1.0) - {1}) * (vec3(1.0) - {0}))));'.format(col1, col2, fac)
+        out_col = '((1.0 - {2}) * {0} + {2} * ((vec3(1.0) - {0}) * {1} * {0} + {0} * (vec3(1.0) - (vec3(1.0) - {1}) * (vec3(1.0) - {0}))))'.format(col1, col2, fac)
     elif blend == 'LINEAR_LIGHT':
         out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
         # out_col = '({0} + {2} * (2.0 * ({1} - vec3(0.5))))'.format(col1, col2, fac_var)
