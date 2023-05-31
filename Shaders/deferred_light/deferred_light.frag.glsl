@@ -204,7 +204,7 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
-
+	fragColor = vec4(0.0);
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
