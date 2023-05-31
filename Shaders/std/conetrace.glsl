@@ -48,7 +48,7 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const float clipmapLevel) {
 	dir = normalize(dir);
 	vec4 sampleCol = vec4(0.0);
-	float voxelSize = VOXEL_SIZE * pow(2.0, clipmapLevel);
+	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
 	float dist = 2.0 * voxelSize * voxelgiOffset;
 	float diam = dist * aperture;
 	vec3 samplePos;
@@ -133,7 +133,7 @@ vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const float clipmapLevel) {
 	dir = normalize(dir);
 	float sampleCol = 0.0;
-	float voxelSize = VOXEL_SIZE * pow(2.0, clipmapLevel);
+	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
 	float dist = 1.5 * voxelSize * voxelgiOffset;
 	float diam = dist * aperture;
 	vec3 samplePos;
@@ -152,7 +152,7 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 float traceConeAOShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const float offset, const float clipmapLevel) {
 	dir = normalize(dir);
 	float sampleCol = 0.0;
-	float voxelSize = VOXEL_SIZE * pow(2.0, clipmapLevel);
+	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
 	float dist = 1.5 * voxelSize * voxelgiOffset * 2.5; //
 	float diam = dist * aperture;
 	vec3 samplePos;
