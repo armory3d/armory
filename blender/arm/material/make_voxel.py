@@ -177,8 +177,6 @@ def make_gi(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('if (abs(voxposition.z) > 1 || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
-    frag.add_uniform('int clipmapCount', '_clipmapCount')
-    frag.write('if (abs(voxposition.z) < (clipmapLevel / clipmapCount) || abs(voxposition.x) < (clipmapLevel / clipmapCount) || abs(voxposition.y) < (clipmapLevel / clipmapCount)) return;')
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -420,8 +418,7 @@ def make_ao(context_id):
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
         frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y * 6) > 1) return;')
-        frag.add_uniform('int clipmapCount', '_clipmapCount')
-        frag.write('if (abs(voxposition.z) < (clipmapLevel / clipmapCount) || abs(voxposition.x) < (clipmapLevel / clipmapCount) || abs(voxposition.y) < (clipmapLevel / clipmapCount)) return;')
+
         voxRes = str(rpdat.rp_voxelgi_resolution)
         voxResZ = str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z)))
 
@@ -481,8 +478,6 @@ def make_ao(context_id):
         geom.write('EndPrimitive();')
 
         frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
-        frag.add_uniform('int clipmapCount', '_clipmapCount')
-        frag.write('if (abs(voxposition.z) < (clipmapLevel / clipmapCount) || abs(voxposition.x) < (clipmapLevel / clipmapCount) || abs(voxposition.y) < (clipmapLevel / clipmapCount)) return;')
 
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * voxelgiResolution;')
