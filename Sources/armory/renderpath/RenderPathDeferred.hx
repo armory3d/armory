@@ -12,8 +12,6 @@ class RenderPathDeferred {
 	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
-	static var voxelsBounce = "voxelsBounce";
-	static var voxelsBounceLast = "voxelsBounce";
 	#end
 
 	#if rp_bloom
@@ -63,12 +61,6 @@ class RenderPathDeferred {
 			Inc.initGI();
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
-			#else
-			Inc.initGI("voxelsNor");
-			Inc.initGI("voxelsOpac");
-			#if (rp_voxelgi_bounces != 1)
-			Inc.initGI("voxelsBounce");
-			#end
 			#end
 		}
 		#end
@@ -546,24 +538,13 @@ class RenderPathDeferred {
 			*/
 
 			#if arm_voxelgi_temporal
-			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
-			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) Voxels.voxelize(voxels);
+			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) {
+				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+				Voxels.voxelize(voxels);
+			}
 			#else
 			Voxels.voxelize("voxels");
-			#end
-
-
-			#if (rp_voxels == "Voxel GI")
-				//Inc.computeVoxelsBegin();
-				//Inc.computeVoxels(voxtex, voxels);
-				//Inc.computeVoxelsEnd(voxels, voxelsBounce);
-				#if(rp_voxelgi_bounces != 1)
-				//voxels = voxelsBounce;
-				//voxelsLast = voxelsBounceLast;
-				#end
-			#else
-			//path.generateMipmaps(voxels);
 			#end
 		}
 		#end

@@ -49,7 +49,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 	dir = normalize(dir);
 	vec4 sampleCol = vec4(0.0);
 	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-	float dist = 8.0 * voxelSize * voxelgiOffset;
+	float dist = 1.5 * voxelSize * voxelgiOffset;
 	float diam = dist * aperture;
 	vec3 samplePos;
 
