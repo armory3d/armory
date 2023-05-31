@@ -3,7 +3,9 @@ package armory.logicnode;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
+#if arm_ui
 using zui.GraphicsExtension;
+#end
 
 class DrawArcNode extends LogicNode {
 
@@ -12,6 +14,7 @@ class DrawArcNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawArcNode");
 
 		final colorVec = inputs[1].get();
@@ -30,6 +33,7 @@ class DrawArcNode extends LogicNode {
 		} else {
 			RenderToTexture.g.drawArc(cx, cy, radius, sAngle, eAngle, inputs[3].get(), ccw, segments);
 		}
+		#end
 
 		runOutput(0);
 	}
