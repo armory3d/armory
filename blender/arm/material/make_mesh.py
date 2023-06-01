@@ -713,7 +713,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-        frag.write('vec4 lightData = sampleLight(')
+        frag.write('direct += sampleLight(')
         frag.write('  wposition, n, eyeDir, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
@@ -724,8 +724,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_MicroShadowing' in wrd.world_defs:
             frag.write('  , occlusion')
         frag.write(');')
-        frag.write('direct += lightData.rgb;')
-        frag.write('direct *= lightData.a;')
 
     if '_Clusters' in wrd.world_defs:
         make_cluster.write(vert, frag)

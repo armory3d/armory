@@ -250,13 +250,12 @@ def make_gi(context_id):
                 frag.write('#ifdef _InvY')
                 frag.write('l.y = -l.y;')
                 frag.write('#endif')
-                frag.write('visibility = attenuate(distance(ld, voxposition));')
                 if '_Legacy' in wrd.world_defs:
                     frag.write('visibility *= float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 20)).r > compare);')
                 else:
                     frag.write('visibility *= texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
             frag.write('}')
-            frag.write('basecol *= visibility * pointCol;')
+            frag.write('basecol *= pointCol * attenuate(distance(voxposition, pointPos)) * visibility;')
 
     if '_Clusters' in wrd.world_defs:
         is_shadows = '_ShadowMap' in wrd.world_defs

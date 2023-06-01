@@ -312,35 +312,6 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifdef _SSAO
-	// #ifdef _RTGI
-	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	// #else
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	// #endif
-
-	// Show SSAO
-	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
-#endif
-
-#ifdef _EmissionShadeless
-	if (matid == 1) { // pure emissive material, color stored in basecol
-		fragColor.rgb += g1.rgb;
-		fragColor.a = 1.0; // Mark as opaque
-		return;
-	}
-#endif
-#ifdef _EmissionShaded
-	#ifdef _EmissionShadeless
-	else {
-	#endif
-		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
-		fragColor.rgb += emission;
-	#ifdef _EmissionShadeless
-	}
-	#endif
-#endif
-
 	// Show voxels
 
 	//Show SSAO
@@ -352,7 +323,8 @@ void main() {
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) + (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
+        (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -413,8 +385,7 @@ void main() {
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += sdirect * sunCol;
-	fragColor.rgb *= svisibility;
+	fragColor.rgb += sdirect * sunCol * svisibility;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -450,7 +421,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
-	vec4 lightData = sampleLight(
+	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
 			, 0, pointBias, true
@@ -476,9 +447,6 @@ void main() {
 		#endif
 	);
 
-	fragColor.rgb += lightData.rgb;
-	fragColor.rgb *= lightData.a;
-
 	#ifdef _Spot
 	#ifdef _SSS
 	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
@@ -503,7 +471,7 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		vec4 lightData = sampleLight(
+		fragColor.rgb += sampleLight(
 			p,
 			n,
 			v,
@@ -543,8 +511,6 @@ void main() {
 			, gbufferD, invVP, eye
 			#endif
 		);
-		fragColor.rgb += lightData.rgb;
-		fragColor.rgb *= lightData.a;
 	}
 #endif // _Clusters
 
@@ -574,6 +540,34 @@ void main() {
 
 	fragColor.rgb += envl;
 
+#ifdef _SSAO
+	// #ifdef _RTGI
+	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	// #else
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #endif
+
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
+#endif
+
+#ifdef _EmissionShadeless
+	if (matid == 1) { // pure emissive material, color stored in basecol
+		fragColor.rgb += g1.rgb;
+		fragColor.a = 1.0; // Mark as opaque
+		return;
+	}
+#endif
+#ifdef _EmissionShaded
+	#ifdef _EmissionShadeless
+	else {
+	#endif
+		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		fragColor.rgb += emission;
+	#ifdef _EmissionShadeless
+	}
+	#endif
+#endif
 
 #ifdef _VoxelRefract
 if(opac < 1.0) {

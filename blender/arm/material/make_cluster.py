@@ -63,7 +63,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
 
-    frag.write('vec4 lightData = sampleLight(')
+    frag.write('direct += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
     frag.write('    vVec,')
@@ -89,7 +89,5 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     frag.write(');')
-    frag.write('direct += lightData.rgb;')
-    frag.write('direct *= lightData.a;')
 
     frag.write('}') # for numLights
