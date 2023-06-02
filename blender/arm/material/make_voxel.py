@@ -115,19 +115,16 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
-    vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
-    vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
-    vert.add_uniform('int clipmapCount', '_clipmapCount')
+    vert.add_uniform('vec3 eyeLook', '_cameraLook')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = distance(viewerPos, P);')
-    vert.add_out('int clipmapLevelGeom')
-    vert.write('clipmapLevelGeom = int(max(log2(dist / (2.0 * voxelgiHalfExtents)) , 0));')
-    vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
-    vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 8;')
-    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + viewMatrix[2].xyz) / voxelSize) * voxelSize;')
+    vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+    vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
+    vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
+    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
-    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
+    #vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec3 voxnormal')
@@ -366,8 +363,7 @@ def make_ao(context_id):
         vert.write('uniform float4x4 W;')
 
         vert.add_uniform('vec3 viewerPos', '_viewerPos')
-        vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
-        vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
+        vert.add_uniform('mat4 eyeLook', '_cameraLook')
 
         geom.write('struct SPIRV_Cross_Input { float4 svpos : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Output { float3 wpos : TEXCOORD0; float4 svpos : SV_POSITION; };')
@@ -376,11 +372,10 @@ def make_ao(context_id):
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
-        vert.add_out('int clipmapLevelGeom')
-        vert.write('clipmapLevelGeom = int(max(log2(dist / (2.0 * voxelgiHalfExtents)) , 0));')
-        vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 8;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + viewMatrix[2].xyz) / voxelSize) * voxelSize;')
+        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+        vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
+        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
+        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         vert.write('  stage_output.svpos.w = 1.0;')
@@ -439,16 +434,14 @@ def make_ao(context_id):
         vert.add_out('vec3 voxpositionGeom')
 
         vert.add_uniform('vec3 viewerPos', '_viewerPos')
-        vert.add_uniform('mat4 viewMatrix', '_viewMatrix')
-        vert.add_uniform('float maxClipmapSize', '_maxClipmapSize')
+        vert.add_uniform('vec3 eyeLook', '_cameraLook')
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
-        vert.add_out('int clipmapLevelGeom')
-        vert.write('clipmapLevelGeom = int(max(log2(dist / (2.0 * voxelgiHalfExtents)) , 0));')
-        vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 8;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + viewMatrix[2].xyz) / voxelSize) * voxelSize;')
+        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+        vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
+        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
+        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         geom.add_out('vec3 voxposition')
