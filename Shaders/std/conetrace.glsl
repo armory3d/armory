@@ -13,6 +13,8 @@
 
 const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
+const float BORDER_OFFSET = 0.1;
+const float BORDER_WIDTH = 0.25;
 
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
@@ -47,18 +49,20 @@ vec3 tangent(const vec3 n) {
 
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const float clipmapLevel) {
 	dir = normalize(dir);
-	vec4 sampleCol = vec4(0.0);
-	float dist = 2.0 * VOXEL_SIZE * voxelgiOffset;
+	vec4 sampleCol = vec4(0.0), sampleCol2 = vec4(0.0);
+	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset;
 	float diam = dist * aperture;
-	vec3 samplePos;
+	vec3 samplePos, samplePos2;
 
 	// Step until alpha > 1 or out of bounds
 	while (sampleCol.a < 1.0 && dist < maxDist) {
 		samplePos = dir * dist + origin;
 		samplePos = samplePos * 0.5 + 0.5;
+
 		// Choose mip level based on the diameter of the cone
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		vec4 mipSample = textureLod(voxels, samplePos, mip);
+
 		// Blend mip sample with current sample color
 		sampleCol += (1 - sampleCol.a) * mipSample;
 		diam = dist * aperture;
