@@ -119,10 +119,10 @@ def make_gi(context_id):
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = distance(viewerPos, P);')
-    vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+    vert.write('int clipmapLevel = int(max(log2(dist) , 0));')
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-    vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
-    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
+    vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+    vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
     #vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
@@ -369,10 +369,10 @@ def make_ao(context_id):
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
-        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+        vert.write('int clipmapLevel = int(max(log2(dist) , 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
+        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         vert.write('  stage_output.svpos.w = 1.0;')
@@ -434,10 +434,10 @@ def make_ao(context_id):
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = distance(viewerPos, P);')
-        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x) , 0));')
+        vert.write('int clipmapLevel = int(max(log2(dist) , 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
+        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;')#this rebrands the eyeSnap that was written in uniforms
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         geom.add_out('vec3 voxposition')

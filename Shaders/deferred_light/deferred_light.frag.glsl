@@ -225,18 +225,19 @@ void main() {
 
 #ifdef _VoxelGI
     float dist = distance(viewerPos, p);
-    int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
+    int clipmapLevel = int(max(log2(dist), 0));
     float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-    float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;
-    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;
+    float voxelSize = clipmapLevelSize / voxelgiResolution.x;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
     vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
 #ifdef _VoxelAOvar
-    int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));
+    float dist = distance(viewerPos, p);
+    int clipmapLevel = int(max(log2(dist), 0));
     float clipmapLevelSize = pow(2.0, clipmapLevel) * voxelgiHalfExtents.x;
-    float voxelSize = clipmapLevelSize / voxelgiResolution.x * 2;
-    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize * 0.9) / voxelSize) * voxelSize;
+    float voxelSize = clipmapLevelSize / voxelgiResolution.x;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
     vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
