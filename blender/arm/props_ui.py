@@ -2350,6 +2350,46 @@ class ARM_PT_MaterialNodePanel(bpy.types.Panel):
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')
 
+class ARM_PT_DopeSheetRootMotionPanel(bpy.types.Panel):
+    bl_label = 'Armory Root Motion'
+    bl_idname = 'ARM_PT_DopeSheetRootMotionPanel'
+    bl_space_type = 'DOPESHEET_EDITOR'
+    bl_region_type = 'UI'
+    bl_context = 'data'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        ds_mode = context.space_data.mode
+        if ds_mode in {'DOPESHEET', 'ACTION'}:
+            return bool(context.active_action)
+
+    def draw(self, context):
+        action = context.active_action
+        layout = self.layout
+        layout.label(text='Action: ' + action.name)
+        layout.prop(action, 'arm_root_motion_pos')
+        layout.prop(action, 'arm_root_motion_rot')
+
+class ARM_PT_NLARootMotionPanel(bpy.types.Panel):
+    bl_label = 'Armory Root Motion'
+    bl_idname = 'ARM_PT_NLARootMotionPanel'
+    bl_space_type = 'NLA_EDITOR'
+    bl_region_type = 'UI'
+    bl_context = 'data'
+    bl_category = 'Armory'
+
+    @classmethod
+    def poll(cls, context):
+        return bool(context.active_nla_strip)
+
+    def draw(self, context):
+        action = context.active_nla_strip.action
+        layout = self.layout
+        layout.label(text='Action: ' + action.name)
+        layout.prop(action, 'arm_root_motion_pos')
+        layout.prop(action, 'arm_root_motion_rot')
+
 class ARM_OT_CopyToBundled(bpy.types.Operator):
     bl_label = 'Copy To Bundled'
     bl_idname = 'arm.copy_to_bundled'

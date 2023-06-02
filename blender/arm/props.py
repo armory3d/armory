@@ -536,7 +536,9 @@ def init_properties():
     # Particles
     bpy.types.ParticleSettings.arm_count_mult = FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
     bpy.types.ParticleSettings.arm_loop = BoolProperty(name="Loop", description="Loop this particle system", default=False)
-
+    # Actions
+    bpy.types.Action.arm_root_motion_pos = BoolProperty(name="Root Motion Position", description="Enable position root motion", default=False)
+    bpy.types.Action.arm_root_motion_rot = BoolProperty(name="Root Motion Rotation", description="Enable rotation root motion", default=False)
     create_wrd()
 
 def create_wrd():
