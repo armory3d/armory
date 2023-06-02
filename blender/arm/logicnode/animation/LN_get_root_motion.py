@@ -10,3 +10,4 @@ class GetRootMotionNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_output('ArmStringSocket', 'Bone')
         self.add_output('ArmVectorSocket', 'Velocity')
+        self.add_output('ArmRotationSocket', 'Rotation')
