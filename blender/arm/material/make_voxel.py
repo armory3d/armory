@@ -146,7 +146,7 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    voxnormal = voxnormalGeom[i];')
-    geom.write('    clipmapLevel = clipmapLevelGeom[i];')
+    geom.write('    clipmapLevel = clipmapLevel[i];')
     if '_Sun' in wrd.world_defs:
         geom.write('lightPosition = lightPositionGeom[i];')
     if '_SinglePoint' in wrd.world_defs and '_Spot' in wrd.world_defs:
@@ -367,7 +367,7 @@ def make_ao(context_id):
 
         geom.write('struct SPIRV_Cross_Input { float4 svpos : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Output { float3 wpos : TEXCOORD0; float4 svpos : SV_POSITION; };')
-        geom.write('struct SPIRV_Cross_Input { flat int clipmapLevelGeom : SV_POSITION; };')
+        geom.write('struct SPIRV_Cross_Input { flat int clipmapLevel : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Input { fllat int clipmapLevel : SV_POSITION; };')
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
@@ -390,7 +390,7 @@ def make_ao(context_id):
         geom.write('  for (int i = 0; i < 3; ++i) {')
         geom.write('    SPIRV_Cross_Output stage_output;')
         geom.write('    stage_output.wpos = stage_input[i].svpos.xyz;')
-        geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevelGeom;')
+        geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevel;')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('      stage_output.svpos = float4(stage_input[i].svpos.x, stage_input[i].svpos.y, 0.0, 1.0);')
         geom.write('    }')
@@ -452,7 +452,7 @@ def make_ao(context_id):
         geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
-        geom.write('    clipmapLevel = clipmapLevelGeom[i];')
+        geom.write('    clipmapLevel = clipmapLevel[i];')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
         geom.write('    }')
