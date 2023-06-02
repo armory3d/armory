@@ -277,6 +277,11 @@ class ArmoryExporter:
             oanim['marker_names'].append(pos_marker.name)
 
     @staticmethod
+    def export_root_motion(oanim, action):
+        oanim['root_motion_pos'] = action.arm_root_motion_pos
+        oanim['root_motion_rot'] = action.arm_root_motion_rot
+
+    @staticmethod
     def calculate_anim_frame_range(action: bpy.types.Action) -> Tuple[int, int]:
         """Calculates the required frame range of the given action by
         also taking fcurve modifiers into account.
@@ -1053,6 +1058,7 @@ class ArmoryExporter:
                         self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], original_action)
+                            self.export_root_motion(bones[0]['anim'], original_action)
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
