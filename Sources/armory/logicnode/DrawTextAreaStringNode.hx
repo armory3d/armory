@@ -7,10 +7,10 @@ import armory.renderpath.RenderToTexture;
 import kha.graphics2.VerTextAlignment;
 import kha.graphics2.HorTextAlignment;
 
-using zui.GraphicsExtension;
-
 #if arm_ui
 import armory.ui.Canvas;
+
+using zui.GraphicsExtension;
 #end
 
 class DrawTextAreaStringNode extends LogicNode {
@@ -29,6 +29,7 @@ class DrawTextAreaStringNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawTextAreaStringNode");
 
 		var string:String = Std.string(inputs[1].get());
@@ -124,6 +125,7 @@ class DrawTextAreaStringNode extends LogicNode {
 			++index;
 
 		}
+		#end
 
 		runOutput(0);
 	}

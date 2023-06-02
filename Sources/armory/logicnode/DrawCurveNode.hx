@@ -3,7 +3,9 @@ package armory.logicnode;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
+#if arm_ui
 using zui.GraphicsExtension;
+#end
 
 class DrawCurveNode extends LogicNode {
 
@@ -12,6 +14,7 @@ class DrawCurveNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawCurveNode");
 
 		final colorVec = inputs[1].get();
@@ -22,6 +25,7 @@ class DrawCurveNode extends LogicNode {
 			[inputs[5].get(), inputs[7].get(), inputs[9].get(), inputs[11].get()],
 			inputs[3].get(), inputs[2].get()
 		);
+		#end
 
 		runOutput(0);
 	}
