@@ -12,8 +12,8 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "maxClipmapSize",
-					"link": "_maxClipmapSize"
+					"name": "clipmapCount",
+					"link": "_clipmapCount"
 				},
 				{
 					"name": "viewerPos",

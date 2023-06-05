@@ -226,4 +226,14 @@ class Uniforms {
 		}
 		return null;
 	}
+	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
+		switch(link) {
+			#if (rp_voxels != "Off")
+			case "_clipmapCount": {
+				return Main.voxelgiClipmapCount;
+			}
+			#end
+		}
+		return null;
+	}
 }
