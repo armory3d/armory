@@ -85,7 +85,6 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     return sampleCol;
 }
 
-
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const int clipmapLevel, const int clipmapCount) {
 	const float angleMix = 0.5f;
 	const float aperture = 0.55785173935;
