@@ -52,34 +52,29 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const int clipmapCount) {
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
-    float dist = 2.0 * VOXEL_SIZE * voxelgiOffset;
-    float diam = dist * aperture;
+    float voxelSize = 0.125 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
+	float voxelSize0 = 2.0 * voxelSize;
+	float dist = voxelSize0 * voxelgiOffset;
     vec3 samplePos;
-
+	vec3 startPos = origin * voxelSize0;
+	float step_dist = dist;
+	const float coneCoefficient = 2 * tan(aperture * 0.5);
     // Step until alpha > 1 or out of bounds
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		samplePos = samplePos * 0.5 + 0.5;
-
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
-		float a = max(alpha.x, alpha.y);
-
-        // Choose mip levels based on the diameter of the cone for both levels
-        float mip = log2(diam * voxelgiResolution.x);
-        // Sample the voxels from the current and next levels
-        vec4 mipSample = textureLod(voxels, samplePos, mip);
-         // Blend the samples based on the blend factor
-
-		if(clipmapLevel+1 < clipmapCount)
-		{
-			vec3 tex_off_o = (samplePos / 2 + 0.5) - 0.5;
-			vec4 y_o = textureLod(voxels, tex_off_o, mip);
-			mipSample = mix(mipSample, y_o, a);
+		float diam = max(voxelSize0, dist * coneCoefficient);
+		// Choose mip levels based on the diameter of the cone for both levels
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
+		float clipmap_index = floor(lod);
+		float clipmap_blend = fract(lod);
+        vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod);
+		// Blend the samples based on the blend factor
+		if(clipmap_blend > 0) {
+				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, lod + 1), clipmap_blend);
 		}
         sampleCol += (1 - sampleCol.a) * mipSample;
-
-        diam = dist * aperture;
-        dist += max(diam / 2, VOXEL_SIZE);
+        step_dist =diam * voxelgiStep;
+		dist += step_dist;
     }
 
     return sampleCol;
