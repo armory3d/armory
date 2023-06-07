@@ -58,11 +58,12 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     vec3 samplePos;
 	vec3 startPos = origin * voxelSize0;
 	float step_dist = dist;
+	float diam = dist * aperture;
 	const float coneCoefficient = 2 * tan(aperture * 0.5);
     // Step until alpha > 1 or out of bounds
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * coneCoefficient);
+		//float diam = max(voxelSize0, dist * coneCoefficient);
 		// Choose mip levels based on the diameter of the cone for both levels
         float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_index = floor(lod);
@@ -72,8 +73,9 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		if(clipmap_blend > 0) {
 				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, lod + 1), clipmap_blend);
 		}
+		diam = dist * aperture;
         sampleCol += (1 - sampleCol.a) * mipSample;
-        step_dist =diam * voxelgiStep;
+        step_dist =diam / 2.0 * voxelgiStep;
 		dist += step_dist;
     }
 
