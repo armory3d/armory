@@ -7,9 +7,7 @@ import iron.math.Vec3;
 class Voxels {
 
 	public static var voxelFrame = 0;
-	public static var voxelFreq = 6; // Revoxelizing frequency
-	public static var CLIPMAP_COUNT = 6;
-	public static var clipmap_to_update = 0;
+	public static var voxelFreq = 6;
 
 	public static function voxelize(voxels)
 	{

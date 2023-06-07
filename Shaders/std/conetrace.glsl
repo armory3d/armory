@@ -15,8 +15,8 @@
 
 const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
-const float BORDER_OFFSET = 0.1;
-const float BORDER_WIDTH = 0.25;
+const float BORDER_OFFSET = 0.5;
+const float BORDER_WIDTH = 0.5;
 
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
@@ -52,33 +52,30 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const int clipmapCount) {
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
-    float voxelSize = 0.125 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-	float voxelSize0 = 2.0 * voxelSize;
-	float dist = voxelSize0 * voxelgiOffset;
+	float voxelSize0 = 2.0 * VOXEL_SIZE;
+	float dist = voxelSize0;
     vec3 samplePos;
-	vec3 startPos = origin * voxelSize0;
 	float step_dist = dist;
 	float diam = dist * aperture;
-	const float coneCoefficient = 2 * tan(aperture * 0.5);
-    // Step until alpha > 1 or out of bounds
+
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		//float diam = max(voxelSize0, dist * coneCoefficient);
+		//vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
+		//float a = max(alpha.x, alpha.y);
 		// Choose mip levels based on the diameter of the cone for both levels
         float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
-        vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod);
+        vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index);
 		// Blend the samples based on the blend factor
 		if(clipmap_blend > 0) {
-				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, lod + 1), clipmap_blend);
+				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index + 1), clipmap_blend);
 		}
-		diam = dist * aperture;
         sampleCol += (1 - sampleCol.a) * mipSample;
-        step_dist =diam / 2.0 * voxelgiStep;
-		dist += step_dist;
+		diam = dist * aperture;
+		step_dist = diam / 2.0 * voxelgiStep;
+		dist += max(step_dist, VOXEL_SIZE);
     }
-
     return sampleCol;
 }
 
@@ -146,72 +143,60 @@ vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const 
 float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const int clipmapCount) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float dist = 2.0 * VOXEL_SIZE * voxelgiOffset;
-    float diam = dist * aperture;
+	float voxelSize0 = 2.0 * VOXEL_SIZE;
+	float dist = voxelSize0;
     vec3 samplePos;
+	float step_dist = dist;
+	float diam = dist * aperture;
 
-    // Step until alpha > 1 or out of bounds
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		samplePos = samplePos * 0.5 + 0.5;
-
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
-		float a = max(alpha.x, alpha.y);
-
-        // Choose mip levels based on the diameter of the cone for both levels
-        float mip = log2(diam * voxelgiResolution.x);
-        // Sample the voxels from the current and next levels
-        float mipSample = textureLod(voxels, samplePos, mip).r;
-         // Blend the samples based on the blend factor
-
-		if(clipmapLevel+1 < clipmapCount)
-		{
-			vec3 tex_off_o = (samplePos / 2 + 0.5) - 0.5;
-			float y_o = textureLod(voxels, tex_off_o, mip).r;
-			mipSample = mix(mipSample, y_o, a);
+		//vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
+		//float a = max(alpha.x, alpha.y);
+		// Choose mip levels based on the diameter of the cone for both levels
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
+		float clipmap_index = floor(lod);
+		float clipmap_blend = fract(lod);
+        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index).r;
+		// Blend the samples based on the blend factor
+		if(clipmap_blend > 0) {
+				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index + 1).r, clipmap_blend);
 		}
         sampleCol += (1 - sampleCol) * mipSample;
-
-        diam = dist * aperture;
-        dist += max(diam / 2, VOXEL_SIZE);
+		diam = dist * aperture;
+		step_dist = diam / 2.0 * voxelgiStep;
+		dist += max(step_dist, VOXEL_SIZE);
     }
-
     return sampleCol;
 }
 
 float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const int clipmapCount) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float dist = 2.0 * VOXEL_SIZE * voxelgiOffset;
-    float diam = dist * aperture;
+	float voxelSize0 = 2.0 * VOXEL_SIZE;
+	float dist = voxelSize0;
     vec3 samplePos;
+	float step_dist = dist;
+	float diam = dist * aperture;
 
-    // Step until alpha > 1 or out of bounds
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		samplePos = samplePos * 0.5 + 0.5;
-
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
-		float a = max(alpha.x, alpha.y);
-
-        // Choose mip levels based on the diameter of the cone for both levels
-        float mip = log2(diam * voxelgiResolution.x);
-        // Sample the voxels from the current and next levels
-        float mipSample = textureLod(voxels, samplePos, mip).r;
-         // Blend the samples based on the blend factor
-
-		if(clipmapLevel+1 < clipmapCount)
-		{
-			vec3 tex_off_o = (samplePos / 2 + 0.5) - 0.5;
-			float y_o = textureLod(voxels, tex_off_o, mip).r;
-			mipSample = mix(mipSample, y_o, a);
+		//vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
+		//float a = max(alpha.x, alpha.y);
+		// Choose mip levels based on the diameter of the cone for both levels
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
+		float clipmap_index = floor(lod);
+		float clipmap_blend = fract(lod);
+        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index).r;
+		// Blend the samples based on the blend factor
+		if(clipmap_blend > 0) {
+				mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, clipmap_index + 1).r, clipmap_blend);
 		}
         sampleCol += (1 - sampleCol) * mipSample;
-
-        diam = dist * aperture;
-        dist += max(diam / 2, VOXEL_SIZE);
+		diam = dist * aperture;
+		step_dist = diam / 2.0 * voxelgiStep;
+		dist += max(step_dist, VOXEL_SIZE);
     }
-
     return sampleCol;
 }
 
