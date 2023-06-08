@@ -1,5 +1,13 @@
 import bpy
+import textwrap
 from bpy.props import *
+
+import arm.props_ui
+
+if arm.is_reload(__name__):
+    arm.props_ui = arm.reload_module(arm.props_ui)
+else:
+    arm.enable_reload(__name__)
 
 class ArmRetargetActions(bpy.types.Operator):
     bl_idname = 'arm.retarget_action'
@@ -45,6 +53,7 @@ class ArmRetargetActions(bpy.types.Operator):
         from_bone = pose.bones.get(wrd.arm_retarget_from)
         to_bone = pose.bones.get(wrd.arm_retarget_to)
         if from_bone is None or to_bone is None:
+            self.report({'ERROR'}, "Actions not retargeted. Armature or bones do not exist.")
             return{'CANCELLED'}
         # Copy selected transform bake to helper1
         helper1_scl = helper1.constraints.new('COPY_SCALE')
@@ -125,6 +134,7 @@ class ArmRetargetActions(bpy.types.Operator):
         bpy.data.actions.remove(helper2.animation_data.action)
         bpy.data.objects.remove(helper1)
         bpy.data.objects.remove(helper2)
+        self.report({'INFO'}, "Action retargeted successfully")
         return{'FINISHED'}
 
 class ArmDrawRetargetPanel:
@@ -163,14 +173,12 @@ class ArmDrawRetargetPanel:
         section.enabled = condition
         # Position
         sub = section.row(align=True)
-        #sub.enabled = condition
         sub.label(text="Position:")
         sub.prop(wrd, 'arm_action_retarget_pos_x', text='X', toggle=True)
         sub.prop(wrd, 'arm_action_retarget_pos_y', text='Y', toggle=True)
         sub.prop(wrd, 'arm_action_retarget_pos_z', text='Z', toggle=True)
         # Rotation
         sub = section.row(align=True)
-        #sub.enabled = condition
         sub.label(text="Rotation:")
         sub.prop(wrd, 'arm_action_retarget_rot_x', text='X', toggle=True)
         sub.prop(wrd, 'arm_action_retarget_rot_y', text='Y', toggle=True)
@@ -178,9 +186,13 @@ class ArmDrawRetargetPanel:
         # Retarget Operator
         sub = section.row()
         sub.prop(wrd, 'arm_retarget_overwrite')
+        box = section.box()
+        text='Retargeting will apply all constraints for the selected objects and then baked.'
+        'The constraints are removed after retarget.'
+        textwrap_width = int(bpy.context.region.width//2)
+        col = arm.props_ui.draw_multiline_with_icon(box, textwrap_width, 'ERROR', text)
         sub = section.row(align=True)
-        #sub.enabled = condition
-        sub.operator('arm.retarget_action', text='Retarget')
+        sub.operator('arm.retarget_action', text='Retarget', icon='FILE_REFRESH')
 
 class ARM_PT_DSRootMotionRetargetPanel(bpy.types.Panel):
     bl_label = 'Armory Root Motion Retarget'
@@ -267,4 +279,3 @@ def unregister():
     bpy.utils.unregister_class(ArmRetargetActions)
     bpy.utils.unregister_class(ARM_PT_NLARootMotionPanel)
     bpy.utils.unregister_class(ARM_PT_DopeSheetRootMotionPanel)
-
