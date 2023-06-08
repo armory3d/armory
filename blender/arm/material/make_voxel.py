@@ -124,7 +124,7 @@ def make_gi(context_id):
     vert.write('float maxExtents = 2.0 * voxelgiHalfExtents.x * pow(2.0, clipmapCount);')
     vert.write('clipmapLevelGeom = int(max(log2(dist / maxExtents) , 0));')
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom + 1);')
-    vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+    vert.write('float voxelSize = 0.125 * pow(2.0, clipmapLevelGeom) / voxelgiResolution.x;')
     vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) * clipmapLevelSize / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
@@ -381,7 +381,7 @@ def make_ao(context_id):
         vert.write('float maxExtents = 2.0 * voxelgiHalfExtents.x * pow(2.0, clipmapCount);')
         vert.write('clipmapLevelGeom = int(max(log2(dist / maxExtents) , 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom + 1);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+        vert.write('float voxelSize = 0.125 * pow(2.0, clipmapLevelGeom) / voxelgiResolution.x;')
         vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) * clipmapLevelSize / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
@@ -453,7 +453,7 @@ def make_ao(context_id):
         vert.write('float maxExtents = 2.0 * voxelgiHalfExtents.x * pow(2.0, clipmapCount);')
         vert.write('clipmapLevelGeom = int(max(log2(dist / maxExtents) , 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom + 1);')
-        vert.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x;')
+        vert.write('float voxelSize = 0.125 * pow(2.0, clipmapLevelGeom) / voxelgiResolution.x;')
         vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) * clipmapLevelSize / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
