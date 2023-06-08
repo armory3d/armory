@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 import textwrap
+import mathutils
 
 import bpy
 from bpy.props import *
@@ -245,6 +246,35 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
         if obj.rigid_body_constraint is not None:
             layout.prop(obj, 'arm_relative_physics_constraint')
 
+class ARM_OT_AddArmatureRootMotion(bpy.types.Operator):
+    bl_idname = "arm.add_root_motion_bone"
+    bl_label = "Add root bone"
+    bl_description = "Add a new bone and set it as the root bone. This may be used for root motion."
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj.mode == 'EDIT':
+            return False
+        armature = obj.data
+        if armature.bones:
+            if armature.bones.active:
+                return True
+
+    def execute(self, context):
+        obj = context.object
+        current_mode = obj.mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        armature = obj.data
+        edit_bones = armature.edit_bones
+        current_root_pos = edit_bones.active.head
+        current_root_len = edit_bones.active.length
+        new_root = edit_bones.new("ArmoryRoot")
+        new_root.head = current_root_pos
+        new_root.tail = new_root.head + mathutils.Vector((0.0, 0.0, current_root_len))
+        bpy.ops.object.mode_set(mode=current_mode)
+        return{'FINISHED'}
+
 # Menu in data region
 class ARM_PT_DataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -281,6 +311,10 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'arm_autobake')
             layout.prop(obj.data, 'arm_relative_bone_constraints')
+            if obj.data.bones:
+                if obj.data.bones.active:
+                    layout.label(text='Current Root: ' + obj.data.bones.active.name)
+            layout.operator('arm.add_root_motion_bone', text='Add new root bone', icon='ADD')
             pass
 
 class ARM_PT_WorldPropsPanel(bpy.types.Panel):
