@@ -10,6 +10,7 @@ import iron.object.MeshObject;
 import iron.data.Geometry;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
+import kha.arrays.Uint32Array;
 #if arm_physics_soft
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
@@ -37,6 +38,8 @@ class SoftBody extends Trait {
 	static var helpers: bullet.Bt.SoftBodyHelpers;
 	static var helpersCreated = false;
 	static var worldInfo: bullet.Bt.SoftBodyWorldInfo;
+
+	var vertexIndexMap: Map<Int, Array<Int>>;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -74,6 +77,22 @@ class SoftBody extends Trait {
 		return vals;
 	}
 
+	function generateVertexIndexMap(ind: haxe.ds.Vector<Int>, vert: haxe.ds.Vector<Int>) {
+		if (vertexIndexMap == null) vertexIndexMap = new Map();
+		for (i in 0...ind.length) {
+			var currentVertex = vert[i];
+			var currentIndex = ind[i];
+
+			var mapping = vertexIndexMap.get(currentVertex);
+			if (mapping == null) {
+				vertexIndexMap.set(currentVertex, [currentIndex]);
+			}
+			else {
+				if(! mapping.contains(currentIndex)) mapping.push(currentIndex);
+			}
+		}
+	}
+
 	var v = new Vec4();
 	function init() {
 		if (ready) return;
@@ -84,6 +103,17 @@ class SoftBody extends Trait {
 		var mo = cast(object, MeshObject);
 		mo.frustumCulling = false;
 		var geom = mo.data.geom;
+		var rawData = mo.data.raw;
+		var vertexMap: Array<Uint32Array> = [];
+		for (ind in rawData.index_arrays) {
+			if (ind.vertex_map == null) return;
+			vertexMap.push(ind.vertex_map);
+		}
+
+		var vecind = fromU32(geom.indices);
+		var vertexMapArray = fromU32(vertexMap);
+
+		generateVertexIndexMap(vecind, vertexMapArray);
 
 		// Parented soft body - clear parent location
 		if (object.parent != null && object.parent.name != "") {
@@ -115,7 +145,6 @@ class SoftBody extends Trait {
 		object.transform.rot.set(0, 0, 0, 1);
 		object.transform.buildMatrix();
 
-		var vecind = fromU32(geom.indices);
 		var numtri = 0;
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
@@ -125,18 +154,26 @@ class SoftBody extends Trait {
 			helpersCreated = true;
 		}
 
-		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(positions.length);
-		for(i in 0...positions.length){
-			positionsVector.set(i, positions.get(i));
+		var verts: Array<Float> = [];
+		for (key in vertexIndexMap.keys()) {
+			var i = vertexIndexMap.get(key)[0];
+			verts.push(positions[i * 3    ]);
+			verts.push(positions[i * 3 + 1]);
+			verts.push(positions[i * 3 + 2]);
 		}
 
-		var vecindVector: haxe.ds.Vector<Int> = new haxe.ds.Vector<Int>(vecind.length);
-		for(i in 0...vecind.length){
-			vecindVector.set(i, vecind.get(i));
+		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(verts.length);
+		for(i in 0...positions.length){
+			positionsVector.set(i, verts[i]);
+		}
+
+		var vecindVector: haxe.ds.Vector<Int> = new haxe.ds.Vector<Int>(vertexMapArray.length);
+		for(i in 0...vertexMapArray.length){
+			vecindVector.set(i, vertexMapArray.get(i));
 		}
 
 		#if js
-		body = helpers.CreateFromTriMesh(worldInfo, positions, vecind, numtri);
+		body = helpers.CreateFromTriMesh(worldInfo, positionsVector, vecindVector, numtri);
 		#elseif cpp
 		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
 		#end
@@ -201,7 +238,7 @@ class SoftBody extends Trait {
 		#end
 
 		var scalePos = 1.0;
-		for (i in 0...numVerts) {
+		for (i in 0...nodes.size()) {
 			var node = nodes.at(i);
 			#if js
 			var nodePos = node.get_m_x();
@@ -215,10 +252,9 @@ class SoftBody extends Trait {
 		mo.data.scalePos = scalePos;
 		mo.transform.scaleWorld = scalePos;
 		mo.transform.buildMatrix();
-
-		for (i in 0...numVerts) {
+		for (i in 0...nodes.size()) {
 			var node = nodes.at(i);
-			var vertIndex = i * l * 2;
+			var indices = vertexIndexMap.get(i);
 			#if js
 			var nodePos = node.get_m_x();
 			var nodeNor = node.get_m_n();
@@ -226,27 +262,29 @@ class SoftBody extends Trait {
 			var nodePos = node.m_x;
 			var nodeNor = node.m_n;
 			#end
-			#if arm_deinterleaved
-			v.set(i * 4    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-			v.set(i * 4 + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-			v.set(i * 4 + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
-			n.set(i * 2    , Std.int(nodeNor.x() * 32767));
-			n.set(i * 2 + 1, Std.int(nodeNor.y() * 32767));
-			v.set(i * 4 + 3, Std.int(nodeNor.z() * 32767));
-			#else
-			//trace(i);
-			v.setInt16(vertIndex        , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-			v.setInt16(vertIndex + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-			v.setInt16(vertIndex + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
-			if (vbPos != null) {
-				v2.setInt16(i * 8    , v.getInt16(vertIndex    ));
-				v2.setInt16(i * 8 + 2, v.getInt16(vertIndex + 2));
-				v2.setInt16(i * 8 + 4, v.getInt16(vertIndex + 4));
+			for (idx in indices){
+				var vertIndex = idx * l * 2;
+				#if arm_deinterleaved
+				v.set(idx * 4    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+				v.set(idx * 4 + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+				v.set(idx * 4 + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+				n.set(idx * 2    , Std.int(nodeNor.x() * 32767));
+				n.set(idx * 2 + 1, Std.int(nodeNor.y() * 32767));
+				v.set(idx * 4 + 3, Std.int(nodeNor.z() * 32767));
+				#else
+				v.setInt16(vertIndex        , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+				v.setInt16(vertIndex + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+				v.setInt16(vertIndex + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+				if (vbPos != null) {
+					v2.setInt16(idx * 8    , v.getInt16(vertIndex    ));
+					v2.setInt16(idx * 8 + 2, v.getInt16(vertIndex + 2));
+					v2.setInt16(idx * 8 + 4, v.getInt16(vertIndex + 4));
+				}
+				v.setInt16(vertIndex + 6, Std.int(nodeNor.z() * 32767));
+				v.setInt16(vertIndex + 8, Std.int(nodeNor.x() * 32767));
+				v.setInt16(vertIndex + 10, Std.int(nodeNor.y() * 32767));
+				#end
 			}
-			v.setInt16(vertIndex + 6, Std.int(nodeNor.z() * 32767));
-			v.setInt16(vertIndex + 8, Std.int(nodeNor.x() * 32767));
-			v.setInt16(vertIndex + 10, Std.int(nodeNor.y() * 32767));
-			#end
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
 		// 	var a = geom.indices[0][i * 3];
