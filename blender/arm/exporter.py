@@ -1579,6 +1579,7 @@ Make sure the mesh only has tris/quads.""")
             if tris == 0: # No face assigned
                 continue
             prim = np.empty(tris * 3, dtype='<i4')
+            v_map = np.empty(tris * 3, dtype='<i4')
 
             i = 0
             for poly in polys:
@@ -1588,7 +1589,15 @@ Make sure the mesh only has tris/quads.""")
                     prim[i + 2] = loops[loop.loops[2]].index
                     i += 3
 
-            ia = {'values': prim, 'material': 0}
+            j = 0
+            for poly in polys:
+                for loop in tri_loops[poly.index]:
+                    v_map[j    ] = loops[loop.loops[0]].vertex_index
+                    v_map[j + 1] = loops[loop.loops[1]].vertex_index
+                    v_map[j + 2] = loops[loop.loops[2]].vertex_index
+                    j += 3
+
+            ia = {'values': prim, 'material': 0, 'vertex_map': v_map}
             if len(mats) > 1:
                 for i in range(len(mats)):  # Multi-mat mesh
                     if mats[i] == mats[index]:  # Default material for empty slots
