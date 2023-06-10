@@ -30,22 +30,11 @@ class Vertex:
         self.col = [0.0, 0.0, 0.0] if vcol0 is None else vcol0.data[loop_idx].color[:]
         self.loop_indices = [loop_idx]
         self.index = 0
-        print("******************************************************************")
-        print(self.vertex_index)
-        print(loop_idx)
-        print(self.co)
-        print(self.normal)
-        print(self.uvs)
-        print(self.col)
-        print(self.loop_indices)
 
     def __hash__(self):
-        print("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-        print(hash((self.co, self.normal, self.uvs)))
         return hash((self.co, self.normal, self.uvs))
 
     def __eq__(self, other):
-        print("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111")
         eq = (
             (self.co == other.co) and
             (self.normal == other.normal) and
@@ -53,7 +42,6 @@ class Vertex:
             (self.col == other.col)
             )
         if eq:
-            print("EQUAL")
             indices = self.loop_indices + other.loop_indices
             self.loop_indices = indices
             other.loop_indices = indices
@@ -130,11 +118,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
     # exportMesh.calc_loop_triangles()
     vcol0 = self.get_nth_vertex_colors(export_mesh, 0)
     vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
-    print("EXPORT")
-    print({Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops})
-    print(vert_list)
     num_verts = len(vert_list)
-    print(num_verts)
     num_uv_layers = len(export_mesh.uv_layers)
     # Check if shape keys were exported
     has_morph_target = self.get_shape_keys(bobject.data)
