@@ -221,8 +221,8 @@ class SoftBody extends Trait {
 		var mo = cast(object, MeshObject);
 		var geom = mo.data.geom;
 		#if arm_deinterleaved
-		var v = geom.vertexBuffers[0].lock();
-		var n = geom.vertexBuffers[1].lock();
+		var v: ByteArray = geom.vertexBuffers[0].buffer.lock();
+		var n: ByteArray = geom.vertexBuffers[1].buffer.lock();
 		#else
 		var v:ByteArray = geom.vertexBuffer.lock();
 		var vbPos = geom.vertexBufferMap.get("pos");
@@ -263,15 +263,15 @@ class SoftBody extends Trait {
 			var nodeNor = node.m_n;
 			#end
 			for (idx in indices){
-				var vertIndex = idx * l * 2;
 				#if arm_deinterleaved
-				v.set(idx * 4    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-				v.set(idx * 4 + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-				v.set(idx * 4 + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
-				n.set(idx * 2    , Std.int(nodeNor.x() * 32767));
-				n.set(idx * 2 + 1, Std.int(nodeNor.y() * 32767));
-				v.set(idx * 4 + 3, Std.int(nodeNor.z() * 32767));
+				v.setInt16(idx * 8    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+				v.setInt16(idx * 8 + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+				v.setInt16(idx * 8 + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+				n.setInt16(idx * 4    , Std.int(nodeNor.x() * 32767));
+				n.setInt16(idx * 4 + 2, Std.int(nodeNor.y() * 32767));
+				v.setInt16(idx * 8 + 6, Std.int(nodeNor.z() * 32767));
 				#else
+				var vertIndex = idx * l * 2;
 				v.setInt16(vertIndex        , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
 				v.setInt16(vertIndex + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
 				v.setInt16(vertIndex + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
@@ -308,8 +308,8 @@ class SoftBody extends Trait {
 		// 	v.set(c * l + 5, cb.z);
 		// }
 		#if arm_deinterleaved
-		geom.vertexBuffers[0].unlock();
-		geom.vertexBuffers[1].unlock();
+		geom.vertexBuffers[0].buffer.unlock();
+		geom.vertexBuffers[1].buffer.unlock();
 		#else
 		geom.vertexBuffer.unlock();
 		if (vbPos != null) vbPos.unlock();
