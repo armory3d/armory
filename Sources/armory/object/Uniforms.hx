@@ -4,11 +4,8 @@ import iron.Scene;
 import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
-import iron.math.Vec3;
 
 import armory.renderpath.Postprocess;
-import armory.renderpath.Voxels;
-import armory.renderpath.Inc;
 
 using StringTools;
 
@@ -226,6 +223,7 @@ class Uniforms {
 		}
 		return null;
 	}
+
 	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
 		switch(link) {
 			#if (rp_voxels != "Off")

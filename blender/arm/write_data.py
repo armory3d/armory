@@ -572,7 +572,7 @@ def write_compiledglsl(defs, make_variants):
             gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
             f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-            #Write indices of G-Buffer render targets
+            # Write indices of G-Buffer render targets
             f.write('#define GBUF_IDX_0 0\n')
             f.write('#define GBUF_IDX_1 1\n')
 
@@ -652,6 +652,10 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
+<<<<<<< HEAD
+=======
+const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
+>>>>>>> 415fd5214c89f217eb56509ec768afc78b34a7a4
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
@@ -758,12 +762,14 @@ const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100)
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 """)
+
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""
 const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
 const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 """)
+
         if rpdat.rp_sss:
             f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")
 

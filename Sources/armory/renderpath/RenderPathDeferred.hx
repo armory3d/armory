@@ -522,33 +522,25 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if (rp_voxels != 'Off')
-		var relight = false;
+		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			/*
-			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			//Relight if light was moved
-			for (light in iron.Scene.active.lights)
-				if (light.transform.diff()) {
-					relight = true;
-					break;
-				}
-			#end
-			*/
-
 			#if arm_voxelgi_temporal
-			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) {
-				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
-				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-				Voxels.voxelize(voxels);
-			}
-			#else
-			Voxels.voxelize("voxels");
+			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			#end
+
+			var res = Inc.getVoxelRes();
+			var voxtex = voxels;
+
+			path.clearImage(voxtex, 0x00000000);
+			path.setTarget("");
+			path.setViewport(res, res);
+			path.bindTarget(voxtex, "voxels");
+			path.drawMeshes("voxel");
+			path.generateMipmaps(voxels);
 		}
 		#end
-
 		// ---
 		// Deferred light
 		// ---
@@ -559,6 +551,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+
 		#if rp_voxelgi_refract
 		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 		#end

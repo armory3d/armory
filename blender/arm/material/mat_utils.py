@@ -35,6 +35,7 @@ def disp_linked(output_node):
 def get_rpasses(material):
 
     ar = []
+
     rpdat = arm.utils.get_rp()
     has_voxels = arm.utils.voxel_support()
 

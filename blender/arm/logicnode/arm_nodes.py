@@ -427,6 +427,7 @@ class ArmLogicVariableNodeMixin(ArmLogicTreeNode):
 
             self.is_master_node = False  # Ignore this node in get_master_node below
             if self.__class__.get_master_node(target_tree, self.arm_logic_id) is None:
+
                 # copy() is not only called when manually copying/pasting
                 # nodes, but also when duplicating logic trees.
                 # In that case, Blender duplicates the arm_treevariableslist

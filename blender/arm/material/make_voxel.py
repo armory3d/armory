@@ -330,6 +330,7 @@ def make_gi(context_id):
 
     return con_voxel
 
+
 def make_ao(context_id):
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False], 'conservative_raster': False })
     wrd = bpy.data.worlds['Arm']
@@ -412,6 +413,7 @@ def make_ao(context_id):
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
         frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
+
         frag.write('')
         frag.write('}')
     else:

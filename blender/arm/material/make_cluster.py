@@ -86,6 +86,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
         frag.write('\t, voxels, voxpos, clipmapLevel')
+
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     frag.write(');')

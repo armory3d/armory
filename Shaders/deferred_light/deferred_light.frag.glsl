@@ -322,7 +322,7 @@ void main() {
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-        (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
+	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -383,7 +383,7 @@ void main() {
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += sdirect * sunCol * svisibility;
+	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -419,6 +419,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
+
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
@@ -577,6 +578,5 @@ if(opac < 1.0) {
 	fragColor.rgb += mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 }
 #endif
-	fragColor.a = 1.0;
-	//fragColor.rgb *= p_fade;
+	fragColor.a = 1.0; // Mark as opaque
 }

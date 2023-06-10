@@ -2,8 +2,6 @@
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-
-
 // References
 // https://github.com/Friduric/voxel-cone-tracing
 // https://github.com/Cigg/Voxel-Cone-Tracing
@@ -17,6 +15,7 @@ const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
 const float BORDER_OFFSET = 0.1;
 const float BORDER_WIDTH = 0.25;
+
 
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
@@ -195,7 +194,45 @@ float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const int
 	return traceConeShadow(voxels, origin, dir, 0.14 * voxelgiAperture, 2.5 * voxelgiRange, clipmapLevel, clipmapCount);
 }
 
-float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, const int clipmapLevel, const int clipmapCount) {
+float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {
+	dir = normalize(dir);
+	float sampleCol = 0.0;
+	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset;
+	float diam = dist * aperture;
+	vec3 samplePos;
+	while (sampleCol < 1.0 && dist < maxDist) {
+		samplePos = dir * dist + origin;
+		float mip = max(log2(diam * voxelgiResolution.x), 0);
+		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip).r;
+		sampleCol += (1 - sampleCol) * mipSample;
+		dist += max(diam / 2, VOXEL_SIZE);
+		diam = dist * aperture;
+	}
+	return sampleCol;
+}
+
+float traceConeAOShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const float offset) {
+	dir = normalize(dir);
+	float sampleCol = 0.0;
+	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset * 2.5; //
+	float diam = dist * aperture;
+	vec3 samplePos;
+	while (sampleCol < 1.0 && dist < maxDist) {
+		samplePos = dir * dist + origin;
+		float mip = max(log2(diam * voxelgiResolution.x), 0);
+		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip).r;
+		sampleCol += (1 - sampleCol) * mipSample;
+		dist += max(diam / 2, VOXEL_SIZE);
+		diam = dist * aperture;
+	}
+	return sampleCol;
+}
+
+float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir) {
+	return traceConeAO(voxels, origin, dir, 0.14 * voxelgiAperture, 2.5 * voxelgiRange);
+}
+
+float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	const float angleMix = 0.5f;
 	const float aperture = 0.55785173935;
 	vec3 o1 = normalize(tangent(normal));

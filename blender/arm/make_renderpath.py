@@ -348,10 +348,9 @@ def build():
         wrd.world_defs += '_VR'
 
     has_voxels = arm.utils.voxel_support()
-
-    has_voxels = arm.utils.voxel_support()
     if rpdat.rp_voxels != "Off" and has_voxels and rpdat.arm_material_model == 'Full':
         assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
+
         assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
         assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
 
