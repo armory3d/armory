@@ -68,7 +68,6 @@ class SoftBody extends Trait {
 		for (ar in ars) {
 			for (j in 0...ar.length) {
 				vals[i] = ar[j];
-				trace(ar[j]);
 				i++;
 			}
 		}
@@ -103,8 +102,6 @@ class SoftBody extends Trait {
 			v.y *= object.transform.scale.y;
 			v.z *= object.transform.scale.z;
 			v.addf(object.transform.worldx(), object.transform.worldy(), object.transform.worldz());
-			trace("Position index" + i);
-			trace(v);
 			positions[i * 3    ] = v.x;
 			positions[i * 3 + 1] = v.y;
 			positions[i * 3 + 2] = v.z;
@@ -186,9 +183,7 @@ class SoftBody extends Trait {
 	function update() {
 		var mo = cast(object, MeshObject);
 		var geom = mo.data.geom;
-		trace(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; UPDATE");
 		#if arm_deinterleaved
-		trace("deinterleieved");
 		var v = geom.vertexBuffers[0].lock();
 		var n = geom.vertexBuffers[1].lock();
 		#else
@@ -198,17 +193,6 @@ class SoftBody extends Trait {
 		var l = geom.structLength;
 		#end
 		var numVerts = geom.getVerticesCount();
-		trace("num verts = " + numVerts);
-		for(i in 0...numVerts * l) {
-			trace("point " + i + " = " + v.getInt16( i * 2 ));
-		}
-		trace("num tris = " + geom.numTris);
-		trace("structLength = " + l);
-		trace("total len =" + v.byteLength);
-		for(k in geom.vertexBufferMap.keys()){
-			trace("key = " + k);
-			trace(geom.vertexBufferMap.get(k));
-		}
 
 		#if js
 		var nodes = body.get_m_nodes();
@@ -221,8 +205,6 @@ class SoftBody extends Trait {
 			var node = nodes.at(i);
 			#if js
 			var nodePos = node.get_m_x();
-			trace("nodepos " + i);
-			trace("( " + nodePos.x() + ", " + nodePos.y() + ", " + nodePos.z() + " )");
 			#elseif cpp
 			var nodePos = node.m_x;
 			#end
