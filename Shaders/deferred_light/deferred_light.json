@@ -1,0 +1,253 @@
+{
+	"variants": ["_VoxelAOvar"],
+	"contexts": [
+		{
+			"name": "deferred_light",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "clipmapCount",
+					"link": "_clipmapCount"
+				},
+				{
+					"name": "viewerPos",
+					"link": "_viewerPos"
+				},
+				{
+					"name": "lookWorld",
+					"link": "_lookWorld"
+				},
+				{
+					"name": "voxelBlend",
+					"link": "_voxelBlend",
+					"ifdef": ["_VoxelTemporal"]
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "shirr",
+					"link": "_envmapIrradiance",
+					"ifdef": ["_Irr"]
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "$brdf.png",
+					"ifdef": ["_Brdf"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "backgroundCol",
+					"link": "_backgroundCol",
+					"ifdef": ["_EnvCol"]
+				},
+				{
+					"name": "lightsArray",
+					"link": "_lightsArray",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "lightsArraySpot",
+					"link": "_lightsArraySpot",
+					"ifdef": ["_Clusters", "_Spot"]
+				},
+				{
+					"name": "clustersData",
+					"link": "_clustersData",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "cameraPlane",
+					"link": "_cameraPlane",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "sunDir",
+					"link": "_sunDirection",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "sunCol",
+					"link": "_sunColor",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_sunShadowsBias",
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLightWorldViewProjectionMatrixSun",
+					"ifndef": ["_CSM"],
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
+				},
+				{
+					"name": "lightPlane",
+					"link": "_lightPlane",
+					"ifdef": ["_SSS"]
+				},
+				{
+					"name": "VP",
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "texClouds",
+					"link": "$cloudstexture.png",
+					"ifdef": ["_LightClouds"]
+				},
+				{
+					"name": "time",
+					"link": "_time",
+					"ifdef": ["_LightClouds"]
+				},
+				{
+					"name": "texIES",
+					"link": "$iestexture.png",
+					"ifdef": ["_LightIES"]
+				},
+				{
+					"name": "lightArea0",
+					"link": "_lightArea0",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "lightArea1",
+					"link": "_lightArea1",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "lightArea2",
+					"link": "_lightArea2",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "lightArea3",
+					"link": "_lightArea3",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "sltcMat",
+					"link": "_ltcMat",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "sltcMag",
+					"link": "_ltcMag",
+					"ifdef": ["_LTC"]
+				},
+				{
+					"name": "smSizeUniform",
+					"link": "_shadowMapSize",
+					"ifdef": ["_SMSizeUniform"]
+				},
+				{
+					"name": "lightProj",
+					"link": "_lightPlaneProj",
+					"ifdef": ["_ShadowMap"]
+				},
+				{
+					"name": "pointPos",
+					"link": "_pointPosition",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointCol",
+					"link": "_pointColor",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointBias",
+					"link": "_pointShadowsBias",
+					"ifdef": ["_SinglePoint", "_ShadowMap"]
+				},
+				{
+					"name": "spotDir",
+					"link": "_spotDirection",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "spotData",
+					"link": "_spotData",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "spotRight",
+					"link": "_spotRight",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "LWVPSpotArray",
+					"link": "_biasLightWorldViewProjectionMatrixSpotArray",
+					"ifdef": ["_Clusters", "_ShadowMap", "_Spot"]
+				},
+				{
+					"name": "pointLightDataArray",
+					"link": "_pointLightsAtlasArray",
+					"ifdef": ["_Clusters", "_ShadowMap", "_ShadowMapAtlas"]
+				},
+				{
+					"name": "LWVPSpot[0]",
+					"link": "_biasLightWorldViewProjectionMatrixSpot0",
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot[1]",
+					"link": "_biasLightWorldViewProjectionMatrixSpot1",
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot[2]",
+					"link": "_biasLightWorldViewProjectionMatrixSpot2",
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot[3]",
+					"link": "_biasLightWorldViewProjectionMatrixSpot3",
+					"ifndef": ["_ShadowMapAtlas"],
+					"ifdef": ["_LTC", "_ShadowMap"]
+				}
+			],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "deferred_light.frag.glsl",
+			"color_attachments": ["RGBA64"]
+		}
+	]
+}

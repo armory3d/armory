@@ -1,0 +1,36 @@
+{
+	"contexts": [
+		{
+			"name": "probe_planar",
+			"depth_write": false,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "VWVP",
+					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "probeVP",
+					"link": "_probeViewProjectionMatrix"
+				},
+				{
+					"name": "proben",
+					"link": "_probeNormal"
+				}
+			],
+			"vertex_shader": "../include/pass_volume.vert.glsl",
+			"fragment_shader": "probe_planar.frag.glsl"
+		}
+	]
+}

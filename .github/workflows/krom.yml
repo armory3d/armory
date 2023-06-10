@@ -1,0 +1,22 @@
+name: Krom
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get Submodules
+      run: |
+        git clone https://github.com/armory3d/armory_ci
+        git clone --recursive https://github.com/armory3d/Kha.git armory_ci/Kha
+        git clone https://github.com/armory3d/iron.git armory_ci/Libraries/iron
+        git clone https://github.com/armory3d/armory.git armory_ci/Libraries/armory
+        git clone https://github.com/armory3d/nodejs_bin.git armory_ci/nodejs_bin
+    - name: Compile
+      run: |
+        cd armory_ci
+        nodejs_bin/node-linux64 Kha/make.js krom --shaderversion 330

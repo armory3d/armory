@@ -1,0 +1,21 @@
+{
+	"contexts": [
+		{
+			"name": "chromatic_aberration_pass",
+			"depth_write": false,
+			"color_write_alpha": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "PPComp13",
+					"link": "_PPComp13",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "chromatic_aberration_pass.frag.glsl"
+		}
+	]
+}

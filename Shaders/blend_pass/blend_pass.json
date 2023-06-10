@@ -1,0 +1,17 @@
+{
+	"contexts": [
+		{
+			"name": "blend_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "../include/pass_copy.frag.glsl"
+		}
+	]
+}
