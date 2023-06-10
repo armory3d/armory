@@ -280,7 +280,7 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
     @staticmethod
     def filter_selected_nodes(tree) -> list:
         """Avoiding selecting nodes which should not be copied into subtree"""
-       return [n for n in tree.nodes if n.select and n.bl_idname not in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
+        return [n for n in tree.nodes if n.select and n.bl_idname not in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
 
     @staticmethod
     def recreate_frames(from_tree: bpy.types.NodeTree,

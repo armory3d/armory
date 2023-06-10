@@ -105,13 +105,6 @@ def add_world_defs():
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
-            assets.add_khafile_def('rp_voxelgi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
-            if rpdat.arm_voxelgi_bounces != "1":
-                wrd.world_defs += '_VoxelsBounce'
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
-            #if rpdat.rp_voxelgi_relight:
-            #    assets.add_khafile_def('rp_voxelgi_relight')
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')

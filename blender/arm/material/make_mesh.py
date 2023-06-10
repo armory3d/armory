@@ -275,7 +275,7 @@ def make_deferred(con_mesh, rpasses):
         else:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
 
-   return con_mesh
+    return con_mesh
 
 
 def make_raytracer(con_mesh):
