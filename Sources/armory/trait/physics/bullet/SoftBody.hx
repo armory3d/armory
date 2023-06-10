@@ -163,12 +163,12 @@ class SoftBody extends Trait {
 		}
 
 		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(verts.length);
-		for(i in 0...positions.length){
+		for(i in 0...positionsVector.length){
 			positionsVector.set(i, verts[i]);
 		}
 
 		var vecindVector: haxe.ds.Vector<Int> = new haxe.ds.Vector<Int>(vertexMapArray.length);
-		for(i in 0...vertexMapArray.length){
+		for(i in 0...vecindVector.length){
 			vecindVector.set(i, vertexMapArray.get(i));
 		}
 
