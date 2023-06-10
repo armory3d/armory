@@ -208,8 +208,11 @@ def export_data(fp, sdk_path):
     if network_found == False:
         export_network = False
 
-    if wrd.arm_ui == 'Enabled':
-        export_ui = True
+    # Ugly workaround: some logic nodes require Zui code even if no UI is used,
+    # for now enable UI export unless explicitly disabled.
+    export_ui = True
+    if wrd.arm_ui == 'Disabled':
+        export_ui = False
 
     if wrd.arm_network == 'Enabled':
         export_network = True
