@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2023.5'
+arm_version = '2023.6'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
