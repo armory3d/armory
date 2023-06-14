@@ -189,7 +189,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 }
 
 float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const int clipmapLevel, const int clipmapCount) {
-	return traceConeShadow(voxels, origin, dir, 0.14 * voxelgiAperture, 2.5 * voxelgiRange, clipmapLevel, clipmapCount);
+	return traceConeShadow(voxels, origin, dir, voxelgiAperture, MAX_DISTANCE, clipmapLevel, clipmapCount);
 }
 
 float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, const int clipmapLevel, const int clipmapCount) {

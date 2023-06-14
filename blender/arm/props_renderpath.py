@@ -496,11 +496,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     #rp_voxelgi_relight: BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_refraction: BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    arm_voxelgi_bounces: EnumProperty(
-        items=[
-        	   ('1', '1', '1'),
-               ('2', '2', '2')],
-        name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
+    #arm_voxelgi_bounces: EnumProperty(
+    #    items=[
+    #    	   ('1', '1', '1'),
+    #           ('2', '2', '2')],
+    #    name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
     arm_voxelgi_clipmap_count: IntProperty(name="Clipmap Count", description="Exponential multiplier for voxelization bounds", default=5, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
@@ -519,8 +519,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('3', '3', '3'),
                ('1', '1', '1'),
                ],
-        name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
+        name="Cones", description="Number of cones to trace", default='9', update=assets.invalidate_shader_cache)
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Intensity", description="", default=1.0, update=assets.invalidate_shader_cache)
