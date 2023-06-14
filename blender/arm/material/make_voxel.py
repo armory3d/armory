@@ -174,6 +174,8 @@ def make_gi(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('if (abs(voxposition.x) > 1 || abs(voxposition.y) > 1 || abs(voxposition.z) > 1) return;')
+    frag.add_uniform('int clipmapCount', '_clipmapCount')
+    frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -369,6 +371,10 @@ def make_ao(context_id):
         geom.write('struct SPIRV_Cross_Input { float4 svpos : SV_POSITION; };')
         geom.write('struct SPIRV_Cross_Output { float3 wpos : TEXCOORD0; float4 svpos : SV_POSITION; };')
 
+        #FIXME: implement the in/out in the correct way for the clipmapLevel.
+        geom.write('struct SPIRV_Cross_Input { int clipmapLevelGeom; };')
+        geom.write('struct SPIRV_Cross_Output { int clipmapLevel; };')
+
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
         vert.write('float maxExtents = voxelgiHalfExtents.x * pow(2.0, clipmapCount) * 2.0;')
@@ -390,6 +396,7 @@ def make_ao(context_id):
         geom.write('  for (int i = 0; i < 3; ++i) {')
         geom.write('    SPIRV_Cross_Output stage_output;')
         geom.write('    stage_output.wpos = stage_input[i].svpos.xyz;')
+        geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevelGeom.xyz;')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('      stage_output.svpos = float4(stage_input[i].svpos.x, stage_input[i].svpos.y, 0.0, 1.0);')
         geom.write('    }')
@@ -415,6 +422,8 @@ def make_ao(context_id):
 
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
+        frag.add_uniform('int clipmapCount', '_clipmapCount')
+        frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
         frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
@@ -447,12 +456,14 @@ def make_ao(context_id):
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
         geom.add_out('vec3 voxposition')
+        geom.add_out('flat int clipmapLevel')
 
         geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
         geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
         geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
+        geom.write('    clipmapLevel = clipmapLevelGeom[i];')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
         geom.write('    }')
@@ -469,6 +480,8 @@ def make_ao(context_id):
         frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * voxelgiResolution;')
+        frag.add_uniform('int clipmapCount', '_clipmapCount')
+        frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
 
         frag.write('imageStore(voxels, ivec3(writecoord), vec4(1.0));')
 
