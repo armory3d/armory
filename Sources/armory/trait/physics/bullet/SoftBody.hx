@@ -1,8 +1,11 @@
 package armory.trait.physics.bullet;
 
-import kha.arrays.ByteArray;
 #if arm_bullet
-
+import iron.Scene;
+import haxe.ds.Vector;
+import kha.arrays.ByteArray;
+import bullet.Bt.Vector3;
+import bullet.Bt.CollisionObjectActivationState;
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
@@ -154,30 +157,42 @@ class SoftBody extends Trait {
 			helpersCreated = true;
 		}
 
-		var verts: Array<Float> = [];
-		for (key in vertexIndexMap.keys()) {
+		var vertsLength = 0;
+		for (key in vertexIndexMap.keys()) vertsLength++;
+		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(vertsLength * 3);
+		for (key in 0...vertsLength){
 			var i = vertexIndexMap.get(key)[0];
-			verts.push(positions[i * 3    ]);
-			verts.push(positions[i * 3 + 1]);
-			verts.push(positions[i * 3 + 2]);
+			positionsVector.set(key * 3    , positions[i * 3    ]);
+			positionsVector.set(key * 3 + 1, positions[i * 3 + 1]);
+			positionsVector.set(key * 3 + 2, positions[i * 3 + 2]);
 		}
 
-		var positionsVector: haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(verts.length);
-		for(i in 0...positionsVector.length){
-			positionsVector.set(i, verts[i]);
-		}
-
+		var indexMax: Int = 0;
 		var vecindVector: haxe.ds.Vector<Int> = new haxe.ds.Vector<Int>(vertexMapArray.length);
-		for(i in 0...vecindVector.length){
-			vecindVector.set(i, vertexMapArray.get(i));
+		for (i in 0...vecindVector.length){
+			var idx = vertexMapArray.get(i);
+			vecindVector.set(i, idx);
+			indexMax = indexMax > idx ? indexMax : idx;
 		}
 
 		#if js
 		body = helpers.CreateFromTriMesh(worldInfo, positionsVector, vecindVector, numtri);
-		#elseif cpp
-		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
+		#else
+		//Create helper float array
+		var floatArray = new bullet.Bt.FloatArray(positionsVector.length);
+		for (i in 0...positionsVector.length){
+			floatArray.set(i, positionsVector[i]);
+		}
+		//Create helper int array
+		var intArray = new bullet.Bt.IntArray(vecindVector.length);
+		for (i in 0...vecindVector.length){
+			intArray.set(i, vecindVector[i]);
+		}
+		//world info is passed as value and not as a reference, need to set gravity again in HL.
+		worldInfo.m_gravity = physics.world.getGravity();
+		//Create soft body
+		body = helpers.CreateFromTriMesh(worldInfo, floatArray.raw, intArray.raw, numtri, false);
 		#end
-
 		// body.generateClusters(4);
 
 		#if js
@@ -185,29 +200,33 @@ class SoftBody extends Trait {
 		cfg.set_viterations(physics.solverIterations);
 		cfg.set_piterations(physics.solverIterations);
 		// cfg.set_collisions(0x0001 + 0x0020 + 0x0040); // self collision
-		// cfg.set_collisions(0x11); // Soft-rigid, soft-soft
+		cfg.set_collisions(0x11); // Soft-rigid, soft-soft
 		if (shape == SoftShape.Volume) {
 			cfg.set_kDF(0.1);
 			cfg.set_kDP(0.01);
 			cfg.set_kPR(bend);
 		}
-
-		#elseif cpp
-		body.m_cfg.viterations = physics.solverIterations;
-		body.m_cfg.piterations = physics.solverIterations;
+		#else
+		//Not passed as refernece
+		var cfg = body.m_cfg;
+		cfg.viterations = physics.solverIterations;
+		cfg.piterations = physics.solverIterations;
 		// body.m_cfg.collisions = 0x0001 + 0x0020 + 0x0040;
+		cfg.collisions = 0x11; // Soft-rigid, soft-soft
 		if (shape == SoftShape.Volume) {
-			body.m_cfg.kDF = 0.1;
-			body.m_cfg.kDP = 0.01;
-			body.m_cfg.kPR = bend;
+			cfg.kDF = 0.1;
+			cfg.kDP = 0.01;
+			cfg.kPR = bend;
 		}
+		//Set config again in HL
+		body.m_cfg = cfg;
 		#end
 
 		body.setTotalMass(mass, false);
 		body.getCollisionShape().setMargin(margin);
 
 		physics.world.addSoftBody(body, 1, -1);
-		body.setActivationState(bullet.Bt.CollisionObject.DISABLE_DEACTIVATION);
+		body.setActivationState(CollisionObjectActivationState.DISABLE_DEACTIVATION);
 
 		notifyOnUpdate(update);
 	}
@@ -233,7 +252,7 @@ class SoftBody extends Trait {
 
 		#if js
 		var nodes = body.get_m_nodes();
-		#elseif cpp
+		#else
 		var nodes = body.m_nodes;
 		#end
 
@@ -242,7 +261,7 @@ class SoftBody extends Trait {
 			var node = nodes.at(i);
 			#if js
 			var nodePos = node.get_m_x();
-			#elseif cpp
+			#else
 			var nodePos = node.m_x;
 			#end
 			if (Math.abs(nodePos.x()) > scalePos) scalePos = Math.abs(nodePos.x());
@@ -258,7 +277,7 @@ class SoftBody extends Trait {
 			#if js
 			var nodePos = node.get_m_x();
 			var nodeNor = node.get_m_n();
-			#elseif cpp
+			#else
 			var nodePos = node.m_x;
 			var nodeNor = node.m_n;
 			#end
