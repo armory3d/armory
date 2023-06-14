@@ -751,7 +751,7 @@ const float compoDOFLength = 160.0;
             halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + " + 2.0" + """, """ + str(rpdat.rp_voxelgi_resolution) + " + 2.0" + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + " + 2.0" + """);
-const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
+const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + " + 2.0" + """, """ + str(halfext) + " + 2.0" + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + " + 2.0" + """);
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
