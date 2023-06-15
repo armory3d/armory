@@ -175,7 +175,7 @@ def make_gi(context_id):
 
     frag.write('if (abs(voxposition.x) > 1 || abs(voxposition.y) > 1 || abs(voxposition.z) > 1) return;')
     frag.add_uniform('int clipmapCount', '_clipmapCount')
-    frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
+    frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 4.0)) return;')
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -422,8 +422,8 @@ def make_ao(context_id):
 
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ');')
-        #frag.add_uniform('int clipmapCount', '_clipmapCount')
-        #frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
+        frag.add_uniform('int clipmapCount', '_clipmapCount')
+        frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 4.0)) return;')
         frag.write('  voxels[uvw * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')
         frag.write('')
         frag.write('}')
@@ -480,8 +480,9 @@ def make_ao(context_id):
         frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
         frag.write('vec3 uvw = voxposition * 0.5 + 0.5;')
         frag.write('vec3 writecoord = uvw * voxelgiResolution;')
-        #frag.add_uniform('int clipmapCount', '_clipmapCount')
-        #frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 2.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 2.0)) return;')
+        frag.add_uniform('int clipmapCount', '_clipmapCount')
+        #carving into the lower levels
+        frag.write('if (abs(voxposition.x) * voxelgiResolution.x < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.y) * voxelgiResolution.y < (clipmapLevel / clipmapCount / 4.0) || abs(voxposition.z) * voxelgiResolution.z < (clipmapLevel / clipmapCount / 4.0)) return;')
 
         frag.write('imageStore(voxels, ivec3(writecoord), vec4(1.0));')
 
