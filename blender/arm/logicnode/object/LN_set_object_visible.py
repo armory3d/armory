@@ -7,7 +7,7 @@ class SetVisibleNode(ArmLogicTreeNode):
 
     @input Visible: Visibility.
 
-    @input Children: Set the visibility of the children too. Visibility is set only to the immidiate children.
+    @input Children: Set the visibility of the children too. Visibility is set only to the immediate children.
 
     @input Recursive: If enabled, visibility of all the children in the tree is set. Ignored if `Children` is disabled.
 
