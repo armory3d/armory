@@ -37,7 +37,6 @@ class SpawnObjectNode extends LogicNode {
 				}
 				#end
 			}
-			object.visible = true;
 			runOutput(0);
 		}, spawnChildren);
 	}
