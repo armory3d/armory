@@ -51,9 +51,10 @@ class SoftBody extends Trait {
 		this.mass = mass;
 		this.margin = margin;
 
-		iron.Scene.active.notifyOnInit(function() {
-			notifyOnInit(init);
-		});
+		//notifyOnAdd(init);
+		//The above line works as well, but the object transforms are not set
+		//properly, so the positions are not accurate
+		notifyOnInit(init);
 	}
 
 	function fromI16(ar: kha.arrays.Int16Array, scalePos: Float): haxe.ds.Vector<Float> {
@@ -96,8 +97,20 @@ class SoftBody extends Trait {
 		}
 	}
 
-	var v = new Vec4();
 	function init() {
+		var mo = cast(object, MeshObject);
+		//Set new mesh data for this object
+		new MeshData(mo.data.raw, function (data) {
+			mo.setData(data);
+			//Init soft body after setting new data
+			initSoftBody();
+			//If the above line is commented out, the program becomes unresponsive with white screen
+			//and no errors.
+		});
+	}
+
+	var v = new Vec4();
+	function initSoftBody() {
 		if (ready) return;
 		ready = true;
 
