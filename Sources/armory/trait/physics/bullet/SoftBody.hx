@@ -152,14 +152,6 @@ class SoftBody extends Trait {
 			positions[i * 3 + 1] = v.y;
 			positions[i * 3 + 2] = v.z;
 		}
-		vertOffsetX = object.transform.worldx();
-		vertOffsetY = object.transform.worldy();
-		vertOffsetZ = object.transform.worldz();
-
-		object.transform.scale.set(1, 1, 1);
-		object.transform.loc.set(0, 0, 0);
-		object.transform.rot.set(0, 0, 0, 1);
-		object.transform.buildMatrix();
 
 		var numtri = 0;
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
@@ -261,29 +253,63 @@ class SoftBody extends Trait {
 		var v2 = vbPos != null ? vbPos.lock() : null; // For shadows
 		var l = geom.structLength;
 		#end
-		var numVerts = geom.getVerticesCount();
 
 		#if js
 		var nodes = body.get_m_nodes();
 		#else
 		var nodes = body.m_nodes;
 		#end
+		var numNodes = nodes.size();
 
-		var scalePos = 1.0;
-		for (i in 0...nodes.size()) {
+		//Finding the mean position of vertices in world space
+		vertOffsetX = 0.0;
+		vertOffsetY = 0.0;
+		vertOffsetZ = 0.0;
+		for (i in 0...numNodes) {
 			var node = nodes.at(i);
 			#if js
 			var nodePos = node.get_m_x();
 			#else
 			var nodePos = node.m_x;
 			#end
-			if (Math.abs(nodePos.x()) > scalePos) scalePos = Math.abs(nodePos.x());
-			if (Math.abs(nodePos.y()) > scalePos) scalePos = Math.abs(nodePos.y());
-			if (Math.abs(nodePos.z()) > scalePos) scalePos = Math.abs(nodePos.z());
+			var mx = nodePos.x();
+			var my = nodePos.y();
+			var mz = nodePos.z();
+			vertOffsetX += mx;
+			vertOffsetY += my;
+			vertOffsetZ += mz;
 		}
+		vertOffsetX /= numNodes;
+		vertOffsetY /= numNodes;
+		vertOffsetZ /= numNodes;
+		
+		//Setting the mean position as object local location
+		mo.transform.scale.set(1, 1, 1);
+		mo.transform.loc.set(vertOffsetX, vertOffsetY, vertOffsetZ);
+		mo.transform.rot.set(0, 0, 0, 1);
+
+		//Checking maximum dimension for scalePos
+		var scalePos = 1.0;
+		for (i in 0...numNodes) {
+			var node = nodes.at(i);
+			#if js
+			var nodePos = node.get_m_x();
+			#else
+			var nodePos = node.m_x;
+			#end
+			var mx = nodePos.x() - vertOffsetX;
+			var my = nodePos.y() - vertOffsetY;
+			var mz = nodePos.z() - vertOffsetZ;
+			if (Math.abs(mx * 2) > scalePos) scalePos = Math.abs(mx * 2);
+			if (Math.abs(my * 2) > scalePos) scalePos = Math.abs(my * 2);
+			if (Math.abs(mz * 2) > scalePos) scalePos = Math.abs(mz * 2);
+		}
+		//Set scalePos and buildMatrix
 		mo.data.scalePos = scalePos;
 		mo.transform.scaleWorld = scalePos;
 		mo.transform.buildMatrix();
+
+		//Set vertices with location offset
 		for (i in 0...nodes.size()) {
 			var node = nodes.at(i);
 			var indices = vertexIndexMap.get(i);
@@ -294,27 +320,35 @@ class SoftBody extends Trait {
 			var nodePos = node.m_x;
 			var nodeNor = node.m_n;
 			#end
+			var mx = nodePos.x() - vertOffsetX;
+			var my = nodePos.y() - vertOffsetY;
+			var mz = nodePos.z() - vertOffsetZ;
+			
+			var nx = nodeNor.x();
+			var ny = nodeNor.y();
+			var nz = nodeNor.z();
+
 			for (idx in indices){
 				#if arm_deinterleaved
-				v.setInt16(idx * 8    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-				v.setInt16(idx * 8 + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-				v.setInt16(idx * 8 + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
-				n.setInt16(idx * 4    , Std.int(nodeNor.x() * 32767));
-				n.setInt16(idx * 4 + 2, Std.int(nodeNor.y() * 32767));
-				v.setInt16(idx * 8 + 6, Std.int(nodeNor.z() * 32767));
+				v.setInt16(idx * 8    , Std.int(mx * 32767 * (1 / scalePos)));
+				v.setInt16(idx * 8 + 2, Std.int(my * 32767 * (1 / scalePos)));
+				v.setInt16(idx * 8 + 4, Std.int(mz * 32767 * (1 / scalePos)));
+				n.setInt16(idx * 4    , Std.int(nx * 32767));
+				n.setInt16(idx * 4 + 2, Std.int(ny * 32767));
+				v.setInt16(idx * 8 + 6, Std.int(nz * 32767));
 				#else
 				var vertIndex = idx * l * 2;
-				v.setInt16(vertIndex        , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
-				v.setInt16(vertIndex + 2, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
-				v.setInt16(vertIndex + 4, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+				v.setInt16(vertIndex    , Std.int(mx * 32767 * (1 / scalePos)));
+				v.setInt16(vertIndex + 2, Std.int(my * 32767 * (1 / scalePos)));
+				v.setInt16(vertIndex + 4, Std.int(mz * 32767 * (1 / scalePos)));
 				if (vbPos != null) {
 					v2.setInt16(idx * 8    , v.getInt16(vertIndex    ));
 					v2.setInt16(idx * 8 + 2, v.getInt16(vertIndex + 2));
 					v2.setInt16(idx * 8 + 4, v.getInt16(vertIndex + 4));
 				}
-				v.setInt16(vertIndex + 6, Std.int(nodeNor.z() * 32767));
-				v.setInt16(vertIndex + 8, Std.int(nodeNor.x() * 32767));
-				v.setInt16(vertIndex + 10, Std.int(nodeNor.y() * 32767));
+				v.setInt16(vertIndex + 6,  Std.int(nx * 32767));
+				v.setInt16(vertIndex + 8,  Std.int(ny * 32767));
+				v.setInt16(vertIndex + 10, Std.int(nz * 32767));
 				#end
 			}
 		}
