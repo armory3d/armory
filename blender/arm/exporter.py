@@ -588,6 +588,8 @@ class ArmoryExporter:
             # Tilesheets
             elif bobject.arm_tilesheet != '':
                 variant_suffix = '_armtile'
+            elif arm.utils.export_morph_targets(bobject):
+                variant_suffix = '_armskey'
 
             if variant_suffix == '':
                 continue
