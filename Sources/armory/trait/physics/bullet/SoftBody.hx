@@ -160,6 +160,10 @@ class SoftBody extends Trait {
 			helpers = new bullet.Bt.SoftBodyHelpers();
 			worldInfo = physics.world.getWorldInfo();
 			helpersCreated = true;
+			#if hl
+			//world info is passed as value and not as a reference, need to set gravity again in HL.
+			worldInfo.m_gravity = physics.world.getGravity();
+			#end
 		}
 
 		var vertsLength = 0;
@@ -193,10 +197,11 @@ class SoftBody extends Trait {
 		for (i in 0...vecindVector.length){
 			intArray.set(i, vecindVector[i]);
 		}
-		//world info is passed as value and not as a reference, need to set gravity again in HL.
-		worldInfo.m_gravity = physics.world.getGravity();
 		//Create soft body
 		body = helpers.CreateFromTriMesh(worldInfo, floatArray.raw, intArray.raw, numtri, false);
+
+		floatArray.delete();
+		intArray.delete();
 		#end
 		// body.generateClusters(4);
 
@@ -233,6 +238,11 @@ class SoftBody extends Trait {
 		physics.world.addSoftBody(body, 1, -1);
 		body.setActivationState(CollisionObjectActivationState.DISABLE_DEACTIVATION);
 
+		#if hl
+		cfg.delete();
+		#end
+
+		notifyOnRemove(removeFromWorld);
 		notifyOnUpdate(update);
 	}
 
@@ -278,6 +288,11 @@ class SoftBody extends Trait {
 			vertOffsetX += mx;
 			vertOffsetY += my;
 			vertOffsetZ += mz;
+
+			#if hl
+			node.delete();
+			nodePos.delete();
+			#end
 		}
 		vertOffsetX /= numNodes;
 		vertOffsetY /= numNodes;
@@ -303,6 +318,11 @@ class SoftBody extends Trait {
 			if (Math.abs(mx * 2) > scalePos) scalePos = Math.abs(mx * 2);
 			if (Math.abs(my * 2) > scalePos) scalePos = Math.abs(my * 2);
 			if (Math.abs(mz * 2) > scalePos) scalePos = Math.abs(mz * 2);
+
+			#if hl
+			node.delete();
+			nodePos.delete();
+			#end
 		}
 		//Set scalePos and buildMatrix
 		mo.data.scalePos = scalePos;
@@ -351,6 +371,12 @@ class SoftBody extends Trait {
 				v.setInt16(vertIndex + 10, Std.int(nz * 32767));
 				#end
 			}
+
+			#if hl
+			node.delete();
+			nodePos.delete();
+			nodeNor.delete();
+			#end
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
 		// 	var a = geom.indices[0][i * 3];
@@ -379,6 +405,18 @@ class SoftBody extends Trait {
 		#else
 		geom.vertexBuffer.unlock();
 		if (vbPos != null) vbPos.unlock();
+		#end
+		#if hl
+		nodes.delete();
+		#end
+	}
+
+	function removeFromWorld() {
+		physics.world.removeSoftBody(body);
+		#if js
+		bullet.Bt.Ammo.destroy(body);
+		#else
+		body.delete();
 		#end
 	}
 
