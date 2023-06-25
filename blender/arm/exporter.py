@@ -588,6 +588,8 @@ class ArmoryExporter:
             # Tilesheets
             elif bobject.arm_tilesheet != '':
                 variant_suffix = '_armtile'
+            elif arm.utils.export_morph_targets(bobject):
+                variant_suffix = '_armskey'
 
             if variant_suffix == '':
                 continue
@@ -1577,6 +1579,7 @@ Make sure the mesh only has tris/quads.""")
             if tris == 0: # No face assigned
                 continue
             prim = np.empty(tris * 3, dtype='<i4')
+            v_map = np.empty(tris * 3, dtype='<i4')
 
             i = 0
             for poly in polys:
@@ -1586,7 +1589,15 @@ Make sure the mesh only has tris/quads.""")
                     prim[i + 2] = loops[loop.loops[2]].index
                     i += 3
 
-            ia = {'values': prim, 'material': 0}
+            j = 0
+            for poly in polys:
+                for loop in tri_loops[poly.index]:
+                    v_map[j    ] = loops[loop.loops[0]].vertex_index
+                    v_map[j + 1] = loops[loop.loops[1]].vertex_index
+                    v_map[j + 2] = loops[loop.loops[2]].vertex_index
+                    j += 3
+
+            ia = {'values': prim, 'material': 0, 'vertex_map': v_map}
             if len(mats) > 1:
                 for i in range(len(mats)):  # Multi-mat mesh
                     if mats[i] == mats[index]:  # Default material for empty slots
@@ -2948,6 +2959,16 @@ Make sure the mesh only has tris/quads.""")
             rbw = self.scene.rigidbody_world
             if rbw is not None and rbw.enabled:
                 out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
+
+                if phys_pkg == 'bullet':
+                    debug_draw_mode = 1 if wrd.arm_bullet_dbg_draw_wireframe else 0
+                    debug_draw_mode |= 2 if wrd.arm_bullet_dbg_draw_aabb else 0
+                    debug_draw_mode |= 8 if wrd.arm_bullet_dbg_draw_contact_points else 0
+                    debug_draw_mode |= 2048 if wrd.arm_bullet_dbg_draw_constraints else 0
+                    debug_draw_mode |= 4096 if wrd.arm_bullet_dbg_draw_constraint_limits else 0
+                    debug_draw_mode |= 16384 if wrd.arm_bullet_dbg_draw_normals else 0
+                    debug_draw_mode |= 32768 if wrd.arm_bullet_dbg_draw_axis_gizmo else 0
+                    out_trait['parameters'].append(str(debug_draw_mode))
 
             self.output['traits'].append(out_trait)
 

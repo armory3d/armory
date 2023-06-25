@@ -59,7 +59,6 @@ class SpawnObjectByNameNode extends LogicNode {
 					}
 					#end
 				}
-				object.visible = true;
 				runOutput(0);
 			}, spawnChildren, rawScene);
 
