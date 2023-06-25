@@ -650,10 +650,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('float dist = max(abs(viewerPos.x - wposition.x), max(abs(viewerPos.y - wposition.y), abs(viewerPos.z - wposition.z)));')
         frag.write('float maxExtents = voxelgiHalfExtents.x * pow(2.0, clipmapCount) * 2.0;')
         frag.write('int clipmapLevel = int(max(log2(dist / maxExtents), 0));')
-        frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel) * 2.0;')
-        frag.write('float voxelSize = maxExtents / voxelgiResolution.x;')
-        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;')
-        frag.write('vec3 voxpos = (wposition - eyeSnap) / clipmapLevelSize;')
+        frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel + 1);')
+        frag.write('float voxelSize = 0.125 / pow(2.0, clipmapLevel);')
+        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
+        frag.write('vec3 voxpos = (wposition - eyeSnap) * voxelSize / maxExtents;')
 
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:

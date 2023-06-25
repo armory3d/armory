@@ -228,8 +228,9 @@ void main() {
     float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
 	float maxExtents = voxelgiHalfExtents.x * pow(2.0, clipmapCount) * 2.0;
     int clipmapLevel = int(max(log2(dist / maxExtents), 0));
+	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel + 1);
 	float voxelSize = 0.125 / pow(2.0, clipmapLevel);
-    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
     vec3 voxpos = (p - eyeSnap) * voxelSize / maxExtents;
 #endif
 
@@ -237,8 +238,9 @@ void main() {
     float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
 	float maxExtents = voxelgiHalfExtents.x * pow(2.0, clipmapCount);
     int clipmapLevel = int(max(log2(dist / maxExtents), 0));
+	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel + 1);
 	float voxelSize = 0.125 / pow(2.0, clipmapLevel);
-    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
     vec3 voxpos = (p - eyeSnap) * voxelSize / maxExtents;
 #endif
 
@@ -365,7 +367,7 @@ void main() {
 #ifdef _VoxelGI
 	fragColor.rgb += envl;
 #else
-	fragColor.rgb = env;
+	fragColor.rgb = envl;
 #endif
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
