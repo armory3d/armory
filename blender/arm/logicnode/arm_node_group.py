@@ -269,8 +269,7 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
         # delete selected nodes and copied frames without children
         [base_tree.nodes.remove(n) for n in self.filter_selected_nodes(base_tree)]
         with_children_frames = {n.parent.name for n in base_tree.nodes if n.parent}
-        [base_tree.nodes.remove(n) for n in base_tree.nodes
-        if n.name in frame_names and n.name not in with_children_frames]
+        [base_tree.nodes.remove(n) for n in base_tree.nodes if n.name in frame_names and n.name not in with_children_frames]
 
         # enter the group tree
         bpy.ops.arm.edit_group_tree(node_index=group_node.get_id_str())
@@ -279,7 +278,7 @@ class ArmAddGroupTreeFromSelected(bpy.types.Operator):
 
     @staticmethod
     def filter_selected_nodes(tree) -> list:
-        """Avoiding selecting nodes which should not be copied into sub tree"""
+        """Avoiding selecting nodes which should not be copied into subtree"""
         return [n for n in tree.nodes if n.select and n.bl_idname not in {'LNGroupInputsNode', 'LNGroupOutputsNode'}]
 
     @staticmethod

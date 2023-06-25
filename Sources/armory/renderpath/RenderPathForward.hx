@@ -22,9 +22,11 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			path.setTarget("lbuffer0", [
-				#if rp_ssr "lbuffer1", #end
-			]);
+			#if rp_ssr
+			path.setTarget("lbuffer0", ["lbuffer1"]);
+			#else
+			path.setTarget("lbuffer0");
+			#end
 		}
 		#else
 		{
@@ -133,7 +135,7 @@ class RenderPathForward {
 				t.name = "buf";
 				t.width = 0;
 				t.height = 0;
-				t.format = Inc.getHdrFormat();
+				t.format = "RGBA32";
 				t.displayp = Inc.getDisplayp();
 				t.scale = Inc.getSuperSampling();
 				t.depth_buffer = "main";
@@ -316,57 +318,39 @@ class RenderPathForward {
 		var relight = false;
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			/*
-			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			//Relight if light was moved
-			for (light in iron.Scene.active.lights)
-				if (light.transform.diff()) {
-					relight = true;
-					break;
-				}
-			#end
-			*/
+			var path = RenderPath.active;
+
+			path.clearImage(voxels, 0x00000000);
 
 			#if arm_voxelgi_temporal
-			/*
+			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
+				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+				Voxels.voxelize(voxels);
+			}
+			#else
+
+			path.setTarget("");
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
+			path.bindTarget(voxels, "voxels");
+
 			#if (rp_voxels == "Voxel GI")
-			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
-			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
-			#else
-			*/
-			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
-			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-			#end
-			//#end
-
-			/*
-			#if(rp_voxels == "Voxel GI")
-			#if arm_voxelgi_temporal
-			var voxtex = voxels == "voxels" ? "voxelsOpac" : "voxelsOpacB";
-			#else
-			var voxtex = "voxelsOpac";
-			#end
-			#else
-			var voxtex = voxels;
-			#end
-			*/
-
-			Voxels.voxelize(voxels);
-			path.generateMipmaps(voxels);
-
-			/*
-			#if (rp_voxels == "Voxel GI")
-				Inc.computeVoxelsBegin();
-				Inc.computeVoxels(voxtex, voxels);
-				Inc.computeVoxelsEnd(voxels, voxelsBounce);
-				#if(rp_voxelgi_bounces != 1)
-				voxels = voxelsBounce;
-				voxelsLast = voxelsBounceLast;
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
 				#end
-			#else
-			path.generateMipmaps(voxels);
+			}
 			#end
-			*/
+			#end
+
+			path.drawMeshes("voxel");
+			path.generateMipmaps(voxels);
+
+			#end
 		}
 		#end
 

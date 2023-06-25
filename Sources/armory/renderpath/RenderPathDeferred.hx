@@ -121,7 +121,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
+			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -526,25 +526,38 @@ class RenderPathDeferred {
 		var relight = false;
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			/*
-			#if ((rp_voxels == "Voxel GI") && (rp_voxelgi_relight))
-			//Relight if light was moved
-			for (light in iron.Scene.active.lights)
-				if (light.transform.diff()) {
-					relight = true;
-					break;
-				}
-			#end
-			*/
+			var path = RenderPath.active;
+
+			path.clearImage(voxels, 0x00000000);
 
 			#if arm_voxelgi_temporal
-			if(++Voxels.voxelFrame % Voxels.voxelFreq == 0) {
+			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 				Voxels.voxelize(voxels);
 			}
 			#else
-			Voxels.voxelize("voxels");
+
+			path.setTarget("");
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
+			path.bindTarget(voxels, "voxels");
+
+			#if (rp_voxels == "Voxel GI")
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
+			#end
+
+			path.drawMeshes("voxel");
+			path.generateMipmaps(voxels);
+
 			#end
 		}
 		#end
@@ -559,6 +572,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+
 		#if rp_voxelgi_refract
 		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 		#end

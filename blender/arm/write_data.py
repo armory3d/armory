@@ -468,6 +468,7 @@ class Main {
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
     public static inline var voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) +  """;
+
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
         if rpdat.rp_bloom:
@@ -572,7 +573,7 @@ def write_compiledglsl(defs, make_variants):
             gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
             f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-            #Write indices of G-Buffer render targets
+            # Write indices of G-Buffer render targets
             f.write('#define GBUF_IDX_0 0\n')
             f.write('#define GBUF_IDX_1 1\n')
 
@@ -589,6 +590,13 @@ def write_compiledglsl(defs, make_variants):
 
             if '_VoxelRefract' in wrd.world_defs:
                 f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
+
+            if '_gbuffer2' in wrd.world_defs:
+                f.write('#define GBUF_IDX_2 2\n')
+                idx_emission += 1
+
+            if '_EmissionShaded' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
@@ -652,6 +660,8 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
+
+const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;

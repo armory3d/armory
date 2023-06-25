@@ -24,6 +24,6 @@ class CameraGetNode(ArmLogicTreeNode):
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 3):
-           raise LookupError()
+            raise LookupError()
             
         return NodeReplacement.Identity(self)

@@ -39,7 +39,7 @@ def parse_mixshader(node: bpy.types.ShaderNodeMixShader, out_socket: NodeSocket,
     ek1 = mat_state.emission_type
 
     mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
-    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[1])
+    bc2, rough2, met2, occ2, spec2, opac2, rior2, emi2 = c.parse_shader_input(node.inputs[2])
     ek2 = mat_state.emission_type
 
     if state.parse_surface:
@@ -182,6 +182,7 @@ def parse_bsdfrefraction(node: bpy.types.ShaderNodeBsdfRefraction, out_socket: N
     if state.parse_opacity:
         state.out_opacity = '0.0'
         state.out_rior = c.parse_value_input(node.inputs[2])
+
 
 def parse_subsurfacescattering(node: bpy.types.ShaderNodeSubsurfaceScattering, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:

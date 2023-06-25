@@ -309,10 +309,76 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-	// Show voxels
 
-	//Show SSAO
-	//fragColor.rgb = texture(ssaotex, texCoord).rrr;
+	fragColor.rgb = envl;
+
+#ifdef _SSAO
+	// #ifdef _RTGI
+	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	// #else
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #endif
+#endif
+
+#ifdef _EmissionShadeless
+	if (matid == 1) { // pure emissive material, color stored in basecol
+		fragColor.rgb += g1.rgb;
+		fragColor.a = 1.0; // Mark as opaque
+		return;
+	}
+#endif
+#ifdef _EmissionShaded
+	#ifdef _EmissionShadeless
+	else {
+	#endif
+		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		fragColor.rgb += emission;
+	#ifdef _EmissionShadeless
+	}
+	#endif
+#endif
+
+#ifdef _VoxelGI
+	#ifdef _VoxelTemporal
+	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
+	#else
+	fragColor.rgb += traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * voxelgiDiff * albedo;
+	#endif
+	if(roughness < 1.0 && occspec.y > 0.0)
+		#ifdef _VoxelTemporal
+		fragColor.rgb += (traceSpecular(voxels, n, voxpos, v, roughness, clipmapLevel, clipmapCount).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmapLevel, clipmapCount).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
+		#else
+		fragColor.rgb += traceSpecular(voxels,  n, voxpos, v, roughness, clipmapLevel, clipmapCount).rgb * voxelgiRefl * occspec.y;
+		#endif
+#endif
+
+#ifdef _VoxelAOvar
+	#ifndef _VoxelAONoTrace
+	#ifdef _VoxelTemporal
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel, clipmapCount) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel, clipmapCount) * (1.0 - voxelBlend));
+	#else
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel, clipmapCount);
+	#endif
+	#endif
+#endif
+
+#ifdef _VoxelGI
+	fragColor.rgb += envl;
+#else
+	fragColor.rgb = env;
+#endif
+	// Show voxels
+	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	// vec3 direction = vec3(0.0, 0.0, -1.0);
+	// vec4 color = vec4(0.0f);
+	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	// 	vec3 point = origin + 0.005 * step * direction;
+	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	// }
+	// fragColor.rgb += color.rgb;
+
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
@@ -321,7 +387,7 @@ void main() {
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-        (specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * occspec.y;
+	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -382,7 +448,7 @@ void main() {
 	svisibility *= clamp(sdotNL + 2.0 * occspec.x * occspec.x - 1.0, 0.0, 1.0);
 	#endif
 
-	fragColor.rgb += sdirect * sunCol * svisibility;
+	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
 // 	if (matid == 2) {
@@ -418,6 +484,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
+
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
@@ -511,61 +578,6 @@ void main() {
 	}
 #endif // _Clusters
 
-#ifdef _VoxelGI
-	#ifdef _VoxelTemporal
-	fragColor.rgb += (traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * voxelBlend + traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
-	#else
-	fragColor.rgb += traceDiffuse(voxpos, n, voxels, clipmapLevel, clipmapCount).rgb * voxelgiDiff * albedo;
-	#endif
-	if(roughness < 1.0 && occspec.y > 0.0)
-		#ifdef _VoxelTemporal
-		fragColor.rgb += (traceSpecular(voxels, n, voxpos, v, roughness, clipmapLevel, clipmapCount).rgb * voxelBlend + traceSpecular(voxels, voxpos, n, v, roughness, clipmapLevel, clipmapCount).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
-		#else
-		fragColor.rgb += traceSpecular(voxels,  n, voxpos, v, roughness, clipmapLevel, clipmapCount).rgb * voxelgiRefl * occspec.y;
-		#endif
-#endif
-
-#ifdef _VoxelAOvar
-	#ifndef _VoxelAONoTrace
-	#ifdef _VoxelTemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel, clipmapCount) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel, clipmapCount) * (1.0 - voxelBlend));
-	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel, clipmapCount);
-	#endif
-	#endif
-#endif
-
-	fragColor.rgb += envl;
-
-#ifdef _SSAO
-	// #ifdef _RTGI
-	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	// #else
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	// #endif
-
-	// Show SSAO
-	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
-#endif
-
-#ifdef _EmissionShadeless
-	if (matid == 1) { // pure emissive material, color stored in basecol
-		fragColor.rgb += g1.rgb;
-		fragColor.a = 1.0; // Mark as opaque
-		return;
-	}
-#endif
-#ifdef _EmissionShaded
-	#ifdef _EmissionShadeless
-	else {
-	#endif
-		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
-		fragColor.rgb += emission;
-	#ifdef _EmissionShadeless
-	}
-	#endif
-#endif
-
 #ifdef _VoxelRefract
 if(opac < 1.0) {
 	#ifdef _VoxelTemporal
@@ -576,6 +588,5 @@ if(opac < 1.0) {
 	fragColor.rgb += mix(refraction * fragColor.rgb, fragColor.rgb, opac);
 }
 #endif
-	fragColor.a = 1.0;
-	//fragColor.rgb *= p_fade;
+	fragColor.a = 1.0; // Mark as opaque
 }

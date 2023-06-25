@@ -2,8 +2,6 @@
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-
-
 // References
 // https://github.com/Friduric/voxel-cone-tracing
 // https://github.com/Cigg/Voxel-Cone-Tracing
@@ -184,6 +182,7 @@ float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const int
 }
 
 float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, const int clipmapLevel, const int clipmapCount) {
+
 	const float angleMix = 0.5f;
 	const float aperture = 0.55785173935;
 	vec3 o1 = normalize(tangent(normal));

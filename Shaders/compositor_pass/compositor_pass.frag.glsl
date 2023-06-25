@@ -389,7 +389,6 @@ void main() {
 #endif
 
 #ifdef _CGrain
-	// const float compoGrainStrength = 4.0;
 	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * (time * 10.0);
 	#ifdef _CPostprocess
 		fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * PPComp4.y;
@@ -476,6 +475,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 			} else {
 				fragColor.rgb = mix(midLumColor, maxLumColor, luminance);
 			}
+
 		} else {
 			fragColor.rgb = vec3(0,1,0); //ERROR
 		}

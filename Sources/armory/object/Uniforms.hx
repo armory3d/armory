@@ -4,11 +4,8 @@ import iron.Scene;
 import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
-import iron.math.Vec3;
 
 import armory.renderpath.Postprocess;
-import armory.renderpath.Voxels;
-import armory.renderpath.Inc;
 
 using StringTools;
 
@@ -219,8 +216,8 @@ class Uniforms {
 			#end
 			#if (rp_voxels != 'Off')
 			case "_voxelBlend": { // Blend current and last voxels
-				var freq = Voxels.voxelFreq;
-				return (Voxels.voxelFrame % freq) / freq;
+				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
+				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
 			}
 			#end
 		}

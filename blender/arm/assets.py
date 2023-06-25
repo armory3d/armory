@@ -66,7 +66,7 @@ def add(asset_file):
     for f in assets:
         f_file_base = os.path.basename(f)
         if f_file_base == asset_file_base:
-           return
+            return
 
     assets.append(asset_file)
 

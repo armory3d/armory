@@ -32,14 +32,14 @@ def write_vertpos(vert):
     if particle:
         if arm.utils.get_rp().arm_particles == 'On':
             make_particle.write(vert, particle_info=cycles.particle_info)
-            # Billboards
-            if billboard == 'spherical':
-                vert.add_uniform('mat4 WV', '_worldViewMatrix')
-                vert.add_uniform('mat4 P', '_projectionMatrix')
-                vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
-            else:
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-                vert.write('gl_Position = WVP * spos;')
+        # Billboards
+        if billboard == 'spherical':
+            vert.add_uniform('mat4 WV', '_worldViewMatrix')
+            vert.add_uniform('mat4 P', '_projectionMatrix')
+            vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
+        else:
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            vert.write('gl_Position = WVP * spos;')
     else:
         # Billboards
         if billboard == 'spherical':
