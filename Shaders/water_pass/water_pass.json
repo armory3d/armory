@@ -1,0 +1,76 @@
+{
+	"contexts": [
+		{
+			"name": "water_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "source_alpha",
+			"blend_destination": "inverse_source_alpha",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "sbase",
+					"link": "$water_base.png"
+				},
+				{
+					"name": "sdetail",
+					"link": "$water_detail.png"
+				},
+				{
+					"name": "sfoam",
+					"link": "$water_foam.png"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "ld",
+					"link": "_lightDirection"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "time",
+					"link": "_time"
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_SSR"]
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3",
+					"ifdef": ["_SSR"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "water_pass.frag.glsl"
+		}
+	]
+}

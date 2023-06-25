@@ -1,0 +1,14 @@
+{
+	"contexts": [
+		{
+			"name": "deferred_light",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "deferred_light.frag.glsl",
+			"color_attachments": ["RGBA64"]
+		}
+	]
+}

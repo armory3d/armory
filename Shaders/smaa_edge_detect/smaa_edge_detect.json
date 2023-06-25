@@ -1,0 +1,19 @@
+{
+	"contexts": [
+		{
+			"name": "smaa_edge_detect",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "screenSizeInv",
+					"link": "_screenSizeInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "smaa_edge_detect.vert.glsl",
+			"fragment_shader": "smaa_edge_detect.frag.glsl"
+		}
+	]
+}
