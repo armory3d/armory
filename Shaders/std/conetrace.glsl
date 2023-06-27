@@ -51,7 +51,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
 	float voxelSize = 2.0 / (pow(2.0, clipmapLevel) * voxelgiResolution.x) * voxelgiStep;
-	float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
+	float voxelSize0 = VOXEL_SIZE * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
     vec3 samplePos;
     while (sampleCol.a < 1.0 && dist < maxDist) {
@@ -65,7 +65,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 			mipSample = mix(mipSample, textureLod(voxels, samplePos * 0.5 + 0.5, lod + 1), clipmap_blend);
 		}
         sampleCol += (1 - sampleCol.a) * mipSample;
-		dist += diam;
+		dist += max(diam / 2.0, VOXEL_SIZE);
     }
     return sampleCol;
 }
