@@ -18,7 +18,7 @@ class Uniforms {
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
 		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
-		iron.object.Uniforms.externalIntLinks = [];
+		iron.object.Uniforms.externalIntLinks = [intLink];
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): Null<kha.Image> {
@@ -227,6 +227,7 @@ class Uniforms {
 		switch(link) {
 			#if (rp_voxels != "Off")
 			case "_clipmapCount": {
+				trace(Main.voxelgiClipmapCount);
 				return Main.voxelgiClipmapCount;
 			}
 			#end

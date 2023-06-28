@@ -468,7 +468,6 @@ class Main {
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
     public static inline var voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) +  """;
-
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
         if rpdat.rp_bloom:
