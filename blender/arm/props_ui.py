@@ -1072,6 +1072,8 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_export_tangents')
 
         col = layout.column(heading='Quality')
+        row = col.row()  # To expand below property UI horizontally
+        row.prop(wrd, 'arm_canvas_img_scaling_quality', expand=True)
         col.prop(wrd, 'arm_texture_quality')
         col.prop(wrd, 'arm_sound_quality')
 
