@@ -128,7 +128,7 @@ def make_gi(context_id):
     vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
     vert.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x) , 0));')
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-    vert.write('float voxelSize = 0.125 * pow(2.0, clipmapLevel);')
+    vert.write('float voxelSize = 2.0 * pow(2.0, clipmapLevel);')
     vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
     vert.write('clipmapOffsetGeom = eyeSnap - (0.5 * clipmapLevelSize) / voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
