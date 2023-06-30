@@ -59,7 +59,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         float diam = dist * aperture;
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float clipmap_blend = fract(lod);
-        vec3 texCoord = ((samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution) * pow(2.0, lod);
+        vec3 texCoord = samplePos * 0.5 + 0.5;// * clipmapOffset / voxelgiResolution) * pow(2.0, lod);
         vec4 mipSample = textureLod(voxels, texCoord, lod);
         // Blend the samples based on the blend factor
         if (clipmap_blend > 0) {
