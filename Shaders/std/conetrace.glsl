@@ -59,10 +59,10 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         float diam = max(voxelSize0, dist * aperture);
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float clipmap_blend = fract(lod);
-        vec4 mipSample = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod);
+        vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod);
 		// Blend the samples based on the blend factor
         if (clipmap_blend > 0) {
-            vec4 mipSampleNext = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod + 1);
+            vec4 mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1);
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
         }
         sampleCol += (1.0 - sampleCol.a) * mipSample;
@@ -146,10 +146,10 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 		float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_blend = fract(lod);
 		vec3 uvw = (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x;
-        float mipSample = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod).r;
+        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
 		// Blend the samples based on the blend factor
         if (clipmap_blend > 0) {
-            float mipSampleNext = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod + 1).r;
+            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1).r;
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
         }
         sampleCol += (1 - sampleCol) * mipSample;
@@ -171,10 +171,10 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 		float diam = dist * aperture;
 		float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_blend = fract(lod);
-        float mipSample = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod).r;
+        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
 		// Blend the samples based on the blend factor
         if (clipmap_blend > 0) {
-            float mipSampleNext = textureLod(voxels, (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x, lod + 1).r;
+            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1).r;
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
         }
         sampleCol += (1 - sampleCol) * mipSample;
