@@ -102,7 +102,7 @@ void main() {
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-    vec3 refracted = refract(normalize(-viewPos), normalize(viewNormal), 1.0 / ior);
+    vec3 refracted = normalize(refract(-viewPos, viewNormal, 1.0 / ior));
     hitCoord = viewPos;
 
 #ifdef _CPostprocess
@@ -116,6 +116,7 @@ void main() {
     float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
     float refractivity = 1.0;
+
 #ifdef _CPostprocess
     float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 #else
