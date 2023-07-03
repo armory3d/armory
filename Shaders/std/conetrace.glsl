@@ -50,13 +50,13 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const vec3 clipmapOffset) {
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
+    float voxelSize = 0.125 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
     float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
     float dist = voxelSize0;
     vec3 samplePos;
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-        float diam = max(voxelSize0, dist * aperture);
+        float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float clipmap_blend = fract(lod);
         vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod);
@@ -135,14 +135,14 @@ vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const 
 float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const vec3 clipmapOffset) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
+    float voxelSize = 0.125 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
 	float voxelSize0 = 2.0 * voxelSize * voxelgiOffset;
 	float dist = voxelSize0;
     vec3 samplePos;
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = dist * aperture;
+		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
 		float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_blend = fract(lod);
 		vec3 uvw = (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x;
@@ -153,7 +153,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
         }
         sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2.0, voxelSize0);
+		dist += diam;
     }
     return sampleCol;
 }
@@ -161,14 +161,14 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const vec3 clipmapOffset) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
+    float voxelSize = 0.125 * pow(2.0, clipmapLevel) / voxelgiResolution.x * voxelgiStep;
 	float voxelSize0 = 2.0 * voxelSize * voxelgiOffset;
 	float dist = voxelSize0;
     vec3 samplePos;
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = dist * aperture;
+		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
 		float lod = max(log2(diam * voxelgiResolution.x), 0);
 		float clipmap_blend = fract(lod);
         float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
@@ -178,7 +178,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
         }
         sampleCol += (1 - sampleCol) * mipSample;
-		dist += max(diam / 2.0, voxelSize0);
+		dist += diam;
     }
     return sampleCol;
 }
