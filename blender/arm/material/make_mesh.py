@@ -647,13 +647,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('int clipmapCount', '_clipmapCount')
         frag.add_uniform('sampler3D voxels')
 
-        frag.write('float dist = max(abs(viewerPos.x - wposition.x), max(abs(viewerPos.y - wposition.y), abs(viewerPos.z - wposition.z)));')
-        frag.write('float maxExtents = voxelgiHalfExtents.x * pow(2.0, clipmapCount) * 2.0;')
-        frag.write('int clipmapLevel = int(max(log2(dist / maxExtents), 0));')
-        frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel + 1);')
-        frag.write('float voxelSize = 0.125 / pow(2.0, clipmapLevel);')
-        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
-        frag.write('vec3 voxpos = (wposition - eyeSnap) * voxelSize / maxExtents;')
+        frag.write('float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));')
+        frag.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));')
+        frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
+        frag.write('float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;')
+        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;')
+        frag.write('vec3 clipmapOffset = eyeSnap - (0.5 * clipmapLevelSize) / voxelgiResolution.x;')
+        frag.write('vec3 voxpos = (p - clipmapOffset) / clipmapLevelSize;')
 
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:

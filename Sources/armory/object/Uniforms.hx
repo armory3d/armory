@@ -227,7 +227,6 @@ class Uniforms {
 		switch(link) {
 			#if (rp_voxels != "Off")
 			case "_clipmapCount": {
-				trace(Main.voxelgiClipmapCount);
 				return Main.voxelgiClipmapCount;
 			}
 			#end

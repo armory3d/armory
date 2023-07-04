@@ -94,7 +94,7 @@ def add_world_defs():
             voxelao = True
 
     if voxelgi or voxelao:
-        assets.add_khafile_def('arm_voxelgi')
+        assets.add_khafile_def('arm_voxelgi')#might be uneeded
         wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelShadow'

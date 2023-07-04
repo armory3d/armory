@@ -431,7 +431,7 @@ def make_ao(context_id):
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
 
         frag.add_uniform('int clipmapCount', '_clipmapCount')
-        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y * 6) > 1) return;')
+        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
         frag.write('if (abs(voxposition.x) < (clipmapLevel / clipmapCount) || abs(voxposition.y) < (clipmapLevel / clipmapCount) || abs(voxposition.z) < (clipmapLevel / clipmapCount)) return;')
 
         voxRes = str(rpdat.rp_voxelgi_resolution)
@@ -496,7 +496,7 @@ def make_ao(context_id):
         geom.write('EndPrimitive();')
 
         frag.add_uniform('int clipmapCount', '_clipmapCount')
-        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y * 6) > 1) return;')
+        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
         frag.write('if (abs(voxposition.x) < (clipmapLevel / clipmapCount) || abs(voxposition.y) < (clipmapLevel / clipmapCount) || abs(voxposition.z) < (clipmapLevel / clipmapCount)) return;')
 
         frag.write('vec3 uvw = (voxposition * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x) * voxelgiResolution.x;')
