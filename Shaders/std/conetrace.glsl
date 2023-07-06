@@ -54,22 +54,37 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
     float dist = voxelSize0;
     vec3 samplePos;
+    vec4 prevSample = vec4(0.0); // Previous sample for anisotropic blending
+    float anisotropicWeight = 0.0; // Anisotropic blending weight
+
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
         float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float clipmap_blend = fract(lod);
-        vec4 mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod);
-		// Blend the samples based on the blend factor
-        if (clipmap_blend > 0) {
-            vec4 mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1);
-            mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+
+        vec4 mipSample = vec4(0.0);
+
+        // LOD blending
+        if(clipmap_blend > 0.0) {
+            // Decrease the sampling frequency
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod);
+            vec4 mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, max(log2(diam + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0));
+            mipSample = mix(mipSample, mipSampleNext, anisotropicWeight);
+        } else {
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod);
         }
+
         sampleCol += (1.0 - sampleCol.a) * mipSample;
+
+        // Update anisotropic blending weight
+        anisotropicWeight = max(anisotropicWeight + clipmap_blend, 1.0);
         dist += diam;
     }
+
     return sampleCol;
 }
+
 
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const int clipmapLevel, const vec3 clipmapOffset) {
 	const float angleMix = 0.5f;
@@ -136,25 +151,37 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
     dir = normalize(dir);
     float sampleCol = 0.0;
     float voxelSize = 2.0 / (pow(2.0, clipmapLevel) * voxelgiResolution.x) * voxelgiStep;
-	float voxelSize0 = 2.0 * voxelSize * voxelgiOffset;
-	float dist = voxelSize0;
+    float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
+    float dist = voxelSize0;
     vec3 samplePos;
+    float prevSample = 0.0; // Previous sample for anisotropic blending
+    float anisotropicWeight = 0.0; // Anisotropic blending weight
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-		float lod = max(log2(diam * voxelgiResolution.x), 0);
-		float clipmap_blend = fract(lod);
-		vec3 uvw = (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset / voxelgiResolution.x;
-        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
-		// Blend the samples based on the blend factor
-        if (clipmap_blend > 0) {
-            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1).r;
-            mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+        float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
+        float clipmap_blend = fract(lod);
+
+        float mipSample = 0.0;
+
+        // LOD blending
+        if(clipmap_blend > 0.0) {
+            // Decrease the sampling frequency
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
+            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, max(log2(diam + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0)).r;
+            mipSample = mix(mipSample, mipSampleNext, anisotropicWeight);
+        } else {
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
         }
-        sampleCol += (1 - sampleCol) * mipSample;
-		dist += diam;
+
+        sampleCol += (1.0 - sampleCol) * mipSample;
+
+        // Update anisotropic blending weight
+        anisotropicWeight = max(anisotropicWeight + clipmap_blend, 1.0);
+        dist += diam;
     }
+
     return sampleCol;
 }
 
@@ -162,24 +189,37 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
     dir = normalize(dir);
     float sampleCol = 0.0;
     float voxelSize = 2.0 / (pow(2.0, clipmapLevel) * voxelgiResolution.x) * voxelgiStep;
-	float voxelSize0 = 2.0 * voxelSize * voxelgiOffset;
-	float dist = voxelSize0;
+    float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
+    float dist = voxelSize0;
     vec3 samplePos;
+    float prevSample = 0.0; // Previous sample for anisotropic blending
+    float anisotropicWeight = 0.0; // Anisotropic blending weight
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-		float lod = max(log2(diam * voxelgiResolution.x), 0);
-		float clipmap_blend = fract(lod);
-        float mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
-		// Blend the samples based on the blend factor
-        if (clipmap_blend > 0) {
-            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod + 1).r;
-            mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+        float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
+        float clipmap_blend = fract(lod);
+
+        float mipSample = 0.0;
+
+        // LOD blending
+        if(clipmap_blend > 0.0) {
+            // Decrease the sampling frequency
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
+            float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, max(log2(diam + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0)).r;
+            mipSample = mix(mipSample, mipSampleNext, anisotropicWeight);
+        } else {
+            mipSample = textureLod(voxels, samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x, lod).r;
         }
-        sampleCol += (1 - sampleCol) * mipSample;
-		dist += diam;
+
+        sampleCol += (1.0 - sampleCol) * mipSample;
+
+        // Update anisotropic blending weight
+        anisotropicWeight = max(anisotropicWeight + clipmap_blend, 1.0);
+        dist += diam;
     }
+
     return sampleCol;
 }
 

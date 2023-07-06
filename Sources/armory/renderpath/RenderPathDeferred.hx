@@ -534,7 +534,6 @@ class RenderPathDeferred {
 			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-				Voxels.voxelize(voxels);
 			}
 			#else
 
@@ -604,7 +603,7 @@ class RenderPathDeferred {
 		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if arm_config
+			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");
