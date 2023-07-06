@@ -85,6 +85,8 @@ class SwitchActionNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+		if(!ready) init();
+
 		var restart = inputs[5].get();
 		var duration: FastFloat = inputs[6].get();
 		var boneLayer: Null<Int> = inputs[7].get();

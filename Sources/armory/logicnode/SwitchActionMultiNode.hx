@@ -94,6 +94,8 @@ class SwitchActionMultiNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+		if(!ready) init();
+
 		switchTo = inputs[1].get();
 		var restart = inputs[3].get();
 		var duration: FastFloat = inputs[4].get();
