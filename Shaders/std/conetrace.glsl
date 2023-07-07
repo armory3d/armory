@@ -199,7 +199,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
         if(a > 0.0) {
 			// Decrease the sampling frequency
             mipSample = textureLod(voxels, samplePos,lod).r;
-            vec4 mipSampleNext = textureLod(voxels, samplePos, max(log2(max(voxelSize0, dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0)).r;
+            float mipSampleNext = textureLod(voxels, samplePos, max(log2(max(voxelSize0, dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0)).r;
             mipSample = mix(mipSample, mipSampleNext, a);
         } else {
             mipSample = textureLod(voxels, samplePos, lod).r;

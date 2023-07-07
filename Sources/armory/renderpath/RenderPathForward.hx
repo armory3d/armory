@@ -9,7 +9,7 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
@@ -315,7 +315,6 @@ class RenderPathForward {
 
 		// Voxels
 		#if (rp_voxels != 'Off')
-		var relight = false;
 		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var path = RenderPath.active;
