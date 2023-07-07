@@ -590,8 +590,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
+    frag.write_attrib('float dotNV = max(dot(n, eyeDir), 0.0);')
 
     sh = tese if tese is not None else vert
     sh.add_out('vec3 eyeDir')
@@ -624,7 +623,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Rad' in wrd.world_defs:
             frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
             frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-            frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
+            frag.write('vec3 reflectionWorld = reflect(-eyeDir, n);')
             frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
             frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
             if '_EnvLDR' in wrd.world_defs:
@@ -682,10 +681,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 1.0;')
-        frag.write('vec3 sh = normalize(vVec + sunDir);')
+        frag.write('vec3 sh = normalize(eyeDir + sunDir);')
         frag.write('float sdotNL = dot(n, sunDir);')
         frag.write('float sdotNH = dot(n, sh);')
-        frag.write('float sdotVH = dot(vVec, sh);')
+        frag.write('float sdotVH = dot(eyeDir, sh);')
         if is_shadows:
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
@@ -737,7 +736,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('direct += sampleLight(')
-        frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
+        frag.write('  wposition, n, eyeDir, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write('  , 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:

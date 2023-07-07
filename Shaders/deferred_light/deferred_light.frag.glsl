@@ -231,7 +231,7 @@ void main() {
 	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x * voxelgiStep;
 	vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
 	vec3 clipmapOffset = eyeSnap - 0.5 * clipmapLevelSize / voxelgiResolution.x;
-	vec3 voxpos = (p - clipmapOffset) / (clipmapLevelSize / voxelSize);
+	vec3 voxpos = (p - clipmapOffset) / clipmapLevelSize;
 #endif
 
 #ifdef _VoxelAOvar
@@ -241,7 +241,7 @@ void main() {
 	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x * voxelgiStep;
 	vec3 eyeSnap = floor(normalize(viewerPos + eyeLook) / voxelSize) * voxelSize;
 	vec3 clipmapOffset = eyeSnap - 0.5 * clipmapLevelSize / voxelgiResolution.x;
-	vec3 voxpos = (p - eyeSnap) / (clipmapLevelSize / voxelSize);
+	vec3 voxpos = (p - clipmapOffset) / (clipmapLevelSize / voxelSize);
 #endif
 
 #ifdef _VoxelRefract
