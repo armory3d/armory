@@ -61,7 +61,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         vec4 mipSample = vec4(0.0);
 
-		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
+		samplePos = (samplePos + 1.0) * 0.5 + 0.5 * clipmapOffset;
 
 		vec3 alpha = clamp(((samplePos * 2.0 - 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
@@ -69,7 +69,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         if(a > 0.0) {
 			// Decrease the sampling frequency
             mipSample = textureLod(voxels, samplePos,lod);
-            vec4 mipSampleNext = textureLod(voxels, samplePos, max(log2(max(voxelSize0, dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0));
+            vec4 mipSampleNext = textureLod(voxels, samplePos, lod + 1.0);
             mipSample = mix(mipSample, mipSampleNext, a);
         } else {
             mipSample = textureLod(voxels, samplePos, lod);
