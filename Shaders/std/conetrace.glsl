@@ -54,8 +54,6 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     float voxelSize0 = VOXEL_SIZE * 2.0 * voxelgiOffset;
     float dist = voxelSize0;
     vec3 samplePos;
-    vec4 prevSample = vec4(0.0); // Previous sample for anisotropic blending
-    float anisotropicWeight = 0.0; // Anisotropic blending weight
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
