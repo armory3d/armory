@@ -70,7 +70,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'HUE_SAT': MaterialNodeMeta(parse_func=nodes_color.parse_huesat),
     'INVERT': MaterialNodeMeta(parse_func=nodes_color.parse_invert),
     'LIGHT_FALLOFF': MaterialNodeMeta(parse_func=nodes_color.parse_lightfalloff),
-    'MIX_RGB': MaterialNodeMeta(parse_func=nodes_color.parse_mixrgb),
+    'MIX': MaterialNodeMeta(parse_func=nodes_color.parse_mix),
 
     # --- nodes_converter
     'BLACKBODY': MaterialNodeMeta(parse_func=nodes_converter.parse_blackbody),

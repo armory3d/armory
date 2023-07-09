@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2023.6'
+arm_version = '2023.7'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -254,6 +254,15 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled')],
         name="Audio", default='Enabled', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_khafile = PointerProperty(name="Append Khafile", description="Source appended to the project's khafile.js after it is generated", update=assets.invalidate_compiler_cache, type=bpy.types.Text)
+    bpy.types.World.arm_canvas_img_scaling_quality = EnumProperty(
+        name='Canvas Image Quality',
+        description='The quality with which to scale images drawn to Kha canvases',
+        items=[
+            ('low', 'Low', 'Low quality. Scaling usually takes place using a point filter.'),
+            ('high', 'High', 'High quality. Scaling usually takes place using a bilinear filter.'),
+        ],
+        default='low'
+    )
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_copy_override = BoolProperty(name="Copy Override", description="Overrides any existing files when copying", default=False, update=assets.invalidate_compiled_data)
