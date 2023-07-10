@@ -33,7 +33,7 @@ class ArmLogicTree(bpy.types.NodeTree):
     """Logic nodes"""
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
-    bl_icon = 'DECORATE'
+    bl_icon = 'NODETREE'
 
     def update(self):
         pass
