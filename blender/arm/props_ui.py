@@ -1398,6 +1398,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
             row.operator("arm.play", icon="PLAY", text="")
         else:
             row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+        row.operator("arm.clean_menu", icon="BRUSH_DATA", text="")
         row.operator("arm.open_editor", icon="DESKTOP", text="")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")
 
