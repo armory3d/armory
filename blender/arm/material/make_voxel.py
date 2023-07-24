@@ -151,7 +151,7 @@ def make_gi(context_id):
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
-    geom.write('    clipmapOffset = (eyeSnap[i] - voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom[i])) / 4.0;')
+    geom.write('    clipmapOffset = (eyeSnap[i] - pow(2.0, clipmapLevelGeom[i]));')
     geom.write('    clipmapLevel = clipmapLevelGeom[i];')
     if '_Sun' in wrd.world_defs:
         geom.write('lightPosition = lightPositionGeom[i];')
@@ -404,7 +404,7 @@ def make_ao(context_id):
         geom.write('    stage_output.wpos = stage_input[i].svpos.xyz;')
         geom.write('    stage_output.clipmapOffset = stage_input[i].clipmapOffsetGeom.xyz;')
         geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevelGeom.xyz;')
-        geom.write('    stage_output.clipmapOffset = (stage_input[i].xyz.eyeSnap - voxelgiHalfExtents.x * pow(2.0, stage_input[i].clipmapLevelGeom).xyz) / 4.0;')
+        geom.write('    stage_output.clipmapOffset = (stage_input[i].xyz.eyeSnap - pow(2.0, stage_input[i].clipmapLevelGeom).xyz);')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('      stage_output.svpos = float4(stage_input[i].svpos.x, stage_input[i].svpos.y, 0.0, 1.0);')
         geom.write('    }')
@@ -431,7 +431,7 @@ def make_ao(context_id):
         voxRes = str(rpdat.rp_voxelgi_resolution)
         voxResZ = str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z)))
 
-        frag.write('  voxels[(voxposition * 0.5 + 0.5) * voxelgiResolution.x * stage_input.wpos] = 1.0;')
+        frag.write('  voxels[(voxposition * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x) * voxelgiResolution.x * stage_input.wpos] = 1.0;')
         frag.write('')
         frag.write('}')
     else:
@@ -472,7 +472,7 @@ def make_ao(context_id):
         geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
-        geom.write('    clipmapOffset = (eyeSnap[i] - voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom[i])) / 4.0;')
+        geom.write('    clipmapOffset = (eyeSnap[i] - pow(2.0, clipmapLevelGeom[i]));')
         geom.write('    clipmapLevel = clipmapLevelGeom[i];')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
