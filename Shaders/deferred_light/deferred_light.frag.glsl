@@ -226,20 +226,20 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
-	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
+	int clipmapLevel = int(max(log2(dist / (voxelgiHalfExtents.x * 2.0 * pow(2.0, clipmapCount))), 0));
 	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
 	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;
-	vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;
+	vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 clipmapOffset = (eyeSnap - clipmapLevelSize);
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
 #ifdef _VoxelAOvar
 	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
-	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
+	int clipmapLevel = int(max(log2(dist / (voxelgiHalfExtents.x * 2.0 * pow(2.0, clipmapCount))), 0));
 	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
-	float voxelSize = pow(2.0, clipmapLevel) * 2.0;
-	vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
+	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;;
+	vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 clipmapOffset = (eyeSnap - clipmapLevelSize);
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
@@ -424,13 +424,13 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel, clipmapOffset);
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel, clipmapOffset);
 	#endif
 	#endif
 
@@ -497,12 +497,12 @@ void main() {
 		#endif
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		, voxels, voxpos, clipmapLevel
+		, voxels, voxpos, clipmapLevel, clipmapOffset
 		#endif
 		#endif
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		, voxels, voxpos, clipmapLevel
+		, voxels, voxpos, clipmapLevel, clipmapOffset
 		#endif
 		#endif
 		#ifdef _MicroShadowing
@@ -562,12 +562,12 @@ void main() {
 			#endif
 			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos, clipmapLevel
+			, voxels, voxpos, clipmapLevel, clipmapOffset
 			#endif
 			#endif
 			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
-			, voxels, voxpos, clipmapLevel
+			, voxels, voxpos, clipmapLevel, clipmapOffset
 			#endif
 			#endif
 			#ifdef _MicroShadowing

@@ -125,10 +125,10 @@ def make_gi(context_id):
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
-    vert.write('clipmapLevelGeom = int(max(log2(dist / voxelgiHalfExtents.x), 0));')
+    vert.write('clipmapLevelGeom = int(max(log2(dist / (voxelgiHalfExtents.x * 2.0 * pow(2.0, clipmapCount))), 0));')
     vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
     vert.write('float voxelSize = pow(2.0, clipmapLevelGeom) * 2.0 / voxelgiResolution.x;')
-    vert.write('eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
+    vert.write('eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
     geom.add_out('vec3 voxposition')
@@ -384,9 +384,9 @@ def make_ao(context_id):
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
-        vert.write('clipmapLevelGeom = int(max(log2(dist / voxelgiHalfExtents.x), 0));')
+        vert.write('clipmapLevelGeom = int(max(log2(dist / (voxelgiHalfExtents.x * 2.0 * pow(2.0, clipmapCount))), 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
-        vert.write('float voxelSize = pow(2.0, clipmapLevelGeom) * 2.0;')
+        vert.write('float voxelSize = pow(2.0, clipmapLevelGeom) * 2.0 / voxelgiResolution.x;')
         vert.write('eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
@@ -457,9 +457,9 @@ def make_ao(context_id):
 
         vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
         vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
-        vert.write('clipmapLevelGeom = int(max(log2(dist / voxelgiHalfExtents.x), 0));')
+        vert.write('clipmapLevelGeom = int(max(log2(dist / (voxelgiHalfExtents.x * 2.0 * pow(2.0, clipmapCount))), 0));')
         vert.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevelGeom);')
-        vert.write('float voxelSize = pow(2.0, clipmapLevelGeom) * 2.0;')
+        vert.write('float voxelSize = pow(2.0, clipmapLevelGeom) * 2.0 / voxelgiResolution.x;')
         vert.write('eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
         vert.write('voxpositionGeom = (P - eyeSnap) / clipmapLevelSize;')
 
