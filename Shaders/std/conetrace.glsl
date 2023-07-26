@@ -51,14 +51,14 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
 	float voxelSize = 2.0 * pow(2.0, clipmapLevel);
-    float voxelSize0 = voxelSize / voxelgiResolution.x * 2.0 * voxelgiOffset;
+    float voxelSize0 = VOXEL_SIZE * 2.0 * voxelgiOffset;
     float dist = voxelSize0;
     vec3 samplePos;
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-        float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam * voxelgiResolution.x), 0);
+        float diam = dist * aperture;
+        float lod = max(log2(diam * voxelgiResolution.x * voxelSize), 0);
         vec4 mipSample = vec4(0.0);
 		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
@@ -74,7 +74,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
             mipSample = textureLod(voxels, samplePos, lod);
         }
         sampleCol += (1.0 - sampleCol.a) * mipSample;
-        dist += dist;
+        dist += max(dist / 2.0, VOXEL_SIZE);
     }
     return sampleCol;
 }
@@ -153,7 +153,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
         float diam = dist * aperture;
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float mipSample = 0.0;
-		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
+		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset;
 
 		vec3 alpha = clamp((((samplePos * 2.0 - 0.5) * 2.0- 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
@@ -184,7 +184,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
         float diam = dist * aperture;
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float mipSample = 0.0;
-		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
+		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset;
 
 		vec3 alpha = clamp((((samplePos * 2.0 - 0.5) * 2.0- 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
