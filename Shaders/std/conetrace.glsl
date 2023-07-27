@@ -61,7 +61,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         vec4 mipSample = vec4(0.0);
 		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos * 2.0 - 0.5  + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
@@ -156,13 +156,13 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
         float mipSample = 0.0;
 		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos * 2.0 - 0.5 + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
 			// Decrease the sampling frequency
             mipSample = textureLod(voxels, samplePos,lod).r;
-            float mipSampleNext = textureLod(voxels, samplePos - 0.5 / voxelgiResolution.x, lod + 1.0).r;
+            float mipSampleNext = textureLod(voxels, samplePos - 2.0 / voxelgiResolution.x, lod + 1.0).r;
             mipSample = mix(mipSample, mipSampleNext, a);
         } else {
             mipSample = textureLod(voxels, samplePos, lod).r;
@@ -187,13 +187,13 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
         float mipSample = 0.0;
 		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos * 2.0 - 0.5 + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
 			// Decrease the sampling frequency
             mipSample = textureLod(voxels, samplePos,lod).r;
-            float mipSampleNext = textureLod(voxels, samplePos - 0.5 / voxelgiResolution.x, 1.0).r;
+            float mipSampleNext = textureLod(voxels, samplePos - 2.0 / voxelgiResolution.x, 1.0).r;
             mipSample = mix(mipSample, mipSampleNext, a);
         } else {
             mipSample = textureLod(voxels, samplePos, lod).r;
