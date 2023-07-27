@@ -50,26 +50,27 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel, const vec3 clipmapOffset) {
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
-	float voxelSize = 2.0 * pow(2.0, clipmapLevel);
-    float voxelSize0 = VOXEL_SIZE * 2.0 * voxelgiOffset;
+	float voxelSize0 = VOXEL_SIZE * 2.0 * voxelgiOffset;
     float dist = voxelSize0;
     vec3 samplePos;
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
         float diam = dist * aperture;
-        float lod = max(log2(diam * voxelgiResolution.x * voxelSize), 0);
+        float lod = max(log2(diam * voxelgiResolution.x), 0);
         vec4 mipSample = vec4(0.0);
 		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((((samplePos * 2.0 - 0.5) * 2.0- 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
 			// Decrease the sampling frequency
             mipSample = textureLod(voxels, samplePos,lod);
-            vec4 mipSampleNext = textureLod(voxels, samplePos - 0.5 / voxelgiResolution.x, lod + 1.0);
-            mipSample = mix(mipSample, mipSampleNext, a);
+            vec4 mipSampleNext = textureLod(voxels, samplePos - 2.0 / voxelgiResolution.x, lod + 1.0);
+            // Smooth LOD blending
+            float t = smoothstep(0.0, 1.0, a);
+            mipSample = mix(mipSample, mipSampleNext, t);
         } else {
             mipSample = textureLod(voxels, samplePos, lod);
         }
@@ -153,9 +154,9 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
         float diam = dist * aperture;
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float mipSample = 0.0;
-		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset;
+		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((((samplePos * 2.0 - 0.5) * 2.0- 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
@@ -184,9 +185,9 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
         float diam = dist * aperture;
         float lod = max(log2(diam * voxelgiResolution.x), 0);
         float mipSample = 0.0;
-		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset;
+		samplePos = samplePos * 0.5 + 0.5 + clipmapOffset / voxelgiResolution.x;
 
-		vec3 alpha = clamp((((samplePos * 2.0 - 0.5) * 2.0- 1.0) + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
+		vec3 alpha = clamp((samplePos + BORDER_OFFSET - (1.0 - BORDER_WIDTH)) / BORDER_WIDTH, 0.0, 1.0);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
         // LOD blending
         if(a > 0.0) {
