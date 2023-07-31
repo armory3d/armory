@@ -585,7 +585,7 @@ if(opac < 1.0) {
 	#else
 	vec3 refraction = traceRefraction(voxels, voxpos, n, v, rior, roughness, clipmapLevel) * voxelgiRefr;
 	#endif
-	fragColor.rgb += mix(refraction * fragColor.rgb, fragColor.rgb, opac);
+	fragColor.rgb += mix(refraction, fragColor.rgb, opac);
 }
 #endif
 	fragColor.a = 1.0; // Mark as opaque

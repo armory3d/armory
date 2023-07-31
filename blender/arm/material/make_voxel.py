@@ -183,7 +183,7 @@ def make_gi(context_id):
 
     frag.add_uniform('int clipmapCount', '_clipmapCount')
     frag.write('if (abs(voxposition.x) > 1 || abs(voxposition.y) > 1 || abs(voxposition.z) > 1) return;')
-    #frag.write('if (abs(voxposition.x) < clipmapLevel / clipmapCount || abs(voxposition.y) < clipmapLevel / clipmapCount || abs(voxposition.z) < clipmapLevel / clipmapCount) return;')
+    frag.write('if (abs(voxposition.x) < clipmapLevel / clipmapCount || abs(voxposition.y) < clipmapLevel / clipmapCount || abs(voxposition.z) < clipmapLevel / clipmapCount) return;')
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
