@@ -58,10 +58,11 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-        float diam = dist * pow(2.0, clipmapLevel) * aperture / voxelgiResolution.x;
-        vec4 mipSample = vec4(0.0);
+		float diam = dist * aperture;
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
+		vec4 mipSample = vec4(0.0);
 		samplePos = samplePos * 0.5 + 0.5;
-		mipSample = texture(voxels, samplePos);
+		mipSample = textureLod(voxels, samplePos, lod);
         sampleCol += (1.0 - sampleCol.a) * mipSample;
 		// Calculate the adaptive step size based on LOD and distance to the surface
         dist += max(diam / 2.0, VOXEL_SIZE);
@@ -140,10 +141,11 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-        float diam = dist * pow(2.0, clipmapLevel) * aperture / voxelgiResolution.x;
+        float diam = dist * aperture;
+		float lod = max(log2(diam * voxelgiResolution.x), 0.0);
         float mipSample = 0.0;
 		samplePos = samplePos * 0.5 + 0.5;
-		mipSample = texture(voxels, samplePos).r;
+		mipSample = textureLod(voxels, samplePos, lod).r;
         sampleCol += (1.0 - sampleCol) * mipSample;
 
         dist += max(diam / 2.0, VOXEL_SIZE);
@@ -160,14 +162,15 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-        float diam = dist * pow(2.0, clipmapLevel) * aperture / voxelgiResolution.x;
+        float diam = dist * aperture;
+		float lod = log2(diam * voxelgiResolution.x);
         float mipSample = 0.0;
 		samplePos = samplePos * 0.5 + 0.5;
 
-		mipSample = texture(voxels, samplePos).r;
+		mipSample = textureLod(voxels, samplePos, lod).r;
         sampleCol += (1.0 - sampleCol) * mipSample;
 
-		dist = max(diam / 2.0, VOXEL_SIZE);
+		dist += max(diam / 2.0, VOXEL_SIZE);
     }
     return sampleCol;
 }
