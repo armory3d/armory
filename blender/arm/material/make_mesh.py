@@ -656,23 +656,23 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', '_voxelBlend')
-            frag.write('indirect *= ((1.0 - traceAO(voxpos, n, voxels, clipmapLevel)) * voxelBlend + (1.0 - traceAO(voxpos, n, voxelsLast, clipmapLevel)) * (1.0 - voxelBlend));')
+            frag.write('indirect *= ((1.0 - traceAO(voxpos, n, voxels)) * voxelBlend + (1.0 - traceAO(voxpos, n, voxelsLast)) * (1.0 - voxelBlend));')
         else:
-            frag.write('indirect *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);')
+            frag.write('indirect *= 1.0 - traceAO(voxpos, n, voxels);')
 
     if '_VoxelGI' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', '_voxelBlend')
-            frag.write('indirect += (traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;')
+            frag.write('indirect += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;')
         else:
-            frag.write('indirect += traceDiffuse(voxpos, n, voxels, clipmapLevel).rgb * voxelgiDiff * albedo;')
+            frag.write('indirect += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * albedo;')
 
         frag.write('if (roughness < 1.0 && specular > 0.0)')
         if '_VoxelTemporal' in wrd.world_defs:
             frag.add_uniform('float voxelBlend', '_voxelBlend')
-            frag.write('indirect += (traceSpecular(voxels, voxpos, n, eyeDir, roughness, clipmapLevel).rgb * voxelBlend + traceSpecular(voxelsLast, voxpos, n, eyeDir, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiRefl * specular;')
+            frag.write('indirect += (traceSpecular(voxels, voxpos, n, eyeDir, roughness).rgb * voxelBlend + traceSpecular(voxelsLast, voxpos, n, eyeDir, roughness).rgb * (1.0 - voxelBlend)) * voxelgiRefl * specular;')
         else:
-            frag.write('indirect += traceSpecular(voxels, voxpos, n, eyeDir, roughness, clipmapLevel).rgb * voxelgiRefl * specular;')
+            frag.write('indirect += traceSpecular(voxels, voxpos, n, eyeDir, roughness).rgb * voxelgiRefl * specular;')
 
     frag.write('vec3 direct = vec3(0.0);')
 
