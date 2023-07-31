@@ -66,7 +66,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
         sampleCol += (1.0 - sampleCol.a) * mipSample;
 		// Calculate the adaptive step size based on LOD and distance to the surface
         dist += max(diam / 2.0, VOXEL_SIZE);
-}
+	}
     return sampleCol;
 }
 
