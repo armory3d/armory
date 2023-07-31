@@ -155,7 +155,7 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    clipmapLevel = clipmapLevelGeom[i];')
-    geom.write('    clipmapOffset = (eyeSnap[i]) / voxelgiResolution * 4.0;')
+    geom.write('    clipmapOffset = ((eyeSnap[i]) - 1.0) / voxelgiResolution;')
     if '_Sun' in wrd.world_defs:
         geom.write('lightPosition = lightPositionGeom[i];')
     if '_SinglePoint' in wrd.world_defs and '_Spot' in wrd.world_defs:
