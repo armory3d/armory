@@ -738,21 +738,19 @@ class ArmRPListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 
+__REG_CLASSES = (
+    ArmRPListItem,
+    ARM_UL_RPList,
+    ArmRPListNewItem,
+    ArmRPListDeleteItem,
+    ArmRPListMoveItem,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmRPListItem)
-    bpy.utils.register_class(ARM_UL_RPList)
-    bpy.utils.register_class(ArmRPListNewItem)
-    bpy.utils.register_class(ArmRPListDeleteItem)
-    bpy.utils.register_class(ArmRPListMoveItem)
+    __reg_classes()
 
     bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
     bpy.types.World.rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
-
-
-def unregister():
-    bpy.utils.unregister_class(ArmRPListItem)
-    bpy.utils.unregister_class(ARM_UL_RPList)
-    bpy.utils.unregister_class(ArmRPListNewItem)
-    bpy.utils.unregister_class(ArmRPListDeleteItem)
-    bpy.utils.unregister_class(ArmRPListMoveItem)
