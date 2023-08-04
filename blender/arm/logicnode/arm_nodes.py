@@ -1014,7 +1014,7 @@ def reset_globals():
     category_items = OrderedDict()
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ArmNodeSearch,
     ArmNodeAddInputButton,
     ArmNodeAddInputValueButton,
@@ -1026,4 +1026,4 @@ REG_CLASSES = (
     ArmNodeRemoveInputOutputButton,
     ArmNodeCallFuncButton
 )
-register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
+register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
