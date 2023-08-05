@@ -58,7 +58,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
 		float diam = dist * aperture;
-        float lod = max(log2(diam * voxelgiResolution.x * pow(2.0, clipmapLevel)), 0.0);
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		vec4 mipSample = vec4(0.0);
 
 		vec3 alpha = abs(samplePos) * 2.0;
