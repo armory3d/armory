@@ -73,7 +73,6 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
-		// Calculate the adaptive step size based on LOD and distance to the surface
         dist += max(diam / 2.0, VOXEL_SIZE);
 	}
     return sampleCol;
@@ -138,6 +137,7 @@ vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const 
  	const float transmittance = 1.0;
  	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
  	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+
  	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, clipmapLevel).xyz;
 }
 
