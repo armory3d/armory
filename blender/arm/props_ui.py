@@ -2875,6 +2875,7 @@ __REG_CLASSES = (
     ArmoryUpdateListAndroidEmulatorRunButton,
     ArmoryUpdateListInstalledVSButton,
     ARM_PT_BulletDebugDrawingPanel,
+    ARM_OT_AddArmatureRootMotion,
     scene.TLM_PT_Settings,
     scene.TLM_PT_Denoise,
     scene.TLM_PT_Filtering,

@@ -266,16 +266,17 @@ class ARM_PT_NLARootMotionPanel(bpy.types.Panel):
         layout.prop(action, 'arm_root_motion_pos')
         layout.prop(action, 'arm_root_motion_rot')
 
+__REG_CLASSES = (
+    ArmRetargetActions,
+    ARM_PT_DSRootMotionRetargetPanel,
+    ARM_PT_NLARootMotionRetargetPanel,
+    ARM_PT_DopeSheetRootMotionPanel,
+    ARM_PT_NLARootMotionPanel,
+)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
+
 def register():
-    bpy.utils.register_class(ArmRetargetActions)
-    bpy.utils.register_class(ARM_PT_DSRootMotionRetargetPanel)
-    bpy.utils.register_class(ARM_PT_NLARootMotionRetargetPanel)
-    bpy.utils.register_class(ARM_PT_DopeSheetRootMotionPanel)
-    bpy.utils.register_class(ARM_PT_NLARootMotionPanel)
+    __reg_classes()
 
 def unregister():
-    bpy.utils.unregister_class(ARM_PT_NLARootMotionRetargetPanel)
-    bpy.utils.unregister_class(ARM_PT_DSRootMotionRetargetPanel)
-    bpy.utils.unregister_class(ArmRetargetActions)
-    bpy.utils.unregister_class(ARM_PT_NLARootMotionPanel)
-    bpy.utils.unregister_class(ARM_PT_DopeSheetRootMotionPanel)
+    __unreg_classes()
