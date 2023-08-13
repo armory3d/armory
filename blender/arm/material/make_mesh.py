@@ -260,7 +260,6 @@ def make_deferred(con_mesh, rpasses):
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[GBUF_IDX_2].rg = vec2(posa - posb);')
             frag.write('fragColor[GBUF_IDX_2].b = 0.0;')
-
         if mat_state.material.arm_ignore_irradiance:
             frag.write('fragColor[GBUF_IDX_2].b = 1.0;')
 
