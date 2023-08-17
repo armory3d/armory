@@ -130,7 +130,7 @@ vec4 traceSpecular(sampler3D voxels, const vec3 normal, const vec3 origin, const
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = reflect(-viewDir, normal);
 
-	return (traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel) + traceCone(voxels, origin, specularDir, specularAperture / 4.0, MAX_DISTANCE, clipmapLevel)) / 2.0;
+	return (traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel) + traceCone(voxels, origin, specularDir, specularAperture / 4.0, MAX_DISTANCE, clipmapLevel)) / 2.0;//divide aperture by pi ?
 }
 
 vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float ior, const float roughness, const int clipmapLevel) {
