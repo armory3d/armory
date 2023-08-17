@@ -154,7 +154,7 @@ def make_gi(context_id):
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    clipmapLevel = clipmapLevelGeom[i];')
-    geom.write('    clipmapOffset = voxelSize[i] - 2.0 / voxelgiResolution.x;')
+    geom.write('    clipmapOffset = voxelSize[i] - 1.0 / voxelgiResolution.x;')
     if '_Sun' in wrd.world_defs:
         geom.write('lightPosition = lightPositionGeom[i];')
     if '_SinglePoint' in wrd.world_defs and '_Spot' in wrd.world_defs:
@@ -404,7 +404,7 @@ def make_ao(context_id):
         geom.write('    stage_output.wpos = stage_input[i].svpos.xyz;')
         geom.write('    stage_output.clipmapOffset = stage_input[i].clipmapOffsetGeom.xyz;')
         geom.write('    stage_output.clipmapLevel = stage_input[i].clipmapLevelGeom;')
-        geom.write('    stage_output.clipmapOffset = stage_input[i].voxelSize - 2.0 / voxelgiResolution.x;')
+        geom.write('    stage_output.clipmapOffset = stage_input[i].voxelSize - 1.0 / voxelgiResolution.x;')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('      stage_output.svpos = float4(stage_input[i].svpos.x, stage_input[i].svpos.y, 0.0, 1.0);')
         geom.write('    }')
@@ -473,7 +473,7 @@ def make_ao(context_id):
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
         geom.write('    clipmapLevel = clipmapLevelGeom[i];')
-        geom.write('    clipmapOffset = voxelSize[i] - 2.0 / voxelgiResolution.x;')
+        geom.write('    clipmapOffset = voxelSize[i] - 1.0 / voxelgiResolution.x;')
         geom.write('    if (p.z > p.x && p.z > p.y) {')
         geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
         geom.write('    }')
