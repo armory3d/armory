@@ -69,7 +69,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		if(a > 0.0) {
 			vec4 mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0));
-			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, a));
+			mipSample = mix(mipSample, mipSampleNext, fract(lod));
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
