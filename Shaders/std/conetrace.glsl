@@ -13,8 +13,8 @@
 
 const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
-const float BORDER_OFFSET = 0.1;
-const float BORDER_WIDTH = 0.1;
+const float BORDER_OFFSET = 0.1 / voxelgiResolution.x;
+const float BORDER_WIDTH = 0.25 / voxelgiResolution.x;
 
 // uniform sampler3D voxels;
 // uniform sampler3D voxelsLast;
@@ -160,7 +160,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod).r;
 
 		if(a > 0.0) {
-			float mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0)).r;
+			float mipSampleNext = textureLod(voxels, samplePos * 0.5 + 0.5 + VOXEL_SIZE - 1.0 / voxelgiResolution.x, lod).r;
 			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, a));
 		}
         sampleCol += (1.0 - sampleCol) * mipSample;
