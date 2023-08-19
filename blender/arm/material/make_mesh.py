@@ -650,8 +650,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('float dist = max(abs(viewerPos.x - wposition.x), max(abs(viewerPos.y - wposition.y), abs(viewerPos.z - wposition.z)));')
         frag.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0.0));')
         frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-        frag.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;')
-        frag.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
+        frag.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0 * voxelgiStep / voxelgiResolution.x;')
+        frag.write('vec3 eyeSnap = floor((viewerPos + normalize(eyeLook) * clipmapLevelSize) / voxelSize) * voxelSize;')
         frag.write('vec3 voxpos = (wposition - eyeSnap) / clipmapLevelSize;')
 
     if '_VoxelAOvar' in wrd.world_defs:
