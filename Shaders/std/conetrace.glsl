@@ -67,10 +67,12 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod);
 
+		/*
 		if(a > 0.0) {
-			vec4 mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0));
+			vec4 mipSampleNext = textureLod(voxels, (samplePos + dir * (dist - max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist - max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0));
 			mipSample = mix(mipSample, mipSampleNext, fract(lod));
 		}
+		*/
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
         dist += max(diam / 2.0, VOXEL_SIZE);
@@ -154,7 +156,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 		float lod = max(log2(diam * voxelgiResolution.x), 0.0);
         float mipSample = 0.0;
 		vec3 alpha = abs(samplePos);
-		alpha = clamp((alpha + BORDER_OFFSET - ( 1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
+		alpha = clamp((alpha + BORDER_OFFSET - (1 - BORDER_WIDTH)) / BORDER_WIDTH, 0, 1);
 		float a = max(alpha.x, max(alpha.y, alpha.z));
 
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod).r;

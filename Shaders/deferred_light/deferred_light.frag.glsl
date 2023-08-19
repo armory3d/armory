@@ -228,17 +228,18 @@ void main() {
 	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
 	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
 	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
-	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-	vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
+	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;
+	vec3 eyeSnap = floor((normalize(viewerPos) + normalize(eyeLook) * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	float clipmapOffset = voxelSize - 1.0 / voxelgiResolution.x;
 #endif
 
 #ifdef _VoxelAOvar
 	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
 	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
 	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
-	float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-	vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
+	float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;
+	vec3 eyeSnap = floor((normalize(viewerPos) + normalize(eyeLook) * clipmapLevelSize) / voxelSize) * voxelSize;
 	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
 #endif
 
@@ -309,40 +310,11 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-
-	fragColor.rgb = envl;
-
-#ifdef _SSAO
-	// #ifdef _RTGI
-	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	// #else
-	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	// #endif
-#endif
-
-#ifdef _EmissionShadeless
-	if (matid == 1) { // pure emissive material, color stored in basecol
-		fragColor.rgb += g1.rgb;
-		fragColor.a = 1.0; // Mark as opaque
-		return;
-	}
-#endif
-#ifdef _EmissionShaded
-	#ifdef _EmissionShadeless
-	else {
-	#endif
-		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
-		fragColor.rgb += emission;
-	#ifdef _EmissionShadeless
-	}
-	#endif
-#endif
-
 #ifdef _VoxelGI
 	#ifdef _VoxelTemporal
-	fragColor.rgb += (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
+	fragColor.rgb = (traceDiffuse(voxpos, n, voxels).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
 	#else
-	fragColor.rgb += traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * albedo;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels).rgb * voxelgiDiff * albedo;
 	#endif
 	if(roughness < 1.0 && occspec.y > 0.0)
 		#ifdef _VoxelTemporal
@@ -379,6 +351,32 @@ void main() {
 
 	// Show SSAO
 	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
+
+#ifdef _SSAO
+	// #ifdef _RTGI
+	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	// #else
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
+	// #endif
+#endif
+
+#ifdef _EmissionShadeless
+	if (matid == 1) { // pure emissive material, color stored in basecol
+		fragColor.rgb += g1.rgb;
+		fragColor.a = 1.0; // Mark as opaque
+		return;
+	}
+#endif
+#ifdef _EmissionShaded
+	#ifdef _EmissionShadeless
+	else {
+	#endif
+		vec3 emission = textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		fragColor.rgb += emission;
+	#ifdef _EmissionShadeless
+	}
+	#endif
+#endif
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
