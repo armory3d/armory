@@ -57,7 +57,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * aperture);
+		float diam = max(VOXEL_SIZE, dist * aperture);
         float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		vec4 mipSample = vec4(0.0);
 
@@ -152,7 +152,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * aperture);
+		float diam = max(VOXEL_SIZE, dist * aperture);
 		float lod = max(log2(diam * voxelgiResolution.x), 0.0);
         float mipSample = 0.0;
 		vec3 alpha = abs(samplePos);
@@ -184,7 +184,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * aperture);
+		float diam = max(VOXEL_SIZE, dist * aperture);
 		float lod = log2(diam * voxelgiResolution.x);
         float mipSample = 0.0;
 		vec3 alpha = abs(samplePos);
