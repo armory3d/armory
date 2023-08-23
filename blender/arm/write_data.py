@@ -598,9 +598,6 @@ def write_compiledglsl(defs, make_variants):
                 f.write('#define GBUF_IDX_2 2\n')
                 idx_emission += 1
 
-            if '_EmissionShaded' in wrd.world_defs:
-                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
-
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
 #endif

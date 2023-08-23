@@ -592,7 +592,7 @@ class RenderPathDeferred {
 		#end
 
 		#if rp_gbuffer_emission
-		{const int
+		{
 			path.bindTarget("gbuffer_emission", "gbufferEmission");
 		}
 		#end
