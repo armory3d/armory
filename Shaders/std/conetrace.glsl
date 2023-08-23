@@ -67,12 +67,10 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod);
 
-		/*
 		if(a > 0.0) {
-			vec4 mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0));
+			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam)) * 0.5 + 0.5, max(log2((dist + diam) * aperture * voxelgiResolution.x), 0.0));
 			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, a));
 		}
-		*/
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
         dist += diam;
@@ -161,12 +159,10 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod).r;
 
-		/*
 		if(a > 0.0) {
-			float mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0)).r;
+			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam)) * 0.5 + 0.5, max(log2((dist + diam) * aperture * voxelgiResolution.x), 0.0)).r;
 			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, a));
 		}
-		*/
 
         sampleCol += (1.0 - sampleCol) * mipSample;
 
@@ -193,12 +189,10 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 
 		mipSample = textureLod(voxels, samplePos * 0.5 + 0.5, lod).r;
 
-		/*
 		if(a > 0.0) {
-			float mipSampleNext = textureLod(voxels, (samplePos + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2(((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture) * voxelgiResolution.x), 0.0)).r;
+			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam)) * 0.5 + 0.5, max(log2((dist + diam) * aperture * voxelgiResolution.x), 0.0)).r;
 			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, a));
 		}
-		*/
 
         sampleCol += (1.0 - sampleCol) * mipSample;
 
