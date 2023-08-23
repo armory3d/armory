@@ -22,11 +22,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+			#if rp_ssr "lbuffer1", #end
+			#if (rp_voxels != "Off") "gbuffer_voxpos", #end
+			]);
 		}
 		#else
 		{
@@ -162,12 +161,14 @@ class RenderPathForward {
 			Inc.initGI();
 
 			#if (rp_voxels == "Voxel GI")
-			Inc.initGI("voxelsNor");
-			Inc.initGI("voxelsOpac");
-
-			#if (rp_voxelgi_bounces != 1)
-			Inc.initGI("voxelsBounce");
-			#end
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_voxpos";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 			#end
 		}
 		#end
@@ -327,11 +328,12 @@ class RenderPathForward {
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 				Voxels.voxelize(voxels);
 			}
-			#else
+			#end
 
 			path.setTarget("");
 			var res = Inc.getVoxelRes();
 			path.setViewport(res, res);
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			path.bindTarget(voxels, "voxels");
 
 			#if (rp_voxels == "Voxel GI")
@@ -348,8 +350,6 @@ class RenderPathForward {
 
 			path.drawMeshes("voxel");
 			path.generateMipmaps(voxels);
-
-			#end
 		}
 		#end
 
@@ -385,6 +385,7 @@ class RenderPathForward {
 		#if (rp_voxels != "Off")
 		{
 			path.bindTarget(voxels, "voxels");
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			#if arm_voxelgi_temporal
 			{
 				path.bindTarget(voxelsLast, "voxelsLast");

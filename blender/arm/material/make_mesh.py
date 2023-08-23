@@ -642,17 +642,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
-        frag.add_uniform('vec3 viewerPos', '_viewerPos')
-        frag.add_uniform('vec3 eyeLook', '_cameraLook')
-        frag.add_uniform('int clipmapCount', '_clipmapCount')
         frag.add_uniform('sampler3D voxels')
-
-        frag.write('float dist = max(abs(viewerPos.x - wposition.x), max(abs(viewerPos.y - wposition.y), abs(viewerPos.z - wposition.z)));')
-        frag.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0.0));')
-        frag.write('float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);')
-        frag.write('float voxelSize = clipmapLevelSize / voxelgiResolution.x * 16.0;')
-        frag.write('vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;')
-        frag.write('vec3 voxpos = (wposition - eyeSnap) / clipmapLevelSize;')
+        frag.add_uniform('sampler2D gbuffer_voxpos')
+        vert.add_out('vec2 texCoord')
+        frag.write('vec3 voxpos = textureLod(gbuffer_voxpos, texCoord, 0.0).rgb;')
 
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:

@@ -37,13 +37,11 @@ uniform sampler2D gbuffer_refraction;
 
 #ifdef _VoxelGI
 uniform sampler3D voxels;
-uniform vec3 viewerPos;
-uniform int clipmapCount;
+uniform sampler2D gbuffer_voxpos;
 #endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
-uniform vec3 viewerPos;
-uniform int clipmapCount;
+uniform sampler2D gbuffer_voxpos;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -224,21 +222,11 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _VoxelGI
-	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
-	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
-	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
-	float voxelSize = clipmapLevelSize / voxelgiResolution.x;
-	vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 voxpos = textureLod(gbuffer_voxpos, texCoord, 0.0).rgb;
 #endif
 
 #ifdef _VoxelAOvar
-	float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));
-	int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x), 0));
-	float clipmapLevelSize = voxelgiHalfExtents.x * pow(2.0, clipmapLevel);
-	float voxelSize = clipmapLevelSize / voxelgiResolution.x;
-	vec3 eyeSnap = floor((viewerPos + eyeLook * clipmapLevelSize) / voxelSize) * voxelSize;
-	vec3 voxpos = (p - eyeSnap) / clipmapLevelSize;
+	vec3 voxpos = textureLod(gbuffer_voxpos, texCoord, 0.0).rgb;
 #endif
 
 #ifdef _VoxelRefract
