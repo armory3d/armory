@@ -385,13 +385,15 @@ def make_ao(context_id):
 
     geom.add_out('vec3 voxposition')
     geom.add_out('flat int clipmapLevel')
+    geom.add_out('float clipmapOffset')
 
     geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
     geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
-    geom.write('    voxposition = voxpositionGeom[i] + voxelSize[i] - 1.0 / voxelgiResolution.x;')
+    geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    clipmapLevel = clipmapLevelGeom[i];')
+    geom.write('    clipmapOffset = voxelSize[i] - 1.0 / voxelgiResolution.x;')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
     geom.write('    }')
@@ -409,7 +411,7 @@ def make_ao(context_id):
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('if (abs(voxposition.x) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.y) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.z) < (clipmapLevel / clipmapCount) * voxelgiResolution.x) return;')
 
-    frag.write('vec3 uvw = (voxposition * 0.5 + 0.5) * voxelgiResolution;')
+    frag.write('vec3 uvw = (voxposition * 0.5 + 0.5 + clipmapOffset) * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(uvw), vec4(1.0));')
     frag.add_out('vec3 voxpos')
     frag.write('voxpos = voxposition;')
