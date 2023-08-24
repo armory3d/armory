@@ -1,0 +1,29 @@
+{
+	"contexts": [
+		{
+			"name": "blur_bilat_blend_pass_y",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_bilat_blend_pass.frag.glsl"
+		}
+	]
+}

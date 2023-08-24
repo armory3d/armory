@@ -1,0 +1,42 @@
+{
+	"contexts": [
+		{
+			"name": "sss_pass_x",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2x"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "sss_pass.frag.glsl"
+		},
+		{
+			"name": "sss_pass_y",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "sss_pass.frag.glsl"
+		}
+	]
+}
