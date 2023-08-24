@@ -160,7 +160,6 @@ class RenderPathForward {
 		{
 			Inc.initGI();
 
-			#if (rp_voxels == "Voxel GI")
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_voxpos";
 			t.width = 0;
@@ -169,7 +168,6 @@ class RenderPathForward {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			#end
 		}
 		#end
 

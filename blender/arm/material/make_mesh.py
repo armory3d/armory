@@ -644,8 +644,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         frag.add_uniform('sampler2D gbuffer_voxpos')
-        vert.add_out('vec2 texCoord')
-        frag.write('vec3 voxpos = textureLod(gbuffer_voxpos, texCoord, 0.0).rgb;')
+        frag.write('vec3 voxpos = textureLod(gbuffer_voxpos, wposition.xy, 0.0).rgb;')
 
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:
