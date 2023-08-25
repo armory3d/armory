@@ -350,52 +350,57 @@ class ArmBakeRemoveBakedMaterialsButton(bpy.types.Operator):
                 bpy.data.materials.remove(mat, do_unlink=True)
         return{'FINISHED'}
 
+
+__REG_CLASSES = (
+    ArmBakeListItem,
+    ARM_UL_BakeList,
+    ArmBakeListNewItem,
+    ArmBakeListDeleteItem,
+    ArmBakeListMoveItem,
+    ArmBakeButton,
+    ArmBakeApplyButton,
+    ArmBakeSpecialsMenu,
+    ArmBakeAddAllButton,
+    ArmBakeAddSelectedButton,
+    ArmBakeClearAllButton,
+    ArmBakeRemoveBakedMaterialsButton
+)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmBakeListItem)
-    bpy.utils.register_class(ARM_UL_BakeList)
-    bpy.utils.register_class(ArmBakeListNewItem)
-    bpy.utils.register_class(ArmBakeListDeleteItem)
-    bpy.utils.register_class(ArmBakeListMoveItem)
-    bpy.utils.register_class(ArmBakeButton)
-    bpy.utils.register_class(ArmBakeApplyButton)
-    bpy.utils.register_class(ArmBakeSpecialsMenu)
-    bpy.utils.register_class(ArmBakeAddAllButton)
-    bpy.utils.register_class(ArmBakeAddSelectedButton)
-    bpy.utils.register_class(ArmBakeClearAllButton)
-    bpy.utils.register_class(ArmBakeRemoveBakedMaterialsButton)
-    bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
+    __reg_classes()
+
+    bpy.types.Scene.arm_bakelist_scale = FloatProperty(
+        name="Resolution", description="Resolution scale", subtype='PERCENTAGE',
+        default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0
+    )
     bpy.types.Scene.arm_bakelist = CollectionProperty(type=ArmBakeListItem)
     bpy.types.Scene.arm_bakelist_index = IntProperty(name="Index for my_list", default=0)
     bpy.types.Scene.arm_bakelist_unwrap = EnumProperty(
-        items = [('Lightmap Pack', 'Lightmap Pack', 'Lightmap Pack'),
-                 ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],
-        name = "UV Unwrap", default='Smart UV Project')
+        name="UV Unwrap", default='Smart UV Project',
+        items=[
+            ('Lightmap Pack', 'Lightmap Pack', 'Lightmap Pack'),
+            ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')
+        ]
+    )
 
-
-    #Register lightmapper
+    # Register lightmapper
     bpy.types.Scene.arm_bakemode = EnumProperty(
-        items = [('Static Map', 'Static Map', 'Static Map'),
-                 ('Lightmap', 'Lightmap', 'Lightmap')],
-        name = "Bake mode", default='Static Map')
+        name="Bake mode", default='Static Map',
+        items=[
+            ('Static Map', 'Static Map', 'Static Map'),
+            ('Lightmap', 'Lightmap', 'Lightmap')
+        ]
+    )
 
     operators.register()
     properties.register()
 
+
 def unregister():
-    bpy.utils.unregister_class(ArmBakeListItem)
-    bpy.utils.unregister_class(ARM_UL_BakeList)
-    bpy.utils.unregister_class(ArmBakeListNewItem)
-    bpy.utils.unregister_class(ArmBakeListDeleteItem)
-    bpy.utils.unregister_class(ArmBakeListMoveItem)
-    bpy.utils.unregister_class(ArmBakeButton)
-    bpy.utils.unregister_class(ArmBakeApplyButton)
-    bpy.utils.unregister_class(ArmBakeSpecialsMenu)
-    bpy.utils.unregister_class(ArmBakeAddAllButton)
-    bpy.utils.unregister_class(ArmBakeAddSelectedButton)
-    bpy.utils.unregister_class(ArmBakeClearAllButton)
-    bpy.utils.unregister_class(ArmBakeRemoveBakedMaterialsButton)
+    __unreg_classes()
 
-    #Unregister lightmapper
-
+    # Unregister lightmapper
     operators.unregister()
     properties.unregister()

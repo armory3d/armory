@@ -174,6 +174,7 @@ def on_save_pre(context):
 @persistent
 def on_load_pre(context):
     unload_py_libraries()
+    log.clear(clear_warnings=True, clear_errors=True)
 
 
 @persistent
