@@ -138,6 +138,9 @@ class ArmoryExporter:
         self.world_array = []
         self.particle_system_array = {}
 
+        self.referenced_collections: list[bpy.types.Collection] = []
+        """Collections referenced by collection instances"""
+
         self.has_spawning_camera = False
         """Whether there is at least one camera in the scene that spawns by default"""
 
@@ -771,6 +774,7 @@ class ArmoryExporter:
 
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
+                self.referenced_collections.append(bobject.instance_collection)
 
             if bobject.arm_tilesheet != '':
                 out_object['tilesheet_ref'] = bobject.arm_tilesheet
@@ -2433,7 +2437,7 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                if self.scene.user_of_id(collection) or collection.library:
+                if self.scene.user_of_id(collection) or collection.library or collection in self.referenced_collections:
                     self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:

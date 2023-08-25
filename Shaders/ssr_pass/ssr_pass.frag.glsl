@@ -24,8 +24,8 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-const int numBinarySearchSteps = 7;
-const int maxSteps = 18;
+#define numBinarySearchSteps int((1.0 / ssrMinRayStep) * 7.0)
+#define maxSteps int((1.0 / ssrRayStep) * ssrSearchDist)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -45,18 +45,17 @@ float getDeltaDepth(const vec3 hit) {
 
 vec4 binarySearch(vec3 dir) {
 	float ddepth;
-	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= 0.5;
+		dir *= ssrMinRayStep;
 		hitCoord -= dir;
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	if (abs(ddepth) > PPComp9.z) return vec4(0.0);
 	#else
-		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
+	if (abs(ddepth) > ssrSearchDist) return vec4(0.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -69,7 +68,7 @@ vec4 rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(hitCoord);
 	}
 	return vec4(0.0);
 }
@@ -89,11 +88,10 @@ void main() {
 	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
-	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	vec3 reflected = reflect(normalize(viewPos), normalize(viewNormal));
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

@@ -20,10 +20,6 @@
 					"link": "_viewerPos"
 				},
 				{
-					"name": "lookWorld",
-					"link": "_lookWorld"
-				},
-				{
 					"name": "voxelBlend",
 					"link": "_voxelBlend",
 					"ifdef": ["_VoxelTemporal"]

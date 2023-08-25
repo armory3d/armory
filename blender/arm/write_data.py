@@ -468,7 +468,6 @@ class Main {
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
     public static inline var voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) +  """;
-
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
         if rpdat.rp_bloom:
@@ -499,6 +498,10 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
+        if wrd.arm_canvas_img_scaling_quality == 'low':
+            f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
+        elif wrd.arm_canvas_img_scaling_quality == 'high':
+            f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -594,9 +597,6 @@ def write_compiledglsl(defs, make_variants):
             if '_gbuffer2' in wrd.world_defs:
                 f.write('#define GBUF_IDX_2 2\n')
                 idx_emission += 1
-
-            if '_EmissionShaded' in wrd.world_defs:
-                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY

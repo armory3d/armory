@@ -54,9 +54,47 @@ def parse_invert(node: bpy.types.ShaderNodeInvert, out_socket: bpy.types.NodeSoc
     return f'mix({out_col}, vec3(1.0) - ({out_col}), {fac})'
 
 
-def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    col1 = c.parse_vector_input(node.inputs[1])
-    col2 = c.parse_vector_input(node.inputs[2])
+def parse_mix(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> str:
+    if node.data_type == 'FLOAT':
+        return _parse_mixfloat(node, out_socket, state)
+    elif node.data_type == 'VECTOR':
+        return _parse_mixvec(node, out_socket, state)
+    elif node.data_type == 'RGBA':
+        return _parse_mixrgb(node, out_socket, state)
+    else:
+        log.warn(f'Mix node: unsupported data type {node.data_type}.')
+        return '0.0'
+
+
+def _parse_mixfloat(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> floatstr:
+    fac = c.parse_value_input(node.inputs[0])
+    if node.clamp_factor:
+        fac = f'clamp({fac}, 0.0, 1.0)'
+
+    return f'mix({c.parse_value_input(node.inputs[2])}, {c.parse_value_input(node.inputs[3])}, {fac})'
+
+
+def _parse_mixvec(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    if node.factor_mode == 'UNIFORM':
+        fac = c.parse_value_input(node.inputs[0])
+        if node.clamp_factor:
+            fac = f'clamp({fac}, 0.0, 1.0)'
+
+    elif node.factor_mode == 'NON_UNIFORM':
+        fac = c.parse_vector_input(node.inputs[1])
+        if node.clamp_factor:
+            fac = f'clamp({fac}, vec3(0.0), vec3(1.0))'
+
+    else:
+        log.warn(f'Mix node: unsupported factor mode {node.factor_mode}.')
+        return 'vec3(0.0, 0.0, 0.0)'
+
+    return f'mix({c.parse_vector_input(node.inputs[4])}, {c.parse_vector_input(node.inputs[5])}, {fac})'
+
+
+def _parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    col1 = c.parse_vector_input(node.inputs[6])
+    col2 = c.parse_vector_input(node.inputs[7])
 
     # Store factor in variable for linked factor input
     if node.inputs[0].is_linked:
@@ -64,6 +102,9 @@ def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSoc
         state.curshader.write('float {0} = {1};'.format(fac, c.parse_value_input(node.inputs[0])))
     else:
         fac = c.parse_value_input(node.inputs[0])
+
+    if node.clamp_factor:
+        fac = f'clamp({fac}, 0.0, 1.0)'
 
     # TODO: Do not mix if factor is constant 0.0 or 1.0?
 
@@ -109,7 +150,7 @@ def parse_mixrgb(node: bpy.types.ShaderNodeMixRGB, out_socket: bpy.types.NodeSoc
         log.warn(f'MixRGB node: unsupported blend type {node.blend_type}.')
         return col1
 
-    if node.use_clamp:
+    if node.clamp_result:
         return 'clamp({0}, vec3(0.0), vec3(1.0))'.format(out_col)
     return out_col
 

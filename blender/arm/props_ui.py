@@ -1072,6 +1072,8 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_export_tangents')
 
         col = layout.column(heading='Quality')
+        row = col.row()  # To expand below property UI horizontally
+        row.prop(wrd, 'arm_canvas_img_scaling_quality', expand=True)
         col.prop(wrd, 'arm_texture_quality')
         col.prop(wrd, 'arm_sound_quality')
 
@@ -1705,7 +1707,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col3 = col.column()
         col3.enabled = rpdat.rp_voxels == 'Voxel AO'
-        col3.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         #col2.prop(rpdat, 'rp_voxelgi_relight')
         col2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
         #col2.prop(rpdat, 'arm_voxelgi_bounces')

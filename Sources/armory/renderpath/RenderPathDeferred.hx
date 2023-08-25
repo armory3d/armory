@@ -59,6 +59,16 @@ class RenderPathDeferred {
 		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
+
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_voxpos";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
 			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			#end
@@ -534,13 +544,13 @@ class RenderPathDeferred {
 			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-				Voxels.voxelize(voxels);
 			}
-			#else
+			#end
 
 			path.setTarget("");
 			var res = Inc.getVoxelRes();
 			path.setViewport(res, res);
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			path.bindTarget(voxels, "voxels");
 
 			#if (rp_voxels == "Voxel GI")
@@ -557,8 +567,6 @@ class RenderPathDeferred {
 
 			path.drawMeshes("voxel");
 			path.generateMipmaps(voxels);
-
-			#end
 		}
 		#end
 
@@ -604,10 +612,13 @@ class RenderPathDeferred {
 		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if arm_config
+			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
 			#end
+
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			path.bindTarget(voxels, "voxels");
+
 			#if arm_voxelgi_temporal
 			{
 				path.bindTarget(voxelsLast, "voxelsLast");

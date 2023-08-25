@@ -89,6 +89,18 @@ def on_operator_post(operator_id: str) -> None:
             target_obj.arm_rb_ccd = source_obj.arm_rb_ccd
             target_obj.arm_rb_collision_filter_mask = source_obj.arm_rb_collision_filter_mask
 
+    elif operator_id == "NODE_OT_new_node_tree":
+        if bpy.context.space_data.tree_type == arm.nodes_logic.ArmLogicTree.bl_idname:
+            # In Blender 3.5+, new node trees are no longer called "NodeTree"
+            # but follow the bl_label attribute by default. New logic trees
+            # are thus called "Armory Logic Editor" which conflicts with Haxe's
+            # class naming convention. To avoid this, we listen for the
+            # creation of a node tree and then rename it.
+            # Unfortunately, manually naming the tree has the unfortunate
+            # side effect of not basing the new name on the name of the
+            # previously opened node tree, as it is the case for Blender trees...
+            bpy.context.space_data.edit_tree.name = "LogicTree"
+
 
 def send_operator(op):
     if hasattr(bpy.context, 'object') and bpy.context.object is not None:
