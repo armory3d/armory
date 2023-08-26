@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class CallHaxeStaticNode(ArmLogicTreeNode):
     """Calls the given static Haxe function and optionally passes arguments to it.
 
-    **Compatibility info**: prior versions of this node didn't accept arguments and instead implicitly passed the current logic tree object as the first argument. In newer versions you need to pass that argument explicitly if the called function expects it.
+    **Compatibility info**: pior versions of this node didn't accept arguments and instead implicitly passed the current logic tree object as the first argument. In newer versions you need to pass that argument explicitly if the called function expects it.
 
     @input Function: the full module path to the function.
     @output Result: the result of the function."""

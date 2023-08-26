@@ -14,7 +14,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxels && arm_config)
+	#if ((rp_voxels != 'Off') && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -356,7 +356,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (!voxelsCreated) initGI();
 		#end
 		#end // arm_config
@@ -442,17 +442,27 @@ class Inc {
 	}
 	#end
 
-	#if rp_voxels
+	#if (rp_voxels != 'Off')
 	public static function initGI(tname = "voxels") {
+		var t = new RenderTargetRaw();
+		t.name = tname;
+		
 		#if arm_config
 		var config = armory.data.Config.raw;
-		if (config.rp_gi != true || voxelsCreated) return;
+		if (config.rp_voxels != true || voxelsCreated) return;
 		voxelsCreated = true;
 		#end
 
-		var t = new RenderTargetRaw();
-		t.name = tname;
-		t.format = "R8";
+		#if (rp_voxels == "Voxel AO")
+		{
+			t.format = "R8";
+		}
+		#else
+		{
+			t.format = "RGBA64";
+		}
+		#end
+
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
 		t.width = res;

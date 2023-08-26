@@ -1692,13 +1692,6 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_RenderPathPanel"
 
-    def draw_header(self, context):
-        wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
-            return
-        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
-        self.layout.prop(rpdat, "rp_voxelao", text="")
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1708,22 +1701,36 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
-        layout.enabled = rpdat.rp_voxelao
-        layout.prop(rpdat, 'arm_voxelgi_shadows')
-        layout.prop(rpdat, 'arm_voxelgi_cones')
-        layout.prop(rpdat, 'rp_voxelgi_resolution')
-        layout.prop(rpdat, 'rp_voxelgi_resolution_z')
-        layout.prop(rpdat, 'arm_voxelgi_dimensions')
-        layout.prop(rpdat, 'arm_voxelgi_revoxelize')
-        col2 = layout.column()
-        col2.enabled = rpdat.arm_voxelgi_revoxelize
-        col2.prop(rpdat, 'arm_voxelgi_camera')
-        col2.prop(rpdat, 'arm_voxelgi_temporal')
-        layout.prop(rpdat, 'arm_voxelgi_occ')
-        layout.prop(rpdat, 'arm_voxelgi_step')
-        layout.prop(rpdat, 'arm_voxelgi_range')
-        layout.prop(rpdat, 'arm_voxelgi_offset')
-        layout.prop(rpdat, 'arm_voxelgi_aperture')
+        layout.prop(rpdat, 'rp_voxels')
+        col = layout.column()
+        col.enabled = rpdat.rp_voxels != 'Off'
+        col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col3 = col.column()
+        col3.enabled = rpdat.rp_voxels == 'Voxel AO'
+        col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        #col2.prop(rpdat, 'rp_voxelgi_relight')
+        col2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
+        #col2.prop(rpdat, 'arm_voxelgi_bounces')
+        col.prop(rpdat, 'arm_voxelgi_cones')
+        col.prop(rpdat, 'rp_voxelgi_resolution')
+        col.prop(rpdat, 'rp_voxelgi_resolution_z')
+        col.prop(rpdat, 'arm_voxelgi_dimensions')
+        col.prop(rpdat, 'arm_voxelgi_clipmap_count', text="Clipmap Count")
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col.prop(rpdat, 'arm_voxelgi_temporal')
+        col.label(text="Light")
+        col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col2.prop(rpdat, 'arm_voxelgi_diff')
+        col2.prop(rpdat, 'arm_voxelgi_spec')
+        col2.prop(rpdat, 'arm_voxelgi_refr')
+        col.prop(rpdat, 'arm_voxelgi_occ')
+        col.label(text="Ray")
+        col.prop(rpdat, 'arm_voxelgi_step')
+        col.prop(rpdat, 'arm_voxelgi_range')
+        col.prop(rpdat, 'arm_voxelgi_offset')
+        col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
     bl_label = "World"

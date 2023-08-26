@@ -18,7 +18,7 @@ class Uniforms {
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
 		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
-		iron.object.Uniforms.externalIntLinks = [];
+		iron.object.Uniforms.externalIntLinks = [intLink];
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): Null<kha.Image> {
@@ -166,17 +166,13 @@ class Uniforms {
 				}
 			}
 			#end
-			#if rp_voxels
-			case "_cameraPositionSnap": {
-				v = iron.object.Uniforms.helpVec;
+
+			#if (rp_voxels != "Off")
+			case "_viewerPos": {
 				var camera = iron.Scene.active.camera;
-				v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var l = camera.lookWorld();
-				var e = Main.voxelgiHalfExtents;
-				v.x += l.x * e * 0.9;
-				v.y += l.y * e * 0.9;
-				var f = Main.voxelgiVoxelSize * 8; // Snaps to 3 mip-maps range
-				v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
+				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+				v = iron.object.Uniforms.helpVec;
+				v.set(viewerPos.x, viewerPos.y, viewerPos.z);
 			}
 			#end
 		}
@@ -213,15 +209,25 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-			#if rp_voxels
+			#if rp_bloom
+			case "_bloomSampleScale": {
+				return Postprocess.bloom_uniforms[3];
+			}
+			#end
+			#if (rp_voxels != 'Off')
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
 				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
 			}
 			#end
-			#if rp_bloom
-			case "_bloomSampleScale": {
-				return Postprocess.bloom_uniforms[3];
+		}
+		return null;
+	}
+	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
+		switch(link) {
+			#if (rp_voxels != "Off")
+			case "_clipmapCount": {
+				return Main.voxelgiClipmapCount;
 			}
 			#end
 		}

@@ -190,7 +190,7 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         # needs to be overridden by individual node classes with arm_version>1
-        """(only called if the node's version is inferior to the node class's version)
+        """(only called if the node's version is infeior to the node class's version)
         Help with the node replacement process, by explaining how a node (`self`) should be replaced.
         This method can either return a NodeReplacement object (see `nodes_logic.py`), or a brand new node.
 
