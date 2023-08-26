@@ -539,7 +539,10 @@ def is_parsed(node_store_name: str):
 def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Return the name of the variable that stores the parsed result
     from the given node and socket."""
-    return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
+    name = node_name(node.name) + '_' + safesrc(socket.name) + '_res'
+    if '__' in name:  # Consecutive _ are reserved
+        name = name.replace('_', '_x')
+    return name
 
 
 def write_result(link: bpy.types.NodeLink) -> Optional[str]:
@@ -601,8 +604,12 @@ def to_uniform(inp: bpy.types.NodeSocket):
     state.curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
-def store_var_name(node: bpy.types.Node):
-    return node_name(node.name) + '_store'
+
+def store_var_name(node: bpy.types.Node) -> str:
+    name = node_name(node.name)
+    if name[-1] == "_":
+        return name + '_x_store'  # Prevent consecutive __
+    return name + '_store'
 
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
@@ -773,7 +780,7 @@ def node_name(s: str) -> str:
     if state.curshader.write_textures > 0:
         s += '_texread'
     s = safesrc(s)
-    if '__' in s: # Consecutive _ are reserved
+    if '__' in s:  # Consecutive _ are reserved
         s = s.replace('_', '_x')
     return s
 
