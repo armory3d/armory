@@ -328,10 +328,9 @@ class RenderPathForward {
 			}
 			#end
 
-			path.setTarget("");
+			path.setTarget("gbuffer_voxpos");
 			var res = Inc.getVoxelRes();
 			path.setViewport(res, res);
-			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			path.bindTarget(voxels, "voxels");
 
 			#if (rp_voxels == "Voxel GI")
