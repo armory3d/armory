@@ -336,8 +336,7 @@ def make_gi(context_id):
         frag.write('basecol *= visibility * lightsArray[li * 3 + 1].xyz;')
         frag.write('}')
 
-    frag.write('vec3 uvw = (voxposition * 0.5 + 0.5 + clipmapOffset) * voxelgiResolution;')
-    frag.add_uniform('sampler2D gbuffer_voxpos')
+    frag.write('vec3 uvw = (voxposition * 0.5 + 0.5 + clipmapOffset) * voxelgiResolution;')
     frag.add_out('vec3 voxpos')
     frag.write('voxpos.rgb = voxposition;')
     frag.write('imageStore(voxels, ivec3(uvw), vec4(min(surfaceAlbedo(basecol, metallic) + emissionCol, vec3(1.0)), 1.0));')
@@ -370,8 +369,7 @@ def make_ao(context_id):
     vert.add_out('vec3 voxpositionGeom')
 
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
-    vert.add_uniform('vec3 eyeLook', '_cameraLook')
-    vert.add_uniform('int clipmapCount', '_clipmapCount')
+    vert.add_uniform('vec3 eyeLook', '_cameraLook)
     vert.add_out('int clipmapLevelGeom')
     vert.add_out('float voxelSize')
 
