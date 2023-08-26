@@ -119,8 +119,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.add_uniform('vec3 viewerPos', '_viewerPos')
-    vert.add_uniform('vec3 eyeLook', '_cameraLook')
-    vert.add_uniform('int clipmapCount', '_clipmapCount')
+    vert.add_uniform('vec3 eyeLook', '_cameraLook')
     vert.add_out('int clipmapLevelGeom')
     vert.add_out('float voxelSize')
 
