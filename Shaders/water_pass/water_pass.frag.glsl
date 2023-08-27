@@ -38,8 +38,8 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-const int numBinarySearchSteps = 16;
-const int maxSteps = 16;
+const int numBinarySearchSteps = 7;
+#define maxSteps int(ceil(1.0 / ssrRayStep) * ssrSearchDist)
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -152,7 +152,7 @@ void main() {
 
 	vec3 viewNormal = n2;
 	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
-	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	vec3 reflected = reflect(viewPos, viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

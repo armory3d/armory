@@ -27,7 +27,7 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-#define maxSteps int((1.0 / ss_refractionRayStep) * ss_refractionSearchDist)
+#define maxSteps int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist)
 
 vec2 getProjectedCoord(const vec3 hit) {
     vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -73,7 +73,7 @@ vec4 rayCast(vec3 dir) {
     for (int i = 0; i < maxSteps; i++) {
         hitCoord += dir;
         d = getDeltaDepth(hitCoord);
-        if (d > 0.0) return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
+        if (d > 0.0) return vec4(getProjectedCoord(dir), 0.0, 1.0);
     }
     return vec4(texCoord, 0.0, 1.0);
 }
@@ -96,11 +96,11 @@ void main() {
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
     n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    n = normalize(n);
+	n = normalize(n);
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-    vec3 refracted = refract(normalize(-viewPos), viewNormal, 1.0 / ior);
+    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
 #ifdef _CPostprocess
@@ -124,5 +124,6 @@ void main() {
     intensity = clamp(intensity, 0.0, 1.0);
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
     refractionCol = clamp(refractionCol, 0.0, 1.0);
-    fragColor.rgb = mix(refractionCol * intensity, textureLod(tex, texCoord.xy, 0.0).rgb, opac);
+	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+    fragColor.rgb = mix(refractionCol * intensity + color, color, opac);
 }
