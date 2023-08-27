@@ -108,7 +108,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')
-            #assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count))
 
             if rpdat.arm_voxelgi_bounces == '2':
                 wrd.world_defs += '_VoxelBounces'

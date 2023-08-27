@@ -178,9 +178,7 @@ def make_gi(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    frag.add_uniform('int clipmapCount', '_clipmapCount')
     frag.write('if (abs(voxposition.x) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.y) > 1 || abs(voxposition.z) > 1) return;')
-    frag.write('if (abs(voxposition.x) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.y) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.z) < (clipmapLevel / clipmapCount) * voxelgiResolution.x) return;')
 
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -404,9 +402,7 @@ def make_ao(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    frag.add_uniform('int clipmapCount', '_clipmapCount')
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
-    frag.write('if (abs(voxposition.x) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.y) < (clipmapLevel / clipmapCount) * voxelgiResolution.x || abs(voxposition.z) < (clipmapLevel / clipmapCount) * voxelgiResolution.x) return;')
 
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5 + clipmapOffset) * voxelgiResolution;')
     frag.write('imageStore(voxels, ivec3(uvw), vec4(1.0));')

@@ -18,7 +18,7 @@ class Uniforms {
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
 		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
-		iron.object.Uniforms.externalIntLinks = [intLink];
+		iron.object.Uniforms.externalIntLinks = [];
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): Null<kha.Image> {
@@ -218,16 +218,6 @@ class Uniforms {
 			case "_voxelBlend": { // Blend current and last voxels
 				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
 				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
-			}
-			#end
-		}
-		return null;
-	}
-	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
-		switch(link) {
-			#if (rp_voxels != "Off")
-			case "_clipmapCount": {
-				return Main.voxelgiClipmapCount;
 			}
 			#end
 		}
