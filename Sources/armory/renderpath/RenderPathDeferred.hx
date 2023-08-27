@@ -570,6 +570,7 @@ class RenderPathDeferred {
 			path.generateMipmaps(voxels);
 
 			#if arm_voxelgi_bounces
+			path.setTarget("");
 			path.bindTarget(voxels, "voxels");
 			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
 			path.bindTarget("voxelsBounce", "voxelsBounce");
