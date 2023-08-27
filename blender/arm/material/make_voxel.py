@@ -55,7 +55,6 @@ def make_gi(context_id):
 
     rpdat = arm.utils.get_rp()
     frag.add_uniform('layout(binding = 0, rgba8) image3D voxels')
-    frag.add_uniform('layout(binding = 1, rgba8) image3D voxelsNor')
 
     frag.write('vec3 basecol;')
     frag.write('float roughness;') #

@@ -99,6 +99,10 @@ def add_world_defs():
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelShadow'
 
+        if rpdat.arm_voxelgi_bounces:
+            wrd.world_defs += '_VoxelBounces'
+            assets.add_khafile_def('arm_voxelgi_bounces')
+
         if rpdat.arm_voxelgi_temporal:
             wrd.world_defs += '_VoxelTemporal'
             assets.add_khafile_def('arm_voxelgi_temporal')

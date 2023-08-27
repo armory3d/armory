@@ -51,6 +51,8 @@ def get_rpasses(material):
             ar.append('translucent')
         if rpdat.rp_voxels != "Off" and has_voxels:
            ar.append('voxel')
+           if rpdat.arm_voxelgi_bounces != 1:
+               ar.append('voxel_bounce')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
 

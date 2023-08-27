@@ -472,6 +472,17 @@ class Inc {
 		t.mipmaps = true;
 		path.createRenderTarget(t);
 
+		#if arm_voxelgi_bounces
+		var t = new RenderTargetRaw();
+		t.name = "voxelsBounce";
+		t.width = res;
+		t.height = res;
+		t.depth = Std.int(res * resZ);
+		t.is_image = true;
+		t.mipmaps = true;
+		path.createRenderTarget(t);
+		#end
+
 		#if arm_voxelgi_temporal
 		{
 			var tB = new RenderTargetRaw();

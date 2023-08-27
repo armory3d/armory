@@ -12,10 +12,6 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "clipmapCount",
-					"link": "_clipmapCount"
-				},
-				{
 					"name": "viewerPos",
 					"link": "_viewerPos"
 				},

@@ -567,6 +567,13 @@ class RenderPathDeferred {
 
 			path.drawMeshes("voxel");
 			path.generateMipmaps(voxels);
+
+			#if arm_voxelgi_bounces
+			path.bindTarget(voxels, "voxels")
+			path.bindTarget("voxelsBounce", "voxelsBounce")
+			path.drawMeshes("voxel_bounce")
+			path.generateMipmaps("voxel_bounce")
+			#end
 		}
 		#end
 
@@ -617,7 +624,12 @@ class RenderPathDeferred {
 			#end
 
 			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
+
+			#if arm_voxelgi_bounces
+			path.bindTarget(voxels, "voxelsBounce");
+			#else
 			path.bindTarget(voxels, "voxels");
+			#end
 
 			#if arm_voxelgi_temporal
 			{
