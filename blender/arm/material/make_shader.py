@@ -17,7 +17,7 @@ import arm.material.make_mesh as make_mesh
 import arm.material.make_overlay as make_overlay
 import arm.material.make_transluc as make_transluc
 import arm.material.make_voxel as make_voxel
-import arm.material.make_voxel_bounce as make_voxel_bounce
+import arm.material.make_voxelbounce as make_voxelbounce
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 from arm.material.shader import Shader, ShaderContext, ShaderData
@@ -35,7 +35,7 @@ if arm.is_reload(__name__):
     make_overlay = arm.reload_module(make_overlay)
     make_transluc = arm.reload_module(make_transluc)
     make_voxel = arm.reload_module(make_voxel)
-    make_voxel_bounce = arm.reload_module(make_voxel_bounce)
+    make_voxelbounce = arm.reload_module(make_voxelbounce)
     mat_state = arm.reload_module(mat_state)
     mat_utils = arm.reload_module(mat_utils)
     arm.material.shader = arm.reload_module(arm.material.shader)
@@ -110,8 +110,8 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         elif rp == 'voxel':
             con = make_voxel.make(rp)
 
-        elif rp == 'voxel_bounce':
-            con = make_voxel_bounce.make(rp)
+        elif rp == 'voxelbounce':
+            con = make_voxelbounce.make(rp)
 
         elif rpass_hook is not None:
             con = rpass_hook(rp)

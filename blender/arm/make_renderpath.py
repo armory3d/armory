@@ -94,14 +94,10 @@ def add_world_defs():
             voxelao = True
 
     if voxelgi or voxelao:
-        assets.add_khafile_def('arm_voxelgi')#might be uneeded
+        assets.add_khafile_def('arm_voxelgi')# might be uneeded
         wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelShadow'
-
-        if rpdat.arm_voxelgi_bounces:
-            wrd.world_defs += '_VoxelBounces'
-            assets.add_khafile_def('arm_voxelgi_bounces')
 
         if rpdat.arm_voxelgi_temporal:
             wrd.world_defs += '_VoxelTemporal'
@@ -112,7 +108,11 @@ def add_world_defs():
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')
-            assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count))
+            #assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count))
+
+            if rpdat.arm_voxelgi_bounces == '2':
+                wrd.world_defs += '_VoxelBounces'
+                assets.add_khafile_def('arm_voxelgi_bounces')
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant

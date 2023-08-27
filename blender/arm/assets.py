@@ -54,6 +54,7 @@ def reset():
     shader_cons['voxel_vert'] = []
     shader_cons['voxel_frag'] = []
     shader_cons['voxel_geom'] = []
+    shader_cons['voxelbounce_frag'] = []
 
 def add(asset_file):
     global assets

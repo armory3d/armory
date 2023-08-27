@@ -328,10 +328,11 @@ class RenderPathForward {
 			}
 			#end
 
-			path.setTarget("gbuffer_voxpos");
+			path.setTarget("", ["gbuffer_voxpos"]);
+			path.bindTarget(voxels, "voxels");
+
 			var res = Inc.getVoxelRes();
 			path.setViewport(res, res);
-			path.bindTarget(voxels, "voxels");
 
 			#if (rp_voxels == "Voxel GI")
 			#if rp_shadowmap
@@ -347,6 +348,14 @@ class RenderPathForward {
 
 			path.drawMeshes("voxel");
 			path.generateMipmaps(voxels);
+
+			#if arm_voxelgi_bounces
+			path.bindTarget(voxels, "voxels");
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
+			path.bindTarget("voxelsBounce", "voxelsBounce");
+			path.drawMeshes("voxel_bounce");
+			path.generateMipmaps("voxelsBounce");
+			#end
 		}
 		#end
 

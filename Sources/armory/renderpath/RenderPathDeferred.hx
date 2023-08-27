@@ -547,10 +547,12 @@ class RenderPathDeferred {
 			}
 			#end
 
-			path.setTarget("gbuffer_voxpos");
-			var res = Inc.getVoxelRes();
-			path.setViewport(res, res)
+
+			path.setTarget("", ["gbuffer_voxpos"]);
 			path.bindTarget(voxels, "voxels");
+
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
 
 			#if (rp_voxels == "Voxel GI")
 			#if rp_shadowmap
@@ -568,10 +570,11 @@ class RenderPathDeferred {
 			path.generateMipmaps(voxels);
 
 			#if arm_voxelgi_bounces
-			path.bindTarget(voxels, "voxels")
-			path.bindTarget("voxelsBounce", "voxelsBounce")
-			path.drawMeshes("voxel_bounce")
-			path.generateMipmaps("voxel_bounce")
+			path.bindTarget(voxels, "voxels");
+			path.bindTarget("gbuffer_voxpos", "gbuffer_voxpos");
+			path.bindTarget("voxelsBounce", "voxelsBounce");
+			path.drawMeshes("voxelbounce");
+			path.generateMipmaps("voxelsBounce");
 			#end
 		}
 		#end
