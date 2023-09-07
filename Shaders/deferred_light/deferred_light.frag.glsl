@@ -233,7 +233,7 @@ void main() {
 		if (g2.b < 0.5) {
 			envl = envl;
 		} else {
-			envl = vec3(1.0);
+			envl = vec3(0.0);
 		}
 	#endif
 
@@ -241,7 +241,7 @@ void main() {
 		envl /= PI;
 	#endif
 #else
-	vec3 envl = vec3(1.0);
+	vec3 envl = vec3(0.0);
 #endif
 
 #ifdef _Rad
