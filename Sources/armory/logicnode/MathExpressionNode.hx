@@ -3,43 +3,67 @@ package armory.logicnode;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
+import haxe.ds.Vector;
 
 class MathExpressionNode extends LogicNode {
 
-	public var property0: String; // Expression
-	public var property1: Bool; // Clamp
-
+	var formula:Formula;
+	var paramFormula:Vector<Formula>;
+	
+	public var property0:Bool; // Clamp	
+	public var property1:Int; // Number of params
+	
+	public var property2(default, set):String; // Formula Expression
+	
+	function set_property2(s:String):String {
+		try {
+			formula = Formula.fromString(s);
+			paramFormula = new Vector(property1);
+			// trace("number of params:", property1);
+			for (i in 0...property1) {
+				var p:Formula = 0.0;
+				p.name = String.fromCharCode(97+i);
+				paramFormula.set(i, p);
+				if( formula.hasParam(p.name) ) {
+					// trace("bind to param:", p.name);
+					formula.bind( paramFormula.get(i) );
+				}
+			}
+		}
+		catch(msg: String) {
+			#if arm_debug
+			trace("Math Expression Node - " + msg);
+			#end
+		}
+		return property2 = s;
+	}
+	
+	
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
-
-	
-	static inline var paramNames = "abcdexyhijk";
 	
 	override function get(from: Int): Dynamic {
 		var result:Float = 0.0;
-        var expression:String = property0;
-				
-        // Expression
-        try {
-            var formula:Formula = new Formula(expression);
-			
-			// bind variables
-			for (i in 0...inputs.length) {
-				formula.bind( (inputs[i].get():Float), paramNames.substr(i, 1) );
+		
+		// Expression
+		try {
+			// set new values to param-subformulas
+			for (i in 0...property1) {
+				// paramFormula.get(i).set( (inputs[i].get():Float) );
+				paramFormula.get(i).left.value = inputs[i].get(); // optimized
 			}
-			
-            result = formula.result;
-			
-        } catch(msg: String) {
+			result = formula.result;
+		}
+		catch(msg:String) {
 			#if arm_debug
-            trace(msg);
+			trace("Math Expression Node - " + msg);
 			#end
-        }
+		}
 		
 		// Clamp
-		if (property1) result = result < 0.0 ? 0.0 : (result > 1.0 ? 1.0 : result);
-
+		if (property0) result = result < 0.0 ? 0.0 : (result > 1.0 ? 1.0 : result);
+		
 		return result;
 	}
 }
@@ -56,7 +80,7 @@ class MathExpressionNode extends LogicNode {
      by Sylvio Sell, Rostock 2023
 */
 
-@:forward( name, result, depth, params, hasParam, hasBinding, resolveAll, unbindAll, toBytes, debug, copy, derivate, simplify, expand, factorize)
+@:forward( value, left, name, result, depth, params, hasParam, hasBinding, resolveAll, unbindAll, toBytes, debug, copy, derivate, simplify, expand, factorize)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
     /**
