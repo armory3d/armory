@@ -260,6 +260,7 @@ def make_deferred(con_mesh, rpasses):
             frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[GBUF_IDX_2].rg = vec2(posa - posb);')
+            frag.write('fragColor[GBUF_IDX_2].b = 0.0;')
 
         if mat_state.material.arm_ignore_irradiance:
             frag.write('fragColor[GBUF_IDX_2].b = 1.0;')
@@ -535,25 +536,21 @@ def make_forward(con_mesh):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
-        mrt = 1
-        if rpdat.rp_ssr:
-            mrt += 1
-        if rpdat.rp_ss_refraction:
-            mrt += 1
-        if mrt > 1:
+        mrt = rpdat.rp_ssr or rpdat.rp_ss_refraction
+        if mrt:
             # Store light gbuffer for post-processing
-            frag.add_out('vec4 fragColor[{0}]'.format(mrt))
+            frag.add_out('vec4 fragColor[GBUF_SIZE]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-            frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-            frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
-
-            if mrt > 2:
+            frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
+            frag.write('fragColor[GBUF_IDX_1] = vec4(n.xy, roughness, metallic);')
+            if '_SSRefraction' in wrd.world_defs:
                 if parse_opacity:
-                    frag.write('fragColor[{0}] = vec4(rior, opacity, 0.0, 0.0);'.format(mrt-1))
+                    frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
                 else:
-                    frag.write('fragColor[{0}] = vec4(1.0, 1.0, 0.0, 0.0);'.format(mrt-1))
+                    frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
+
         else:
             frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')

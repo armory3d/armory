@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2023.5'
+arm_version = '2023.9'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -197,6 +197,40 @@ def init_properties():
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_bullet_dbg_draw_wireframe = BoolProperty(
+        name="Collider Wireframes", default=False,
+        description="Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations"
+    )
+    bpy.types.World.arm_bullet_dbg_draw_aabb = BoolProperty(
+        name="Axis-aligned Minimum Bounding Boxes", default=False,
+        description="Draw axis-aligned minimum bounding boxes (AABBs) of the physics collider meshes"
+    )
+    bpy.types.World.arm_bullet_dbg_draw_contact_points = BoolProperty(
+        name="Contact Points", default=False,
+        description="Visualize contact points of multiple colliders"
+    )
+    bpy.types.World.arm_bullet_dbg_draw_constraints = BoolProperty(
+        name="Constraints", default=False,
+        description="Draw axis gizmos for important constraint points"
+    )
+    bpy.types.World.arm_bullet_dbg_draw_constraint_limits = BoolProperty(
+        name="Constraint Limits", default=False,
+        description="Draw additional constraint information such as distance or angle limits"
+    )
+    bpy.types.World.arm_bullet_dbg_draw_normals = BoolProperty(
+        name="Face Normals", default=False,
+        description=(
+            "Draw the normal vectors of the triangles of the physics collider meshes."
+            " This only works for mesh collision shapes"
+        )
+    )
+    bpy.types.World.arm_bullet_dbg_draw_axis_gizmo = BoolProperty(
+        name="Axis Gizmos", default=False,
+        description=(
+            "Draw a small axis gizmo at the origin of the collision shape."
+            " Only works if \"Collider Wireframes\" is enabled as well"
+        )
+    )
     bpy.types.World.arm_navigation = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),
@@ -220,6 +254,15 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled')],
         name="Audio", default='Enabled', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_khafile = PointerProperty(name="Append Khafile", description="Source appended to the project's khafile.js after it is generated", update=assets.invalidate_compiler_cache, type=bpy.types.Text)
+    bpy.types.World.arm_canvas_img_scaling_quality = EnumProperty(
+        name='Canvas Image Quality',
+        description='The quality with which to scale images drawn to Kha canvases',
+        items=[
+            ('low', 'Low', 'Low quality. Scaling usually takes place using a point filter.'),
+            ('high', 'High', 'High quality. Scaling usually takes place using a bilinear filter.'),
+        ],
+        default='low'
+    )
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_copy_override = BoolProperty(name="Copy Override", description="Overrides any existing files when copying", default=False, update=assets.invalidate_compiled_data)

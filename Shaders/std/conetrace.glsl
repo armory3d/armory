@@ -50,7 +50,7 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 float traceConeAOShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const float offset) {
 	dir = normalize(dir);
 	float sampleCol = 0.0;
-	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset * 2.5; //
+	float dist = 1.5 * VOXEL_SIZE * voxelgiOffset * 2.5;
 	float diam = dist * aperture;
 	vec3 samplePos;
 	while (sampleCol < 1.0 && dist < maxDist) {

@@ -561,7 +561,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.25, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
@@ -743,21 +743,19 @@ class ArmRPListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 
+__REG_CLASSES = (
+    ArmRPListItem,
+    ARM_UL_RPList,
+    ArmRPListNewItem,
+    ArmRPListDeleteItem,
+    ArmRPListMoveItem,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmRPListItem)
-    bpy.utils.register_class(ARM_UL_RPList)
-    bpy.utils.register_class(ArmRPListNewItem)
-    bpy.utils.register_class(ArmRPListDeleteItem)
-    bpy.utils.register_class(ArmRPListMoveItem)
+    __reg_classes()
 
     bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
     bpy.types.World.rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
-
-
-def unregister():
-    bpy.utils.unregister_class(ArmRPListItem)
-    bpy.utils.unregister_class(ARM_UL_RPList)
-    bpy.utils.unregister_class(ArmRPListNewItem)
-    bpy.utils.unregister_class(ArmRPListDeleteItem)
-    bpy.utils.unregister_class(ArmRPListMoveItem)

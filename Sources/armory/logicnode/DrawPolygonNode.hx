@@ -4,7 +4,9 @@ import kha.Color;
 import kha.math.Vector2;
 import armory.renderpath.RenderToTexture;
 
+#if arm_ui
 using zui.GraphicsExtension;
+#end
 
 class DrawPolygonNode extends LogicNode {
 	static inline var numStaticInputs = 6;
@@ -16,6 +18,7 @@ class DrawPolygonNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawPolygonNode");
 
 		if (vertices == null) {
@@ -43,6 +46,7 @@ class DrawPolygonNode extends LogicNode {
 		} else {
 			RenderToTexture.g.drawPolygon(inputs[4].get(), inputs[5].get(), vertices, inputs[3].get());
 		}
+		#end
 
 		runOutput(0);
 	}

@@ -33,7 +33,7 @@ class ArmLogicTree(bpy.types.NodeTree):
     """Logic nodes"""
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Editor'
-    bl_icon = 'DECORATE'
+    bl_icon = 'NODETREE'
 
     def update(self):
         pass
@@ -311,7 +311,7 @@ class ARM_OT_ReplaceNodesOperator(bpy.types.Operator):
     def poll(cls, context):
         return context.space_data is not None and context.space_data.type == 'NODE_EDITOR'
 
-class ARM_UL_interface_sockets(bpy.types.UIList):
+class ARM_UL_InterfaceSockets(bpy.types.UIList):
     """UI List of input and output sockets"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         socket = item
@@ -356,26 +356,32 @@ class DrawNodeBreadCrumbs():
             bpy.types.SpaceNodeEditor.draw_handler_remove(cls.draw_handler, 'WINDOW')
             cls.draw_handler = None
 
+
+__REG_CLASSES = (
+    ArmLogicTree,
+    ArmOpenNodeHaxeSource,
+    ArmOpenNodePythonSource,
+    ArmOpenNodeWikiEntry,
+    ARM_OT_ReplaceNodesOperator,
+    ARM_MT_NodeAddOverride,
+    ARM_OT_AddNodeOverride,
+    ARM_UL_InterfaceSockets,
+    ARM_PT_LogicNodePanel,
+    ARM_PT_NodeDevelopment
+)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
     arm.logicnode.arm_nodes.register()
     arm.logicnode.arm_sockets.register()
     arm.logicnode.arm_node_group.register()
+    arm.logicnode.tree_variables.register()
 
-    bpy.utils.register_class(ArmLogicTree)
-    bpy.utils.register_class(ArmOpenNodeHaxeSource)
-    bpy.utils.register_class(ArmOpenNodePythonSource)
-    bpy.utils.register_class(ArmOpenNodeWikiEntry)
-    bpy.utils.register_class(ARM_OT_ReplaceNodesOperator)
     ARM_MT_NodeAddOverride.overridden_menu = bpy.types.NODE_MT_add
     ARM_MT_NodeAddOverride.overridden_draw = bpy.types.NODE_MT_add.draw
-    bpy.utils.register_class(ARM_MT_NodeAddOverride)
-    bpy.utils.register_class(ARM_OT_AddNodeOverride)
-    bpy.utils.register_class(ARM_UL_interface_sockets)
 
-    # Register panels in correct order
-    bpy.utils.register_class(ARM_PT_LogicNodePanel)
-    arm.logicnode.tree_variables.register()
-    bpy.utils.register_class(ARM_PT_NodeDevelopment)
+    __reg_classes()
 
     arm.logicnode.init_categories()
     DrawNodeBreadCrumbs.register_draw()
@@ -388,20 +394,10 @@ def unregister():
     # Ensure that globals are reset if the addon is enabled again in the same Blender session
     arm_nodes.reset_globals()
 
-    bpy.utils.unregister_class(ARM_PT_NodeDevelopment)
-    arm.logicnode.tree_variables.unregister()
-    bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
-
-    bpy.utils.unregister_class(ARM_OT_ReplaceNodesOperator)
-    bpy.utils.unregister_class(ArmLogicTree)
-    bpy.utils.unregister_class(ArmOpenNodeHaxeSource)
-    bpy.utils.unregister_class(ArmOpenNodePythonSource)
-    bpy.utils.unregister_class(ArmOpenNodeWikiEntry)
-    bpy.utils.unregister_class(ARM_OT_AddNodeOverride)
-    bpy.utils.unregister_class(ARM_MT_NodeAddOverride)
+    __unreg_classes()
     bpy.utils.register_class(ARM_MT_NodeAddOverride.overridden_menu)
-    bpy.utils.unregister_class(ARM_UL_interface_sockets)
 
+    arm.logicnode.tree_variables.unregister()
     arm.logicnode.arm_node_group.unregister()
     arm.logicnode.arm_sockets.unregister()
     arm.logicnode.arm_nodes.unregister()

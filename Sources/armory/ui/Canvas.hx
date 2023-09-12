@@ -16,6 +16,7 @@ class Canvas {
 	public static var screenW = -1;
 	public static var screenH = -1;
 	public static var locale = "en";
+	public static var imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;
 	static var _ui: Zui;
 	static var h = new zui.Zui.Handle(); // TODO: needs one handle per canvas
 
@@ -29,6 +30,7 @@ class Canvas {
 		_ui = ui;
 
 		g.end();
+		g.imageScaleQuality = Canvas.imageScaleQuality;
 		ui.begin(g); // Bake elements
 		g.begin(false);
 

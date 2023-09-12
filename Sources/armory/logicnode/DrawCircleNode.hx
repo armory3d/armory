@@ -3,7 +3,9 @@ package armory.logicnode;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
+#if arm_ui
 using zui.GraphicsExtension;
+#end
 
 class DrawCircleNode extends LogicNode {
 
@@ -12,6 +14,7 @@ class DrawCircleNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawCircleNode");
 
 		final colorVec = inputs[1].get();
@@ -28,6 +31,7 @@ class DrawCircleNode extends LogicNode {
 		else {
 			RenderToTexture.g.drawCircle(cx, cy, radius, inputs[3].get(), segments);
 		}
+		#end
 
 		runOutput(0);
 	}

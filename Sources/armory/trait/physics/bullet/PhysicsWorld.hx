@@ -79,11 +79,13 @@ class PhysicsWorld extends Trait {
 	static var transform1: bullet.Bt.Transform = null;
 	static var transform2: bullet.Bt.Transform = null;
 
+	var debugDrawHelper: DebugDrawHelper = null;
+
 	#if arm_debug
 	public static var physTime = 0.0;
 	#end
 
-	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10) {
+	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10, debugDrawMode: DebugDrawMode = NoDebug) {
 		super();
 
 		if (nullvec) {
@@ -121,6 +123,8 @@ class PhysicsWorld extends Trait {
 		// Ensure physics are updated first in the lateUpdate list
 		_lateUpdate = [lateUpdate];
 		@:privateAccess iron.App.traitLateUpdates.insert(0, lateUpdate);
+
+		setDebugDrawMode(debugDrawMode);
 
 		iron.Scene.active.notifyOnRemove(function() {
 			sceneRemoved = true;
@@ -445,7 +449,7 @@ class PhysicsWorld extends Trait {
 		var worldCol: bullet.Bt.CollisionWorld = worldDyn;
 		var bodyColl: bullet.Bt.ConvexShape =  cast rb.body.getCollisionShape();
 		worldCol.convexSweepTest(bodyColl, transformFrom, transformTo, convexCallback, 0.0);
-		
+
 		var hitInfo: ConvexHit = null;
 
 		var cc: bullet.Bt.ClosestConvexResultCallback = convexCallback;
@@ -482,6 +486,187 @@ class PhysicsWorld extends Trait {
 
 	public function removePreUpdate(f: Void->Void) {
 		preUpdates.remove(f);
+	}
+
+	public function setDebugDrawMode(debugDrawMode: DebugDrawMode) {
+		if (debugDrawHelper == null) {
+			if (debugDrawMode == NoDebug) {
+				return;
+			}
+			initDebugDrawing();
+		}
+
+		#if js
+			world.getDebugDrawer().setDebugMode(debugDrawMode);
+		#elseif hl
+			hlDebugDrawer_setDebugMode(debugDrawMode);
+		#end
+	}
+
+	public inline function getDebugDrawMode(): DebugDrawMode {
+		if (debugDrawHelper == null) {
+			return NoDebug;
+		}
+
+		#if js
+			return world.getDebugDrawer().getDebugMode();
+		#elseif hl
+			return hlDebugDrawer_getDebugMode();
+		#else
+			return NoDebug;
+		#end
+	}
+
+	function initDebugDrawing() {
+		debugDrawHelper = new DebugDrawHelper(this);
+
+		#if js
+			final drawer = new bullet.Bt.DebugDrawer();
+
+			// https://emscripten.org/docs/porting/connecting_cpp_and_javascript/WebIDL-Binder.html?highlight=jsimplementation#sub-classing-c-base-classes-in-javascript-jsimplementation
+			drawer.drawLine = debugDrawHelper.drawLine;
+			drawer.drawContactPoint = debugDrawHelper.drawContactPoint;
+			drawer.reportErrorWarning = debugDrawHelper.reportErrorWarning;
+			drawer.draw3dText = debugDrawHelper.draw3dText;
+
+			// From the Armory API perspective this is not required,
+			// but Ammo requires it and will result in a black screen if not set
+			drawer.setDebugMode = debugDrawHelper.setDebugMode;
+			drawer.getDebugMode = debugDrawHelper.getDebugMode;
+
+			world.setDebugDrawer(drawer);
+		#elseif hl
+			hlDebugDrawer_setDrawLine(debugDrawHelper.drawLine);
+			hlDebugDrawer_setDrawContactPoint(debugDrawHelper.drawContactPoint);
+			hlDebugDrawer_setReportErrorWarning(debugDrawHelper.reportErrorWarning);
+			hlDebugDrawer_setDraw3dText(debugDrawHelper.draw3dText);
+
+			hlDebugDrawer_worldSetGlobalDebugDrawer(world);
+		#end
+	}
+
+	#if hl
+	@:hlNative("bullet", "debugDrawer_worldSetGlobalDebugDrawer")
+	public static function hlDebugDrawer_worldSetGlobalDebugDrawer(world: #if arm_physics_soft bullet.Bt.SoftRigidDynamicsWorld #else bullet.Bt.DiscreteDynamicsWorld #end) {}
+
+	@:hlNative("bullet", "debugDrawer_setDebugMode")
+	public static function hlDebugDrawer_setDebugMode(debugMode: Int) {}
+
+	@:hlNative("bullet", "debugDrawer_getDebugMode")
+	public static function hlDebugDrawer_getDebugMode(): Int { return 0; }
+
+	@:hlNative("bullet", "debugDrawer_setDrawLine")
+	public static function hlDebugDrawer_setDrawLine(func: bullet.Bt.Vector3->bullet.Bt.Vector3->bullet.Bt.Vector3->Void) {}
+
+	@:hlNative("bullet", "debugDrawer_setDrawContactPoint")
+	public static function hlDebugDrawer_setDrawContactPoint(func: bullet.Bt.Vector3->bullet.Bt.Vector3->kha.FastFloat->Int->bullet.Bt.Vector3->Void) {}
+
+	@:hlNative("bullet", "debugDrawer_setReportErrorWarning")
+	public static function hlDebugDrawer_setReportErrorWarning(func: hl.Bytes->Void) {}
+
+	@:hlNative("bullet", "debugDrawer_setDraw3dText")
+	public static function hlDebugDrawer_setDraw3dText(func: bullet.Bt.Vector3->hl.Bytes->Void) {}
+	#end
+}
+
+/**
+	Debug flags for Bullet physics, despite the name not solely related to debug drawing.
+	You can combine multiple flags with bitwise operations.
+
+	Taken from Bullet's `btIDebugDraw::DebugDrawModes` enum.
+	Please note that the descriptions of the individual flags are a result of inspecting the Bullet sources and thus might contain inaccuracies.
+
+	@see `armory.trait.physics.PhysicsWorld.getDebugDrawMode()`
+	@see `armory.trait.physics.PhysicsWorld.setDebugDrawMode()`
+**/
+// Not all of the flags below are actually used in the library core, some of them are only used
+// in individual Bullet example projects. The intention of the original authors is unknown,
+// so whether those flags are actually meant to get their purpose from the implementing application
+// and not from the library remains a mystery...
+enum abstract DebugDrawMode(Int) from Int to Int {
+	/** All debug flags off. **/
+	var NoDebug = 0;
+
+	/** Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations. **/
+	var DrawWireframe = 1;
+
+	/** Draw axis-aligned minimum bounding boxes (AABBs) of the physics collider meshes. **/
+	var DrawAABB = 1 << 1;
+
+	/** Not used in Armory. **/
+	// Only used in a Bullet physics example at the moment:
+	// https://github.com/bulletphysics/bullet3/blob/39b8de74df93721add193e5b3d9ebee579faebf8/examples/ExampleBrowser/GL_ShapeDrawer.cpp#L616-L644
+	var DrawFeaturesText = 1 << 2;
+
+	/** Visualize contact points of multiple colliders. **/
+	var DrawContactPoints = 1 << 3;
+
+	/**
+		Globally disable sleeping/deactivation of dynamic colliders.
+	**/
+	var NoDeactivation = 1 << 4;
+
+	/** Not used in Armory. **/
+	// Not used in the library core, in some Bullet examples this flag is used to print application-specific help text (e.g. keyboard shortcuts) to the screen, e.g.:
+	// https://github.com/bulletphysics/bullet3/blob/39b8de74df93721add193e5b3d9ebee579faebf8/examples/ForkLift/ForkLiftDemo.cpp#L586
+	var NoHelpText = 1 << 5;
+
+	/** Not used in Armory. **/
+	// Not used in the library core, appears to be the opposite of NoHelpText (not sure why there are two flags required for this...)
+	// https://github.com/bulletphysics/bullet3/blob/39b8de74df93721add193e5b3d9ebee579faebf8/examples/FractureDemo/FractureDemo.cpp#L189
+	var DrawText = 1 << 6;
+
+	/** Not used in Armory. **/
+	// Not even used in official Bullet examples, probably obsolete.
+	// Related to btQuickprof.h: https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=1285#p4743
+	// Probably replaced by define: https://github.com/bulletphysics/bullet3/commit/d051e2eacb01a948c7b53e24fd3d9942ce64bdcc
+	var ProfileTimings = 1 << 7;
+
+	/** Not used in Armory. **/
+	// Not even used in official Bullet examples, might be obsolete.
+	var EnableSatComparison = 1 << 8;
+
+	/** Not used in Armory. **/
+	var DisableBulletLCP = 1 << 9;
+
+	/** Not used in Armory. **/
+	var EnableCCD = 1 << 10;
+
+	/** Draw axis gizmos for important constraint points. **/
+	var DrawConstraints = 1 << 11;
+
+	/** Draw additional constraint information such as distance or angle limits. **/
+	var DrawConstraintLimits = 1 << 12;
+
+	/** Not used in Armory. **/
+	// Only used in a Bullet physics example at the moment:
+	// https://github.com/bulletphysics/bullet3/blob/39b8de74df93721add193e5b3d9ebee579faebf8/examples/ExampleBrowser/GL_ShapeDrawer.cpp#L258
+	// We could use it in the future to toggle depth testing for lines, i.e. draw actual 3D lines if not set and Kha's g2 lines if set.
+	var FastWireframe = 1 << 13;
+
+	/**
+		Draw the normal vectors of the triangles of the physics collider meshes.
+		This only works for `Mesh` collision shapes.
+	**/
+	// Outside of Armory this works for a few more collision shapes
+	var DrawNormals = 1 << 14;
+
+	 /**
+		Draw a small axis gizmo at the origin of the collision shape.
+		Only works if `DrawWireframe` is enabled as well.
+	 **/
+	var DrawFrames = 1 << 15;
+
+	@:op(~A) public inline function bitwiseNegate(): DebugDrawMode {
+		return ~this;
+	}
+
+	@:op(A & B) public inline function bitwiseAND(other: DebugDrawMode): DebugDrawMode {
+		return this & other;
+	}
+
+	@:op(A | B) public inline function bitwiseOR(other: DebugDrawMode): DebugDrawMode {
+		return this | other;
 	}
 }
 

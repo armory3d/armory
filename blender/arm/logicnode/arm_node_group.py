@@ -549,7 +549,7 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
         row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit Tree')
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ArmGroupTree,
     ArmEditGroupTree,
     ArmCopyGroupTree,
@@ -562,4 +562,4 @@ REG_CLASSES = (
     ArmAddCallGroupNode,
     ARM_PT_LogicGroupPanel
 )
-register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
+register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

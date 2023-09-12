@@ -106,10 +106,9 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
-        state.out_opacity = c.parse_value_input(node.inputs[21])
-        if len(node.inputs) >= 21: #do we need to test that ?
+        state.out_rior = c.parse_value_input(node.inputs[16])
+        if len(node.inputs) >= 21:
             state.out_opacity = c.parse_value_input(node.inputs[21])
-
 
 def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:

@@ -308,6 +308,8 @@ def build():
             assets.add_khafile_def('rp_ssr')
             assets.add_shader_pass('ssr_pass')
             assets.add_shader_pass('blur_adaptive_pass')
+            if rpdat.arm_ssr_half_res:
+                assets.add_khafile_def('rp_ssr_half')
 
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
@@ -436,7 +438,7 @@ def build():
         callback()
 
 
-def get_num_gbuffer_rts_deferred() -> int:
+def get_num_gbuffer_rts()-> int:
     """Return the number of render targets required for the G-Buffer."""
     wrd = bpy.data.worlds['Arm']
 

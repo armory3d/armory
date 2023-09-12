@@ -141,18 +141,18 @@ def draw_properties(layout, obj):
         op = col.operator("arm_propertylist.move_item", icon='TRIA_DOWN', text="")
         op.direction = 'DOWN'
 
+
+__REG_CLASSES = (
+    ArmPropertyListItem,
+    ARM_UL_PropertyList,
+    ArmPropertyListNewItem,
+    ArmPropertyListDeleteItem,
+    ArmPropertyListMoveItem,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmPropertyListItem)
-    bpy.utils.register_class(ARM_UL_PropertyList)
-    bpy.utils.register_class(ArmPropertyListNewItem)
-    bpy.utils.register_class(ArmPropertyListDeleteItem)
-    bpy.utils.register_class(ArmPropertyListMoveItem)
+    __reg_classes()
     bpy.types.Object.arm_propertylist = CollectionProperty(type=ArmPropertyListItem)
     bpy.types.Object.arm_propertylist_index = IntProperty(name="Index for arm_propertylist", default=0)
-
-def unregister():
-    bpy.utils.unregister_class(ArmPropertyListItem)
-    bpy.utils.unregister_class(ARM_UL_PropertyList)
-    bpy.utils.unregister_class(ArmPropertyListNewItem)
-    bpy.utils.unregister_class(ArmPropertyListDeleteItem)
-    bpy.utils.unregister_class(ArmPropertyListMoveItem)
