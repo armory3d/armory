@@ -635,8 +635,8 @@ class TermNode {
 	 * static Function Pointers (to stored in this.operation)
 	 * 
 	 */		
-	static function opName(t:TermNode) :Float if (t.left!=null) return t.left.result else ErrorMsg.emptyFunction(t.symbol);
-	static function opParam(t:TermNode):Float if (t.left!=null) return t.left.result else ErrorMsg.missingParameter(t.symbol);
+	static function opName(t:TermNode) :Float if (t.left != null) return t.left.result else { ErrorMsg.emptyFunction(t.symbol); return 0; }
+	static function opParam(t:TermNode):Float if (t.left!=null) return t.left.result else { ErrorMsg.missingParameter(t.symbol); return 0; }
 	static function opValue(t:TermNode):Float return t.value;
 	
 	static var MathOp:Map<String, TermNode->Float> = [
@@ -735,7 +735,8 @@ class TermNode {
 	static function parseString(s:String, errPos:Int, ?params:Map<String, TermNode>):TermNode {
 		var t:TermNode = null;
 		var operations:Array<OperationNode> = new Array();
-		var e, f:String;
+		var e:String = "";
+		var f:String;
 		var negate:Bool;
 		var spaces:Int = 0;
 		
@@ -822,7 +823,7 @@ class TermNode {
 		}
 		
 		if ( operations.length > 0 ) {
-			if ( operations[operations.length-1].right == null ) ErrorMsg.missingRightOperand(errPos-spaces);
+			if ( operations[operations.length - 1].right == null ) { ErrorMsg.missingRightOperand(errPos - spaces); return t;}
 			else {
 				operations.sort(function(a:OperationNode, b:OperationNode):Int
 				{
@@ -879,6 +880,7 @@ class TermNode {
 		}
 		if (s.indexOf(")") == 0) ErrorMsg.noOpeningBracket(errPos);
 		else ErrorMsg.wrongChar(errPos);
+		return "";
 	}
 	
 	
