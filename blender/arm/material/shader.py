@@ -124,9 +124,9 @@ class ShaderContext:
             c['link'] = link
         if default_value is not None:
             if ctype == 'float':
-                c['float'] = default_value
+                c['floatValue'] = default_value
             if ctype == 'vec3':
-                c['vec3'] = default_value
+                c['vec3Value'] = default_value
         if is_arm_mat_param is not None:
             c['is_arm_parameter'] = True
         self.constants.append(c)
