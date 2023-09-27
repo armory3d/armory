@@ -125,7 +125,7 @@ def make_gi(context_id):
     vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
     vert.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);')
     vert.write('float voxelSize = pow(2.0, int(clipmapLevel)) * 2.0;')
-    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize / 2.0 * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
+    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
@@ -368,7 +368,7 @@ def make_ao(context_id):
     vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
     vert.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);')
     vert.write('float voxelSize = pow(2.0, int(clipmapLevel)) * 2.0;')
-    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize / 2.0 * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
+    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
