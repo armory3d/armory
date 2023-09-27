@@ -8,6 +8,9 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
+#ifdef _VoxelGI
+#include "std/conetrace.glsl"
+#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -21,6 +24,10 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+#ifdef _VoxelRefract
+uniform sampler2D gbuffer_refraction;
+#endif
+
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
@@ -28,15 +35,17 @@ uniform sampler2D gbuffer1;
 	uniform sampler2D gbufferEmission;
 #endif
 
+#ifdef _VoxelGI
+uniform sampler3D voxels;
+uniform vec3 viewerPos;
+#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
+uniform vec3 viewerPos;
 #endif
-#ifdef _VoxelGITemporal
+#ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
 uniform float voxelBlend;
-#endif
-#ifdef _VoxelGICam
-uniform vec3 eyeSnap;
 #endif
 
 uniform float envmapStrength;
@@ -191,7 +200,7 @@ out vec4 fragColor;
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
-
+	fragColor = vec4(0.0);
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
@@ -208,9 +217,31 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
+
+#ifdef _VoxelGI
+	float dist = max(abs(p.x - viewerPos.x), max(abs(p.y - viewerPos.y), abs(p.z - viewerPos.z)));
+	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+	float voxelSize = pow(2.0, int(clipmapLevel)) * 2.0;
+	vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize / 2.0 * voxelgiHalfExtents.x) / voxelSize) * voxelSize;
+    vec3 voxpos = (p - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;
+#endif
+
+#ifdef _VoxelAOvar
+	float dist = max(abs(p.x - viewerPos.x), max(abs(p.y - viewerPos.y), abs(p.z - viewerPos.z)));
+	float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+	float voxelSize = pow(2.0, int(clipmapLevel)) * 2.0;
+	vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize / 2.0 * voxelgiHalfExtents.x) / voxelSize) * voxelSize;
+    vec3 voxpos = (p - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;
+#endif
+
+#ifdef _VoxelRefract
+	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
+	float ior = gr.x;
+	float opac = gr.y;
+#endif
 
 #ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
@@ -233,7 +264,7 @@ void main() {
 		if (g2.b < 0.5) {
 			envl = envl;
 		} else {
-			envl = vec3(1.0);
+			envl = vec3(0.0);
 		}
 	#endif
 
@@ -241,7 +272,7 @@ void main() {
 		envl /= PI;
 	#endif
 #else
-	vec3 envl = vec3(1.0);
+	vec3 envl = vec3(0.0);
 #endif
 
 #ifdef _Rad
@@ -273,26 +304,48 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifdef _VoxelAOvar
-
-	#ifdef _VoxelGICam
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+#ifdef _VoxelGI
+	#ifdef _VoxelTemporal
+	fragColor.rgb = (traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelBlend + traceDiffuse(voxpos, n, voxelsLast, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
 	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
+	fragColor.rgb = traceDiffuse(voxpos, n, voxels, roughness, clipmapLevel).rgb * voxelgiDiff * albedo;
 	#endif
-
-	#ifndef _VoxelAONoTrace
-	#ifdef _VoxelGITemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
-	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
-	#endif
-	#endif
-
+	if(roughness < 1.0 && occspec.y > 0.0)
+		#ifdef _VoxelTemporal
+		//fragColor.rgb += (traceSpecular(voxpos, n, voxels, -v, roughness, clipmapLevel).rgb * voxelBlend + traceSpecular(voxpos, n, voxelsLast, -v, roughness, clipmapLevel).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
+		fragColor.rgb += traceSpecular(voxpos, n, voxels, -v, roughness, clipmapLevel).rgb * voxelgiRefl * occspec.y;
+		#else
+		fragColor.rgb += traceSpecular(voxpos, n, voxels, -v, roughness, clipmapLevel).rgb * voxelgiRefl * occspec.y;
+		#endif
 #endif
 
+#ifdef _VoxelAOvar
+	#ifndef _VoxelAONoTrace
+	#ifdef _VoxelTemporal
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + traceAO(voxpos, n, voxelsLast, clipmapLevel) * (1.0 - voxelBlend));
+	#else
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);
+	#endif
+	#endif
+#endif
+
+#ifdef _VoxelGI
+	fragColor.rgb += envl;
+#else
 	fragColor.rgb = envl;
+#endif
+	// Show voxels
+	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	// vec3 direction = vec3(0.0, 0.0, -1.0);
+	// vec4 color = vec4(0.0f);
+	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	// 	vec3 point = origin + 0.005 * step * direction;
+	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	// }
+	// fragColor.rgb += color.rgb;
+
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _SSAO
 	// #ifdef _RTGI
@@ -319,19 +372,6 @@ void main() {
 	}
 	#endif
 #endif
-
-	// Show voxels
-	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	// vec3 direction = vec3(0.0, 0.0, -1.0);
-	// vec4 color = vec4(0.0f);
-	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	// 	vec3 point = origin + 0.005 * step * direction;
-	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	// }
-	// fragColor.rgb += color.rgb;
-
-	// Show SSAO
-	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
@@ -375,7 +415,13 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
+	#endif
+	#endif
+
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
 	#endif
 	#endif
 
@@ -442,7 +488,12 @@ void main() {
 		#endif
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		, voxels, voxpos
+		, voxels, voxpos, clipmapLevel
+		#endif
+		#endif
+		#ifdef _VoxelGI
+		#ifdef _VoxelShadow
+		, voxels, voxpos, clipmapLevel
 		#endif
 		#endif
 		#ifdef _MicroShadowing
@@ -502,7 +553,12 @@ void main() {
 			#endif
 			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos
+			, voxels, voxpos, clipmapLevel
+			#endif
+			#endif
+			#ifdef _VoxelGI
+			#ifdef _VoxelShadow
+			, voxels, voxpos, clipmapLevel
 			#endif
 			#endif
 			#ifdef _MicroShadowing
@@ -515,5 +571,16 @@ void main() {
 	}
 #endif // _Clusters
 
+#ifdef _VoxelRefract
+if(opac < 1.0) {
+	#ifdef _VoxelTemporal
+	vec3 refraction = traceRefraction(voxpos, n, voxels, v, ior, roughness, clipmapLevel) * voxelgiRefr;
+	//vec3 refraction = (traceRefraction(voxpos, n, voxels, v, ior, roughness, clipmapLevel) * voxelBlend + traceRefraction(voxpos, n, voxelsLast, v, ior, roughness, clipmapLevel) * (1.0 - voxelBlend)) * voxelgiRefr;
+	#else
+	vec3 refraction = traceRefraction(voxpos, n, voxels, v, ior, roughness, clipmapLevel) * voxelgiRefr;
+	#endif
+	fragColor.rgb += mix(refraction + fragColor.rgb, fragColor.rgb, opac);
+}
+#endif
 	fragColor.a = 1.0; // Mark as opaque
 }

@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2023.7'
+arm_version = '2023.9'
 arm_commit = '$Id$'
 
 def get_project_html5_copy(self):
@@ -566,7 +566,7 @@ def update_armory_world():
         for rp in wrd.arm_rplist:  # TODO: deprecated
             if rp.rp_gi != 'Off':
                 rp.rp_gi = 'Off'
-                rp.rp_voxelao = True
+                rp.rp_voxels = rp.rp_gi
 
         # For some breaking changes we need to use a special update
         # routine first before regularly replacing nodes

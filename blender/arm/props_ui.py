@@ -1398,6 +1398,7 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
             row.operator("arm.play", icon="PLAY", text="")
         else:
             row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+        row.operator("arm.clean_menu", icon="BRUSH_DATA", text="")
         row.operator("arm.open_editor", icon="DESKTOP", text="")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")
 
@@ -1691,13 +1692,6 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bl_parent_id = "ARM_PT_RenderPathPanel"
 
-    def draw_header(self, context):
-        wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
-            return
-        rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
-        self.layout.prop(rpdat, "rp_voxelao", text="")
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1707,22 +1701,36 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
             return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
-        layout.enabled = rpdat.rp_voxelao
-        layout.prop(rpdat, 'arm_voxelgi_shadows')
-        layout.prop(rpdat, 'arm_voxelgi_cones')
-        layout.prop(rpdat, 'rp_voxelgi_resolution')
-        layout.prop(rpdat, 'rp_voxelgi_resolution_z')
-        layout.prop(rpdat, 'arm_voxelgi_dimensions')
-        layout.prop(rpdat, 'arm_voxelgi_revoxelize')
-        col2 = layout.column()
-        col2.enabled = rpdat.arm_voxelgi_revoxelize
-        col2.prop(rpdat, 'arm_voxelgi_camera')
-        col2.prop(rpdat, 'arm_voxelgi_temporal')
-        layout.prop(rpdat, 'arm_voxelgi_occ')
-        layout.prop(rpdat, 'arm_voxelgi_step')
-        layout.prop(rpdat, 'arm_voxelgi_range')
-        layout.prop(rpdat, 'arm_voxelgi_offset')
-        layout.prop(rpdat, 'arm_voxelgi_aperture')
+        layout.prop(rpdat, 'rp_voxels')
+        col = layout.column()
+        col.enabled = rpdat.rp_voxels != 'Off'
+        col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col3 = col.column()
+        col3.enabled = rpdat.rp_voxels == 'Voxel AO'
+        col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        #col2.prop(rpdat, 'rp_voxelgi_relight')
+        col2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
+        #col2.prop(rpdat, 'arm_voxelgi_bounces')
+        #col2.prop(rpdat, 'arm_voxelgi_clipmap_count')
+        col.prop(rpdat, 'arm_voxelgi_cones')
+        col.prop(rpdat, 'rp_voxelgi_resolution')
+        col.prop(rpdat, 'rp_voxelgi_resolution_z')
+        col.prop(rpdat, 'arm_voxelgi_dimensions')
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col.prop(rpdat, 'arm_voxelgi_temporal')
+        col.label(text="Light")
+        col2 = col.column()
+        col2.enabled = rpdat.rp_voxels == 'Voxel GI'
+        col2.prop(rpdat, 'arm_voxelgi_diff')
+        col2.prop(rpdat, 'arm_voxelgi_spec')
+        col2.prop(rpdat, 'arm_voxelgi_refr')
+        col.prop(rpdat, 'arm_voxelgi_occ')
+        col.label(text="Ray")
+        col.prop(rpdat, 'arm_voxelgi_step')
+        col.prop(rpdat, 'arm_voxelgi_range')
+        col.prop(rpdat, 'arm_voxelgi_offset')
+        col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
     bl_label = "World"
@@ -2743,80 +2751,85 @@ def draw_multiline_with_icon(layout: bpy.types.UILayout, layout_width_px: int, i
     return col
 
 
-def register():
-    bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
-    bpy.utils.register_class(ARM_PT_ModifiersPropsPanel)
-    bpy.utils.register_class(ARM_PT_ParticlesPropsPanel)
-    bpy.utils.register_class(ARM_PT_PhysicsPropsPanel)
-    bpy.utils.register_class(ARM_PT_DataPropsPanel)
-    bpy.utils.register_class(ARM_PT_ScenePropsPanel)
-    bpy.utils.register_class(ARM_PT_WorldPropsPanel)
-    bpy.utils.register_class(InvalidateCacheButton)
-    bpy.utils.register_class(InvalidateMaterialCacheButton)
-    bpy.utils.register_class(ARM_OT_NewCustomMaterial)
-    bpy.utils.register_class(ARM_PG_BindTexturesListItem)
-    bpy.utils.register_class(ARM_UL_BindTexturesList)
-    bpy.utils.register_class(ARM_OT_BindTexturesListNewItem)
-    bpy.utils.register_class(ARM_OT_BindTexturesListDeleteItem)
-    bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
-    bpy.utils.register_class(ARM_PT_BindTexturesPropsPanel)
-    bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
-    bpy.utils.register_class(ARM_PT_MaterialDriverPropsPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
-    bpy.utils.register_class(ARM_PT_TopbarPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
-    bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
-    bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
-    bpy.utils.register_class(ARM_PT_ProjectFlagsDebugConsolePanel)
-    bpy.utils.register_class(ARM_PT_ProjectWindowPanel)
-    bpy.utils.register_class(ARM_PT_ProjectModulesPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathRendererPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathShadowsPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathVoxelsPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathWorldPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathPostProcessPanel)
-    bpy.utils.register_class(ARM_PT_RenderPathCompositorPanel)
-    bpy.utils.register_class(ARM_PT_BakePanel)
-    # bpy.utils.register_class(ArmVirtualInputPanel)
-    bpy.utils.register_class(ArmoryPlayButton)
-    bpy.utils.register_class(ArmoryStopButton)
-    bpy.utils.register_class(ArmoryBuildProjectButton)
-    bpy.utils.register_class(ArmoryOpenProjectFolderButton)
-    bpy.utils.register_class(ArmoryOpenEditorButton)
-    bpy.utils.register_class(CleanMenu)
-    bpy.utils.register_class(CleanButtonMenu)
-    bpy.utils.register_class(ArmoryCleanProjectButton)
-    bpy.utils.register_class(ArmoryPublishProjectButton)
-    bpy.utils.register_class(ArmGenLodButton)
-    bpy.utils.register_class(ARM_PT_LodPanel)
-    bpy.utils.register_class(ArmGenTerrainButton)
-    bpy.utils.register_class(ARM_PT_TerrainPanel)
-    bpy.utils.register_class(ARM_PT_TilesheetPanel)
-    bpy.utils.register_class(ArmPrintTraitsButton)
-    bpy.utils.register_class(ARM_PT_MaterialNodePanel)
-    bpy.utils.register_class(ARM_OT_UpdateFileSDK)
-    bpy.utils.register_class(ARM_OT_CopyToBundled)
-    bpy.utils.register_class(ARM_OT_ShowFileVersionInfo)
-    bpy.utils.register_class(ARM_OT_ShowNodeUpdateErrors)
-    bpy.utils.register_class(ARM_OT_DiscardPopup)
-    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorButton)
-    bpy.utils.register_class(ArmoryUpdateListAndroidEmulatorRunButton)
-    bpy.utils.register_class(ArmoryUpdateListInstalledVSButton)
-    bpy.utils.register_class(ARM_PT_BulletDebugDrawingPanel)
+__REG_CLASSES = (
+    ARM_PT_ObjectPropsPanel,
+    ARM_PT_ModifiersPropsPanel,
+    ARM_PT_ParticlesPropsPanel,
+    ARM_PT_PhysicsPropsPanel,
+    ARM_PT_DataPropsPanel,
+    ARM_PT_ScenePropsPanel,
+    ARM_PT_WorldPropsPanel,
+    InvalidateCacheButton,
+    InvalidateMaterialCacheButton,
+    ARM_OT_NewCustomMaterial,
+    ARM_PG_BindTexturesListItem,
+    ARM_UL_BindTexturesList,
+    ARM_OT_BindTexturesListNewItem,
+    ARM_OT_BindTexturesListDeleteItem,
+    ARM_PT_MaterialPropsPanel,
+    ARM_PT_BindTexturesPropsPanel,
+    ARM_PT_MaterialBlendingPropsPanel,
+    ARM_PT_MaterialDriverPropsPanel,
+    ARM_PT_ArmoryPlayerPanel,
+    ARM_PT_TopbarPanel,
+    ARM_PT_ArmoryExporterPanel,
+    ARM_PT_ArmoryExporterAndroidSettingsPanel,
+    ARM_PT_ArmoryExporterAndroidPermissionsPanel,
+    ARM_PT_ArmoryExporterAndroidAbiPanel,
+    ARM_PT_ArmoryExporterAndroidBuildAPKPanel,
+    ARM_PT_ArmoryExporterHTML5SettingsPanel,
+    ARM_PT_ArmoryExporterWindowsSettingsPanel,
+    ARM_PT_ArmoryProjectPanel,
+    ARM_PT_ProjectFlagsPanel,
+    ARM_PT_ProjectFlagsDebugConsolePanel,
+    ARM_PT_ProjectWindowPanel,
+    ARM_PT_ProjectModulesPanel,
+    ARM_PT_RenderPathPanel,
+    ARM_PT_RenderPathRendererPanel,
+    ARM_PT_RenderPathShadowsPanel,
+    ARM_PT_RenderPathVoxelsPanel,
+    ARM_PT_RenderPathWorldPanel,
+    ARM_PT_RenderPathPostProcessPanel,
+    ARM_PT_RenderPathCompositorPanel,
+    ARM_PT_BakePanel,
+    # ArmVirtualInputPanel,
+    ArmoryPlayButton,
+    ArmoryStopButton,
+    ArmoryBuildProjectButton,
+    ArmoryOpenProjectFolderButton,
+    ArmoryOpenEditorButton,
+    CleanMenu,
+    CleanButtonMenu,
+    ArmoryCleanProjectButton,
+    ArmoryPublishProjectButton,
+    ArmGenLodButton,
+    ARM_PT_LodPanel,
+    ArmGenTerrainButton,
+    ARM_PT_TerrainPanel,
+    ARM_PT_TilesheetPanel,
+    ArmPrintTraitsButton,
+    ARM_PT_MaterialNodePanel,
+    ARM_OT_UpdateFileSDK,
+    ARM_OT_CopyToBundled,
+    ARM_OT_ShowFileVersionInfo,
+    ARM_OT_ShowNodeUpdateErrors,
+    ARM_OT_DiscardPopup,
+    ArmoryUpdateListAndroidEmulatorButton,
+    ArmoryUpdateListAndroidEmulatorRunButton,
+    ArmoryUpdateListInstalledVSButton,
+    ARM_PT_BulletDebugDrawingPanel,
+    scene.TLM_PT_Settings,
+    scene.TLM_PT_Denoise,
+    scene.TLM_PT_Filtering,
+    scene.TLM_PT_Encoding,
+    scene.TLM_PT_Utility,
+    scene.TLM_PT_Additional,
+)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
 
-    bpy.utils.register_class(scene.TLM_PT_Settings)
-    bpy.utils.register_class(scene.TLM_PT_Denoise)
-    bpy.utils.register_class(scene.TLM_PT_Filtering)
-    bpy.utils.register_class(scene.TLM_PT_Encoding)
-    bpy.utils.register_class(scene.TLM_PT_Utility)
-    bpy.utils.register_class(scene.TLM_PT_Additional)
+
+def register():
+    __reg_classes()
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.VIEW3D_MT_object.append(draw_view3d_object_menu)
@@ -2826,82 +2839,11 @@ def register():
     bpy.types.Material.arm_bind_textures_list = CollectionProperty(type=ARM_PG_BindTexturesListItem)
     bpy.types.Material.arm_bind_textures_list_index = IntProperty(name='Index for arm_bind_textures_list', default=0)
 
+
 def unregister():
     bpy.types.NODE_MT_context_menu.remove(draw_custom_node_menu)
     bpy.types.VIEW3D_MT_object.remove(draw_view3d_object_menu)
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
     bpy.types.TOPBAR_HT_upper_bar.remove(draw_space_topbar)
 
-    bpy.utils.unregister_class(ARM_PT_BulletDebugDrawingPanel)
-    bpy.utils.unregister_class(ArmoryUpdateListInstalledVSButton)
-    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorRunButton)
-    bpy.utils.unregister_class(ArmoryUpdateListAndroidEmulatorButton)
-    bpy.utils.unregister_class(ARM_OT_DiscardPopup)
-    bpy.utils.unregister_class(ARM_OT_ShowNodeUpdateErrors)
-    bpy.utils.unregister_class(ARM_OT_CopyToBundled)
-    bpy.utils.unregister_class(ARM_OT_ShowFileVersionInfo)
-    bpy.utils.unregister_class(ARM_OT_UpdateFileSDK)
-    bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_ModifiersPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_PhysicsPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_DataPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_WorldPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
-    bpy.utils.unregister_class(InvalidateCacheButton)
-    bpy.utils.unregister_class(InvalidateMaterialCacheButton)
-    bpy.utils.unregister_class(ARM_OT_NewCustomMaterial)
-    bpy.utils.unregister_class(ARM_PT_MaterialDriverPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_BindTexturesPropsPanel)
-    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
-    bpy.utils.unregister_class(ARM_OT_BindTexturesListDeleteItem)
-    bpy.utils.unregister_class(ARM_OT_BindTexturesListNewItem)
-    bpy.utils.unregister_class(ARM_UL_BindTexturesList)
-    bpy.utils.unregister_class(ARM_PG_BindTexturesListItem)
-    bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
-    bpy.utils.unregister_class(ARM_PT_TopbarPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterWindowsSettingsPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterHTML5SettingsPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidBuildAPKPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidAbiPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidPermissionsPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterAndroidSettingsPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryExporterPanel)
-    bpy.utils.unregister_class(ARM_PT_ArmoryProjectPanel)
-    bpy.utils.unregister_class(ARM_PT_ProjectFlagsDebugConsolePanel)
-    bpy.utils.unregister_class(ARM_PT_ProjectFlagsPanel)
-    bpy.utils.unregister_class(ARM_PT_ProjectWindowPanel)
-    bpy.utils.unregister_class(ARM_PT_ProjectModulesPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathRendererPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathShadowsPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathVoxelsPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathWorldPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathPostProcessPanel)
-    bpy.utils.unregister_class(ARM_PT_RenderPathCompositorPanel)
-    bpy.utils.unregister_class(ARM_PT_BakePanel)
-    # bpy.utils.unregister_class(ArmVirtualInputPanel)
-    bpy.utils.unregister_class(ArmoryPlayButton)
-    bpy.utils.unregister_class(ArmoryStopButton)
-    bpy.utils.unregister_class(ArmoryBuildProjectButton)
-    bpy.utils.unregister_class(ArmoryOpenProjectFolderButton)
-    bpy.utils.unregister_class(ArmoryOpenEditorButton)
-    bpy.utils.unregister_class(CleanMenu)
-    bpy.utils.unregister_class(CleanButtonMenu)
-    bpy.utils.unregister_class(ArmoryCleanProjectButton)
-    bpy.utils.unregister_class(ArmoryPublishProjectButton)
-    bpy.utils.unregister_class(ArmGenLodButton)
-    bpy.utils.unregister_class(ARM_PT_LodPanel)
-    bpy.utils.unregister_class(ArmGenTerrainButton)
-    bpy.utils.unregister_class(ARM_PT_TerrainPanel)
-    bpy.utils.unregister_class(ARM_PT_TilesheetPanel)
-    bpy.utils.unregister_class(ArmPrintTraitsButton)
-    bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)
-
-    bpy.utils.unregister_class(scene.TLM_PT_Settings)
-    bpy.utils.unregister_class(scene.TLM_PT_Denoise)
-    bpy.utils.unregister_class(scene.TLM_PT_Filtering)
-    bpy.utils.unregister_class(scene.TLM_PT_Encoding)
-    bpy.utils.unregister_class(scene.TLM_PT_Utility)
-    bpy.utils.unregister_class(scene.TLM_PT_Additional)
+    __unreg_classes()
