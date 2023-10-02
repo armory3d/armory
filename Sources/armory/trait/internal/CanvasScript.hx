@@ -44,7 +44,7 @@ class CanvasScript extends Trait {
 				}
 
 				iron.data.Data.getFont(font, function(defaultFont: kha.Font) {
-					var c: TCanvas = haxe.Json.parse(blob.toString());
+					var c: TCanvas = Canvas.parseCanvasFromBlob(blob);
 					if (c.theme == null) c.theme = Canvas.themes[0].NAME;
 					cui = new Zui({font: defaultFont, theme: Canvas.getTheme(c.theme)});
 
@@ -140,12 +140,26 @@ class CanvasScript extends Trait {
 		return cui.ops.scaleFactor;
 	}
 
+	@:deprecated("Please use setCanvasVisible() instead")
+	public inline function setCanvasVisibility(visible: Bool) {
+		setCanvasVisible(visible);
+	}
+
 	/**
-		Set visibility of canvas
-		@param visible Whether canvas should be visible or not
+		Set whether the active canvas is visible.
+
+		Note that elements of invisible canvases are not rendered and computed,
+		so it is not possible to interact with those elements on the screen.
 	**/
-	public function setCanvasVisibility(visible: Bool){
-		for (e in canvas.elements) e.visible = visible;
+	public inline function setCanvasVisible(visible: Bool) {
+		canvas.visible = visible;
+	}
+
+	/**
+		Get whether the active canvas is visible.
+	**/
+	public inline function getCanvasVisible(): Bool {
+		return canvas.visible;
 	}
 
 	/**
