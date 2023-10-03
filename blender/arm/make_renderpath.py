@@ -104,7 +104,7 @@ def add_world_defs():
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
-            #assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count))
+            #assets.add_khafile_def('arm_voxelgi_clipmap_count={0}'.format(rpdat.arm_voxelgi_clipmap_count)) //could be used to limit the total extents
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')

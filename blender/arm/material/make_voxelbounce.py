@@ -22,10 +22,13 @@ else:
 def make(context_id):
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
 
-    con_voxel.add_elem('tex', 'short2norm')
+    #assets.vs_equal(con_voxel, assets.shader_cons['voxelbounce_vert'])
+    #assets.fs_equal(con_voxel, assets.shader_cons['voxelbounce_frag'])
 
     vert = con_voxel.make_vert()
     frag = con_voxel.make_frag()
+    tesc = None
+    tese = None
 
     frag.ins = vert.outs
 
@@ -59,7 +62,7 @@ def make(context_id):
     frag.write('float roughness = g0.b;')
 
     frag.write('vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);')
-    frag.write('float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));')
+    frag.write('float dist = max(abs(p.x - viewerPos.x), max(abs(p.y - viewerPos.y), abs(p.z - viewerPos.z)));')
     frag.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x * 2.0), 0);')
     frag.write('float voxelSize = pow(2.0, int(clipmapLevel)) / 2.0;')
     frag.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
@@ -72,7 +75,5 @@ def make(context_id):
 
     frag.write('vec4 col = traceDiffuse(voxpos, wnormal, voxels, roughness, clipmapLevel);')
     frag.write('imageStore(voxelsBounce, ivec3(voxpos), col);')
-
-    assets.fs_equal(con_voxel, assets.shader_cons['voxelbounce_frag'])
 
     return con_voxel

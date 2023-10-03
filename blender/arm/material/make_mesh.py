@@ -124,7 +124,7 @@ def make_base(con_mesh, parse_opacity):
             make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
             make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
 
-            if rpdat.arm_rp_displacement == 'Tessellation':
+            if rpdat.rp_voxels != "Off" and rpdat.rp_renderer == "Forward":
                 make_tess.interpolate(tese, 'voxpos', 3, declare_out=True)
                 make_tess.interpolate(tese, 'clipmapLevel', 3, declare_out=True)
 

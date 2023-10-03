@@ -560,13 +560,13 @@ class RenderPathDeferred {
 			path.generateMipmaps(voxels);
 
 			#if (arm_voxelgi_bounces != "1")
-			path.setTarget("");
 			path.bindTarget(voxels, "voxels");
 			path.bindTarget("voxelsBounce", "voxelsBounce");
 			path.bindTarget("gbuffer0", "gbuffer0");
+			path.bindTarget("gbuffer1", "gbuffer1");
 			path.bindTarget("_main", "gbufferD");
 			path.drawMeshes("voxelbounce");
-			path.generateMipmaps("voxelsBounce");//use a variable to hold current image for temporal filter.
+			path.generateMipmaps("voxelsBounce");
 			#end
 		}
 		#end
