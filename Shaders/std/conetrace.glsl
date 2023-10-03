@@ -163,7 +163,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 		sampleCol += (1.0 - sampleCol) * mipSample;
-        dist += diam  * voxelgiStep;
+        dist += diam * voxelgiStep;
 	}
     return sampleCol;
 }

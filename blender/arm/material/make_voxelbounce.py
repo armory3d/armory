@@ -40,6 +40,7 @@ def make(context_id):
     frag.add_uniform('layout(binding = 0, rgba8) image3D voxelsBounce')
     frag.add_uniform('sampler2D gbufferD')
     frag.add_uniform('sampler2D gbuffer0')
+    frag.add_uniform('sampler2D gbuffer1')
     frag.add_uniform('vec3 eye', '_cameraPosition')
     frag.add_uniform('vec3 eyeLook', '_cameraLook')
     frag.add_uniform('vec2 cameraProj', '_cameraPlaneProj')
@@ -53,11 +54,15 @@ def make(context_id):
     frag.write('n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);')
     frag.write('n = normalize(n);')
 
+    frag.write('vec4 g1 = textureLod(gbuffer1, texCoord, 0.0);')
+    frag.write('float spec = unpackFloat2(g1.a).y;')
+    frag.write('float roughness = g0.b;')
+
     frag.write('vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);')
     frag.write('float dist = max(abs(viewerPos.x - p.x), max(abs(viewerPos.y - p.y), abs(viewerPos.z - p.z)));')
     frag.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x * 2.0), 0);')
     frag.write('float voxelSize = pow(2.0, int(clipmapLevel)) / 2.0;')
-    frag.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiResolution.x) / voxelSize) * voxelSize;')
+    frag.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
     frag.write('vec3 voxpos = (p - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     vert.add_uniform('mat3 N', '_normalMatrix')
@@ -65,7 +70,7 @@ def make(context_id):
     vert.add_out('vec3 wnormal')
     vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
 
-    frag.write('vec4 col = traceDiffuse(voxpos, wnormal, voxels, clipmapLevel);')
+    frag.write('vec4 col = traceDiffuse(voxpos, wnormal, voxels, roughness, clipmapLevel);')
     frag.write('imageStore(voxelsBounce, ivec3(voxpos), col);')
 
     assets.fs_equal(con_voxel, assets.shader_cons['voxelbounce_frag'])

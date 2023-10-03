@@ -331,7 +331,7 @@ def make_gi(context_id):
         frag.write('}')
 
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5) * voxelgiResolution;')
-    frag.write('imageStore(voxels, ivec3(uvw), vec4(min(surfaceAlbedo(basecol, metallic) + emissionCol, vec3(1.0)), 1.0));')
+    frag.write('imageStore(voxels, ivec3(uvw), vec4(min(basecol, vec3(1.0)), 1.0));')
 
     return con_voxel
 
@@ -368,7 +368,7 @@ def make_ao(context_id):
     vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
     vert.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x * 2.0), 0);')
     vert.write('float voxelSize = pow(2.0, int(clipmapLevel)) / 2.0;')
-    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiResolution.x) / voxelSize) * voxelSize;')
+    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelSize * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
     vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
