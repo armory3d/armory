@@ -159,8 +159,15 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_navigation')
             if not os.path.exists('Libraries/haxerecast'):
                 khafile.write(add_armory_library(sdk_path + '/lib/', 'haxerecast', rel_path=do_relpath_sdk))
-            if state.target.startswith('krom') or state.target == 'html5':
-                recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
+            if state.target.startswith('krom'):
+                recastjs_path = sdk_path + '/lib/haxerecast/recastjs/recast.wasm.js'
+                recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
+                khafile.write(add_assets(recastjs_path, rel_path=do_relpath_sdk))
+                recastjs_wasm_path = sdk_path + '/lib/haxerecast/recastjs/recast.wasm.wasm'
+                recastjs_wasm_path = recastjs_wasm_path.replace('\\', '/').replace('//', '/')
+                khafile.write(add_assets(recastjs_wasm_path, rel_path=do_relpath_sdk))
+            elif state.target == 'html5' or state.target == 'node':
+                recastjs_path = sdk_path + '/lib/haxerecast/recastjs/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
                 khafile.write(add_assets(recastjs_path, rel_path=do_relpath_sdk))
 
