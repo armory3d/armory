@@ -590,7 +590,8 @@ class ArmoryExporter:
                 variant_suffix = '_armskin'
             # Tilesheets
             elif bobject.arm_tilesheet != '':
-                variant_suffix = '_armtile'
+                if not bobject.arm_use_custom_tilesheet_node:
+                    variant_suffix = '_armtile'
             elif arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
