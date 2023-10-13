@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class CanvasSetVisibleNode(ArmLogicTreeNode):
-    """Sets whether the given UI element is visibile."""
+    """Sets whether the given UI element is visible."""
     bl_idname = 'LNCanvasSetVisibleNode'
     bl_label = 'Set Canvas Visible'
     arm_version = 1
