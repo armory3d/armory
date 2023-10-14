@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class OnCanvasElementNode(ArmLogicTreeNode):
     """Activates the output whether an action over the given UI element is done."""
     bl_idname = 'LNOnCanvasElementNode'
     bl_label = 'On Canvas Element'
+    arm_section = 'events'
     arm_version = 1
 
     property0: HaxeEnumProperty(

@@ -10,6 +10,7 @@ class SetGlobalCanvasVisibilityNode(ArmLogicTreeNode):
     bl_idname = 'LNSetGlobalCanvasVisibilityNode'
     bl_label = 'Set Global Canvas Visibility'
     bl_width_default = 200
+    arm_section = 'global'
     arm_version = 1
 
     def arm_init(self, context):
