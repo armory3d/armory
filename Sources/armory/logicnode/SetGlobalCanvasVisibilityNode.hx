@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.trait.internal.CanvasScript;
 
-class HideActiveCanvas extends LogicNode {
+class SetGlobalCanvasVisibilityNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
