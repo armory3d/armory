@@ -48,4 +48,8 @@ void main() {
 	#ifdef _EmissionShaded
 		fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);
 	#endif
+
+	#ifdef _VoxelRefract
+		fragColor[GBUF_IDX_REFRACTION] = vec4(ior, opacity, 0.0, 0.0);
+	#endif
 }

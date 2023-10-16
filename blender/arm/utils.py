@@ -727,7 +727,7 @@ def safesrc(s):
 def safestr(s: str) -> str:
     """Outputs a string where special characters have been replaced with
     '_', which can be safely used in file and path names."""
-    for c in r'''[]/\;,><&*:%=+@!#^()|?^'"''':
+    for c in r'''[]/\;,><&*:§$%=+@!#^()|?^'"''':
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 

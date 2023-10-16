@@ -10,6 +10,9 @@
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
+#ifdef _VoxelGI
+#include "std/conetrace.glsl"
+#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -91,7 +94,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-		, sampler3D voxels, vec3 voxpos
+		, sampler3D voxels, vec3 voxpos, float clipmapLevel
+	#endif
+	#endif
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+		, sampler3D voxels, vec3 voxpos, float clipmapLevel
 	#endif
 	#endif
 	#ifdef _MicroShadowing
@@ -125,8 +133,8 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
+	direct *= attenuate(distance(p, lp));
 
 	#ifdef _MicroShadowing
 	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
@@ -138,7 +146,13 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
+	#endif
+	#endif
+
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
 	#endif
 	#endif
 

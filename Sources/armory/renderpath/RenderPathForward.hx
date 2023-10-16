@@ -9,9 +9,11 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
+	static var voxelsBounce = "voxelsBounce";
+	static var voxelsBounceLast = "voxelsBounce";
 	#end
 
 	#if rp_bloom
@@ -22,11 +24,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+			#if rp_ssr "lbuffer1", #end
+			#if (rp_voxels != "Off") "gbuffer_voxpos", #end
+			]);
 		}
 		#else
 		{
@@ -157,9 +158,18 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
+
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_voxpos";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -173,8 +183,7 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -203,26 +212,24 @@ class RenderPathForward {
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-			{
-				var t = new RenderTargetRaw();
-				t.name = "singlea";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "R8";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-			}
-			{
-				var t = new RenderTargetRaw();
-				t.name = "singleb";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "R8";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-			}
+
+			var t = new RenderTargetRaw();
+			t.name = "singlea";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "singleb";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -248,16 +255,14 @@ class RenderPathForward {
 
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
-			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = "R32"; // R16
-				path.createRenderTarget(t);
-			}
+			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			var t = new RenderTargetRaw();
+			t.name = "half";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = "R32"; // R16
+			path.createRenderTarget(t);	
 		}
 		#end
 
@@ -276,8 +281,7 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -310,30 +314,62 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+		// Voxels
+		#if (rp_voxels != 'Off')
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			var voxelize = path.voxelize();
+			var path = RenderPath.active;
+
+			path.clearImage(voxels, 0x00000000);
 
 			#if arm_voxelgi_temporal
-			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
-
-			if (voxelize) {
+			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			}
 			#end
 
-			if (voxelize) {
-				var res = Inc.getVoxelRes();
-				var voxtex = voxels;
+			path.setTarget("", ["gbuffer_voxpos"]);
+			path.bindTarget(voxels, "voxels");
 
-				path.clearImage(voxtex, 0x00000000);
-				path.setTarget("");
-				path.setViewport(res, res);
-				path.bindTarget(voxtex, "voxels");
-				path.drawMeshes("voxel");
-				path.generateMipmaps(voxels);
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
+
+			#if (rp_voxels == "Voxel GI")
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
 			}
+			#end
+			#end
+
+			path.drawMeshes("voxel");
+			path.generateMipmaps(voxels);
+
+			#if (arm_voxelgi_bounces != 1)
+			path.clearImage(voxelsBounce, 0x00000000);
+
+			path.setTarget("");
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
+
+			path.bindTarget(voxels, "voxels");
+			path.bindTarget(voxelsBounce, "voxelsBounce");
+			#if rp_voxelgi_refract
+			path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+			#end
+			path.bindTarget("gbuffer0", "gbuffer0");
+			path.bindTarget("gbuffer1", "gbuffer1");
+			path.bindTarget("_main", "gbufferD");
+			path.drawMeshes("voxelbounce");
+			path.generateMipmaps(voxelsBounce);
+			#else
+			path.generateMipmaps(voxels);
+			#end
 		}
 		#end
 
@@ -366,12 +402,23 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+
+		#if (rp_voxels != 'Off')
+		if (armory.data.Config.raw.rp_gi != false)
 		{
+			#if (arm_voxelgi_bounces != 1)
+			path.bindTarget(voxelsBounce, "voxels");
+			#else
 			path.bindTarget(voxels, "voxels");
+			#end
+
 			#if arm_voxelgi_temporal
 			{
+				#if (arm_voxelgi_bounces != 1)
+				path.bindTarget(voxelsBounceLast, "voxelsLast");
+				#else
 				path.bindTarget(voxelsLast, "voxelsLast");
+				#end
 			}
 			#end
 		}

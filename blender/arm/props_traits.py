@@ -868,11 +868,8 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
             # Bundled scripts
             else:
-                if item.class_name_prop == 'NavMesh':
-                    row.operator("arm.generate_navmesh", icon="UV_VERTEXSEL")
-                else:
-                    row.enabled = item.class_name_prop != ''
-                    row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
+                row.enabled = item.class_name_prop != ''
+                row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
@@ -954,59 +951,40 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
+
+__REG_CLASSES = (
+    ArmTraitListItem,
+    ARM_UL_TraitList,
+    ArmTraitListNewItem,
+    ArmTraitListDeleteItem,
+    ArmTraitListDeleteItemScene,
+    ArmTraitListMoveItem,
+    ArmEditScriptButton,
+    ArmEditBundledScriptButton,
+    ArmEditWasmScriptButton,
+    ArmoryGenerateNavmeshButton,
+    ArmEditCanvasButton,
+    ArmNewScriptDialog,
+    ArmNewTreeNodeDialog,
+    ArmEditTreeNodeDialog,
+    ArmGetTreeNodeDialog,
+    ArmNewCanvasDialog,
+    ArmNewWasmButton,
+    ArmRefreshScriptsButton,
+    ArmRefreshObjectScriptsButton,
+    ArmRefreshCanvasListButton,
+    ARM_PT_TraitPanel,
+    ARM_PT_SceneTraitPanel,
+    ARM_OT_CopyTraitsFromActive,
+    ARM_MT_context_menu,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmTraitListItem)
-    bpy.utils.register_class(ARM_UL_TraitList)
-    bpy.utils.register_class(ArmTraitListNewItem)
-    bpy.utils.register_class(ArmTraitListDeleteItem)
-    bpy.utils.register_class(ArmTraitListDeleteItemScene)
-    bpy.utils.register_class(ArmTraitListMoveItem)
-    bpy.utils.register_class(ArmEditScriptButton)
-    bpy.utils.register_class(ArmEditBundledScriptButton)
-    bpy.utils.register_class(ArmEditWasmScriptButton)
-    bpy.utils.register_class(ArmoryGenerateNavmeshButton)
-    bpy.utils.register_class(ArmEditCanvasButton)
-    bpy.utils.register_class(ArmNewScriptDialog)
-    bpy.utils.register_class(ArmNewTreeNodeDialog)
-    bpy.utils.register_class(ArmEditTreeNodeDialog)
-    bpy.utils.register_class(ArmGetTreeNodeDialog)
-    bpy.utils.register_class(ArmNewCanvasDialog)
-    bpy.utils.register_class(ArmNewWasmButton)
-    bpy.utils.register_class(ArmRefreshScriptsButton)
-    bpy.utils.register_class(ArmRefreshObjectScriptsButton)
-    bpy.utils.register_class(ArmRefreshCanvasListButton)
-    bpy.utils.register_class(ARM_PT_TraitPanel)
-    bpy.utils.register_class(ARM_PT_SceneTraitPanel)
-    bpy.utils.register_class(ARM_OT_CopyTraitsFromActive)
-    bpy.utils.register_class(ARM_MT_context_menu)
+    __reg_classes()
 
     bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
-
-def unregister():
-    bpy.utils.unregister_class(ARM_OT_CopyTraitsFromActive)
-    bpy.utils.unregister_class(ARM_MT_context_menu)
-    bpy.utils.unregister_class(ArmTraitListItem)
-    bpy.utils.unregister_class(ARM_UL_TraitList)
-    bpy.utils.unregister_class(ArmTraitListNewItem)
-    bpy.utils.unregister_class(ArmTraitListDeleteItem)
-    bpy.utils.unregister_class(ArmTraitListDeleteItemScene)
-    bpy.utils.unregister_class(ArmTraitListMoveItem)
-    bpy.utils.unregister_class(ArmEditScriptButton)
-    bpy.utils.unregister_class(ArmEditBundledScriptButton)
-    bpy.utils.unregister_class(ArmEditWasmScriptButton)
-    bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
-    bpy.utils.unregister_class(ArmEditCanvasButton)
-    bpy.utils.unregister_class(ArmNewScriptDialog)
-    bpy.utils.unregister_class(ArmGetTreeNodeDialog)
-    bpy.utils.unregister_class(ArmEditTreeNodeDialog)
-    bpy.utils.unregister_class(ArmNewTreeNodeDialog)
-    bpy.utils.unregister_class(ArmNewCanvasDialog)
-    bpy.utils.unregister_class(ArmNewWasmButton)
-    bpy.utils.unregister_class(ArmRefreshObjectScriptsButton)
-    bpy.utils.unregister_class(ArmRefreshScriptsButton)
-    bpy.utils.unregister_class(ArmRefreshCanvasListButton)
-    bpy.utils.unregister_class(ARM_PT_TraitPanel)
-    bpy.utils.unregister_class(ARM_PT_SceneTraitPanel)

@@ -159,8 +159,15 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_navigation')
             if not os.path.exists('Libraries/haxerecast'):
                 khafile.write(add_armory_library(sdk_path + '/lib/', 'haxerecast', rel_path=do_relpath_sdk))
-            if state.target.startswith('krom') or state.target == 'html5':
-                recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
+            if state.target.startswith('krom'):
+                recastjs_path = sdk_path + '/lib/haxerecast/recastjs/recast.wasm.js'
+                recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
+                khafile.write(add_assets(recastjs_path, rel_path=do_relpath_sdk))
+                recastjs_wasm_path = sdk_path + '/lib/haxerecast/recastjs/recast.wasm.wasm'
+                recastjs_wasm_path = recastjs_wasm_path.replace('\\', '/').replace('//', '/')
+                khafile.write(add_assets(recastjs_wasm_path, rel_path=do_relpath_sdk))
+            elif state.target == 'html5' or state.target == 'node':
+                recastjs_path = sdk_path + '/lib/haxerecast/recastjs/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
                 khafile.write(add_assets(recastjs_path, rel_path=do_relpath_sdk))
 
@@ -434,7 +441,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
-        'rp_gi': rpdat.rp_voxelao,
+        'rp_gi': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
     }
 
@@ -465,11 +472,9 @@ class Main {
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
-        if rpdat.rp_voxelao:
-            f.write("""
-    public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
-    public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
-
+    #if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
+            #f.write("""
+    #public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
         if rpdat.rp_bloom:
             f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
 
@@ -498,10 +503,11 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
-        if wrd.arm_canvas_img_scaling_quality == 'low':
-            f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
-        elif wrd.arm_canvas_img_scaling_quality == 'high':
-            f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
+        if wrd.arm_ui == 'Enabled':
+            if wrd.arm_canvas_img_scaling_quality == 'low':
+                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
+            elif wrd.arm_canvas_img_scaling_quality == 'high':
+                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -581,12 +587,18 @@ def write_compiledglsl(defs, make_variants):
             f.write('#define GBUF_IDX_1 1\n')
 
             idx_emission = 2
+            idx_refraction = 2
             if '_gbuffer2' in wrd.world_defs:
                 f.write('#define GBUF_IDX_2 2\n')
                 idx_emission += 1
+                idx_refraction += 1
 
             if '_EmissionShaded' in wrd.world_defs:
                 f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
+                idx_refraction += 1
+
+            if '_VoxelRefract' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY
@@ -650,6 +662,7 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
+
 const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
@@ -746,18 +759,23 @@ const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_voxelao:
-            halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
+        if rpdat.rp_voxels != 'Off':
+            #halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
+#const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + " + 2.0" + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 """)
-
+        if rpdat.rp_voxels == 'Voxel GI':
+            f.write("""
+const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
+const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
+const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
+""")
         if rpdat.rp_sss:
             f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")
 
