@@ -49,15 +49,13 @@ vec3 tangent(const vec3 n) {
 vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel) {
     dir = normalize(dir);
     vec4 sampleCol = vec4(0.0);
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-    float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
-    float dist = voxelSize0;
+    float dist = VOXEL_SIZE * 2.0 * voxelgiOffset;
     vec3 samplePos;
 
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam / voxelSize), 0.0);
+		float diam = dist * aperture;
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		vec4 mipSample = vec4(0.0);
 
 		mipSample = textureLod(voxels, samplePos *  0.5 + 0.5, lod);
@@ -65,11 +63,11 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		float clipmap_blend = fract(lod);
 		if(clipmap_blend > 0) {
 			//Compute sample with next diam.
-			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam * voxelgiStep)) * 0.5 + 0.5, max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0.0));
+			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture * voxelgiResolution.x), 0.0));
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
-        dist += diam * voxelgiStep;
+        dist += max(diam / 2.0, VOXEL_SIZE);
 	}
     return sampleCol;
 }
@@ -125,14 +123,14 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels, const 
 
 vec4 traceSpecular(const vec3 origin, const vec3 normal, sampler3D voxels, const vec3 viewDir, const float roughness, const int clipmapLevel) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	vec3 specularDir = reflect(viewDir, normal);
+	vec3 specularDir = normalize(reflect(viewDir, normal));
 	return (traceCone(voxels, origin, specularDir, specularAperture, MAX_DISTANCE, clipmapLevel) + traceCone(voxels, origin, specularDir, specularAperture / 3.14159265, MAX_DISTANCE, clipmapLevel)) / 2.0 * voxelgiOcc;
 }
 
 
 vec3 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, const vec3 viewDir, const float ior, const float roughness, const int clipmapLevel) {
  	const float transmittance = 1.0;
- 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
+ 	vec3 refraction = normalize(refract(viewDir, normal, 1.0 / ior));
  	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
  	return transmittance * traceCone(voxels, origin, refraction, refractiveAperture, MAX_DISTANCE, clipmapLevel).xyz * voxelgiOcc;
 }
@@ -141,15 +139,13 @@ vec3 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, con
 float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-    float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
-	float dist = voxelSize0 * 2.0 * voxelgiOffset;
+	float dist = VOXEL_SIZE * 2.0 * voxelgiOffset;
     vec3 samplePos;
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam / voxelSize), 0.0);
+		float diam = dist * aperture;
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		float mipSample = 0.0;
 		float clipmapOffset = 0.0;
 
@@ -159,11 +155,11 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 
 		if(clipmap_blend > 0) {
 			//Compute sample with next diam.
-			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam * voxelgiStep)) * 0.5 + 0.5,  max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0.0)).r;
+			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture * voxelgiResolution.x), 0.0)).r;
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 		sampleCol += (1.0 - sampleCol) * mipSample;
-        dist += diam * voxelgiStep;
+        dist += max(diam / 2.0, VOXEL_SIZE);
 	}
     return sampleCol;
 }
@@ -172,15 +168,13 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist, const int clipmapLevel) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-    float voxelSize = 2.0 * pow(2.0, clipmapLevel) / voxelgiResolution.x;
-    float voxelSize0 = voxelSize * 2.0 * voxelgiOffset;
-	float dist = voxelSize0 * 2.0 * voxelgiOffset;
+	float dist = VOXEL_SIZE * 2.0 * voxelgiOffset;
     vec3 samplePos;
 
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam / voxelSize), 0.0);
+		float diam = dist * aperture;
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		float mipSample = 0.0;
 		float clipmapOffset = 0.0;
 
@@ -190,11 +184,11 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
 
 		if(clipmap_blend > 0) {
 			//Compute sample with next diam.
-			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + diam * voxelgiStep)) * 0.5 + 0.5,  max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0.0)).r;
+			float mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(diam / 2.0, VOXEL_SIZE))) * 0.5 + 0.5, max(log2((dist + max(diam / 2.0, VOXEL_SIZE)) * aperture * voxelgiResolution.x), 0.0)).r;
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 		sampleCol += (1.0 - sampleCol) * mipSample;
-        dist += diam * voxelgiStep;
+        dist += max(diam / 2.0, VOXEL_SIZE);
 	}
 	return sampleCol;
 }
