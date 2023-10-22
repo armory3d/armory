@@ -2,14 +2,14 @@ from arm.logicnode.arm_nodes import *
 
 class WaitForNode(ArmLogicTreeNode):
     """
-    Activates the output when all inputs are received disregaring its order. The idea
-    is to wait for all inputs to be received to trigger the output.
+    Activate the output when all inputs have been activated at least once since the node's initialization.
+    Use This node for parallel flows. Inputs don't need to be active at the same point in time.
 
-    @input list of inputs to wait for triggering the output
-    @output is triggered when all inputs are received
+    @input Input[0-n]: list of inputs to be activated
+    @output Output: output triggered when all inputs are activated
     """
     bl_idname = 'LNWaitForNode'
-    bl_label = 'Wait for Input'
+    bl_label = 'Wait for All Inputs'
     arm_section = 'flow'
     arm_version = 1
     
