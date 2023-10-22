@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class CanvasGetScaleNode(ArmLogicTreeNode):
     """Returns the scale of the given UI element."""
     bl_idname = 'LNCanvasGetScaleNode'
     bl_label = 'Get Canvas Scale'
+    arm_section = 'elements_general'
     arm_version = 1
 
     def arm_init(self, context):
