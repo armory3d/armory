@@ -11,7 +11,7 @@ class WaitForNode extends LogicNode {
 	override function run(from: Int) {
 
 		if(!froms.contains(from)) froms.push(from);
-		if(inputs.length == froms.length) runOutput(0);
+		if(inputs.length == froms.length){ runOutput(0); froms = []; }
 
 	}
 
