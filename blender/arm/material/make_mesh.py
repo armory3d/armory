@@ -654,10 +654,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         vert.add_out('vec3 clipmapLevel')
         vert.write('vec3 P = vec3(W * vec4(spos.xyz, 1.0));')
         vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
-        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x * 0.125), 0));')
-        vert.write('float voxelSize = pow(2.0, clipmapLevel) * 4.0;')
+        vert.write('int clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));')
+        vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0 / voxelgiResolution.x;')
         vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook) / voxelSize) * voxelSize;')
-        vert.write('voxpos = (P - eyeSnap) / voxelSize * 0.25 / voxelgiHalfExtents.x;')
+        vert.write('voxpos = (P - eyeSnap) / pow(2.0, clipmapLevel) * 1.0 / voxelgiResolution.x;')
 
         rpdat = arm.utils.get_rp()
 
