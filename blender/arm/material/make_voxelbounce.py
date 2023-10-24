@@ -62,10 +62,10 @@ def make(context_id):
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
-    vert.write('clipmapLevel = int(max(log2(dist / voxelgiResolution.x), 0));')
-    vert.write('float voxelSize = pow(2.0, clipmapLevel) * 0.5;')
-    vert.write('vec3 eyeSnap = floor((normalize(viewerPos + eyeLook)) / voxelSize) * voxelSize;')
-    vert.write('voxpos = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
+    vert.write('int clipmapLevel = int(max(log2(dist / voxelgiHalfExtents.x * 0.125), 0));')
+    vert.write('float voxelSize = pow(2.0, clipmapLevel) * 4.0;')
+    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook) / voxelSize) * voxelSize;')
+    vert.write('voxpos = (P - eyeSnap) / voxelSize * 0.25 / voxelgiHalfExtents.x;')
 
     vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
 
