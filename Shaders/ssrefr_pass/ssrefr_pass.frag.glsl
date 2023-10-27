@@ -27,7 +27,7 @@ vec3 hitCoord;
 float depth;
 vec3 viewPos;
 
-#define maxSteps int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist)
+const int maxSteps = int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist);
 
 vec2 getProjectedCoord(const vec3 hit) {
     vec4 projectedCoord = P * vec4(hit, 1.0);
@@ -100,7 +100,7 @@ void main() {
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-    vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
+    vec3 refracted = normalize(refract(viewPos, viewNormal, 1.0 / ior));
     hitCoord = viewPos;
 
 #ifdef _CPostprocess

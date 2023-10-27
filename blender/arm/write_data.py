@@ -573,26 +573,27 @@ def write_compiledglsl(defs, make_variants):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
 
-        gbuffer_size = make_renderpath.get_num_gbuffer_rts()
-        f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
+        if rpdat.rp_renderer == "Deferred":
+            gbuffer_size = make_renderpath.get_num_gbuffer_rts_deferred()
+            f.write(f'#define GBUF_SIZE {gbuffer_size}\n')
 
-        # Write indices of G-Buffer render targets
-        f.write('#define GBUF_IDX_0 0\n')
-        f.write('#define GBUF_IDX_1 1\n')
+            # Write indices of G-Buffer render targets
+            f.write('#define GBUF_IDX_0 0\n')
+            f.write('#define GBUF_IDX_1 1\n')
 
-        idx_emission = 2
-        idx_refraction = 2
-        if '_gbuffer2' in wrd.world_defs:
-            f.write('#define GBUF_IDX_2 2\n')
-            idx_emission += 1
-            idx_refraction += 1
+            idx_emission = 2
+            idx_refraction = 2
+            if '_gbuffer2' in wrd.world_defs:
+                f.write('#define GBUF_IDX_2 2\n')
+                idx_emission += 1
+                idx_refraction += 1
 
-        if '_EmissionShaded' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
-            idx_refraction += 1
+            if '_EmissionShaded' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
+                idx_refraction += 1
 
-        if '_SSRefraction' in wrd.world_defs:
-            f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
+            if '_SSRefraction' in wrd.world_defs:
+                f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
 #define _InvY

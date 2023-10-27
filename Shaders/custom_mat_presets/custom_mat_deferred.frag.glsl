@@ -50,6 +50,6 @@ void main() {
 	#endif
 	
 	#ifdef _SSRefraction
-		fragColor[GBUF_IDX_REFRACTION] = vec4(1.0);
+		fragColor[GBUF_IDX_REFRACTION] = vec4(ior, opacity, 0.0, 0.0);
 	#endif
 }
