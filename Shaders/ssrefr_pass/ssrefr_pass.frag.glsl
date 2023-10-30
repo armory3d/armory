@@ -41,7 +41,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 float getDeltaDepth(const vec3 hit) {
     float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-    vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+    vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
     return viewPos.z - hit.z;
 }
 
