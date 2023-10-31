@@ -652,14 +652,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         vert.add_out('vec3 voxpos')
         vert.write('vec3 P = vec3(W * vec4(spos.xyz, 1.0));')
         vert.write('float dist = max(abs(P.x - viewerPos.x), max(abs(P.y - viewerPos.y), abs(P.z - viewerPos.z)));')
-        vert.write('float clipmapLevel = max(log2(dist / voxelgiHalfExtents.x), 0);')
-        vert.write('float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0 / voxelgiResolution.x;')
-        vert.write('int clipmapLevelSize = int(pow(2.0, floor(clipmapLevel)) * voxelgiHalfExtents.x);')
-        vert.write('vec3 eyeSnap1 = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
-        vert.write('vec3 eyeSnap2 = floor(normalize(viewerPos + eyeLook * (voxelgiHalfExtents.x * 2.0)) / (voxelSize * 2.0)) * (voxelSize * 2.0);')
-        vert.write('vec3 voxpos1 = (P - eyeSnap1) / clipmapLevelSize;')
-        vert.write('vec3 voxpos2 = (P - eyeSnap2) / (clipmapLevelSize);')
-        vert.write('voxpos = mix(voxpos1, voxpos2, fract(clipmapLevel));')
+        vert.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);')
+        vert.write('float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0;')
+        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
+        vert.write('voxpos = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
 
         rpdat = arm.utils.get_rp()
 

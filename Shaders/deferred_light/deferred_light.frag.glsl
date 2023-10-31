@@ -223,26 +223,18 @@ void main() {
 
 #ifdef _VoxelGI
 	float dist = max(abs(p.x - viewerPos.x), max(abs(p.y - viewerPos.y), abs(p.z - viewerPos.z)));
-	float clipmapLevel = max(log2(dist / voxelgiHalfExtents.x), 0);
-    float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0 / voxelgiResolution.x;
-    int clipmapLevelSize = int(pow(2.0, floor(clipmapLevel)) * voxelgiHalfExtents.x);
-    vec3 eyeSnap1 = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;
-    vec3 eyeSnap2 = floor(normalize(viewerPos + eyeLook * (voxelgiHalfExtents.x * 2.0)) / (voxelSize * 2.0)) * (voxelSize * 2.0);
-    vec3 voxpos1 = (p - eyeSnap1) / clipmapLevelSize;
-    vec3 voxpos2 = (p - eyeSnap2) / clipmapLevelSize;
-    vec3 voxpos = mix(voxpos1, voxpos2, fract(clipmapLevel));
+    float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+    float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;
+    vec3 voxpos = (p - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;
 #endif
 
 #ifdef _VoxelAOvar
 	float dist = max(abs(p.x - viewerPos.x), max(abs(p.y - viewerPos.y), abs(p.z - viewerPos.z)));
-	float clipmapLevel = max(log2(dist / voxelgiHalfExtents.x), 0);
-    float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0 / voxelgiResolution.x;
-    int clipmapLevelSize = int(pow(2.0, floor(clipmapLevel)) * voxelgiHalfExtents.x)
-    vec3 eyeSnap1 = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;
-    vec3 eyeSnap2 = floor(normalize(viewerPos + eyeLook * (voxelgiHalfExtents.x * 2.0)) / (voxelSize * 2.0)) * (voxelSize * 2.0);
-    vec3 voxpos1 = (p - eyeSnap1) / clipmapLevelSize;
-    vec3 voxpos2 = (p - eyeSnap2) / clipmapLevelSize;
-    vec3 voxpos = mix(voxpos1, voxpos2, fract(clipmapLevel));
+    float clipmapLevel = max(log2(dist / voxelgiResolution.x), 0);
+    float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0;
+    vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;
+    vec3 voxpos = (p - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;
 #endif
 
 #ifdef _VoxelRefract
