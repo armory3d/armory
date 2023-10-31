@@ -130,7 +130,7 @@ vec4 traceSpecular(const vec3 origin, const vec3 normal, sampler3D voxels, const
 
 vec3 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, const vec3 viewDir, const float ior, const float roughness) {
  	const float transmittance = 1.0;
- 	vec3 refraction = normalize(refract(viewDir, normal, 1.0 / ior));
+ 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
  	float refractiveAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
  	return transmittance * traceCone(voxels, origin, refraction, refractiveAperture, MAX_DISTANCE).xyz * voxelgiOcc;
 }

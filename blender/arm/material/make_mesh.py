@@ -655,9 +655,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         vert.write('float clipmapLevel = max(log2(dist / voxelgiHalfExtents.x), 0);')
         vert.write('float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0 / voxelgiResolution.x;')
         vert.write('int clipmapLevelSize = int(pow(2.0, floor(clipmapLevel)) * voxelgiHalfExtents.x);')
-        vert.write('vec3 eyeSnap = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
-        vert.write('vec3 voxpos1 = (P - eyeSnap) / clipmapLevelSize;')
-        vert.write('vec3 voxpos2 = (P - eyeSnap) / (clipmapLevelSize * 2.0);')
+        vert.write('vec3 eyeSnap1 = floor(normalize(viewerPos + eyeLook * voxelgiHalfExtents.x) / voxelSize) * voxelSize;')
+        vert.write('vec3 eyeSnap2 = floor(normalize(viewerPos + eyeLook * (voxelgiHalfExtents.x * 2.0)) / (voxelSize * 2.0)) * (voxelSize * 2.0);')
+        vert.write('vec3 voxpos1 = (P - eyeSnap1) / clipmapLevelSize;')
+        vert.write('vec3 voxpos2 = (P - eyeSnap2) / (clipmapLevelSize);')
         vert.write('voxpos = mix(voxpos1, voxpos2, fract(clipmapLevel));')
 
         rpdat = arm.utils.get_rp()
@@ -726,7 +727,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
             frag.write('}') # receiveShadow
         if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
-            frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);')
+            frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
 
@@ -754,7 +755,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs):
-            frag.write('  , voxels, voxpos, clipmapLevel')
+            frag.write('  , voxels, voxpos')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write('  , occlusion')
         frag.write(');')
