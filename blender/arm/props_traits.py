@@ -868,11 +868,8 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
             # Bundled scripts
             else:
-                if item.class_name_prop == 'NavMesh':
-                    row.operator("arm.generate_navmesh", icon="UV_VERTEXSEL")
-                else:
-                    row.enabled = item.class_name_prop != ''
-                    row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
+                row.enabled = item.class_name_prop != ''
+                row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")

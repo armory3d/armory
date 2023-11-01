@@ -754,6 +754,8 @@ class ShadowMapAtlas {
 			return 8192;
 			#elseif (rp_shadowmap_atlas_max_size == 16384)
 			return 16384;
+			#elseif (rp_shadowmap_atlas_max_size == 32768)
+			return 32768;
 			#end
 		#else
 		switch (type) {
@@ -768,6 +770,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_point == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_point == 32768)
+				return 32768;
 				#end
 			}
 			case "spot": {
@@ -783,6 +787,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_spot == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_spot == 32768)
+				return 32768;
 				#end
 			}
 			case "sun": {
@@ -798,6 +804,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_sun == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_sun == 32768)
+				return 32768;
 				#end
 			}
 			default: {
@@ -813,9 +821,10 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size == 32768)
+				return 32768;
 				#end
 			}
-
 		}
 		#end
 	}

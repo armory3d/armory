@@ -80,6 +80,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
                         selected_ts = ts
                         break
                 layout.prop_search(obj, "arm_tilesheet_action", selected_ts, "arm_tilesheetactionlist", text="Action")
+                layout.prop(obj, "arm_use_custom_tilesheet_node")
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)

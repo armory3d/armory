@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.MeshObject;
 
-class PauseTilesheetNode extends LogicNode {
+class SetTilesheetFrameNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -10,10 +10,11 @@ class PauseTilesheetNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: MeshObject = inputs[1].get();
+		var frame: Int = inputs[2].get();
 
 		if (object == null) return;
 
-		object.activeTilesheet.pause();
+		object.activeTilesheet.setFrameOffset(frame);
 
 		runOutput(0);
 	}

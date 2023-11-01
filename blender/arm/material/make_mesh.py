@@ -104,7 +104,13 @@ def make_base(con_mesh, parse_opacity):
     tesc = None
     tese = None
 
-    vert.add_uniform('mat3 N', '_normalMatrix')
+    billboard = mat_state.material.arm_billboard
+    if billboard == 'spherical':
+        vert.add_uniform('mat3 N', '_normalMatrixSphere')
+    elif billboard == 'cylindrical':
+        vert.add_uniform('mat3 N', '_normalMatrixCylinder')
+    else:
+        vert.add_uniform('mat3 N', '_normalMatrix')
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
 
     vattr_written = False
