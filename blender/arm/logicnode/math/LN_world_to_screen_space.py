@@ -8,7 +8,7 @@ class WorldToScreenSpaceNode(ArmLogicTreeNode):
     arm_section = 'matrix'
     arm_version = 2
 
-   def remove_extra_inputs(self, context):
+    def remove_extra_inputs(self, context):
         while len(self.inputs) > 1:
             self.inputs.remove(self.inputs[-1])
         if self.property0 == 'Selected Camera':

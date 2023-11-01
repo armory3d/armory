@@ -38,7 +38,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 float getDeltaDepth(const vec3 hit) {
 	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = normalize(getPosView(viewRay, depth, cameraProj));
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
 }
 
@@ -80,8 +80,8 @@ void main() {
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
-	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	if (depth == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -90,7 +90,7 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	vec3 reflected = normalize(reflect(viewPos, viewNormal));
 	hitCoord = viewPos;
 

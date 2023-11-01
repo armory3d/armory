@@ -752,6 +752,10 @@ class RenderPathDeferred {
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
+
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer0");
+			#end
 		}
 		#end
 
@@ -759,6 +763,10 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false)
 			{
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
+
 				//save depth
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
@@ -844,17 +852,21 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer0");
+				#end
 			}
 		}
-		#end
-
-		#if (!kha_opengl)
-		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 		#end
 
 		#if rp_ssr
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				#end
+
 				#if rp_ssr_half
 				var targeta = "ssra";
 				var targetb = "ssrb";
@@ -884,6 +896,10 @@ class RenderPathDeferred {
 				path.bindTarget(targetb, "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+
+				#if (!kha_opengl)
+				path.setDepthFrom("tex", "gbuffer0");
+				#end
 			}
 		}
 		#end
