@@ -416,13 +416,13 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, int(clipmapLevel));
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, int(clipmapLevel));
 	#endif
 	#endif
 
@@ -489,12 +489,12 @@ void main() {
 		#endif
 		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		, voxels, voxpos
+		, voxels, voxpos, int(clipmapLevel)
 		#endif
 		#endif
 		#ifdef _VoxelGI
 		#ifdef _VoxelShadow
-		, voxels, voxpos
+		, voxels, voxpos, int(clipmapLevel)
 		#endif
 		#endif
 		#ifdef _MicroShadowing
@@ -554,12 +554,12 @@ void main() {
 			#endif
 			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos
+			, voxels, voxpos, int(clipmapLevel)
 			#endif
 			#endif
 			#ifdef _VoxelGI
 			#ifdef _VoxelShadow
-			, voxels, voxpos
+			, voxels, voxpos, int(clipmapLevel)
 			#endif
 			#endif
 			#ifdef _MicroShadowing
