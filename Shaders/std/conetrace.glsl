@@ -65,12 +65,12 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		float clipmap_blend = fract(lod);
 		if(clipmap_blend > 0) {
 			//Compute sample with next diam.
-			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)))) * 0.5 + 0.5, max(log2(max(voxelSize0, (dist + diam) * 2.0 * tan(aperture * 0.5)) * aperture / voxelSize), 0.0));
+			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiStep)) * 0.5 + 0.5, max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * aperture / voxelSize), 0.0));
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
-        dist += dist * voxelgiStep;
+        dist += diam * voxelgiStep;
 	}
     return sampleCol;
 }
@@ -164,7 +164,7 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 dir, const float aperture,
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 		sampleCol += (1.0 - sampleCol) * mipSample;
-        dist += max(diam / 2.0, VOXEL_SIZE);
+        dist += diam * voxelgiStep;
 	}
     return sampleCol;
 }
