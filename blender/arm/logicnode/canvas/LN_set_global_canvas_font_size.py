@@ -5,6 +5,7 @@ class SetGlobalCanvasFontSizeNode(ArmLogicTreeNode):
     """Sets the font size of the entire UI Canvas."""
     bl_idname = 'LNSetGlobalCanvasFontSizeNode'
     bl_label = 'Set Global Canvas Font Size'
+    arm_section = 'global'
     arm_version = 1
 
     def arm_init(self, context):

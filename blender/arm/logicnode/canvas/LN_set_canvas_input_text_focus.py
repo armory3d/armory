@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class CanvasSetInputTextFocusNode(ArmLogicTreeNode):
     """Sets the input text focus of the given UI element."""
     bl_idname = 'LNCanvasSetInputTextFocusNode'
     bl_label = 'Set Canvas Input Text Focus'
+    arm_section = 'elements_specific'
     arm_version = 1
 
     def arm_init(self, context):

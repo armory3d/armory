@@ -248,6 +248,9 @@ def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')
     if armory_pbr is None:
         load_library('Armory PBR')
+    custom_tilesheet = bpy.data.node_groups.get('CustomTilesheet')
+    if custom_tilesheet is None:
+        load_library('CustomTilesheet')
 
 
 def load_library(asset_name):
