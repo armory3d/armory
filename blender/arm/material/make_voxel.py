@@ -202,7 +202,7 @@ def make_gi(context_id):
                 frag.write(f'        svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('    }')
             frag.write('}') # receiveShadow
-            frag.write('basecol *= sunCol * svisibility;')
+            frag.write('basecol += sunCol * svisibility;')
 
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', '_pointPosition')
@@ -247,7 +247,7 @@ def make_gi(context_id):
                 else:
                     frag.write('visibility *= texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
             frag.write('}')
-            frag.write('basecol *= pointCol * attenuate(distance(voxposition, pointPos)) * visibility;')
+            frag.write('basecol += pointCol * attenuate(distance(voxposition, pointPos)) * visibility;')
 
     if '_Clusters' in wrd.world_defs:
         is_shadows = '_ShadowMap' in wrd.world_defs
@@ -319,7 +319,7 @@ def make_gi(context_id):
             frag.write('    if (li == 3) visibility *= texture(shadowMapSpot[3], vec3(lPos.xy, lPos.z - lightsArray[li * 3 + 2].x)).r;')
 
         frag.write('    }')
-        frag.write('basecol *= visibility * lightsArray[li * 3 + 1].xyz;')
+        frag.write('basecol += lightsArray[li * 3 + 1].xyz * visibility;')
         frag.write('}')
 
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5) * voxelgiResolution;')
