@@ -660,7 +660,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('sampler3D voxelsLast')
 
         rpdat = arm.utils.get_rp()
-        if rpdat.rp_voxels != "Off" and (rpdat.rp_renderer == "Forward" or transluc_pass):
+        if rpdat.rp_voxels != "Off" and (rpdat.rp_renderer == "Forward" or transluc_pass) and tese is not None:
             make_tess.interpolate(tese, 'voxpos', 3, declare_out=True)
             make_tess.interpolate(tese, 'clipmapLevel', 3, declare_out=True)
 

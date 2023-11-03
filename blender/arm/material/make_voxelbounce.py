@@ -71,23 +71,23 @@ def make(context_id):
     vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
 
     frag.write('vec4 col = textureLod(voxels, voxpos * 0.5 + 0.5, clipmapLevel);')
-    frag.write('col += traceDiffuse(voxpos, wnormal, voxels);')
+    frag.write('col += traceDiffuse(voxpos, wnormal, voxels, int(clipmapLevel));')
 
     frag.add_uniform('vec3 eye', '_cameraPosition')
     frag.write('vec3 v = normalize(eye - voxpos);')
 
     frag.write('if(roughness < 1.0 && spec > 0.0)')
-    frag.write('    col += traceSpecular(voxpos, wnormal, voxels, -v, roughness);')
+    frag.write('    col += traceSpecular(voxpos, wnormal, voxels, -v, roughness, int(clipmapLevel));')
 
     frag.write('#ifdef _VoxelRefract')
     frag.write('vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);')
     frag.write('float ior = gr.x;')
     frag.write('float opacity = gr.y;')
     frag.write('if(opacity < 1.0)')
-    frag.write('    col.rgb = mix(traceRefraction(voxpos, wnormal, voxels, -v, ior, roughness) + col.rgb, col.rgb, opacity);')
+    frag.write('    col.rgb = mix(traceRefraction(voxpos, wnormal, voxels, -v, ior, roughness, int(clipmapLevel)) + col.rgb, col.rgb, opacity);')
     frag.write('#endif')
 
-    frag.write('imageStore(voxelsBounce, ivec3((voxpos * 0.5 + 0.5) * voxelgiResolution.x), vec4(1.0));')
+    frag.write('imageStore(voxelsBounce, ivec3((voxpos * 0.5 + 0.5) * voxelgiResolution.x), vec4(10.0));')
 
     assets.vs_equal(con_voxel, assets.shader_cons['voxelbounce_vert'])
     assets.fs_equal(con_voxel, assets.shader_cons['voxelbounce_frag'])
