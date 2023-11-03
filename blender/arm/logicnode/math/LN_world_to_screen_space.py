@@ -24,12 +24,12 @@ class WorldToScreenSpaceNode(ArmLogicTreeNode):
         self.add_input('ArmVectorSocket', 'World')
 
         self.add_output('ArmVectorSocket', 'Screen')
-    
+
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)
