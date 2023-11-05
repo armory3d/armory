@@ -443,9 +443,9 @@ class Inc {
 	#end
 
 	#if (rp_voxels != 'Off')
-	public static function initGI(tname = "voxels") {
+	public static function initGI() {
 		var t = new RenderTargetRaw();
-		t.name = tname;
+		t.name = "voxels";
 		
 		#if arm_config
 		var config = armory.data.Config.raw;
@@ -472,9 +472,10 @@ class Inc {
 		t.mipmaps = true;
 		path.createRenderTarget(t);
 
-		#if (arm_voxelgi_bounces != 1)
+		#if rp_voxelgi_bounces
 		var tBo = new RenderTargetRaw();
 		tBo.name = "voxelsBounce";
+		tBo.format = "RGBA64";
 		tBo.width = t.width;
 		tBo.height = t.height;
 		tBo.depth = t.depth;
@@ -495,14 +496,15 @@ class Inc {
 			tB.mipmaps = t.mipmaps;
 			path.createRenderTarget(tB);
 
-			#if (arm_voxelgi_bounces != 1)
+			#if rp_voxelgi_bounces
 			var tBoB = new RenderTargetRaw();
-			tBoB.name = tBoB.name + "B";
-			tBoB.width = t.width;
-			tBoB.height = t.height;
-			tBoB.depth = t.depth;
-			tBoB.is_image = t.is_image;
-			tBoB.mipmaps = t.mipmaps;
+			tBoB.name = tBo.name + "B";
+			tBoB.format = "RGBA64";
+			tBoB.width = tBo.width;
+			tBoB.height = tBo.height;
+			tBoB.depth = tBo.depth;
+			tBoB.is_image = tBo.is_image;
+			tBoB.mipmaps = tBo.mipmaps;
 			path.createRenderTarget(tBoB);
 			#end
 		}

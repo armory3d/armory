@@ -327,6 +327,10 @@ class RenderPathForward {
 			if(voxelize) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+				#if rp_voxelgi_bounces
+				voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+				voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+				#end
 			}
 			#end
 
@@ -352,7 +356,7 @@ class RenderPathForward {
 
 				path.drawMeshes("voxel");
 
-				#if (arm_voxelgi_bounces != 1)
+				#if rp_voxelgi_bounces
 				path.clearImage(voxelsBounce, 0x00000000);
 
 				path.setTarget("");
@@ -409,7 +413,7 @@ class RenderPathForward {
 		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (arm_voxelgi_bounces != 1)
+			#if rp_voxelgi_bounces
 			path.bindTarget(voxelsBounce, "voxels");
 			#else
 			path.bindTarget(voxels, "voxels");
@@ -417,7 +421,7 @@ class RenderPathForward {
 
 			#if arm_voxelgi_temporal
 			{
-				#if (arm_voxelgi_bounces != 1)
+				#if rp_voxelgi_bounces
 				path.bindTarget(voxelsBounceLast, "voxelsLast");
 				#else
 				path.bindTarget(voxelsLast, "voxelsLast");

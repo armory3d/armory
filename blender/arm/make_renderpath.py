@@ -109,9 +109,8 @@ def add_world_defs():
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('rp_voxelgi_refract')
 
-            if rpdat.arm_voxelgi_bounces != '1':
-                wrd.world_defs += '_VoxelBounce'
-                assets.add_khafile_def('arm_voxelgi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
+            if rpdat.rp_voxelgi_bounces != "1":
+                assets.add_khafile_def('rp_voxelgi_bounces={0}'.format(rpdat.rp_voxelgi_bounces))
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant

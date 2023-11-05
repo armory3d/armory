@@ -496,7 +496,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     #rp_voxelgi_relight: BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_refraction: BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    arm_voxelgi_bounces: EnumProperty(
+    rp_voxelgi_bounces: EnumProperty(
         items=[
         	   ('1', '1', '1'),
                ('2', '2', '2')],
