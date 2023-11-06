@@ -57,7 +57,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
     while (sampleCol.a < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
 		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam / voxelSize), 0.0);
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		vec4 mipSample = vec4(0.0);
 
 		mipSample = textureLod(voxels, samplePos *  0.5 + 0.5, lod);
@@ -65,7 +65,7 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 dir, const float aperture, co
 		float clipmap_blend = fract(lod);
 		if(clipmap_blend > 0) {
 			//Compute sample with next diam.
-			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiStep)) * 0.5 + 0.5, max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * aperture / voxelSize), 0.0));
+			vec4 mipSampleNext = textureLod(voxels, (origin + dir * (dist + max(voxelSize0, dist * 2.0 * tan(aperture * 0.5)) * voxelgiStep)) * 0.5 + 0.5, max(log2(max(voxelSize0, (dist + diam * voxelgiStep) * 2.0 * tan(aperture * 0.5)) * voxelgiResolution.x), 0.0));
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
@@ -181,7 +181,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 dir, const float
     while (sampleCol < 1.0 && dist < maxDist) {
         samplePos = origin + dir * dist;
 		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = max(log2(diam / voxelSize), 0.0);
+        float lod = max(log2(diam * voxelgiResolution.x), 0.0);
 		float mipSample = 0.0;
 		float clipmapOffset = 0.0;
 
