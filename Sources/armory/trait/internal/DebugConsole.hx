@@ -502,6 +502,19 @@ class DebugConsole extends Trait {
 							ui.unindent();
 						}
 
+						if (selectedObject.properties != null) {
+							ui.text("Properties:");
+							ui.indent();
+
+							for (name => value in selectedObject.properties) {
+								ui.row([1/2, 1/2]);
+								ui.text(name);
+								ui.text(dynamicToUIString(value), Align.Right);
+							}
+
+							ui.unindent();
+						}
+
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
 							if (iron.Scene.active.world != null) {
@@ -936,21 +949,8 @@ class DebugConsole extends Trait {
 					ui.text(fieldName + "");
 
 					var fieldValue = Reflect.field(trait, fieldName);
-					var fieldClass = Type.getClass(fieldValue);
 
-					// Treat objects differently (VERY bad performance otherwise)
-					if (Reflect.isObject(fieldValue) && fieldClass != String) {
-
-						if (fieldClass != null) {
-							ui.text('<${Type.getClassName(fieldClass)}>', Align.Right);
-						} else {
-							// Anonymous data structures for example
-							ui.text("<???>", Align.Right);
-						}
-					} else {
-						ui.text(Std.string(fieldValue), Align.Right);
-					}
-
+					ui.text(dynamicToUIString(fieldValue), Align.Right);
 				}
 
 				ui.unindent();
@@ -959,6 +959,22 @@ class DebugConsole extends Trait {
 
 		ui.end(bindG);
 		if (bindG) g.begin(false);
+	}
+
+	function dynamicToUIString(value: Dynamic): String {
+		final valueClass = Type.getClass(value);
+
+		// Don't convert objects to string, Haxe includes _all_ object fields
+		// (recursively) by default which does not fit in the UI and can cause performance issues
+		if (Reflect.isObject(value) && valueClass != String) {
+			if (valueClass != null) {
+				return '<${Type.getClassName(valueClass)}>';
+			}
+			// Given value has no class, anonymous data structures for example
+			return "<???>";
+		}
+
+		return Std.string(value);
 	}
 
 	function update() {
