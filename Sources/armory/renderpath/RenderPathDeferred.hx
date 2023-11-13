@@ -334,7 +334,7 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			//holds rior and opacity
+			//holds ior and opacity
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
 			t.width = 0;

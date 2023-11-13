@@ -279,7 +279,7 @@ def make_deferred(con_mesh, rpasses):
 
     if '_SSRefraction' in wrd.world_defs:
         if 'refraction' in rpasses:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(rior, opacity, 0.0, 0.0);')
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(ior, opacity, 0.0, 0.0);')
         else:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
 
@@ -544,22 +544,25 @@ def make_forward(con_mesh):
     if not blend:
         mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
-            mrt = 2
+            mrt += 1
         if rpdat.rp_ss_refraction:
             mrt += 1
         if mrt != 0:
+            index = 1
             # Store light gbuffer for post-processing
-            frag.add_out(f'vec4 fragColor[{mrt}]')
+            frag.add_out(f'vec4 fragColor[{mrt}+1]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-            frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
-            if '_SSRefraction' in wrd.world_defs:
+            if rpdat.rp_ssr:
+                frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
+                index += 1
+            if rpdat.rp_ss_refraction:
                 if parse_opacity:
-                    frag.write('fragColor[2] = vec4(rior, opacity, 0.0, 0.0);')
+                    frag.write(f'fragColor[{index}] = vec4(ior, opacity, 0.0, 0.0);')
                 else:
-                    frag.write('fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
+                    frag.write(f'fragColor[{index}] = vec4(1.0, 1.0, 0.0, 0.0);')
 
         else:
             frag.add_out('vec4 fragColor[1]')
@@ -759,4 +762,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float rior = 1.450;')#case shader is arm we don't get an ior
+        frag.write('float ior = 1.450;')#case shader is arm we don't get an ior

@@ -120,7 +120,7 @@ class RenderPathForward {
 
 			#if rp_ssrefr
 			{
-				//holds rior and opacity
+				//holds ior and opacity
 				var t = new RenderTargetRaw();
 				t.name = "gbuffer_refraction";
 				t.width = 0;
