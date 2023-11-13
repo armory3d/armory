@@ -542,14 +542,14 @@ def make_forward(con_mesh):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
-        mrt = 0
+        mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
             mrt = 2
         if rpdat.rp_ss_refraction:
             mrt += 1
         if mrt != 0:
             # Store light gbuffer for post-processing
-            frag.add_out('vec4 fragColor[{mrt}]'.format(mrt = mrt))
+            frag.add_out(f'vec4 fragColor[{mrt}]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
