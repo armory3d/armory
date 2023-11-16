@@ -548,7 +548,7 @@ def make_forward(con_mesh):
         if rpdat.rp_ss_refraction:
             mrt += 1
         if mrt != 0:
-            index = 1
+            idx_refraction = 1
             # Store light gbuffer for post-processing
             frag.add_out(f'vec4 fragColor[{mrt}+1]')
             frag.add_include('std/gbuffer.glsl')
@@ -557,12 +557,12 @@ def make_forward(con_mesh):
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             if rpdat.rp_ssr:
                 frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
-                index += 1
+                idx_refraction += 1
             if rpdat.rp_ss_refraction:
                 if parse_opacity:
-                    frag.write(f'fragColor[{index}] = vec4(ior, opacity, 0.0, 0.0);')
+                    frag.write(f'fragColor[{idx_refraction}] = vec4(ior, opacity, 0.0, 0.0);')
                 else:
-                    frag.write(f'fragColor[{index}] = vec4(1.0, 1.0, 0.0, 0.0);')
+                    frag.write(f'fragColor[{idx_refraction}] = vec4(1.0, 1.0, 0.0, 0.0);')
 
         else:
             frag.add_out('vec4 fragColor[1]')
