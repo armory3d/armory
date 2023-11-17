@@ -746,9 +746,6 @@ class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
                 lst.remove(0)
             obj.arm_traitlist_index = 0
 
-        for obj in bpy.context.selected_objects:
-            print(obj.name, obj.arm_traitlist_index)
-
         return {"FINISHED"}
     
 
