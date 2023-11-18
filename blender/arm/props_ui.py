@@ -2278,7 +2278,7 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
-    bl_label = 'Print All Scenes Traits'
+    bl_label = 'Print All Traits'
     bl_description = 'Returns all traits in current blend'
 
     def execute(self, context):
@@ -2310,7 +2310,7 @@ class ArmPrintTraitsButton(bpy.types.Operator):
                         tname = t.canvas_name_prop
                     if t.type_prop == 'WebAssembly':
                         tname = t.webassembly_prop
-                    print('Object Trait: {0} ("{1}")'.format(o.name, tname))
+                    print(' Object Trait: {0} ("{1}")'.format(o.name, tname))
         return{'FINISHED'}
 
 class ARM_PT_MaterialNodePanel(bpy.types.Panel):

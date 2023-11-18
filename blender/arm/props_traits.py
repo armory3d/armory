@@ -735,15 +735,13 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         draw_traits_panel(self.layout, obj, is_object=False)
 
 class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
-    bl_label = 'Remove Traits From Active Objects'
+    bl_label = 'Remove Traits From Selected Objects'
     bl_idname = 'arm.remove_traits_from_active_objects'
-    bl_description = 'Removes all traits from all active objects'
+    bl_description = 'Removes all traits from all selected objects'
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            lst = obj.arm_traitlist
-            while(len(lst) > 0):
-                lst.remove(0)
+            obj.arm_traitlist.clear()
             obj.arm_traitlist_index = 0
 
         return {"FINISHED"}
