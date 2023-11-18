@@ -739,6 +739,10 @@ class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
     bl_idname = 'arm.remove_traits_from_active_objects'
     bl_description = 'Removes all traits from all selected objects'
 
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             obj.arm_traitlist.clear()
