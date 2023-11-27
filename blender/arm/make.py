@@ -629,7 +629,7 @@ def build_success():
                 else:
                     tplstr = Template(envcmd).safe_substitute({
                         'host': host,
-                        'port': prefs.html5_server_port, 
+                        'port': prefs.html5_server_port,
                         'width': width,
                         'height': height,
                         'url': url,
