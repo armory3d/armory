@@ -734,6 +734,23 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         obj = bpy.context.scene
         draw_traits_panel(self.layout, obj, is_object=False)
 
+class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
+    bl_label = 'Remove Traits From Selected Objects'
+    bl_idname = 'arm.remove_traits_from_active_objects'
+    bl_description = 'Removes all traits from all selected objects'
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            obj.arm_traitlist.clear()
+            obj.arm_traitlist_index = 0
+
+        return {"FINISHED"}
+    
+
 class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
     bl_label = 'Copy Traits from Active Object'
     bl_idname = 'arm.copy_traits_to_active'
@@ -814,6 +831,7 @@ class ARM_MT_context_menu(Menu):
         layout = self.layout
 
         layout.operator("arm.copy_traits_to_active", icon='PASTEDOWN')
+        layout.operator("arm.remove_traits_from_active_objects", icon='REMOVE')
         layout.operator("arm.print_traits", icon='CONSOLE')
 
 def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene], is_object: bool) -> None:
@@ -977,6 +995,7 @@ __REG_CLASSES = (
     ARM_PT_SceneTraitPanel,
     ARM_OT_CopyTraitsFromActive,
     ARM_MT_context_menu,
+    ARM_OT_RemoveTraitsFromActiveObjects
 )
 __reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
 
