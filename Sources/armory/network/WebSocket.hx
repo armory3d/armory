@@ -190,7 +190,9 @@ class WebSocket extends WebSocketCommon {
 	}
 
 	inline private function parseUrl(url)
-	{
+	{	
+		/** TO DO - FIND OUT WHAT IS BREAKING REGEX IN THE NEW PCRE2 FOR HL C 
+
 		var urlRegExp = ~/^(\w+?):\/\/([\w\.-]+)(:(\d+))?(\/.*)?$/;
 
 		if ( ! urlRegExp.match(url)) {
@@ -209,8 +211,23 @@ class WebSocket extends WebSocketCommon {
 		if (_path == null || _path.length == 0) {
 			_path = "/";
 		}
-
+		**/
+		var urlArr = url.split(":");
+		if ( urlArr.length < 3) {
+			throw 'Uri not matching websocket URL "${url}"';
+		}
+		_protocol = urlArr[0];
+		_host = urlArr[1].substr(2, urlArr[1].length);
+		var parsedPort = Std.parseInt(urlArr[2].split("/")[0]);
+		if (parsedPort > 0 ) {
+			_port = parsedPort;
+		}
+		_path = urlArr[2].substr(urlArr[2].split("/")[0].length, urlArr[2].length);
+		if (_path == null || _path.length == 0) {
+			_path = "/";
+		}
 	}
+
 
 	private function createSocket():SocketImpl
 	{
