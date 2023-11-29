@@ -297,7 +297,7 @@ project.addSources('Sources');
         if arm.utils.get_pref_or_default('haxe_times', False):
             khafile.write("project.addParameter('--times');\n")
 
-        if export_ui:
+        if export_ui or wrd.arm_debug_console:
             if not os.path.exists('Libraries/zui'):
                 khafile.write(add_armory_library(sdk_path, 'lib/zui', rel_path=do_relpath_sdk))
             p = sdk_path + '/armory/Assets/font_default.ttf'
