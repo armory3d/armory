@@ -741,7 +741,7 @@ class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0
+        return context.mode != 'SCENE' and len(context.selected_objects) > 0
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
