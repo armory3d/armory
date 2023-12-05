@@ -147,7 +147,7 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "R32";
+				t.format = "DEPTH16";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}

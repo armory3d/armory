@@ -101,7 +101,7 @@ void main() {
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, depth, cameraProj);
     vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
-    hitCoord = -viewPos;
+    hitCoord = viewPos;
 
 #ifdef _CPostprocess
     vec3 dir = refracted * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
@@ -125,5 +125,5 @@ void main() {
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
     refractionCol = clamp(refractionCol, 0.0, 1.0);
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
-    fragColor.rgb = mix(refractionCol * intensity + color, color, opac);
+    fragColor.rgb = mix(refractionCol * intensity, color, opac);
 }
