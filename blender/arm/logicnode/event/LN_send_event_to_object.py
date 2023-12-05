@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class SendEventNode(ArmLogicTreeNode):
     """Sends a event to the given object.
 
@@ -19,3 +20,8 @@ class SendEventNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Object')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+
+    def draw_label(self) -> str:
+        if self.inputs[1].is_linked:
+            return self.bl_label
+        return f'{self.bl_label}: {self.inputs[1].get_default_value()}'

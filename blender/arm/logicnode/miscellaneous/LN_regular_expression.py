@@ -5,31 +5,28 @@ class RegularExpressionNode(ArmLogicTreeNode):
     The first argument is a string with a regular expression pattern, the second one is a string with flags.
 
     @input RegExp Pattern: regular expression patterns such as
-
-        . any character
-        * repeat zero-or-more
-        + repeat one-or-more
-        ? optional zero-or-one
-        [A-Z0-9] character ranges
-        [^\r\n\t] character not-in-range
-        (...) parenthesis to match groups of characters
-        ^ beginning of the string (beginning of a line in multiline matching mode)
-        $ end of the string (end of a line in multiline matching mode)
-        | "OR" statement.
-
+        - `.`: any character
+        - `*`: repeat zero-or-more
+        - `+`: repeat one-or-more
+        - `?`: optional zero-or-one
+        - `[A-Z0-9]`: character ranges
+        - `[^\\r\\n\\t]`: character not-in-range
+        - `(...)`: parenthesis to match groups of characters
+        - `^`: beginning of the string (beginning of a line in multiline matching mode)
+        - `$`: end of the string (end of a line in multiline matching mode)
+        - `|`: "OR" statement.
 
     @input RegExp Flags: possible flags are the following
-
-        i case insensitive matching
-        g global replace or split, see below
-        m multiline matching, ^ and $ represent the beginning and end of a line
-        s the dot . will also match newlines (not supported by C# and JavaScript versions before ES2018)
-        u use UTF-8 matching (Neko and C++ targets only)
+        - `i`: case insensitive matching
+        - `g`: global replace or split, see below
+        - `m`: multiline matching, ^ and $ represent the beginning and end of a line
+        - `s`: the dot . will also match newlines (not supported by C# and JavaScript versions before ES2018)
+        - `u`: use UTF-8 matching (Neko and C++ targets only)
 
     @input String: String to match, split or replace
-    @input Replace: String to use when replace 
+    @input Replace: String to use when replace
 
-    @ouput Match: boolean result comparing the regular expression pattern with the string
+    @output Match: boolean result comparing the regular expression pattern with the string
     @output Matched: array containing list of matched patterns
     @output Split: array string of string splits using the pattern
     @output Replace: new string with the pattern replaced
@@ -66,7 +63,7 @@ class RegularExpressionNode(ArmLogicTreeNode):
         self.add_input('ArmStringSocket', 'RegExp Pattern')
         self.add_input('ArmStringSocket', 'RegExp Flags')
         self.add_input('ArmStringSocket', 'String')
-        
+
         self.add_output('ArmBoolSocket', 'Match')
         self.add_output('ArmNodeSocketArray', 'Matched', is_var=False)
 

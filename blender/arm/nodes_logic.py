@@ -1,9 +1,10 @@
 from typing import Any, Callable
 import webbrowser
 
+import bl_operators
 import bpy
 import blf
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, CollectionProperty, StringProperty
 
 import arm.logicnode.arm_nodes as arm_nodes
 import arm.logicnode.replacement
@@ -24,6 +25,9 @@ if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
+
+INTERNAL_GROUPS_MENU_ID = 'ARM_INTERNAL_GROUPS'
+internal_groups_menu_class: bpy.types.Menu
 
 registered_nodes = []
 registered_categories = []
@@ -69,6 +73,10 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
                     safe_category_name = arm.utils.safesrc(category.name.lower())
                     layout.menu(f'ARM_MT_{safe_category_name}_menu', text=category.name, icon=category.icon)
 
+            if arm.logicnode.arm_node_group.ArmGroupTree.has_linkable_group_trees():
+                layout.separator()
+                layout.menu(f'ARM_MT_{INTERNAL_GROUPS_MENU_ID}_menu', text=internal_groups_menu_class.bl_label, icon='OUTLINER_OB_GROUP_INSTANCE')
+
         else:
             ARM_MT_NodeAddOverride.overridden_draw(self, context)
 
@@ -81,9 +89,26 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
 
     type: StringProperty(name="NodeItem type")
     use_transform: BoolProperty(name="Use Transform")
+    settings: CollectionProperty(
+        name="Settings",
+        description="Settings to be applied on the newly created node",
+        type=bl_operators.node.NodeSetting,
+        options={'SKIP_SAVE'},
+    )
 
     def invoke(self, context, event):
-        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform)
+        # Passing collection properties as operator parameters only
+        # works via raw sequences of dicts:
+        # https://blender.stackexchange.com/a/298977/58208
+        # https://github.com/blender/blender/blob/cf1e1ed46b7ec80edb0f43cb514d3601a1696ec1/source/blender/python/intern/bpy_rna.c#L2033-L2043
+        setting_dicts = []
+        for setting in self.settings.values():
+            setting_dicts.append({
+                "name": setting.name,
+                "value": setting.value
+            })
+
+        bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform, settings=setting_dicts)
         return {'FINISHED'}
 
     @classmethod
@@ -122,7 +147,7 @@ def get_category_draw_func(category: arm_nodes.ArmNodeCategory):
 
 
 def register_nodes():
-    global registered_nodes
+    global registered_nodes, internal_groups_menu_class
 
     # Re-register all nodes for now..
     if len(registered_nodes) > 0 or len(registered_categories) > 0:
@@ -145,6 +170,7 @@ def register_nodes():
         for category in category_section:
             category.sort_nodes()
             safe_category_name = arm.utils.safesrc(category.name.lower())
+            assert(safe_category_name != INTERNAL_GROUPS_MENU_ID)  # see below
             menu_class = type(f'ARM_MT_{safe_category_name}Menu', (bpy.types.Menu, ), {
                 'bl_space_type': 'NODE_EDITOR',
                 'bl_idname': f'ARM_MT_{safe_category_name}_menu',
@@ -156,19 +182,47 @@ def register_nodes():
 
             bpy.utils.register_class(menu_class)
 
+    # Generate and register group menu
+    def draw_nodegroups_menu(self, context):
+        layout = self.layout
+
+        tree: arm.logicnode.arm_node_group.ArmGroupTree
+        for tree in arm.logicnode.arm_node_group.ArmGroupTree.get_linkable_group_trees():
+            op = layout.operator('arm.add_node_override', text=tree.name)
+            op.type = 'LNCallGroupNode'
+            op.use_transform = True
+            item = op.settings.add()
+            item.name = "group_tree"
+            item.value = f'bpy.data.node_groups["{tree.name}"]'
+
+    # Don't name categories like the content of the INTERNAL_GROUPS_MENU_ID variable!
+    menu_class = type(f'ARM_MT_{INTERNAL_GROUPS_MENU_ID}Menu', (bpy.types.Menu,), {
+        'bl_space_type': 'NODE_EDITOR',
+        'bl_idname': f'ARM_MT_{INTERNAL_GROUPS_MENU_ID}_menu',
+        'bl_label': 'Node Groups',
+        'bl_description': 'List of node groups that can be added to the current tree',
+        'draw': draw_nodegroups_menu
+    })
+    internal_groups_menu_class = menu_class
+    bpy.utils.register_class(menu_class)
+
 
 def unregister_nodes():
-    global registered_nodes, registered_categories
+    global registered_nodes, registered_categories, internal_groups_menu_class
 
     for n in registered_nodes:
         if issubclass(n, arm_nodes.ArmLogicTreeNode):
             n.on_unregister()
         bpy.utils.unregister_class(n)
+    registered_nodes = []
+
     for c in registered_categories:
         bpy.utils.unregister_class(c)
-
-    registered_nodes = []
     registered_categories = []
+
+    if internal_groups_menu_class is not None:
+        bpy.utils.unregister_class(internal_groups_menu_class)
+        internal_groups_menu_class = None
 
 
 class ARM_PT_LogicNodePanel(bpy.types.Panel):

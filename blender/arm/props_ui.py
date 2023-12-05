@@ -2288,12 +2288,25 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
-    bl_label = 'Print All Scenes Traits'
+    bl_label = 'Print All Traits'
     bl_description = 'Returns all traits in current blend'
 
     def execute(self, context):
         for s in bpy.data.scenes:
             print('Scene: {0}'.format(s.name))
+            for t in s.arm_traitlist:
+                if not t.enabled_prop:
+                    continue
+                tname = "undefined"
+                if t.type_prop == 'Haxe Script' or "Bundled":
+                    tname = t.class_name_prop
+                if t.type_prop == 'Logic Nodes':
+                    tname = t.node_tree_prop.name
+                if t.type_prop == 'UI Canvas':
+                    tname = t.canvas_name_prop
+                if t.type_prop == 'WebAssembly':
+                    tname = t.webassembly_prop
+                print('Scene Trait: {0} ("{1}")'.format(s.name, tname))
             for o in s.objects:
                 for t in o.arm_traitlist:
                     if not t.enabled_prop:
@@ -2307,7 +2320,7 @@ class ArmPrintTraitsButton(bpy.types.Operator):
                         tname = t.canvas_name_prop
                     if t.type_prop == 'WebAssembly':
                         tname = t.webassembly_prop
-                    print('Trait: {0} ("{1}")'.format(o.name, tname))
+                    print(' Object Trait: {0} ("{1}")'.format(o.name, tname))
         return{'FINISHED'}
 
 class ARM_PT_MaterialNodePanel(bpy.types.Panel):
