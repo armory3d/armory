@@ -466,7 +466,7 @@ class Inc {
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
 		t.width = res;
-		t.height = res;
+		t.height = res * Main.voxelgiClipmapCount;
 		t.depth = Std.int(res * resZ);
 		t.is_image = true;
 		t.mipmaps = true;
@@ -475,6 +475,7 @@ class Inc {
 		#if (arm_voxelgi_bounces != 1)
 		var tBo = new RenderTargetRaw();
 		tBo.name = "voxelsBounce";
+		tBo.format = "RGBA64";
 		tBo.width = t.width;
 		tBo.height = t.height;
 		tBo.depth = t.depth;
@@ -497,7 +498,8 @@ class Inc {
 
 			#if (arm_voxelgi_bounces != 1)
 			var tBoB = new RenderTargetRaw();
-			tBoB.name = tBoB.name + "B";
+			tBoB.name = tBo.name + "B";
+			tBoB.format = "RGBA64";
 			tBoB.width = t.width;
 			tBoB.height = t.height;
 			tBoB.depth = t.depth;
@@ -783,6 +785,8 @@ class ShadowMapAtlas {
 			return 8192;
 			#elseif (rp_shadowmap_atlas_max_size == 16384)
 			return 16384;
+			#elseif (rp_shadowmap_atlas_max_size == 32768)
+			return 32768;
 			#end
 		#else
 		switch (type) {
@@ -797,6 +801,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_point == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_point == 32768)
+				return 32768;
 				#end
 			}
 			case "spot": {
@@ -812,6 +818,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_spot == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_spot == 32768)
+				return 32768;
 				#end
 			}
 			case "sun": {
@@ -827,6 +835,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_sun == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_sun == 32768)
+				return 32768;
 				#end
 			}
 			default: {
@@ -842,9 +852,10 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size == 32768)
+				return 32768;
 				#end
 			}
-
 		}
 		#end
 	}

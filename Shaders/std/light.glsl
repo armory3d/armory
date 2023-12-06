@@ -84,6 +84,10 @@ uniform sampler2D sltcMag;
 #endif
 #endif
 
+#ifdef _VoxelTemporal
+uniform float voxelBlend;
+#endif
+
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
 	const vec3 albedo, const float rough, const float spec, const vec3 f0
 	#ifdef _ShadowMap
@@ -94,12 +98,20 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-		, sampler3D voxels, vec3 voxpos, float clipmapLevel
+		, sampler3D voxels
+	#ifdef _VoxelTemporal
+		, sampler3D voxelsLast
+	#endif
+		, vec3 voxpos, int clipmapLevel
 	#endif
 	#endif
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-		, sampler3D voxels, vec3 voxpos, float clipmapLevel
+		, sampler3D voxels
+	#ifdef _VoxelTemporal
+		, sampler3D voxelsLast
+	#endif
+		, vec3 voxpos, int clipmapLevel
 	#endif
 	#endif
 	#ifdef _MicroShadowing
@@ -146,13 +158,21 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
+	#ifdef _VoxelTemporal
+	direct *= (1.0 - traceShadow(voxels, voxpos, l, int(clipmapLevel))) * voxelBlend + (1.0 - traceShadow(voxelsLast, voxpos, l, int(clipmapLevel)) * 1.0 - voxelBlend);
+	#else
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, int(clipmapLevel));
+	#endif
 	#endif
 	#endif
 
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l, clipmapLevel);
+	#ifdef _VoxelTemporal
+	direct *= (1.0 - traceShadow(voxels, voxpos, l, int(clipmapLevel))) * voxelBlend + (1.0 - traceShadow(voxelsLast, voxpos, l, int(clipmapLevel)) * 1.0 - voxelBlend);
+	#else
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, int(clipmapLevel));
+	#endif
 	#endif
 	#endif
 

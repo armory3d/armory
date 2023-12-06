@@ -12,8 +12,8 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "viewerPos",
-					"link": "_viewerPos"
+					"name": "eyeSnap",
+					"link": "_cameraPositionSnap"
 				},
 				{
 					"name": "voxelBlend",

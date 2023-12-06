@@ -166,16 +166,7 @@ class Uniforms {
 				}
 			}
 			#end
-			#if (rp_voxels != "Off")
-			case "_viewerPos": {
-				var camera = iron.Scene.active.camera;
-				var viewerPos = new iron.math.Vec3(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				v = iron.object.Uniforms.helpVec;
-				v.set(viewerPos.x, viewerPos.y, viewerPos.z);
-			}
-			#end
 		}
-
 		return v;
 	}
 

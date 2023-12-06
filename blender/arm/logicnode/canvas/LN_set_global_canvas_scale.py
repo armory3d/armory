@@ -5,6 +5,7 @@ class SetGlobalCanvasScaleNode(ArmLogicTreeNode):
     """Sets the scale of the entire UI Canvas."""
     bl_idname = 'LNSetGlobalCanvasScaleNode'
     bl_label = 'Set Global Canvas Scale'
+    arm_section = 'global'
     arm_version = 1
 
     def arm_init(self, context):

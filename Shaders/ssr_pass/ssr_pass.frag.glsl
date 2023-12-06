@@ -25,7 +25,7 @@ vec3 hitCoord;
 float depth;
 
 const int numBinarySearchSteps = 7;
-#define maxSteps int(ceil(1.0 / ssrRayStep) * ssrSearchDist)
+const int maxSteps = int(ceil(1.0 / ssrRayStep) * ssrSearchDist);
 
 vec2 getProjectedCoord(const vec3 hit) {
 	vec4 projectedCoord = P * vec4(hit, 1.0);

@@ -13,7 +13,7 @@ class ResumeTilesheetNode extends LogicNode {
 
 		if (object == null) return;
 
-		object.tilesheet.resume();
+		object.activeTilesheet.resume();
 
 		runOutput(0);
 	}

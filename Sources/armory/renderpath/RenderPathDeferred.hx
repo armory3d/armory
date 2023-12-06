@@ -526,60 +526,63 @@ class RenderPathDeferred {
 
 		// Voxels
 		#if (rp_voxels != 'Off')
-		var relight = false;
 		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var path = RenderPath.active;
 
-			path.clearImage(voxels, 0x00000000);
+			var voxelize = true;
 
 			#if arm_voxelgi_temporal
-			if(++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0) {
+			voxelize = ++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0;
+			if(voxelize) {
 				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
 				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
 			}
 			#end
 
-			path.setTarget("");
-			var res = Inc.getVoxelRes();
-			path.setViewport(res, res);
+			if(voxelize) {
+				path.clearImage(voxels, 0x00000000);
+				path.setTarget("");
+				var res = Inc.getVoxelRes();
+				path.setViewport(res, res);
 
-			path.bindTarget(voxels, "voxels");
+				path.bindTarget(voxels, "voxels");
 
-			#if (rp_voxels == "Voxel GI")
-			#if rp_shadowmap
-			{
-				#if arm_shadowmap_atlas
-				Inc.bindShadowMapAtlas();
+				#if (rp_voxels == "Voxel GI")
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
+				#end
+
+				path.drawMeshes("voxel");
+
+				#if (arm_voxelgi_bounces != 1)
+				path.clearImage(voxelsBounce, 0x00000000);
+
+				path.setTarget("");
+				var res = Inc.getVoxelRes();
+				path.setViewport(res, res);
+
+				path.bindTarget(voxels, "voxels");
+				path.bindTarget(voxelsBounce, "voxelsBounce");
+				#if rp_voxelgi_refract
+				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.bindTarget("_main", "gbufferD");
+				path.drawMeshes("voxelbounce");
+				path.generateMipmaps(voxelsBounce);
 				#else
-				Inc.bindShadowMap();
+				path.generateMipmaps(voxels);
 				#end
 			}
-			#end
-			#end
-
-			path.drawMeshes("voxel");
-
-			#if (arm_voxelgi_bounces != 1)
-			path.clearImage(voxelsBounce, 0x00000000);
-
-			path.setTarget("");
-			var res = Inc.getVoxelRes();
-			path.setViewport(res, res);
-
-			path.bindTarget(voxels, "voxels");
-			path.bindTarget(voxelsBounce, "voxelsBounce");
-			#if rp_voxelgi_refract
-			path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-			#end
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.bindTarget("gbuffer1", "gbuffer1");
-			path.bindTarget("_main", "gbufferD");
-			path.drawMeshes("voxelbounce");
-			path.generateMipmaps(voxelsBounce);
-			#else
-			path.generateMipmaps(voxels);
-			#end
 		}
 		#end
 
