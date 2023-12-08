@@ -108,7 +108,6 @@ def make_gi(context_id):
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
     vert.add_out('vec3 voxpositionGeom')
-    vert.add_out('float clipmapLevelGeom')
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
@@ -120,17 +119,15 @@ def make_gi(context_id):
 
     vert.add_uniform('vec3 eyeLook', '_cameraLook')
     vert.add_uniform('vec3 eye', '_cameraPosition')
+    vert.add_uniform('int clipmapLevel', '_clipmapLevel')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('float dist = max(abs(P.x - eye.x), max(abs(P.y - eye.y), abs(P.z - eye.z)));')
-    vert.write('clipmapLevelGeom = max(log2(dist / (voxelgiResolution.x * 0.5)), 0.0);')
-    vert.write('float voxelSize = pow(2.0, floor(clipmapLevelGeom)) * 2.0;')
+    vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0;')
     vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
-    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 4.0 / voxelgiResolution.x;')
+    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec3 voxnormal')
-    geom.add_out('flat int clipmapLevel')
 
     if con_voxel.is_elem('col'):
         geom.add_out('vec3 vcolor')
@@ -147,7 +144,6 @@ def make_gi(context_id):
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
-    geom.write('    clipmapLevel = int(clipmapLevelGeom[i]);')
     if '_Sun' in wrd.world_defs:
         geom.write('lightPosition = lightPositionGeom[i];')
     if '_SinglePoint' in wrd.world_defs and '_Spot' in wrd.world_defs:
@@ -324,6 +320,7 @@ def make_gi(context_id):
         frag.write('col += basecol * lightsArray[li * 3 + 1].xyz * visibility;')
         frag.write('}')
 
+    frag.add_uniform('int clipmapLevel', '_clipmapLevel')
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5);')
     frag.write('uvw.y = uvw.y + clipmapLevel;')
     frag.write('uvw = uvw * voxelgiResolution.x;')
@@ -356,27 +353,23 @@ def make_ao(context_id):
     vert.add_include('compiled.inc')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
-    vert.add_out('float clipmapLevelGeom')
 
     vert.add_uniform('vec3 eyeLook', '_cameraLook')
     vert.add_uniform('vec3 eye', '_cameraPosition')
+    vert.add_uniform('int clipmapLevel', '_clipmapLevel')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('float dist = max(abs(P.x - eye.x), max(abs(P.y - eye.y), abs(P.z - eye.z)));')
-    vert.write('clipmapLevelGeom = max(log2(dist / (voxelgiResolution.x * 0.5)), 0.0);')
-    vert.write('float voxelSize = pow(2.0, floor(clipmapLevelGeom)) * 2.0;')
+    vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0;')
     vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
-    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 4.0 / voxelgiResolution.x;')
+    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
-    geom.add_out('flat int clipmapLevel')
 
     geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
     geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
     geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
-    geom.write('    clipmapLevel = int(clipmapLevelGeom[i]);')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
     geom.write('    }')
@@ -390,6 +383,7 @@ def make_ao(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
+    frag.add_uniform('int clipmapLevel', '_clipmapLevel')
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5);')
     frag.write('uvw.y = uvw.y + clipmapLevel;')
     frag.write('uvw = uvw * voxelgiResolution.x;')

@@ -12,8 +12,8 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeSnap",
-					"link": "_cameraPositionSnap"
+					"name": "clipmapLevel",
+					"link": "_clipmapLevel"
 				},
 				{
 					"name": "voxelBlend",
