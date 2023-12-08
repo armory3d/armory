@@ -44,7 +44,7 @@ def make(context_id):
     frag.add_uniform('sampler2D gbuffer_refraction')
 
     vert.add_uniform('vec3 eyeLook', '_cameraLook')
-    vert.add_uniform('vec3 viewerPos', '_viewerPos')
+    vert.add_uniform('int clipmapLevel', '_clipmapLevel')
 
     frag.write('vec4 g1 = textureLod(gbuffer1, texCoord, 0.0);')
     frag.write('vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);')
@@ -60,15 +60,8 @@ def make(context_id):
     vert.write('texCoord = pos.xy * 0.5 + 0.5;')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('float dist = max(abs(viewerPos.x - P.x), max(abs(viewerPos.y - P.y), abs(viewerPos.z - P.z)));')
-    vert.write('float clipmapLevel = max(log2(dist / voxelgiResolution.x * 8.0), 0);')
-    vert.write('float voxelSize = pow(2.0, floor(clipmapLevel)) * 2.0 / voxelgiResolution.x;')
-    vert.write('float clipmapLevelSize = pow(2.0, floor(clipmapLevel)) * voxelgiResolution.x * 0.125;')
-    vert.write('vec3 eyeSnap1 = floor((viewerPos + eyeLook * voxelgiResolution.x * 0.125) / voxelSize) * voxelSize;')
-    vert.write('vec3 eyeSnap2 = floor((viewerPos + eyeLook * voxelgiResolution.x * 0.125) / (voxelSize * 2.0)) * (voxelSize * 2.0);')
-    vert.write('vec3 voxpos1 = (P - eyeSnap1) / clipmapLevelSize;')
-    vert.write('vec3 voxpos2 = (P - eyeSnap2) / (clipmapLevelSize * 2.0);')
-    vert.write('voxpos = mix(voxpos1, voxpos2, fract(clipmapLevel));')
+    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
+    vert.write('voxpos = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
 
     vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
 
