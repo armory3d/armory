@@ -43,6 +43,7 @@ def make(context_id):
     frag.add_uniform('sampler2D gbuffer1')
     frag.add_uniform('sampler2D gbuffer_refraction')
 
+    vert.add_uniform('vec3 eye', '_cameraPosition')
     vert.add_uniform('vec3 eyeLook', '_cameraLook')
     vert.add_uniform('int clipmapLevel', '_clipmapLevel')
 
@@ -60,7 +61,8 @@ def make(context_id):
     vert.write('texCoord = pos.xy * 0.5 + 0.5;')
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('vec3 eyeSnap = floor((viewerPos + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
+    vert.write('float voxelSize = 2.0 * pow(2.0, clipmapLevel);')
+    vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
     vert.write('voxpos = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
 
     vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
