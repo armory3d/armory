@@ -410,9 +410,9 @@ void main() {
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	svisibility *= (1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel)) * voxelBlend + (1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel) * 1.0 - voxelBlend);
+	svisibility *= (1.0 - traceShadow(voxels, voxpos, sunDir)) * voxelBlend + (1.0 - traceShadow(voxels, voxpos, sunDir) * 1.0 - voxelBlend);
 	#else
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
 	#endif
 	#endif
 	#endif
@@ -420,9 +420,9 @@ void main() {
 	#ifdef _VoxelGI
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	svisibility *= (1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel)) * voxelBlend + (1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel) * 1.0 - voxelBlend);
+	svisibility *= (1.0 - traceShadow(voxels, voxpos, sunDir)) * voxelBlend + (1.0 - traceShadow(voxels, voxpos, sunDir) * 1.0 - voxelBlend);
 	#else
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, clipmapLevel);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
 	#endif
 	#endif
 	#endif
@@ -494,7 +494,7 @@ void main() {
 		#ifdef _VoxelTemporal
 		, voxelsLast
 		#endif
-		, voxpos, clipmapLevel
+		, voxpos
 		#endif
 		#endif
 		#ifdef _VoxelGI
@@ -503,7 +503,7 @@ void main() {
 		#ifdef _VoxelTemporal
 		, voxelsLast
 		#endif
-		, voxpos, clipmapLevel
+		, voxpos
 		#endif
 		#endif
 		#ifdef _MicroShadowing
@@ -567,7 +567,7 @@ void main() {
 			#ifdef _VoxelTemporal
 			, voxelsLast
 			#endif
-			, voxpos, clipmapLevel
+			, voxpos
 			#endif
 			#endif
 			#ifdef _VoxelGI
@@ -576,7 +576,7 @@ void main() {
 			#ifdef _VoxelTemporal
 			, voxelsLast
 			#endif
-			, voxpos, clipmapLevel
+			, voxpos
 			#endif
 			#endif
 			#ifdef _MicroShadowing
