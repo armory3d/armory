@@ -123,8 +123,8 @@ def make_gi(context_id):
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0;')
-    vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
-    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
+    vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x * voxelSize) / voxelSize) * voxelSize;')
+    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
     geom.add_out('vec3 voxnormal')
@@ -324,6 +324,7 @@ def make_gi(context_id):
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5);')
     frag.write('uvw.y = uvw.y + clipmapLevel;')
     frag.write('uvw = uvw * voxelgiResolution.x;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('imageStore(voxels, ivec3(uvw), vec4(min(surfaceAlbedo(col, metallic), vec3(1.0)) + emissionCol, 1.0));')
 
     return con_voxel
@@ -360,8 +361,8 @@ def make_ao(context_id):
 
     vert.write('vec3 P = vec3(W * vec4(pos.xyz, 1.0));')
     vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0;')
-    vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x) / voxelSize) * voxelSize;')
-    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 2.0 / voxelgiResolution.x;')
+    vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x * voxelSize) / voxelSize) * voxelSize;')
+    vert.write('voxpositionGeom = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
 
     geom.add_out('vec3 voxposition')
 
@@ -387,6 +388,7 @@ def make_ao(context_id):
     frag.write('vec3 uvw = (voxposition * 0.5 + 0.5);')
     frag.write('uvw.y = uvw.y + clipmapLevel;')
     frag.write('uvw = uvw * voxelgiResolution.x;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('imageStore(voxels, ivec3(uvw), vec4(1.0));')
 
     return con_voxel
