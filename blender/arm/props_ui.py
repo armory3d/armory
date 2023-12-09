@@ -1714,6 +1714,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_bounces')
         col2.prop(rpdat, 'arm_voxelgi_clipmap_count')
         col.prop(rpdat, 'arm_voxelgi_cones')
+        col.prop(rpdat, 'arm_voxelgi_dimensions')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'rp_voxelgi_resolution_z')
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'

@@ -446,6 +446,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
+    arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),

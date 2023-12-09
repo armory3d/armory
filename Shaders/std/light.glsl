@@ -102,7 +102,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelTemporal
 		, sampler3D voxelsLast
 	#endif
-		, vec3 voxpos
+		, vec3 voxpos, int clipmapLevel
 	#endif
 	#endif
 	#ifdef _VoxelGI

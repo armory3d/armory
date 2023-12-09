@@ -663,8 +663,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         vert.add_out('vec3 voxpos')
         vert.write('vec3 P = vec3(W * vec4(spos.xyz, 1.0));')
         vert.write('float voxelSize = pow(2.0, clipmapLevel) * 2.0;')
-        vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiResolution.x * voxelSize) / voxelSize) * voxelSize;')
-        vert.write('voxpos = (P - eyeSnap) / voxelSize * 1.0 / voxelgiResolution.x;')
+        vert.write('vec3 eyeSnap = floor((eye + eyeLook * voxelgiHalfExtents.x * voxelSize) / voxelSize) * voxelSize;')
+        vert.write('voxpos = (P - eyeSnap) / voxelSize * 1.0 / voxelgiHalfExtents.x;')
 
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
@@ -676,7 +676,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelAOvar' in wrd.world_defs:
         if '_VoxelTemporal' in wrd.world_defs:
-            frag.write('indirect *= ((1.0 - traceAO(voxpos, n, voxels, clipmapLevel) * voxelBlend + (1.0 - traceAO(voxpos, n, voxelsLast, clipmapLevel)) * (1.0 - voxelBlend));')
+            frag.write('indirect *= ((1.0 - traceAO(voxpos, n, voxels, clipmapLevel)) * voxelBlend + (1.0 - traceAO(voxpos, n, voxelsLast, clipmapLevel)) * (1.0 - voxelBlend));')
         else:
             frag.write('indirect *= 1.0 - traceAO(voxpos, n, voxels, clipmapLevel);')
 
