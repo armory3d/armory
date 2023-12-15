@@ -20,7 +20,9 @@ class PlaySoundNode(ArmLogicTreeNode):
     @output Done: activated when the playback has finished or was
         stopped manually.
 
+    @option Sound/Sound Name: specify a sound by a resource or a string name
     @option Sound: The sound that will be played.
+    @option Stream: Stream the sound from disk.
     @option Loop: Whether to loop the playback.
     @option Retrigger: If true, the playback position will be reset to
         the beginning on each activation of Play. If false, the playback
@@ -31,9 +33,16 @@ class PlaySoundNode(ArmLogicTreeNode):
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
     bl_width_default = 200
-    arm_version = 2
+    arm_version = 3
+
+    def remove_extra_inputs(self, context):
+        while len(self.inputs) > 5:
+            self.inputs.remove(self.inputs[-1])
+        if self.property6 == 'Sound Name':
+            self.add_input('ArmStringSocket', 'Sound Name')
 
     property0: HaxePointerProperty('property0', name='', type=bpy.types.Sound)
+    
     property1: HaxeBoolProperty(
         'property1',
         name='Loop',
@@ -62,7 +71,14 @@ class PlaySoundNode(ArmLogicTreeNode):
         default=False
     )
 
+    property6: HaxeEnumProperty(
+    'property6',
+    items = [('Sound', 'Sound', 'Sound'),
+             ('Sound Name', 'Sound Name', 'Sound Name')],
+    name='', default='Sound', update=remove_extra_inputs)
+
     def arm_init(self, context):
+
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
@@ -74,9 +90,14 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Done')
 
     def draw_buttons(self, context, layout):
-        layout.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
+        
+        layout.prop(self, 'property6')
 
         col = layout.column(align=True)
+        
+        if self.property6 == 'Sound':
+            col.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
+        
         col.prop(self, 'property5')
         col.prop(self, 'property1')
         col.prop(self, 'property2')
