@@ -112,7 +112,7 @@ class PlaySoundNode(ArmLogicTreeNode):
         row.prop(self, 'property4')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 2):
-            raise LookupError()
+        if 0 <= self.arm_version <= 2:
+            return NodeReplacement.Identity(self)
 
-        return NodeReplacement.Identity(self)
+        raise LookupError()
