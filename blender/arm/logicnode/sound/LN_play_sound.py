@@ -42,7 +42,7 @@ class PlaySoundNode(ArmLogicTreeNode):
             self.add_input('ArmStringSocket', 'Sound Name')
 
     property0: HaxePointerProperty('property0', name='', type=bpy.types.Sound)
-    
+
     property1: HaxeBoolProperty(
         'property1',
         name='Loop',
@@ -78,7 +78,6 @@ class PlaySoundNode(ArmLogicTreeNode):
     name='', default='Sound', update=remove_extra_inputs)
 
     def arm_init(self, context):
-
         self.add_input('ArmNodeSocketAction', 'Play')
         self.add_input('ArmNodeSocketAction', 'Pause')
         self.add_input('ArmNodeSocketAction', 'Stop')
@@ -90,14 +89,13 @@ class PlaySoundNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Done')
 
     def draw_buttons(self, context, layout):
-        
         layout.prop(self, 'property6')
 
         col = layout.column(align=True)
-        
+
         if self.property6 == 'Sound':
             col.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
-        
+
         col.prop(self, 'property5')
         col.prop(self, 'property1')
         col.prop(self, 'property2')
