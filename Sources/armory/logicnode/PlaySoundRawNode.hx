@@ -15,6 +15,8 @@ class PlaySoundRawNode extends LogicNode {
 	/** Whether to stream the sound from disk **/
 	public var property5: Bool;
 
+	public var property6: String;
+
 	var sound: kha.Sound = null;
 	var channel: kha.audio1.AudioChannel = null;
 
@@ -25,8 +27,8 @@ class PlaySoundRawNode extends LogicNode {
 	override function run(from: Int) {
 		switch (from) {
 			case Play:
-				if (sound == null) {
-					iron.data.Data.getSound(property0, function(s: kha.Sound) {
+				if (property6 == 'Sound' ? sound == null : true) {
+					iron.data.Data.getSound(property6 == 'Sound' ? property0 : inputs[5].get(), function(s: kha.Sound) {
 						this.sound = s;
 					});
 				}
@@ -34,6 +36,8 @@ class PlaySoundRawNode extends LogicNode {
 				// Resume
 				if (channel != null) {
 					if (property2) channel.stop();
+					if (property6 == 'Sound Name')
+						channel = iron.system.Audio.play(sound, property1, property5);
 					channel.play();
 					channel.volume = inputs[4].get();
 				}
