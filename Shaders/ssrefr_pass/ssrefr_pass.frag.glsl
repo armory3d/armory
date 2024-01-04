@@ -4,9 +4,6 @@
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 
-in vec2 texCoord;
-out vec4 fragColor;
-
 uniform sampler2D tex;
 uniform sampler2D tex1;
 uniform sampler2D gbufferD;
@@ -23,59 +20,61 @@ uniform vec3 PPComp10;
 #endif
 
 in vec3 viewRay;
+in vec2 texCoord;
+out vec4 fragColor;
+
 vec3 hitCoord;
 float depth;
-vec3 viewPos;
 
+const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist);
 
 vec2 getProjectedCoord(const vec3 hit) {
-    vec4 projectedCoord = P * vec4(hit, 1.0);
-    projectedCoord.xy /= projectedCoord.w;
-    projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
+	vec4 projectedCoord = P * vec4(hit, 1.0);
+	projectedCoord.xy /= projectedCoord.w;
+	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
 #ifdef _InvY
-    projectedCoord.y = 1.0 - projectedCoord.y;
+	projectedCoord.y = 1.0 - projectedCoord.y;
 #endif
-    return projectedCoord.xy;
+	return projectedCoord.xy;
 }
 
 float getDeltaDepth(const vec3 hit) {
-    depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-    vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-    return viewPos.z - hit.z;
+	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	return viewPos.z - hit.z;
 }
 
+/*
 vec4 binarySearch(vec3 dir) {
-    float d;
-    for (int i = 0; i < 7; i++) {
-        dir *= 0.5;
-        hitCoord -= dir;
-        d = getDeltaDepth(hitCoord);
-        if (d < 0.0)
-            hitCoord += dir;
-    }
-    // Ugly discard of hits too far away
-#ifdef _CPostprocess
-    if (abs(d) > PPComp9.z) return vec4(texCoord, 0.0, 1.0);
-#else
-    if (abs(d) > ss_refractionSearchDist) return vec4(texCoord, 0.0, 1.0);
-#endif
-    return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
+	float ddepth;
+	for (int i = 0; i < numBinarySearchSteps; i++) {
+		dir *= 0.5;
+		hitCoord -= dir;
+		ddepth = getDeltaDepth(hitCoord);
+		if (ddepth < 0.0) hitCoord += dir;
+	}
+	// Ugly discard of hits too far away
+	#ifdef _CPostprocess
+		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
+	#else
+		if (abs(ddepth) > ss_refractionSearchDist / 500) return vec4(0.0);
+	#endif
+	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
+*/
 
 vec4 rayCast(vec3 dir) {
-    float d;
-#ifdef _CPostprocess
-    dir *= PPComp9.x;
-#else
-    dir *= ss_refractionRayStep;
-#endif
-    for (int i = 0; i < maxSteps; i++) {
-        hitCoord += dir;
-        d = getDeltaDepth(hitCoord);
-        if (d > 0.0) return vec4(getProjectedCoord(dir), 0.0, 1.0);
-    }
-    return vec4(texCoord, 0.0, 1.0);
+	#ifdef _CPostprocess
+		dir *= PPComp9.x;
+	#else
+		dir *= ss_refractionRayStep;
+	#endif
+	for (int i = 0; i < maxSteps; i++) {
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return vec4(getProjectedCoord(dir), 0.0, 1.0);
+	}
+	return vec4(0.0);
 }
 
 void main() {
@@ -85,9 +84,9 @@ void main() {
     float ior = gr.x;
     float opac = gr.y;
 
-    depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+    float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (depth == 1.0 || ior == 1.0 || opac == 1.0) {
+    if (d == 1.0 || ior == 1.0 || opac == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -99,7 +98,7 @@ void main() {
 	n = normalize(n);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+    vec3 viewPos = getPosView(viewRay, d, cameraProj);
     vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
@@ -116,7 +115,7 @@ void main() {
     float refractivity = 1.0;
 
 #ifdef _CPostprocess
-    float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+    float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 #else
     float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
 #endif
