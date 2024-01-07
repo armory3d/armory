@@ -24,7 +24,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
-float depth;
+float d;
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist);
@@ -41,8 +41,8 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 
 float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
+	d = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	vec3 viewPos = normalize(getPosView(viewRay, d, cameraProj));
 	return viewPos.z - hit.z;
 }
 
@@ -53,7 +53,7 @@ vec4 binarySearch(vec3 dir) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < depth) hitCoord += dir;
+		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
 	//using a divider of 500 doesn't work here unless the distance is set to at least 500 for a blender unit.
@@ -76,7 +76,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth > depth) return binarySearch(dir);
+		if (ddepth > d) return binarySearch(dir);
 	}
 	return vec4(0.0);
 }
@@ -88,7 +88,7 @@ void main() {
     float ior = gr.x;
     float opac = gr.y;
 
-    float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+    d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
     if (d == 1.0 || ior == 1.0 || opac == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
@@ -102,8 +102,8 @@ void main() {
 	n = normalize(n);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
+    vec3 viewPos = normalize(getPosView(viewRay, d, cameraProj));
+    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
 #ifdef _CPostprocess
