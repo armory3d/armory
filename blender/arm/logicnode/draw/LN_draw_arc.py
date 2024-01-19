@@ -15,7 +15,7 @@ class DrawArcNode(ArmLogicTreeNode):
     @input Radius: The radius of the arc in pixels.
     @input Start Angle/End Angle: The angles in radians where the
         arc starts/ends, starting right of the arc's center.
-    @input Exterior Angle: Whether the angles describe an exterior angle.
+    @input Exteior Angle: Whether the angles describe an exteior angle.
 
     @output Out: Activated after the arc has been drawn.
 
@@ -38,6 +38,6 @@ class DrawArcNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Radius', default_value=20.0)
         self.add_input('ArmFloatSocket', 'Start Angle')
         self.add_input('ArmFloatSocket', 'End Angle')
-        self.add_input('ArmBoolSocket', 'Exterior Angle', default_value=False)
+        self.add_input('ArmBoolSocket', 'Exteior Angle', default_value=False)
 
         self.add_output('ArmNodeSocketAction', 'Out')

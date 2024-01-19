@@ -27,9 +27,9 @@ class NetworkHttpRequestNode extends LogicNode {
         }
 
         var request = new haxe.Http(url);
-
+		#if js
         request.async = true;
-
+		#end
         if(headers != null){
             for (k in headers.keys()) {
                 request.addHeader( k, headers[k]);

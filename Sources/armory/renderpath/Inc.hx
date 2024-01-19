@@ -14,7 +14,7 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
-	#if (rp_voxels && arm_config)
+	#if ((rp_voxels != 'Off') && arm_config)
 	static var voxelsCreated = false;
 	#end
 
@@ -356,7 +356,7 @@ class Inc {
 			path.resize();
 		}
 		// Init voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (!voxelsCreated) initGI();
 		#end
 		#end // arm_config
@@ -442,25 +442,47 @@ class Inc {
 	}
 	#end
 
-	#if rp_voxels
+	#if (rp_voxels != 'Off')
 	public static function initGI(tname = "voxels") {
+		var t = new RenderTargetRaw();
+		t.name = tname;
+		
 		#if arm_config
 		var config = armory.data.Config.raw;
-		if (config.rp_gi != true || voxelsCreated) return;
+		if (config.rp_voxels != true || voxelsCreated) return;
 		voxelsCreated = true;
 		#end
 
-		var t = new RenderTargetRaw();
-		t.name = tname;
-		t.format = "R8";
+		#if (rp_voxels == "Voxel AO")
+		{
+			t.format = "R8";
+		}
+		#else
+		{
+			t.format = "RGBA64";
+		}
+		#end
+
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
 		t.width = res;
-		t.height = res;
+		t.height = res * Main.voxelgiClipmapCount;
 		t.depth = Std.int(res * resZ);
 		t.is_image = true;
 		t.mipmaps = true;
 		path.createRenderTarget(t);
+
+		#if arm_voxelgi_bounces
+		var tBo = new RenderTargetRaw();
+		tBo.name = "voxelsBounce";
+		tBo.format = "RGBA64";
+		tBo.width = t.width;
+		tBo.height = t.height;
+		tBo.depth = t.depth;
+		tBo.is_image = t.is_image;
+		tBo.mipmaps = t.mipmaps;
+		path.createRenderTarget(tBo);
+		#end
 
 		#if arm_voxelgi_temporal
 		{
@@ -473,6 +495,18 @@ class Inc {
 			tB.is_image = t.is_image;
 			tB.mipmaps = t.mipmaps;
 			path.createRenderTarget(tB);
+
+			#if arm_voxelgi_bounces
+			var tBoB = new RenderTargetRaw();
+			tBoB.name = "voxelsBounceB";
+			tBoB.format = "RGBA64";
+			tBoB.width = t.width;
+			tBoB.height = t.height;
+			tBoB.depth = t.depth;
+			tBoB.is_image = t.is_image;
+			tBoB.mipmaps = t.mipmaps;
+			path.createRenderTarget(tBoB);
+			#end
 		}
 		#end
 	}
@@ -751,6 +785,8 @@ class ShadowMapAtlas {
 			return 8192;
 			#elseif (rp_shadowmap_atlas_max_size == 16384)
 			return 16384;
+			#elseif (rp_shadowmap_atlas_max_size == 32768)
+			return 32768;
 			#end
 		#else
 		switch (type) {
@@ -765,6 +801,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_point == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_point == 32768)
+				return 32768;
 				#end
 			}
 			case "spot": {
@@ -780,6 +818,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_spot == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_spot == 32768)
+				return 32768;
 				#end
 			}
 			case "sun": {
@@ -795,6 +835,8 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size_sun == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size_sun == 32768)
+				return 32768;
 				#end
 			}
 			default: {
@@ -810,9 +852,10 @@ class ShadowMapAtlas {
 				return 8192;
 				#elseif (rp_shadowmap_atlas_max_size == 16384)
 				return 16384;
+				#elseif (rp_shadowmap_atlas_max_size == 32768)
+				return 32768;
 				#end
 			}
-
 		}
 		#end
 	}

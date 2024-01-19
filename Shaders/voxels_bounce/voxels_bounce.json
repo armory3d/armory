@@ -1,0 +1,35 @@
+{
+	"contexts": [
+		{
+			"name": "voxels_bounce",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "clipmapLevel",
+					"link": "_clipmapLevel"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				}
+			],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "voxels_bounce.frag.glsl",
+			"color_attachments": ["RGBA64"]
+		}
+	]
+}

@@ -78,7 +78,11 @@ class RotationMathNode extends LogicNode {
 				//var from = q;
 				var from: Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
+				#if js
+				var f: Null<Float> = inputs[2].get();
+				#else
 				var f: Null<Single> = inputs[2].get();
+				#end
 				if ((from == null) || (f == null) || (to == null)) return null;
 				res_q = res_q.lerp(from, to, f);
 			}
@@ -86,7 +90,11 @@ class RotationMathNode extends LogicNode {
 				//var from = q;
 				var from:Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
+				#if js
+				var f: Null<Float> = inputs[2].get();
+				#else
 				var f: Null<Single> = inputs[2].get();
+				#end
 				if ((from == null) || (f == null) || (to == null)) return null;
 				res_q = res_q.slerp(from, to, f);
 			}

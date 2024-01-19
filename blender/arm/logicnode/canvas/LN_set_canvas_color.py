@@ -17,6 +17,7 @@ class CanvasSetColorNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNCanvasSetColorNode'
     bl_label = 'Set Canvas Color'
+    arm_section = 'elements_general'
     arm_version = 1
 
     property0: HaxeEnumProperty(

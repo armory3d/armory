@@ -9,9 +9,11 @@ class RenderPathDeferred {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
+	#if (rp_voxels != "Off")
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
+	static var voxelsBounce = "voxelsBounce";
+	static var voxelsBounceLast = "voxelsBounce";
 	#end
 
 	#if rp_bloom
@@ -24,7 +26,8 @@ class RenderPathDeferred {
 		path.setTarget("gbuffer0", [
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
-			#if rp_gbuffer_emission "gbuffer_emission" #end
+			#if rp_gbuffer_emission "gbuffer_emission", #end
+			#if rp_voxelgi_refract "gbuffer_refraction" #end
 		]);
 	}
 
@@ -55,60 +58,59 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
+
+			#if (rp_voxels == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
+			#else
+			#if arm_voxelgi_bounces
+			path.loadShader("shader_datas/voxels_bounce/voxels_bounce");
+			#end
+			#end
 		}
 		#end
 
-		{
-			path.createDepthBuffer("main", "DEPTH24");
+		path.createDepthBuffer("main", "DEPTH24");
 
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer0";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "tex";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "tex";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		t.depth_buffer = "main";
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "buf";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "buf";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = Inc.getHdrFormat();
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer1";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
 
 		#if rp_gbuffer2
 		{
@@ -120,9 +122,7 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
 
-		{
 			var t = new RenderTargetRaw();
 			t.name = "taa";
 			t.width = 0;
@@ -138,6 +138,19 @@ class RenderPathDeferred {
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_emission";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_voxelgi_refract
+		{
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
@@ -201,8 +214,7 @@ class RenderPathDeferred {
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "singleb";
 			t.width = 0;
@@ -227,8 +239,7 @@ class RenderPathDeferred {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -308,9 +319,7 @@ class RenderPathDeferred {
 			t.height = 1;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
-		}
 
-		{
 			path.loadShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
@@ -324,16 +333,14 @@ class RenderPathDeferred {
 
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
-			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = "R32"; // R16
-				path.createRenderTarget(t);
-			}
+			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			var t = new RenderTargetRaw();
+			t.name = "half";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = "R32"; // R16
+			path.createRenderTarget(t);	
 		}
 		#end
 
@@ -352,8 +359,7 @@ class RenderPathDeferred {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -523,33 +529,74 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if rp_voxels
+		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			var voxelize = path.voxelize();
+			var path = RenderPath.active;
+			var voxelize = true;
 
 			#if arm_voxelgi_temporal
-			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
-
-			if (voxelize) {
-				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
-				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
-			}
+			voxelize = ++armory.renderpath.RenderPathCreator.voxelFrame % armory.renderpath.RenderPathCreator.voxelFreq == 0;
+			voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+			voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+			voxelsBounce = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
+			voxelsBounceLast = voxelsBounce == "voxelsBounce" ? "voxelsBounceB" : "voxelsBounce";
 			#end
 
-			if (voxelize) {
-				var res = Inc.getVoxelRes();
-				var voxtex = voxels;
+			if(voxelize) {
+				path.clearImage(voxels, 0x00000000);
 
-				path.clearImage(voxtex, 0x00000000);
-				path.setTarget("");
-				path.setViewport(res, res);
-				path.bindTarget(voxtex, "voxels");
-				path.drawMeshes("voxel");
+				for (i in 0...Main.voxelgiClipmapCount) {
+					path.setTarget("");
+					var res = Inc.getVoxelRes();
+					path.setViewport(res, res);
+
+					path.bindTarget(voxels, "voxels");
+
+					#if (rp_voxels == "Voxel GI")
+					#if rp_shadowmap
+					{
+						#if arm_shadowmap_atlas
+						Inc.bindShadowMapAtlas();
+						#else
+						Inc.bindShadowMap();
+						#end
+					}
+					#end
+					#end
+
+					path.drawMeshes("voxel");
+
+					armory.renderpath.RenderPathCreator.clipmapLevel = (armory.renderpath.RenderPathCreator.clipmapLevel + 1) % Main.voxelgiClipmapCount;
+				}
+
 				path.generateMipmaps(voxels);
+
+				#if arm_voxelgi_bounces
+				path.clearImage(voxelsBounce, 0x00000000);
+
+				for (i in 0...Main.voxelgiClipmapCount) {
+					path.setTarget("tex");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer1", "gbuffer1");
+					#if rp_voxelgi_refract
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					#end
+					path.bindTarget(voxels, "voxels");
+					path.bindTarget(voxelsBounce, "voxelsBounce");
+
+					path.drawShader("shader_datas/voxels_bounce/voxels_bounce");
+
+					armory.renderpath.RenderPathCreator.clipmapLevel = (armory.renderpath.RenderPathCreator.clipmapLevel + 1) % Main.voxelgiClipmapCount;
+				}
+
+				path.generateMipmaps(voxelsBounce);
+				#end
 			}
 		}
 		#end
+
 		// ---
 		// Deferred light
 		// ---
@@ -561,6 +608,10 @@ class RenderPathDeferred {
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
 
+		#if rp_voxelgi_refract
+		path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+		#end
+	
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
@@ -583,17 +634,27 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
 		var voxelao_pass = false;
-		#if rp_voxels
+		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if arm_config
+			#if (arm_config && (rp_voxels == "Voxel AO"))
 			voxelao_pass = true;
 			#end
+
+			#if arm_voxelgi_bounces
+			path.bindTarget(voxelsBounce, "voxels");
+			#else
 			path.bindTarget(voxels, "voxels");
+			#end
 			#if arm_voxelgi_temporal
 			{
+				#if arm_voxelgi_bounces
+				path.bindTarget(voxelsBounceLast, "voxelsLast");
+				#else
 				path.bindTarget(voxelsLast, "voxelsLast");
+				#end
 			}
 			#end
 		}
@@ -700,12 +761,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_bloom
-		{
-			inline Inc.drawBloom("tex", bloomDownsampler, bloomUpsampler);
-		}
-		#end
-
 		#if rp_sss
 		{
 			#if (!kha_opengl)
@@ -762,6 +817,12 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 			}
+		}
+		#end
+
+		#if rp_bloom
+		{
+			inline Inc.drawBloom("tex", bloomDownsampler, bloomUpsampler);
 		}
 		#end
 

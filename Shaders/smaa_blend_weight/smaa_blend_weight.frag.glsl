@@ -364,7 +364,7 @@ vec4 SMAABlendingWeightCalculationPS(vec2 texcoord, vec2 pixcoord,
 		// one of the boundaries is enough.
 		weights.rg = SMAACalculateDiagWeights(texcoord, e, subsampleIndices);
 
-		// We give priority to diagonals, so if we find a diagonal we skip
+		// We give piority to diagonals, so if we find a diagonal we skip
 		// horizontal/vertical processing.
 		//SMAA_BRANCH
 		if (weights.r == -weights.g) { // weights.r + weights.g == 0.0

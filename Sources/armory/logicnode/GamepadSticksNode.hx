@@ -7,7 +7,7 @@ class GamepadSticksNode extends LogicNode {
 	public var property2: String;
 	var started = false;
 	var previousb = false;
-	
+
 	var gstarted = false;
 	var gpreviousb = false;
 
@@ -64,17 +64,17 @@ class GamepadSticksNode extends LogicNode {
 
 		if (b) previousb = b;
 		if (b != previousb) started = false;
-		
+
 		if (property0 == 'Started' && b && !started){started = true; runOutput(0);}
 		else if (property0 == 'Down' && b){previousb = b; runOutput(0);}
 		else if (property0 == 'Released' && b != previousb){previousb = b; runOutput(0);}
-	
+
 	}
 
 	override function get(from: Int): Dynamic {
 		var num: Int = inputs[0].get();
 		var gamepad = iron.system.Input.getGamepad(num);
-		
+
 		if (gamepad == null) return false;
 		var b = false;
 
@@ -116,15 +116,15 @@ class GamepadSticksNode extends LogicNode {
 			case 'down-right':
 				b = gamepad.rightStick.y == 1 && gamepad.rightStick.x == 1;
 			}
-		
+
 		if (b) gpreviousb = b;
 		if (b != gpreviousb) gstarted = false;
-		
+
 		if (property0 == 'Started' && b && !gstarted){gstarted = true; return true;}
 		else if (property0 == 'Down' && b){gpreviousb = b; return true;}
 		else if (property0 == 'Released' && b != gpreviousb){gpreviousb = b; return true;}
-		
+
 		return false;
-		
+
 	}
 }

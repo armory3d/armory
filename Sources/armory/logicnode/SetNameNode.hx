@@ -14,6 +14,12 @@ class SetNameNode extends LogicNode {
 
 		if (object == null) return;
 
+		#if arm_skin
+		for(a in iron.Scene.active.animations)
+			if(a.armature != null && a.armature.name == object.name)
+				a.armature.name = name;
+		#end
+
 		object.name = name;
 
 		runOutput(0);
