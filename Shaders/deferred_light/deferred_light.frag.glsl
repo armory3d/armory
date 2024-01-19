@@ -219,7 +219,7 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _VoxelGI
-	vec3 clipmap_center = eye + eyeLook;
+	vec3 clipmap_center = floor(eye + eyeLook);
 #endif
 
 #ifdef _VoxelAOvar
