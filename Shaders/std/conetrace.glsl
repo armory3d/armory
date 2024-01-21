@@ -51,7 +51,6 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float aper
     vec4 sampleCol = vec4(0.0);
 	float voxelSize0 = voxelgiVoxelSize * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
-	float step_dist = dist;
 	vec3 samplePos;
 	vec3 start_pos = origin + n * voxelSize0;
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
@@ -86,11 +85,8 @@ vec4 traceCone(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float aper
 			mipSample = mix(mipSample, mixSampleNext, clipmap_blend);
 		}
 
-		mipSample *= step_dist / voxelSize;
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
-
-		step_dist = diam * voxelgiStep;
-		dist += step_dist;
+		dist += diam * voxelgiStep;
 	}
     return sampleCol;
 }
@@ -166,7 +162,6 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float a
     float sampleCol = 0.0;;
 	float voxelSize0 = voxelgiVoxelSize * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
-	float step_dist = dist;
 	vec3 samplePos;
 	vec3 start_pos = origin + n * voxelSize0;
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
@@ -200,10 +195,8 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float a
 			mipSample = mix(mipSample, mixSampleNext, clipmap_blend);
 		}
 
-		mipSample *= step_dist / voxelSize;
 		sampleCol += (1.0 - sampleCol) * mipSample;
-		step_dist = diam * voxelgiStep;
-		dist += step_dist;
+		dist += diam * voxelgiStep;
 	}
     return sampleCol;
 }
@@ -268,7 +261,6 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
     float sampleCol = 0.0;
 	float voxelSize0 = voxelgiVoxelSize * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
-	float step_dist = dist;
 	vec3 samplePos;
 	vec3 start_pos = origin + n * voxelSize0;
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
@@ -312,9 +304,8 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 			mipSample = mix(mipSample, mixSampleNext, clipmap_blend);
 		}
 
-		mipSample *= step_dist / voxelSize;
-		step_dist = diam * voxelgiStep;
-		dist += step_dist;
+		sampleCol += (1.0 - sampleCol) * mipSample;
+		dist += diam * voxelgiStep;
 	}
 	return sampleCol;
 }
