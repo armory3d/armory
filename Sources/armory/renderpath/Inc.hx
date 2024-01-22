@@ -453,15 +453,7 @@ class Inc {
 		voxelsCreated = true;
 		#end
 
-		#if (rp_voxels == "Voxel AO")
-		{
-			t.format = "R8";
-		}
-		#else
-		{
-			t.format = "RGBA64";
-		}
-		#end
+		t.format = "R8";
 
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
@@ -471,18 +463,6 @@ class Inc {
 		t.is_image = true;
 		t.mipmaps = true;
 		path.createRenderTarget(t);
-
-		#if arm_voxelgi_bounces
-		var tBo = new RenderTargetRaw();
-		tBo.name = "voxelsBounce";
-		tBo.format = "RGBA64";
-		tBo.width = t.width;
-		tBo.height = t.height;
-		tBo.depth = t.depth;
-		tBo.is_image = t.is_image;
-		tBo.mipmaps = t.mipmaps;
-		path.createRenderTarget(tBo);
-		#end
 
 		#if arm_voxelgi_temporal
 		{
@@ -495,18 +475,6 @@ class Inc {
 			tB.is_image = t.is_image;
 			tB.mipmaps = t.mipmaps;
 			path.createRenderTarget(tB);
-
-			#if arm_voxelgi_bounces
-			var tBoB = new RenderTargetRaw();
-			tBoB.name = "voxelsBounceB";
-			tBoB.format = "RGBA64";
-			tBoB.width = t.width;
-			tBoB.height = t.height;
-			tBoB.depth = t.depth;
-			tBoB.is_image = t.is_image;
-			tBoB.mipmaps = t.mipmaps;
-			path.createRenderTarget(tBoB);
-			#end
 		}
 		#end
 	}

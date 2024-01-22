@@ -473,7 +473,7 @@ class Main {
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
 
-        if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
+        if rpdat.rp_voxels != "Off":
             f.write("""
             public static inline var voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """;""")
 
@@ -771,12 +771,6 @@ const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) +
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
-""")
-        if rpdat.rp_voxels == 'Voxel GI':
-            f.write("""
-const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
-const float voxelgiRefl = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
-const float voxelgiRefr = """ + str(round(rpdat.arm_voxelgi_refr * 100) / 100) + """;
 """)
         if rpdat.rp_sss:
             f.write(f"const float sssWidth = {rpdat.arm_sss_width / 10.0};\n")

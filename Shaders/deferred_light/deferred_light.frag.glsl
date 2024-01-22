@@ -8,9 +8,6 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelGI
-#include "std/conetrace.glsl"
-#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -35,9 +32,6 @@ uniform sampler2D gbuffer_refraction;
 	uniform sampler2D gbufferEmission;
 #endif
 
-#ifdef _VoxelGI
-uniform sampler3D voxels;
-#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 #endif
@@ -218,10 +212,6 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
-#ifdef _VoxelGI
-	vec3 clipmap_center = floor(eye + eyeLook);
-#endif
-
 #ifdef _VoxelAOvar
 	vec3 clipmap_center = floor(eye + eyeLook);
 #endif
@@ -293,35 +283,17 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifdef _VoxelGI
-	#ifdef _VoxelTemporal
-	fragColor.rgb = (traceDiffuse(p, n, voxels, clipmap_center).rgb * voxelBlend + traceDiffuse(p, n, voxelsLast, clipmap_center).rgb * (1.0 - voxelBlend)) * voxelgiDiff * albedo;
-	#else
-	fragColor.rgb = traceDiffuse(p, n, voxels, clipmap_center).rgb * voxelgiDiff * albedo;
-	#endif
-	if(roughness < 1.0 && occspec.y > 0.0)
-		#ifdef _VoxelTemporal
-		fragColor.rgb += (traceSpecular(p, n, voxels, -v, roughness, clipmap_center).rgb * voxelBlend + traceSpecular(p, n, voxelsLast, -v, roughness, clipmap_center).rgb * (1.0 - voxelBlend)) * voxelgiRefl * occspec.y;
-		#else
-		fragColor.rgb += traceSpecular(p, n, voxels, -v, roughness, clipmap_center).rgb * voxelgiRefl * occspec.y;
-		#endif
-#endif
-
 #ifdef _VoxelAOvar
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
-	envl.rgb *= 1.0 - (traceAO(p, n, voxels, clipmap_center) * voxelBlend + traceAO(p, n, voxelsLast, clipmap_center) * (1.0 - voxelBlend));
+	envl.rgb *= (1.0 - traceAO(p, n, voxels, clipmap_center) * voxelBlend) + (1.0 - traceAO(p, n, voxelsLast, clipmap_center) * (1.0 - voxelBlend));
 	#else
 	envl.rgb *= 1.0 - traceAO(p, n, voxels, clipmap_center);
 	#endif
 	#endif
 #endif
 
-#ifdef _VoxelGI
-	fragColor.rgb += envl;
-#else
 	fragColor.rgb = envl;
-#endif
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
 	// vec3 direction = vec3(0.0, 0.0, -1.0);
@@ -401,26 +373,14 @@ void main() {
 		#endif
 	#endif
 
-	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
 	svisibility *= (1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center)) * voxelBlend + (1.0 - traceShadow(p, n, voxelsLast, sunDir, clipmap_center) * 1.0 - voxelBlend);
 	#else
 	svisibility *= 1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center);
-	#endif
 	#endif
 	#endif
 
-	#ifdef _VoxelGI
-	#ifdef _VoxelShadow
-	#ifdef _VoxelTemporal
-	svisibility *= (1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center)) * voxelBlend + (1.0 - traceShadow(p, n, voxelsLast, sunDir, clipmap_center) * 1.0 - voxelBlend);
-	#else
-	svisibility *= 1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center);
-	#endif
-	#endif
-	#endif
-	
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -482,23 +442,12 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
-		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
 		, voxels 
 		#ifdef _VoxelTemporal
 		, voxelsLast
 		#endif
 		, clipmap_center
-		#endif
-		#endif
-		#ifdef _VoxelGI
-		#ifdef _VoxelShadow
-		, voxels
-		#ifdef _VoxelTemporal
-		, voxelsLast
-		#endif
-		, clipmap_center
-		#endif
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -555,23 +504,12 @@ void main() {
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
-			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
 			, voxels
 			#ifdef _VoxelTemporal
 			, voxelsLast
 			#endif
 			, clipmap_center
-			#endif
-			#endif
-			#ifdef _VoxelGI
-			#ifdef _VoxelShadow
-			, voxels
-			#ifdef _VoxelTemporal
-			, voxelsLast
-			#endif
-			, clipmap_center
-			#endif
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
@@ -582,16 +520,5 @@ void main() {
 		);
 	}
 #endif // _Clusters
-
-#ifdef _VoxelRefract
-if(opac < 1.0) {
-	#ifdef _VoxelTemporal
-	vec3 refraction = (traceRefraction(p, n, voxels, v, ior, roughness, clipmap_center) * voxelBlend + traceRefraction(p, n, voxelsLast, v, ior, roughness, clipmap_center) * (1.0 - voxelBlend)) * voxelgiRefr;
-	#else
-	vec3 refraction = traceRefraction(p, n, voxels, v, ior, roughness, clipmap_center) * voxelgiRefr;
-	#endif
-	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
-}
-#endif
 	fragColor.a = 1.0; // Mark as opaque
 }

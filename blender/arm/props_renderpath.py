@@ -138,7 +138,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxels = 'Voxel AO'
         rpdat.rp_voxelgi_resolution = '128'
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
@@ -478,7 +478,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
@@ -494,12 +493,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('0.5', '0.5', '0.5'),
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
-    arm_voxelgi_refraction: BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    arm_voxelgi_bounces: EnumProperty(
-        items=[
-        	   ('1', '1', '1'),
-               ('2', '2', '2')],
-        name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=4, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
@@ -518,9 +511,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1', '1', '1'),
                ],
         name="Cones", description="Number of cones to trace", default='9', update=assets.invalidate_shader_cache)
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Intensity", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)

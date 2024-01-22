@@ -84,16 +84,13 @@ def add_world_defs():
         wrd.world_defs += '_AutoExposure'
 
     # GI
-    voxelgi = False
     voxelao = False
     has_voxels = arm.utils.voxel_support()
     if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_voxels == 'Voxel GI':
-            voxelgi = True
-        elif rpdat.rp_voxels == 'Voxel AO':
+        if rpdat.rp_voxels == 'Voxel AO':
             voxelao = True
 
-    if voxelgi or voxelao:
+    if voxelao:
         wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelShadow'
@@ -101,17 +98,6 @@ def add_world_defs():
         if rpdat.arm_voxelgi_temporal:
             wrd.world_defs += '_VoxelTemporal'
             assets.add_khafile_def('arm_voxelgi_temporal')
-
-        if voxelgi:
-            wrd.world_defs += '_VoxelGI'
-            if rpdat.arm_voxelgi_refraction:
-                wrd.world_defs += '_VoxelRefract'
-                assets.add_khafile_def('rp_voxelgi_refract')
-
-            if rpdat.arm_voxelgi_bounces != '1':
-                wrd.world_defs += '_VoxelBounce'
-                assets.add_khafile_def('arm_voxelgi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
-                assets.add_shader_pass('voxels_bounce');
 
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
