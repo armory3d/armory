@@ -75,7 +75,6 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float a
 		}
 
 		samplePos.y = (samplePos.y + clipmap_index) / voxelgiClipmapCount;
-
 		mipSample = textureLod(voxels, samplePos, lod).r;
 
 		if(clipmap_blend > 0.0) {

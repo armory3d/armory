@@ -144,7 +144,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	direct *= (1.0 - traceShadow(p, n, voxels, l, clipmap_center)) * voxelBlend + (1.0 - traceShadow(p, n, voxelsLast, l, clipmap_center) * 1.0 - voxelBlend);
+	direct *= 1.0 - (traceShadow(p, n, voxels, l, clipmap_center) * voxelBlend - traceShadow(p, n, voxelsLast, l, clipmap_center) * (1.0 - voxelBlend));
 	#else
 	direct *= 1.0 - traceShadow(p, n, voxels, l, clipmap_center);
 	#endif

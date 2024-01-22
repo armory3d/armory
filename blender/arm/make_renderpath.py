@@ -99,7 +99,7 @@ def add_world_defs():
             wrd.world_defs += '_VoxelTemporal'
             assets.add_khafile_def('arm_voxelgi_temporal')
 
-        elif voxelao:
+        if voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
             if rpdat.arm_voxelgi_occ == 0.0:
                 wrd.world_defs += '_VoxelAONoTrace'

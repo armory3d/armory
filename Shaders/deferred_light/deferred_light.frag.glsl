@@ -21,9 +21,6 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-#ifdef _VoxelRefract
-uniform sampler2D gbuffer_refraction;
-#endif
 
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
@@ -286,7 +283,7 @@ void main() {
 #ifdef _VoxelAOvar
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
-	envl.rgb *= (1.0 - traceAO(p, n, voxels, clipmap_center) * voxelBlend) + (1.0 - traceAO(p, n, voxelsLast, clipmap_center) * (1.0 - voxelBlend));
+	envl.rgb *= 1.0 - (traceAO(p, n, voxels, clipmap_center) * voxelBlend + traceAO(p, n, voxelsLast, clipmap_center) * (1.0 - voxelBlend));
 	#else
 	envl.rgb *= 1.0 - traceAO(p, n, voxels, clipmap_center);
 	#endif
@@ -375,7 +372,7 @@ void main() {
 
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	svisibility *= (1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center)) * voxelBlend + (1.0 - traceShadow(p, n, voxelsLast, sunDir, clipmap_center) * 1.0 - voxelBlend);
+	svisibility *= 1.0 - (traceShadow(p, n, voxels, sunDir, clipmap_center) * voxelBlend + traceShadow(p, n, voxelsLast, sunDir, clipmap_center) * (1.0 - voxelBlend));
 	#else
 	svisibility *= 1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center);
 	#endif
