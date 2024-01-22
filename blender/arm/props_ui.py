@@ -1717,7 +1717,6 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_voxelgi_size')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
-        col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
