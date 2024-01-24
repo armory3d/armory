@@ -49,7 +49,7 @@ vec3 tangent(const vec3 n) {
 float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float aperture, const float maxDist, const vec3 clipmap_center) {
     dir = normalize(dir);
     float sampleCol = 0.0;;
-	float voxelSize0 = voxelgiVoxelSize * 2.0;
+	float voxelSize0 = voxelgiVoxelSize * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
@@ -150,7 +150,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, const vec3
 float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, const float aperture, const float maxDist, const vec3 clipmap_center) {
     dir = normalize(dir);
     float sampleCol = 0.0;
-	float voxelSize0 = voxelgiVoxelSize * 2.0;
+	float voxelSize0 = voxelgiVoxelSize * 2.0 * voxelgiOffset;
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;

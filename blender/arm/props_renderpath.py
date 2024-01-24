@@ -513,6 +513,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Cones", description="Number of cones to trace", default='9', update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Intensity", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_offset: FloatProperty(name="Offset", description="Offset", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=1.0, update=assets.invalidate_shader_cache)
