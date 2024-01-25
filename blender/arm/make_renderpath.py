@@ -28,6 +28,7 @@ def add_world_defs():
     # Screen-space ray-traced shadows
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
+        assets.add_khafile_def('rp_ssrs')
 
     if rpdat.arm_micro_shadowing:
         wrd.world_defs += '_MicroShadowing'
@@ -310,6 +311,13 @@ def build():
             if rpdat.arm_ssr_half_res:
                 assets.add_khafile_def('rp_ssr_half')
 
+        if rpdat.rp_ss_refraction:
+            wrd.world_defs += '_SSRefraction'
+            assets.add_khafile_def('rp_ssrefr')
+            assets.add_shader_pass('ssrefr_pass')
+            if rpdat.rp_renderer == "Forward":
+                assets.add_shader_pass('copy_pass')
+
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
@@ -334,6 +342,7 @@ def build():
     if rpdat.rp_renderer == 'Deferred':
         if rpdat.arm_material_model == 'Full':
             assets.add_shader_pass('deferred_light')
+
         else: # mobile, solid
             assets.add_shader_pass('deferred_light_' + rpdat.arm_material_model.lower())
             assets.add_khafile_def('rp_material_' + rpdat.arm_material_model.lower())
@@ -419,6 +428,7 @@ def build():
 
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
+
     gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
@@ -428,12 +438,12 @@ def build():
         callback()
 
 
-def get_num_gbuffer_rts_deferred() -> int:
+def get_num_gbuffer_rts_deferred()-> int:
     """Return the number of render targets required for the G-Buffer."""
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded'):
+    for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction'):
         if flag in wrd.world_defs:
             num += 1
     return num

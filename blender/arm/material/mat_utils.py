@@ -33,7 +33,6 @@ def disp_linked(output_node):
     return disp_enabled
 
 def get_rpasses(material):
-
     ar = []
 
     rpdat = arm.utils.get_rp()
@@ -43,6 +42,8 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
+    elif is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
+        ar.append('refraction')
     else:
         ar.append('mesh')
         for con in add_mesh_contexts:
@@ -81,7 +82,7 @@ def is_transluc_traverse(node):
 
 
 def is_transluc_type(node: bpy.types.ShaderNode) -> bool:
-    return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT') \
+    return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT', 'BSDF_REFRACTION') \
         or (is_armory_pbr_node(node) and (node.inputs['Opacity'].is_linked or node.inputs['Opacity'].default_value != 1.0)) \
         or (node.type == 'BSDF_PRINCIPLED' and (node.inputs['Alpha'].is_linked or node.inputs['Alpha'].default_value != 1.0))
 

@@ -15,7 +15,7 @@ vec3 getNor(const vec2 enc) {
 
 vec3 getPosView(const vec3 viewRay, const float depth, const vec2 cameraProj) {
 	float linearDepth = cameraProj.y / (cameraProj.x - depth);
-	// float linearDepth = cameraProj.y / ((depth * 0.5 + 0.5) - cameraProj.x);
+	//float linearDepth = cameraProj.y / ((depth * 0.5 + 0.5) - cameraProj.x);
 	return viewRay * linearDepth;
 }
 

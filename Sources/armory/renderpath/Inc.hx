@@ -453,6 +453,7 @@ class Inc {
 		var t = new RenderTargetRaw();
 		t.name = tname;
 		t.format = "R8";
+
 		var res = getVoxelRes();
 		var resZ =  getVoxelResZ();
 		t.width = res;
@@ -537,6 +538,8 @@ class Inc {
 		return 0.5;
 		#elseif (rp_voxelgi_resolution_z == 0.25)
 		return 0.25;
+		#elseif (rp_voxelgi_resolution_z == 0.125)
+		return 0.125;
 		#else
 		return 0.0;
 		#end

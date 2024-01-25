@@ -22,11 +22,10 @@ class RenderPathForward {
 	public static function setTargetMeshes() {
 		#if rp_render_to_texture
 		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
+			path.setTarget("lbuffer0", [
+				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
+				#if rp_ssrefr "gbuffer_refraction" #end]
+			);
 		}
 		#else
 		{
@@ -106,7 +105,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if rp_ssr
+			#if (rp_ssr || rp_ssrefr)
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";
@@ -114,6 +113,41 @@ class RenderPathForward {
 				t.height = 0;
 				t.format = "RGBA64";
 				t.displayp = Inc.getDisplayp();
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+			}
+			#end
+
+			#if rp_ssrefr
+			{
+				//holds ior and opacity
+				var t = new RenderTargetRaw();
+				t.name = "gbuffer_refraction";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+
+				//holds colors before refractive meshes are drawn
+				var t = new RenderTargetRaw();
+				t.name = "refr";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				t.depth_buffer = "main";
+				path.createRenderTarget(t);
+
+				//holds background depth
+				var t = new RenderTargetRaw();
+				t.name = "gbufferD1";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "DEPTH16";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
@@ -160,6 +194,11 @@ class RenderPathForward {
 		#if rp_voxels
 		{
 			Inc.initGI();
+			#if arm_voxelgi_temporal
+			{
+				Inc.initGI("voxelsB");
+			}
+			#end
 		}
 		#end
 
@@ -173,8 +212,7 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-		}
-		{
+
 			var t = new RenderTargetRaw();
 			t.name = "bufb";
 			t.width = 0;
@@ -203,26 +241,24 @@ class RenderPathForward {
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-			{
-				var t = new RenderTargetRaw();
-				t.name = "singlea";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "R8";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-			}
-			{
-				var t = new RenderTargetRaw();
-				t.name = "singleb";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "R8";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
-			}
+
+			var t = new RenderTargetRaw();
+			t.name = "singlea";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "singleb";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
@@ -248,16 +284,21 @@ class RenderPathForward {
 
 		#if (rp_ssr_half || rp_ssgi_half)
 		{
-			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = Inc.getSuperSampling() * 0.5;
-				t.format = "R32"; // R16
-				path.createRenderTarget(t);
-			}
+			path.loadShader("shader_datas/downsample_depth/downsample_depth");
+			var t = new RenderTargetRaw();
+			t.name = "half";
+			t.width = 0;
+			t.height = 0;
+			t.scale = Inc.getSuperSampling() * 0.5;
+			t.format = "R32"; // R16
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -276,8 +317,7 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
-			}
-			{
+
 				var t = new RenderTargetRaw();
 				t.name = "ssrb";
 				t.width = 0;
@@ -393,6 +433,33 @@ class RenderPathForward {
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");
+			#end
+
+			#if rp_ssrefr
+			{
+				if (armory.data.Config.raw.rp_ssrefr != false)
+				{
+					path.setTarget("gbufferD1");
+					path.bindTarget("_main", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					path.setTarget("refr");
+					path.bindTarget("lbuffer0", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					RenderPathCreator.setTargetMeshes();
+					path.drawMeshes("refraction");
+
+					path.setTarget("lbuffer0");
+					path.bindTarget("refr", "tex1");
+					path.bindTarget("lbuffer0", "tex");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("lbuffer1", "gbuffer0");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				}
+			}
 			#end
 
 			#if rp_ssr

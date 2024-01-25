@@ -1529,6 +1529,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_culling')
         col.prop(rpdat, 'rp_pp')
 
+
 class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
     bl_space_type = "PROPERTIES"
@@ -1825,14 +1826,23 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
 
         col = layout.column()
         col.prop(rpdat, "rp_ssr")
+        col.prop(rpdat, 'arm_ssr_half_res')
         col = col.column()
         col.enabled = rpdat.rp_ssr
-        col.prop(rpdat, 'arm_ssr_half_res')
         col.prop(rpdat, 'arm_ssr_ray_step')
-        col.prop(rpdat, 'arm_ssr_min_ray_step')
         col.prop(rpdat, 'arm_ssr_search_dist')
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
+        layout.separator()
+
+        col = layout.column()
+        col.prop(rpdat, "rp_ss_refraction")
+        col = col.column()
+        col.enabled = rpdat.rp_ss_refraction
+        col.prop(rpdat, 'arm_ss_refraction_ray_step')
+        col.prop(rpdat, 'arm_ss_refraction_search_dist')
+        col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
+        col.prop(rpdat, 'arm_ss_refraction_jitter')
         layout.separator()
 
         col = layout.column()
