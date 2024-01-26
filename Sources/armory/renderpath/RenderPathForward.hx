@@ -160,10 +160,6 @@ class RenderPathForward {
 		#if (rp_voxels != 'Off')
 		{
 			Inc.initGI();
-
-			#if arm_voxelgi_bounces
-			path.loadShader("shader_datas/voxels_bounce/voxels_bounce");
-			#end
 		}
 		#end
 
@@ -332,19 +328,6 @@ class RenderPathForward {
 					path.setViewport(res, res);
 
 					path.bindTarget(voxels, "voxels");
-
-					#if (rp_voxels == "Voxel GI")
-					#if rp_shadowmap
-					{
-						#if arm_shadowmap_atlas
-						Inc.bindShadowMapAtlas();
-						#else
-						Inc.bindShadowMap();
-						#end
-					}
-					#end
-					#end
-
 					path.drawMeshes("voxel");
 
 					armory.renderpath.RenderPathCreator.clipmapLevel = (armory.renderpath.RenderPathCreator.clipmapLevel + 1) % Main.voxelgiClipmapCount;

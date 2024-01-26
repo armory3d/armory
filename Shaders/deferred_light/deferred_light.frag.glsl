@@ -210,7 +210,10 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _VoxelAOvar
-	vec3 clipmap_center = floor(eye + eyeLook);
+	float dist = max(abs(eye.x - p.x), max(abs(eye.y - p.y), abs(eye.z - p.z)));
+	float clipmapLevel = max(log2(dist / voxelgiResolution.x * 2.0 / voxelgiVoxelSize), 0.0);
+	float voxelSize = voxelgiVoxelSize * pow(2.0, floor(clipmapLevel));
+	vec3 clipmap_center = floor(eye / (voxelSize * 2.0)) * voxelSize * 2.0;
 #endif
 
 #ifdef _VoxelRefract

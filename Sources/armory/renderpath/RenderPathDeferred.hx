@@ -536,8 +536,8 @@ class RenderPathDeferred {
 
 			if(voxelize) {
 				path.clearImage(voxels, 0x00000000);
-
-				for (i in 0...Main.voxelgiClipmapCount) {
+				for (i in 0...Main.voxelgiClipmapCount)
+				{
 					path.setTarget("");
 					var res = Inc.getVoxelRes();
 					path.setViewport(res, res);
@@ -547,8 +547,7 @@ class RenderPathDeferred {
 
 					armory.renderpath.RenderPathCreator.clipmapLevel = (armory.renderpath.RenderPathCreator.clipmapLevel + 1) % Main.voxelgiClipmapCount;
 				}
-
-				//path.generateMipmaps(voxels);
+				path.generateMipmaps(voxels);
 			}
 		}
 		#end
