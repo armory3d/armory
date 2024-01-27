@@ -60,7 +60,7 @@ def make_ao(context_id):
         geom.noprocessing = True
 
         vert.write('float voxelSize = voxelgiVoxelSize * pow(2.0, clipmapLevel);')
-        vert.write('float3 clipmap_center = floor(eye + eyeLook);')
+        vert.write('float3 clipmap_center = floor(eye / (voxelSize * 2.0)) * voxelSize * 2.0;')
 
         vert.write('uniform float4x4 W;')
         voxRes = str(rpdat.rp_voxelgi_resolution)
