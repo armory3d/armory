@@ -166,7 +166,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 		float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
 
-		float voxelSize = pow(2.0, clipmap_index) * voxelgiVoxelSize;
+		float voxelSize = pow(2.0, clipmapLevel) * voxelgiVoxelSize;
 
         samplePos = ((start_pos + dir * dist) - clipmap_center) / voxelSize * 1.0 / voxelgiResolution.x;
 		samplePos = samplePos * 0.5 + 0.5;
@@ -176,7 +176,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 			continue;
 		}
 
-		samplePos.y = (samplePos.y + clipmap_index) / voxelgiClipmapCount;
+		samplePos.y = (samplePos.y + clipmapLevel) / voxelgiClipmapCount;
 
 		#ifdef _VoxelAOvar
 		mipSample = textureLod(voxels, samplePos, lod).r;
@@ -187,7 +187,7 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 
 		if(clipmap_blend > 0.0) {
 			vec3 samplePosNext = ((start_pos + dir * dist) - clipmap_center) / voxelSize * 0.5 / voxelgiResolution.x;
-			samplePosNext.y = (samplePos.y + clipmap_index + 1.0) / voxelgiClipmapCount;
+			samplePosNext.y = (samplePosNext.y + clipmapLevel + 1.0) / voxelgiClipmapCount;
 			#ifdef _VoxelAOvar
 			float mixSampleNext = textureLod(voxels, samplePosNext, lod).r;
 			#else
