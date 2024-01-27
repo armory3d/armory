@@ -21,6 +21,10 @@
 					"link": "_cameraLook"
 				},
 				{
+					"name": "clipmapLevel",
+					"link": "_clipmapLevel"
+				},
+				{
 					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},

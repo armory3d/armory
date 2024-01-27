@@ -547,6 +547,7 @@ class RenderPathDeferred {
 
 					armory.renderpath.RenderPathCreator.clipmapLevel = (armory.renderpath.RenderPathCreator.clipmapLevel + 1) % Main.voxelgiClipmapCount;
 				}
+				armory.renderpath.RenderPathCreator.clipmapLevel = Main.voxelgiClipmapCount - 1;
 				path.generateMipmaps(voxels);
 			}
 		}

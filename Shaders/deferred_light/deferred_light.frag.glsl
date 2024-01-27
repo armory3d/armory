@@ -31,6 +31,7 @@ uniform sampler2D gbuffer1;
 
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
+uniform int clipmapLevel;
 #endif
 #ifdef _VoxelTemporal
 uniform sampler3D voxelsLast;
@@ -210,9 +211,7 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _VoxelAOvar
-	float dist = max(abs(eye.x - p.x), max(abs(eye.y - p.y), abs(eye.z - p.z)));
-	float clipmapLevel = max(log2(dist / voxelgiResolution.x * 2.0 / voxelgiVoxelSize), 0.0);
-	float voxelSize = voxelgiVoxelSize * pow(2.0, floor(clipmapLevel));
+	float voxelSize = voxelgiVoxelSize * pow(2.0, clipmapLevel);
 	vec3 clipmap_center = floor(eye / (voxelSize * 2.0)) * voxelSize * 2.0;
 #endif
 
@@ -286,9 +285,9 @@ void main() {
 #ifdef _VoxelAOvar
 	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelTemporal
-	envl.rgb *= 1.0 - (traceAO(p, n, voxels, clipmap_center) * voxelBlend + traceAO(p, n, voxelsLast, clipmap_center) * (1.0 - voxelBlend));
+	envl.rgb *= 1.0 - (traceAO(p, n, voxels, clipmap_center, clipmapLevel) * voxelBlend + traceAO(p, n, voxelsLast, clipmap_center, clipmapLevel) * (1.0 - voxelBlend));
 	#else
-	envl.rgb *= 1.0 - traceAO(p, n, voxels, clipmap_center);
+	envl.rgb *= 1.0 - traceAO(p, n, voxels, clipmap_center, clipmapLevel);
 	#endif
 	#endif
 #endif
@@ -375,9 +374,9 @@ void main() {
 
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	svisibility *= 1.0 - (traceShadow(p, n, voxels, sunDir, clipmap_center) * voxelBlend + traceShadow(p, n, voxelsLast, sunDir, clipmap_center) * (1.0 - voxelBlend));
+	svisibility *= 1.0 - (traceShadow(p, n, voxels, sunDir, clipmap_center, clipmapLevel) * voxelBlend + traceShadow(p, n, voxelsLast, sunDir, clipmap_center, clipmapLevel) * (1.0 - voxelBlend));
 	#else
-	svisibility *= 1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center);
+	svisibility *= 1.0 - traceShadow(p, n, voxels, sunDir, clipmap_center, clipmapLevel);
 	#endif
 	#endif
 
@@ -447,7 +446,7 @@ void main() {
 		#ifdef _VoxelTemporal
 		, voxelsLast
 		#endif
-		, clipmap_center
+		, clipmap_center, clipmapLevel
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -509,7 +508,7 @@ void main() {
 			#ifdef _VoxelTemporal
 			, voxelsLast
 			#endif
-			, clipmap_center
+			, clipmap_center, clipmapLevel
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x

@@ -98,7 +98,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelTemporal
 		, sampler3D voxelsLast
 	#endif
-		, vec3 clipmap_center
+		, vec3 clipmap_center, int clipmapLevel
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
@@ -144,9 +144,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelShadow
 	#ifdef _VoxelTemporal
-	direct *= 1.0 - (traceShadow(p, n, voxels, l, clipmap_center) * voxelBlend - traceShadow(p, n, voxelsLast, l, clipmap_center) * (1.0 - voxelBlend));
+	direct *= 1.0 - (traceShadow(p, n, voxels, l, clipmap_center, clipmapLevel) * voxelBlend - traceShadow(p, n, voxelsLast, l, clipmap_center, clipmapLevel) * (1.0 - voxelBlend));
 	#else
-	direct *= 1.0 - traceShadow(p, n, voxels, l, clipmap_center);
+	direct *= 1.0 - traceShadow(p, n, voxels, l, clipmap_center, clipmapLevel);
 	#endif
 	#endif
 
