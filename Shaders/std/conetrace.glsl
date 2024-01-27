@@ -1,26 +1,3 @@
-/*
-Copyright (c) 2024 Turánszki János
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
-//conetracer modified for armory3d and implemented by yvain Douard. yvain29@gmail.com
-
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
@@ -99,14 +76,12 @@ float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const float a
 		samplePos.y = (samplePos.y + clipmapLevel) / voxelgiClipmapCount;
 		mipSample = textureLod(voxels, samplePos, lod).r;
 
-		/*
 		if(clipmap_blend > 0.0) {
 			vec3 samplePosNext = ((start_pos + dir * dist) - clipmap_center) / voxelSize * 0.5 / voxelgiResolution.x;
-			samplePosNext.y = (samplePos.y + clipmap_index + 1.0) / voxelgiClipmapCount;
-			float mixSampleNext = textureLod(voxels, samplePosNext, 0.0).r;
+			samplePosNext.y = (samplePosNext.y + clipmap_index + 1.0) / voxelgiClipmapCount;
+			float mixSampleNext = textureLod(voxels, samplePosNext, lod).r;
 			mipSample = mix(mipSample, mixSampleNext, clipmap_blend);
 		}
-		*/
 
 		mipSample *= step_dist / voxelSize;
 		sampleCol += (1.0 - sampleCol) * mipSample;
@@ -204,9 +179,9 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 		samplePos.y = (samplePos.y + clipmap_index) / voxelgiClipmapCount;
 
 		#ifdef _VoxelAOvar
-		mipSample = textureLod(voxels, samplePos, 0.0).r;
+		mipSample = textureLod(voxels, samplePos, lod).r;
 		#else
-		mipSample = textureLod(voxels, samplePos, 0.0).a;
+		mipSample = textureLod(voxels, samplePos, lod).a;
 		#endif
 		sampleCol += (1.0 - sampleCol) * mipSample;
 
@@ -214,9 +189,9 @@ float traceConeShadow(sampler3D voxels, const vec3 origin, vec3 n, vec3 dir, con
 			vec3 samplePosNext = ((start_pos + dir * dist) - clipmap_center) / voxelSize * 0.5 / voxelgiResolution.x;
 			samplePosNext.y = (samplePos.y + clipmap_index + 1.0) / voxelgiClipmapCount;
 			#ifdef _VoxelAOvar
-			float mixSampleNext = textureLod(voxels, samplePosNext, 0.0).r;
+			float mixSampleNext = textureLod(voxels, samplePosNext, lod).r;
 			#else
-			float mixSampleNext = textureLod(voxels, samplePosNext, 0.0).a;
+			float mixSampleNext = textureLod(voxels, samplePosNext, lod).a;
 			#endif
 			mipSample = mix(mipSample, mixSampleNext, clipmap_blend);
 		}
