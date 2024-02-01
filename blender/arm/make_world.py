@@ -311,6 +311,7 @@ def frag_write_clouds(world: bpy.types.World, frag: Shader):
     frag.add_const('float', 'cloudsSteps', str(round(world.arm_clouds_steps * 100) / 100))
 
     frag.add_function('''float remap(float old_val, float old_min, float old_max, float new_min, float new_max) {
+\tif (old_max == old_min) return 0.0;
 \treturn new_min + (((old_val - old_min) / (old_max - old_min)) * (new_max - new_min));
 }''')
 
