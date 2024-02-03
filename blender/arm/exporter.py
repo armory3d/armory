@@ -29,6 +29,17 @@ import arm.profiler
 from arm import assets, exporter_opt, log, make_renderpath
 from arm.material import cycles, make as make_material, mat_batch
 
+# Global storage for the new file path
+new_file_path = None
+original_filename = None
+
+def get_exported_file_path():
+    """Function to access the global new_file_path and original_filename."""
+    global new_file_path, original_filename
+    print(f"Retrieving file path: {new_file_path}")
+    print(f"Retrieving original filename: {original_filename}")
+    return new_file_path, original_filename
+
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     exporter_opt = arm.reload_module(exporter_opt)
@@ -2344,15 +2355,54 @@ Make sure the mesh only has tris/quads.""")
 
     def execute(self):
         """Exports the scene."""
+        global new_file_path
+        global original_filename
+        
         profile_time = time.time()
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_verbose_output:
             print('Exporting ' + arm.utils.asset_name(self.scene))
         if self.compress_enabled:
             print('Scene data will be compressed which might take a while.')
-
+            
         current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
+        
+        # Save current file path
+        original_file_path = bpy.data.filepath
+        original_filename = original_file_path
+        
+        print(f'Saved filepath {original_file_path}')
+        
+        # Create new file path        
+        savedcopy_file_path = original_file_path.replace('.blend', '-original.blend')
+       
+        print(f"Copying file to: {savedcopy_file_path}")
+        
+        # Set global variable to the new file so we can pass it to make.py.
+        new_file_path = savedcopy_file_path
+        
+        print(f"Setting new file path: {new_file_path}")     
+        
+        # Save a copy of the current file
+        bpy.ops.wm.save_as_mainfile(filepath=savedcopy_file_path, copy=True)
+              
+        # Select all collections and make duplicates real
+        print("Making linked duplicates real - Start")
 
+        # Code to make linked duplicates real
+        for obj in bpy.context.scene.objects:
+            if obj.instance_type == 'COLLECTION':
+                bpy.context.view_layer.objects.active = obj
+                obj.select_set(True)
+                bpy.ops.object.duplicates_make_real(use_hierarchy=True)
+                obj.select_set(False)
+
+        # Debug line for execution completion
+        print("Making linked duplicates real - Complete")
+
+        # Save changes to the duplicated file
+        bpy.ops.wm.save_mainfile()
+       
         scene_objects: List[bpy.types.Object] = self.scene.collection.all_objects.values()
         # bobject => blender object
         for bobject in scene_objects:
@@ -2525,9 +2575,11 @@ Make sure the mesh only has tris/quads.""")
         # Restore frame
         if self.scene.frame_current != current_frame:
             self.scene.frame_set(current_frame, subframe=current_subframe)
-
+           
+         
         if wrd.arm_verbose_output:
             print('Scene exported in {:0.3f}s'.format(time.time() - profile_time))
+            
 
     def create_default_camera(self, is_viewport_camera=False):
         """Creates the default camera and adds a WalkNavigation trait to it."""
