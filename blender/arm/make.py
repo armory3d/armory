@@ -31,9 +31,6 @@ import arm.utils
 import arm.utils_vs
 import arm.write_data as write_data
 
-#Used for scene duplication and restoration.
-from arm.exporter import get_exported_file_path
-
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
@@ -503,35 +500,7 @@ def play_done():
     state.redraw_ui = True
     log.clear()
     live_patch.stop()
-    
-    # Call the new function for handling file operations at the end of play_done
-    handle_reloading_originals()
 
-
-def handle_reloading_originals():
-    """Handles the file operations of opening, saving, and deleting files."""
-    new_file_path, original_filename = get_exported_file_path()
-    if new_file_path:
-        bpy.ops.wm.open_mainfile(filepath=new_file_path)
-        print("Loaded original file copy.")
-        if original_filename and os.path.exists(original_filename):
-            try:
-                os.remove(original_filename)
-                print(f"Deleted original file at: {original_filename}")
-                bpy.ops.wm.save_as_mainfile(filepath=original_filename)
-                print(f"Saved the file to the original filename: {original_filename}")
-            except OSError as e:
-                print(f"Error deleting {original_filename}: {e.strerror}")
-        
-        if new_file_path and os.path.exists(new_file_path) and new_file_path != original_filename:
-            try:
-                os.remove(new_file_path)
-                print(f"Deleted temporary file at: {new_file_path}")
-            except OSError as e:
-                print(f"Error deleting {new_file_path}: {e.strerror}")
-    else:
-        print("Failed to retrieve new file path.")
-    
 def assets_done():
     if state.proc_build == None:
         return
