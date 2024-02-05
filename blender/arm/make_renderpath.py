@@ -282,9 +282,13 @@ def build():
             if rpdat.rp_ssgi == 'SSAO':
                 assets.add_shader_pass('ssao_pass')
                 assets.add_shader_pass('blur_edge_pass')
-            else:
-                assets.add_shader_pass('ssgi_pass')
+            elif rpdat.rp_ssgi == 'RTAO':
                 assets.add_shader_pass('blur_edge_pass')
+                assets.add_shader_pass('ssgi_pass')
+            else:
+                assets.add_shader_pass('ssgi_blur_pass')
+                assets.add_shader_pass('ssgi_pass')
+
             if rpdat.arm_ssgi_half_res:
                 assets.add_khafile_def('rp_ssgi_half')
 

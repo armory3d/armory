@@ -6,9 +6,9 @@
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal
-// #ifdef _RTGI
-// uniform sampler2D gbuffer1; // Basecol
-// #endif
+#ifdef _RTGI
+uniform sampler2D gbuffer1; // Basecol
+#endif
 uniform mat4 P;
 uniform mat3 V3;
 
@@ -23,21 +23,25 @@ const float strength = 2.0 * (1.0 / ssgiStrength) * 1.8;
 
 in vec3 viewRay;
 in vec2 texCoord;
+#ifdef _RTGI
+out vec4 fragColor;
+#else
 out float fragColor;
+#endif
 
 vec3 hitCoord;
 vec2 coord;
 float depth;
-// #ifdef _RTGI
-// vec3 col = vec3(0.0);
-// #endif
+#ifdef _RTGI
+vec3 col = vec3(0.0);
+#endif
 vec3 vpos;
 
 vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	#ifdef _InvY
+	#ifdef HLSL
 	projectedCoord.y = 1.0 - projectedCoord.y;
 	#endif
 	return projectedCoord.xy;
@@ -52,20 +56,21 @@ float getDeltaDepth(vec3 hitCoord) {
 
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
-	dir *= ssgiRayStep * 2;
-	float dist = 0.15;
+	dir *= ssgiRayStep;
+	float dist = 0.0;
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
 		float delta = getDeltaDepth(hitCoord);
-		if (delta > 0.0 && delta < 0.2) {
+		if (delta > 0.0) {
 			dist = distance(vpos, hitCoord);
 			break;
 		}
 	}
-	fragColor += dist;
-	// #ifdef _RTGI
-	// col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
-	// #endif
+	#ifdef _RTGI
+	col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
+	#else
+	fragColor.r += dist;
+	#endif
 }
 
 vec3 tangent(const vec3 n) {
@@ -76,7 +81,11 @@ vec3 tangent(const vec3 n) {
 }
 
 void main() {
-	fragColor = 0;
+	#ifdef _RTGI
+	fragColor = vec4(0.0);
+	#else
+	fragColor = 0.0;
+	#endif
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
@@ -103,5 +112,9 @@ void main() {
 	rayCast(mix(n, -o2, angleMix));
 	rayCast(mix(n, c1, angleMix));
 	rayCast(mix(n, c2, angleMix));
+	#endif
+
+	#ifdef _RTGI
+	fragColor.rgb = col;
 	#endif
 }

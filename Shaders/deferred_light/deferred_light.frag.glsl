@@ -295,11 +295,11 @@ void main() {
 	fragColor.rgb = envl;
 
 #ifdef _SSAO
-	// #ifdef _RTGI
-	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
-	// #else
+	#ifdef _RTGI
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+	#else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
-	// #endif
+	#endif
 #endif
 
 #ifdef _EmissionShadeless

@@ -1815,6 +1815,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         sub.prop(rpdat, 'arm_ssgi_rays')
         sub.prop(rpdat, 'arm_ssgi_radius')
         sub.prop(rpdat, 'arm_ssgi_strength')
+        sub.prop(rpdat, 'arm_ssgi_step')
         sub.prop(rpdat, 'arm_ssgi_max_steps')
         layout.separator()
 
