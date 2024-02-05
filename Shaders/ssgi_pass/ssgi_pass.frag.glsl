@@ -14,6 +14,8 @@ uniform mat3 V3;
 
 uniform vec2 cameraProj;
 
+const int ssgiMaxSteps = int(ceil(1.0 / ssgiRayStep) * ssgiSearchDist);
+
 const float angleMix = 0.5f;
 #ifdef _SSGICone9
 const float strength = 2.0 * (1.0 / ssgiStrength);
@@ -54,20 +56,33 @@ float getDeltaDepth(vec3 hitCoord) {
 	return p.z - hitCoord.z;
 }
 
+float binarySearch(vec3 dir) {
+	float ddepth;
+	for (int i = 0; i < 7; i++) {
+		dir *= 0.5;
+		hitCoord -= dir;
+		ddepth = getDeltaDepth(hitCoord);
+		if (ddepth < 0.0) hitCoord += dir;
+	}
+	if (abs(ddepth) > ssgiSearchDist * ssgiRayStep) return 0.0;
+	return distance(vpos, hitCoord);
+}
+
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
 	dir *= ssgiRayStep;
-	float dist = 0.0;
+	float dist = 1.0;
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
 		float delta = getDeltaDepth(hitCoord);
-		if (delta > 0.0) {
-			dist = distance(vpos, hitCoord);
+		if (delta > 0.0 && delta < 1.0) {
+			dist = binarySearch(dir);
 			break;
 		}
 	}
 	#ifdef _RTGI
-	col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
+	if (dist != 0 && dist != 1.0)
+		col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
 	#else
 	fragColor.r += dist;
 	#endif
