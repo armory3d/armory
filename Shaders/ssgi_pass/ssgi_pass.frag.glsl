@@ -59,6 +59,7 @@ float getDeltaDepth(vec3 hitCoord) {
 	return p.z - hitCoord.z;
 }
 
+#ifdef _RTGI
 vec2 binarySearch(vec3 dir) {
 	float ddepth;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
@@ -70,6 +71,7 @@ vec2 binarySearch(vec3 dir) {
 	if (abs(ddepth) > 1.0) return vec2(-1.0);
 	return getProjectedCoord(hitCoord);
 }
+#endif
 
 void rayCast(vec3 dir) {
 	coord = vec2(-1.0);
@@ -81,7 +83,9 @@ void rayCast(vec3 dir) {
 		float delta = getDeltaDepth(hitCoord);
 		if (delta > 0.0 && delta < 1.0) {
 			dist = distance(vpos, hitCoord);
+			#ifdef _RTGI
 			coord = binarySearch(dir);
+			#endif
 			break;
 		}
 	}
