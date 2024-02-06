@@ -32,7 +32,7 @@ out float fragColor;
 #endif
 
 vec3 hitCoord;
-vec2 coord;
+vec2 coord = vec2(0.0);
 float depth;
 #ifdef _RTGI
 vec3 col = vec3(0.0);
@@ -40,6 +40,8 @@ vec3 col = vec3(0.0);
 float col = 0.0;
 #endif
 vec3 vpos;
+
+int rays = 0;
 
 vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
@@ -58,18 +60,6 @@ float getDeltaDepth(vec3 hitCoord) {
 	return p.z - hitCoord.z;
 }
 
-vec2 binarySearch(vec3 dir) {
-	float ddepth;
-	for (int i = 0; i < 7; i++) {
-		dir *= 0.5;
-		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
-	}
-	if (abs(ddepth) > 1.0) return vec2(0.0);
-	return getProjectedCoord(hitCoord);
-}
-
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
 	dir *= ssgiRayStep;
@@ -83,8 +73,8 @@ void rayCast(vec3 dir) {
 		}
 	}
 	#ifdef _RTGI
-	if (dist > 0.0 && dist < 1.0) {
-		//coord = binarySearch(dir);
+	if (dist < 1.0) // ray has hit
+	{
 		col += textureLod(gbuffer1, coord, 0.0).rgb * dist;
 	}
 	else col += 1.0;
