@@ -630,10 +630,9 @@ const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + "
 """)
 
         if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
-#const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
             f.write("""
 const float ssgiSearchDist = """ + str(rpdat.arm_ssgi_search_dist) + """;
-const float ssgiRayStep = """ + str(round(rpdat.arm_ssgi_step * 1000) / 1000) + """;
+const float ssgiRayStep = """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
 
