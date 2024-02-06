@@ -36,6 +36,8 @@ vec2 coord;
 float depth;
 #ifdef _RTGI
 vec3 col = vec3(0.0);
+#else
+float col = 0.0;
 #endif
 vec3 vpos;
 
@@ -64,7 +66,7 @@ float binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ssgiSearchDist * ssgiRayStep) return 0.0;
+	if (abs(ddepth) > 1.0) return 0.0;
 	return distance(vpos, hitCoord);
 }
 
@@ -81,10 +83,9 @@ void rayCast(vec3 dir) {
 		}
 	}
 	#ifdef _RTGI
-	if (dist != 0 && dist != 1.0)
-		col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
+	col += textureLod(gbuffer1, coord, 0.0).rgb * dist;
 	#else
-	fragColor.r += dist;
+	col += dist;
 	#endif
 }
 
@@ -117,6 +118,7 @@ void main() {
 	vec3 o2 = (cross(o1, n));
 	vec3 c1 = 0.5f * (o1 + o2);
 	vec3 c2 = 0.5f * (o1 - o2);
+	rayCast(n);
 	rayCast(mix(n, o1, angleMix));
 	rayCast(mix(n, o2, angleMix));
 	rayCast(mix(n, -c1, angleMix));
@@ -130,6 +132,16 @@ void main() {
 	#endif
 
 	#ifdef _RTGI
-	fragColor.rgb = col;
+	#ifdef _SSGICone9
+	fragColor.rgb = col / 9;
+	#else
+	fragColor.rgb = col / 5;
+	#endif
+	#else
+	#ifdef _SSGICone9
+	fragColor.r = col / 9;
+	#else
+	fragColor.r = col / 5;
+	#endif
 	#endif
 }
