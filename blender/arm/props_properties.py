@@ -26,7 +26,7 @@ class ArmPropertyListItem(bpy.types.PropertyGroup):
                  ('integer', 'Integer', 'Integer'),
                  ('float', 'Float', 'Float'),
                  ('boolean', 'Boolean', 'Boolean'),
-                ('array', 'Array', 'Array'),                 
+                 ('array', 'Array', 'Array'),                 
                  ],
         name = "Type")
     name_prop: StringProperty(name="Name", description="A name for this item", default="my_prop")
@@ -35,7 +35,7 @@ class ArmPropertyListItem(bpy.types.PropertyGroup):
     float_prop: FloatProperty(name="Float", description="A name for this item", default=0.0)
     boolean_prop: BoolProperty(name="Boolean", description="A name for this item", default=False)
     array_prop: CollectionProperty(type=ArmArrayItem)
-    new_array_item_type: EnumProperty(
+    array_item_type: EnumProperty(
         items = [
             ('string', 'String', 'String'),
             ('integer', 'Integer', 'Integer'),
@@ -50,7 +50,7 @@ class ArmPropertyListItem(bpy.types.PropertyGroup):
 class ARM_UL_ArrayItemList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # Use the item's index within the array as its uneditable name
-        array_type = data.new_array_item_type
+        array_type = data.array_item_type
         
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             # Display the index of the item as its name in a non-editable label
@@ -84,7 +84,7 @@ class ArmArrayAddItem(bpy.types.Operator):
             new_item = selected_item.array_prop.add()
 
             # Set the type of the new item based on the selected type
-            new_item_type = selected_item.new_array_item_type
+            new_item_type = selected_item.array_item_type
             if new_item_type == 'string':
                 new_item.string_prop = ""  # Default value for string
             elif new_item_type == 'integer':
@@ -252,7 +252,7 @@ def draw_properties(layout, obj):
             layout.label(text="Array Items")
 
             # Dropdown to select the type of new array items
-            layout.prop(selected_item, "new_array_item_type", text="New Item Type")
+            layout.prop(selected_item, "array_item_type", text="New Item Type")
 
             # Template list for array items
             row = layout.row()

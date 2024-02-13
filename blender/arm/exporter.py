@@ -787,7 +787,7 @@ class ArmoryExporter:
                     # Check if the property is a collection (array type).
                     if proplist_item.type_prop == 'array':
                         # Convert the collection to a list. 
-                        array_type = proplist_item.new_array_item_type
+                        array_type = proplist_item.array_item_type
                         collection_value = getattr(proplist_item, 'array_prop')
                         property_name = array_type + '_prop'
                         value = [str(getattr(item, property_name)) for item in collection_value]
