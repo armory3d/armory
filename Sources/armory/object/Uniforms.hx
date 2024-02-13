@@ -166,6 +166,7 @@ class Uniforms {
 				}
 			}
 			#end
+
 			#if rp_voxels
 			case "_cameraPositionSnap": {
 				v = iron.object.Uniforms.helpVec;

@@ -16,6 +16,8 @@ class RpConfigNode extends LogicNode {
 			on ? armory.data.Config.raw.rp_ssgi = true : armory.data.Config.raw.rp_ssgi = false;
 		case "SSR":
 			on ? armory.data.Config.raw.rp_ssr = true : armory.data.Config.raw.rp_ssr = false;
+		case "SSREFR":
+			on ? armory.data.Config.raw.rp_ssrefr = true : armory.data.Config.raw.rp_ssrefr = false;
         case "Bloom":
 			on ? armory.data.Config.raw.rp_bloom = true : armory.data.Config.raw.rp_bloom = false;
         case "GI":
