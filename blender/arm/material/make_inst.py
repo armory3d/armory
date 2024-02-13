@@ -14,8 +14,9 @@ def inst_pos(con, vert):
         vert.write('    croty * srotz * srotx + sroty * crotx, -crotz * srotx, -sroty * srotz * srotx + croty * crotx')
         vert.write(');')
         vert.write('spos.xyz = mirot * spos.xyz;')
-        if((con.data['name'] == 'mesh' or 'translucent') and vert.contains('wnormal')):
+        if (con.data['name'] == 'mesh' or con.data['name'] == 'translucent' or con.data['name'] == 'refraction') and vert.contains('wnormal'):
             vert.write('wnormal = normalize(N * mirot * vec3(nor.xy, pos.w));')
+
 
     if con.is_elem('iscl'):
         vert.write('spos.xyz *= iscl;')

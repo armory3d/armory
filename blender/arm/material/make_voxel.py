@@ -104,6 +104,7 @@ def make_ao(context_id):
         frag.add_include('std/math.glsl')
         frag.add_include('std/imageatomic.glsl')
         frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+
         frag.add_uniform('layout(r8) writeonly image3D voxels')
 
         vert.add_include('compiled.inc')
