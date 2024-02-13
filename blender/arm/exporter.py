@@ -786,17 +786,17 @@ class ArmoryExporter:
                 for proplist_item in bobject.arm_propertylist:
                     # Check if the property is a collection (array type).
                     if proplist_item.type_prop == 'array':
-                        # Convert the collection to a list.
+                        # Convert the collection to a list. 
                         collection_value = getattr(proplist_item, 'array_prop')
                         value = []
                         for item in collection_value:
-                            if item.string_prop != "":
+                            if hasattr(item, 'string_prop'):
                                 value.append(item.string_prop)
-                            elif item.integer_prop != 0:
+                            elif hasattr(item, 'integer_prop'):
                                 value.append(item.integer_prop)
-                            elif item.float_prop != 0.0:
+                            elif hasattr(item, 'float_prop'):
                                 value.append(item.float_prop)
-                            elif item.boolean_prop is not False:
+                            elif hasattr(item, 'boolean_prop'):
                                 value.append(item.boolean_prop)
                     else:
                         # Handle other types of properties.
