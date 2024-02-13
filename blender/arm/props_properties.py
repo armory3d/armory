@@ -252,7 +252,7 @@ def draw_properties(layout, obj):
             layout.label(text="Array Items")
 
             # Dropdown to select the type of new array items
-            layout.prop(selected_item, "array_item_type", text="New Item Type")
+            layout.prop(selected_item, "array_item_type", text="Array Type")
 
             # Template list for array items
             row = layout.row()
