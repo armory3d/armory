@@ -78,8 +78,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if '_Spot' in wrd.world_defs:
         frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
         frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
-        frag.write('\t, lightsArraySpot[li].w') # spot blend (exponent)
-        frag.write('\t, lightsArraySpot[li].xyz') # spotDir
+        frag.write('\t, lightsArraySpot[li * 2].w') # spot blend (exponent)
+        frag.write('\t, lightsArraySpot[li * 2].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
