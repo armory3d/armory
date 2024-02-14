@@ -57,8 +57,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
                     frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
             else:
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
-            # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
-            frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
+            frag.add_uniform('mat4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
