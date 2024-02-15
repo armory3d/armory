@@ -57,8 +57,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
                     frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
             else:
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
-            # FIXME: type is actually mat4, but otherwise it will not be set as floats when writing the shaders' json files
-            frag.add_uniform('vec4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
+            frag.add_uniform('mat4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
@@ -79,8 +78,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if '_Spot' in wrd.world_defs:
         frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
         frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
-        frag.write('\t, lightsArraySpot[li].w') # spot blend (exponent)
-        frag.write('\t, lightsArraySpot[li].xyz') # spotDir
+        frag.write('\t, lightsArraySpot[li * 2].w') # spot blend (exponent)
+        frag.write('\t, lightsArraySpot[li * 2].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
