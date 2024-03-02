@@ -63,13 +63,13 @@ class NetworkHttpRequestNode extends LogicNode {
         
         try {
             if(property0 == "post") {
-                var bytes = inputs[2].get();
+                var bytes = inputs[3].get();
                 if(bytes == true){
-                    var data:haxe.io.Bytes = inputs[3].get();
+                    var data:haxe.io.Bytes = inputs[2].get();
                     request.setPostBytes(data);
                     request.request(true);
                 }else{
-                    var data:Dynamic = inputs[3].get();
+                    var data:Dynamic = inputs[2].get();
                     request.setPostData(data.toString());
                     request.request(true);
                 }
