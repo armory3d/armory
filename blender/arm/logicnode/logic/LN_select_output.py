@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class SelectOutputNode(ArmLogicTreeNode):
-    """Selects one of multiple outputs depending on the index
+    """Selects one of multiple outputs depending on the index.
 
     @input In: Action input.
 

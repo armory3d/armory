@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SetMapFromArrayNode(ArmLogicTreeNode):
-    """Set Map From Arrays
+    """Set Map From Arrays.
 
     @input In: Set the map.
 

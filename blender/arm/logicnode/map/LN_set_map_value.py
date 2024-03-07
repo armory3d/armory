@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 
 class SetMapValueNode(ArmLogicTreeNode):
-    """Set Map Value
+    """Set Map Value.
 
     @input In: Set the map.
 

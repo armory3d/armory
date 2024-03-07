@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class StringMapNode(ArmLogicTreeNode):
-    """Create String Map
+    """Create String Map.
 
     @input In: Create a map using given keys and values.
 
