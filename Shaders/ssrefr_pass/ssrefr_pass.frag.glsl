@@ -42,7 +42,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 float getDeltaDepth(const vec3 hit) {
 	d = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewPos = normalize(getPosView(viewRay, d, cameraProj));
 	return viewPos.z - hit.z;
 }
 
@@ -102,7 +102,7 @@ void main() {
 	n = normalize(n);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, d, cameraProj);
+    vec3 viewPos = normalize(getPosView(viewRay, d, cameraProj));
     vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 

@@ -346,7 +346,7 @@ class RenderPathDeferred {
 			t.name = "half";
 			t.width = 0;
 			t.height = 0;
-			t.scale = Inc.getSuperSampling();
+			t.scale = Inc.getSuperSampling() * 0.5;
 			t.format = "R32"; // R16
 			path.createRenderTarget(t);	
 		}
