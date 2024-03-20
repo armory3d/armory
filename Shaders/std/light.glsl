@@ -10,6 +10,9 @@
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
+#ifdef _VoxelGI
+#include "std/conetrace.glsl"
+#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -53,7 +56,7 @@
 			uniform sampler2DShadow shadowMapAtlasSpot;
 			#endif
 			#else
-			uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+			uniform sampler2DShadow shadowMapSpot[4];
 			#endif
 			uniform mat4 LWVPSpotArray[maxLightsCluster];
 		#endif
@@ -81,6 +84,10 @@ uniform sampler2D sltcMag;
 #endif
 #endif
 
+#ifdef _VoxelTemporal
+uniform float voxelBlend;
+#endif
+
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
 	const vec3 albedo, const float rough, const float spec, const vec3 f0
 	#ifdef _ShadowMap
@@ -91,7 +98,14 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-		, sampler3D voxels, vec3 voxpos
+		, sampler3D voxels
+		, float clipmaps[voxelgiClipmapCount * 10]
+	#endif
+	#endif
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+		, sampler3D voxels
+		, float clipmaps[voxelgiClipmapCount * 10]
 	#endif
 	#endif
 	#ifdef _MicroShadowing
@@ -125,8 +139,8 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
+	direct *= attenuate(distance(p, lp));
 
 	#ifdef _MicroShadowing
 	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
@@ -138,7 +152,13 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(voxels, voxpos, l);
+	direct *= 1.0 - traceShadow(p, n, voxels, l, clipmaps);
+	#endif
+	#endif
+
+	#ifdef _VoxelGI
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(p, n, voxels, l, clipmaps);
 	#endif
 	#endif
 

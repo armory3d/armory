@@ -1,5 +1,8 @@
 package armory.logicnode;
+
+#if arm_debug
 import armory.trait.internal.DebugConsole;
+#end
 
 class GetDebugConsoleSettings extends LogicNode {
 
@@ -8,19 +11,22 @@ class GetDebugConsoleSettings extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-		#if arm_debug
 		switch(from) {
-			case 0: return armory.trait.internal.DebugConsole.getVisible();
-			case 1: return armory.trait.internal.DebugConsole.getScale();
-			case 2: {
-				switch (armory.trait.internal.DebugConsole.getPosition()) {
-				case PositionStateEnum.Left: return "Left";
-				case PositionStateEnum.Center: return "Center";
-				case PositionStateEnum.Right: return "Right";
+			case 0: return #if arm_debug true #else false #end;
+			case 1: return #if arm_debug DebugConsole.getVisible() #else false #end;
+			case 2: return #if arm_debug DebugConsole.isDebugConsoleHovered #else false #end;
+			case 3: return #if arm_debug DebugConsole.getScale() #else 1.0 #end;
+			case 4:
+				#if arm_debug
+				switch (DebugConsole.getPosition()) {
+					case PositionStateEnum.Left: return "Left";
+					case PositionStateEnum.Center: return "Center";
+					case PositionStateEnum.Right: return "Right";
 				}
-			}
+				#else
+				return "";
+				#end
 		}
-		#end
 		return null;
 	}
 }

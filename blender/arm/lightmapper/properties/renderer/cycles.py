@@ -11,9 +11,9 @@ class TLM_CyclesSceneProperties(bpy.types.PropertyGroup):
                 default="CPU")
 
     tlm_quality : EnumProperty(
-        items = [('0', 'Exterior Preview', 'Best for fast exterior previz'),
-                    ('1', 'Interior Preview', 'Best for fast interior previz with bounces'),
-                    ('2', 'Medium', 'Best for complicated interior preview and final for isometric environments'),
+        items = [('0', 'Exteior Preview', 'Best for fast exteior previz'),
+                    ('1', 'Inteior Preview', 'Best for fast inteior previz with bounces'),
+                    ('2', 'Medium', 'Best for complicated inteior preview and final for isometric environments'),
                     ('3', 'High', 'Best used for final baking for 3rd person games'),
                     ('4', 'Production', 'Best for first-person and Archviz'),
                     ('5', 'Custom', 'Uses the cycles sample settings provided the user')],

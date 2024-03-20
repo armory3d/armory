@@ -590,7 +590,8 @@ class ArmoryExporter:
                 variant_suffix = '_armskin'
             # Tilesheets
             elif bobject.arm_tilesheet != '':
-                variant_suffix = '_armtile'
+                if not bobject.arm_use_custom_tilesheet_node:
+                    variant_suffix = '_armtile'
             elif arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
@@ -783,10 +784,23 @@ class ArmoryExporter:
             if len(bobject.arm_propertylist) > 0:
                 out_object['properties'] = []
                 for proplist_item in bobject.arm_propertylist:
+                    # Check if the property is a collection (array type).
+                    if proplist_item.type_prop == 'array':
+                        # Convert the collection to a list. 
+                        array_type = proplist_item.array_item_type
+                        collection_value = getattr(proplist_item, 'array_prop')
+                        property_name = array_type + '_prop'
+                        value = [str(getattr(item, property_name)) for item in collection_value]
+                    else:
+                        # Handle other types of properties.
+                        value = getattr(proplist_item, proplist_item.type_prop + '_prop')
+
                     out_property = {
                         'name': proplist_item.name_prop,
-                        'value': getattr(proplist_item, proplist_item.type_prop + '_prop')}
+                        'value': value
+                    }
                     out_object['properties'].append(out_property)
+
 
             # Export the object reference and material references
             objref = bobject.data

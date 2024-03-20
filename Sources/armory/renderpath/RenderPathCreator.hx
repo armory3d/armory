@@ -57,11 +57,11 @@ class RenderPathCreator {
 		return path;
 	}
 
-	#if rp_voxels
-	public static var voxelFrame = 0;
-	public static var voxelFreq = 6; // Revoxelizing frequency
-	#end
-
 	// Last target before drawing to framebuffer
 	public static var finalTarget: RenderTarget = null;
+	#if (rp_voxels != "Off")
+	public static var pre_clear = true;
+	public static var clipmapLevel = 0;
+	public static var clipmaps:Array<Clipmap> = new Array<Clipmap>();
+	#end
 }

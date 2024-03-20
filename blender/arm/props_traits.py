@@ -414,33 +414,91 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        armature = obj.find_armature()
-        apply_modifiers = not armature
-
-        obj_eval = obj.evaluated_get(depsgraph) if apply_modifiers else obj
-        export_mesh = obj_eval.to_mesh()
-        # TODO: build tilecache here
         print("Started visualization generation")
-        # For visualization
+
+        # Append objects to be included in NavMesh
+        export_objects = []
+        # Append Object with trait
+        export_objects.append(obj)
+        # Get NavMesh trait
+        for trait in obj.arm_traitlist:
+            if trait.arm_traitpropslist and trait.class_name_prop == 'NavMesh':
+                # Check if child objects should be included in NavMesh
+                prop = trait.arm_traitpropslist['combineImmidiateChildren']
+                if(prop.get_value()):
+                    # If yes, check if child is a mesh
+                    for child_obj in obj.children:
+                        if obj.type == 'MESH':
+                            # Append child
+                            export_objects.append(child_obj)
+
+        # get dependency graph
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        # Get build directory
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
 
-        nav_mesh_name = 'nav_' + obj_eval.data.name
+        # Get export OBJ name and path
+        nav_mesh_name = 'nav_' + obj.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
 
+        # Max index of objects (vertices) traversed
+        max_overall_index = 0
+        # Open to OBJ file
         with open(mesh_path, 'w') as f:
-            for v in export_mesh.vertices:
-                f.write("v %.4f " % (v.co[0] * obj_eval.scale.x))
-                f.write("%.4f " % (v.co[2] * obj_eval.scale.z))
-                f.write("%.4f\n" % (v.co[1] * obj_eval.scale.y)) # Flipped
-            for p in export_mesh.polygons:
-                f.write("f")
-                for i in reversed(p.vertices): # Flipped normals
-                    f.write(" %d" % (i + 1))
-                f.write("\n")
+            for export_obj in export_objects:
+                # If armature, apply armature modifier
+                armature = export_obj.find_armature()
+                apply_modifiers = not armature
+                obj_eval = export_obj.evaluated_get(depsgraph) if apply_modifiers else export_obj
 
+                # Get mesh data
+                export_mesh = obj_eval.to_mesh()
+
+                # Get world transform
+                world_matrix = obj_eval.matrix_world
+
+                # Iterate over the triangles and get vertices and indices
+                triangles = export_mesh.loop_triangles
+                traversed_indices = []
+
+                # For each triangle in the object
+                for triangle in triangles:
+                    # For each index in triangle
+                    for loop_index in triangle.loops:
+                        # Get vertex index
+                        vertex_index = export_mesh.loops[loop_index].vertex_index
+                        # Skip if vertex already appended
+                        if (vertex_index not in traversed_indices):
+                            # If not, append vertex
+                            traversed_indices.append(vertex_index)
+                            vertex = export_mesh.vertices[vertex_index].co
+                            # Apply world transform
+                            tv = world_matrix @ vertex
+                            # Write to OBJ
+                            f.write("v %.4f " % (tv[0]))
+                            f.write("%.4f " % (tv[2]))
+                            f.write("%.4f\n" % (tv[1])) # Flipped
+
+                # Max index of this object
+                max_index = 0
+                # For each triangle in the object
+                for triangle in triangles:
+                    # Write index to OBJ
+                    f.write("f")
+                    for loop_index in triangle.loops:
+                        # index of this object should be > index of previous objects
+                        curr_index = max_overall_index + loop_index + 1
+                        f.write(" %d" % (curr_index))
+                        if(curr_index > max_overall_index):
+                            max_index = curr_index
+                    f.write("\n")
+                # Store max overall index
+                max_overall_index = max_index
+
+        # Get buildnavjs
         buildnavjs_path = arm.utils.get_sdk_path() + '/lib/haxerecast/buildnavjs'
 
         # append config values
@@ -461,9 +519,10 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         navmesh = bpy.ops.import_scene.obj(filepath=mesh_path)
         navmesh = bpy.context.selected_objects[0]
 
+        # NavMesh preview settings, cleanup
         navmesh.name = nav_mesh_name
         navmesh.rotation_euler = (0, 0, 0)
-        navmesh.location = (obj.location.x, obj.location.y, obj.location.z)
+        navmesh.location = (0, 0, 0)
         navmesh.arm_export = False
 
         bpy.context.view_layer.objects.active = navmesh
@@ -734,6 +793,23 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
         obj = bpy.context.scene
         draw_traits_panel(self.layout, obj, is_object=False)
 
+class ARM_OT_RemoveTraitsFromActiveObjects(bpy.types.Operator):
+    bl_label = 'Remove Traits From Selected Objects'
+    bl_idname = 'arm.remove_traits_from_active_objects'
+    bl_description = 'Removes all traits from all selected objects'
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode != 'SCENE' and len(context.selected_objects) > 0
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            obj.arm_traitlist.clear()
+            obj.arm_traitlist_index = 0
+
+        return {"FINISHED"}
+    
+
 class ARM_OT_CopyTraitsFromActive(bpy.types.Operator):
     bl_label = 'Copy Traits from Active Object'
     bl_idname = 'arm.copy_traits_to_active'
@@ -814,6 +890,7 @@ class ARM_MT_context_menu(Menu):
         layout = self.layout
 
         layout.operator("arm.copy_traits_to_active", icon='PASTEDOWN')
+        layout.operator("arm.remove_traits_from_active_objects", icon='REMOVE')
         layout.operator("arm.print_traits", icon='CONSOLE')
 
 def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, bpy.types.Scene], is_object: bool) -> None:
@@ -954,59 +1031,41 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
                 row = layout.row()
                 row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
+
+__REG_CLASSES = (
+    ArmTraitListItem,
+    ARM_UL_TraitList,
+    ArmTraitListNewItem,
+    ArmTraitListDeleteItem,
+    ArmTraitListDeleteItemScene,
+    ArmTraitListMoveItem,
+    ArmEditScriptButton,
+    ArmEditBundledScriptButton,
+    ArmEditWasmScriptButton,
+    ArmoryGenerateNavmeshButton,
+    ArmEditCanvasButton,
+    ArmNewScriptDialog,
+    ArmNewTreeNodeDialog,
+    ArmEditTreeNodeDialog,
+    ArmGetTreeNodeDialog,
+    ArmNewCanvasDialog,
+    ArmNewWasmButton,
+    ArmRefreshScriptsButton,
+    ArmRefreshObjectScriptsButton,
+    ArmRefreshCanvasListButton,
+    ARM_PT_TraitPanel,
+    ARM_PT_SceneTraitPanel,
+    ARM_OT_CopyTraitsFromActive,
+    ARM_MT_context_menu,
+    ARM_OT_RemoveTraitsFromActiveObjects
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmTraitListItem)
-    bpy.utils.register_class(ARM_UL_TraitList)
-    bpy.utils.register_class(ArmTraitListNewItem)
-    bpy.utils.register_class(ArmTraitListDeleteItem)
-    bpy.utils.register_class(ArmTraitListDeleteItemScene)
-    bpy.utils.register_class(ArmTraitListMoveItem)
-    bpy.utils.register_class(ArmEditScriptButton)
-    bpy.utils.register_class(ArmEditBundledScriptButton)
-    bpy.utils.register_class(ArmEditWasmScriptButton)
-    bpy.utils.register_class(ArmoryGenerateNavmeshButton)
-    bpy.utils.register_class(ArmEditCanvasButton)
-    bpy.utils.register_class(ArmNewScriptDialog)
-    bpy.utils.register_class(ArmNewTreeNodeDialog)
-    bpy.utils.register_class(ArmEditTreeNodeDialog)
-    bpy.utils.register_class(ArmGetTreeNodeDialog)
-    bpy.utils.register_class(ArmNewCanvasDialog)
-    bpy.utils.register_class(ArmNewWasmButton)
-    bpy.utils.register_class(ArmRefreshScriptsButton)
-    bpy.utils.register_class(ArmRefreshObjectScriptsButton)
-    bpy.utils.register_class(ArmRefreshCanvasListButton)
-    bpy.utils.register_class(ARM_PT_TraitPanel)
-    bpy.utils.register_class(ARM_PT_SceneTraitPanel)
-    bpy.utils.register_class(ARM_OT_CopyTraitsFromActive)
-    bpy.utils.register_class(ARM_MT_context_menu)
+    __reg_classes()
 
     bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem, override={"LIBRARY_OVERRIDABLE", "USE_INSERTION"})
     bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0, options={"LIBRARY_EDITABLE"}, override={"LIBRARY_OVERRIDABLE"})
-
-def unregister():
-    bpy.utils.unregister_class(ARM_OT_CopyTraitsFromActive)
-    bpy.utils.unregister_class(ARM_MT_context_menu)
-    bpy.utils.unregister_class(ArmTraitListItem)
-    bpy.utils.unregister_class(ARM_UL_TraitList)
-    bpy.utils.unregister_class(ArmTraitListNewItem)
-    bpy.utils.unregister_class(ArmTraitListDeleteItem)
-    bpy.utils.unregister_class(ArmTraitListDeleteItemScene)
-    bpy.utils.unregister_class(ArmTraitListMoveItem)
-    bpy.utils.unregister_class(ArmEditScriptButton)
-    bpy.utils.unregister_class(ArmEditBundledScriptButton)
-    bpy.utils.unregister_class(ArmEditWasmScriptButton)
-    bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
-    bpy.utils.unregister_class(ArmEditCanvasButton)
-    bpy.utils.unregister_class(ArmNewScriptDialog)
-    bpy.utils.unregister_class(ArmGetTreeNodeDialog)
-    bpy.utils.unregister_class(ArmEditTreeNodeDialog)
-    bpy.utils.unregister_class(ArmNewTreeNodeDialog)
-    bpy.utils.unregister_class(ArmNewCanvasDialog)
-    bpy.utils.unregister_class(ArmNewWasmButton)
-    bpy.utils.unregister_class(ArmRefreshObjectScriptsButton)
-    bpy.utils.unregister_class(ArmRefreshScriptsButton)
-    bpy.utils.unregister_class(ArmRefreshCanvasListButton)
-    bpy.utils.unregister_class(ARM_PT_TraitPanel)
-    bpy.utils.unregister_class(ARM_PT_SceneTraitPanel)
