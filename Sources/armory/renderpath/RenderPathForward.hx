@@ -106,7 +106,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if (rp_ssr || rp_ssrefr)
+			#if (rp_ssr || rp_ssrefr || rp_voxels != "Off")
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";

@@ -35,7 +35,7 @@ class Inc {
 	static var voxel_tf1:kha.compute.TextureUnit;
 	static var voxel_tg1:kha.compute.TextureUnit;
 	static var voxel_th1:kha.compute.TextureUnit;
-	#if rp_gbuffer2
+	#if (rp_gbuffer2 && arm_deferred)
 	static var voxel_ti1:kha.compute.TextureUnit;
 	#end
 	#if arm_brdf
@@ -591,7 +591,6 @@ class Inc {
 			}
 			#end
 			t.depth = Std.int(res * resZ);
-			t.mipmaps = true;
 		}
 		t.is_image = true;
 		path.createRenderTarget(t);
@@ -728,7 +727,7 @@ class Inc {
 			voxel_tf1 = voxel_sh1.getTextureUnit("voxelsLight");
 			voxel_tg1 = voxel_sh1.getTextureUnit("gbuffer0");
 			voxel_th1 = voxel_sh1.getTextureUnit("gbuffer1");
-			#if rp_gbuffer2
+			#if (rp_gbuffer2 && arm_deferred)
 			voxel_ti1 = voxel_sh1.getTextureUnit("gbuffer2");
 			#end
 			#if arm_brdf
@@ -874,9 +873,17 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_td1, rts.get("voxelsNor").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsEmission").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tf1, rts.get("voxelsLight").image, kha.compute.Access.Read);
+		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tg1, rts.get("gbuffer0").image);
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_tg1, rts.get("lbuffer1").image);
+		#end
+		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_th1, rts.get("gbuffer1").image);
-		#if rp_gbuffer2
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_th1, rts.get("lbuffer0").image);
+		#end
+		#if (rp_gbuffer2 && arm_deferred)
 		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf

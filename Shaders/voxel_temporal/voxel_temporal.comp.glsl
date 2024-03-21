@@ -73,7 +73,9 @@ uniform vec3 backgroundCol;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
+#ifdef _Deferred
 uniform sampler2D gbuffer2;
+#endif
 #endif
 uniform sampler2D gbufferD;
 
@@ -149,7 +151,9 @@ void main() {
 			float dotNV = max(dot(normal, v), 0.0);
 
 			#ifdef _gbuffer2
+			#ifdef _Deferred
 				vec4 g2 = textureLod(gbuffer2, uv, 0.0);
+			#endif
 			#endif
 
 			#ifdef _Brdf
@@ -162,11 +166,13 @@ void main() {
 				vec3 envl = shIrradiance(normal, shirr);
 
 				#ifdef _gbuffer2
+				#ifdef _Deferred
 					if (g2.b < 0.5) {
 						envl = envl;
 					} else {
 						envl = vec3(0.0);
 					}
+				#endif
 				#endif
 
 				#ifdef _EnvTex
