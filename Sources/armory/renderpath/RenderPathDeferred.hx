@@ -537,6 +537,9 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsBegin();
 
+			voxelsOut = voxelsOut == "voxelsOut" ? "voxelsOutB" : "voxelsOut";
+			voxelsOutLast = voxelsOut == "voxelsOut" ? "voxelsOutB" : "voxelsOut";
+
 			if (armory.renderpath.RenderPathCreator.pre_clear == true)
 			{
 				#if (rp_voxels == "Voxel GI")
@@ -557,8 +560,6 @@ class RenderPathDeferred {
 				path.clearImage("voxelsLight", 0x00000000);
 				#end
 				path.clearImage("voxels", 0x00000000);
-				voxelsOut = voxelsOut == "voxelsOut" ? "voxelsOutB" : "voxelsOut";
-				voxelsOutLast = voxelsOut == "voxelsOut" ? "voxelsOutB" : "voxelsOut";
 				Inc.computeVoxelsOffsetPrev(voxelsOut, voxelsOutLast);
 			}
 
@@ -576,7 +577,7 @@ class RenderPathDeferred {
 			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsLight();
 			#end
-			Inc.computeVoxelsTemporal();
+			Inc.computeVoxelsTemporal(voxelsOut, voxelsOutLast);
 
 			if (res_pre_clear == true) {
 				res_pre_clear = false;
@@ -589,10 +590,10 @@ class RenderPathDeferred {
 			}
 
 			#if (rp_voxels == "Voxel AO")
-			Inc.resolveAO();
+			Inc.resolveAO(voxelsOut);
 			#else
-			Inc.resolveDiffuse();
-			Inc.resolveSpecular();
+			Inc.resolveDiffuse(voxelsOut);
+			Inc.resolveSpecular(voxelsOut);
 			#end
 		}
 		#end

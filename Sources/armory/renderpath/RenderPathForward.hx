@@ -24,7 +24,7 @@ class RenderPathForward {
 		#if rp_render_to_texture
 		{
 			path.setTarget("lbuffer0", [
-				#if (rp_ssr || rp_ssrefr || rp_voxels != "Off") "lbuffer1",  #end
+				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
 				#if rp_ssrefr "gbuffer_refraction" #end]
 			);
 		}
@@ -106,7 +106,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if (rp_ssr || rp_ssrefr || rp_voxels != "Off")
+			#if (rp_ssr || rp_ssrefr)
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";
@@ -201,10 +201,6 @@ class RenderPathForward {
 			Inc.initGI("voxelsNor");
 			Inc.initGI("voxelsEmission");
 			Inc.initGI("voxelsLight");
-			Inc.initGI("voxels_diffuse");
-			Inc.initGI("voxels_specular");
-			#else
-			Inc.initGI("voxels_ao");
 			#end
 			for (i in 0...Main.voxelgiClipmapCount) {
 				var clipmap = new armory.renderpath.Clipmap();
@@ -293,7 +289,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
+		#if (rp_ssr_half || rp_ssgi_half)
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -409,23 +405,6 @@ class RenderPathForward {
 			Inc.computeVoxelsLight();
 			#end
 			Inc.computeVoxelsTemporal();
-
-			if (res_pre_clear == true) {
-				res_pre_clear = false;
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxels_diffuse", 0x00000000);
-				path.clearImage("voxels_specular", 0x00000000);
-				#else
-				path.clearImage("voxels_ao", 0x00000000);
-				#end
-			}
-
-			#if (rp_voxels == "Voxel AO")
-			Inc.resolveAO();
-			#else
-			Inc.resolveDiffuse();
-			Inc.resolveSpecular();
-			#end
 		}
 		#end
 
@@ -459,18 +438,10 @@ class RenderPathForward {
 		#end
 
 
-		#if (rp_voxels != 'Off')
+		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (rp_voxels == "Voxel AO")
-			path.bindTarget("voxels_ao", "voxels_ao");
-			#else
-			path.bindTarget("voxels_diffuse", "voxels_diffuse");
-			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if (arm_voxelgi_shadows)
 			path.bindTarget("voxelsOut", "voxels");
-			#end
 		}
 		#end
 
@@ -484,9 +455,9 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_render_to_texture || rp_voxels != "Off")
+		#if rp_render_to_texture
 		{
-			#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
+			#if (rp_ssr_half || rp_ssgi_half)
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");

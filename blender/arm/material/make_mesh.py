@@ -673,26 +673,22 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
 
-    if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        frag.write('vec2 texCoord = wposition.xy * 0.5 + 0.5;')
-        if '_InvY' in wrd.world_defs:
-            frag.write('texCoord.y = 1.0 - texCoord.y;')
-
-    frag.write('vec3 indirect = vec3(0.0);')#deactivate environment light for GI
     if '_VoxelAOvar' in wrd.world_defs:
-        frag.add_uniform('sampler2D voxels_ao')
-        frag.write('indirect = envl * (1.0 - textureLod(voxels_ao, texCoord, 0.0).r);')
+        frag.write('vec3 indirect = envl;')
+    else:
+        frag.write('vec3 indirect = vec3(0.0);') #deactivate environment light for GI
 
-    if '_VoxelGI' in wrd.world_defs:
-        frag.add_uniform('sampler2D voxels_diffuse')
-        frag.add_uniform('sampler2D voxels_specular')
-        frag.write('indirect += textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;')
-        frag.write('if (roughness < 1.0 && specular > 0.0)')
-        frag.write('    indirect += textureLod(voxels_specular, texCoord, 0.0).rgb * specular * voxelgiRefl;')
-
-    if '_VoxelShadow' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
         frag.add_uniform('sampler3D voxels')
         frag.add_uniform('float clipmaps[voxelgiClipmapCount * 10]', link='_clipmaps')
+
+    if '_VoxelAOvar' in wrd.world_defs:
+        frag.write('indirect *= (1.0 - traceAO(wposition, n, voxels, clipmaps).r);')
+
+    if '_VoxelGI' in wrd.world_defs:
+        frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
+        frag.write('if (roughness < 1.0 && specular > 0.0)')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, -vVec, roughness, clipmaps).rgb * specular * voxelgiRefl;')
 
     frag.write('vec3 direct = vec3(0.0);')
 

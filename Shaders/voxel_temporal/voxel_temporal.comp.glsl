@@ -42,11 +42,11 @@ uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
 
+uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(r32ui) uimage3D voxelsNor;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxelsEmission;
 uniform layout(rgba8) image3D voxelsOut;
 #ifdef _ShadowMap
