@@ -26,7 +26,6 @@ out vec4 fragColor;
 vec3 hitCoord;
 float d;
 
-const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist);
 
 vec2 getProjectedCoord(const vec3 hit) {
@@ -46,25 +45,6 @@ float getDeltaDepth(const vec3 hit) {
 	return -viewPos.z - hit.z;
 }
 
-
-vec4 binarySearch(vec3 dir) {
-	float ddepth;
-	for (int i = 0; i < numBinarySearchSteps; i++) {
-		dir *= 0.5;
-		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth < 0.0) hitCoord += dir;
-	}
-	// Ugly discard of hits too far away
-	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z * 500) return vec4(texCoord.xy, 0.0, 0.0);
-	#else
-		if (abs(ddepth) > ss_refractionSearchDist * 500) return vec4(texCoord.xy, 0.0, 0.0);
-	#endif
-	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
-}
-
-
 vec4 rayCast(vec3 dir) {
 	float ddepth;
 	#ifdef _CPostprocess
@@ -75,7 +55,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth > 0.0) return binarySearch(hitCoord);
+		if (ddepth > 0.0) return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 	}
 	return vec4(0.0);
 }
@@ -102,7 +82,7 @@ void main() {
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(-viewPos, viewNormal, 1.0 / ior);
+    vec3 refracted = refract(-viewPos, viewNormal, ior);
     hitCoord = viewPos;
 
 #ifdef _CPostprocess
