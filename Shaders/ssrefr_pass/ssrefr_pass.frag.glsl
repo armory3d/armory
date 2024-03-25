@@ -41,9 +41,9 @@ vec2 getProjectedCoord(const vec3 hit) {
 
 
 float getDeltaDepth(const vec3 hit) {
-	float depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hit.z;
+	return -viewPos.z - hit.z;
 }
 
 
@@ -56,11 +56,10 @@ vec4 binarySearch(vec3 dir) {
 		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
-	//using a divider of 500 doesn't work here unless the distance is set to at least 500 for a blender unit.
 	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z) return vec4(texCoord.xy, 0.0, 0.0);
+		if (abs(ddepth) > PPComp9.z * 500) return vec4(texCoord.xy, 0.0, 0.0);
 	#else
-		if (abs(ddepth) > ss_refractionSearchDist) return vec4(texCoord.xy, 0.0, 0.0);
+		if (abs(ddepth) > ss_refractionSearchDist * 500) return vec4(texCoord.xy, 0.0, 0.0);
 	#endif
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
@@ -76,7 +75,7 @@ vec4 rayCast(vec3 dir) {
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth > d) return binarySearch(dir);
+		if (ddepth > 0.0) return binarySearch(hitCoord);
 	}
 	return vec4(0.0);
 }
@@ -103,7 +102,7 @@ void main() {
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
+    vec3 refracted = refract(-viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
 #ifdef _CPostprocess
