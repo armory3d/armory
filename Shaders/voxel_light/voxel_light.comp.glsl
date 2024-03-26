@@ -27,7 +27,6 @@ uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(r32ui) uimage3D voxelsNor;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;

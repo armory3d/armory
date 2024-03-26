@@ -46,12 +46,12 @@ vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCo
 	tc.y = (tc.y + clipmap_index) / voxelgiClipmapCount;
 
 	if (precomputed_direction == 0) {
-		col = direction_weight.x * textureLod(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z), 0.0)
-			+ direction_weight.y * textureLod(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z), 0.0)
-			+ direction_weight.z * textureLod(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z), 0.0);
+		col = direction_weight.x * texture(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z))
+			+ direction_weight.y * texture(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z))
+			+ direction_weight.z * texture(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z));
 	}
 	else
-		col = textureLod(voxels, tc, 0.0);
+		col = texture(voxels, tc);
 
 	col *= step_dist / float(clipmaps[int(clipmap_index * 10)]);
 
@@ -70,12 +70,12 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 	tc.y = (tc.y + clipmap_index) / voxelgiClipmapCount;
 
 	if (precomputed_direction == 0) {
-		opac = direction_weight.x * textureLod(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z), 0.0).r
-			+ direction_weight.y * textureLod(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z), 0.0).r
-			+ direction_weight.z * textureLod(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z), 0.0).r;
+		opac = direction_weight.x * texture(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z)).r
+			+ direction_weight.y * texture(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z)).r
+			+ direction_weight.z * texture(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z)).r;
 	}
 	else
-		opac = textureLod(voxels, tc, 0.0).r;
+		opac = texture(voxels, tc).r;
 
 	opac *= step_dist / float(clipmaps[int(clipmap_index * 10)]);
 
@@ -84,7 +84,7 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 #endif
 
 #ifdef _VoxelGI
-vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 dir, const int precomputed_direction, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
+vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 dir, const int precomputed_direction, const bool use_sdf, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
     vec3 color = vec3(0.0);
 	float alpha = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
@@ -132,13 +132,14 @@ vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 
 		alpha += a * mipSample.a;
 
 		float stepSizeCurrent = step_size;
-		// half texel correction is applied to avoid sampling over current clipmap:
-		const vec3 half_texel = vec3(0.5) / voxelgiResolution;
-		vec3 tc0 = clamp(samplePos, half_texel, 1 - half_texel);
-		tc0.y = (tc0.y + clipmap_index) / voxelgiClipmapCount; // remap into clipmap
-		float sdf = textureLod(voxelsSDF, tc0, 0).r;
-		stepSizeCurrent = max(step_size, sdf - diam);
-
+		if (use_sdf) {
+			// half texel correction is applied to avoid sampling over current clipmap:
+			const vec3 half_texel = vec3(0.5) / voxelgiResolution;
+			vec3 tc0 = clamp(samplePos, half_texel, 1 - half_texel);
+			tc0.y = (tc0.y + clipmap_index) / voxelgiClipmapCount; // remap into clipmap
+			float sdf = textureLod(voxelsSDF, tc0, 0.0).r;
+			stepSizeCurrent = max(step_size, sdf - diam);
+		}
 		step_dist = diam * stepSizeCurrent;
 		dist += step_dist;
 	}
@@ -154,19 +155,19 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
-		amount += traceCone(voxels, voxelsSDF, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceCone(voxels, voxelsSDF, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 	amount /= sum;
 	amount.rgb = max(vec3(0.0), amount.rgb);
 	amount.a = clamp(amount.a, 0.0, 1.0);
-	return amount;
+	return amount * voxelgiOcc;
 }
 
 
 vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10]) {
 	vec3 specularDir = reflect(viewDir, normal);
-	return traceCone(voxels, voxelsSDF, origin, normal, specularDir, 0, roughness, voxelgiStep, clipmaps) * voxelgiOcc;
+	return traceCone(voxels, voxelsSDF, origin, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps) * voxelgiOcc;
 }
 
 /*
@@ -224,15 +225,7 @@ float traceConeAO(sampler3D voxels, const sampler3D voxelsSDF, vec3 origin, vec3
 
 		opacity += (1.0 - opacity) * mipSample;
 
-		float stepSizeCurrent = step_size;
-		// half texel correction is applied to avoid sampling over current clipmap:
-		const vec3 half_texel = vec3(0.5) / voxelgiResolution;
-		vec3 tc0 = clamp(samplePos, half_texel, 1 - half_texel);
-		tc0.y = (tc0.y + clipmap_index) / voxelgiClipmapCount; // remap into clipmap
-		float sdf = textureLod(voxelsSDF, tc0, 0).r;
-		stepSizeCurrent = max(step_size, sdf - diam);
-
-		step_dist = diam * stepSizeCurrent;
+		step_dist = diam * step_size;
 		dist += step_dist;
 	}
     return opacity;
@@ -309,16 +302,7 @@ float traceConeShadow(sampler3D voxels, const sampler3D voxelsSDF, const vec3 or
 		}
 
 		sampleCol += (1.0 - sampleCol) * mipSample;
-
-		float stepSizeCurrent = step_size;
-		// half texel correction is applied to avoid sampling over current clipmap:
-		const vec3 half_texel = vec3(0.5) / voxelgiResolution;
-		vec3 tc0 = clamp(samplePos, half_texel, 1 - half_texel);
-		tc0.y = (tc0.y + clipmap_index) / voxelgiClipmapCount; // remap into clipmap
-		float sdf = textureLod(voxelsSDF, tc0, 0).r;
-		stepSizeCurrent = max(step_size, sdf - diam);
-
-		step_dist = diam * stepSizeCurrent;
+		step_dist = diam * step_size;
 		dist += step_dist;
 	}
 	return sampleCol;

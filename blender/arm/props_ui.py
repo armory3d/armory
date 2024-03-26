@@ -1724,13 +1724,13 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
-        col2.prop(rpdat, 'arm_voxelgi_refr')
+        #col2.prop(rpdat, 'arm_voxelgi_refr')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
         col.prop(rpdat, 'arm_voxelgi_size')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
-        col.prop(rpdat, 'arm_voxelgi_offset')
+        #col.prop(rpdat, 'arm_voxelgi_offset')
         #col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
