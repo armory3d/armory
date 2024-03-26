@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class OnEventNode(ArmLogicTreeNode):
     """Activates the output when the given event is received.
 
@@ -51,14 +52,16 @@ class OnEventNode(ArmLogicTreeNode):
         layout.prop(self, 'property1', text='')
 
     def draw_label(self) -> str:
-        return f'{self.bl_label}: {self.operators[self.property1]}'
+        if self.inputs[0].is_linked:
+            return self.bl_label
+        return f'{self.bl_label}: {self.inputs[0].get_default_value()}'
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
 
         newnode = node_tree.nodes.new('LNOnEventNode')
-        
+
         try:
             newnode.inputs[0].default_value_raw = self["property0"]
         except:

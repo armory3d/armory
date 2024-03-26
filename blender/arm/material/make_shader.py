@@ -71,7 +71,6 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
     bind_textures = dict()
 
     for rp in rpasses:
-
         car = []
         bind_constants[rp] = car
         mat_state.bind_constants = car
@@ -95,6 +94,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
 
         elif rp == 'translucent':
             con = make_transluc.make(rp)
+
+        elif rp == 'refraction':
+            con = make_mesh.make(rp, rpasses)
 
         elif rp == 'overlay':
             con = make_overlay.make(rp)

@@ -138,20 +138,20 @@ class ArmLodListMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
+
+__REG_CLASSES = (
+    ArmLodListItem,
+    ARM_UL_LodList,
+    ArmLodListNewItem,
+    ArmLodListDeleteItem,
+    ArmLodListMoveItem,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmLodListItem)
-    bpy.utils.register_class(ARM_UL_LodList)
-    bpy.utils.register_class(ArmLodListNewItem)
-    bpy.utils.register_class(ArmLodListDeleteItem)
-    bpy.utils.register_class(ArmLodListMoveItem)
+    __reg_classes()
 
     bpy.types.Mesh.arm_lodlist = CollectionProperty(type=ArmLodListItem)
     bpy.types.Mesh.arm_lodlist_index = IntProperty(name="Index for my_list", default=0)
     bpy.types.Mesh.arm_lod_material = BoolProperty(name="Material Lod", description="Use materials of lod objects", default=False)
-
-def unregister():
-    bpy.utils.unregister_class(ArmLodListItem)
-    bpy.utils.unregister_class(ARM_UL_LodList)
-    bpy.utils.unregister_class(ArmLodListNewItem)
-    bpy.utils.unregister_class(ArmLodListDeleteItem)
-    bpy.utils.unregister_class(ArmLodListMoveItem)

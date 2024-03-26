@@ -1,10 +1,12 @@
 import bpy
 
 import arm
+import arm.material.mat_state as mat_state
 import arm.material.make_tess as make_tess
 from arm.material.shader import ShaderContext
 
 if arm.is_reload(__name__):
+    mat_state = arm.reload_module(mat_state)
     make_tess = arm.reload_module(make_tess)
     arm.material.shader = arm.reload_module(arm.material.shader)
     from arm.material.shader import ShaderContext
@@ -27,7 +29,13 @@ def make(con_mesh: ShaderContext):
         # n is not always defined yet (in some shadowmap shaders e.g.)
         if not frag.contains('vec3 n'):
             vert.add_out('vec3 wnormal')
-            vert.add_uniform('mat3 N', '_normalMatrix')
+            billboard = mat_state.material.arm_billboard
+            if billboard == 'spherical':
+                vert.add_uniform('mat3 N', '_normalMatrixSphere')
+            elif billboard == 'cylindrical':
+                vert.add_uniform('mat3 N', '_normalMatrixCylinder')
+            else:
+                vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write_attrib('wnormal = normalize(N * vec3(nor.xy, pos.w));')
             frag.write_attrib('vec3 n = normalize(wnormal);')
 

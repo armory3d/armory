@@ -68,11 +68,10 @@ class GateNode(ArmLogicTreeNode):
                 column.enabled = False
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 2):
-            raise LookupError()
-            
         if self.arm_version == 1 or self.arm_version == 2:
             return NodeReplacement(
-                'LNGateNode', self.arm_version, 'LNGateNode', 2,
+                'LNGateNode', self.arm_version, 'LNGateNode', 3,
                 in_socket_mapping={0:0, 1:1, 2:2}, out_socket_mapping={0:0, 1:1}
             )
+        else:
+            raise LookupError()

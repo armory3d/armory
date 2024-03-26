@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class CanvasSetCheckBoxNode(ArmLogicTreeNode):
     """Sets the state of the given UI checkbox."""
     bl_idname = 'LNCanvasSetCheckBoxNode'
     bl_label = 'Set Canvas Checkbox'
+    arm_section = 'elements_specific'
     arm_version = 1
 
     def arm_init(self, context):

@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class CanvasGetTextNode(ArmLogicTreeNode):
     """Sets the text of the given UI element."""
     bl_idname = 'LNCanvasGetTextNode'
     bl_label = 'Get Canvas Text'
+    arm_section = 'elements_general'
     arm_version = 1
 
     def arm_init(self, context):

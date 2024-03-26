@@ -84,6 +84,9 @@ class ShaderDataNode(Node):
                 state.frag.add_uniform('vec2 screenSize', link='_screenSize')
                 return f'textureLod({self.variable_name}, gl_FragCoord.xy / screenSize, 0.0).rgb'
 
+            if self.variable_type == "vec2":
+                return f'vec3({self.variable_name}.xy, 0)'
+
             return self.variable_name
 
         else:

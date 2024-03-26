@@ -1,9 +1,11 @@
 from arm.logicnode.arm_nodes import *
 
+
 class CanvasGetLocationNode(ArmLogicTreeNode):
     """Returns the location of the given UI element (pixels)."""
     bl_idname = 'LNCanvasGetLocationNode'
     bl_label = 'Get Canvas Location'
+    arm_section = 'elements_general'
     arm_version = 1
 
     def arm_init(self, context):

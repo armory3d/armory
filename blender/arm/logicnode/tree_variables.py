@@ -525,7 +525,7 @@ def node_compat_sdk2209():
                 arm.logicnode.arm_nodes.ArmLogicVariableNodeMixin.synchronize(tree, item.name)
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ARM_PT_Variables,
     ARM_OT_TreeVariableListMoveItem,
     ARM_OT_TreeVariableMakeLocalNode,
@@ -536,11 +536,11 @@ REG_CLASSES = (
     ARM_UL_TreeVarList,
     ARM_PG_TreeVarListItem,
 )
-register_classes, unregister_classes = bpy.utils.register_classes_factory(REG_CLASSES)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
 
 
 def register():
-    register_classes()
+    __reg_classes()
 
     bpy.types.Node.arm_logic_id = StringProperty(
         name='ID',
@@ -554,4 +554,4 @@ def register():
 
 
 def unregister():
-    unregister_classes()
+    __unreg_classes()

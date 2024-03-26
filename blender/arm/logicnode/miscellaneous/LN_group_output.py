@@ -189,7 +189,7 @@ class GroupOutputsNode(ArmLogicTreeNode):
             layout.enabled = False
         node = context.active_node
         split = layout.row()
-        split.template_list('ARM_UL_interface_sockets', 'IN', node, 'inputs', node, 'active_input')
+        split.template_list('ARM_UL_InterfaceSockets', 'IN', node, 'inputs', node, 'active_input')
         ops_col = split.column()
         add_remove_col = ops_col.column(align=True)
         props = add_remove_col.operator('arm.node_call_func', icon='ADD', text="")

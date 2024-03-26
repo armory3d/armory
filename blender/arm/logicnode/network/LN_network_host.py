@@ -55,16 +55,3 @@ class NetworkHostNode(ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
     
-    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
-            raise LookupError()
-
-        in_socket_mapping={0:0, 1:1, 2:2, 3:3}
-        if self.property0:
-            in_socket_mapping.update({4:4, 5:5})
-
-        return NodeReplacement(
-            'LNNetworkHostNode', self.arm_version, 'LNNetworkHostNode', 4,
-            in_socket_mapping=in_socket_mapping,
-            out_socket_mapping={0:0, 1:1},
-            property_mapping={'property0':'property0'})

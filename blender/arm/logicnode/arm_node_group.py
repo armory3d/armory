@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: GPL3
 # License-Filename: LICENSE
 from functools import reduce
-from typing import List, Set, Dict
+from typing import Iterator, List, Set, Dict
 
 import bpy
 from bpy.props import *
@@ -62,7 +62,7 @@ class ArmGroupTree(bpy.types.NodeTree):
                 raise RecursionError(f'Looks like group tree "{self}" has links to itself from other groups')
         return trees
 
-    def can_be_linked(self):
+    def can_be_linked(self) -> bool:
         """Try to avoid creating loops of group trees with each other"""
         # upstream trees of tested treed should nad share trees with downstream trees of current tree
         tested_tree_upstream_trees = {t.name for t in self.upstream_trees()}
@@ -72,6 +72,18 @@ class ArmGroupTree(bpy.types.NodeTree):
 
     def update(self):
         pass
+
+    @classmethod
+    def get_linkable_group_trees(cls) -> Iterator['ArmGroupTree']:
+        return filter(lambda tree: isinstance(tree, ArmGroupTree) and tree.can_be_linked(), bpy.data.node_groups)
+
+    @classmethod
+    def has_linkable_group_trees(cls) -> bool:
+        try:
+            _ = next(cls.get_linkable_group_trees())
+        except StopIteration:
+            return False
+        return True
 
 
 class ArmEditGroupTree(bpy.types.Operator):
@@ -549,7 +561,7 @@ class ARM_PT_LogicGroupPanel(bpy.types.Panel):
         row.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit Tree')
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ArmGroupTree,
     ArmEditGroupTree,
     ArmCopyGroupTree,
@@ -562,4 +574,4 @@ REG_CLASSES = (
     ArmAddCallGroupNode,
     ARM_PT_LogicGroupPanel
 )
-register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
+register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

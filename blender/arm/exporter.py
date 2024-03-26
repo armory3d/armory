@@ -138,6 +138,9 @@ class ArmoryExporter:
         self.world_array = []
         self.particle_system_array = {}
 
+        self.referenced_collections: list[bpy.types.Collection] = []
+        """Collections referenced by collection instances"""
+
         self.has_spawning_camera = False
         """Whether there is at least one camera in the scene that spawns by default"""
 
@@ -587,7 +590,8 @@ class ArmoryExporter:
                 variant_suffix = '_armskin'
             # Tilesheets
             elif bobject.arm_tilesheet != '':
-                variant_suffix = '_armtile'
+                if not bobject.arm_use_custom_tilesheet_node:
+                    variant_suffix = '_armtile'
             elif arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
@@ -771,6 +775,7 @@ class ArmoryExporter:
 
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
+                self.referenced_collections.append(bobject.instance_collection)
 
             if bobject.arm_tilesheet != '':
                 out_object['tilesheet_ref'] = bobject.arm_tilesheet
@@ -779,10 +784,23 @@ class ArmoryExporter:
             if len(bobject.arm_propertylist) > 0:
                 out_object['properties'] = []
                 for proplist_item in bobject.arm_propertylist:
+                    # Check if the property is a collection (array type).
+                    if proplist_item.type_prop == 'array':
+                        # Convert the collection to a list. 
+                        array_type = proplist_item.array_item_type
+                        collection_value = getattr(proplist_item, 'array_prop')
+                        property_name = array_type + '_prop'
+                        value = [str(getattr(item, property_name)) for item in collection_value]
+                    else:
+                        # Handle other types of properties.
+                        value = getattr(proplist_item, proplist_item.type_prop + '_prop')
+
                     out_property = {
                         'name': proplist_item.name_prop,
-                        'value': getattr(proplist_item, proplist_item.type_prop + '_prop')}
+                        'value': value
+                    }
                     out_object['properties'].append(out_property)
+
 
             # Export the object reference and material references
             objref = bobject.data
@@ -2433,7 +2451,7 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                if self.scene.user_of_id(collection) or collection.library:
+                if self.scene.user_of_id(collection) or collection.library or collection in self.referenced_collections:
                     self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:

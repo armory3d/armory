@@ -124,9 +124,9 @@ class ShaderContext:
             c['link'] = link
         if default_value is not None:
             if ctype == 'float':
-                c['float'] = default_value
+                c['floatValue'] = default_value
             if ctype == 'vec3':
-                c['vec3'] = default_value
+                c['vec3Value'] = default_value
         if is_arm_mat_param is not None:
             c['is_arm_parameter'] = True
         self.constants.append(c)
@@ -282,6 +282,9 @@ class Shader:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             elif ar[0] == 'vec4' and '[' in ar[1]:
+                ar[0] = 'floats'
+                ar[1] = ar[1].split('[', 1)[0]
+            elif ar[0] == 'mat4' and '[' in ar[1]:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)

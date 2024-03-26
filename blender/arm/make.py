@@ -11,6 +11,7 @@ from string import Template
 import subprocess
 import threading
 import time
+import traceback
 from typing import Callable
 import webbrowser
 
@@ -628,7 +629,7 @@ def build_success():
                 else:
                     tplstr = Template(envcmd).safe_substitute({
                         'host': host,
-                        'port': prefs.html5_server_port, 
+                        'port': prefs.html5_server_port,
                         'width': width,
                         'height': height,
                         'url': url,
@@ -677,8 +678,9 @@ def build_success():
                     cmd.append('--nosound')
         try:
             state.proc_play = run_proc(cmd, play_done)
-        except:
-            log.warn('Failed to start player')
+        except Exception:
+            traceback.print_exc()
+            log.warn('Failed to start player, command and exception have been printed to console above')
             if wrd.arm_runtime == 'Browser':
                 webbrowser.open(url)
 

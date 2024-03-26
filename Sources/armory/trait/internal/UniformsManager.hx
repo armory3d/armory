@@ -110,15 +110,15 @@ class UniformsManager extends Trait{
 					switch (constant.type) {
 						case "float":
 							var link = constant.link;
-							var value = constant.float;
+							var value = constant.floatValue;
 							setFloatValue(material, object, link, value);
 							register(Float);
 
 						case "vec3":
 							var vec = new Vec4();
-							vec.x = constant.vec3.get(0);
-							vec.y = constant.vec3.get(1);
-							vec.z = constant.vec3.get(2);
+							vec.x = constant.vec3Value.get(0);
+							vec.y = constant.vec3Value.get(1);
+							vec.z = constant.vec3Value.get(2);
 
 							setVec3Value(material, object, constant.link, vec);
 							register(Vector);

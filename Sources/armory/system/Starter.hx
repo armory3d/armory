@@ -96,8 +96,17 @@ class Starter {
 		function loadLib(name: String) {
 			kha.Assets.loadBlobFromPath(name, function(b: kha.Blob) {
 				js.Syntax.code("(1, eval)({0})", b.toString());
-				tasks--;
-				start();
+				#if kha_krom
+				js.Syntax.code("Recast({print:function(s){iron.log(s);},instantiateWasm:function(imports,successCallback) {
+					var wasmbin = Krom.loadBlob('recast.wasm.wasm');
+					var module = new WebAssembly.Module(wasmbin);
+					var inst = new WebAssembly.Instance(module,imports);
+					successCallback(inst);
+					return inst.exports;
+				}}).then(function(){ tasks--; start();})");
+				#else
+				js.Syntax.code("Recast({print:function(s){iron.log(s);}}).then(function(){ tasks--; start();})");
+				#end
 			});
 		}
 		#end
@@ -115,7 +124,11 @@ class Starter {
 
 		#if (js && arm_navigation)
 		tasks++;
+		#if kha_krom
+		loadLib("recast.wasm.js");
+		#else
 		loadLib("recast.js");
+		#end
 		#end
 
 		#if (arm_config)

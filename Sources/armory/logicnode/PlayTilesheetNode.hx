@@ -14,7 +14,7 @@ class PlayTilesheetNode extends LogicNode {
 
 		if (object == null) return;
 
-		object.tilesheet.play(action, function() {
+		object.activeTilesheet.play(action, function() {
 			runOutput(1);
 		});
 

@@ -152,13 +152,9 @@ class ARM_UL_PropList(bpy.types.UIList):
             layout.alignment = 'CENTER'
 
 
-def register():
-    bpy.utils.register_class(ArmTraitPropWarning)
-    bpy.utils.register_class(ArmTraitPropListItem)
-    bpy.utils.register_class(ARM_UL_PropList)
-
-
-def unregister():
-    bpy.utils.unregister_class(ARM_UL_PropList)
-    bpy.utils.unregister_class(ArmTraitPropListItem)
-    bpy.utils.unregister_class(ArmTraitPropWarning)
+__REG_CLASSES = (
+    ArmTraitPropWarning,
+    ArmTraitPropListItem,
+    ARM_UL_PropList,
+)
+register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

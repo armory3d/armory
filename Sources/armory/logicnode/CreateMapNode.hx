@@ -7,7 +7,7 @@ import armory.system.Event;
 class CreateMapNode extends LogicNode {
   public var property0: String;
   public var property1: String;
-  public var map: Map<Dynamic,Dynamic>;
+  public var map: Dynamic;
 
 
 	public function new(tree:LogicTree) {

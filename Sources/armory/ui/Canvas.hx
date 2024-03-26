@@ -22,10 +22,12 @@ class Canvas {
 
 	public static function draw(ui: Zui, canvas: TCanvas, g: kha.graphics2.Graphics): Array<String> {
 
+		events.resize(0);
+
+		if (!canvas.visible) return events;
+
 		screenW = kha.System.windowWidth();
 		screenH = kha.System.windowHeight();
-
-		events.resize(0);
 
 		_ui = ui;
 
@@ -313,6 +315,21 @@ class Canvas {
 		if (rotated) ui.g.popTransformation();
 	}
 
+	/**
+		Parse the content of the given blob object and return a `TCanvas` object
+		from it.
+	**/
+	public static function parseCanvasFromBlob(blob: kha.Blob): TCanvas {
+		final raw: haxe.DynamicAccess<Dynamic> = haxe.Json.parse(blob.toString());
+
+		// Ensure TCanvas has all attributes even for older files
+		if (!raw.exists("visible")) {
+			raw.set("visible", true);
+		}
+
+		return (raw: Dynamic);
+	}
+
 	static inline function getText(canvas: TCanvas, e: TElement): String {
 		return e.text;
 	}
@@ -414,6 +431,7 @@ typedef TCanvas = {
 	var height: Int;
 	var elements: Array<TElement>;
 	var theme: String;
+	var visible: Bool;
 	@:optional var assets: Array<TAsset>;
 	@:optional var locales: Array<TLocale>;
 }

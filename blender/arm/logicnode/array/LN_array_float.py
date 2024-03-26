@@ -44,7 +44,18 @@ class FloatArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
             inp.default_value_raw = master_node.inputs[i].get_default_value()
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 2):
+        if self.arm_version < 0 or self.arm_version > 2:
             raise LookupError()
-            
-        return NodeReplacement.Identity(self)
+
+        newnode = node_tree.nodes.new(FloatArrayNode.bl_idname)
+        for inp_old in self.inputs:
+            inp_new = newnode.add_input('ArmFloatSocket', inp_old.name)
+            inp_new.hide = self.arm_logic_id != ''
+            inp_new.enabled = self.arm_logic_id != ''
+            inp_new.default_value_raw = inp_old.get_default_value()
+            NodeReplacement.replace_input_socket(node_tree, inp_old, inp_new)
+
+        NodeReplacement.replace_output_socket(node_tree, self.outputs[0], newnode.outputs[0])
+        NodeReplacement.replace_output_socket(node_tree, self.outputs[1], newnode.outputs[1])
+
+        return newnode

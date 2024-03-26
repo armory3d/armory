@@ -1,9 +1,14 @@
 package armory.logicnode;
 
+#if arm_debug
+import armory.trait.internal.DebugConsole;
+#end
+
 class MergedMouseNode extends LogicNode {
 
 	public var property0: String;
 	public var property1: String;
+	public var property2: Bool;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -12,6 +17,10 @@ class MergedMouseNode extends LogicNode {
 	}
 
 	function update() {
+		#if arm_debug
+			if (!property2 && DebugConsole.isDebugConsoleHovered && property0 != "moved") return;
+		#end
+
 		var mouse = iron.system.Input.getMouse();
 		var b = false;
 		switch (property0) {
@@ -28,6 +37,10 @@ class MergedMouseNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
+		#if arm_debug
+			if (!property2 && DebugConsole.isDebugConsoleHovered && property0 != "moved") return false;
+		#end
+
 		var mouse = iron.system.Input.getMouse();
 		switch (property0) {
 		case "started":

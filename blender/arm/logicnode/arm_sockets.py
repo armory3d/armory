@@ -633,7 +633,7 @@ ArmVectorSocketInterface = _make_socket_interface('ArmVectorSocketInterface', 'A
 ArmAnySocketInterface = _make_socket_interface('ArmAnySocketInterface', 'ArmAnySocket')
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ArmActionSocketInterface,
     ArmAnimSocketInterface,
     ArmRotationSocketInterface,
@@ -662,4 +662,4 @@ REG_CLASSES = (
     ArmVectorSocket,
     ArmAnySocket,
 )
-register, unregister = bpy.utils.register_classes_factory(REG_CLASSES)
+register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

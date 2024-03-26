@@ -26,6 +26,7 @@ class WalkNavigation extends Trait {
 		notifyOnInit(init);
 	}
 
+	#if arm_debug @:keep #end
 	function init() {
 		keyboard = Input.getKeyboard();
 		gamepad = Input.getGamepad();

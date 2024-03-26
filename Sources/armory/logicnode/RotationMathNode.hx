@@ -54,7 +54,7 @@ class RotationMathNode extends LogicNode {
 			}
 			case "Amplify": {
 				var v1: Quat = inputs[0].get();
-				var v2: Float = inputs[1].get();
+				var v2: Null<Float> = inputs[1].get();
 				if ((v1 == null) || (v2 == null)) return null;
 				res_q.setFrom(v1);
 				var fac2 = Math.sqrt(1- res_q.w*res_q.w);
@@ -78,7 +78,11 @@ class RotationMathNode extends LogicNode {
 				//var from = q;
 				var from: Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
-				var f: Float = inputs[2].get();
+				#if js
+				var f: Null<Float> = inputs[2].get();
+				#else
+				var f: Null<Single> = inputs[2].get();
+				#end
 				if ((from == null) || (f == null) || (to == null)) return null;
 				res_q = res_q.lerp(from, to, f);
 			}
@@ -86,7 +90,11 @@ class RotationMathNode extends LogicNode {
 				//var from = q;
 				var from:Quat = inputs[0].get();
 				var to: Quat = inputs[1].get();
-				var f: Float = inputs[2].get();
+				#if js
+				var f: Null<Float> = inputs[2].get();
+				#else
+				var f: Null<Single> = inputs[2].get();
+				#end
 				if ((from == null) || (f == null) || (to == null)) return null;
 				res_q = res_q.slerp(from, to, f);
 			}

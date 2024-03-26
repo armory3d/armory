@@ -507,6 +507,7 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
         # Append LDR define
         if disable_hdr:
             world.world_defs += '_EnvLDR'
+            assets.add_khafile_def("arm_envldr")
 
     wrd = bpy.data.worlds['Arm']
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
