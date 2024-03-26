@@ -9,10 +9,6 @@ class RenderPathDeferred {
 
 	static var path: RenderPath;
 
-	#if (rp_voxels != "Off")
-	static var res_pre_clear = true;
-	#end
-
 	#if rp_bloom
 	static var bloomDownsampler: Downsampler;
 	static var bloomUpsampler: Upsampler;
@@ -614,8 +610,8 @@ class RenderPathDeferred {
 			Inc.computeVoxelsTemporal();
 			Inc.computeVoxelsSDF();
 
-			if (res_pre_clear == true) {
-				res_pre_clear = false;
+			if (armory.renderpath.RenderPathCreator.res_pre_clear == true) {
+				armory.renderpath.RenderPathCreator.res_pre_clear = false;
 				#if (rp_voxels == "Voxel GI")
 				path.clearImage("voxels_diffuse", 0x00000000);
 				path.clearImage("voxels_specular", 0x00000000);

@@ -59,6 +59,7 @@ class RenderPathCreator {
 
 	#if (rp_voxels != "Off")
 	public static var pre_clear = true;
+	public static var res_pre_clear = true;
 	public static var clipmapLevel = 0;
 	public static var clipmaps:Array<Clipmap>;
 	#end
