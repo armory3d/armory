@@ -46,12 +46,12 @@ vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCo
 	tc.y = (tc.y + clipmap_index) / voxelgiClipmapCount;
 
 	if (precomputed_direction == 0) {
-		col = direction_weight.x * texture(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z))
-			+ direction_weight.y * texture(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z))
-			+ direction_weight.z * texture(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z));
+		col = direction_weight.x * textureLod(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z), 0.0)
+			+ direction_weight.y * textureLod(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z), 0.0)
+			+ direction_weight.z * textureLod(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z), 0.0);
 	}
 	else
-		col = texture(voxels, tc);
+		col = textureLod(voxels, tc, 0.0);
 
 	col *= step_dist / float(clipmaps[int(clipmap_index * 10)]);
 
@@ -70,12 +70,12 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 	tc.y = (tc.y + clipmap_index) / voxelgiClipmapCount;
 
 	if (precomputed_direction == 0) {
-		opac = direction_weight.x * texture(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z)).r
-			+ direction_weight.y * texture(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z)).r
-			+ direction_weight.z * texture(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z)).r;
+		opac = direction_weight.x * textureLod(voxels, vec3(tc.x + face_offset.x, tc.y, tc.z), 0.0).r
+			+ direction_weight.y * textureLod(voxels, vec3(tc.x + face_offset.y, tc.y, tc.z), 0.0).r
+			+ direction_weight.z * textureLod(voxels, vec3(tc.x + face_offset.z, tc.y, tc.z), 0.0).r;
 	}
 	else
-		opac = texture(voxels, tc).r;
+		opac = textureLod(voxels, tc, 0.0).r;
 
 	opac *= step_dist / float(clipmaps[int(clipmap_index * 10)]);
 
@@ -124,7 +124,7 @@ vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
 			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
+			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
 		float a = 1.0 - alpha;

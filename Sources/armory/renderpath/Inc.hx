@@ -599,6 +599,7 @@ class Inc {
 				if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
 					t.width = res * (6 + 16);
 					t.height = res * Main.voxelgiClipmapCount;
+					t.mipmaps = true;
 				}
 				else {
 					t.width = res * 6;
@@ -611,6 +612,7 @@ class Inc {
 					t.format = "RGBA64";
 					t.width = res * (6 + 16);
 					t.height = res * Main.voxelgiClipmapCount;
+					t.mipmaps = true;
 				}
 				else {
 					t.format = "R32";
