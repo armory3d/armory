@@ -83,7 +83,6 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 }
 #endif
 
-
 #ifdef _VoxelGI
 vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 dir, const int precomputed_direction, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
     vec3 color = vec3(0.0);
@@ -145,7 +144,6 @@ vec4 traceCone(sampler3D voxels, sampler3D voxelsSDF, vec3 origin, vec3 n, vec3 
 	}
     return vec4(color, alpha);
 }
-
 
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sum = 0.0;

@@ -568,7 +568,6 @@ def make_forward(con_mesh):
                     frag.write(f'fragColor[{index}] = vec4(ior, opacity, 0.0, 0.0);')
                 else:
                     frag.write(f'fragColor[{index}] = vec4(1.0, 1.0, 0.0, 0.0);')
-
         else:
             frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
