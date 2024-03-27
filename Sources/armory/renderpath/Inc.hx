@@ -98,6 +98,7 @@ class Inc {
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh5:kha.compute.Shader = null;
 	static var voxel_ta5:kha.compute.TextureUnit;
+	static var voxel_te5:kha.compute.TextureUnit;
 	static var voxel_ca5:kha.compute.ConstantLocation;
 	static var voxel_cb5:kha.compute.ConstantLocation;
 	static var voxel_cc5:kha.compute.ConstantLocation;
@@ -605,7 +606,7 @@ class Inc {
 			#else
 			{
 				if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-					t.format = "RGBA64";
+					t.format = "RGBA32";
 					t.width = res * (6 + 16);
 					t.height = res * Main.voxelgiClipmapCount;
 					t.mipmaps = true;
@@ -840,6 +841,7 @@ class Inc {
 		if (voxel_sh5 == null) {
 			voxel_sh5 = path.getComputeShader("voxel_light");
 			voxel_ta5 = voxel_sh5.getTextureUnit("voxelsLight");
+			voxel_te5 = voxel_sh5.getTextureUnit("voxelsNor");
 
 	 		voxel_ca5 = voxel_sh5.getConstantLocation("clipmaps");
 			voxel_cb5 = voxel_sh5.getConstantLocation("clipmapLevel");
@@ -1276,6 +1278,7 @@ class Inc {
 	 		kha.compute.Compute.setShader(voxel_sh5);
 
 			kha.compute.Compute.setTexture(voxel_ta5, rts.get("voxelsLight").image, kha.compute.Access.Write);
+			kha.compute.Compute.setTexture(voxel_te5, rts.get("voxelsNor").image, kha.compute.Access.Read);
 
 			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 			for (i in 0...Main.voxelgiClipmapCount) {

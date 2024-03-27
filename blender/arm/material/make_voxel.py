@@ -144,7 +144,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
+    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
@@ -206,7 +206,7 @@ def make_gi(context_id):
     frag.write('uvw = (uvw * 0.5 + 0.5);')
     frag.write('if(any(notEqual(uvw, clamp(uvw, 0.0, 1.0)))) return;')
     frag.write('vec3 writecoords = floor(uvw * voxelgiResolution);')
-    frag.write('vec3 aniso_direction = normalize(voxnormal);')
+    frag.write('vec3 aniso_direction = voxnormal;')
     frag.write('uvec3 face_offsets = uvec3(')
     frag.write('	aniso_direction.x > 0 ? 0 : 1,')
     frag.write('	aniso_direction.y > 0 ? 2 : 3,')
