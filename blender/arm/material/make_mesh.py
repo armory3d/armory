@@ -547,10 +547,10 @@ def make_forward(con_mesh):
 
     if not blend:
         mrt = 0  # mrt: multiple render targets
-        if rpdat.rp_ssr or rpdat.rp_voxels == "Voxel GI":
-            mrt += 1
+        if rpdat.rp_ssr:
+            mrt = 1
         if rpdat.rp_ss_refraction:
-            mrt += 1
+            mrt = 2
         if mrt != 0:
             index = 0
             # Store light gbuffer for post-processing
@@ -672,10 +672,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
 
-    #if '_VoxelGI' in wrd.world_defs:
-    #    frag.write('vec3 indirect = vec3(0.0);')
-    #else:
-    frag.write('vec3 indirect = envl;')
+    if '_VoxelGI' in wrd.world_defs:
+        frag.write('vec3 indirect = vec3(0.0);')
+    else:
+        frag.write('vec3 indirect = envl;')
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
