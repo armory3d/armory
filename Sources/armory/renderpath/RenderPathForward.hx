@@ -111,7 +111,7 @@ class RenderPathForward {
 				t.name = "lbuffer1";
 				t.width = 0;
 				t.height = 0;
-				t.format = "RGBA64";
+				t.format = Inc.getHdrFormat();
 				t.displayp = Inc.getDisplayp();
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
@@ -147,7 +147,7 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "DEPTH16";
+				t.format = "R32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}

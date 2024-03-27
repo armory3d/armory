@@ -29,7 +29,7 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
-				},
+				}
 			],
 			"vertex_shader": "../include/pass_viewray2.vert.glsl",
 			"fragment_shader": "ssrefr_pass.frag.glsl"

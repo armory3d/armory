@@ -544,9 +544,9 @@ def make_forward(con_mesh):
     if not blend:
         mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
-            mrt += 1
+            mrt = 1
         if rpdat.rp_ss_refraction:
-            mrt += 1
+            mrt = 2
         if mrt != 0:
             # Store light gbuffer for post-processing
             frag.add_out(f'vec4 fragColor[{mrt}+1]')
