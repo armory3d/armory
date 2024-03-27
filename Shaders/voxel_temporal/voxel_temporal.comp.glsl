@@ -43,7 +43,7 @@ uniform mat4 LVP;
 #endif
 
 uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDF;
+uniform layout(r8) image3D SDF;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(r32ui) uimage3D voxelsNor;
@@ -89,10 +89,7 @@ uniform layout(r8) image3D voxelsB;
 uniform layout(r8) image3D voxelsOut;
 #endif
 
-uniform layout(r8) image3D SDF;
-
 uniform int clipmapLevel;
-
 uniform float clipmaps[voxelgiClipmapCount * 10];
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
@@ -106,7 +103,9 @@ void main() {
 	float aniso_colors[6];
 	#endif
 
+	#ifdef _VoxelGI
 	float sdf = float(clipmaps[int(clipmapLevel * 10)]) * 2.0 * voxelgiResolution.x;
+	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
@@ -214,7 +213,7 @@ void main() {
 
 			envl.rgb *= envmapStrength * occspec.x;
 
-			vec4 trace = traceDiffuse(wposition, normal, voxelsSampler, voxelsSDF, clipmaps);
+			vec4 trace = traceDiffuse(wposition, normal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
 			radiance.rgb *= light.rgb / PI + indirect.rgb;
 			radiance.rgb += emission.rgb;
@@ -267,8 +266,6 @@ void main() {
 				sdf = 0.0;
 			#else
 			aniso_colors[i] = opac;
-			if (opac > 0)
-				sdf = 0.0;
 			#endif
 		}
 		else {
@@ -303,7 +300,9 @@ void main() {
 		imageStore(voxelsOut, dst, vec4(opac));
 		#endif
 	}
+	#ifdef _VoxelGI
 	ivec3 dst_sdf = ivec3(gl_GlobalInvocationID.xyz);
 	dst_sdf.y += clipmapLevel * res;
 	imageStore(SDF, dst_sdf, vec4(sdf));
+	#endif
 }

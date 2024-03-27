@@ -680,14 +680,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
-        frag.add_uniform('sampler3D voxelsSDF')
+        if '_VoxelGI' in wrd.world_defs:
+            frag.add_uniform('sampler3D voxelsSDF')
         frag.add_uniform('float clipmaps[voxelgiClipmapCount * 10]', link='_clipmaps')
 
     if '_VoxelAOvar' in wrd.world_defs:
-        frag.write('indirect *= (1.0 - traceAO(wposition, n, voxels, voxelsSDF, clipmaps).r);')
+        frag.write('indirect *= (1.0 - traceAO(wposition, n, voxels, clipmaps).r);')
 
     if '_VoxelGI' in wrd.world_defs:
-        frag.write('indirect += traceDiffuse(wposition, n, voxels, voxelsSDF, clipmaps).rgb * albedo * voxelgiDiff;')
+        frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
         frag.write('if (roughness < 1.0 && specular > 0.0)')
         frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, -vVec, roughness, clipmaps).rgb * specular * voxelgiRefl;')
 

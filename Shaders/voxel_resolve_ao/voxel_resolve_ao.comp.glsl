@@ -33,7 +33,6 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform sampler3D voxelsSDF;
 uniform layout(r8) image2D voxels_ao;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
@@ -68,7 +67,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	float occ = traceAO(P, n, voxels, voxelsSDF, clipmaps);
+	float occ = traceAO(P, n, voxels, clipmaps);
 
 	imageStore(voxels_ao, ivec2(pixel), vec4(occ));
 }

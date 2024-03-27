@@ -607,9 +607,10 @@ class RenderPathDeferred {
 			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsLight();
 			#end
-
 			Inc.computeVoxelsTemporal();
+			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
+			#end
 
 			if (armory.renderpath.RenderPathCreator.res_pre_clear == true) {
 				armory.renderpath.RenderPathCreator.res_pre_clear = false;
@@ -675,7 +676,6 @@ class RenderPathDeferred {
 			#end
 			#if (arm_voxelgi_shadows)
 			path.bindTarget("voxelsOut", "voxels");
-			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
 		}
 		#end

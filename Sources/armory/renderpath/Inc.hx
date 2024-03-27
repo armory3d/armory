@@ -28,7 +28,6 @@ class Inc {
 	static var voxel_ta1:kha.compute.TextureUnit;
 	static var voxel_tb1:kha.compute.TextureUnit;
 	static var voxel_tc1:kha.compute.TextureUnit;
-	static var voxel_th1:kha.compute.TextureUnit;
 	static var m = iron.math.Mat4.identity();
 	static var voxel_ca1:kha.compute.ConstantLocation;
 	static var voxel_cb1:kha.compute.ConstantLocation;
@@ -37,17 +36,17 @@ class Inc {
 	static var voxel_te1:kha.compute.TextureUnit;
 	static var voxel_tf1:kha.compute.TextureUnit;
 	static var voxel_tg1:kha.compute.TextureUnit;
+	static var voxel_th1:kha.compute.TextureUnit;
 	static var voxel_ti1:kha.compute.TextureUnit;
 	static var voxel_tj1:kha.compute.TextureUnit;
-	static var voxel_tk1:kha.compute.TextureUnit;
 	#if (rp_gbuffer2 && arm_deferred)
-	static var voxel_tl1:kha.compute.TextureUnit;
+	static var voxel_tk1:kha.compute.TextureUnit;
 	#end
 	#if arm_brdf
-	static var voxel_tm1:kha.compute.TextureUnit;
+	static var voxel_tl1:kha.compute.TextureUnit;
 	#end
 	#if arm_radiance
-	static var voxel_tn1:kha.compute.TextureUnit;
+	static var voxel_tm1:kha.compute.TextureUnit;
 	static var voxel_ce1:kha.compute.ConstantLocation;
 	#end
 	#if arm_irradiance
@@ -59,7 +58,6 @@ class Inc {
 	#end
 	static var voxel_cg1:kha.compute.ConstantLocation;
 	static var voxel_ch1:kha.compute.ConstantLocation;
-	#end //gi
 	static var read_sdf = "voxelsSDF";
 	static var write_sdf = "voxelsSDF";
 	static var voxel_sh2:kha.compute.Shader = null;
@@ -68,7 +66,7 @@ class Inc {
 	static var voxel_ca2:kha.compute.ConstantLocation;
 	static var voxel_cb2:kha.compute.ConstantLocation;
 	static var voxel_cc2:kha.compute.ConstantLocation;
-
+	#end //gi
 	#if arm_deferred
 	static var voxel_sh3:kha.compute.Shader = null;
 	static var voxel_ta3:kha.compute.TextureUnit;
@@ -753,24 +751,23 @@ class Inc {
 	 		voxel_ca1 = voxel_sh1.getConstantLocation("clipmaps");
 	 		voxel_cb1 = voxel_sh1.getConstantLocation("clipmapLevel");
 
-			voxel_th1 = voxel_sh1.getTextureUnit("SDF");
-
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("voxelsNor");
 			voxel_tf1 = voxel_sh1.getTextureUnit("voxelsEmission");
 			voxel_tg1 = voxel_sh1.getTextureUnit("voxelsLight");
-			voxel_ti1 = voxel_sh1.getTextureUnit("voxelsSDF");
-			voxel_tj1 = voxel_sh1.getTextureUnit("gbuffer0");
-			voxel_tk1 = voxel_sh1.getTextureUnit("gbuffer1");
+			voxel_th1 = voxel_sh1.getTextureUnit("SDF");
+
+			voxel_ti1 = voxel_sh1.getTextureUnit("gbuffer0");
+			voxel_tj1 = voxel_sh1.getTextureUnit("gbuffer1");
 			#if (rp_gbuffer2 && arm_deferred)
-			voxel_tl1 = voxel_sh1.getTextureUnit("gbuffer2");
+			voxel_tk1 = voxel_sh1.getTextureUnit("gbuffer2");
 			#end
 			#if arm_brdf
-			voxel_tm1 = voxel_sh1.getTextureUnit("senvmapBrdf");
+			voxel_tl1 = voxel_sh1.getTextureUnit("senvmapBrdf");
 			#end
 			#if arm_radiance
-			voxel_tn1 = voxel_sh1.getTextureUnit("senvmapRadiance");
+			voxel_tm1 = voxel_sh1.getTextureUnit("senvmapRadiance");
 			voxel_ce1 = voxel_sh1.getConstantLocation("envmapNumMipmaps");
 			#end
 			#if arm_irradiance
@@ -784,6 +781,7 @@ class Inc {
 			voxel_ch1 = voxel_sh1.getConstantLocation("postprocess_resolution");
 			#end
 		}
+		#if (rp_voxels == "Voxel GI")
 		if (voxel_sh2 == null)
 		{
 			voxel_sh2 = path.getComputeShader("voxel_sdf_jumpflood");
@@ -794,6 +792,7 @@ class Inc {
 			voxel_cb2 = voxel_sh2.getConstantLocation("clipmapLevel");
 			voxel_cc2 = voxel_sh2.getConstantLocation("jump_size");
 		}
+		#end
 		#if arm_deferred
 		if (voxel_sh3 == null)
 		{
@@ -805,11 +804,11 @@ class Inc {
 			voxel_ta3 = voxel_sh3.getTextureUnit("voxels");
 			voxel_tb3 = voxel_sh3.getTextureUnit("gbufferD");
 			voxel_tc3 = voxel_sh3.getTextureUnit("gbuffer0");
-			voxel_td3 = voxel_sh3.getTextureUnit("voxelsSDF");
 			#if (rp_voxels == "Voxel AO")
-			voxel_te3 = voxel_sh3.getTextureUnit("voxels_ao");
+			voxel_td3 = voxel_sh3.getTextureUnit("voxels_ao");
 			#else
-			voxel_te3 = voxel_sh3.getTextureUnit("voxels_diffuse");
+			voxel_td3 = voxel_sh3.getTextureUnit("voxels_diffuse");
+			voxel_te3 = voxel_sh3.getTextureUnit("voxelsSDF");
 			#end
 	 		voxel_ca3 = voxel_sh3.getConstantLocation("clipmaps");
 	 		voxel_cb3 = voxel_sh3.getConstantLocation("InvVP");
@@ -912,13 +911,12 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_ta1, rts.get("voxels").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tb1, rts.get("voxelsOutB").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tc1, rts.get("voxelsOut").image, kha.compute.Access.Write);
-		kha.compute.Compute.setTexture(voxel_th1, rts.get("voxelsSDF").image, kha.compute.Access.Read);
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsNor").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tf1, rts.get("voxelsEmission").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tg1, rts.get("voxelsLight").image, kha.compute.Access.Read);
-		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("voxelsSDF").image);
+		kha.compute.Compute.setTexture(voxel_th1, rts.get("voxelsSDF").image, kha.compute.Access.Read);
 		#end
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
@@ -941,20 +939,20 @@ class Inc {
 
 		#if (rp_voxels == "Voxel GI")
 		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("gbuffer0").image);
-		kha.compute.Compute.setSampledTexture(voxel_tk1, rts.get("gbuffer1").image);
+		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("gbuffer0").image);
+		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("gbuffer1").image);
 		#else
-		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("lbuffer1").image);
-		kha.compute.Compute.setSampledTexture(voxel_tk1, rts.get("lbuffer0").image);
+		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("lbuffer1").image);
+		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("lbuffer0").image);
 		#end
 		#if (rp_gbuffer2 && arm_deferred)
-		kha.compute.Compute.setSampledTexture(voxel_tl1, rts.get("gbuffer2").image);
+		kha.compute.Compute.setSampledTexture(voxel_tk1, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf
-		kha.compute.Compute.setSampledTexture(voxel_tm1, iron.Scene.active.embedded.get("brdf.png"));
+		kha.compute.Compute.setSampledTexture(voxel_tl1, iron.Scene.active.embedded.get("brdf.png"));
 		#end
 		#if arm_radiance
-		kha.compute.Compute.setSampledTexture(voxel_tn1, iron.Scene.active.world.probe.radiance);
+		kha.compute.Compute.setSampledTexture(voxel_tm1, iron.Scene.active.world.probe.radiance);
 		var w = iron.Scene.active.world;
 		var i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1;
 		kha.compute.Compute.setFloat(voxel_ce1, i);
@@ -994,6 +992,7 @@ class Inc {
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 	}
 
+	#if (rp_voxels == "Voxel GI")
 	public static function computeVoxelsSDF() {
 		var rts = path.renderTargets;
 	 	var res = Inc.getVoxelRes();
@@ -1038,6 +1037,7 @@ class Inc {
 			}
 		}
 	}
+	#end
 
 	#if arm_deferred
 	#if (rp_voxels == "Voxel AO")
@@ -1053,8 +1053,7 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		kha.compute.Compute.setSampledTexture(voxel_td3, rts.get("voxelsSDF").image);
-		kha.compute.Compute.setTexture(voxel_te3, rts.get("voxels_ao").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {
@@ -1126,8 +1125,8 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		kha.compute.Compute.setSampledTexture(voxel_td3, rts.get("voxelsSDF").image);
-		kha.compute.Compute.setTexture(voxel_te3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
+		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("voxelsSDF").image);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {

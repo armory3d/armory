@@ -415,9 +415,10 @@ class RenderPathForward {
 			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsLight();
 			#end
-
 			Inc.computeVoxelsTemporal();
+			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
+			#end
 		}
 		#end
 
@@ -455,7 +456,9 @@ class RenderPathForward {
 		if (armory.data.Config.raw.rp_gi != false)
 		{
 			path.bindTarget("voxelsOut", "voxels");
+			#if (rp_voxels == "Voxel GI")
 			path.bindTarget("voxelsSDF", "voxelsSDF");
+			#end
 		}
 		#end
 
