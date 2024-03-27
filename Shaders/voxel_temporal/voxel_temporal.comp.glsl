@@ -56,7 +56,6 @@ uniform sampler2DShadow shadowMapSpot;
 uniform samplerCubeShadow shadowMapPoint;
 #endif
 
-#ifdef _Deferred
 #include "std/shirr.glsl"
 uniform float envmapStrength;
 #ifdef _Irr
@@ -75,13 +74,13 @@ uniform vec3 backgroundCol;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
+#ifdef _Deferred
 uniform sampler2D gbuffer2;
 #endif
-uniform sampler2D gbufferD;
+#endif
 
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;
-#endif
 #endif
 
 #ifdef _VoxelAOvar
@@ -138,7 +137,6 @@ void main() {
 			vec4 emission = convRGBA8ToVec4(imageLoad(voxelsEmission, src).r);
 			vec4 light = convRGBA8ToVec4(imageLoad(voxelsLight, src).r);
 
-			#ifdef _Deferred
 			const vec2 pixel = gl_GlobalInvocationID.xy;
 			const vec2 uv = (pixel + 0.5) / postprocess_resolution;
 
@@ -156,8 +154,10 @@ void main() {
 			vec3 v = normalize(eye - wposition);
 			float dotNV = max(dot(normal, v), 0.0);
 
+			#ifdef _Deferred
 			#ifdef _gbuffer2
 				vec4 g2 = textureLod(gbuffer2, uv, 0.0);
+			#endif
 			#endif
 
 			#ifdef _Brdf
@@ -168,12 +168,14 @@ void main() {
 			#ifdef _Irr
 				vec3 envl = shIrradiance(normal, shirr);
 
+				#ifdef _Deferred
 				#ifdef _gbuffer2
 					if (g2.b < 0.5) {
 						envl = envl;
 					} else {
 						envl = vec3(0.0);
 					}
+				#endif
 				#endif
 
 				#ifdef _EnvTex
@@ -211,9 +213,6 @@ void main() {
 			#endif
 
 			envl.rgb *= envmapStrength * occspec.x;
-			#else
-			vec3 envl = vec3(0.0);
-			#endif
 
 			vec4 trace = traceDiffuse(wposition, normal, voxelsSampler, voxelsSDF, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);

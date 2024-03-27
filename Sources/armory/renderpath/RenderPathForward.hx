@@ -22,7 +22,7 @@ class RenderPathForward {
 		#if rp_render_to_texture
 		{
 			path.setTarget("lbuffer0", [
-				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
+				#if (rp_ssr || rp_ssrefr || rp_voxels == "Voxel GI") "lbuffer1",  #end
 				#if rp_ssrefr "gbuffer_refraction" #end]
 			);
 		}
@@ -90,7 +90,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_render_to_texture
+		#if (rp_render_to_texture || rp_voxels == "Voxel GI")
 		{
 			path.createDepthBuffer("main", "DEPTH24");
 
@@ -104,7 +104,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if (rp_ssr || rp_ssrefr)
+			#if (rp_ssr || rp_ssrefr || rp_voxels == "Voxel GI")
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";

@@ -547,7 +547,7 @@ def make_forward(con_mesh):
 
     if not blend:
         mrt = 0  # mrt: multiple render targets
-        if rpdat.rp_ssr:
+        if rpdat.rp_ssr or rpdat.rp_voxels == "Voxel GI":
             mrt += 1
         if rpdat.rp_ss_refraction:
             mrt += 1
@@ -560,7 +560,7 @@ def make_forward(con_mesh):
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             index += 1
-            if rpdat.rp_ssr:
+            if rpdat.rp_ssr or rpdat.rp_voxels == "Voxel GI":
                 frag.write(f'fragColor[{index}] = vec4(n.xy, roughness, metallic);')
                 index += 1
             if rpdat.rp_ss_refraction:
@@ -641,11 +641,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
         frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance')
-        frag.write('vec3 indirect = shIrradiance(n, shirr);')
+        frag.write('vec3 envl = shIrradiance(n, shirr);')
         if '_EnvTex' in wrd.world_defs:
-            frag.write('indirect /= PI;')
+            frag.write('envl /= PI;')
     else:
-        frag.write('vec3 indirect = vec3(0.0);')
+        frag.write('vec3 envl = vec3(0.0);')
 
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
@@ -655,20 +655,27 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
 
     if '_EnvLDR' in wrd.world_defs:
-        frag.write('indirect = pow(indirect, vec3(2.2));')
+        frag.write('envl = pow(envl, vec3(2.2));')
         if '_Rad' in wrd.world_defs:
             frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
 
-    frag.write('indirect *= albedo;')
+    frag.write('envl *= albedo;')
 
+    if '_Brdf' in wrd.world_defs:
+        frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
     if '_Rad' in wrd.world_defs:
-        frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('indirect += f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
 
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
-    frag.write('indirect *= envmapStrength * occlusion;')
+    frag.write('envl *= envmapStrength * occlusion;')
+
+    if '_VoxelGI' in wrd.world_defs:
+        frag.write('vec3 indirect = vec3(0.0);')
+    else:
+        frag.write('vec3 indirect = envl;')
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')

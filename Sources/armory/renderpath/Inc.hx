@@ -38,10 +38,9 @@ class Inc {
 	static var voxel_tf1:kha.compute.TextureUnit;
 	static var voxel_tg1:kha.compute.TextureUnit;
 	static var voxel_ti1:kha.compute.TextureUnit;
-	#if arm_deferred
 	static var voxel_tj1:kha.compute.TextureUnit;
 	static var voxel_tk1:kha.compute.TextureUnit;
-	#if rp_gbuffer2
+	#if (rp_gbuffer2 && arm_deferred)
 	static var voxel_tl1:kha.compute.TextureUnit;
 	#end
 	#if arm_brdf
@@ -60,7 +59,6 @@ class Inc {
 	#end
 	static var voxel_cg1:kha.compute.ConstantLocation;
 	static var voxel_ch1:kha.compute.ConstantLocation;
-	#end //deferred
 	#end //gi
 	static var read_sdf = "voxelsSDF";
 	static var write_sdf = "voxelsSDF";
@@ -763,10 +761,9 @@ class Inc {
 			voxel_tf1 = voxel_sh1.getTextureUnit("voxelsEmission");
 			voxel_tg1 = voxel_sh1.getTextureUnit("voxelsLight");
 			voxel_ti1 = voxel_sh1.getTextureUnit("voxelsSDF");
-			#if arm_deferred
 			voxel_tj1 = voxel_sh1.getTextureUnit("gbuffer0");
 			voxel_tk1 = voxel_sh1.getTextureUnit("gbuffer1");
-			#if rp_gbuffer2
+			#if (rp_gbuffer2 && arm_deferred)
 			voxel_tl1 = voxel_sh1.getTextureUnit("gbuffer2");
 			#end
 			#if arm_brdf
@@ -785,7 +782,6 @@ class Inc {
 			#end
 			voxel_cg1 = voxel_sh1.getConstantLocation("eye");
 			voxel_ch1 = voxel_sh1.getConstantLocation("postprocess_resolution");
-			#end
 			#end
 		}
 		if (voxel_sh2 == null)
@@ -947,6 +943,10 @@ class Inc {
 		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("gbuffer0").image);
 		kha.compute.Compute.setSampledTexture(voxel_tk1, rts.get("gbuffer1").image);
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_tj1, rts.get("lbuffer1").image);
+		kha.compute.Compute.setSampledTexture(voxel_tk1, rts.get("lbuffer0").image);
+		#end
 		#if (rp_gbuffer2 && arm_deferred)
 		kha.compute.Compute.setSampledTexture(voxel_tl1, rts.get("gbuffer2").image);
 		#end
@@ -989,7 +989,6 @@ class Inc {
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_ch1, width, height);
-		#end
 		#end
 
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
