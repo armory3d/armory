@@ -509,6 +509,12 @@ class Inc {
 			#end
 		}
 		#end
+		#if (rp_voxels != "Off")
+		path.bindTarget("voxelsOut", "voxels");
+		#if (rp_voxels == "Voxel GI")
+		path.bindTarget("voxelsSDF", "voxelsSDF");
+		#end
+		#end
 		path.drawMeshes("translucent");
 		#if rp_render_to_texture
 		{

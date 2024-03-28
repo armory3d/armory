@@ -767,12 +767,6 @@ class RenderPathDeferred {
 
 		#if (rp_translucency && !rp_ssrefr)
 		{
-			#if (rp_voxels != "Off")
-			path.bindTarget("voxelsOut", "voxels");
-			#if (rp_voxels == "Voxel GI")
-			path.bindTarget("voxelsSDF", "voxelsSDF");
-			#end
-			#end
 			Inc.drawTranslucency("tex");
 		}
 		#end
