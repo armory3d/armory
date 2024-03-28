@@ -75,7 +75,7 @@ def make(context_id, rpasses):
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
-    if rid == 'Forward' or blend:
+    if rid == 'Forward' or blend or 'refraction' in rpasses:
         if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
         elif rpdat.arm_material_model == 'Solid':
