@@ -22,7 +22,7 @@ class RenderPathForward {
 		#if rp_render_to_texture
 		{
 			path.setTarget("lbuffer0", [
-				#if (rp_ssr || rp_ssrefr || rp_voxels == "Voxel GI") "lbuffer1",  #end
+				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
 				#if rp_ssrefr "gbuffer_refraction" #end]
 			);
 		}
@@ -52,7 +52,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_translucency
+		#if (rp_translucency && !rp_ssrefr)
 		{
 			RenderPathCreator.setTargetMeshes();
 			Inc.drawTranslucency("lbuffer0");
@@ -90,7 +90,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_render_to_texture || rp_voxels == "Voxel GI")
+		#if (rp_render_to_texture)
 		{
 			path.createDepthBuffer("main", "DEPTH24");
 
@@ -104,7 +104,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if (rp_ssr || rp_ssrefr || rp_voxels == "Voxel GI")
+			#if (rp_ssr || rp_ssrefr)
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";
@@ -184,7 +184,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_translucency)
+		#if (rp_translucency && !rpssrefr)
 		{
 			Inc.initTranslucency();
 		}
@@ -211,12 +211,6 @@ class RenderPathForward {
 				clipmap.offset_prev = new iron.math.Vec3(0.0);
 				armory.renderpath.RenderPathCreator.clipmaps.push(clipmap);
 			}
-			Inc.initGI();
-			#if arm_voxelgi_temporal
-			{
-				Inc.initGI("voxelsB");
-			}
-			#end
 		}
 		#end
 
@@ -482,33 +476,6 @@ class RenderPathForward {
 		#end
 		#if rp_render_to_texture
 		{
-			#if rp_ssrefr
-			{
-				if (armory.data.Config.raw.rp_ssrefr != false)
-				{
-					path.setTarget("gbufferD1");
-					path.bindTarget("_main", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("refr");
-					path.bindTarget("lbuffer0", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					RenderPathCreator.setTargetMeshes();
-					path.drawMeshes("refraction");
-
-					path.setTarget("lbuffer0");
-					path.bindTarget("refr", "tex1");
-					path.bindTarget("lbuffer0", "tex");
-					path.bindTarget("_main", "gbufferD");
-					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer1", "gbuffer0");
-					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-				}
-			}
-			#end
-
 			#if rp_ssrefr
 			{
 				if (armory.data.Config.raw.rp_ssrefr != false)
