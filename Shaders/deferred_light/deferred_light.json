@@ -12,18 +12,18 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeSnap",
-					"link": "_cameraPositionSnap",
-					"ifdef": ["_VoxelGICam"]
-				},
-				{
 					"name": "voxelBlend",
 					"link": "_voxelBlend",
-					"ifdef": ["_VoxelGITemporal"]
+					"ifdef": ["_VoxelTemporal"]
 				},
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
+				},
+				{
+					"name": "clipmaps",
+					"link": "_clipmaps",
+					"ifdef": ["VoxelShadow"]
 				},
 				{
 					"name": "invVP",

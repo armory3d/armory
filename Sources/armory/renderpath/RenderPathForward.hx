@@ -9,9 +9,8 @@ class RenderPathForward {
 
 	static var path: RenderPath;
 
-	#if rp_voxels
-	static var voxels = "voxels";
-	static var voxelsLast = "voxels";
+	#if (rp_voxels != "Off")
+	static var res_pre_clear = true;
 	#end
 
 	#if rp_bloom
@@ -53,7 +52,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_translucency
+		#if (rp_translucency && !rp_ssrefr)
 		{
 			RenderPathCreator.setTargetMeshes();
 			Inc.drawTranslucency("lbuffer0");
@@ -91,7 +90,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_render_to_texture
+		#if (rp_render_to_texture)
 		{
 			path.createDepthBuffer("main", "DEPTH24");
 
@@ -111,7 +110,7 @@ class RenderPathForward {
 				t.name = "lbuffer1";
 				t.width = 0;
 				t.height = 0;
-				t.format = "RGBA64";
+				t.format = Inc.getHdrFormat();
 				t.displayp = Inc.getDisplayp();
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
@@ -147,7 +146,7 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "DEPTH16";
+				t.format = "R32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
@@ -185,20 +184,33 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_translucency)
+		#if (rp_translucency && !rp_ssrefr)
 		{
 			Inc.initTranslucency();
 		}
 		#end
 
-		#if rp_voxels
+		#if (rp_voxels != "Off")
 		{
-			Inc.initGI();
-			#if arm_voxelgi_temporal
-			{
-				Inc.initGI("voxelsB");
-			}
+			Inc.initGI("voxels");
+			Inc.initGI("voxelsOut");
+			Inc.initGI("voxelsOutB");
+			Inc.initGI("voxelsSDF");
+			Inc.initGI("voxelsSDFtmp");
+			#if (rp_voxels == "Voxel GI")
+			Inc.initGI("voxelsNor");
+			Inc.initGI("voxelsEmission");
+			Inc.initGI("voxelsLight");
 			#end
+			armory.renderpath.RenderPathCreator.clipmaps = new Array<Clipmap>();
+			for (i in 0...Main.voxelgiClipmapCount) {
+				var clipmap = new armory.renderpath.Clipmap();
+				clipmap.voxelSize = Main.voxelgiVoxelSize * Math.pow(2.0, i);
+				clipmap.extents = new iron.math.Vec3(0.0);
+				clipmap.center = new iron.math.Vec3(0.0);
+				clipmap.offset_prev = new iron.math.Vec3(0.0);
+				armory.renderpath.RenderPathCreator.clipmaps.push(clipmap);
+			}
 		}
 		#end
 
@@ -350,30 +362,56 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+		// Voxels
+		#if (rp_voxels != 'Off')
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			var voxelize = path.voxelize();
+			var path = RenderPath.active;
 
-			#if arm_voxelgi_temporal
-			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
+			Inc.computeVoxelsBegin();
 
-			if (voxelize) {
-				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
-				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+			if (armory.renderpath.RenderPathCreator.pre_clear == true)
+			{
+				#if (rp_voxels == "Voxel GI")
+				path.clearImage("voxelsNor", 0x00000000);
+				path.clearImage("voxelsEmission", 0x00000000);
+				path.clearImage("voxelsLight", 0x00000000);
+				#end
+				path.clearImage("voxels", 0x00000000);
+				path.clearImage("voxelsOut", 0x00000000);
+				path.clearImage("voxelsOutB", 0x00000000);
+				path.clearImage("voxelsSDF", 0x00000000);
+				path.clearImage("voxelsSDFtmp", 0x00000000);
+				armory.renderpath.RenderPathCreator.pre_clear = false;
 			}
+			else
+			{
+				#if (rp_voxels == "Voxel GI")
+				path.clearImage("voxelsNor", 0x00000000);
+				path.clearImage("voxelsEmission", 0x00000000);
+				#end
+				path.clearImage("voxels", 0x00000000);
+				Inc.computeVoxelsOffsetPrev();
+			}
+
+			path.setTarget("");
+			var res = Inc.getVoxelRes();
+			path.setViewport(res, res);
+
+			path.bindTarget("voxels", "voxels");
+			#if (rp_voxels == "Voxel GI")
+			path.bindTarget("voxelsNor", "voxelsNor");
+			path.bindTarget("voxelsEmission", "voxelsEmission");
 			#end
+			path.drawMeshes("voxel");
 
-			if (voxelize) {
-				var res = Inc.getVoxelRes();
-				var voxtex = voxels;
-
-				path.clearImage(voxtex, 0x00000000);
-				path.setTarget("");
-				path.setViewport(res, res);
-				path.bindTarget(voxtex, "voxels");
-				path.drawMeshes("voxel");
-				path.generateMipmaps(voxels);
-			}
+			#if (rp_voxels == "Voxel GI")
+			Inc.computeVoxelsLight();
+			#end
+			Inc.computeVoxelsTemporal();
+			#if (rp_voxels == "Voxel GI")
+			Inc.computeVoxelsSDF();
+			#end
 		}
 		#end
 
@@ -406,13 +444,13 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_voxels
+
+		#if (rp_voxels != "Off")
+		if (armory.data.Config.raw.rp_gi != false)
 		{
-			path.bindTarget(voxels, "voxels");
-			#if arm_voxelgi_temporal
-			{
-				path.bindTarget(voxelsLast, "voxelsLast");
-			}
+			path.bindTarget("voxelsOut", "voxels");
+			#if (rp_voxels == "Voxel GI")
+			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
 		}
 		#end

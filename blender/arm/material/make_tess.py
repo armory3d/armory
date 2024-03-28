@@ -18,7 +18,7 @@ def interpolate(tese, var, size, normalize=False, declare_out=False):
     s = '{0} {1}_0 = gl_TessCoord.x * tc_{1}[0];\n'.format(vec, var)
     s += '{0} {1}_1 = gl_TessCoord.y * tc_{1}[1];\n'.format(vec, var)
     s += '{0} {1}_2 = gl_TessCoord.z * tc_{1}[2];\n'.format(vec, var)
-    
+
     prep = ''
     if not declare_out:
         prep = vec + ' '

@@ -53,7 +53,6 @@ def make(context_id, rpasses, shadowmap=False):
     if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
-    
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)
 

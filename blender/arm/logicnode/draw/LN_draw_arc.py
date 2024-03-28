@@ -15,7 +15,7 @@ class DrawArcNode(ArmLogicTreeNode):
     @input Radius: The radius of the arc in pixels.
     @input Start Angle/End Angle: The angles in radians where the
         arc starts/ends, starting right of the arc's center.
-    @input Exterior Angle: Whether the angles describe an exterior angle.
+    @input Exterior Angle: Whether the angles describe an Exterior angle.
 
     @output Out: Activated after the arc has been drawn.
 
