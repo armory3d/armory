@@ -88,8 +88,7 @@ void main() {
 	for (int i = 0; i < 6; i++)
 	{
 		ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
-		ivec3 src = dst;
-		src.x += i * res;
+		dst.x += i * res;
 
 		vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
 		P = P * 2.0 - 1.0;
@@ -146,20 +145,6 @@ void main() {
 		light.rgb *= visibility * lightColor;
 		light = clamp(light, vec4(0.0), vec4(1.0));
 
-		vec3 wnormal = decNor(imageLoad(voxelsNor, src).r);
-		vec3 aniso_direction = -wnormal;
-		uvec3 face_offsets = uvec3(
-			aniso_direction.x > 0 ? 0 : 1,
-			aniso_direction.y > 0 ? 2 : 3,
-			aniso_direction.z > 0 ? 4 : 5
-		);
-		vec3 direction_weights = abs(wnormal);
-
-		if (direction_weights.x > 0.0)
-			imageAtomicMax(voxelsLight, dst + ivec3(face_offsets.x, 0, 0), convVec4ToRGBA8(light * direction_weights.x));
-		if (direction_weights.y > 0.0)
-			imageAtomicMax(voxelsLight, dst + ivec3(face_offsets.y, 0, 0), convVec4ToRGBA8(light * direction_weights.y));
-		if (direction_weights.z > 0.0)
-			imageAtomicMax(voxelsLight, dst + ivec3(face_offsets.z, 0, 0), convVec4ToRGBA8(light * direction_weights.z));
+		imageAtomicMax(voxelsLight, dst, convVec4ToRGBA8(light));
 	}
 }

@@ -44,7 +44,7 @@ uniform vec2 postprocess_resolution;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
-	vec2 uv = (pixel + vec2(0.5)) / postprocess_resolution;
+	vec2 uv = (pixel + 0.5) / postprocess_resolution;
 	#ifdef _InvY
 	uv.y = 1.0 - uv.y;
 	#endif

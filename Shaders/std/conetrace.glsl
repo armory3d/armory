@@ -22,7 +22,7 @@ THE SOFTWARE.
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-#include "std/voxels_constants.h"
+#include "std/voxels_constants.glsl"
 
 // References
 // https://github.com/Friduric/voxel-cone-tracing
@@ -166,10 +166,10 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 	return amount * voxelgiOcc;
 }
 
-
-vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10]) {
-	vec3 specularDir = reflect(viewDir, normal);
-	return traceCone(voxels, voxelsSDF, origin, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps) * voxelgiOcc;
+vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel) {
+	vec3 specularDir = reflect(-viewDir, normal);
+	vec3 P = origin + specularDir * (BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) * voxelgiStep;
+	return traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps) * voxelgiOcc;
 }
 
 /*
@@ -180,7 +180,6 @@ vec3 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sam
 }
 */
 #endif
-
 
 #ifdef _VoxelAOvar
 float traceConeAO(sampler3D voxels, vec3 origin, vec3 n, vec3 dir, const int precomputed_direction, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
