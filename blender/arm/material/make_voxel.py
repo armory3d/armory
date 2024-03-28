@@ -213,7 +213,7 @@ def make_gi(context_id):
     frag.write('	aniso_direction.y > 0 ? 2 : 3,')
     frag.write('	aniso_direction.z > 0 ? 4 : 5')
     frag.write('	) * voxelgiResolution;')
-    frag.write('vec3 direction_weights = abs(N);')
+    frag.write('vec3 direction_weights = abs(voxnormal);')
 
     frag.write('if (direction_weights.x > 0.0) {')
     frag.write('    uint basecol_direction = convVec4ToRGBA8(vec4(min(basecol * direction_weights.x, vec3(1.0)), 1.0));')
