@@ -375,16 +375,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "lbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.format = Inc.getHdrFormat();
-			t.displayp = Inc.getDisplayp();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-
+			//Normals
 			var t = new RenderTargetRaw();
 			t.name = "lbuffer1";
 			t.width = 0;
@@ -776,12 +767,6 @@ class RenderPathDeferred {
 
 		#if (rp_translucency && !rpssrefr)
 		{
-			#if (rp_voxels != "Off")
-			path.bindTarget("voxelsOut", "voxels");
-			#if (rp_voxels == "Voxel GI")
-			path.bindTarget("voxelsSDF", "voxelsSDF");
-			#end
-			#end
 			Inc.drawTranslucency("tex");
 		}
 		#end
