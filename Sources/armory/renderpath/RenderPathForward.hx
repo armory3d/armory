@@ -192,7 +192,7 @@ class RenderPathForward {
 
 		#if (rp_voxels != "Off")
 		{
-      Inc.initGI("voxels");
+			Inc.initGI("voxels");
 			Inc.initGI("voxelsOut");
 			Inc.initGI("voxelsOutB");
 			Inc.initGI("voxelsSDF");

@@ -674,7 +674,7 @@ class RenderPathDeferred {
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
 			path.bindTarget("voxels_specular", "voxels_specular");
 			#end
-			#if (arm_voxelgi_shadows)
+			#if arm_voxelgi_shadows
 			path.bindTarget("voxelsOut", "voxels");
 			#end
 		}
@@ -758,7 +758,9 @@ class RenderPathDeferred {
 		{
 			#if (rp_voxels != "Off")
 			path.bindTarget("voxelsOut", "voxels");
+			#if (rp_voxels == "Voxel GI")
 			path.bindTarget("voxelsSDF", "voxelsSDF");
+			#end
 			#end
 			Inc.drawTranslucency("tex");
 		}
