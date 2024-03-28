@@ -196,7 +196,7 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses or 'refraction' in rpasses
+    parse_opacity = arm_discard or 'translucent'
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -204,7 +204,7 @@ def make_deferred(con_mesh, rpasses):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if parse_opacity and not 'refraction' in rpasses:
+    if parse_opacity:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -594,7 +594,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard) and not '_SSRefraction' in wrd.world_defs:
+    if (parse_opacity and not '_SSRefraction' in wrd.world_defs) or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
@@ -690,7 +690,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs:
         frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
         frag.write('if (roughness < 1.0 && specular > 0.0) {')
-        frag.write('    vec2 pixel = wposition.xy * vec2(0.5) + vec2(0.5);')
+        frag.write('    vec2 pixel = gl_FragCoord.xy;')
         frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, pixel).rgb * specular * voxelgiRefl;')
         frag.write('}')
     frag.write('vec3 direct = vec3(0.0);')
