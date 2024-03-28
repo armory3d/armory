@@ -184,7 +184,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_translucency && !rpssrefr)
+		#if (rp_translucency && !rp_ssrefr)
 		{
 			Inc.initTranslucency();
 		}
