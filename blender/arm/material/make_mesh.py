@@ -560,7 +560,7 @@ def make_forward(con_mesh):
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             index += 1
-            if rpdat.rp_ssr or rpdat.rp_voxels == "Voxel GI":
+            if rpdat.rp_ssr:
                 frag.write(f'fragColor[{index}] = vec4(n.xy, roughness, metallic);')
                 index += 1
             if rpdat.rp_ss_refraction:

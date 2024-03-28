@@ -45,7 +45,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_translucency)
+		#if (rp_translucency && !rpssrefr)
 		{
 			Inc.initTranslucency();
 		}
@@ -774,7 +774,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_translucency
+		#if (rp_translucency && !rpssrefr)
 		{
 			#if (rp_voxels != "Off")
 			path.bindTarget("voxelsOut", "voxels");
@@ -851,12 +851,18 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
+				path.setTarget("tex", ["lbuffer1", "gbuffer_refraction"]);
+				#if (rp_voxels != "Off")
+				path.bindTarget("voxelsOut", "voxels");
+				#if (rp_voxels == "Voxel GI")
+				path.bindTarget("voxelsSDF", "voxelsSDF");
+				#end
+				#end
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex1");
-				path.bindTarget("lbuffer0", "tex");
+				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("lbuffer1", "gbuffer0");
