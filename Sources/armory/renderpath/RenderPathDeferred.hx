@@ -344,7 +344,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			//holds colors before refractive meshes are drawn
+			// holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
 			t.name = "refr";
 			t.width = 0;
@@ -355,7 +355,7 @@ class RenderPathDeferred {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			//holds background depth
+			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
 			t.width = 0;
@@ -365,16 +365,7 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			var t = new RenderTargetRaw();
-			t.name = "lbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.format = Inc.getHdrFormat();
-			t.displayp = Inc.getDisplayp();
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
-			path.createRenderTarget(t);
-
+			// holds normals
 			var t = new RenderTargetRaw();
 			t.name = "lbuffer1";
 			t.width = 0;
@@ -793,12 +784,12 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
+				path.setTarget("tex", ["lbuffer1", "gbuffer_refraction"]);
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex1");
-				path.bindTarget("lbuffer0", "tex");
+				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("lbuffer1", "gbuffer0");
