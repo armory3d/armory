@@ -75,7 +75,7 @@ def make(context_id, rpasses):
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
-    if rid == 'Forward' or blend:
+    if rid == 'Forward' or blend or 'refraction' in rpasses:
         if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
         elif rpdat.arm_material_model == 'Solid':
@@ -544,9 +544,9 @@ def make_forward(con_mesh):
     if not blend:
         mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
-            mrt += 1
+            mrt = 1
         if rpdat.rp_ss_refraction:
-            mrt += 1
+            mrt = 2
         if mrt != 0:
             # Store light gbuffer for post-processing
             frag.add_out(f'vec4 fragColor[{mrt}+1]')
