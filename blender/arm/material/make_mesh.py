@@ -151,6 +151,9 @@ def make_base(con_mesh, parse_opacity):
     make_attrib.write_norpos(con_mesh, vert)
     frag.write_attrib('vec3 n = normalize(wnormal);')
 
+    if mat_state.material.arm_two_sided:
+        frag.write('if (!gl_FrontFacing) n *= -1;')  # Flip normal when drawing back-face
+
     if not is_displacement and not vattr_written:
         make_attrib.write_vertpos(vert)
 
@@ -239,9 +242,6 @@ def make_deferred(con_mesh, rpasses):
 
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')
-
-    if mat_state.material.arm_two_sided:
-        frag.write('if (!gl_FrontFacing) n *= -1;') # Flip normal when drawing back-face
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
@@ -341,6 +341,9 @@ def make_forward_mobile(con_mesh):
         vert.add_out('vec3 wnormal')
         make_attrib.write_norpos(con_mesh, vert)
         frag.write_attrib('vec3 n = normalize(wnormal);')
+
+    if mat_state.material.arm_two_sided:
+        frag.write('if (!gl_FrontFacing) n *= -1;')  # Flip normal when drawing back-face
 
     make_attrib.write_vertpos(vert)
 
