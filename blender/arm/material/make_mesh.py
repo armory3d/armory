@@ -75,7 +75,7 @@ def make(context_id, rpasses):
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
-    if rid == 'Forward' or blend or 'refraction' in rpasses:
+    if rid == 'Forward' or blend:
         if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
         elif rpdat.arm_material_model == 'Solid':
@@ -590,7 +590,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity and not '_SSRefraction' in wrd.world_defs) or arm_discard:
+    if parse_opacity or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
