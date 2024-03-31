@@ -32,3 +32,4 @@ class NetworkCloseConnectionNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+        layout.prop(self, 'property1')

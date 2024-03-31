@@ -727,7 +727,7 @@ def safesrc(s):
 def safestr(s: str) -> str:
     """Outputs a string where special characters have been replaced with
     '_', which can be safely used in file and path names."""
-    for c in r'''[]/\;,><&*:%=+@!#^()|?^'"''':
+    for c in r'''[]/\;,><&*:§$%=+@!#^()|?^'"''':
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
@@ -800,11 +800,11 @@ def get_cascade_size(rpdat):
 
 
 def check_blender_version(op: bpy.types.Operator):
-    """Check whether the user uses the correct Blender version, if not
-    report in UI.
+    """Check whether the Blender version is supported by Armory,
+    if not, report in UI.
     """
-    if not compare_version_blender_arm():
-        op.report({'INFO'}, 'For Armory to work correctly, you need Blender 3.3 LTS.')
+    if bpy.app.version[0] != 3 or bpy.app.version[1] != 6:
+        op.report({'INFO'}, 'For Armory to work correctly, you need Blender 3.6 LTS.')
 
 
 def check_saved(self):
@@ -1136,8 +1136,6 @@ def get_link_web_server():
     addon_prefs = get_arm_preferences()
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
 
-def compare_version_blender_arm():
-    return not (bpy.app.version[0] != 3 or bpy.app.version[1] != 3)
 
 def get_file_arm_version_tuple() -> tuple[int]:
     wrd = bpy.data.worlds['Arm']

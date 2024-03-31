@@ -248,35 +248,57 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
             cdata[i3 + 2] = v.col[2]
 
     # Indices
+    # Create dict for every material slot
     prims = {ma.name if ma else '': [] for ma in export_mesh.materials}
+    v_maps = {ma.name if ma else '': [] for ma in export_mesh.materials}
     if not prims:
+        # No materials
         prims = {'': []}
+        v_maps = {'': []}
 
+    # Create dict of {loop_indices : vertex} with each loop_index in each vertex in Vertex_list
     vert_dict = {i : v for v in vert_list for i in v.loop_indices}
+    # For each polygon in a mesh
     for poly in export_mesh.polygons:
+        # Index of the first loop of this polygon
         first = poly.loop_start
+        # No materials assigned
         if len(export_mesh.materials) == 0:
+            # Get prim
             prim = prims['']
+            v_map = v_maps['']
         else:
+            # First material
             mat = export_mesh.materials[min(poly.material_index, len(export_mesh.materials) - 1)]
+            # Get prim for this material
             prim = prims[mat.name if mat else '']
+            v_map = v_maps[mat.name if mat else '']
+        # List of indices for each loop_index belonging to this polygon
         indices = [vert_dict[i].index for i in range(first, first+poly.loop_total)]
+        v_indices = [vert_dict[i].vertex_index for i in range(first, first+poly.loop_total)]
 
+        # If 3 loops per polygon (Triangle?)
         if poly.loop_total == 3:
             prim += indices
+            v_map += v_indices
+        # If > 3 loops per polygon (Non-Triangular?)
         elif poly.loop_total > 3:
             for i in range(poly.loop_total-2):
                 prim += (indices[-1], indices[i], indices[i + 1])
+                v_map += (v_indices[-1], v_indices[i], v_indices[i + 1])
 
     # Write indices
     o['index_arrays'] = []
     for mat, prim in prims.items():
         idata = [0] * len(prim)
+        v_map_data = [0] * len(prim)
+        v_map_sub = v_maps[mat]
         for i, v in enumerate(prim):
             idata[i] = v
+            v_map_data[i] = v_map_sub[i]
         if len(idata) == 0: # No face assigned
             continue
-        ia = {'values': idata, 'material': 0}
+        ia = {'values': idata, 'material': 0, 'vertex_map': v_map_data}
         # Find material index for multi-mat mesh
         if len(export_mesh.materials) > 1:
             for i in range(0, len(export_mesh.materials)):

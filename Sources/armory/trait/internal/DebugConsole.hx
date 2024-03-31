@@ -29,6 +29,14 @@ class DebugConsole extends Trait {
 	public static var traceWithPosition = true;
 	public static var fpsAvg = 0.0;
 
+	/**
+		Whether any window of the debug console was hovered in the last drawn frame.
+		If `visible` is `false`, the value of this variable is also `false`.
+	**/
+	// NOTE If there is more than one debug console for whatever reason
+	//  (technically possible but stupid) this will only work for the last drawn debug console
+	public static var isDebugConsoleHovered(default, null) = false;
+
 	static var ui: Zui;
 	var scaleFactor = 1.0;
 
@@ -69,6 +77,8 @@ class DebugConsole extends Trait {
 	var shortcutScaleIn = kha.input.KeyCode.OpenBracket;
 	var shortcutScaleOut = kha.input.KeyCode.CloseBracket;
 
+	var mouse: iron.system.Input.Mouse;
+
 	#if arm_shadowmap_atlas
 	var lightColorMap: Map<String, Int> = new Map();
 	var lightColorMapCount = 0;
@@ -83,6 +93,7 @@ class DebugConsole extends Trait {
 	keyCodeScaleOut = kha.input.KeyCode.CloseBracket) {
 		super();
 		this.scaleFactor = scaleFactor;
+		this.mouse = iron.system.Input.getMouse();
 		DebugConsole.traceWithPosition = traceWithPosition == 1;
 
 		iron.data.Data.getFont(Canvas.defaultFontName, function(font: kha.Font) {
@@ -233,7 +244,9 @@ class DebugConsole extends Trait {
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
 
+		isDebugConsoleHovered = false;
 		if (!visible) return;
+
 		var ww = Std.int(280 * scaleFactor * getScale());
 		// RIGHT
 		var wx = iron.App.w() - ww;
@@ -251,6 +264,7 @@ class DebugConsole extends Trait {
 		if (bindG) g.end();
 
 		ui.begin(g);
+
 		if (ui.window(hwin, wx, wy, ww, wh, true)) {
 
 			if (ui.tab(htab, "")) {}
@@ -499,6 +513,19 @@ class DebugConsole extends Trait {
 								}
 								if (ui.isHovered) ui.tooltip("Open details about the trait in another window");
 							}
+							ui.unindent();
+						}
+
+						if (selectedObject.properties != null) {
+							ui.text("Properties:");
+							ui.indent();
+
+							for (name => value in selectedObject.properties) {
+								ui.row([1/2, 1/2]);
+								ui.text(name);
+								ui.text(dynamicToUIString(value), Align.Right);
+							}
+
 							ui.unindent();
 						}
 
@@ -895,6 +922,7 @@ class DebugConsole extends Trait {
 
 			ui.separator();
 		}
+		isDebugConsoleHovered = isDebugConsoleHovered || isZuiWindowHovered(hwin, wx, wy);
 
 		// Draw trait debug windows
 		var handleWinTrait = Id.handle();
@@ -936,29 +964,33 @@ class DebugConsole extends Trait {
 					ui.text(fieldName + "");
 
 					var fieldValue = Reflect.field(trait, fieldName);
-					var fieldClass = Type.getClass(fieldValue);
 
-					// Treat objects differently (VERY bad performance otherwise)
-					if (Reflect.isObject(fieldValue) && fieldClass != String) {
-
-						if (fieldClass != null) {
-							ui.text('<${Type.getClassName(fieldClass)}>', Align.Right);
-						} else {
-							// Anonymous data structures for example
-							ui.text("<???>", Align.Right);
-						}
-					} else {
-						ui.text(Std.string(fieldValue), Align.Right);
-					}
-
+					ui.text(dynamicToUIString(fieldValue), Align.Right);
 				}
 
 				ui.unindent();
 			}
+			isDebugConsoleHovered = isDebugConsoleHovered || isZuiWindowHovered(handleWindow, wx, wy);
 		}
 
 		ui.end(bindG);
 		if (bindG) g.begin(false);
+	}
+
+	function dynamicToUIString(value: Dynamic): String {
+		final valueClass = Type.getClass(value);
+
+		// Don't convert objects to string, Haxe includes _all_ object fields
+		// (recursively) by default which does not fit in the UI and can cause performance issues
+		if (Reflect.isObject(value) && valueClass != String) {
+			if (valueClass != null) {
+				return '<${Type.getClassName(valueClass)}>';
+			}
+			// Given value has no class, anonymous data structures for example
+			return "<???>";
+		}
+
+		return Std.string(value);
 	}
 
 	function update() {
@@ -972,6 +1004,16 @@ class DebugConsole extends Trait {
 		smaLogicTime += armory.renderpath.Inc.shadowsLogicTime;
 		smaRenderTime += armory.renderpath.Inc.shadowsRenderTime;
 	#end
+	}
+
+	function isZuiWindowHovered(hwin: zui.Zui.Handle, wx: Int, wy: Int): Bool {
+		var mouseWindowSpaceX = mouse.x - wx - hwin.dragX;
+		var mouseWindowSpaceY = mouse.y - wy - hwin.dragY;
+
+		return (
+			   mouseWindowSpaceX >= 0 && mouseWindowSpaceX < hwin.lastMaxX
+			&& mouseWindowSpaceY >= 0 && mouseWindowSpaceY < hwin.lastMaxY
+		);
 	}
 
 	static function roundfp(f: Float, precision = 2): Float {

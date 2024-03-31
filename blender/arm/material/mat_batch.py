@@ -1,12 +1,15 @@
+import bpy
 import arm
 import arm.material.cycles as cycles
 import arm.material.make_shader as make_shader
 import arm.material.mat_state as mat_state
+import arm.utils as arm_utils
 
 if arm.is_reload(__name__):
     cycles = arm.reload_module(cycles)
     make_shader = arm.reload_module(make_shader)
     mat_state = arm.reload_module(mat_state)
+    arm_utils = arm.reload_module(arm_utils)
 else:
     arm.enable_reload(__name__)
 
@@ -25,7 +28,7 @@ def traverse_tree(node, sign):
             sign += 'o' # Unconnected socket
     return sign
 
-def get_signature(mat):
+def get_signature(mat, object: bpy.types.Object):
     nodes = mat.node_tree.nodes
     output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
 
@@ -54,6 +57,8 @@ def get_signature(mat):
         sign += mat.arm_skip_context if mat.arm_skip_context != '' else '0'
         sign += '1' if mat.arm_particle_fade else '0'
         sign += mat.arm_billboard
+        sign += '_skin' if arm_utils.export_bone_data(object) else '0'
+        sign += '_morph' if arm_utils.export_morph_targets(object) else '0'
         return sign
 
 def traverse_tree2(node, ar):
@@ -105,7 +110,7 @@ def build(materialArray, mat_users, mat_armusers):
     # Update signatures
     for mat in materialArray:
         if mat.signature == '' or not mat.arm_cached:
-            mat.signature = get_signature(mat)
+            mat.signature = get_signature(mat, mat_users[mat][0])
         # Group signatures
         if mat.signature in signatureDict:
             signatureDict[mat.signature].append(mat)

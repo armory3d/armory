@@ -16,19 +16,23 @@ class Canvas {
 	public static var screenW = -1;
 	public static var screenH = -1;
 	public static var locale = "en";
+	public static var imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;
 	static var _ui: Zui;
 	static var h = new zui.Zui.Handle(); // TODO: needs one handle per canvas
 
 	public static function draw(ui: Zui, canvas: TCanvas, g: kha.graphics2.Graphics): Array<String> {
 
+		events.resize(0);
+
+		if (!canvas.visible) return events;
+
 		screenW = kha.System.windowWidth();
 		screenH = kha.System.windowHeight();
-
-		events.resize(0);
 
 		_ui = ui;
 
 		g.end();
+		g.imageScaleQuality = Canvas.imageScaleQuality;
 		ui.begin(g); // Bake elements
 		g.begin(false);
 
@@ -311,6 +315,21 @@ class Canvas {
 		if (rotated) ui.g.popTransformation();
 	}
 
+	/**
+		Parse the content of the given blob object and return a `TCanvas` object
+		from it.
+	**/
+	public static function parseCanvasFromBlob(blob: kha.Blob): TCanvas {
+		final raw: haxe.DynamicAccess<Dynamic> = haxe.Json.parse(blob.toString());
+
+		// Ensure TCanvas has all attributes even for older files
+		if (!raw.exists("visible")) {
+			raw.set("visible", true);
+		}
+
+		return (raw: Dynamic);
+	}
+
 	static inline function getText(canvas: TCanvas, e: TElement): String {
 		return e.text;
 	}
@@ -412,6 +431,7 @@ typedef TCanvas = {
 	var height: Int;
 	var elements: Array<TElement>;
 	var theme: String;
+	var visible: Bool;
 	@:optional var assets: Array<TAsset>;
 	@:optional var locales: Array<TLocale>;
 }

@@ -96,10 +96,10 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         mat_data['contexts'].append(c)
 
         if rp == 'mesh':
-            c['bind_constants'].append({'name': 'receiveShadow', 'bool': material.arm_receive_shadow})
+            c['bind_constants'].append({'name': 'receiveShadow', 'boolValue': material.arm_receive_shadow})
 
             if material.arm_material_id != 0:
-                c['bind_constants'].append({'name': 'materialID', 'int': material.arm_material_id})
+                c['bind_constants'].append({'name': 'materialID', 'intValue': material.arm_material_id})
 
                 if material.arm_material_id == 2:
                     wrd.world_defs += '_Hair'
@@ -107,10 +107,10 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
             elif rpdat.rp_sss_state != 'Off':
                 const = {'name': 'materialID'}
                 if needs_sss:
-                    const['int'] = 2
+                    const['intValue'] = 2
                     sss_used = True
                 else:
-                    const['int'] = 0
+                    const['intValue'] = 0
                 c['bind_constants'].append(const)
 
             # TODO: Mesh only material batching
@@ -133,10 +133,10 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
                     for inp in node.inputs:
                         if inp.is_uniform:
                             uname = arm.utils.safesrc(inp.node.name) + arm.utils.safesrc(inp.name)  # Merge with cycles module
-                            c['bind_constants'].append({'name': uname, cycles.glsl_type(inp.type): glsl_value(inp.default_value)})
+                            c['bind_constants'].append({'name': uname, cycles.glsl_type(inp.type)+'Value': glsl_value(inp.default_value)})
 
-        elif rp == 'translucent':
-            c['bind_constants'].append({'name': 'receiveShadow', 'bool': material.arm_receive_shadow})
+        elif rp == 'translucent' or rp == 'refraction':
+            c['bind_constants'].append({'name': 'receiveShadow', 'boolValue': material.arm_receive_shadow})
         
         elif rp == 'shadowmap':
             if wrd.arm_batch_materials:
