@@ -195,7 +195,7 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' in rpasses or 'refraction' in rpasses
+    parse_opacity = arm_discard or 'translucent'
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -203,7 +203,7 @@ def make_deferred(con_mesh, rpasses):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if parse_opacity and not 'refraction' in rpasses:
+    if parse_opacity:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
@@ -547,9 +547,9 @@ def make_forward(con_mesh):
     if not blend:
         mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
-            mrt += 1
+            mrt = 1
         if rpdat.rp_ss_refraction:
-            mrt += 1
+            mrt = 2
         if mrt != 0:
             # Store light gbuffer for post-processing
             frag.add_out(f'vec4 fragColor[{mrt}+1]')
@@ -590,7 +590,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if (parse_opacity or arm_discard) and not '_SSRefraction' in wrd.world_defs:
+    if parse_opacity or arm_discard:
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
