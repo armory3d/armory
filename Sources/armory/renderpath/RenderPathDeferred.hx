@@ -364,17 +364,6 @@ class RenderPathDeferred {
 			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-
-			// holds normals
-			var t = new RenderTargetRaw();
-			t.name = "lbuffer1";
-			t.width = 0;
-			t.height = 0;
-			t.format = Inc.getHdrFormat();
-			t.displayp = Inc.getDisplayp();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
 		}
 		#end
 
@@ -784,7 +773,7 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("tex", ["lbuffer1", "gbuffer_refraction"]);
+				path.setTarget("tex", ["gbuffer0", "gbuffer_refraction"]);
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
@@ -792,7 +781,7 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("lbuffer1", "gbuffer0");
+				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
