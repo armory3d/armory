@@ -451,7 +451,7 @@ class ARM_OT_ExporterOpenVS(bpy.types.Operator):
         return{'FINISHED'}
 
 
-REG_CLASSES = (
+__REG_CLASSES = (
     ArmExporterListItem,
     ArmExporterAndroidPermissionListItem,
     ArmExporterAndroidAbiListItem,
@@ -470,11 +470,11 @@ REG_CLASSES = (
     ArmoryExporterOpenFolderButton,
     ARM_OT_ExporterOpenVS
 )
-_reg_classes, _unreg_classes = bpy.utils.register_classes_factory(REG_CLASSES)
+__reg_classes, __unreg_classes = bpy.utils.register_classes_factory(__REG_CLASSES)
 
 
 def register():
-    _reg_classes()
+    __reg_classes()
 
     bpy.types.World.arm_exporterlist = CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = IntProperty(name="Index for my_list", default=0)
@@ -485,4 +485,4 @@ def register():
 
 
 def unregister():
-    _unreg_classes()
+    __unreg_classes()

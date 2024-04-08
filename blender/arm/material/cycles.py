@@ -113,7 +113,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission_col = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_ior, out_emission_col = parse_shader_input(node.inputs[0])
         if parse_surface:
             curshader.write(f'basecol = {out_basecol};')
             curshader.write(f'roughness = {out_roughness};')
@@ -131,7 +131,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                     arm.assets.add_khafile_def('rp_gbuffer_emission')
 
         if parse_opacity:
-            curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
+            curshader.write('opacity = {0};'.format(out_opacity))
+            curshader.write('ior = {0};'.format(out_ior))
 
     # Volume
     # parse_volume_input(node.inputs[1])
@@ -258,6 +259,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                     mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
+                state.out_ior = 1.450;
         else:
             return parse_group(node, socket)
 
@@ -337,7 +339,7 @@ def parse_vector(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
         'GAMMA',
         'HUE_SAT',
         'INVERT',
-        'MIX_RGB',
+        'MIX',
         'BLACKBODY',
         'VALTORGB',
         'CURVE_VEC',
@@ -464,6 +466,7 @@ def parse_value(node, socket):
         'CLAMP',
         'VALTORGB',
         'MATH',
+        'MIX',
         'RGBTOBW',
         'SEPARATE_COLOR',
         'SEPHSV',
@@ -537,7 +540,10 @@ def is_parsed(node_store_name: str):
 def res_var_name(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> str:
     """Return the name of the variable that stores the parsed result
     from the given node and socket."""
-    return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
+    name = node_name(node.name) + '_' + safesrc(socket.name) + '_res'
+    if '__' in name:  # Consecutive _ are reserved
+        name = name.replace('_', '_x')
+    return name
 
 
 def write_result(link: bpy.types.NodeLink) -> Optional[str]:
@@ -599,8 +605,12 @@ def to_uniform(inp: bpy.types.NodeSocket):
     state.curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
-def store_var_name(node: bpy.types.Node):
-    return node_name(node.name) + '_store'
+
+def store_var_name(node: bpy.types.Node) -> str:
+    name = node_name(node.name)
+    if name[-1] == "_":
+        return name + '_x_store'  # Prevent consecutive __
+    return name + '_store'
 
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
@@ -771,7 +781,7 @@ def node_name(s: str) -> str:
     if state.curshader.write_textures > 0:
         s += '_texread'
     s = safesrc(s)
-    if '__' in s: # Consecutive _ are reserved
+    if '__' in s:  # Consecutive _ are reserved
         s = s.replace('_', '_x')
     return s
 

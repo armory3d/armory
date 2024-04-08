@@ -1,5 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
+
 class SendGlobalEventNode(ArmLogicTreeNode):
     """Sends the given event to all objects in the scene.
 
@@ -17,3 +18,8 @@ class SendGlobalEventNode(ArmLogicTreeNode):
         self.add_input('ArmStringSocket', 'Event')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+
+    def draw_label(self) -> str:
+        if self.inputs[1].is_linked:
+            return self.bl_label
+        return f'{self.bl_label}: {self.inputs[1].get_default_value()}'

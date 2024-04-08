@@ -64,7 +64,8 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelao = False
+        rpdat.rp_voxelgi_resolution = '32'
+        rpdat.rp_voxels = 'Voxel AO'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -102,7 +103,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelao = False
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -138,10 +139,11 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelao = True
-        rpdat.rp_voxelgi_resolution = '128'
+        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
+        rpdat.rp_voxelgi_emission = False
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'TAA'
@@ -151,6 +153,7 @@ def update_preset(self, context):
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
+        rpdat.rp_ss_refraction = True
         rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
         rpdat.arm_bloom_quality = 'high'
@@ -181,7 +184,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelao = False
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -381,6 +384,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
+    rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
@@ -455,7 +459,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
     rp_voxelgi_resolution_z: EnumProperty(
         items=[('1.0', '1.0', '1.0'),
-               ('0.5', '0.5', '0.5'),
+              ('0.5', '0.5', '0.5'),
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
@@ -494,10 +498,32 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     rp_chromatic_aberration: BoolProperty(name="Chromatic Aberration", description="Add chromatic aberration (scene fringe)", default=False, update=assets.invalidate_shader_cache)
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
-    arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
-    arm_voxelgi_revoxelize: BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
+    rp_voxels: EnumProperty(
+        items=[('Off', 'Off', 'Off'),
+               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
+               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ],
+        name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
+    rp_voxelgi_resolution: EnumProperty(
+        items=[('32', '32', '32'),
+               ('64', '64', '64'),
+               ('128', '128', '128'),
+               ('256', '256', '256'),
+               ],
+        name="Resolution", description="3D texture resolution", default='64', update=update_renderpath)
+    rp_voxelgi_resolution_z: EnumProperty(
+        items=[('1.0', '1.0', '1.0'),
+               ('0.5', '0.5', '0.5'),
+               ('0.25', '0.25', '0.25')],
+        name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
+    arm_voxelgi_refraction: BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    arm_voxelgi_bounces: EnumProperty(
+        items=[
+        	   ('1', '1', '1'),
+               ('2', '2', '2')],
+        name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
-    arm_voxelgi_camera: BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
         items=[('1', '1', '1'),
@@ -514,11 +540,15 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1', '1', '1'),
                ],
         name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Intensity", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_offset: FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_offset: FloatProperty(name="Offset", description="Offset for dealing with self occlusion", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.5, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
@@ -555,11 +585,14 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         update=assets.invalidate_shader_cache
     )
     arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssr_ray_step: FloatProperty(name="Step", default=0.04, update=assets.invalidate_shader_cache)
-    arm_ssr_min_ray_step: FloatProperty(name="Step Min", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ssr_ray_step: FloatProperty(name="Step", default=0.03, update=assets.invalidate_shader_cache)
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)
@@ -738,21 +771,19 @@ class ArmRPListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 
+__REG_CLASSES = (
+    ArmRPListItem,
+    ARM_UL_RPList,
+    ArmRPListNewItem,
+    ArmRPListDeleteItem,
+    ArmRPListMoveItem,
+)
+__reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
+
+
 def register():
-    bpy.utils.register_class(ArmRPListItem)
-    bpy.utils.register_class(ARM_UL_RPList)
-    bpy.utils.register_class(ArmRPListNewItem)
-    bpy.utils.register_class(ArmRPListDeleteItem)
-    bpy.utils.register_class(ArmRPListMoveItem)
+    __reg_classes()
 
     bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
     bpy.types.World.rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
-
-
-def unregister():
-    bpy.utils.unregister_class(ArmRPListItem)
-    bpy.utils.unregister_class(ARM_UL_RPList)
-    bpy.utils.unregister_class(ArmRPListNewItem)
-    bpy.utils.unregister_class(ArmRPListDeleteItem)
-    bpy.utils.unregister_class(ArmRPListMoveItem)

@@ -70,7 +70,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'HUE_SAT': MaterialNodeMeta(parse_func=nodes_color.parse_huesat),
     'INVERT': MaterialNodeMeta(parse_func=nodes_color.parse_invert),
     'LIGHT_FALLOFF': MaterialNodeMeta(parse_func=nodes_color.parse_lightfalloff),
-    'MIX_RGB': MaterialNodeMeta(parse_func=nodes_color.parse_mixrgb),
+    'MIX': MaterialNodeMeta(parse_func=nodes_color.parse_mix),
 
     # --- nodes_converter
     'BLACKBODY': MaterialNodeMeta(parse_func=nodes_converter.parse_blackbody),
@@ -160,6 +160,7 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'BSDF_PRINCIPLED': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfprincipled),
     'BSDF_TRANSLUCENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftranslucent),
     'BSDF_TRANSPARENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftransparent),
+    'BSDF_REFRACTION': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfrefraction),
     'BSDF_VELVET': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet),
     'EMISSION': MaterialNodeMeta(parse_func=nodes_shader.parse_emission),
     'HOLDOUT': MaterialNodeMeta(

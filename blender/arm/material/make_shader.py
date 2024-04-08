@@ -16,6 +16,7 @@ import arm.material.make_depth as make_depth
 import arm.material.make_mesh as make_mesh
 import arm.material.make_overlay as make_overlay
 import arm.material.make_transluc as make_transluc
+import arm.material.make_refract as make_refract
 import arm.material.make_voxel as make_voxel
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -71,7 +72,6 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
     bind_textures = dict()
 
     for rp in rpasses:
-
         car = []
         bind_constants[rp] = car
         mat_state.bind_constants = car
@@ -95,6 +95,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
 
         elif rp == 'translucent':
             con = make_transluc.make(rp)
+
+        elif rp == 'refraction':
+            con = make_refract.make(rp)
 
         elif rp == 'overlay':
             con = make_overlay.make(rp)
