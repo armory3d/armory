@@ -83,9 +83,9 @@ uniform layout(r16) image3D SDF;
 #ifdef _VoxelShadow
 uniform layout(r16) image3D SDF;
 #endif
-uniform layout(r8) image3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16) image3D voxels;
+uniform layout(r16) image3D voxelsB;
+uniform layout(r16) image3D voxelsOut;
 #endif
 #endif
 

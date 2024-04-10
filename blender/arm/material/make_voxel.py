@@ -373,7 +373,7 @@ def make_ao(context_id):
         frag.write('}')
     else:
     """
-    frag.add_uniform('layout(r8) image3D voxels')
+    frag.add_uniform('layout(r16) image3D voxels')
 
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 voxnormalGeom')
