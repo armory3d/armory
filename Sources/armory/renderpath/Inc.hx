@@ -64,8 +64,8 @@ class Inc {
 	#end
 	#end
 	#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
-	static var read_sdf = "voxelsSDFtmp";
-	static var write_sdf = "voxelsSDF";
+	static var read_sdf = "voxelsSDF";
+	static var write_sdf = "voxelsSDFtmp";
 	static var voxel_sh2:kha.compute.Shader = null;
 	static var voxel_ta2:kha.compute.TextureUnit;
 	static var voxel_tb2:kha.compute.TextureUnit;
@@ -900,7 +900,7 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_th1, rts.get("voxelsSDFtmp").image, kha.compute.Access.Write);
 		#else
 		#if arm_voxelgi_shadows
-		kha.compute.Compute.setTexture(voxel_th1, rts.get("voxelsSDFtmp").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(voxel_th1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
 		#end
 		#end
 
@@ -1015,13 +1015,11 @@ class Inc {
 
 			kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 
-			/*
 			if (i < passcount - 1)
 			{
 				read_sdf = read_sdf == "voxelsSDF" ? "voxelsSDFtmp" : "voxelsSDF";
 				write_sdf = read_sdf == "voxelsSDF" ? "voxelsSDFtmp" : "voxelsSDF";
 			}
-			*/
 		}
 	}
 	#end
