@@ -552,7 +552,7 @@ def make_forward(con_mesh):
         if rpdat.rp_ss_refraction:
             mrt = 2
         if mrt != 0:
-           # Store light gbuffer for post-processing
+            # Store light gbuffer for post-processing
             frag.add_out(f'vec4 fragColor[{mrt}+1]')
             frag.add_include('std/gbuffer.glsl')
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
