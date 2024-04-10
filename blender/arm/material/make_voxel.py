@@ -373,7 +373,7 @@ def make_ao(context_id):
         frag.write('}')
     else:
     """
-    frag.add_uniform('layout(r16) image3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
 
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 voxnormalGeom')
@@ -425,18 +425,18 @@ def make_ao(context_id):
     frag.write('vec3 direction_weights = abs(N);')
 
     frag.write('if (direction_weights.x > 0.0) {')
-    frag.write('    float opac_direction = direction_weights.x;')
-    frag.write('    imageStore(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), vec4(opac_direction));')
+    frag.write('    uint opac_direction = convVec4ToRGBA8(vec4(direction_weights.x));')
+    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), opac_direction);')
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0.0) {')
-    frag.write('    float opac_direction = direction_weights.y;')
-    frag.write('    imageStore(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), vec4(opac_direction));')
+    frag.write('    uint opac_direction = convVec4ToRGBA8(vec4(direction_weights.y));')
+    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), opac_direction);')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0.0) {')
-    frag.write('    float opac_direction = direction_weights.z;')
-    frag.write('    imageStore(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), vec4(opac_direction));')
+    frag.write('    uint opac_direction = convVec4ToRGBA8(vec4(direction_weights.z));')
+    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), opac_direction);')
     frag.write('}')
 
     return con_voxel

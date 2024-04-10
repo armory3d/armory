@@ -83,9 +83,9 @@ uniform layout(r16) image3D SDF;
 #ifdef _VoxelShadow
 uniform layout(r16) image3D SDF;
 #endif
-uniform layout(r16) image3D voxels;
-uniform layout(r16) image3D voxelsB;
-uniform layout(r16) image3D voxelsOut;
+uniform layout(r32ui) uimage3D voxels;
+uniform layout(r8) image3D voxelsB;
+uniform layout(r8) image3D voxelsOut;
 #endif
 #endif
 
@@ -227,7 +227,7 @@ void main() {
 			radiance = clamp(radiance, vec4(0.0), vec4(1.0));
 
 			#else
-			opac = imageLoad(voxels, src).r;
+			opac = convRGBA8ToVec4(imageLoad(voxels, src).r).r;
 			#endif
 
 			#ifdef _VoxelGI

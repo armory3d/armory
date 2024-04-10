@@ -594,12 +594,13 @@ class Inc {
 			else {
 				#if (rp_voxels == "Voxel AO")
 				{
-					t.format = "R16";
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
+						t.format = "R8";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 					}
 					else {
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
 					}

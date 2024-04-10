@@ -33,8 +33,8 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(rgba8) image3D voxelsOut;
 #else
-uniform layout(r16) image3D voxelsB;
-uniform layout(r16) image3D voxelsOut;
+uniform layout(r8) image3D voxelsB;
+uniform layout(r8) image3D voxelsOut;
 #endif
 
 uniform int clipmapLevel;
@@ -44,21 +44,12 @@ uniform float clipmaps[voxelgiClipmapCount * 10];
 
 void main() {
 	const int res = voxelgiResolution.x;
-	#ifdef _VoxelGI
-	vec4 col;
-	#else
-	float opac;
-	#endif
 	ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 	src.y += clipmapLevel * res;
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
-		#ifdef _VoxelGI
-		col = vec4(0.0);
-		#else
-		opac = 0.0;
-		#endif
+		vec4 col = vec4(0.0);
 
 		ivec3 dst = src;
 		dst.x += i * res;
@@ -75,29 +66,13 @@ void main() {
 				coords.y >= clipmap_face_start_y && coords.y < clipmap_face_end_y &&
 				coords.z >= 0 && coords.z < res
 			)
-				#ifdef _VoxelGI
 				col = imageLoad(voxelsB, coords);
-				#else
-				opac = imageLoad(voxelsB, coords).r;
-				#endif
 			else
-				#ifdef _VoxelGI
 				col = vec4(0.0);
-				#else
-				opac = 0.0;
-				#endif
 		}
 		else
-			#ifdef _VoxelGI
 			col = imageLoad(voxelsB, dst);
-			#else
-			opac = imageLoad(voxelsB, dst).r;
-			#endif
 
-		#ifdef _VoxelGI
 		imageStore(voxelsOut, dst, col);
-		#else
-		imageStore(voxelsOut, dst, vec4(opac));
-		#endif
 	}
 }
