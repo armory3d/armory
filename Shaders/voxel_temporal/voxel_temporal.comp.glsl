@@ -76,7 +76,6 @@ uniform sampler2D gbuffer2;
 #endif
 #endif
 uniform vec3 eye;
-uniform vec2 postprocess_resolution;
 uniform layout(r16) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -142,7 +141,7 @@ void main() {
 			vec4 emission = convRGBA8ToVec4(imageLoad(voxelsEmission, src).r);
 
 			const vec2 pixel = gl_GlobalInvocationID.xy;
-			const vec2 uv = (pixel + 0.5) / postprocess_resolution;
+			const vec2 uv = (pixel + 0.5) / voxelgiResolution.xy;
 
 			vec4 g0 = textureLod(gbuffer0, uv, 0.0); // Normal.xy, roughness, metallic/matid
 			float roughness = g0.b;
