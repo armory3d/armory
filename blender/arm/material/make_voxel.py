@@ -146,7 +146,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
+    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
@@ -379,7 +379,7 @@ def make_ao(context_id):
     vert.add_out('vec3 voxnormalGeom')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
+    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
