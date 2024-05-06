@@ -33,7 +33,6 @@ def disp_linked(output_node):
     return disp_enabled
 
 def get_rpasses(material):
-
     ar = []
 
     rpdat = arm.utils.get_rp()
@@ -47,9 +46,11 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
+        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending and not rpdat.rp_ss_refraction:
             ar.append('translucent')
-        if rpdat.rp_voxelao and has_voxels:
+        elif is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
+            ar.append('refraction')
+        if rpdat.rp_voxels != "Off" and has_voxels:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
@@ -81,7 +82,7 @@ def is_transluc_traverse(node):
 
 
 def is_transluc_type(node: bpy.types.ShaderNode) -> bool:
-    return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT') \
+    return node.type in ('BSDF_GLASS', 'BSDF_TRANSPARENT', 'BSDF_TRANSLUCENT', 'BSDF_REFRACTION') \
         or (is_armory_pbr_node(node) and (node.inputs['Opacity'].is_linked or node.inputs['Opacity'].default_value != 1.0)) \
         or (node.type == 'BSDF_PRINCIPLED' and (node.inputs['Alpha'].is_linked or node.inputs['Alpha'].default_value != 1.0))
 

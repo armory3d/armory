@@ -4,7 +4,9 @@ import iron.math.Vec4;
 import kha.Color;
 import armory.renderpath.RenderToTexture;
 
+#if arm_ui
 using zui.GraphicsExtension;
+#end
 
 class DrawEllipseNode extends LogicNode {
 
@@ -13,6 +15,7 @@ class DrawEllipseNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
+		#if arm_ui
 		RenderToTexture.ensure2DContext("DrawEllipseNode");
 
 		final colorVec: Vec4 = inputs[1].get();
@@ -41,6 +44,7 @@ class DrawEllipseNode extends LogicNode {
 
 		RenderToTexture.g.rotate(-angle, cx, cy);
 		RenderToTexture.g.scale(1.0, scaleInv);
+		#end
 
 		runOutput(0);
 	}

@@ -34,6 +34,7 @@ def init_categories():
     arm_nodes.add_category('Camera', icon='OUTLINER_OB_CAMERA', section="data")
     arm_nodes.add_category('Material', icon='MATERIAL', section="data")
     arm_nodes.add_category('Light', icon='LIGHT', section="data")
+    arm_nodes.add_category('World', icon='WORLD', section="data")
     arm_nodes.add_category('Object', icon='OBJECT_DATA', section="data")
     arm_nodes.add_category('Scene', icon='SCENE_DATA', section="data")
     arm_nodes.add_category('Trait', icon='NODETREE', section="data")
