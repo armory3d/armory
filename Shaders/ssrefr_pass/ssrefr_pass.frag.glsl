@@ -101,6 +101,6 @@ void main() {
     intensity = clamp(intensity, 0.0, 1.0);
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
     refractionCol = clamp(refractionCol, 0.0, 1.0);
-	  vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
     fragColor.rgb = mix(refractionCol * intensity, color, opac);
 }
