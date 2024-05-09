@@ -232,7 +232,7 @@ project.addSources('Sources');
             khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
 
         # Move assets for published game to /data folder
-        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl')
+        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
