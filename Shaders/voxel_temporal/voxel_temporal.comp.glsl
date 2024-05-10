@@ -237,9 +237,8 @@ void main() {
 
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light.rgb / PI + indirect.rgb;
+			radiance.rgb *= light.rgb + indirect.rgb;
 			radiance.rgb += emission.rgb;
-			radiance = clamp(radiance, vec4(0.0), vec4(1.0));
 
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;
