@@ -472,6 +472,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
 """// Auto-generated
 package;
 """)
+        
         if winmode == 1 and state.target.startswith('html5'):
             f.write("""
 import js.Browser.document;
@@ -479,13 +480,12 @@ import js.Browser.window;
 import js.html.CanvasElement;
 import kha.Macros;
 """)
-
+        
         f.write("""
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
-
 
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
@@ -499,16 +499,16 @@ class Main {
             f.write("""
     public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")
 
-        f.write("""
-    public static function main() {
-        """)
-
+        f.write("""\n
+    public static function main() {""")
         if winmode == 1 and state.target.startswith('html5'): 
-            f.write("""setFullWindowCanvas();""")
+            f.write("""
+        setFullWindowCanvas();""")
 
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
+        
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -517,6 +517,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -525,11 +526,15 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
+        
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;""")
             elif wrd.arm_canvas_img_scaling_quality == 'high':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
+        
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -543,11 +548,10 @@ class Main {
             """ + ('true' if wrd.arm_vsync else 'false') + """,
             """ + pathpack + """.renderpath.RenderPathCreator.get
         );
-    }
-    """)
+    }""")
         
         if winmode == 1 and state.target.startswith('html5'):
-            f.write("""
+            f.write("""\n
     static function setFullWindowCanvas(): Void {
 		document.documentElement.style.padding = "0";
 		document.documentElement.style.margin = "0";
