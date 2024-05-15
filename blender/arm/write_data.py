@@ -470,16 +470,14 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
-package;
-""")
+package;\n""")
         
         if winmode == 1 and state.target.startswith('html5'):
             f.write("""
 import js.Browser.document;
 import js.Browser.window;
 import js.html.CanvasElement;
-import kha.Macros;
-""")
+import kha.Macros;\n""")
         
         f.write("""
 class Main {
@@ -578,8 +576,7 @@ class Main {
 	}""")
             
         f.write("""
-}
-""")
+}\n""")
 
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
