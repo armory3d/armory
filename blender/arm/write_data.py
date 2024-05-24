@@ -347,6 +347,9 @@ project.addSources('Sources');
         if wrd.arm_winresize or state.target == 'html5':
             assets.add_khafile_def('arm_resizable')
 
+        if get_winmode(wrd.arm_winmode) == 1 and state.target.startswith('html5'):
+            assets.add_khafile_def('kha_html5_disable_automatic_size_adjust')
+
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
@@ -467,12 +470,20 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
-package ;
+package;\n""")
+        
+        if winmode == 1 and state.target.startswith('html5'):
+            f.write("""
+import js.Browser.document;
+import js.Browser.window;
+import js.html.CanvasElement;
+import kha.Macros;\n""")
+        
+        f.write("""
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
-
 
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
@@ -486,11 +497,16 @@ class Main {
             f.write("""
     public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")
 
-        f.write("""
+        f.write("""\n
     public static function main() {""")
+        if winmode == 1 and state.target.startswith('html5'): 
+            f.write("""
+        setFullWindowCanvas();""")
+
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
+        
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -499,6 +515,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -507,11 +524,15 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
+        
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;""")
             elif wrd.arm_canvas_img_scaling_quality == 'high':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
+        
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -525,9 +546,37 @@ class Main {
             """ + ('true' if wrd.arm_vsync else 'false') + """,
             """ + pathpack + """.renderpath.RenderPathCreator.get
         );
-    }
-}
-""")
+    }""")
+        
+        if winmode == 1 and state.target.startswith('html5'):
+            f.write("""\n
+    static function setFullWindowCanvas(): Void {
+		document.documentElement.style.padding = "0";
+		document.documentElement.style.margin = "0";
+		document.body.style.padding = "0";
+		document.body.style.margin = "0";
+		final canvas: CanvasElement = cast document.getElementById(Macros.canvasId());
+		canvas.style.display = "block";
+		final resize = function() {
+			var w = document.documentElement.clientWidth;
+			var h = document.documentElement.clientHeight;
+			if (w == 0 || h == 0) {
+				w = window.innerWidth;
+				h = window.innerHeight;
+			}
+			canvas.width = Std.int(w * window.devicePixelRatio);
+			canvas.height = Std.int(h * window.devicePixelRatio);
+			if (canvas.style.width == "") {
+				canvas.style.width = "100%";
+				canvas.style.height = "100%";
+			}
+		}
+		window.onresize = resize;
+		resize();
+	}""")
+            
+        f.write("""
+}\n""")
 
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
