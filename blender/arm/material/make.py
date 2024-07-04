@@ -137,6 +137,21 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
 
         elif rp == 'translucent' or rp == 'refraction':
             c['bind_constants'].append({'name': 'receiveShadow', 'boolValue': material.arm_receive_shadow})
+
+            if material.arm_material_id != 0:
+                c['bind_constants'].append({'name': 'materialID', 'intValue': material.arm_material_id})
+
+                if material.arm_material_id == 2:
+                    wrd.world_defs += '_Hair'
+
+            elif rpdat.rp_sss_state != 'Off':
+                const = {'name': 'materialID'}
+                if needs_sss:
+                    const['intValue'] = 2
+                    sss_used = True
+                else:
+                    const['intValue'] = 0
+                c['bind_constants'].append(const)
         
         elif rp == 'shadowmap':
             if wrd.arm_batch_materials:

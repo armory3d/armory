@@ -445,25 +445,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
-    rp_gi: EnumProperty( # TODO: remove in 0.8
-        items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI', 'ERROR', 1),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
-               ],
-        name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
-    rp_voxelao: BoolProperty(name="Voxel AO", description="Voxel-based ambient occlusion", default=False, update=update_renderpath)
-    rp_voxelgi_resolution: EnumProperty(
-        items=[('32', '32', '32'),
-               ('64', '64', '64'),
-               ('128', '128', '128'),
-               ('256', '256', '256'),
-               ('512', '512', '512')],
-        name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
-    rp_voxelgi_resolution_z: EnumProperty(
-        items=[('1.0', '1.0', '1.0'),
-              ('0.5', '0.5', '0.5'),
-               ('0.25', '0.25', '0.25')],
-        name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)
@@ -507,7 +488,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
-        items=[('32', '32', '32'),
+        items=[('16', '16', '16'),
+               ('32', '32', '32'),
                ('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),

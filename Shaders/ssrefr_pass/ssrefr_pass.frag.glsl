@@ -6,8 +6,8 @@
 
 uniform sampler2D tex;
 uniform sampler2D tex1;
-uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
+uniform sampler2D gbufferD;
 uniform sampler2D gbufferD1;
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;

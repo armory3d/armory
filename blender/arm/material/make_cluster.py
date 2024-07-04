@@ -87,9 +87,11 @@ def write(vert: shader.Shader, frag: shader.Shader):
             frag.write(', voxels')
             frag.write(', voxelsSDF')
             frag.write(', clipmaps')
-        
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
+    if '_SSS' in wrd.world_defs:
+        frag.add_uniform("vec2 lightPlane", "_lightPlane")
+        frag.write(', matid, lightPlane')
     frag.write(');')
 
     frag.write('}') # for numLights

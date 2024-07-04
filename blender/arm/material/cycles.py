@@ -113,7 +113,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_ior, out_emission_col = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_ior, out_emission_col, out_subsurface_col, out_subsurface_radius, out_subsurface_ior, out_subsurface = parse_shader_input(node.inputs[0])
         if parse_surface:
             curshader.write(f'basecol = {out_basecol};')
             curshader.write(f'roughness = {out_roughness};')
@@ -121,6 +121,10 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
             curshader.write(f'occlusion = {out_occlusion};')
             curshader.write(f'specular = {out_specular};')
             curshader.write(f'emissionCol = {out_emission_col};')
+            curshader.write(f'subsurfaceCol = {out_subsurface_col};')
+            curshader.write(f'subsurfaceWeights = {out_subsurface_radius};')
+            curshader.write(f'subsurfaceIor = {out_subsurface_ior};')
+            curshader.write(f'subsurfaceScale = {out_subsurface};')
 
             if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
                 if '_EmissionShadeless' not in wrd.world_defs:
@@ -131,8 +135,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                     arm.assets.add_khafile_def('rp_gbuffer_emission')
 
         if parse_opacity:
-            curshader.write('opacity = {0};'.format(out_opacity))
             curshader.write('ior = {0};'.format(out_ior))
+            curshader.write('opacity = {0};'.format(out_opacity))
 
     # Volume
     # parse_volume_input(node.inputs[1])

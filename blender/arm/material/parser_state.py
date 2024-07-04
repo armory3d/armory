@@ -99,6 +99,10 @@ class ParserState:
         self.out_opacity: floatstr = '1.0'
         self.out_ior: floatstr = '1.450'
         self.out_emission_col: vec3str = 'vec3(0.0)'
+        self.out_subsurface_col: vec3str = 'vec3(0.0)'
+        self.out_subsurface_radius: vec3str = 'vec3(0.0)'
+        self.out_subsurface_ior: floatstr = '1.45'
+        self.out_subsurface: floatstr = '0.0'
 
     def reset_outs(self):
         """Reset the shader output values to their default values."""
@@ -110,11 +114,15 @@ class ParserState:
         self.out_opacity = '1.0'
         self.out_ior = '1.450'
         self.out_emission_col = 'vec3(0.0)'
+        self.out_subsurface_col: vec3str = 'vec3(0.0)'
+        self.out_subsurface_radius: vec3str = 'vec3(0.0)'
+        self.out_subsurface_ior: floatstr = '1.45'
+        self.out_subsurface: floatstr = '0.0'
 
-    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str]:
+    def get_outs(self) -> Tuple[vec3str, floatstr, floatstr, floatstr, floatstr, floatstr, floatstr, vec3str, vec3str, vec3str, floatstr]:
         """Return the shader output values as a tuple."""
         return (self.out_basecol, self.out_roughness, self.out_metallic, self.out_occlusion, self.out_specular,
-                self.out_opacity, self.out_ior, self.out_emission_col)
+                self.out_opacity, self.out_ior, self.out_emission_col, self.out_subsurface_col, self.out_subsurface_radius, self.out_subsurface_ior, self.out_subsurface)
 
 
     def get_parser_pass_suffix(self) -> str:

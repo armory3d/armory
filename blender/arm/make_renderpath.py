@@ -469,4 +469,6 @@ def get_num_gbuffer_rts_deferred()-> int:
     for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction'):
         if flag in wrd.world_defs:
             num += 1
+    if '_SSS' in wrd.world_defs:
+        num += 2
     return num

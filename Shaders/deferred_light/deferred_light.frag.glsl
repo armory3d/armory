@@ -444,13 +444,10 @@ void main() {
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
+		#ifdef _SSS
+		, matid, lightPlane
+		#endif
 	);
-
-	#ifdef _Spot
-	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
-	#endif
-	#endif
 
 #endif
 
@@ -503,6 +500,9 @@ void main() {
 			#endif
 			#ifdef _SSRS
 			, gbufferD, invVP, eye
+			#endif
+			#ifdef _SSS
+			, matid, lightPlane
 			#endif
 		);
 	}

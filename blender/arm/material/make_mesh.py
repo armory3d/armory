@@ -256,6 +256,8 @@ def make_deferred(con_mesh, rpasses):
         if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
             frag.add_uniform('int materialID')
             frag.write('if (materialID == 2) matid = 2;')
+            frag.write('fragColor[GBUF_IDX_SUBSURFACE_1] = vec4(subsurfaceCol, 1.0);')
+            frag.write('fragColor[GBUF_IDX_SUBSURFACE_2] = vec4(subsurfaceWeights, packFloat2(subsurfaceIor, subsurfaceScale));')
     else:
         frag.write('const uint matid = 0;')
 
@@ -545,37 +547,51 @@ def make_forward(con_mesh):
                 frag.add_uniform('mat4 LWVPSpotArray[4]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
+    frag.add_out('vec4 fragColor[GBUF_SIZE]')
+
     if not blend:
-        mrt = 0  # mrt: multiple render targets
-        if rpdat.rp_ssr:
-            mrt = 1
-        if rpdat.rp_ss_refraction:
-            mrt = 2
-        if mrt != 0:
-            # Store light gbuffer for post-processing
-            frag.add_out(f'vec4 fragColor[{mrt}+1]')
-            frag.add_include('std/gbuffer.glsl')
-            frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
-            frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-            frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-            frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
-            if rpdat.rp_ss_refraction:
-                if parse_opacity:
-                    frag.write(f'fragColor[2] = vec4(ior, opacity, 0.0, 0.0);')
-                else:
-                    frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
-
+        is_shadeless = mat_state.emission_type == mat_state.EmissionType.SHADELESS
+        if is_shadeless or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+            frag.write('uint matid = 0;')
+            if is_shadeless:
+                frag.write('matid = 1;')
+                frag.write('basecol = emissionCol;')
+            if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+                frag.add_uniform('int materialID')
+                frag.write('if (materialID == 2) matid = 2;')
+                frag.write('fragColor[GBUF_IDX_SUBSURFACE_1] = vec4(subsurfaceCol, 1.0);')
+                frag.write('fragColor[GBUF_IDX_SUBSURFACE_2] = vec4(subsurfaceWeights, packFloat2(subsurfaceIor, subsurfaceScale));')
         else:
-            frag.add_out('vec4 fragColor[1]')
-            frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
+            frag.write('const uint matid = 0;')
 
-        if '_LDR' in wrd.world_defs:
-            frag.add_include('std/tonemap.glsl')
-            frag.write('fragColor[0].rgb = tonemapFilmic(fragColor[0].rgb);')
+        frag.write('fragColor[GBUF_IDX_0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
+        frag.write('fragColor[GBUF_IDX_1] = vec4(n.xy, roughness, metallic);')
+
+        if '_gbuffer2' in wrd.world_defs:
+            if '_Veloc' in wrd.world_defs:
+                frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+                frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
+                frag.write('fragColor[GBUF_IDX_2].rg = vec2(posa - posb);')
+                frag.write('fragColor[GBUF_IDX_2].b = 0.0;')
+
+            if mat_state.material.arm_ignore_irradiance:
+                frag.write('fragColor[GBUF_IDX_2].b = 1.0;')
+
+        # Even if the material doesn't use emission we need to write to the
+        # emission buffer (if used) to prevent undefined behaviour
+        frag.write('#ifdef _EmissionShaded')
+        frag.write('fragColor[GBUF_IDX_EMISSION] = vec4(emissionCol, 0.0);')  #Alpha channel is unused at the moment
+        frag.write('#endif')
+
+        if '_SSRefraction' in wrd.world_defs:
+            if parse_opacity:
+                frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(ior, opacity, 0.0, 0.0);')
+            else:
+                frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
 
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
-        frag.write('fragColor[0].rgb *= p_fade;')
+        frag.write('fragColor[GBUF_IDX_0].rgb *= p_fade;')
 
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
@@ -595,7 +611,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if arm_discard or blend:
             opac = mat_state.material.arm_discard_opacity
             frag.write('if (opacity < {0}) discard;'.format(opac))
-        elif transluc_pass:
+        elif transluc_pass or '_SSRefraction' in wrd.world_defs:
             frag.write('if (opacity == 1.0) discard;')
         else:
             opac = '0.9999' # 1.0 - eps
@@ -692,6 +708,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('}')
     frag.write('vec3 direct = vec3(0.0);')
 
+    is_shadeless = mat_state.emission_type == mat_state.EmissionType.SHADELESS
+    if is_shadeless or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+        frag.write('uint matid = 0;')
+        if is_shadeless:
+            frag.write('matid = 1;')
+        if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+            frag.add_uniform('int materialID')
+            frag.write('if (materialID == 2) matid = 2;')
+
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
@@ -762,6 +787,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', clipmaps')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
+        if '_SSS' in wrd.world_defs:
+            frag.add_uniform("vec2 lightPlane", "_lightPlane")
+            frag.write(', matid, lightPlane')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:
@@ -786,6 +814,10 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     # We may not use emission, but the attribute will then be removed
     # by the shader compiler
     frag.write('vec3 emissionCol;')
+    frag.write('vec3 subsurfaceCol;')
+    frag.write('vec3 subsurfaceWeights;')
+    frag.write('float subsurfaceIor;')
+    frag.write('float subsurfaceScale;')
     if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior = 1.450;')#case shader is arm we don't get an ior

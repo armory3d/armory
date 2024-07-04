@@ -12,11 +12,6 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "voxelBlend",
-					"link": "_voxelBlend",
-					"ifdef": ["_VoxelTemporal"]
-				},
-				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
 				},

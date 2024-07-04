@@ -22,6 +22,9 @@
 #ifdef _Spot
 #include "std/light_common.glsl"
 #endif
+#ifdef _SSS
+#include "std/sss.glsl"
+#endif
 
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
@@ -100,6 +103,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _SSRS
 		, sampler2D gbufferD, mat4 invVP, vec3 eye
 	#endif
+	#ifdef _SSS
+		, uint matid, vec2 lightPlane
+	#endif
 	) {
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
@@ -147,23 +153,38 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#ifdef _SinglePoint
 			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+			#ifdef _SSS
+			if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[0], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[0]);
+			#endif
 			#endif
 			#ifdef _Clusters
 			if (index == 0) {
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[0], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[0]);
+				#endif
 			}
 			else if (index == 1) {
 				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[1], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[1]);
+				#endif
 			}
 			else if (index == 2) {
 				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[2], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[2]);
+				#endif
 			}
 			else if (index == 3) {
 				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[3], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[3]);
+				#endif
 			}
 			#endif
 		}
@@ -180,6 +201,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#ifdef _SinglePoint
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[0], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[0]);
+				#endif
 				#endif
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
@@ -192,11 +216,34 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 							#endif
 							, lPos.xyz / lPos.w, bias
 						);
+						#ifdef _SSS
+						if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpotArray[index], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[index]);
+						#endif
 					#else
-							 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-						else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-						else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-						else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+							 if (index == 0) {
+								 direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+								 #ifdef _SSS
+								 if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[0], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[0]);
+								 #endif
+							 }
+						else if (index == 1) {
+							direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+							#ifdef _SSS
+							if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[1], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[1]);
+							#endif
+						}
+						else if (index == 2) {
+							direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+							#ifdef _SSS
+							if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[2], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[2]);
+							#endif
+						}
+						else if (index == 3) {
+							direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+							#ifdef _SSS
+							if (matid == 2) direct += direct * SSSSTransmittance(LWVPSpot[3], p, n, normalize(lPos.xyz - p), lightPlane.y, shadowMapSpot[3]);
+							#endif
+						}
 					#endif
 				#endif
 			}
@@ -214,6 +261,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#ifdef _SinglePoint
 			#ifndef _Spot
 			direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+			#ifdef _SSS
+			if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[0], p, n, -l, lightPlane.y, 1.0);
+			#endif
 			#endif
 			#endif
 			#ifdef _Clusters
@@ -226,11 +276,34 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 					#endif
 					, ld, -l, bias, lightProj, n, index
 				);
+				#ifdef _SSS
+				if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[index], p, n, -l, lightPlane.y, 1.0);
+				#endif
 				#else
-					 if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
-				else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
-				else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
-				else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+					 if (index == 0) {
+						 direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+						 #ifdef _SSS
+						 if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[0], p, n, -l, lightPlane.y, 1.0);
+						 #endif
+					 }
+				else if (index == 1) {
+					direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
+					#ifdef _SSS
+					if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[1], p, n, -l, lightPlane.y, 1.0);
+					#endif
+				}
+				else if (index == 2) {
+					direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
+					#ifdef _SSS
+					if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[2], p, n, -l, lightPlane.y, 1.0);
+					#endif
+				}
+				else if (index == 3) {
+					direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+					#ifdef _SSS
+					if (matid == 2) direct += direct * SSSSTransmittanceCube(shadowMapPoint[3], p, n, -l, lightPlane.y, 1.0);
+					#endif
+				}
 				#endif
 			#endif
 		}
