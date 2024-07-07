@@ -1493,7 +1493,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, 'rp_sss_state')
         col = layout.column()
         col.enabled = rpdat.rp_sss_state != 'Off'
-        col.prop(rpdat, 'arm_sss_width')
+        #col.prop(rpdat, 'arm_sss_width')
         layout.prop(rpdat, 'arm_rp_displacement')
         if rpdat.arm_rp_displacement == 'Tessellation':
             layout.label(text='Mesh')
