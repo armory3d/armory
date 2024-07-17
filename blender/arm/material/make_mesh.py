@@ -682,7 +682,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('float clipmaps[voxelgiClipmapCount * 10]', link='_clipmaps')
 
     if '_VoxelAOvar' in wrd.world_defs:
-        frag.write('indirect *= (1.0 - traceAO(wposition, n, voxels, clipmaps).r);')
+        frag.write('indirect *= 1.0 - traceAO(wposition, n, voxels, clipmaps);')
 
     if '_VoxelGI' in wrd.world_defs:
         frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')

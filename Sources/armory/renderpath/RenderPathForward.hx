@@ -387,6 +387,9 @@ class RenderPathForward {
 			}
 			else
 			{
+				#if (rp_voxels == "Voxel GI")
+				path.clearImage("voxelsLight", 0x00000000);
+				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}

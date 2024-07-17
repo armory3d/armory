@@ -43,9 +43,9 @@ uniform mat4 LVP;
 #endif
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(rgba8) image3D voxelsB;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba8) image3D voxelsOut;
+uniform layout(rgba16) image3D voxelsB;
+uniform layout(rgba16) image3D voxelsOut;
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
 uniform sampler2DShadow shadowMapSpot;
@@ -75,15 +75,15 @@ uniform sampler2D gbuffer2;
 #endif
 #endif
 uniform vec3 eye;
-uniform layout(r8) image3D SDF;
+uniform layout(r16) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r8) image3D SDF;
+uniform layout(r16) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16) image3D voxelsB;
+uniform layout(r16) image3D voxelsOut;
 #endif
 #endif
 
@@ -110,7 +110,11 @@ void main() {
 	#endif
 
 	#ifdef _VoxelGI
-	vec4 light = convRGBA8ToVec4(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz)).r);
+	vec3 light = vec3(0.0);
+	light.r = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz))) / 255;
+	light.g = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x))) / 255;
+	light.b = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+	light /= 3;
 	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
@@ -237,7 +241,7 @@ void main() {
 
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light.rgb + indirect.rgb;
+			radiance.rgb *= light + indirect.rgb;
 			radiance.rgb += emission.rgb;
 
 			#else

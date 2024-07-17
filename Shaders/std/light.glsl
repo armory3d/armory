@@ -75,7 +75,7 @@ uniform sampler2D sltcMag;
 	#endif
 	#ifdef _Clusters
 		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
+		uniform mat4 LWVPSpot[maxLightsCluster];
 	#endif
 	#endif
 #endif

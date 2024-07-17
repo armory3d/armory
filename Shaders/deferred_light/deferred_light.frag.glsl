@@ -283,7 +283,7 @@ void main() {
 #endif
 
 #ifdef _VoxelAOvar
-	envl.rgb *= 1.0 - textureLod(voxels_ao, texCoord, 0.0).r;
+	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
 #endif
 
 #ifndef _VoxelGI

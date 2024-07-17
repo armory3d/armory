@@ -566,19 +566,12 @@ class Inc {
 		var res = iron.RenderPath.getVoxelRes();
 		var resZ =  iron.RenderPath.getVoxelResZ();
 
-		if (t.name == "voxels_diffuse" || t.name == "voxels_specular") {
+		if (t.name == "voxels_diffuse" || t.name == "voxels_specular" || t.name == "voxels_ao") {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
 			t.scale = getSuperSampling();
-			t.format = getHdrFormat();
-		}
-		else if (t.name == "voxels_ao") {
-			t.width = 0;
-			t.height = 0;
-			t.displayp = getDisplayp();
-			t.scale = getSuperSampling();
-			t.format = "R8";
+			t.format = t.name == "voxels_ao" ? "R8" : "RGBA32";
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -591,7 +584,7 @@ class Inc {
 				#if (rp_voxels == "Voxel AO")
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "R8";
+						t.format = "R16";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
@@ -606,29 +599,29 @@ class Inc {
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
+						t.format = "RGBA64";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
-						t.format = "RGBA32";
 						t.depth = res;
 					}
 					else if (t.name == "voxelsLight") {
+						t.format = "R32";
 						t.width = res;
 						t.height = res;
-						t.format = "R32";
-						t.depth = res;
+						t.depth = res * 3;
 					}
 					else {
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.format = "R32";
 						t.depth = res * 9;
 					}
 				}
 				#end
 			}
 		}
-		t.mipmaps = true;
 		t.is_image = true;
+		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end

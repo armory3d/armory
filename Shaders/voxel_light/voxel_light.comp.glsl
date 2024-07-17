@@ -83,9 +83,7 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 void main() {
 	int res = voxelgiResolution.x;
-
 	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
-
 	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
 	P = P * 2.0 - 1.0;
 	P *= clipmaps[int(clipmapLevel * 10)];
@@ -138,8 +136,8 @@ void main() {
 		}
 	}
 
-	light.rgb += visibility * lightColor;
-	light = clamp(light, vec4(0.0), vec4(1.0));
-
-	imageAtomicMax(voxelsLight, dst, convVec4ToRGBA8(light));
+	light.rgb = visibility * lightColor;
+	imageAtomicAdd(voxelsLight, dst, uint(light.r * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(light.g * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(light.b * 255));
 }
