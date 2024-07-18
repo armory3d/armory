@@ -662,8 +662,8 @@ class Inc {
 				#end
 			}
 		}
-		t.is_image = true;
 		t.mipmaps = true;
+		t.is_image = true;
 		path.createRenderTarget(t);
 	}
 	#end
