@@ -693,7 +693,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
         frag.write('if (roughness < 1.0 && specular > 0.0) {')
         frag.write('    vec2 pixel = gl_FragCoord.xy;')
-        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, pixel).rgb * specular * voxelgiRefl;')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps/*, pixel*/).rgb * specular * voxelgiRefl;')
         frag.write('}')
     frag.write('vec3 direct = vec3(0.0);')
 

@@ -68,7 +68,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps, pixel).rgb;
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps/*, pixel*/).rgb;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

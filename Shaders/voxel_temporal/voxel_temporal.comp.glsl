@@ -42,10 +42,12 @@ uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
 uniform sampler3D voxelsSampler;
+uniform sampler3D voxelsSDFSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba16) image3D voxelsB;
 uniform layout(rgba16) image3D voxelsOut;
+uniform layout(rgba16) image3D voxelsBounce;
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
 uniform sampler2DShadow shadowMapSpot;
@@ -94,12 +96,6 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 void main() {
 	int res = voxelgiResolution.x;
-	#ifdef _VoxelGI
-	vec4 aniso_colors[6];
-	#else
-	float opac;
-	float aniso_colors[6];
-	#endif
 
 	#ifdef _VoxelGI
 	float sdf = float(clipmaps[int(clipmapLevel * 10)]) * 2.0 * res;
@@ -119,12 +115,19 @@ void main() {
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
+		#ifdef _VoxelGI
+		vec4 aniso_colors[6];
+		#else
+		float aniso_colors[6];
+		#endif
+
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 		ivec3 dst = src;
 		dst.y += clipmapLevel * res;
 		#ifdef _VoxelGI
 		vec4 radiance = vec4(0.0);
+		vec4 bounce = vec4(0.0);
 		#else
 		float opac = 0.0;
 		#endif
@@ -172,8 +175,8 @@ void main() {
 
 			vec4 g1 = textureLod(gbuffer1, uv, 0.0); // Basecolor.rgb, spec/occ
 			vec2 occspec = unpackFloat2(g1.a);
-			vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
-			vec3 f0 = surfaceF0(g1.rgb, metallic);
+			vec3 albedo = surfaceAlbedo(basecol.rgb, metallic); // g1.rgb - basecolor
+			vec3 f0 = surfaceF0(basecol.rgb, metallic);
 
 			vec3 v = normalize(eye - wposition);
 			float dotNV = max(dot(wnormal, v), 0.0);
@@ -238,13 +241,11 @@ void main() {
 			#endif
 
 			radiance = basecol;
-
-			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-
-			radiance.rgb *= light + indirect.rgb;
+			vec4 traceD = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
+			vec4 traceS = traceSpecular(wposition, wnormal, voxelsSampler, voxelsSDFSampler, -v, roughness, clipmaps);
+			vec3 indirect = basecol.rgb * (traceS.rgb + traceD.rgb) / 2;
+			radiance.rgb *= light / PI + indirect * envl.rgb * (1.0 - (traceS.a + traceD.a) / 2);
 			radiance.rgb += emission.rgb;
-
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;
 			#endif
