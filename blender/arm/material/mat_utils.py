@@ -5,6 +5,7 @@ import bpy
 import arm.utils
 import arm.make_state as make_state
 import arm.material.cycles as cycles
+import arm.assets as assets
 import arm.log as log
 
 if arm.is_reload(__name__):
@@ -42,21 +43,24 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
-    elif is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
-        ar.append('refraction')
     else:
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
+        if is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending and not rpdat.rp_ss_refraction:
             ar.append('translucent')
-        if rpdat.rp_voxelao and has_voxels:
+        elif is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
+            ar.append('refraction')
+        if rpdat.rp_voxels != "Off" and has_voxels:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
 
     if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
-        ar.append('shadowmap')
+        if 'translucent' in ar or 'refraction' in ar:
+            ar.append('shadowmap_transparent')
+        else:
+            ar.append('shadowmap')
 
     return ar
 

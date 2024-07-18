@@ -29,16 +29,6 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
-				},
-				{
-					"name": "PPComp9",
-					"link": "_PPComp9",
-					"ifdef": ["_CPostprocess"]
-				},
-				{
-					"name": "PPComp10",
-					"link": "_PPComp10",
-					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray2.vert.glsl",

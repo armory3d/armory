@@ -82,6 +82,7 @@ def build():
                         if write_radiance:
                             # Set world def, everything else is handled by write_probes()
                             wrd.world_defs += '_Rad'
+                            assets.add_khafile_def("arm_radiance")
 
     write_probes.check_last_cmft_time()
 
@@ -184,6 +185,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
             world.world_defs += '_Irr'
+            assets.add_khafile_def("arm_irradiance")
         col = world.color
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0

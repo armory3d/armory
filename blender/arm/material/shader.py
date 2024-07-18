@@ -284,6 +284,9 @@ class Shader:
             elif ar[0] == 'vec4' and '[' in ar[1]:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
+            elif ar[0] == 'mat4' and '[' in ar[1]:
+                ar[0] = 'floats'
+                ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
         if top:
             if not included and s not in self.uniforms_top:

@@ -414,33 +414,91 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        armature = obj.find_armature()
-        apply_modifiers = not armature
-
-        obj_eval = obj.evaluated_get(depsgraph) if apply_modifiers else obj
-        export_mesh = obj_eval.to_mesh()
-        # TODO: build tilecache here
         print("Started visualization generation")
-        # For visualization
+
+        # Append objects to be included in NavMesh
+        export_objects = []
+        # Append Object with trait
+        export_objects.append(obj)
+        # Get NavMesh trait
+        for trait in obj.arm_traitlist:
+            if trait.arm_traitpropslist and trait.class_name_prop == 'NavMesh':
+                # Check if child objects should be included in NavMesh
+                prop = trait.arm_traitpropslist['combineImmidiateChildren']
+                if(prop.get_value()):
+                    # If yes, check if child is a mesh
+                    for child_obj in obj.children:
+                        if obj.type == 'MESH':
+                            # Append child
+                            export_objects.append(child_obj)
+
+        # get dependency graph
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        # Get build directory
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
 
-        nav_mesh_name = 'nav_' + obj_eval.data.name
+        # Get export OBJ name and path
+        nav_mesh_name = 'nav_' + obj.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
 
+        # Max index of objects (vertices) traversed
+        max_overall_index = 0
+        # Open to OBJ file
         with open(mesh_path, 'w') as f:
-            for v in export_mesh.vertices:
-                f.write("v %.4f " % (v.co[0] * obj_eval.scale.x))
-                f.write("%.4f " % (v.co[2] * obj_eval.scale.z))
-                f.write("%.4f\n" % (v.co[1] * obj_eval.scale.y)) # Flipped
-            for p in export_mesh.polygons:
-                f.write("f")
-                for i in reversed(p.vertices): # Flipped normals
-                    f.write(" %d" % (i + 1))
-                f.write("\n")
+            for export_obj in export_objects:
+                # If armature, apply armature modifier
+                armature = export_obj.find_armature()
+                apply_modifiers = not armature
+                obj_eval = export_obj.evaluated_get(depsgraph) if apply_modifiers else export_obj
 
+                # Get mesh data
+                export_mesh = obj_eval.to_mesh()
+
+                # Get world transform
+                world_matrix = obj_eval.matrix_world
+
+                # Iterate over the triangles and get vertices and indices
+                triangles = export_mesh.loop_triangles
+                traversed_indices = []
+
+                # For each triangle in the object
+                for triangle in triangles:
+                    # For each index in triangle
+                    for loop_index in triangle.loops:
+                        # Get vertex index
+                        vertex_index = export_mesh.loops[loop_index].vertex_index
+                        # Skip if vertex already appended
+                        if (vertex_index not in traversed_indices):
+                            # If not, append vertex
+                            traversed_indices.append(vertex_index)
+                            vertex = export_mesh.vertices[vertex_index].co
+                            # Apply world transform
+                            tv = world_matrix @ vertex
+                            # Write to OBJ
+                            f.write("v %.4f " % (tv[0]))
+                            f.write("%.4f " % (tv[2]))
+                            f.write("%.4f\n" % (tv[1])) # Flipped
+
+                # Max index of this object
+                max_index = 0
+                # For each triangle in the object
+                for triangle in triangles:
+                    # Write index to OBJ
+                    f.write("f")
+                    for loop_index in triangle.loops:
+                        # index of this object should be > index of previous objects
+                        curr_index = max_overall_index + loop_index + 1
+                        f.write(" %d" % (curr_index))
+                        if(curr_index > max_overall_index):
+                            max_index = curr_index
+                    f.write("\n")
+                # Store max overall index
+                max_overall_index = max_index
+
+        # Get buildnavjs
         buildnavjs_path = arm.utils.get_sdk_path() + '/lib/haxerecast/buildnavjs'
 
         # append config values
@@ -461,9 +519,10 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         navmesh = bpy.ops.import_scene.obj(filepath=mesh_path)
         navmesh = bpy.context.selected_objects[0]
 
+        # NavMesh preview settings, cleanup
         navmesh.name = nav_mesh_name
         navmesh.rotation_euler = (0, 0, 0)
-        navmesh.location = (obj.location.x, obj.location.y, obj.location.z)
+        navmesh.location = (0, 0, 0)
         navmesh.arm_export = False
 
         bpy.context.view_layer.objects.active = navmesh
@@ -886,8 +945,11 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
 
             # Bundled scripts
             else:
-                row.enabled = item.class_name_prop != ''
-                row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
+                if item.class_name_prop == 'NavMesh':
+                    row.operator("arm.generate_navmesh", icon="UV_VERTEXSEL")
+                else:
+                    row.enabled = item.class_name_prop != ''
+                    row.operator("arm.edit_bundled_script", icon_value=ICON_HAXE).is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")
