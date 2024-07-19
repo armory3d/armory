@@ -243,7 +243,7 @@ void main() {
 			radiance = basecol;
 			vec4 traceD = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect_diffuse = light * traceD.rgb + envl * (1.0 - traceD.a);
-			radiance.rgb *= indirect_diffuse
+			radiance.rgb *= indirect_diffuse;
 			vec4 traceS = traceSpecular(wposition, wnormal, voxelsSampler, voxelsSDFSampler, -v, roughness, clipmaps);
 			vec3 indirect_specular = light * traceS.rgb + envl * (1.0 - traceS.a);
 			radiance.rgb *= indirect_specular;
