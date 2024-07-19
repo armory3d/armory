@@ -105,14 +105,6 @@ void main() {
 	#endif
 	#endif
 
-	#ifdef _VoxelGI
-	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz))) / 255;
-	light.g = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-	light /= 3;
-	#endif
-
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
 		#ifdef _VoxelGI
@@ -134,6 +126,11 @@ void main() {
 
 		if (i < 6) {
 			#ifdef _VoxelGI
+			vec3 light = vec3(0.0);
+			light.r = float(imageLoad(voxelsLight, src)) / 255;
+			light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+			light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+			light /= 3;
 			vec4 basecol = vec4(0.0);
 			basecol.r = float(imageLoad(voxels, src)) / 255;
 			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
@@ -241,12 +238,8 @@ void main() {
 			#endif
 
 			radiance = basecol;
-			vec4 traceD = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec3 indirect_diffuse = light * traceD.rgb + envl * (1.0 - traceD.a);
-			radiance.rgb *= indirect_diffuse;
-			vec4 traceS = traceSpecular(wposition, wnormal, voxelsSampler, voxelsSDFSampler, -v, roughness, clipmaps);
-			vec3 indirect_specular = light * traceS.rgb + envl * (1.0 - traceS.a);
-			radiance.rgb *= indirect_specular;
+			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
+			radiance.rgb *= light / PI * (envl * (1.0 - trace.a) + trace.rgb);
 			radiance.rgb += emission.rgb;
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;

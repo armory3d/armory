@@ -649,7 +649,7 @@ class Inc {
 					}
 					else if (t.name == "voxelsLight") {
 						t.format = "R32";
-						t.width = res;
+						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 3;
 					}
