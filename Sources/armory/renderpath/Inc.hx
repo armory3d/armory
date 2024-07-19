@@ -933,7 +933,7 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_tc1, rts.get("voxelsOut").image, kha.compute.Access.Write);
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
-		kha.compute.Compute.setSampledTexture(voxel_tl1, rts.get("voxelsSDFtmp").image);
+		kha.compute.Compute.setSampledTexture(voxel_tl1, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsLight").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tf1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
 		#else

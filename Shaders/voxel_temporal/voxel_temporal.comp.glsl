@@ -175,8 +175,8 @@ void main() {
 
 			vec4 g1 = textureLod(gbuffer1, uv, 0.0); // Basecolor.rgb, spec/occ
 			vec2 occspec = unpackFloat2(g1.a);
-			vec3 albedo = surfaceAlbedo(basecol.rgb, metallic); // g1.rgb - basecolor
-			vec3 f0 = surfaceF0(basecol.rgb, metallic);
+			vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
+			vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 			vec3 v = normalize(eye - wposition);
 			float dotNV = max(dot(wnormal, v), 0.0);
@@ -242,12 +242,11 @@ void main() {
 
 			radiance = basecol;
 			vec4 traceD = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec4 indirect_diffuse = traceD * vec4(envl.rgb, 1.0) * (1.0 - traceD.a);
-			imageStore(voxelsB, dst, indirect_diffuse);
-			memoryBarrierImage();
+			vec3 indirect_diffuse = light * traceD.rgb + envl * (1.0 - traceD.a);
+			radiance.rgb *= indirect_diffuse
 			vec4 traceS = traceSpecular(wposition, wnormal, voxelsSampler, voxelsSDFSampler, -v, roughness, clipmaps);
-			vec3 indirect_specular = indirect_diffuse.rgb * traceS.rgb;
-			radiance.rgb *= light + indirect_diffuse.rgb + indirect_specular;
+			vec3 indirect_specular = light * traceS.rgb + envl * (1.0 - traceS.a);
+			radiance.rgb *= indirect_specular;
 			radiance.rgb += emission.rgb;
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;
