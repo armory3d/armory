@@ -200,8 +200,8 @@ void main() {
 				light[face_offsets.y] * direction_weights.y +
 				light[face_offsets.z] * direction_weights.z;
 
-		imageAtomicMax(voxelsLight, src, uint(sam.r * 255));
-		imageAtomicMax(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x), uint(sam.g * 255));
-		imageAtomicMax(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2), uint(sam.b * 255));
+		imageAtomicAdd(voxelsLight, src, uint(sam.r * 255));
+		imageAtomicAdd(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x), uint(sam.g * 255));
+		imageAtomicAdd(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2), uint(sam.b * 255));
 	}
 }
