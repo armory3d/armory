@@ -98,7 +98,7 @@ void main() {
 
 	vec4 light[6];
 
-	for (int i=0; i<6; i++) {
+	for (int i = 0; i < 6; i++) {
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 
@@ -177,7 +177,8 @@ void main() {
 
 		light[i].rgb = basecol.rgb * visibility * lightColor;
 	}
-	for (int i=0; i<6; i++) {
+
+	for (int i = 0; i < 6; i++) {
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 		vec3 N = vec3(0.0);
