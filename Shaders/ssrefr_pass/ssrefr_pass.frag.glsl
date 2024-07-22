@@ -48,7 +48,7 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist / 500) return vec4(0.0);
+	if (abs(ddepth) > ss_refractionSearchDist || abs(ddepth) <= 0.0) return vec4(texCoord, 0.0, 1.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -70,9 +70,10 @@ void main() {
     float ior = gr.x;
     float opac = gr.y;
 
-    float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+    float d1 = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	float d2 = textureLod(gbufferD1, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 1.0 || ior == 1.0 || opac == 1.0) {
+    if (d1 == 1.0 || d2 == 1.0 || ior == 1.0 || opac == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -83,7 +84,7 @@ void main() {
     n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, d, cameraProj);
+    vec3 viewPos = getPosView(viewRay, d1, cameraProj);
     vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
