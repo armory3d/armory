@@ -8,7 +8,7 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelAOvar
+#ifdef _VoxelShadow
 #include "std/conetrace.glsl"
 #endif
 #ifdef _SSS
@@ -21,6 +21,7 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
@@ -28,15 +29,17 @@ uniform sampler2D gbuffer1;
 	uniform sampler2D gbufferEmission;
 #endif
 
+#ifdef _VoxelGI
+uniform sampler2D voxels_diffuse;
+uniform sampler2D voxels_specular;
+#endif
 #ifdef _VoxelAOvar
+uniform sampler2D voxels_ao;
+#endif
+#ifdef _VoxelShadow
+uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform sampler3D voxels;
-#endif
-#ifdef _VoxelGITemporal
-uniform sampler3D voxelsLast;
-uniform float voxelBlend;
-#endif
-#ifdef _VoxelGICam
-uniform vec3 eyeSnap;
+uniform sampler3D voxelsSDF;
 #endif
 
 uniform float envmapStrength;
@@ -273,26 +276,31 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifdef _VoxelAOvar
-
-	#ifdef _VoxelGICam
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
-	#endif
-
-	#ifndef _VoxelAONoTrace
-	#ifdef _VoxelGITemporal
-	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
-					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
-	#else
-	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
-	#endif
-	#endif
-
+#ifdef _VoxelGI
+	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff * albedo;
+	if(roughness < 1.0 && occspec.y > 0.0)
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * voxelgiRefl * occspec.y;
 #endif
 
+#ifdef _VoxelAOvar
+	envl.rgb *= 1.0 - textureLod(voxels_ao, texCoord, 0.0).r;
+#endif
+
+#ifndef _VoxelGI
 	fragColor.rgb = envl;
+#endif
+	// Show voxels
+	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	// vec3 direction = vec3(0.0, 0.0, -1.0);
+	// vec4 color = vec4(0.0f);
+	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	// 	vec3 point = origin + 0.005 * step * direction;
+	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	// }
+	// fragColor.rgb += color.rgb;
+
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _SSAO
 	// #ifdef _RTGI
@@ -319,19 +327,6 @@ void main() {
 	}
 	#endif
 #endif
-
-	// Show voxels
-	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
-	// vec3 direction = vec3(0.0, 0.0, -1.0);
-	// vec4 color = vec4(0.0f);
-	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
-	// 	vec3 point = origin + 0.005 * step * direction;
-	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
-	// }
-	// fragColor.rgb += color.rgb;
-
-	// Show SSAO
-	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
 #ifdef _Sun
 	vec3 sh = normalize(v + sunDir);
@@ -373,12 +368,10 @@ void main() {
 		#endif
 	#endif
 
-	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
+	svisibility *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps);
 	#endif
-	#endif
-
+	
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -440,10 +433,10 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
-		#ifdef _VoxelAOvar
 		#ifdef _VoxelShadow
-		, voxels, voxpos
-		#endif
+		, voxels 
+		, voxelsSDF
+		, clipmaps
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -500,10 +493,10 @@ void main() {
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
-			#ifdef _VoxelAOvar
 			#ifdef _VoxelShadow
-			, voxels, voxpos
-			#endif
+			, voxels
+			, voxelsSDF
+			, clipmaps
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
@@ -515,5 +508,13 @@ void main() {
 	}
 #endif // _Clusters
 
+/*
+#ifdef _VoxelRefract
+if(opac < 1.0) {
+	vec3 refraction = traceRefraction(p, n, voxels, v, ior, roughness, eye) * voxelgiRefr;
+	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
+}
+#endif
+*/
 	fragColor.a = 1.0; // Mark as opaque
 }

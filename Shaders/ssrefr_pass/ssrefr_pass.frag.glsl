@@ -81,6 +81,7 @@ void main() {
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
     n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    n = normalize(n);
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
