@@ -1,3 +1,6 @@
+//https://lettier.github.io/3d-game-shaders-for-beginners/screen-space-refraction.html
+//Implemented by Yvain Douard.
+
 #version 450
 
 #include "compiled.inc"
@@ -10,6 +13,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1;
 uniform sampler2D gbuffer_refraction; // ior\opacity
+uniform sampler2D voxels_refraction;
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
@@ -35,7 +39,7 @@ vec2 getProjectedCoord(const vec3 hit) {
 }
 
 float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hit.z;
 }
@@ -48,7 +52,7 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist / 500) return vec4(0.0);
+	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -72,7 +76,7 @@ void main() {
 
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 1.0 || ior == 1.0 || opac == 1.0) {
+    if (d == 0.0 || ior == 1.0 || opac == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -89,18 +93,27 @@ void main() {
     hitCoord = viewPos;
 
     vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
-
     vec4 coords = rayCast(dir);
-    vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-    float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-    float refractivity = 1.0;
+	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-    float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
+	float refractivity = 1.0 - roughness;
+	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((ss_refractionSearchDist - length(viewPos - hitCoord)) * (1.0 / ss_refractionSearchDist), 0.0, 1.0) * coords.w;
 
-    intensity = clamp(intensity, 0.0, 1.0);
-    vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
+	intensity = clamp(intensity, 0.0, 1.0);
+
+	vec3 refractionCol;
+	if (all(equal(coords, vec4(0.0))))
+		refractionCol = textureLod(tex1, texCoord, 0.0).rgb;
+	else
+		refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
     refractionCol = clamp(refractionCol, 0.0, 1.0);
-	  vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
-    fragColor.rgb = mix(refractionCol * intensity, color, opac);
+	refractionCol *= intensity;
+	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+	#ifdef _VoxelRefract
+	vec3 voxelsRefr = textureLod(voxels_refraction, texCoord, 0.0).rgb * voxelgiRefr;
+	refractionCol = (refractionCol + voxelsRefr) / 2;
+	#endif
+    fragColor.rgb = mix(refractionCol, color, opac);
 }

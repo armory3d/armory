@@ -601,7 +601,7 @@ def write_compiledglsl(defs, make_variants):
                 f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
                 idx_refraction += 1
 
-            if '_SSRefraction' in wrd.world_defs:
+            if '_SSRefraction' in wrd.world_defs or '_VoxelRefract' in wrd.world_defs:
                 f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
@@ -773,11 +773,12 @@ const float compoDOFLength = 160.0;
             f.write("""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """);
 const int voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """;
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
-const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;
-const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
+const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
+const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
+const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
+const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""

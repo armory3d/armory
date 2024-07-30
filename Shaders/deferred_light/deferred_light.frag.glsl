@@ -8,8 +8,13 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelShadow
+#ifdef _VoxelRefract
 #include "std/conetrace.glsl"
+#endif
+#ifdef _VoxelShadow
+#ifndef _VoxelRefract
+#include "std/conetrace.glsl"
+#endif
 #endif
 #ifdef _SSS
 #include "std/sss.glsl"
@@ -32,14 +37,16 @@ uniform sampler2D gbuffer1;
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
+#ifdef _VoxelRefract
+uniform sampler2D voxels_refraction;
+uniform sampler2D gbuffer_refraction;
+#endif
 #endif
 #ifdef _VoxelAOvar
 uniform sampler2D voxels_ao;
 #endif
 #ifdef _VoxelShadow
-uniform float clipmaps[voxelgiClipmapCount * 10];
-uniform sampler3D voxels;
-uniform sampler3D voxelsSDF;
+uniform sampler2D voxels_shadows;
 #endif
 
 uniform float envmapStrength;
@@ -277,13 +284,13 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelGI
-	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff * albedo;
+	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * voxelgiRefl * occspec.y;
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #endif
 
 #ifdef _VoxelAOvar
-	envl.rgb *= 1.0 - textureLod(voxels_ao, texCoord, 0.0).r;
+	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
 #endif
 
 #ifndef _VoxelGI
@@ -369,7 +376,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps);
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
 	
 	#ifdef _SSRS
@@ -434,9 +441,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-		, voxels 
-		, voxelsSDF
-		, clipmaps
+		, texCoord
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -494,9 +499,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, voxels
-			, voxelsSDF
-			, clipmaps
+			, texCoord
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
@@ -507,14 +510,5 @@ void main() {
 		);
 	}
 #endif // _Clusters
-
-/*
-#ifdef _VoxelRefract
-if(opac < 1.0) {
-	vec3 refraction = traceRefraction(p, n, voxels, v, ior, roughness, eye) * voxelgiRefr;
-	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
-}
-#endif
-*/
 	fragColor.a = 1.0; // Mark as opaque
 }
