@@ -85,7 +85,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs:
         frag.add_uniform("sampler2D voxels_shadows", top=True)
-        frag.write(', gl_FragCoord.xy')
+        frag.write(', texCoord')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     frag.write(');')

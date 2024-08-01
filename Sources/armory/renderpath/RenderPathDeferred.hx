@@ -354,7 +354,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.depth_buffer = "main";
+			//t.depth_buffer = "main";
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
@@ -472,11 +472,6 @@ class RenderPathDeferred {
 			path.setTarget("gbuffer2");
 			path.clearTarget(0xff000000);
 		}
-		#end
-
-		#if (arm_voxelgi_refract || rp_ssrefr)
-		path.setTarget("gbuffer_refraction");
-		path.clearTarget(0xff000000);
 		#end
 
 		RenderPathCreator.setTargetMeshes();
@@ -861,6 +856,7 @@ class RenderPathDeferred {
 				path.drawMeshes("refraction");
 
 				#if arm_voxelgi_refract
+				//we need the updated half depth to resolve the refraction objects writen by the 'refraction' pass
 				path.setTarget("half");
 				path.bindTarget("_main", "texdepth");
 				path.drawShader("shader_datas/downsample_depth/downsample_depth");

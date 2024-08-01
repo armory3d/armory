@@ -762,27 +762,6 @@ class Inc {
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("voxelsLight");
 			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
-
-			voxel_tg1 = voxel_sh1.getTextureUnit("gbuffer0");
-			voxel_th1 = voxel_sh1.getTextureUnit("gbuffer1");
-			#if (rp_gbuffer2 && arm_deferred)
-			voxel_ti1 = voxel_sh1.getTextureUnit("gbuffer2");
-			#end
-			#if arm_brdf
-			voxel_tj1 = voxel_sh1.getTextureUnit("senvmapBrdf");
-			#end
-			#if arm_radiance
-			voxel_tk1 = voxel_sh1.getTextureUnit("senvmapRadiance");
-			voxel_ce1 = voxel_sh1.getConstantLocation("envmapNumMipmaps");
-			#end
-			#if arm_irradiance
-			voxel_cc1 = voxel_sh1.getConstantLocation("shirr");
-			#end
-			voxel_cd1 = voxel_sh1.getConstantLocation("envmapStrength");
-			#if arm_envldr
-			voxel_cf1 = voxel_sh1.getConstantLocation("backgroundCol");
-			#end
-			voxel_cg1 = voxel_sh1.getConstantLocation("eye");
 			#else
 			#if arm_voxelgi_shadows
 			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
@@ -976,43 +955,6 @@ class Inc {
 		kha.compute.Compute.setFloats(voxel_ca1, fa);
 
 		kha.compute.Compute.setInt(voxel_cb1, iron.RenderPath.clipmapLevel);
-
-		#if (rp_voxels == "Voxel GI")
-		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tg1, rts.get("gbuffer0").image);
-		kha.compute.Compute.setSampledTexture(voxel_th1, rts.get("gbuffer1").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tg1, rts.get("lbuffer1").image);
-		kha.compute.Compute.setSampledTexture(voxel_th1, rts.get("lbuffer0").image);
-		#end
-		#if (rp_gbuffer2 && arm_deferred)
-		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("gbuffer2").image);
-		#end
-		#if arm_brdf
-		kha.compute.Compute.setSampledTexture(voxel_tj1, iron.Scene.active.embedded.get("brdf.png"));
-		#end
-		#if arm_radiance
-		kha.compute.Compute.setSampledTexture(voxel_tk1, iron.Scene.active.world.probe.radiance);
-		var w = iron.Scene.active.world;
-		var i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1;
-		kha.compute.Compute.setFloat(voxel_ce1, i);
-		#end
-		#if arm_irradiance
-		fa = iron.Scene.active.world == null ? iron.data.WorldData.getEmptyIrradiance() : iron.Scene.active.world.probe.irradiance;
-		kha.compute.Compute.setFloats(voxel_cc1, fa);
-		#end
-		kha.compute.Compute.setFloat(voxel_cd1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
-
-		#if arm_envldr
-		var envCol:iron.math.Vec3;
-		if (camera.data.raw.clear_color != null)
-			envCol = new iron.math.Vec3(camera.data.raw.clear_color[0], camera.data.raw.clear_color[1], camera.data.raw.clear_color[2]);
-		else
-			envCol = new iron.math.Vec3(0.0);
-		kha.compute.Compute.setFloat3(voxel_cf1, envCol.x, envCol.y, envCol.z);
-		#end
-		kha.compute.Compute.setFloat3(voxel_cg1, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-		#end
 
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 	}
@@ -1501,7 +1443,11 @@ class Inc {
 	 		#if rp_shadowmap
 	 		if (l.data.raw.type == "sun") {
 				#if arm_shadowmap_atlas
+				#if arm_shadowmap_atlas_single_map
+	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlas").image);
+	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlasSun").image);
+	 			#end
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMap").image);
 	 			#end
@@ -1509,7 +1455,11 @@ class Inc {
 	 		}
 	 		else if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
 				#if arm_shadowmap_atlas
+				#if arm_shadowmap_atlas_single_map
+	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlas").image);
+	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlasSpot").image);
+	 			#end
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapSpot[" + spotIndex + "]").image);
 	 			spotIndex++;
@@ -1518,7 +1468,11 @@ class Inc {
 	 		}
 	 		else {
 				#if arm_shadowmap_atlas
+				#if arm_shadowmap_atlas_single_map
+				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlas").image);
+				#else
 				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlasPoint").image);
+				#end
 				kha.compute.Compute.setInt(voxel_cl5, i);
 				kha.compute.Compute.setFloats(voxel_cm5, iron.object.LightObject.pointLightsData);
 				#else

@@ -172,9 +172,9 @@ void main() {
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 diffuse_indirect = trace.rgb + envl * (1.0 - trace.a);
 			#ifdef _ShadowMap
-			radiance.rgb *= light / PI + diffuse_indirect;
+			radiance.rgb *= light + diffuse_indirect;
 			#else
-			radiance.rgb *= 1.0 / PI + diffuse_indirect;
+			radiance.rgb *= diffuse_indirect;
 			#endif
 			radiance.rgb += emission.rgb;
 			#else
