@@ -19,8 +19,6 @@ else:
 
 def make(context_id):
     con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
-    con_refract.data["vertex_elements"].append({'name' : 'pos', 'data' : 'short4norm'})
-
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
 
     vert = con_refract.vert

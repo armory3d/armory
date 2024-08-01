@@ -680,7 +680,6 @@ class Inc {
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end
@@ -955,7 +954,7 @@ class Inc {
 		kha.compute.Compute.setShader(voxel_sh1);
 
 		kha.compute.Compute.setTexture(voxel_ta1, rts.get("voxels").image, kha.compute.Access.Read);
-		kha.compute.Compute.setTexture(voxel_tb1, rts.get("voxelsOutB").image, kha.compute.Access.ReadWrite);
+		kha.compute.Compute.setTexture(voxel_tb1, rts.get("voxelsOutB").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tc1, rts.get("voxelsOut").image, kha.compute.Access.Write);
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
@@ -989,6 +988,7 @@ class Inc {
 	}
 
 	#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
+
 	public static function computeVoxelsSDF() {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
@@ -1037,7 +1037,6 @@ class Inc {
 		}
 	}
 	#end
-
 	#if (rp_voxels == "Voxel AO")
 	public static function resolveAO() {
 		var rts = path.renderTargets;
@@ -1533,7 +1532,6 @@ class Inc {
 	 		// LVP
 	 		m.setFrom(l.VP);
 	 		m.multmat(iron.object.Uniforms.biasMat);
-
 	 		#if arm_shadowmap_atlas
 			if (l.data.raw.type == "sun")
 			{

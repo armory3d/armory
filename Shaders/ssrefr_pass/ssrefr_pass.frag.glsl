@@ -1,6 +1,4 @@
 //https://lettier.github.io/3d-game-shaders-for-beginners/screen-space-refraction.html
-//Implemented by Yvain Douard.
-
 #version 450
 
 #include "compiled.inc"

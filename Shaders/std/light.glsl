@@ -146,7 +146,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelShadow
-	direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad; //TODO transparency's color
 	#endif
 
 	#ifdef _LTC

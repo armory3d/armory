@@ -126,7 +126,6 @@ void main() {
 		dst.y += clipmapLevel * res;
 		#ifdef _VoxelGI
 		vec4 radiance = vec4(0.0);
-		vec4 bounce = vec4(0.0);
 		#else
 		float opac = 0.0;
 		#endif
@@ -154,6 +153,7 @@ void main() {
 			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
 			N /= 2;
 			vec3 wnormal = decode_oct(N.rg * 2 - 1);
+
 			float roughness = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
 			float metallic = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 

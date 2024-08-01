@@ -779,8 +779,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
-
-
+    """
+    if '_VoxelRefract' in wrd.world_defs and parse_opacity:
+        frag.write('vec3 refraction = traceRefraction(wposition, n, voxels, eyeDir, ior, roughness, eye) * voxelgiRefr;')
+        frag.write('indirect = mix(refraction, indirect, opacity);')
+        frag.write('direct = mix(refraction, direct, opacity);')
+    """
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
     frag.write('float roughness;')

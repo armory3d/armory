@@ -333,7 +333,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off") //we need half depth for resolve voxels shaders
+		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -679,7 +679,7 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-
+	
 		#if rp_gbuffer2
 		{
 			path.bindTarget("gbuffer2", "gbuffer2");
@@ -904,7 +904,6 @@ class RenderPathDeferred {
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0_refr", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
 		}

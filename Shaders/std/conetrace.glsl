@@ -281,7 +281,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 	) / (6 + DIFFUSE_CONE_COUNT);
 	vec3 direction_weight = abs(dir);
 
-    while (sampleCol < 1.0 && dist < MAX_DISTANCE * 100 && clipmap_index0 < voxelgiClipmapCount) {
+    while (sampleCol < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
 		float mipSample = 0.0;
 		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);

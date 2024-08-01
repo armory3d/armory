@@ -8,14 +8,6 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelRefract
-#include "std/conetrace.glsl"
-#endif
-#ifdef _VoxelShadow
-#ifndef _VoxelRefract
-#include "std/conetrace.glsl"
-#endif
-#endif
 #ifdef _SSS
 #include "std/sss.glsl"
 #endif
@@ -37,10 +29,6 @@ uniform sampler2D gbuffer1;
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
-#ifdef _VoxelRefract
-uniform sampler2D voxels_refraction;
-uniform sampler2D gbuffer_refraction;
-#endif
 #endif
 #ifdef _VoxelAOvar
 uniform sampler2D voxels_ao;
@@ -523,5 +511,6 @@ void main() {
 		);
 	}
 #endif // _Clusters
+
 	fragColor.a = 1.0; // Mark as opaque
 }
