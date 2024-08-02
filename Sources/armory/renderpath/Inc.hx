@@ -629,7 +629,6 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.scale = getSuperSampling();
 			t.format = (t.name == "voxels_ao" || t.name == "voxels_shadow") ? "R8" : "RGBA32";
 		}
 		else {

@@ -50,7 +50,7 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist) return vec4(getProjectedCoord(hitCoord * gl_FragCoord.xyz), 0.0, 0.0);
+	if (abs(ddepth) > ss_refractionSearchDist) return vec4(getProjectedCoord(hitCoord * gl_FragCoord.xyz), 0.0, 1.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
