@@ -354,7 +354,6 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			//t.depth_buffer = "main";
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
@@ -369,24 +368,6 @@ class RenderPathDeferred {
 			// holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
 			t.name = "refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0_refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1_refr";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
@@ -871,7 +852,7 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("gbuffer1_refr", ["gbuffer0_refr", "gbuffer_refraction"]);
+				path.setTarget("tex", ["gbuffer0", "gbuffer_refraction"]);
 				#if (rp_voxels != "Off")
 				#if (rp_voxels == "Voxel AO")
 				path.bindTarget("voxels_ao", "voxels_ao");
@@ -899,10 +880,10 @@ class RenderPathDeferred {
 				path.bindTarget("voxels_refraction", "voxels_refraction");
 				#end
 				path.bindTarget("refr", "tex1");
-				path.bindTarget("gbuffer1_refr", "tex");
+				path.bindTarget("tex", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("gbuffer0_refr", "gbuffer0");
+				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
