@@ -309,7 +309,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half)
+		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -502,9 +502,9 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_render_to_texture
+		#if (rp_render_to_texture || rp_voxels != "Off")
 		{
-			#if (rp_ssr_half || rp_ssgi_half)
+			#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");

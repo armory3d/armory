@@ -674,18 +674,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     # Computing texCoord in vertex shader from pos.xy doesn't work
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        rpdat = arm.utils.get_rp()
-        resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        if rpdat.arm_rp_resolution == 'Custom':
-            if resx > resy:
-                resx = int(resx * (rpdat.arm_rp_resolution_size / resy));
-                resy = rpdat.arm_rp_resolution_size;
-            else:
-                resy = int(resy * (rpdat.arm_rp_resolution_size / resx));
-                resx = rpdat.arm_rp_resolution_size;
-        frag.write(f'vec2 texCoord = gl_FragCoord.xy / vec2({resx}, {resy});')
         if '_VoxelShadow' in wrd.world_defs:
             frag.add_uniform("sampler2D voxels_shadows", top=True)
+        vert.add_out('vec4 wvpposition')
+        vert.write('wvpposition = gl_Position;')
+        frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
 
     if '_VoxelAOvar' in wrd.world_defs:
         frag.add_uniform("sampler2D voxels_ao");
