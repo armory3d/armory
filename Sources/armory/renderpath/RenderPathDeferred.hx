@@ -468,16 +468,8 @@ class RenderPathDeferred {
 		#end
 
 		#if (rp_ssrefr || arm_voxelgi_refract)
-		path.setTarget("gbuffer0_refr");
-		#if (rp_background == "Clear")
-		{
-			path.clearTarget(-1, 1.0);
-		}
-		#else
-		{
-			path.clearTarget(null, 1.0);
-		}
-		#end
+		path.setTarget("gbuffer_refraction");
+		path.clearTarget(0xff0000ff);
 		#end
 
 		#if rp_gbuffer2
