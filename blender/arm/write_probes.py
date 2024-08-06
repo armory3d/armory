@@ -68,10 +68,10 @@ def setup_envmap_render():
     scene.render.resolution_y = radiance_size // 2
 
     # Set GPU as rendering device if the user enabled it
-    if bpy.context.preferences.addons["cycles"].preferences.compute_device_type == "CUDA":
+    if bpy.context.preferences.addons["cycles"].preferences.compute_device_type != "NONE":
         scene.cycles.device = "GPU"
     else:
-        log.info('Using CPU for environment render (might be slow). Enable CUDA if possible.')
+        log.info('Using CPU for environment render (might be slow). If possible, configure GPU rendering in Blender preferences (System > Cycles Render Devices).')
 
     # Those settings are sufficient for rendering only the world background
     scene.cycles.samples = 1

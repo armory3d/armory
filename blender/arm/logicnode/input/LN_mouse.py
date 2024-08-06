@@ -6,7 +6,7 @@ class MouseNode(ArmLogicTreeNode):
     bl_idname = 'LNMergedMouseNode'
     bl_label = 'Mouse'
     arm_section = 'mouse'
-    arm_version = 2
+    arm_version = 3
 
     property0: HaxeEnumProperty(
         'property0',
@@ -23,6 +23,14 @@ class MouseNode(ArmLogicTreeNode):
                  ('side1', 'Side 1', 'Side 1 mouse button'),
                  ('side2', 'Side 2', 'Side 2 mouse button')],
         name='', default='left')
+    property2: HaxeBoolProperty(
+        'property2',
+        name='Include Debug Console',
+        description=(
+            'If disabled, this node does not react to mouse press events'
+            ' over the debug console area. Enable this option to catch those events'
+        )
+    )
 
     def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
@@ -30,13 +38,24 @@ class MouseNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
-        layout.prop(self, 'property1')
+
+        if self.property0 != 'moved':
+            layout.prop(self, 'property1')
+            layout.prop(self, 'property2')
 
     def draw_label(self) -> str:
         return f'{self.bl_label}: {self.property1}'
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
-            raise LookupError()
-            
-        return NodeReplacement.Identity(self)
+        if 0 <= self.arm_version < 2:
+            return NodeReplacement.Identity(self)
+
+        elif self.arm_version == 2:
+            return NodeReplacement(
+                'LNMergedMouseNode', self.arm_version, 'LNMergedMouseNode', 3,
+                in_socket_mapping={}, out_socket_mapping={0: 0, 1: 1},
+                property_mapping={'property0': 'property0', 'property1': 'property1'},
+                property_defaults={'property2': True}
+            )
+
+        raise LookupError()

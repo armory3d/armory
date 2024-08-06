@@ -310,7 +310,6 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
     if node.sky_type == 'PREETHAM' or node.sky_type == 'HOSEK_WILKIE':
         if node.sky_type == 'PREETHAM':
             log.info('Info: Preetham sky model is not supported, using Hosek Wilkie sky model instead')
-
         return parse_sky_hosekwilkie(node, state)
 
     elif node.sky_type == 'NISHITA':
@@ -352,6 +351,8 @@ def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) 
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+
+    wrd.world_defs += '_HOSEK'
 
     if not state.radiance_written:
         # Irradiance json file name
@@ -507,6 +508,7 @@ def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: 
         # Append LDR define
         if disable_hdr:
             world.world_defs += '_EnvLDR'
+            assets.add_khafile_def("arm_envldr")
 
     wrd = bpy.data.worlds['Arm']
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'

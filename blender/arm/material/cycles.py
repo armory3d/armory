@@ -113,7 +113,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
         curshader = state.frag
         state.curshader = curshader
 
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_emission_col = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity, out_ior, out_emission_col = parse_shader_input(node.inputs[0])
         if parse_surface:
             curshader.write(f'basecol = {out_basecol};')
             curshader.write(f'roughness = {out_roughness};')
@@ -131,7 +131,8 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
                     arm.assets.add_khafile_def('rp_gbuffer_emission')
 
         if parse_opacity:
-            curshader.write('opacity = {0} - 0.0002;'.format(out_opacity))
+            curshader.write('opacity = {0};'.format(out_opacity))
+            curshader.write('ior = {0};'.format(out_ior))
 
     # Volume
     # parse_volume_input(node.inputs[1])
@@ -258,6 +259,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                     mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
+                state.out_ior = 1.450;
         else:
             return parse_group(node, socket)
 

@@ -45,6 +45,7 @@ typedef TConfig = {
 	@:optional var rp_shadowmap_cascade: Null<Int>; // size for single cascade
 	@:optional var rp_ssgi: Null<Bool>;
 	@:optional var rp_ssr: Null<Bool>;
+	@:optional var rp_ssrefr: Null<Bool>;
 	@:optional var rp_bloom: Null<Bool>;
 	@:optional var rp_motionblur: Null<Bool>;
 	@:optional var rp_gi: Null<Bool>; // voxelao

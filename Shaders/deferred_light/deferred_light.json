@@ -12,18 +12,18 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeSnap",
-					"link": "_cameraPositionSnap",
-					"ifdef": ["_VoxelGICam"]
-				},
-				{
 					"name": "voxelBlend",
 					"link": "_voxelBlend",
-					"ifdef": ["_VoxelGITemporal"]
+					"ifdef": ["_VoxelTemporal"]
 				},
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
+				},
+				{
+					"name": "clipmaps",
+					"link": "_clipmaps",
+					"ifdef": ["VoxelShadow"]
 				},
 				{
 					"name": "invVP",
@@ -217,25 +217,25 @@
 					"name": "LWVPSpot[0]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot0",
 					"ifndef": ["_ShadowMapAtlas"],
-					"ifdef": ["_LTC", "_ShadowMap"]
+					"ifdef": ["_ShadowMap"]
 				},
 				{
 					"name": "LWVPSpot[1]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot1",
 					"ifndef": ["_ShadowMapAtlas"],
-					"ifdef": ["_LTC", "_ShadowMap"]
+					"ifdef": ["_ShadowMap", "_LTC"]
 				},
 				{
 					"name": "LWVPSpot[2]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot2",
 					"ifndef": ["_ShadowMapAtlas"],
-					"ifdef": ["_LTC", "_ShadowMap"]
+					"ifdef": ["_ShadowMap", "_LTC"]
 				},
 				{
 					"name": "LWVPSpot[3]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
 					"ifndef": ["_ShadowMapAtlas"],
-					"ifdef": ["_LTC", "_ShadowMap"]
+					"ifdef": ["_ShadowMap", "_LTC"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",
