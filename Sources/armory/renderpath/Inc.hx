@@ -988,7 +988,6 @@ class Inc {
 	}
 
 	#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
-
 	public static function computeVoxelsSDF() {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
@@ -1557,6 +1556,7 @@ class Inc {
 	 		kha.compute.Compute.setFloat(voxel_ck5, l.data.raw.shadows_bias);
 
 			kha.compute.Compute.setTexture(voxel_th5, rts.get("voxels").image, kha.compute.Access.Read);
+
 			#end // rp_shadowmap
 
 	 		// lightPos

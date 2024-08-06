@@ -119,7 +119,6 @@ void main() {
 		#else
 		float aniso_colors[6];
 		#endif
-
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 		ivec3 dst = src;
@@ -166,7 +165,6 @@ void main() {
 			#ifdef _HOSEK
 			envl *= 10;
 			#endif
-
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
 			wposition = wposition * 2.0 - 1.0;

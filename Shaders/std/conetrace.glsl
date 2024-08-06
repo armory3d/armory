@@ -33,7 +33,7 @@ THE SOFTWARE.
 // http://www.seas.upenn.edu/%7Epcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
-const float MAX_DISTANCE = voxelgiRange;
+const float MAX_DISTANCE = voxelgiRange * 100.0;
 
 #ifdef _VoxelGI
 uniform sampler3D dummy;
@@ -333,6 +333,7 @@ float traceShadow(const vec3 origin, const vec3 normal, const sampler3D voxels, 
  	vec3 P = origin + dir * (BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) * voxelgiStep;
 	float amount = traceConeShadow(voxels, voxelsSDF, P, normal, dir, DIFFUSE_CONE_APERTURE, voxelgiStep, clipmaps);
 	amount = clamp(amount, 0.0, 1.0);
+
 	return amount * voxelgiOcc;
 }
 #endif
