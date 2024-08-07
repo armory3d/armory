@@ -101,14 +101,24 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # ior = c.parse_vector_input(node.inputs[14])
         # transmission = c.parse_vector_input(node.inputs[15])
         # transmission_roughness = c.parse_vector_input(node.inputs[16])
-        if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
-                and (node.inputs['Emission'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission'], (0.0, 0.0, 0.0), comp_alpha=False)):
-            emission_col = c.parse_vector_input(node.inputs[19])
-            emission_strength = c.parse_value_input(node.inputs[20])
-            state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
-            mat_state.emission_type = mat_state.EmissionType.SHADED
+        if bpy.app.version < (4, 1, 0):
+            if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
+                    and (node.inputs['Emission'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission'], (0.0, 0.0, 0.0), comp_alpha=False)):
+                emission_col = c.parse_vector_input(node.inputs[19])
+                emission_strength = c.parse_value_input(node.inputs[20])
+                state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
+                mat_state.emission_type = mat_state.EmissionType.SHADED
+            else:
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
         else:
-            mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
+            if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
+                    and (node.inputs['Emission Color'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission Color'], (0.0, 0.0, 0.0), comp_alpha=False)):
+                emission_col = c.parse_vector_input(node.inputs[27])
+                emission_strength = c.parse_value_input(node.inputs[28])
+                state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
+                mat_state.emission_type = mat_state.EmissionType.SHADED
+            else:
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION  
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
