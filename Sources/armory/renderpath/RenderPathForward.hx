@@ -552,7 +552,7 @@ class RenderPathForward {
 					path.bindTarget("refr", "tex1");
 					path.bindTarget("lbuffer0", "tex");
 					path.bindTarget("_main", "gbufferD");
-					path.bindTarget("_gbufferD1", "gbufferD1");
+					path.bindTarget("gbufferD1", "gbufferD1");
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");

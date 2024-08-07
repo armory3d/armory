@@ -101,7 +101,7 @@ void main() {
 	vec3 l;
 	if (lightType == 0) { l = lightDir; visibility = vec3(1.0); }
 	else { l = normalize(lp); visibility = vec3(attenuate(distance(P, lightPos))); }
-	bool transparent = bool(float(imageLoad(voxels, dst + ivec3(0, 0, voxelgiResolution.x * 14))) / 255);
+	bool transparent = bool(float(imageLoad(voxels, dst + ivec3(0, 0, voxelgiResolution.x * 12))) / 255);
 
 	// float dotNL = max(dot(wnormal, l), 0.0);
 	// if (dotNL == 0.0) return;
