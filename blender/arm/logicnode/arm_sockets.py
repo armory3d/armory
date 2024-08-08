@@ -658,27 +658,50 @@ def draw_socket_layout_split(socket: bpy.types.NodeSocket, layout: bpy.types.UIL
         layout.prop(socket, prop_name, text='')
 
 
-def _make_socket_interface(interface_name: str, bl_idname: str) -> Type[bpy.types.NodeSocketInterface]:
-    """Create a socket interface class that is used by Blender for node
-    groups. We currently don't use real node groups, but without these
-    classes Blender will (incorrectly) draw the socket borders in light grey.
-    """
-    def draw(self, context, layout):
-        pass
+if bpy.app.version < (4, 1, 0):
+    def _make_socket_interface(interface_name: str, bl_idname: str) -> Type[bpy.types.NodeSocketInterface]:
+        """Create a socket interface class that is used by Blender for node
+        groups. We currently don't use real node groups, but without these
+        classes Blender will (incorrectly) draw the socket borders in light grey.
+        """
+        def draw(self, context, layout):
+            pass
 
-    def draw_color(self, context):
-        # This would be used if we were using "real" node groups
-        return 0, 0, 0, 1
+        def draw_color(self, context):
+            # This would be used if we were using "real" node groups
+            return 0, 0, 0, 1
 
-    cls = type(
-        interface_name,
-        (bpy.types.NodeSocketInterface, ), {
-            'bl_socket_idname': bl_idname,
-            'draw': draw,
-            'draw_color': draw_color,
-        }
-    )
-    return cls
+        cls = type(
+            interface_name,
+            (bpy.types.NodeSocketInterface, ), {
+                'bl_socket_idname': bl_idname,
+                'draw': draw,
+                'draw_color': draw_color,
+            }
+        )
+        return cls
+else:
+    def _make_socket_interface(interface_name: str, bl_idname: str) -> Type[bpy.types.NodeTreeInterfaceSocket]:
+        """Create a socket interface class that is used by Blender for node
+        groups. We currently don't use real node groups, but without these
+        classes Blender will (incorrectly) draw the socket borders in light grey.
+        """
+        def draw(self, context, layout):
+            pass
+
+        def draw_color(self, context):
+            # This would be used if we were using "real" node groups
+            return 0, 0, 0, 1
+
+        cls = type(
+            interface_name,
+            (bpy.types.NodeTreeInterfaceSocket, ), {
+                'bl_socket_idname': bl_idname,
+                'draw': draw,
+                'draw_color': draw_color,
+            }
+        )
+        return cls   
 
 
 ArmActionSocketInterface = _make_socket_interface('ArmActionSocketInterface', 'ArmNodeSocketAction')
