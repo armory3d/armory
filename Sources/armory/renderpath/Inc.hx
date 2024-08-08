@@ -680,6 +680,7 @@ class Inc {
 			}
 		}
 		t.is_image = true;
+		t.mipmaps = false;
 		path.createRenderTarget(t);
 	}
 	#end
