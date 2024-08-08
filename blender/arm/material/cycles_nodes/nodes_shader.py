@@ -82,10 +82,16 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # subsurface = c.parse_vector_input(node.inputs[1])
         # subsurface_radius = c.parse_vector_input(node.inputs[2])
         # subsurface_color = c.parse_vector_input(node.inputs[3])
-        state.out_metallic = c.parse_value_input(node.inputs[6])
+        if bpy.app.version < (4, 1, 0):
+            state.out_metallic = c.parse_value_input(node.inputs[6])
+        else:
+            state.out_metallic = c.parse_value_input(node.inputs[1])
         state.out_specular = c.parse_value_input(node.inputs[7])
         # specular_tint = c.parse_vector_input(node.inputs[6])
-        state.out_roughness = c.parse_value_input(node.inputs[9])
+        if bpy.app.version < (4, 1, 0):
+            state.out_roughness = c.parse_value_input(node.inputs[9])
+        else:
+            state.out_roughness = c.parse_value_input(node.inputs[2])
         # aniso = c.parse_vector_input(node.inputs[8])
         # aniso_rot = c.parse_vector_input(node.inputs[9])
         # sheen = c.parse_vector_input(node.inputs[10])
@@ -95,14 +101,24 @@ def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: N
         # ior = c.parse_vector_input(node.inputs[14])
         # transmission = c.parse_vector_input(node.inputs[15])
         # transmission_roughness = c.parse_vector_input(node.inputs[16])
-        if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
-                and (node.inputs['Emission'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission'], (0.0, 0.0, 0.0), comp_alpha=False)):
-            emission_col = c.parse_vector_input(node.inputs[19])
-            emission_strength = c.parse_value_input(node.inputs[20])
-            state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
-            mat_state.emission_type = mat_state.EmissionType.SHADED
+        if bpy.app.version < (4, 1, 0):
+            if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
+                    and (node.inputs['Emission'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission'], (0.0, 0.0, 0.0), comp_alpha=False)):
+                emission_col = c.parse_vector_input(node.inputs[19])
+                emission_strength = c.parse_value_input(node.inputs[20])
+                state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
+                mat_state.emission_type = mat_state.EmissionType.SHADED
+            else:
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
         else:
-            mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
+            if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
+                    and (node.inputs['Emission Color'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission Color'], (0.0, 0.0, 0.0), comp_alpha=False)):
+                emission_col = c.parse_vector_input(node.inputs[27])
+                emission_strength = c.parse_value_input(node.inputs[28])
+                state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
+                mat_state.emission_type = mat_state.EmissionType.SHADED
+            else:
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION  
         # clearcoar_normal = c.parse_vector_input(node.inputs[21])
         # tangent = c.parse_vector_input(node.inputs[22])
     if state.parse_opacity:
@@ -118,12 +134,13 @@ def parse_bsdfdiffuse(node: bpy.types.ShaderNodeBsdfDiffuse, out_socket: NodeSoc
         state.out_specular = '0.0'
 
 
-def parse_bsdfglossy(node: bpy.types.ShaderNodeBsdfGlossy, out_socket: NodeSocket, state: ParserState) -> None:
-    if state.parse_surface:
-        c.write_normal(node.inputs[2])
-        state.out_basecol = c.parse_vector_input(node.inputs[0])
-        state.out_roughness = c.parse_value_input(node.inputs[1])
-        state.out_metallic = '1.0'
+if bpy.app.version < (4, 1, 0):
+    def parse_bsdfglossy(node: bpy.types.ShaderNodeBsdfGlossy, out_socket: NodeSocket, state: ParserState) -> None:
+        if state.parse_surface:
+            c.write_normal(node.inputs[2])
+            state.out_basecol = c.parse_vector_input(node.inputs[0])
+            state.out_roughness = c.parse_value_input(node.inputs[1])
+            state.out_metallic = '1.0'
 
 
 def parse_ambientocclusion(node: bpy.types.ShaderNodeAmbientOcclusion, out_socket: NodeSocket, state: ParserState) -> None:
@@ -204,9 +221,10 @@ def parse_bsdftransparent(node: bpy.types.ShaderNodeBsdfTransparent, out_socket:
         state.out_opacity = '(1.0 - {0}.r)'.format(c.parse_vector_input(node.inputs[0]))
 
 
-def parse_bsdfvelvet(node: bpy.types.ShaderNodeBsdfVelvet, out_socket: NodeSocket, state: ParserState) -> None:
-    if state.parse_surface:
-        c.write_normal(node.inputs[2])
-        state.out_basecol = c.parse_vector_input(node.inputs[0])
-        state.out_roughness = '1.0'
-        state.out_metallic = '1.0'
+if bpy.app.version < (4, 1, 0):
+    def parse_bsdfvelvet(node: bpy.types.ShaderNodeBsdfVelvet, out_socket: NodeSocket, state: ParserState) -> None:
+        if state.parse_surface:
+            c.write_normal(node.inputs[2])
+            state.out_basecol = c.parse_vector_input(node.inputs[0])
+            state.out_roughness = '1.0'
+            state.out_metallic = '1.0'
