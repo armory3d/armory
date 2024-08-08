@@ -27,14 +27,19 @@ uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
+uniform layout(r32ui) uimage3D voxels;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
+uniform sampler2D shadowMapTransparent;
 uniform sampler2DShadow shadowMapSpot;
+uniform sampler2D shadowMapSpotTransparent;
 #ifdef _ShadowMapAtlas
 uniform sampler2DShadow shadowMapPoint;
+uniform sampler2D shadowMapPointTransparent;
 #else
 uniform samplerCubeShadow shadowMapPoint;
+uniform samplerCube shadowMapPointTransparent;
 #endif
 #endif
 
@@ -83,7 +88,6 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 void main() {
 	int res = voxelgiResolution.x;
-
 	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
 
 	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
@@ -92,13 +96,12 @@ void main() {
 	P *= voxelgiResolution;
 	P += vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)]);
 
-	vec4 light = vec4(0.0);
-
-	float visibility;
+	vec3 visibility;
 	vec3 lp = lightPos - P;
 	vec3 l;
-	if (lightType == 0) { l = lightDir; visibility = 1.0; }
-	else { l = normalize(lp); visibility = attenuate(distance(P, lightPos)); }
+	if (lightType == 0) { l = lightDir; visibility = vec3(1.0); }
+	else { l = normalize(lp); visibility = vec3(attenuate(distance(P, lightPos))); }
+	bool transparent = bool(float(imageLoad(voxels, dst + ivec3(0, 0, voxelgiResolution.x * 12))) / 255);
 
 	// float dotNL = max(dot(wnormal, l), 0.0);
 	// if (dotNL == 0.0) return;
@@ -107,12 +110,22 @@ void main() {
 	if (lightShadow == 1) {
 		vec4 lightPosition = LVP * vec4(P, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
-		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
+		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).rrr;
+		if (transparent == false) {
+			vec4 transparent_shadow = texture(shadowMapTransparent, vec2(lPos.xy));
+			if (transparent_shadow.a > lPos.z - shadowsBias)
+				visibility *= transparent_shadow.rgb;
+		}
 	}
 	else if (lightShadow == 2) {
 		vec4 lightPosition = LVP * vec4(P, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
+		if (transparent == false) {
+			vec4 transparent_shadow = texture(shadowMapSpotTransparent, vec2(lPos.xy));
+			if (transparent_shadow.a > lPos.z - shadowsBias)
+				visibility *= transparent_shadow.rgb;
+		}
 	}
 	else if (lightShadow == 3) {
 		#ifdef _ShadowMapAtlas
@@ -125,8 +138,18 @@ void main() {
 		uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 		#endif
 		visibility *= texture(shadowMapPoint, vec3(uvtiled, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		if (transparent == false) {
+			vec4 transparent_shadow = texture(shadowMapPointTransparent, uvtiled);
+			if (transparent_shadow.a > lpToDepth(lp, lightProj))
+				visibility *= transparent_shadow.rgb;
+		}
 		#else
 		visibility *= texture(shadowMapPoint, vec4(-l, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		if (transparent == false) {
+			vec4 transparent_shadow = texture(shadowMapPointTransparent, -l);
+			if (transparent_shadow.a > lpToDepth(lp, lightProj))
+				visibility *= transparent_shadow.rgb;
+		}
 		#endif
 	}
 #endif
@@ -138,8 +161,9 @@ void main() {
 		}
 	}
 
-	light.rgb += visibility * lightColor;
-	light = clamp(light, vec4(0.0), vec4(1.0));
+	vec3 light = visibility * lightColor;
 
-	imageAtomicMax(voxelsLight, dst, convVec4ToRGBA8(light));
+	imageAtomicAdd(voxelsLight, dst, uint(light.r * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(light.g * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(light.b * 255));
 }

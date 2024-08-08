@@ -23,8 +23,8 @@ THE SOFTWARE.
 
 #include "compiled.inc"
 
-uniform layout(r8) image3D input_sdf;
-uniform layout(r8) image3D output_sdf;
+uniform layout(r16) image3D input_sdf;
+uniform layout(r16) image3D output_sdf;
 
 uniform float jump_size;
 uniform int clipmapLevel;

@@ -67,7 +67,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	float occ = traceAO(P, n, voxels, clipmaps);
+	float occ = 1.0 - traceAO(P, n, voxels, clipmaps);
 
 	imageStore(voxels_ao, ivec2(pixel), vec4(occ));
 }

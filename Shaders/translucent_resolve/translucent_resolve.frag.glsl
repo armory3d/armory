@@ -5,6 +5,7 @@
 
 uniform sampler2D gbuffer0; // accum
 uniform sampler2D gbuffer1; // revealage
+uniform sampler2D voxels_refration;
 
 uniform vec2 texSize;
 
@@ -15,6 +16,10 @@ void main() {
 	vec4 accum = texelFetch(gbuffer0, ivec2(texCoord * texSize), 0);
 	float revealage = 1.0 - accum.a;
 
+	#ifdef _VoxelRefract
+	vec3 refrationCol = textureLod(voxels_refration, texCoord, 0.0).rgb;
+	accum.rgb = (accum.rgb + refrationCol) / 2.0;
+	#endif
 	// Save the blending and color texture fetch cost
 	if (revealage == 0.0) {
 		discard;

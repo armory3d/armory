@@ -34,7 +34,7 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(rgba8) image2D voxels_specular;
+uniform layout(r8) image2D voxels_shadows;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
@@ -42,12 +42,13 @@ uniform vec2 cameraProj;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
+uniform vec3 lPos;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
 	vec2 uv = (pixel + 0.5) / postprocess_resolution;
 	#ifdef _InvY
-	uv.y = 1.0 - uv.y
+	uv.y = 1.0 - uv.y;
 	#endif
 
 	float depth = textureLod(gbufferD, uv, 0.0).r * 2.0 - 1.0;
@@ -68,7 +69,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps, pixel).rgb;
+	float occ = 1.0 - traceShadow(P, n, voxels, voxelsSDF, normalize(lPos - P), clipmaps, pixel);
 
-	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
+	imageStore(voxels_shadows, ivec2(pixel), vec4(occ));
 }

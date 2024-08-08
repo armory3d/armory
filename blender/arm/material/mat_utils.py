@@ -5,6 +5,7 @@ import bpy
 import arm.utils
 import arm.make_state as make_state
 import arm.material.cycles as cycles
+import arm.assets as assets
 import arm.log as log
 
 if arm.is_reload(__name__):
@@ -56,7 +57,10 @@ def get_rpasses(material):
             ar.append('depth')
 
     if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
-        ar.append('shadowmap')
+        if 'translucent' in ar or 'refraction' in ar:
+            ar.append('shadowmap_transparent')
+        else:
+            ar.append('shadowmap')
 
     return ar
 
