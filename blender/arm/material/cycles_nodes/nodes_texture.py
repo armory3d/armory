@@ -244,22 +244,22 @@ def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.No
 
     return res
 
+if bpy.app.version < (4, 1, 0):
+    def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
+        state.curshader.add_function(c_functions.str_tex_musgrave)
 
-def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    state.curshader.add_function(c_functions.str_tex_musgrave)
-
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
-    else:
-        co = 'bposition'
-
-    scale = c.parse_value_input(node.inputs['Scale'])
-    # detail = c.parse_value_input(node.inputs[2])
-    # distortion = c.parse_value_input(node.inputs[3])
-
-    res = f'tex_musgrave_f({co} * {scale} * 0.5)'
-
-    return res
+        if node.inputs[0].is_linked:
+            co = c.parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+    
+        scale = c.parse_value_input(node.inputs['Scale'])
+        # detail = c.parse_value_input(node.inputs[2])
+        # distortion = c.parse_value_input(node.inputs[3])
+    
+        res = f'tex_musgrave_f({co} * {scale} * 0.5)'
+    
+        return res
 
 
 def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
