@@ -724,7 +724,10 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
-            row.operator("arm.stop", icon="MESH_PLANE")
+            if bpy.app.version < (3, 0, 0):
+                row.operator("arm.stop", icon="CANCEL", text="")
+            else:
+                row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
         row.operator("arm.clean_menu", icon="BRUSH_DATA")
 
         col = layout.box().column()
