@@ -255,8 +255,8 @@ class ArmoryExporter:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
             o['name'] = bobject_ref["structName"]
             self.export_bone_transform(armature, bone, o, action)
-            self.export_bone_layers(armature, bone, o)
-            o['bone_length'] = bone.length
+            #self.export_bone_layers(armature, bone, o)
+            #o['bone_length'] = bone.length
 
         o['children'] = []
         for sub_bobject in bone.children:
@@ -276,10 +276,10 @@ class ArmoryExporter:
             oanim['marker_frames'].append(int(pos_marker.frame))
             oanim['marker_names'].append(pos_marker.name)
 
-    @staticmethod
-    def export_root_motion(oanim, action):
-        oanim['root_motion_pos'] = action.arm_root_motion_pos
-        oanim['root_motion_rot'] = action.arm_root_motion_rot
+    #@staticmethod
+    #def export_root_motion(oanim, action):
+    #    oanim['root_motion_pos'] = action.arm_root_motion_pos
+    #    oanim['root_motion_rot'] = action.arm_root_motion_rot
 
     @staticmethod
     def calculate_anim_frame_range(action: bpy.types.Action) -> Tuple[int, int]:
@@ -480,15 +480,15 @@ class ArmoryExporter:
 
             self.bone_tracks.append((out_track['values'], pose_bone))
     
-    def export_bone_layers(self, armature: bpy.types.Object, bone: bpy.types.Bone, o):
-        layers = []
-        if bpy.app.version < (4, 0, 0):
-            for layer in bone.layers:
-                layers.append(layer)
-        else:
-            for bonecollection in armature.data.collections:
-                layers.append(bonecollection.is_visible)
-        o['bone_layers'] = layers
+    #def export_bone_layers(self, armature: bpy.types.Object, bone: bpy.types.Bone, o):
+    #    layers = []
+    #    if bpy.app.version < (4, 0, 0):
+    #        for layer in bone.layers:
+    #            layers.append(layer)
+    #    else:
+    #        for bonecollection in armature.data.collections:
+    #            layers.append(bonecollection.is_visible)
+    #    o['bone_layers'] = layers
 
     def use_default_material(self, bobject: bpy.types.Object, o):
         if arm.utils.export_bone_data(bobject):
@@ -1067,7 +1067,7 @@ class ArmoryExporter:
                         self.write_bone_matrices(bpy.context.scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], original_action)
-                            self.export_root_motion(bones[0]['anim'], original_action)
+                            #self.export_root_motion(bones[0]['anim'], original_action)
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
