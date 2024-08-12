@@ -1,4 +1,7 @@
-from bpy.types import NodeSocketInterfaceInt
+try:
+    from bpy.types import NodeSocketInterfaceInt
+except:
+    from bpy.types import NodeTreeInterfaceSocketInt
 from arm.logicnode.arm_nodes import *
 
 class SelectNode(ArmLogicTreeNode):
