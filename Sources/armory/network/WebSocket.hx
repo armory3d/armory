@@ -109,7 +109,7 @@ class WebSocket {
 		_onmessage = value;
 		_ws.onmessage = function(message: Dynamic) {
 			if (_onmessage != null) {
-				if (Std.isOfType(message.data, JsBuffer)) {
+				if (message.data is JsBuffer) {
 					var buffer = new Buffer();
 					buffer.writeBytes(Bytes.ofData(message.data));
 					_onmessage(BytesMessage(buffer));
@@ -141,10 +141,10 @@ class WebSocket {
 	}
 
 	public function send(msg:Any) {
-		if (Std.isOfType(msg, Bytes)) {
+		if (msg is Bytes) {
 			var bytes = cast(msg, Bytes);
 			_ws.send(bytes.getData());
-		} else if (Std.isOfType(msg, Buffer)) {
+		} else if (msg is Buffer) {
 			var buffer = cast(msg, Buffer);
 			_ws.send(buffer.readAllAvailableBytes().getData());
 		} else {
