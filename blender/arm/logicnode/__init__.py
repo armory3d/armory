@@ -34,6 +34,7 @@ def init_categories():
     arm_nodes.add_category('Camera', icon='OUTLINER_OB_CAMERA', section="data")
     arm_nodes.add_category('Material', icon='MATERIAL', section="data")
     arm_nodes.add_category('Light', icon='LIGHT', section="data")
+    arm_nodes.add_category('World', icon='WORLD', section="data")
     arm_nodes.add_category('Object', icon='OBJECT_DATA', section="data")
     arm_nodes.add_category('Scene', icon='SCENE_DATA', section="data")
     arm_nodes.add_category('Trait', icon='NODETREE', section="data")
@@ -44,7 +45,7 @@ def init_categories():
     arm_nodes.add_category('Transform', icon='TRANSFORM_ORIGINS', section="motion")
     arm_nodes.add_category('Physics', icon='PHYSICS', section="motion")
 
-    arm_nodes.add_category('Array', icon='LIGHTPROBE_GRID', section="values")
+    arm_nodes.add_category('Array', icon='MOD_ARRAY', section="values")
     arm_nodes.add_category('Map', icon='SHORTDISPLAY', section="values")
     arm_nodes.add_category('Math', icon='FORCE_HARMONIC', section="values")
     arm_nodes.add_category('Random', icon='SEQ_HISTOGRAM', section="values")

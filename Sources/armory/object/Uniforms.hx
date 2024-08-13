@@ -5,6 +5,8 @@ import iron.object.Object;
 import iron.data.MaterialData;
 import iron.math.Vec4;
 
+import kha.arrays.Float32Array;
+
 import armory.renderpath.Postprocess;
 
 using StringTools;
@@ -18,7 +20,8 @@ class Uniforms {
 		iron.object.Uniforms.externalVec3Links = [vec3Link];
 		iron.object.Uniforms.externalVec4Links = [];
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
-		iron.object.Uniforms.externalIntLinks = [];
+		iron.object.Uniforms.externalFloatsLinks = [floatsLink];
+		iron.object.Uniforms.externalIntLinks = [intLink];
 	}
 
 	public static function textureLink(object: Object, mat: MaterialData, link: String): Null<kha.Image> {
@@ -166,21 +169,7 @@ class Uniforms {
 				}
 			}
 			#end
-			#if rp_voxels
-			case "_cameraPositionSnap": {
-				v = iron.object.Uniforms.helpVec;
-				var camera = iron.Scene.active.camera;
-				v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-				var l = camera.lookWorld();
-				var e = Main.voxelgiHalfExtents;
-				v.x += l.x * e * 0.9;
-				v.y += l.y * e * 0.9;
-				var f = Main.voxelgiVoxelSize * 8; // Snaps to 3 mip-maps range
-				v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
-			}
-			#end
 		}
-
 		return v;
 	}
 
@@ -213,15 +202,45 @@ class Uniforms {
 				return armory.trait.internal.DebugConsole.debugFloat;
 			}
 			#end
-			#if rp_voxels
-			case "_voxelBlend": { // Blend current and last voxels
-				var freq = armory.renderpath.RenderPathCreator.voxelFreq;
-				return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
-			}
-			#end
 			#if rp_bloom
 			case "_bloomSampleScale": {
 				return Postprocess.bloom_uniforms[3];
+			}
+			#end
+		}
+		return null;
+	}
+
+	public static function floatsLink(object: Object, mat: MaterialData, link: String): Float32Array {
+		switch (link) {
+			#if (rp_voxels != "Off")
+			case "_clipmaps": {
+				var clipmaps = iron.RenderPath.clipmaps;
+				var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
+				for (i in 0...Main.voxelgiClipmapCount) {
+					fa[i * 10] = clipmaps[i].voxelSize;
+					fa[i * 10 + 1] = clipmaps[i].extents.x;
+					fa[i * 10 + 2] = clipmaps[i].extents.y;
+					fa[i * 10 + 3] = clipmaps[i].extents.z;
+					fa[i * 10 + 4] = clipmaps[i].center.x;
+					fa[i * 10 + 5] = clipmaps[i].center.y;
+					fa[i * 10 + 6] = clipmaps[i].center.z;
+					fa[i * 10 + 7] = clipmaps[i].offset_prev.x;
+					fa[i * 10 + 8] = clipmaps[i].offset_prev.y;
+					fa[i * 10 + 9] = clipmaps[i].offset_prev.z;
+				}
+				return fa;
+			}
+			#end
+		}
+		return null;
+	}
+
+	public static function intLink(object: Object, mat: MaterialData, link: String): Null<Int> {
+		switch (link) {
+			#if (rp_voxels != "Off")
+			case "_clipmapLevel": {
+				return iron.RenderPath.clipmapLevel;
 			}
 			#end
 		}
