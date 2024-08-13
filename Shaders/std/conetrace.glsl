@@ -378,7 +378,6 @@ float
 	traceConeShadow(voxels, voxelsSDF, P, normal, dir, DIFFUSE_CONE_APERTURE, voxelgiStep, clipmaps);
 	amount = clamp(amount, 0.0, 1.0);
 
-
 	return amount * voxelgiOcc;
 }
 #endif

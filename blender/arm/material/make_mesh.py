@@ -692,6 +692,15 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write("if (roughness < 1.0 && specular > 0.0)")
         frag.write("    indirect += textureLod(voxels_specular, texCoord, 0.0).rgb * specular * voxelgiRefl;")
 
+    if '_VoxelAOvar' in wrd.world_defs:
+        frag.write('indirect *= (1.0 - traceAO(wposition, n, voxels, clipmaps).r);')
+
+    if '_VoxelGI' in wrd.world_defs:
+        frag.write('indirect += traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
+        frag.write('if (roughness < 1.0 && specular > 0.0) {')
+        frag.write('    vec2 pixel = gl_FragCoord.xy;')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, pixel).rgb * specular * voxelgiRefl;')
+        frag.write('}')
     frag.write('vec3 direct = vec3(0.0);')
 
     if '_Sun' in wrd.world_defs:
@@ -774,8 +783,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if mat_state.emission_type == mat_state.EmissionType.SHADELESS:
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
-
-
+    """
+    if '_VoxelRefract' in wrd.world_defs and parse_opacity:
+        frag.write('vec3 refraction = traceRefraction(wposition, n, voxels, eyeDir, ior, roughness, eye) * voxelgiRefr;')
+        frag.write('indirect = mix(refraction, indirect, opacity);')
+        frag.write('direct = mix(refraction, direct, opacity);')
+    """
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
