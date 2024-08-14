@@ -169,7 +169,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 }
 
 vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel) {
-	vec3 specularDir = normalize(reflect(-viewDir, normal));
+	vec3 specularDir = reflect(-viewDir, normal);
 	vec3 P = origin + specularDir * (BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) * voxelgiStep;
 	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps);
 
@@ -298,17 +298,18 @@ float
 		sampleCol < 1.0
 		#endif
 		 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
+		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
+        float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
+		float clipmap_index = floor(lod);
+		float clipmap_blend = fract(lod);
+		vec3 p0 = start_pos + dir * dist;
 		#ifdef _VoxelGI
 		vec4 mipSample = vec4(0.0);
 		vec4 mipSampleTr = vec4(0.0);
 		#else
 		float mipSample = 0.0;
 		#endif
-		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
-        float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
-		float clipmap_index = floor(lod);
-		float clipmap_blend = fract(lod);
-		vec3 p0 = start_pos + dir * dist;
+
 
         samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution.x);
 		samplePos = samplePos * 0.5 + 0.5;
@@ -357,7 +358,7 @@ float
 
 	return
 	#ifdef _VoxelGI
-	sampleCol.aaa;
+	sampleCol.aaa / mix(1.0 - (sampleColTr.rgb / sampleColTr.a), sampleCol.aaa, sampleCol.a);
 	#else
 	sampleCol;
 	#endif
