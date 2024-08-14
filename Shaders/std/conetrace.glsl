@@ -358,7 +358,7 @@ float
 
 	return
 	#ifdef _VoxelGI
-	sampleCol.aaa / mix(1.0 - (sampleColTr.rgb / sampleColTr.a), sampleCol.aaa, sampleCol.a);
+	max(1.0 - (sampleColTr.rgb / sampleCol.aaa), 0.0);
 	#else
 	sampleCol;
 	#endif
