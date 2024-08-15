@@ -33,7 +33,7 @@ THE SOFTWARE.
 // http://www.seas.upenn.edu/%7Epcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
-const float MAX_DISTANCE = voxelgiRange * 100.0;
+const float MAX_DISTANCE = voxelgiRange;
 
 #ifdef _VoxelGI
 uniform sampler3D dummy;
@@ -358,7 +358,7 @@ float
 
 	return
 	#ifdef _VoxelGI
-	max(1.0 - (sampleColTr.rgb / sampleCol.aaa), 0.0);
+	sampleColTr.rgb / (1.0 - sampleCol.aaa);
 	#else
 	sampleCol;
 	#endif

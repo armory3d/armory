@@ -531,7 +531,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)

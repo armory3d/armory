@@ -214,25 +214,25 @@
 					"ifdef": ["_Clusters", "_ShadowMap", "_ShadowMapAtlas"]
 				},
 				{
-					"name": "LWVPSpot[0]",
+					"name": "LWVPSpot[1]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot0",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_ShadowMap"]
 				},
 				{
-					"name": "LWVPSpot[1]",
+					"name": "LWVPSpot[2]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot1",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_ShadowMap", "_LTC"]
 				},
 				{
-					"name": "LWVPSpot[2]",
+					"name": "LWVPSpot[3]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot2",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_ShadowMap", "_LTC"]
 				},
 				{
-					"name": "LWVPSpot[3]",
+					"name": "LWVPSpot[4]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_ShadowMap", "_LTC"]
