@@ -160,7 +160,7 @@ void main() {
 			envl /= 3;
 
 			#ifdef _HOSEK
-			envl *= 10;
+			envl *= 100;
 			#endif
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
