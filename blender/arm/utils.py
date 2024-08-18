@@ -760,7 +760,7 @@ def get_render_resolution(scene):
     return int(render.resolution_x * scale), int(render.resolution_y * scale)
 
 def get_texture_quality_percentage() -> int:
-    return int(bpy.data.worlds["Arm"].arm_texture_quality * 100)
+    return int(bpy.data.worlds['Arm'].arm_texture_quality * 100)
 
 def get_project_scene_name():
     return get_active_scene().name

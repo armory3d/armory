@@ -429,21 +429,22 @@ class NavMesh extends Trait {
 		vertexIndexMap = generateVertexIndexMap(vecind, vertexMapArray);
 
 		// Parented object - clear parent location
+		/*
 		if (object.parent != null && object.parent.name != "") {
 			object.transform.loc.x += object.parent.transform.worldx();
 			object.transform.loc.y += object.parent.transform.worldy();
 			object.transform.loc.z += object.parent.transform.worldz();
 			object.transform.localOnly = true;
 			object.transform.buildMatrix();
-		}
+		}*/
 
 		var positions = fromI16(geom.positions.values, mo.data.scalePos);
 		for (i in 0...Std.int(positions.length / 3)) {
 			v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 			v.applyQuat(object.transform.rot);
-			v.x *= object.transform.scale.x;
-			v.y *= object.transform.scale.y;
-			v.z *= object.transform.scale.z;
+			v.x *= object.transform.scale.x * object.parent.transform.scale.x;
+			v.y *= object.transform.scale.y * object.parent.transform.scale.y;
+			v.z *= object.transform.scale.z * object.parent.transform.scale.z;
 			v.addf(object.transform.worldx(), object.transform.worldy(), object.transform.worldz());
 			positions[i * 3    ] = v.x;
 			positions[i * 3 + 1] = v.y;

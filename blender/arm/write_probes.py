@@ -57,7 +57,10 @@ def setup_envmap_render():
         scene.render.image_settings.color_depth = '32'
 
     # Export in linear space and with default color management settings
-    scene.display_settings.display_device = "None"
+    if bpy.app.version < (4, 1, 0):
+        scene.display_settings.display_device = "None"
+    else:
+        scene.display_settings.display_device = "sRGB"
     scene.view_settings.view_transform = "Standard"
     scene.view_settings.look = "None"
     scene.view_settings.exposure = 0
@@ -68,10 +71,10 @@ def setup_envmap_render():
     scene.render.resolution_y = radiance_size // 2
 
     # Set GPU as rendering device if the user enabled it
-    if bpy.context.preferences.addons["cycles"].preferences.compute_device_type == "CUDA":
+    if bpy.context.preferences.addons["cycles"].preferences.compute_device_type != "NONE":
         scene.cycles.device = "GPU"
     else:
-        log.info('Using CPU for environment render (might be slow). Enable CUDA if possible.')
+        log.info('Using CPU for environment render (might be slow). If possible, configure GPU rendering in Blender preferences (System > Cycles Render Devices).')
 
     # Those settings are sufficient for rendering only the world background
     scene.cycles.samples = 1
@@ -93,7 +96,10 @@ def setup_envmap_render():
 
     cam_obj.location = [0.0, 0.0, 0.0]
     cam.type = "PANO"
-    cam.cycles.panorama_type = "EQUIRECTANGULAR"
+    if bpy.app.version < (4, 1, 0):
+        cam.cycles.panorama_type = "EQUIRECTANGULAR"
+    else:
+        cam.panorama_type = "EQUIRECTANGULAR"
     cam_obj.rotation_euler = [math.radians(90), 0, math.radians(-90)]
 
     try:
