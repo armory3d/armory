@@ -23,6 +23,21 @@
 #include "std/light_common.glsl"
 #endif
 
+#ifdef _VoxelGI
+//!uniform sampler2D voxels_diffuse;
+//!uniform sampler2D voxels_specular;
+#ifdef _VoxelRefract
+//!uniform sampler2D gbuffer_refraction;
+//!uniform sampler2D voxels_refraction;
+#endif
+#endif
+#ifdef _VoxelAOvar
+//!uniform sampler2D voxels_ao;
+#endif
+#ifdef _VoxelShadow
+//!uniform sampler2D voxels_shadows;
+#endif
+
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
 		#ifdef _Spot
@@ -75,7 +90,7 @@ uniform sampler2D sltcMag;
 	#endif
 	#ifdef _Clusters
 		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
+		uniform mat4 LWVPSpot[maxLightsCluster];
 	#endif
 	#endif
 #endif
@@ -90,9 +105,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, bool isSpot, float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelShadow
-		, sampler3D voxels
-		, sampler3D voxelsSDF
-		, float clipmaps[voxelgiClipmapCount * 10]
+		, vec2 texCoord
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
@@ -138,7 +151,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, l, clipmaps);
+	direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
 
 	#ifdef _LTC
