@@ -173,6 +173,7 @@ void main() {
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
 			radiance.rgb *= light.rgb + indirect.rgb;
 			radiance.rgb += emission.rgb;
+
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;
 			#endif
