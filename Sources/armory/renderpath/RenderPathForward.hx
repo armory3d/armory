@@ -561,6 +561,33 @@ class RenderPathForward {
 			}
 			#end
 
+			#if rp_ssrefr
+			{
+				if (armory.data.Config.raw.rp_ssrefr != false)
+				{
+					path.setTarget("gbufferD1");
+					path.bindTarget("_main", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					path.setTarget("refr");
+					path.bindTarget("lbuffer0", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+
+					RenderPathCreator.setTargetMeshes();
+					path.drawMeshes("refraction");
+
+					path.setTarget("lbuffer0");
+					path.bindTarget("refr", "tex1");
+					path.bindTarget("lbuffer0", "tex");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("lbuffer1", "gbuffer0");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				}
+			}
+			#end
+
 			#if rp_ssr
 			{
 				if (armory.data.Config.raw.rp_ssr != false) {
