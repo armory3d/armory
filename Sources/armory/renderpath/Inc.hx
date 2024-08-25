@@ -161,7 +161,7 @@ class Inc {
 
 	#if arm_shadowmap_atlas
 	public static function updatePointLightAtlasData(transparent: Bool): Void {
-		var atlas = ShadowMapAtlas.shadowMapAtlases.get(ShadowMapAtlas.shadowMapAtlasName("point", transparent));
+		var atlas = transparent ? ShadowMapAtlas.shadowMapAtlasesTransparent.get(ShadowMapAtlas.shadowMapAtlasName("point", true)) : ShadowMapAtlas.shadowMapAtlases.get(ShadowMapAtlas.shadowMapAtlasName("point", false));
 		if (atlas != null) {
 			if(LightObject.pointLightsData == null) {
 				LightObject.pointLightsData = new kha.arrays.Float32Array(
@@ -233,11 +233,14 @@ class Inc {
 			return;
 		lastFrame = RenderPath.active.frame;
 		#end
-		// add new lights to the atlases
+
 		#if arm_debug
 		beginShadowsLogicProfile();
 		// reset data on rejected lights
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
+			atlas.rejectedLights = [];
+		}
+		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			atlas.rejectedLights = [];
 		}
 		#end
@@ -246,10 +249,12 @@ class Inc {
 			if (!light.lightInAtlas && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, false);
+				ShadowMapAtlas.addLight(light, true);
 			}
 		}
 		// update point light data before rendering
 		updatePointLightAtlasData(false);
+		updatePointLightAtlasData(true);
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			var tilesToRemove = [];
@@ -343,26 +348,6 @@ class Inc {
 				tile.freeTile();
 			}
 		}
-		#if arm_debug
-		endShadowsLogicProfile();
-		#end
-
-		#if arm_debug
-		beginShadowsLogicProfile();
-		// reset data on rejected lights
-		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
-			atlas.rejectedLights = [];
-		}
-		#end
-
-		for (light in iron.Scene.active.lights) {
-			if (!light.lightInAtlasTransparent && !light.culledLight && light.visible && light.shadowMapScale > 0.0
-				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
-				ShadowMapAtlas.addLight(light, true);
-			}
-		}
-		// update point light data before rendering
-		updatePointLightAtlasData(true);
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			var tilesToRemove = [];
@@ -461,7 +446,6 @@ class Inc {
 		#end
 		#end // rp_shadowmap
 	}
-
 	#else
 	public static function bindShadowMap() {
 		for (l in iron.Scene.active.lights) {
@@ -547,8 +531,8 @@ class Inc {
 			if (!l.visible) continue;
 
 			path.light = l;
-			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			var shadowmap = Inc.getShadowMap(l, false);
+			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
 				if (faces > 1) path.currentFace = i;
 				path.setTarget(shadowmap);
@@ -569,8 +553,8 @@ class Inc {
 			if (!l.visible) continue;
 
 			path.light = l;
-			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			var shadowmap = Inc.getShadowMap(l, true);
+			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
 				if (faces > 1) path.currentFace = i;
 				path.setTarget(shadowmap);
@@ -1776,10 +1760,7 @@ class ShadowMapAtlas {
 		// notify atlas when this tile is freed
 		mainTile.notifyOnFree = atlas.freeActiveTile;
 		// "lock" light to make sure it's not eligible to be added again
-		if (transparent)
-			light.lightInAtlasTransparent = true;
-		else
-			light.lightInAtlas = true;
+		light.lightInAtlas = true;
 	}
 
 	static inline function shadowMapAtlasSize(light:LightObject):Int {
@@ -2190,7 +2171,6 @@ class ShadowMapTile {
 		// prevent duplicates
 		if (light != null && unlockLight) {
 			light.lightInAtlas = false;
-			light.lightInAtlasTransparent = false;
 			unlockLight = false;
 		}
 

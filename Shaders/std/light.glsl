@@ -85,7 +85,7 @@ uniform sampler2D sltcMag;
 	#ifdef _Clusters
 		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
 		uniform sampler2D shadowMapSpotTransparent[maxLightsCluster];
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
+		uniform mat4 LWVPSpot[maxLightsCluster];
 	#endif
 	#endif
 #endif
@@ -153,15 +153,26 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
-			vec4 lPos = LWVPSpotArray[0] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0], shadowMapSpotTransparent[0], lPos.xyz / lPos.w, bias, transparent);
 			#endif
 			#ifdef _Clusters
-			vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
-			if (index == 0) direct *= shadowTest(shadowMapSpot[0], shadowMapSpotTransparent[0], lPos.xyz / lPos.w, bias, transparent);
-			else if (index == 1) direct *= shadowTest(shadowMapSpot[1], shadowMapSpotTransparent[1], lPos.xyz / lPos.w, bias, transparent);
-			else if (index == 2) direct *= shadowTest(shadowMapSpot[2], shadowMapSpotTransparent[2], lPos.xyz / lPos.w, bias, transparent);
-			else if (index == 3) direct *= shadowTest(shadowMapSpot[3], shadowMapSpotTransparent[3], lPos.xyz / lPos.w, bias, transparent);
+			if (index == 0) {
+				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[0], shadowMapSpotTransparent[0], lPos.xyz / lPos.w, bias, transparent);
+			}
+			else if (index == 1) {
+				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[1], shadowMapSpotTransparent[1], lPos.xyz / lPos.w, bias, transparent);
+			}
+			else if (index == 2) {
+				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[2], shadowMapSpotTransparent[2], lPos.xyz / lPos.w, bias, transparent);
+			}
+			else if (index == 3) {
+				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[3], shadowMapSpotTransparent[3], lPos.xyz / lPos.w, bias, transparent);
+			}
 			#endif
 		}
 	#endif

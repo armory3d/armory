@@ -45,9 +45,6 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             'depth_read': True,
             'compare_mode': 'less',
             'cull_mode': 'clockwise',
-            'blend_source': 'blend_zero',
-            'blend_destination': 'source_color',
-            'blend_operation': 'add',
             'color_writes_red': [True],
             'color_writes_green': [True],
             'color_writes_blue': [True],
@@ -236,7 +233,9 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
 
     if shadowmap_transparent:
         frag.add_out('vec4 fragColor')
-        frag.write('float depth = wposition.z;')
+        vert.add_out('vec4 wvpposition')
+        vert.write('wvpposition = gl_Position;')
+        frag.write('float depth = (wvpposition.z / wvpposition.w) * 0.5 + 0.5;')
         frag.write('vec3 color = basecol;')
         frag.write('color *= 1.0 - opacity;')
         frag.write('fragColor = vec4(color, depth);')

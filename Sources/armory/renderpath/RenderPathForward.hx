@@ -451,11 +451,6 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssrefr || arm_voxelgi_refract)
-		path.setTarget("gbuffer_refraction");
-		path.clearTarget(0x00ffff00);
-		#end
-
 		#if rp_depthprepass
 		{
 			path.drawMeshes("depth");
@@ -511,7 +506,11 @@ class RenderPathForward {
 			path.bindTarget("_main", "texdepth");
 			path.drawShader("shader_datas/downsample_depth/downsample_depth");
 			#end
+		}
+		#end
 
+		#if rp_render_to_texture
+		{
 			#if rp_ssrefr
 			{
 				if (armory.data.Config.raw.rp_ssrefr != false)

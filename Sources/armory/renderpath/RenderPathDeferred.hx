@@ -854,6 +854,7 @@ class RenderPathDeferred {
 				path.bindTarget("voxels_shadows", "voxels_shadows");
 				#end
 
+				path.bindTarget("_main", "gbufferD");
 				path.drawMeshes("refraction");
 
 				#if arm_voxelgi_refract

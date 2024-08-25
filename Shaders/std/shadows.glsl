@@ -73,7 +73,7 @@ vec3 PCF(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec2 u
 
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uv);
-		if (shadowmap_transparent.a > compare)
+		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
 
@@ -108,7 +108,7 @@ vec3 PCFCube(samplerCubeShadow shadowMapCube, samplerCube shadowMapCubeTranspare
 
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapCubeTransparent, ml);
-		if (shadowmap_transparent.a > compare)
+		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
 
@@ -302,7 +302,7 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, cons
 
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uvtiled);
-		if (shadowmap_transparent.a > compare)
+		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
 

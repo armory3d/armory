@@ -94,6 +94,11 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write(', texCoord')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
+    if '_SSRS' in wrd.world_defs:
+        frag.add_uniform('sampler2D gbufferD', top=True)
+        frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
+        frag.add_uniform('vec3 eye', '_cameraPosition')
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights

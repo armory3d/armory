@@ -488,8 +488,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
-        items=[('16', '16', '16'),
-               ('32', '32', '32'),
+        items=[('32', '32', '32'),
                ('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
@@ -531,7 +530,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
@@ -585,7 +584,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_shadowmap_bounds: FloatProperty(name="Cascade Bounds", description="Multiply cascade bounds to capture bigger area", default=1.0, update=assets.invalidate_compiled_data)
     arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
+    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
+    arm_ssrs_search_dist: FloatProperty(name="Search Distance", default=5.0, update=assets.invalidate_shader_cache)
     arm_chromatic_aberration_type: EnumProperty(
         items=[('Simple', 'Simple', 'Simple'),
                ('Spectral', 'Spectral', 'Spectral'),

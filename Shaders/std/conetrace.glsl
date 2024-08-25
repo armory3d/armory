@@ -33,7 +33,7 @@ THE SOFTWARE.
 // http://www.seas.upenn.edu/%7Epcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
-const float MAX_DISTANCE = voxelgiRange * 100.0;
+const float MAX_DISTANCE = voxelgiRange;
 
 #ifdef _VoxelGI
 uniform sampler3D dummy;
@@ -273,6 +273,7 @@ float
     #ifdef _VoxelGI
 	vec4 sampleCol = vec4(0.0);
 	vec4 sampleColTr = vec4(0.0);
+	float alpha = 0.0;
 	#else
 	float sampleCol = 0.0;
 	#endif
@@ -291,25 +292,19 @@ float
 	) / (6 + DIFFUSE_CONE_COUNT);
 	vec3 direction_weight = abs(dir);
 
-    while (
-		#ifdef _VoxelGI
-		sampleCol.a < 1.0
-		#else
-		sampleCol < 1.0
-		#endif
-		 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
+    while (alpha < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
 		float diam = max(voxelSize0, dist * 2.0 * tan(aperture * 0.5));
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
 		float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
 		vec3 p0 = start_pos + dir * dist;
+
 		#ifdef _VoxelGI
 		vec4 mipSample = vec4(0.0);
 		vec4 mipSampleTr = vec4(0.0);
 		#else
 		float mipSample = 0.0;
 		#endif
-
 
         samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution.x);
 		samplePos = samplePos * 0.5 + 0.5;
@@ -322,7 +317,7 @@ float
 		#ifdef _VoxelAOvar
 		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, 0, face_offset, direction_weight);
 		#else
-		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, 0, face_offset, direction_weight).aaaa;
+		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, 0, face_offset, vec3(1.0)).aaaa;
 		mipSampleTr = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, 0, face_offset, direction_weight);
 		#endif
 
@@ -337,8 +332,10 @@ float
 		}
 
 		#ifdef _VoxelGI
-		sampleCol += (1.0 - sampleCol.a) * mipSample;
-		sampleColTr += (1.0 - sampleColTr.a) * mipSampleTr;
+		float a = 1.0 - alpha;
+		sampleCol += a * mipSample;
+		sampleColTr.rgb += a * mipSampleTr.rgb;
+		alpha += a * mipSample.a;
 		#else
 		sampleCol += (1.0 - sampleCol) * mipSample;
 		#endif
@@ -358,7 +355,7 @@ float
 
 	return
 	#ifdef _VoxelGI
-	max(1.0 - (sampleColTr.rgb / sampleCol.aaa), 0.0);
+	sampleCol.aaa;//mix(sampleColTr.rgb / (1.0 - alpha), sampleCol.aaa, alpha);
 	#else
 	sampleCol;
 	#endif
