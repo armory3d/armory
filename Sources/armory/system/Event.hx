@@ -1,5 +1,8 @@
 package armory.system;
 
+import haxe.Constraints.Function;
+import haxe.Rest;
+
 /**
 	Detailed documentation of the event system:
 	[Armory Wiki: Events](https://github.com/armory3d/armory/wiki/events).
@@ -15,9 +18,9 @@ class Event {
 		For an explanation of the `mask` value, please refer to the
 		[wiki](https://github.com/armory3d/armory/wiki/events#event-masks).
 	**/
-	public static function send(name: String, mask = -1) {
+	public static function send(name: String, mask = -1, rest:Rest<Any>) {
 		var entries = get(name);
-		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) e.onEvent();
+		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) Reflect.callMethod(e, e.onEvent, rest);
 	}
 
 	/**
@@ -36,7 +39,7 @@ class Event {
 		For an explanation of the `mask` value, please refer to the
 		[wiki](https://github.com/armory3d/armory/wiki/events#event-masks).
 	**/
-	public static function add(name: String, onEvent: Void->Void, mask = -1): TEvent {
+	public static function add(name: String, onEvent: Function, mask = -1): TEvent {
 		var e: TEvent = { name: name, onEvent: onEvent, mask: mask };
 		var entries = events.get(name);
 		if (entries != null) entries.push(e);
@@ -76,7 +79,7 @@ typedef TEvent = {
 	var name: String;
 
 	/** The callback function that is called when a matching event is sent. **/
-	var onEvent: Void->Void;
+	var onEvent: Function;
 
 	/** The mask of the events this listener is listening to. **/
 	var mask: Int;
