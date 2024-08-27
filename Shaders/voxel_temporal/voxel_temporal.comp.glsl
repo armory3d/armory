@@ -149,12 +149,10 @@ void main() {
 			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
 			N /= 2;
 			vec3 wnormal = decode_oct(N.rg * 2 - 1);
-			float roughness = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-			float metallic = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 			vec3 envl = vec3(0.0);
-			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
-			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 255;
-			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;
+			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
+			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
+			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 			envl /= 3;
 
 			#ifdef _HOSEK

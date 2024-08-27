@@ -35,31 +35,12 @@ class Inc {
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
 	static var voxel_tf1:kha.compute.TextureUnit;
-	static var voxel_tg1:kha.compute.TextureUnit;
-	static var voxel_th1:kha.compute.TextureUnit;
-	#if (rp_gbuffer2 && arm_deferred)
-	static var voxel_ti1:kha.compute.TextureUnit;
-	#end
-	#if arm_brdf
-	static var voxel_tj1:kha.compute.TextureUnit;
-	#end
-	#if arm_radiance
-	static var voxel_tk1:kha.compute.TextureUnit;
-	static var voxel_ce1:kha.compute.ConstantLocation;
-	#end
-	#if arm_irradiance
-	static var voxel_cc1:kha.compute.ConstantLocation;
-	#end
-	static var voxel_cd1:kha.compute.ConstantLocation;
-	#if arm_envldr
-	static var voxel_cf1:kha.compute.ConstantLocation;
-	#end
-	static var voxel_cg1:kha.compute.ConstantLocation;
 	#else
 	#if arm_voxelgi_shadows
 	static var voxel_tf1:kha.compute.TextureUnit;
 	#end
 	#end
+	static var voxel_tl1:kha.compute.TextureUnit;
 	#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
 	static var voxel_sh2:kha.compute.Shader = null;
 	static var voxel_ta2:kha.compute.TextureUnit;
@@ -137,6 +118,10 @@ class Inc {
 	static var voxel_tb5:kha.compute.TextureUnit;
 	static var voxel_tc5:kha.compute.TextureUnit;
 	static var voxel_td5:kha.compute.TextureUnit;
+	static var voxel_te5:kha.compute.TextureUnit;
+	static var voxel_tf5:kha.compute.TextureUnit;
+	static var voxel_tg5:kha.compute.TextureUnit;
+	static var voxel_th5:kha.compute.TextureUnit;
 	static var voxel_ch5:kha.compute.ConstantLocation;
 	static var voxel_ci5:kha.compute.ConstantLocation;
 	static var voxel_cj5:kha.compute.ConstantLocation;
@@ -175,8 +160,8 @@ class Inc {
 	}
 
 	#if arm_shadowmap_atlas
-	public static function updatePointLightAtlasData(): Void {
-		var atlas = ShadowMapAtlas.shadowMapAtlases.get(ShadowMapAtlas.shadowMapAtlasName("point"));
+	public static function updatePointLightAtlasData(transparent: Bool): Void {
+		var atlas = transparent ? ShadowMapAtlas.shadowMapAtlasesTransparent.get(ShadowMapAtlas.shadowMapAtlasName("point", true)) : ShadowMapAtlas.shadowMapAtlases.get(ShadowMapAtlas.shadowMapAtlasName("point", false));
 		if (atlas != null) {
 			if(LightObject.pointLightsData == null) {
 				LightObject.pointLightsData = new kha.arrays.Float32Array(
@@ -212,14 +197,17 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
+		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
+			path.bindTarget(atlas.target, atlas.target);
+		}
 	}
 
-	static function getShadowMapAtlas(atlas:ShadowMapAtlas):String {
+	static function getShadowMapAtlas(atlas:ShadowMapAtlas, transparent: Bool):String {
 		inline function createDepthTarget(name: String, size: Int) {
 			var t = new RenderTargetRaw();
 			t.name = name;
 			t.width = t.height = size;
-			t.format = "DEPTH16";
+			t.format = transparent ? "RGBA64" : "DEPTH16";
 			return path.createRenderTarget(t);
 		}
 
@@ -245,22 +233,28 @@ class Inc {
 			return;
 		lastFrame = RenderPath.active.frame;
 		#end
-		// add new lights to the atlases
+
 		#if arm_debug
 		beginShadowsLogicProfile();
 		// reset data on rejected lights
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
 		}
+		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
+			atlas.rejectedLights = [];
+		}
 		#end
+
 		for (light in iron.Scene.active.lights) {
 			if (!light.lightInAtlas && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
-				ShadowMapAtlas.addLight(light);
+				ShadowMapAtlas.addLight(light, false);
+				ShadowMapAtlas.addLight(light, true);
 			}
 		}
 		// update point light data before rendering
-		updatePointLightAtlasData();
+		updatePointLightAtlasData(false);
+		updatePointLightAtlasData(true);
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			var tilesToRemove = [];
@@ -268,8 +262,9 @@ class Inc {
 			var tilesToChangeSize = [];
 			#end
 
-			var shadowmap = getShadowMapAtlas(atlas);
+			var shadowmap = getShadowMapAtlas(atlas, false);
 			path.setTargetStream(shadowmap);
+
 			path.clearTarget(null, 1.0);
 
 			for (tile in atlas.activeTiles) {
@@ -345,7 +340,100 @@ class Inc {
 					atlas.activeTiles.push(newTile);
 			}
 			// update point light data after changing size of tiles to avoid render issues
-			updatePointLightAtlasData();
+			updatePointLightAtlasData(false);
+			#end
+
+			for (tile in tilesToRemove) {
+				atlas.activeTiles.remove(tile);
+				tile.freeTile();
+			}
+		}
+
+		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
+			var tilesToRemove = [];
+			#if arm_shadowmap_atlas_lod
+			var tilesToChangeSize = [];
+			#end
+
+			var shadowmap = getShadowMapAtlas(atlas, true);
+			path.setTargetStream(shadowmap);
+
+			path.clearTarget(0xffffff, 0.0);
+
+			for (tile in atlas.activeTiles) {
+				if (tile.light == null || !tile.light.visible || tile.light.culledLight
+					|| !tile.light.data.raw.cast_shadow || tile.light.data.raw.strength == 0) {
+					tile.unlockLight = true;
+					tilesToRemove.push(tile);
+					continue;
+				}
+
+				#if arm_shadowmap_atlas_lod
+				var newTileSize = atlas.getTileSize(tile.light.shadowMapScale);
+				if (newTileSize != tile.size) {
+					if (newTileSize == 0) {
+						tile.unlockLight = true;
+						tilesToRemove.push(tile);
+						continue;
+					}
+					// queue for size change
+					tile.newTileSize = newTileSize;
+					tilesToChangeSize.push(tile);
+				}
+				#end
+				// set the tile offset for this tile and every linked tile to this one
+				var j = 0;
+				tile.forEachTileLinked(function (lTile) {
+					tile.light.tileOffsetX[j] = lTile.coordsX / atlas.sizew;
+					tile.light.tileOffsetY[j] = lTile.coordsY / atlas.sizew;
+					tile.light.tileScale[j] = lTile.size / atlas.sizew;
+					j++;
+				});
+				// set shadowmap size for uniform
+				tile.light.data.raw.shadowmap_size = atlas.sizew;
+
+				path.light = tile.light;
+
+				var face = 0;
+				var faces = ShadowMapTile.tilesLightType(tile.light.data.raw.type);
+
+				#if arm_debug
+				beginShadowsRenderProfile();
+				#end
+				tile.forEachTileLinked(function (lTile) {
+					if (faces > 1) {
+						#if arm_csm
+						switch (tile.light.data.raw.type) {
+							case "sun": tile.light.setCascade(iron.Scene.active.camera, face);
+							case "point": path.currentFace = face;
+						}
+						#else
+						path.currentFace = face;
+						#end
+						face++;
+					}
+					path.setCurrentViewportWithOffset(lTile.size, lTile.size, lTile.coordsX, lTile.coordsY);
+
+					path.drawMeshesStream("shadowmap_transparent");
+				});
+				#if arm_debug
+				endShadowsRenderProfile();
+				#end
+
+				path.currentFace = -1;
+			}
+			path.endStream();
+
+			#if arm_shadowmap_atlas_lod
+			for (tile in tilesToChangeSize) {
+				tilesToRemove.push(tile);
+
+				var newTile = ShadowMapTile.assignTiles(tile.light, atlas, tile);
+				if (newTile != null)
+					atlas.activeTiles.push(newTile);
+			}
+			// update point light data after changing size of tiles to avoid render issues
+			updatePointLightAtlasData(true);
 			#end
 
 			for (tile in tilesToRemove) {
@@ -364,31 +452,37 @@ class Inc {
 			if (!l.visible || l.data.raw.type != "sun") continue;
 			var n = "shadowMap";
 			path.bindTarget(n, n);
+			var n = "shadowMapTransparent";
+			path.bindTarget(n, n);
 			break;
 		}
 		for (i in 0...pointIndex) {
 			var n = "shadowMapPoint[" + i + "]";
 			path.bindTarget(n, n);
+			var n = "shadowMapPointTransparent[" + i + "]";
+			path.bindTarget(n, n);
 		}
 		for (i in 0...spotIndex) {
 			var n = "shadowMapSpot[" + i + "]";
 			path.bindTarget(n, n);
+			var n = "shadowMapSpotTransparent[" + i + "]";
+			path.bindTarget(n, n);
 		}
 	}
 
-	static function shadowMapName(light: LightObject): String {
+	static function shadowMapName(light: LightObject, transparent: Bool): String {
 		switch (light.data.raw.type) {
 			case "sun":
-				return "shadowMap";
+				return transparent ? "shadowMapTransparent" : "shadowMap";
 			case "point":
-				return "shadowMapPoint[" + pointIndex + "]";
+				return transparent ? "shadowMapPointTransparent[" + pointIndex + "]" : "shadowMapPoint[" + pointIndex + "]";
 			default:
-				return "shadowMapSpot[" + spotIndex + "]";
+				return transparent ? "shadowMapSpotTransparent[" + spotIndex + "]" : "shadowMapSpot[" + spotIndex + "]";
 		}
 	}
 
-	static function getShadowMap(l: iron.object.LightObject): String {
-		var target = shadowMapName(l);
+	static function getShadowMap(l: iron.object.LightObject, transparent: Bool): String {
+		var target = shadowMapName(l, transparent);
 		var rt = path.renderTargets.get(target);
 		// Create shadowmap on the fly
 		if (rt == null) {
@@ -399,7 +493,7 @@ class Inc {
 				t.name = target;
 				t.width = size;
 				t.height = size;
-				t.format = "DEPTH16";
+				t.format = transparent ? "RGBA64" : "DEPTH16";
 				t.is_cubemap = true;
 				rt = path.createRenderTarget(t);
 			}
@@ -415,7 +509,7 @@ class Inc {
 				t.name = target;
 				t.width = sizew;
 				t.height = sizeh;
-				t.format = "DEPTH16";
+				t.format = transparent ? "RGBA64" : "DEPTH16";
 				rt = path.createRenderTarget(t);
 			}
 		}
@@ -437,7 +531,7 @@ class Inc {
 			if (!l.visible) continue;
 
 			path.light = l;
-			var shadowmap = Inc.getShadowMap(l);
+			var shadowmap = Inc.getShadowMap(l, false);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
 				if (faces > 1) path.currentFace = i;
@@ -453,6 +547,27 @@ class Inc {
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
 
+		pointIndex = 0;
+		spotIndex = 0;
+		for (l in iron.Scene.active.lights) {
+			if (!l.visible) continue;
+
+			path.light = l;
+			var shadowmap = Inc.getShadowMap(l, true);
+			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
+			for (i in 0...faces) {
+				if (faces > 1) path.currentFace = i;
+				path.setTarget(shadowmap);
+				path.clearTarget(0xffffff, 0.0);
+				if (l.data.raw.cast_shadow) {
+					path.drawMeshes("shadowmap_transparent");
+				}
+			}
+			path.currentFace = -1;
+
+			if (l.data.raw.type == "point") pointIndex++;
+			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
+		}
 		#end // rp_shadowmap
 	}
 	#end
@@ -544,11 +659,10 @@ class Inc {
 		path.bindTarget("voxels_diffuse", "voxels_diffuse");
 		path.bindTarget("voxels_specular", "voxels_specular");
 		#end
-		#end
 		#if arm_voxelgi_shadows
 		path.bindTarget("voxels_shadows", "voxels_shadows");
 		#end
-
+		#end
 		path.drawMeshes("translucent");
 
 		#if rp_render_to_texture
@@ -606,8 +720,12 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			//t.scale = getSuperSampling();
-			t.format = (t.name == "voxels_ao" || t.name == "voxels_shadow") ? "R8" : "RGBA32";
+			//t.scale = Inc.getSuperSampling();
+			#if (rp_voxels == "Voxel AO")
+			t.format = "R8";
+			#else
+			t.format = "RGBA32";
+			#end
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -650,13 +768,14 @@ class Inc {
 						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 14;
+						t.depth = res * 13;
 					}
 				}
 				#end
 			}
 		}
 		t.is_image = true;
+		t.mipmaps = false;
 		path.createRenderTarget(t);
 	}
 	#end
@@ -760,6 +879,7 @@ class Inc {
 
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
+			voxel_tl1 = voxel_sh1.getTextureUnit("voxelsSDFSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("voxelsLight");
 			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
 			#else
@@ -868,8 +988,12 @@ class Inc {
 	 		voxel_cg5 = voxel_sh5.getConstantLocation("spotData");
 	 		#if rp_shadowmap
 	 		voxel_tb5 = voxel_sh5.getTextureUnit("shadowMap");
+	 		voxel_te5 = voxel_sh5.getTextureUnit("shadowMapTransparent");
 	 		voxel_tc5 = voxel_sh5.getTextureUnit("shadowMapSpot");
+	 		voxel_tf5 = voxel_sh5.getTextureUnit("shadowMapSpotTransparent");
 	 		voxel_td5 = voxel_sh5.getTextureUnit("shadowMapPoint");
+	 		voxel_tg5 = voxel_sh5.getTextureUnit("shadowMapPointTransparent");
+			voxel_th5 = voxel_sh5.getTextureUnit("voxels");
 
 	 		voxel_ch5 = voxel_sh5.getConstantLocation("lightShadow");
 	 		voxel_ci5 = voxel_sh5.getConstantLocation("lightProj");
@@ -1008,7 +1132,6 @@ class Inc {
 		}
 	}
 	#end
-
 	#if (rp_voxels == "Voxel AO")
 	public static function resolveAO() {
 		var rts = path.renderTargets;
@@ -1445,11 +1568,14 @@ class Inc {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
 	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlas").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlasTranparent").image);
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlasSun").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlasSunTransparent").image);
 	 			#end
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMap").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapTransparent").image);
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 1); // lightShadow
 	 		}
@@ -1457,11 +1583,14 @@ class Inc {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlas").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapAtlasTranparent").image);
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlasSpot").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapAtlasSpotTransparent").image);
 	 			#end
 	 			#else
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapSpot[" + spotIndex + "]").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapSpotTransparent[" + spotIndex + "]").image);
 	 			spotIndex++;
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 2);
@@ -1470,13 +1599,16 @@ class Inc {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
 				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlas").image);
+				kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("shadowMapAtlasTranparent").image);
 				#else
 				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlasPoint").image);
-				#end
+				kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("shadowMapAtlasPointTransparent").image);
 				kha.compute.Compute.setInt(voxel_cl5, i);
 				kha.compute.Compute.setFloats(voxel_cm5, iron.object.LightObject.pointLightsData);
+				#end
 				#else
 	 			kha.compute.Compute.setSampledCubeMap(voxel_td5, rts.get("shadowMapPoint[" + pointIndex + "]").cubeMap);
+	 			kha.compute.Compute.setSampledCubeMap(voxel_tg5, rts.get("shadowMapPointTransparent[" + pointIndex + "]").cubeMap);
 	 			pointIndex++;
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 3);
@@ -1495,7 +1627,6 @@ class Inc {
 	 		// LVP
 	 		m.setFrom(l.VP);
 	 		m.multmat(iron.object.Uniforms.biasMat);
-
 	 		#if arm_shadowmap_atlas
 			if (l.data.raw.type == "sun")
 			{
@@ -1519,6 +1650,8 @@ class Inc {
 	 		kha.compute.Compute.setMatrix(voxel_cj5, m.self);
 	 		// shadowsBias
 	 		kha.compute.Compute.setFloat(voxel_ck5, l.data.raw.shadows_bias);
+
+			kha.compute.Compute.setTexture(voxel_th5, rts.get("voxels").image, kha.compute.Access.Read);
 			#end // rp_shadowmap
 
 	 		// lightPos
@@ -1565,16 +1698,17 @@ class ShadowMapAtlas {
 	#end
 	public var updateRenderTarget = false;
 	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
+	public static var shadowMapAtlasesTransparent:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
 
 	#if arm_debug
 	public var lightType: String;
 	public var rejectedLights: Array<LightObject> = [];
 	#end
 
-	function new(light: LightObject) {
+	function new(light: LightObject, transparent: Bool) {
 
 		var maxTileSize = shadowMapAtlasSize(light);
-		this.target = shadowMapAtlasName(light.data.raw.type);
+		this.target = shadowMapAtlasName(light.data.raw.type, transparent);
 		this.sizew = this.sizeh = this.baseTileSizeConst = maxTileSize;
 		this.depth = getSubdivisions();
 		this.maxAtlasSizeConst = getMaxAtlasSize(light.data.raw.type);
@@ -1598,13 +1732,16 @@ class ShadowMapAtlas {
 	 * @param light of type LightObject to be added to an yatlas
 	 * @return if the light was added succesfully
 	 */
-	public static function addLight(light: LightObject) {
-		var atlasName = shadowMapAtlasName(light.data.raw.type);
-		var atlas = shadowMapAtlases.get(atlasName);
+	public static function addLight(light: LightObject, transparent: Bool) {
+		var atlasName = shadowMapAtlasName(light.data.raw.type, transparent);
+		var atlas = transparent ? shadowMapAtlasesTransparent.get(atlasName) : shadowMapAtlases.get(atlasName);
 		if (atlas == null) {
 			// create a new atlas
-			atlas = new ShadowMapAtlas(light);
-			shadowMapAtlases.set(atlasName, atlas);
+			atlas = new ShadowMapAtlas(light, transparent);
+			if (transparent)
+				shadowMapAtlasesTransparent.set(atlasName, atlas);
+			else
+				shadowMapAtlases.set(atlasName, atlas);
 		}
 
 		// find a free tile for this light
@@ -1665,17 +1802,17 @@ class ShadowMapAtlas {
 		return (currTileOffset + 1) * baseTileSizeConst > maxAtlasSizeConst;
 	}
 
-	public static inline function shadowMapAtlasName(type: String): String {
+	public static inline function shadowMapAtlasName(type: String, transparent: Bool): String {
 		#if arm_shadowmap_atlas_single_map
-		return "shadowMapAtlas";
+		return transparent ? "shadowMapAtlasTranparent" : "shadowMapAtlas";
 		#else
 		switch (type) {
 			case "point":
-				return "shadowMapAtlasPoint";
+				return transparent ? "shadowMapAtlasPointTransparent" : "shadowMapAtlasPoint";
 			case "sun":
-				return "shadowMapAtlasSun";
+				return transparent ? "shadowMapAtlasSunTransparent" : "shadowMapAtlasSun";
 			default:
-				return "shadowMapAtlasSpot";
+				return transparent ? "shadowMapAtlasSpotTransparent" : "shadowMapAtlasSpot";
 		}
 		#end
 	}
