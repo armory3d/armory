@@ -347,9 +347,6 @@ project.addSources('Sources');
         if wrd.arm_winresize or state.target == 'html5':
             assets.add_khafile_def('arm_resizable')
 
-        if get_winmode(wrd.arm_winmode) == 1 and state.target.startswith('html5'):
-            assets.add_khafile_def('kha_html5_disable_automatic_size_adjust')
-
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
@@ -472,13 +469,6 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
 """// Auto-generated
 package;\n""")
         
-        if winmode == 1 and state.target.startswith('html5'):
-            f.write("""
-import js.Browser.document;
-import js.Browser.window;
-import js.html.CanvasElement;
-import kha.Macros;\n""")
-        
         f.write("""
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
@@ -499,10 +489,7 @@ class Main {
 
         f.write("""\n
     public static function main() {""")
-        if winmode == 1 and state.target.startswith('html5'): 
-            f.write("""
-        setFullWindowCanvas();""")
-
+        
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
@@ -546,37 +533,9 @@ class Main {
             """ + ('true' if wrd.arm_vsync else 'false') + """,
             """ + pathpack + """.renderpath.RenderPathCreator.get
         );
-    }""")
-        
-        if winmode == 1 and state.target.startswith('html5'):
-            f.write("""\n
-    static function setFullWindowCanvas(): Void {
-		document.documentElement.style.padding = "0";
-		document.documentElement.style.margin = "0";
-		document.body.style.padding = "0";
-		document.body.style.margin = "0";
-		final canvas: CanvasElement = cast document.getElementById(Macros.canvasId());
-		canvas.style.display = "block";
-		final resize = function() {
-			var w = document.documentElement.clientWidth;
-			var h = document.documentElement.clientHeight;
-			if (w == 0 || h == 0) {
-				w = window.innerWidth;
-				h = window.innerHeight;
-			}
-			canvas.width = Std.int(w * window.devicePixelRatio);
-			canvas.height = Std.int(h * window.devicePixelRatio);
-			if (canvas.style.width == "") {
-				canvas.style.width = "100%";
-				canvas.style.height = "100%";
-			}
-		}
-		window.onresize = resize;
-		resize();
-	}""")
-            
-        f.write("""
-}\n""")
+    }
+}""")
+
 
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
