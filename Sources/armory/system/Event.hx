@@ -17,7 +17,7 @@ class Event {
 		For an explanation of the `mask` value, please refer to the
 		[wiki](https://github.com/armory3d/armory/wiki/events#event-masks).
 	**/
-	public static function send(name: String, mask = -1, ...args:Any) {
+	public static function send(name: String, mask = -1, ...args: Any) {
 		var entries = get(name);
 		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) Reflect.callMethod(e, e.onEvent, args);
 	}
