@@ -1,7 +1,6 @@
 package armory.system;
 
 import haxe.Constraints.Function;
-import haxe.Rest;
 
 /**
 	Detailed documentation of the event system:
@@ -18,9 +17,9 @@ class Event {
 		For an explanation of the `mask` value, please refer to the
 		[wiki](https://github.com/armory3d/armory/wiki/events#event-masks).
 	**/
-	public static function send(name: String, mask = -1, rest:Rest<Any>) {
+	public static function send(name: String, mask = -1, ...args:Any) {
 		var entries = get(name);
-		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) Reflect.callMethod(e, e.onEvent, rest);
+		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) Reflect.callMethod(e, e.onEvent, args);
 	}
 
 	/**
