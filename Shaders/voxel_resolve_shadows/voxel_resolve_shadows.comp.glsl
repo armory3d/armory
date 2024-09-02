@@ -31,9 +31,10 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "std/conetrace.glsl"
 
 uniform sampler3D voxels;
+uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(r8) image2D voxels_ao;
+uniform layout(r8) image2D voxels_shadows;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
@@ -41,6 +42,7 @@ uniform vec2 cameraProj;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
+uniform vec3 lPos;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
@@ -67,7 +69,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	float occ = 1.0 - traceAO(P, n, voxels, clipmaps);
+	float occ = 1.0 - traceShadow(P, n, voxels, voxelsSDF, normalize(lPos - P), clipmaps, pixel);
 
-	imageStore(voxels_ao, ivec2(pixel), vec4(occ));
+	imageStore(voxels_shadows, ivec2(pixel), vec4(occ));
 }

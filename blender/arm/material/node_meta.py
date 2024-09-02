@@ -76,13 +76,11 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'BLACKBODY': MaterialNodeMeta(parse_func=nodes_converter.parse_blackbody),
     'CLAMP': MaterialNodeMeta(parse_func=nodes_converter.parse_clamp),
     'COMBHSV': MaterialNodeMeta(parse_func=nodes_converter.parse_combhsv),
-    'COMBINE_COLOR': MaterialNodeMeta(parse_func=nodes_converter.parse_combine_color),
     'COMBRGB': MaterialNodeMeta(parse_func=nodes_converter.parse_combrgb),
     'COMBXYZ': MaterialNodeMeta(parse_func=nodes_converter.parse_combxyz),
     'MAP_RANGE': MaterialNodeMeta(parse_func=nodes_converter.parse_maprange),
     'MATH': MaterialNodeMeta(parse_func=nodes_converter.parse_math),
     'RGBTOBW': MaterialNodeMeta(parse_func=nodes_converter.parse_rgbtobw),
-    'SEPARATE_COLOR': MaterialNodeMeta(parse_func=nodes_converter.parse_separate_color),
     'SEPHSV': MaterialNodeMeta(parse_func=nodes_converter.parse_sephsv),
     'SEPRGB': MaterialNodeMeta(parse_func=nodes_converter.parse_seprgb),
     'SEPXYZ': MaterialNodeMeta(parse_func=nodes_converter.parse_sepxyz),
@@ -156,12 +154,10 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'BSDF_ANISOTROPIC': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfanisotropic),
     'BSDF_DIFFUSE': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfdiffuse),
     'BSDF_GLASS': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglass),
-    'BSDF_GLOSSY': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglossy),
     'BSDF_PRINCIPLED': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfprincipled),
     'BSDF_TRANSLUCENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftranslucent),
     'BSDF_TRANSPARENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftransparent),
     'BSDF_REFRACTION': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfrefraction),
-    'BSDF_VELVET': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet),
     'EMISSION': MaterialNodeMeta(parse_func=nodes_shader.parse_emission),
     'HOLDOUT': MaterialNodeMeta(
         parse_func=nodes_shader.parse_holdout,
@@ -177,7 +173,6 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'TEX_GRADIENT': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_gradient),
     'TEX_IMAGE': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_image),
     'TEX_MAGIC': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_magic),
-    'TEX_MUSGRAVE': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_musgrave),
     'TEX_NOISE': MaterialNodeMeta(parse_func=nodes_texture.parse_tex_noise),
     'TEX_POINTDENSITY': MaterialNodeMeta(
         parse_func=nodes_texture.parse_tex_pointdensity,
@@ -204,6 +199,13 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     )
 }
 
+if bpy.app.version > (3, 2, 0):
+    ALL_NODES['SEPARATE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_separate_color)
+    ALL_NODES['COMBINE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_combine_color)
+if bpy.app.version < (4, 1, 0):
+    ALL_NODES['BSDF_GLOSSY'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglossy)
+    ALL_NODES['BSDF_VELVET'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet)
+    ALL_NODES['TEX_MUSGRAVE'] = MaterialNodeMeta(parse_func=nodes_texture.parse_tex_musgrave)
 
 def get_node_meta(node: bpy.types.Node) -> MaterialNodeMeta:
     type_identifier = node.type if node.type != 'CUSTOM' else node.bl_idname

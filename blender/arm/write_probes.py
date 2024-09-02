@@ -57,7 +57,10 @@ def setup_envmap_render():
         scene.render.image_settings.color_depth = '32'
 
     # Export in linear space and with default color management settings
-    scene.display_settings.display_device = "None"
+    if bpy.app.version < (4, 1, 0):
+        scene.display_settings.display_device = "None"
+    else:
+        scene.display_settings.display_device = "sRGB"
     scene.view_settings.view_transform = "Standard"
     scene.view_settings.look = "None"
     scene.view_settings.exposure = 0
@@ -93,7 +96,10 @@ def setup_envmap_render():
 
     cam_obj.location = [0.0, 0.0, 0.0]
     cam.type = "PANO"
-    cam.cycles.panorama_type = "EQUIRECTANGULAR"
+    if bpy.app.version < (4, 1, 0):
+        cam.cycles.panorama_type = "EQUIRECTANGULAR"
+    else:
+        cam.panorama_type = "EQUIRECTANGULAR"
     cam_obj.rotation_euler = [math.radians(90), 0, math.radians(-90)]
 
     try:

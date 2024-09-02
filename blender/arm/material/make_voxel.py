@@ -29,10 +29,6 @@ import arm.material.mat_utils as mat_utils
 import arm.material.make_particle as make_particle
 import arm.make_state as state
 
-import arm.utils
-import arm.assets as assets
-import arm.material.mat_state as mat_state
-
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     assets = arm.reload_module(assets)
@@ -76,6 +72,7 @@ def make_gi(context_id):
     rpdat = arm.utils.get_rp()
     frag.add_uniform('layout(r32ui) uimage3D voxels')
 
+    frag.write('vec3 n;')
     frag.write('vec3 wposition;')
     frag.write('vec3 basecol;')
     frag.write('float roughness;') #
@@ -83,7 +80,8 @@ def make_gi(context_id):
     frag.write('float occlusion;') #
     frag.write('float specular;') #
     frag.write('vec3 emissionCol = vec3(0.0);')
-    parse_opacity = rpdat.arm_voxelgi_refraction
+    blend = mat_state.material.arm_blending
+    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
     if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
@@ -91,7 +89,7 @@ def make_gi(context_id):
         frag.write('float opacity = 1.0;')
 
     frag.write('float dotNV = 0.0;')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
@@ -137,7 +135,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
+    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
@@ -199,60 +197,114 @@ def make_gi(context_id):
     frag.write('uvw = (uvw * 0.5 + 0.5);')
     frag.write('if(any(notEqual(uvw, clamp(uvw, 0.0, 1.0)))) return;')
     frag.write('vec3 writecoords = floor(uvw * voxelgiResolution);')
-    frag.write_attrib('vec3 n = normalize(voxnormal);')
-    frag.write('vec3 aniso_direction = n;')
+    frag.write_attrib('vec3 N = normalize(voxnormal);')
+    frag.write('vec3 aniso_direction = N;')
     frag.write('uvec3 face_offsets = uvec3(')
     frag.write('    aniso_direction.x > 0 ? 0 : 1,')
     frag.write('    aniso_direction.y > 0 ? 2 : 3,')
     frag.write('    aniso_direction.z > 0 ? 4 : 5')
     frag.write('    ) * voxelgiResolution;')
-    frag.write('vec3 direction_weights = abs(n);')
+    frag.write('vec3 direction_weights = abs(N);')
+
+    frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
+    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+
+    frag.add_uniform('vec3 eye', '_cameraPosition')
+    frag.write('vec3 eyeDir = eye - wposition;')
+
+    if '_Brdf' in wrd.world_defs:
+        frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
+        frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;')
+
+    if '_Irr' in wrd.world_defs:
+        frag.add_include('std/shirr.glsl')
+        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance')
+        frag.write('vec3 envl = shIrradiance(n, shirr);')
+        if '_EnvTex' in wrd.world_defs:
+            frag.write('envl /= PI;')
+    else:
+        frag.write('vec3 envl = vec3(0.0);')
+
+    if '_Rad' in wrd.world_defs:
+        frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
+        frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
+        frag.write('vec3 reflectionWorld = reflect(-eyeDir, n);')
+        frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
+        frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
+
+    if '_EnvLDR' in wrd.world_defs:
+        frag.write('envl = pow(envl, vec3(2.2));')
+        if '_Rad' in wrd.world_defs:
+            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
+
+    frag.write('envl *= albedo;')
+
+    if '_Brdf' in wrd.world_defs:
+        frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+    if '_Rad' in wrd.world_defs:
+        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+    elif '_EnvCol' in wrd.world_defs:
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
+        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+
+    frag.add_uniform('float envmapStrength', link='_envmapStrength')
+    frag.write('envl *= envmapStrength * occlusion;')
 
     frag.write('if (direction_weights.x > 0) {')
     frag.write('    vec4 basecol_direction = vec4(min(basecol * direction_weights.x, vec3(1.0)), opacity);')
-    frag.write('    vec3 emission_direction = min(emissionCol * direction_weights.x, vec3(1.0));')
-    frag.write('    vec2 normal_direction = encode_oct(n * direction_weights.x) * 0.5 + 0.5;')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(basecol_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
+    frag.write('    vec3 emission_direction = emissionCol * direction_weights.x;')
+    frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.x) * 0.5 + 0.5;')
+    frag.write('    vec3 envl_direction = envl * direction_weights.x;')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(basecol_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
     frag.write('}')
-
 
     frag.write('if (direction_weights.y > 0) {')
     frag.write('    vec4 basecol_direction = vec4(min(basecol * direction_weights.y, vec3(1.0)), opacity);')
-    frag.write('    vec3 emission_direction = min(emissionCol * direction_weights.y, vec3(1.0));')
-    frag.write('    vec2 normal_direction = encode_oct(n * direction_weights.y) * 0.5 + 0.5;')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(basecol_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
-
+    frag.write('    vec3 emission_direction = emissionCol * direction_weights.y;')
+    frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.y) * 0.5 + 0.5;')
+    frag.write('    vec3 envl_direction = envl * direction_weights.y;')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(basecol_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0) {')
     frag.write('    vec4 basecol_direction = vec4(min(basecol * direction_weights.z, vec3(1.0)), opacity);')
-    frag.write('    vec3 emission_direction = min(emissionCol * direction_weights.z, vec3(1.0));')
+    frag.write('    vec3 emission_direction = emissionCol * direction_weights.z;')
     frag.write('    vec2 normal_direction = encode_oct(n * direction_weights.z) * 0.5 + 0.5;')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(basecol_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
+    frag.write('    vec3 envl_direction = envl * direction_weights.z;')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(basecol_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 2)), uint(basecol_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 3)), uint(basecol_direction.a * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 4)), uint(emission_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 5)), uint(emission_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 6)), uint(emission_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 7)), uint(normal_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 8)), uint(normal_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
     frag.write('}')
 
     return con_voxel
@@ -390,7 +442,7 @@ def make_ao(context_id):
     vert.add_out('vec3 voxnormalGeom')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
+    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
@@ -436,15 +488,15 @@ def make_ao(context_id):
     frag.write('vec3 direction_weights = abs(N);')
 
     frag.write('if (direction_weights.x > 0) {')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(direction_weights.x * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(direction_weights.x * 255));')
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0) {')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(direction_weights.y * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(direction_weights.y * 255));')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0) {')
-    frag.write('    imageAtomicMax(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(direction_weights.z * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(direction_weights.z * 255));')
     frag.write('}')
 
     return con_voxel

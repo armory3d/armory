@@ -232,7 +232,7 @@ project.addSources('Sources');
             khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
 
         # Move assets for published game to /data folder
-        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl')
+        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
@@ -346,6 +346,9 @@ project.addSources('Sources');
 
         if wrd.arm_winresize or state.target == 'html5':
             assets.add_khafile_def('arm_resizable')
+
+        if get_winmode(wrd.arm_winmode) == 1 and state.target.startswith('html5'):
+            assets.add_khafile_def('kha_html5_disable_automatic_size_adjust')
 
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
@@ -467,12 +470,13 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
-package ;
+package;\n""")
+
+        f.write("""
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectVersion = '""" + arm.utils.safestr(wrd.arm_project_version) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
-
 
         if rpdat.rp_voxels == 'Voxel GI' or rpdat.rp_voxels == 'Voxel AO':
             f.write("""
@@ -486,11 +490,13 @@ class Main {
             f.write("""
     public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")
 
-        f.write("""
+        f.write("""\n
     public static function main() {""")
+
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
+        
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -499,6 +505,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -507,11 +514,15 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
+        
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;""")
             elif wrd.arm_canvas_img_scaling_quality == 'high':
-                f.write(f"armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
+                f.write("""
+        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
+        
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -526,8 +537,8 @@ class Main {
             """ + pathpack + """.renderpath.RenderPathCreator.get
         );
     }
-}
-""")
+}""")
+
 
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
@@ -555,7 +566,7 @@ def write_indexhtml(w, h, is_publish):
 """)
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
+    <canvas style="object-fit: contain;  min-width: 100%;  max-width: 100%;  max-height: 100vh;  min-height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
 """)
         else:
             f.write("""
@@ -601,7 +612,7 @@ def write_compiledglsl(defs, make_variants):
                 f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
                 idx_refraction += 1
 
-            if '_SSRefraction' in wrd.world_defs:
+            if '_SSRefraction' in wrd.world_defs or '_VoxelRefract' in wrd.world_defs:
                 f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
@@ -773,11 +784,12 @@ const float compoDOFLength = 160.0;
             f.write("""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """);
 const int voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """;
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
-const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;
-const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
+const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
+const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
+const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
+const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""

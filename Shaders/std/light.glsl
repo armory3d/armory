@@ -8,7 +8,7 @@
 #include "std/shadows.glsl"
 #endif
 #ifdef _VoxelShadow
-#include "std/conetrace.glsl"
+//!uniform sampler2D voxels_shadows;
 #endif
 #ifdef _LTC
 #include "std/ltc.glsl"
@@ -90,9 +90,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, bool isSpot, float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelShadow
-		, sampler3D voxels
-		, sampler3D voxelsSDF
-		, float clipmaps[voxelgiClipmapCount * 10]
+		, vec2 texCoord
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
@@ -125,7 +123,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
 
@@ -138,7 +135,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelShadow
-	direct *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, l, clipmaps);
+	direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad; //TODO: Trace shadows directly for transparent objects.
 	#endif
 
 	#ifdef _LTC
