@@ -84,47 +84,6 @@ def add_world_defs():
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
-    # GI
-    voxelgi = False
-    voxelao = False
-    has_voxels = arm.utils.voxel_support()
-    if has_voxels and rpdat.arm_material_model == 'Full':
-        if rpdat.rp_voxels == 'Voxel GI':
-            voxelgi = True
-        elif rpdat.rp_voxels == 'Voxel AO':
-            voxelao = True
-
-    if voxelgi or voxelao:
-        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_offsetprev/voxel_offsetprev.comp.glsl')
-        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_temporal/voxel_temporal.comp.glsl')
-        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_sdf_jumpflood/voxel_sdf_jumpflood.comp.glsl')
-        wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
-        if rpdat.arm_voxelgi_shadows:
-            wrd.world_defs += '_VoxelShadow'
-            assets.add_khafile_def('arm_voxelgi_shadows')
-
-        if voxelgi:
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
-            if rpdat.rp_renderer == "Deferred":
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_specular/voxel_resolve_specular.comp.glsl')
-            wrd.world_defs += '_VoxelGI'
-            #if rpdat.arm_voxelgi_refraction:
-            #    wrd.world_defs += '_VoxelRefract'
-            #    assets.add_khafile_def('rp_voxelgi_refract')
-
-        elif voxelao:
-            if rpdat.rp_renderer == "Deferred":
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_ao/voxel_resolve_ao.comp.glsl')
-            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
-            if rpdat.arm_voxelgi_occ == 0.0:
-                wrd.world_defs += '_VoxelAONoTrace'
-
-
-    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
-        wrd.world_defs += '_Legacy'
-        assets.add_khafile_def('arm_legacy')
-
     # Light defines
     point_lights = 0
     for bo in bpy.data.objects: # TODO: temp
@@ -141,6 +100,46 @@ def add_world_defs():
                 if light.type == 'SPOT' and '_Spot' not in wrd.world_defs:
                     wrd.world_defs += '_Spot'
                     assets.add_khafile_def('arm_spot')
+    # GI
+    voxelgi = False
+    voxelao = False
+    has_voxels = arm.utils.voxel_support()
+    if has_voxels and rpdat.arm_material_model == 'Full':
+        if rpdat.rp_voxels == 'Voxel GI':
+            voxelgi = True
+        elif rpdat.rp_voxels == 'Voxel AO':
+            voxelao = True
+
+    if voxelgi or voxelao:
+        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_offsetprev/voxel_offsetprev.comp.glsl')
+        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_temporal/voxel_temporal.comp.glsl')
+        assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_sdf_jumpflood/voxel_sdf_jumpflood.comp.glsl')
+        #wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
+        if rpdat.arm_voxelgi_shadows and (point_lights > 0 or '_Sun' in wrd.world_defs):
+            wrd.world_defs += '_VoxelShadow'
+            assets.add_khafile_def('arm_voxelgi_shadows')
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_shadows/voxel_resolve_shadows.comp.glsl')
+
+        if voxelgi:
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_specular/voxel_resolve_specular.comp.glsl')
+            wrd.world_defs += '_VoxelGI'
+            if rpdat.arm_voxelgi_refract:
+                wrd.world_defs += '_VoxelRefract'
+                assets.add_khafile_def('arm_voxelgi_refract')
+                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_refraction/voxel_resolve_refraction.comp.glsl')
+
+        elif voxelao:
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_ao/voxel_resolve_ao.comp.glsl')
+            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
+            if rpdat.arm_voxelgi_occ == 0.0:
+                wrd.world_defs += '_VoxelAONoTrace'
+
+
+    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
+        wrd.world_defs += '_Legacy'
+        assets.add_khafile_def('arm_legacy')
 
     if not rpdat.rp_shadowmap_atlas:
         if point_lights == 1:
@@ -148,6 +147,7 @@ def add_world_defs():
         elif point_lights > 1:
             wrd.world_defs += '_Clusters'
             assets.add_khafile_def('arm_clusters')
+        # we don't reach this point if atlas is on and shadowmap off, TODO: check shadowmap
     else:
         wrd.world_defs += '_SMSizeUniform'
         wrd.world_defs += '_Clusters'
@@ -466,7 +466,14 @@ def get_num_gbuffer_rts_deferred()-> int:
     wrd = bpy.data.worlds['Arm']
 
     num = 2
-    for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction'):
+    refraction_flags = {'_SSRefraction', '_VoxelRefract'}
+    found_refraction_flag = False
+
+    for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction', '_VoxelRefract'):
         if flag in wrd.world_defs:
-            num += 1
+            if flag in refraction_flags and not found_refraction_flag:
+                num += 1
+                found_refraction_flag = True
+            else:
+                num += 1
     return num

@@ -30,10 +30,12 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "std/imageatomic.glsl"
 #include "std/conetrace.glsl"
 
-uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(r8) image2D voxels_ao;
+uniform sampler3D voxels;
+uniform sampler3D voxelsSDF;
+uniform sampler2D gbuffer_refraction;
+uniform layout(rgba8) image2D voxels_refraction;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
@@ -46,11 +48,13 @@ void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
 	vec2 uv = (pixel + 0.5) / postprocess_resolution;
 	#ifdef _InvY
-	uv.y = 1.0 - uv.y;
+	uv.y = 1.0 - uv.y
 	#endif
 
 	float depth = textureLod(gbufferD, uv, 0.0).r * 2.0 - 1.0;
 	if (depth == 0) return;
+
+	vec2 ior_opac = textureLod(gbuffer_refraction, uv, 0.0).xy;
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;
@@ -67,7 +71,9 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	float occ = 1.0 - traceAO(P, n, voxels, clipmaps);
+	vec3 color = vec3(0.0);
+	if(ior_opac.y < 1.0)
+		color = traceRefraction(P, n, voxels, voxelsSDF, normalize(eye - P), ior_opac.x, g0.b, clipmaps, pixel).rgb;
 
-	imageStore(voxels_ao, ivec2(pixel), vec4(occ));
+	imageStore(voxels_refraction, ivec2(pixel), vec4(color, 1.0));
 }
