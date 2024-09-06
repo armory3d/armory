@@ -595,9 +595,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    else:
-        frag.write('float opacity = 1.0;')
-
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
@@ -644,7 +641,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-        frag.write('vec3 reflectionWorld = reflect(-eyeDir, n);')
+        frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
 
@@ -696,9 +693,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
-            frag.write("indirect = traceDiffuse(wposition, wnormal, voxels, clipmaps).rgb * albedo * voxelgiDiff;")
+            frag.write("indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;")
             frag.write("if (roughness < 1.0 && specular > 0.0)")
-            frag.write("    indirect += traceSpecular(wposition, wnormal, voxels, voxelsSDF, eyeDir, roughness, clipmaps, texCoord).rgb * specular * voxelgiRefl;")
+            frag.write("    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, gl_FragCoord.xy).rgb * specular * voxelgiRefl;")
         else:
             frag.add_uniform("sampler2D voxels_diffuse")
             frag.add_uniform("sampler2D voxels_specular")
@@ -746,7 +743,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('}') # receiveShadow
         if '_VoxelShadow' in wrd.world_defs:
             if parse_opacity:
-                frag.write('svisibility *= traceShadow(wposition, wnormal, voxels, voxelsSDF, sunDir, clipmaps, texCoord);')
+                frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord);')
             else:
                 frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
@@ -802,7 +799,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('sampler3D voxels')
         frag.add_uniform('sampler3D voxelsSDF')
         frag.write('if (opacity < 1.0) {')
-        frag.write('    vec3 refraction = traceRefraction(wposition, wnormal, voxels, voxelsSDF, eyeDir, ior, roughness, clipmaps, texCoord).rgb * voxelgiRefr;')
+        frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness, clipmaps, gl_FragCoord.xy).rgb * voxelgiRefr;')
         frag.write('    indirect = mix(refraction, indirect, opacity);')
         frag.write('    direct = mix(refraction, direct, opacity);')
         frag.write('}')
@@ -819,4 +816,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float ior = 1.450;') # case shader is arm we don't get an ior
+        frag.write('float ior;')

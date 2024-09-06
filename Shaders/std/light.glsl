@@ -7,9 +7,6 @@
 #ifdef _ShadowMap
 #include "std/shadows.glsl"
 #endif
-#ifdef _VoxelShadow
-//!uniform sampler2D voxels_shadows;
-#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -132,10 +129,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _SSRS
 	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
-	#endif
-
-	#ifdef _VoxelShadow
-	direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad; //TODO: Trace shadows directly for transparent objects.
 	#endif
 
 	#ifdef _LTC
