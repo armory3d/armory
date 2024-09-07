@@ -79,7 +79,7 @@ void main() {
 		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
         return;
 	}
-    if (d == 1.0 || d == 0.0 || ior == 1.0) {
+    if (d == 0.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -98,7 +98,15 @@ void main() {
     vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
     vec4 coords = rayCast(dir);
 
+	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+
+	float refractivity = 1.0 - roughness;
+	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((length(viewPos - hitCoord)), 0.0, 1.0) * coords.w;
+
+	intensity = clamp(intensity, 0.0, 1.0);
+
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
-    fragColor.rgb = mix(refractionCol, color, opac);
+    fragColor.rgb = mix(refractionCol * intensity, color, opac);
 }

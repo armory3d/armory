@@ -449,6 +449,13 @@ class RenderPathForward {
 		}
 		#end
 
+		#if rp_ssrefr
+		{
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffffff00);
+		}
+		#end
+
 		RenderPathCreator.setTargetMeshes();
 
 		#if rp_shadowmap
