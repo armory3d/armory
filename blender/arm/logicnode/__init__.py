@@ -8,6 +8,7 @@ import arm.logicnode.arm_nodes as arm_nodes
 from arm.logicnode.arm_props import *
 import arm.logicnode.arm_sockets as arm_sockets
 from arm.logicnode.replacement import NodeReplacement
+from arm.logicnode.arm_advanced_draw import *
 
 if arm.is_reload(__name__):
     arm_nodes = arm.reload_module(arm_nodes)

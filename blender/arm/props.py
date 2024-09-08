@@ -537,7 +537,20 @@ def init_properties():
     # Particles
     bpy.types.ParticleSettings.arm_count_mult = FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
     bpy.types.ParticleSettings.arm_loop = BoolProperty(name="Loop", description="Loop this particle system", default=False)
-
+    # Actions
+    bpy.types.Action.arm_root_motion_pos = BoolProperty(name="Root Motion Position", description="Enable position root motion", default=False)
+    bpy.types.Action.arm_root_motion_rot = BoolProperty(name="Root Motion Rotation", description="Enable rotation root motion", default=False)
+    bpy.types.World.arm_action_retarget_pos_x = BoolProperty(name="Position X", description="Retarget Position X", default=True)
+    bpy.types.World.arm_action_retarget_pos_y = BoolProperty(name="Position Y", description="Retarget Position Y", default=True)
+    bpy.types.World.arm_action_retarget_pos_z = BoolProperty(name="Position Z", description="Retarget Position Z", default=False)
+    bpy.types.World.arm_action_retarget_rot_x = BoolProperty(name="Rotation X", description="Retarget Rotation X", default=False)
+    bpy.types.World.arm_action_retarget_rot_y = BoolProperty(name="Rotation Y", description="Retarget Rotation Y", default=False)
+    bpy.types.World.arm_action_retarget_rot_z = BoolProperty(name="Rotation Z", description="Retarget Rotation Z", default=False)
+    bpy.types.World.arm_action_retarget_rot_z = BoolProperty(name="Rotation Z", description="Retarget Rotation Z", default=True)
+    bpy.types.World.arm_retarget_armature = PointerProperty(name="Armature", description="Armature", type=bpy.types.Object)
+    bpy.types.World.arm_retarget_overwrite = BoolProperty(name="Overwrite", description="Overwrite action", default=True)
+    bpy.types.World.arm_retarget_from = StringProperty(name="From Bone", description="From Bone")
+    bpy.types.World.arm_retarget_to = StringProperty(name="To Bone", description="To Bone")
     create_wrd()
 
 def create_wrd():

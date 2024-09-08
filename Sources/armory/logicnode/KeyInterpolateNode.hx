@@ -17,8 +17,8 @@ class KeyInterpolateNode extends LogicNode {
 	}
 
 	function update() {
-		final sign = inputs[0].get() ? 1.0 : -1.0;
-		final rate = inputs[2].get();
+		var sign = inputs[0].get() ? 1.0 : -1.0;
+		var rate: FastFloat = inputs[2].get();
 		value = clamp(value + rate * sign);
 	}
 

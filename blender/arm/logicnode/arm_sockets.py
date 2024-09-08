@@ -30,7 +30,10 @@ socket_colors = {
     'ArmNodeSocketObject': (0.15, 0.55, 0.75, 1),
     'ArmStringSocket': (0.44, 0.70, 1.00, 1.0),
     'ArmVectorSocket': (0.39, 0.39, 0.78, 1.0),
-    'ArmAnySocket': (0.9, 0.9, 0.9, 1)
+    'ArmAnySocket': (0.9, 0.9, 0.9, 1),
+    'ArmNodeSocketAnimTree': (0.3, 0.1, 0.0, 1.0),
+    'ArmFactorSocket': (0.631, 0.631, 0.631, 1.0),
+    'ArmBlendSpaceSocket': (0.631, 0.631, 0.631, 1.0)
 }
 
 
@@ -104,7 +107,8 @@ class ArmAnimActionSocket(ArmCustomSocket):
         elif self.is_linked:
             layout.label(text=self.name)
         else:
-            layout.prop_search(self, 'default_value_raw', bpy.data, 'actions', icon='NONE', text='')
+            row = layout.row(align=True)
+            layout.prop_search(self, 'default_value_raw', bpy.data, 'actions', icon='NONE', text=self.name)
 
     def draw_color(self, context, node):
         return socket_colors[self.bl_idname]
@@ -112,7 +116,6 @@ class ArmAnimActionSocket(ArmCustomSocket):
     def copy_defaults(self, socket):
         if socket.bl_idname == self.bl_idname:
             socket.default_value_raw = self.default_value_raw
-
 
 class ArmRotationSocket(ArmCustomSocket):
     bl_idname = 'ArmRotationSocket'
@@ -577,6 +580,66 @@ class ArmVectorSocket(ArmCustomSocket):
         if socket.bl_idname == self.bl_idname:
             socket.default_value_raw = self.default_value_raw
 
+class ArmAnimTreeSocket(ArmCustomSocket):
+    bl_idname = 'ArmNodeSocketAnimTree'
+    bl_label = 'Animation Tree Socket'
+    arm_socket_type = 'NONE'
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=self.name)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+class ArmFactorSocket(ArmCustomSocket):
+    bl_idname = 'ArmFactorSocket'
+    bl_label = 'Factor Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+class ArmBlendSpaceSocket(ArmCustomSocket):
+    bl_idname = 'ArmBlendSpaceSocket'
+    bl_label = 'Blend Space Socket'
+    arm_socket_type = 'FACTOR'
+
+    default_value_raw: FloatProperty(
+        name='Factor',
+        description='Input value used for unconnected socket in the range [0 , 1]',
+        precision=3,
+        min = 0.0,
+        max = 1.0,
+        update=_on_update_socket
+    )
+
+    def draw(self, context, layout, node, text):
+        draw_socket_layout(self, layout)
+
+    def draw_color(self, context, node):
+        return socket_colors[self.bl_idname]
+
+    def get_default_value(self):
+        return self.default_value_raw
+
+    def set_default_value(self, value):
+        self.default_value_raw = value
+
 def draw_socket_layout(socket: bpy.types.NodeSocket, layout: bpy.types.UILayout, prop_name='default_value_raw'):
     if not socket.is_output and not socket.is_linked:
         layout.prop(socket, prop_name, text=socket.name)
@@ -638,9 +701,8 @@ else:
                 'draw_color': draw_color,
             }
         )
+        
         return cls    
-
-
 
 ArmActionSocketInterface = _make_socket_interface('ArmActionSocketInterface', 'ArmNodeSocketAction')
 ArmAnimSocketInterface = _make_socket_interface('ArmAnimSocketInterface', 'ArmNodeSocketAnimAction')
@@ -655,7 +717,9 @@ ArmObjectSocketInterface = _make_socket_interface('ArmObjectSocketInterface', 'A
 ArmStringSocketInterface = _make_socket_interface('ArmStringSocketInterface', 'ArmStringSocket')
 ArmVectorSocketInterface = _make_socket_interface('ArmVectorSocketInterface', 'ArmVectorSocket')
 ArmAnySocketInterface = _make_socket_interface('ArmAnySocketInterface', 'ArmAnySocket')
-
+ArmAnimTreeSocketInterface = _make_socket_interface('ArmAnimTreeSocketInterface', 'ArmNodeSocketAnimTree')
+ArmFactorSocketInterface = _make_socket_interface('ArmFactorSocketInterface', 'ArmFactorSocket')
+ArmBlendSpaceSocketInterface = _make_socket_interface('ArmBlendSpaceSocketInterface', 'ArmBlendSpaceSocket')
 
 __REG_CLASSES = (
     ArmActionSocketInterface,
@@ -671,6 +735,9 @@ __REG_CLASSES = (
     ArmStringSocketInterface,
     ArmVectorSocketInterface,
     ArmAnySocketInterface,
+    ArmAnimTreeSocketInterface,
+    ArmFactorSocketInterface,
+    ArmBlendSpaceSocketInterface,
 
     ArmActionSocket,
     ArmAnimActionSocket,
@@ -685,5 +752,8 @@ __REG_CLASSES = (
     ArmStringSocket,
     ArmVectorSocket,
     ArmAnySocket,
+    ArmAnimTreeSocket,
+    ArmFactorSocket,
+    ArmBlendSpaceSocket,
 )
 register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

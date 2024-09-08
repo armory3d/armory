@@ -335,6 +335,7 @@ class RigidBody extends iron.Trait {
 				transform.loc.y -= ptransform.worldy();
 				transform.loc.z -= ptransform.worldz();
 			}
+			transform.clearDelta();
 			transform.buildMatrix();
 
 			#if hl

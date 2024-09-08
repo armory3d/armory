@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import itertools
+import math
 import textwrap
 from typing import Any, final, Generator, List, Optional, Type, Union
 from typing import OrderedDict as ODict  # Prevent naming conflicts
@@ -8,6 +9,7 @@ import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
 from arm.logicnode.arm_sockets import ArmCustomSocket
+from mathutils import Vector
 
 import arm  # we cannot import arm.livepatch here or we have a circular import
 # Pass custom property types and NodeReplacement forward to individual
@@ -102,6 +104,14 @@ class ArmLogicTreeNode(bpy.types.Node):
 
     def get_tree(self) -> bpy.types.NodeTree:
         return self.id_data
+    
+    def getViewLocation(self):
+        node = self
+        location = node.location.copy()
+        while node.parent:
+            node = node.parent
+            location += node.location
+        return location
 
     def clear_tree_cache(self):
         self.get_tree().arm_cached = False
@@ -826,6 +836,127 @@ class ArmNodeSearch(bpy.types.Operator):
         bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.item, use_transform=True)
         return {"FINISHED"}
 
+class BlendSpaceOperator(bpy.types.Operator):
+    bl_idname = "arm.blend_space_operator"
+    bl_label = "Blend Space Op"
+    bl_description = ""
+    bl_options = {"REGISTER"}
+
+    callback: StringProperty(default = "")
+    node_index: StringProperty(name='Node Index', default='')
+
+    def invoke(self, context, event):
+        self.node = array_nodes[self.node_index]
+        self.window = context.window
+        self.node.property2 = True
+        context.window_manager.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+    
+    def convert_back(self, px, py):
+        gui_bounds = self.node.gui_bounds
+        x1 = gui_bounds[0]
+        y1 = gui_bounds[1]
+        width = gui_bounds[2]
+        localX = (px - x1)/width
+        localY = (py - y1 + width)/width
+        return localX, localY
+    
+    def convert_forward(self, locX, locY):
+        gui_bounds = self.node.gui_bounds
+        x1 = gui_bounds[0]
+        y1 = gui_bounds[1]
+        width = gui_bounds[2]
+        px = locX * width + x1
+        py = locY * width - width + y1
+        return px, py
+    
+    def set_modal(self):
+        self.modal_start = True
+
+    def unset_modal(self):
+        self.modal_start = False
+    
+    def get_modal_running(self):
+        if not hasattr(self, "modal_start"):
+            self.unset_modal()
+        return self.modal_start
+    
+    def get_active_point(self, locX, locY):
+        points = self.node.property0
+        visible = self.node.property1
+        for i in range((len(points) // 2) - 1, -1, -1):
+            
+            if(visible[i]):
+                px = points[i * 2]
+                py = points[i * 2 + 1]
+                dist = math.sqrt((locX - px) * (locX - px) + (locY - py) * (locY - py))
+                if(dist < self.node.point_size):
+                    return i
+        return -1
+    
+    def get_cursor_in_region(self, locX, locY):
+        point_size = self.node.point_size
+        if (0 - point_size < locX < 1 + point_size) and (0 - point_size < locY < 1 + point_size):
+            return True
+        return False
+    
+    def set_point_coord(self, index, x, y):
+        self.node.property0[index * 2] = x
+        self.node.property0[index * 2 + 1] = y
+
+
+    def modal(self, context, event):
+        self.node = array_nodes[self.node_index]
+        self.mousePosition = (event.mouse_region_x, event.mouse_region_y)
+        if(context.area is None or context.area.type != "NODE_EDITOR"):
+            return{"PASS_THROUGH"}
+        context.area.tag_redraw()
+
+        if not self.node.property2 or not self.node.advanced_draw_run:
+            self.node.property2 = False
+            return {"FINISHED"}
+
+        if event.type == "LEFTMOUSE":
+            if event.value == "PRESS":
+                region = context.region.view2d
+                x, y = region.region_to_view(event.mouse_region_x, event.mouse_region_y)
+                locX, locY = self.convert_back(x, y)
+                if self.get_cursor_in_region(locX, locY):
+                    self.set_modal()
+                    self.node.active_point_index = self.get_active_point(locX, locY)
+                    if self.node.active_point_index != -1:
+                        self.node.active_point_index_ref = self.node.active_point_index            
+            if event.value == "RELEASE":
+                self.node.active_point_index = -1
+                if self.get_modal_running():
+                    context.window.cursor_modal_restore()
+                    self.unset_modal()
+                
+        if event.type == "MOUSEMOVE":
+            active_point = self.node.active_point_index
+            if active_point != -1:
+                context.window.cursor_modal_set("SCROLL_XY")
+                region = context.region.view2d
+                x, y = region.region_to_view(event.mouse_region_x, event.mouse_region_y)
+                locX, locY = self.convert_back(x, y)
+                if self.get_cursor_in_region(locX, locY):
+                    if(active_point < 10):
+                        newX = round(locX * 20) * 0.05
+                        newY = round(locY * 20) * 0.05
+                        self.set_point_coord(active_point, newX, newY)
+                    else:
+                        self.set_point_coord(active_point, locX, locY)
+                else:
+                    context.window.cursor_warp(event.mouse_prev_x, event.mouse_prev_y)
+        
+        if self.get_modal_running():
+            return{"RUNNING_MODAL"}
+        
+        return{"PASS_THROUGH"}
+
+    def finish(self):
+        return {"FINISHED"}
+
 
 class ArmNodeCategory:
     """Represents a category (=directory) of logic nodes."""
@@ -1024,6 +1155,7 @@ __REG_CLASSES = (
     ArmNodeRemoveOutputButton,
     ArmNodeAddInputOutputButton,
     ArmNodeRemoveInputOutputButton,
-    ArmNodeCallFuncButton
+    ArmNodeCallFuncButton,
+    BlendSpaceOperator
 )
 register, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
