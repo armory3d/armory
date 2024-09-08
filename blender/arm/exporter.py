@@ -763,10 +763,15 @@ class ArmoryExporter:
             if bobject.hide_render or not bobject.arm_visible:
                 out_object['visible'] = False
 
-            if not bobject.visible_camera:
-                out_object['visible_mesh'] = False
-            if not bobject.visible_shadow:
-                out_object['visible_shadow'] = False
+            if bpy.app.version < (3, 0, 0):
+                if not bobject.cycles_visibility:
+                    out_object['visible_mesh'] = False
+                    out_object['visible_shadow'] = False
+            else:
+                if not bobject.visible_camera:
+                    out_object['visible_mesh'] = False
+                if not bobject.visible_shadow:
+                    out_object['visible_shadow'] = False
 
             if not bobject.arm_spawn:
                 out_object['spawn'] = False

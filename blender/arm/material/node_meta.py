@@ -76,13 +76,11 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'BLACKBODY': MaterialNodeMeta(parse_func=nodes_converter.parse_blackbody),
     'CLAMP': MaterialNodeMeta(parse_func=nodes_converter.parse_clamp),
     'COMBHSV': MaterialNodeMeta(parse_func=nodes_converter.parse_combhsv),
-    'COMBINE_COLOR': MaterialNodeMeta(parse_func=nodes_converter.parse_combine_color),
     'COMBRGB': MaterialNodeMeta(parse_func=nodes_converter.parse_combrgb),
     'COMBXYZ': MaterialNodeMeta(parse_func=nodes_converter.parse_combxyz),
     'MAP_RANGE': MaterialNodeMeta(parse_func=nodes_converter.parse_maprange),
     'MATH': MaterialNodeMeta(parse_func=nodes_converter.parse_math),
     'RGBTOBW': MaterialNodeMeta(parse_func=nodes_converter.parse_rgbtobw),
-    'SEPARATE_COLOR': MaterialNodeMeta(parse_func=nodes_converter.parse_separate_color),
     'SEPHSV': MaterialNodeMeta(parse_func=nodes_converter.parse_sephsv),
     'SEPRGB': MaterialNodeMeta(parse_func=nodes_converter.parse_seprgb),
     'SEPXYZ': MaterialNodeMeta(parse_func=nodes_converter.parse_sepxyz),
@@ -201,6 +199,9 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     )
 }
 
+if bpy.app.version > (3, 2, 0):
+    ALL_NODES['SEPARATE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_separate_color)
+    ALL_NODES['COMBINE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_combine_color)
 if bpy.app.version < (4, 1, 0):
     ALL_NODES['BSDF_GLOSSY'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglossy)
     ALL_NODES['BSDF_VELVET'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet)
