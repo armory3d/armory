@@ -6,6 +6,11 @@ from gpu_extras.batch import batch_for_shader
 from gpu_extras.presets import *
 from math import pi, cos, sin
 
+if bpy.app.version < (4, 0, 0):
+    uniform_color = '2D_UNIFORM_COLOR'
+else:
+    uniform_color = 'UNIFORM_COLOR'
+
 def getDpiFactor():
     return getDpi() / 72
 
@@ -126,7 +131,7 @@ class Rectangle:
             (self.x2, self.y1),
             (self.x1, self.y2),
             (self.x2, self.y2))
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(uniform_color)
         batch = batch_for_shader(shader, 'TRI_STRIP', {"pos": locations})
 
         shader.bind()
@@ -224,7 +229,7 @@ class Points:
         return coords
     
     def drawPointCirc(self):
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(uniform_color)
         for i in range(len(self.points) - 1):
             if(self.visible[i]):
                 pos = self.points[i]
@@ -322,7 +327,7 @@ class RectangleWithGrid:
             (self.x2, self.y1),
             (self.x1, self.y2),
             (self.x2, self.y2))
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(uniform_color)
         batch = batch_for_shader(shader, 'TRI_STRIP', {"pos": locations})
 
         shader.bind()
@@ -335,7 +340,7 @@ class RectangleWithGrid:
             (self.x2 - self.width/self.numGrids, self.y1 - self.height/self.numGrids),
             (self.x1 + self.width/self.numGrids, self.y2 + self.height/self.numGrids),
             (self.x2 - self.width/self.numGrids, self.y2 + self.height/self.numGrids))
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(uniform_color)
         batch = batch_for_shader(shader, 'TRI_STRIP', {"pos": locations})
 
         shader.bind()
