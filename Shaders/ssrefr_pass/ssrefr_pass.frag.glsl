@@ -12,6 +12,18 @@ uniform sampler2D tex1;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1;
+
+#ifdef _VoxelGI
+uniform sampler2D voxels_diffuse;
+uniform sampler2D voxels_specular;
+#ifdef _VoxelRefract
+uniform sampler2D voxels_refraction;
+#endif
+#else
+#ifdef _VoxelAO
+uniform sampler2D voxels_ao;
+#endif
+#endif
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
@@ -107,6 +119,17 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
+	#ifdef _VoxelRefract
+	refractionCol += textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
+	#endif
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+	#ifdef _VoxelGI
+	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	color += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	#else
+	#ifdef _VoxelAO
+	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
+	#endif
+	#endif
     fragColor.rgb = mix(refractionCol * intensity, color, opac);
 }

@@ -163,7 +163,7 @@ class Inc {
 		if (atlas != null) {
 			if(LightObject.pointLightsData == null) {
 				LightObject.pointLightsData = new kha.arrays.Float32Array(
-					LightObject.maxLightsCluster * ShadowMapTile.tilesLightType("point") * 4 ); // max possible visible lights * 6 or 2 (faces) * 4 (xyzw)
+					LightObject.maxLightsCluster * ShadowMapTile.tilesLightType("point") * 4); // max possible visible lights * 6 or 2 (faces) * 4 (xyzw)
 			}
 
 			var n = iron.Scene.active.lights.length > LightObject.maxLightsCluster ? LightObject.maxLightsCluster : iron.Scene.active.lights.length;
@@ -521,11 +521,6 @@ class Inc {
 		}
 		#end
 
-		#if (rp_voxels != "Off")
-		path.bindTarget("voxelsOut", "voxels");
-		path.bindTarget("voxelsSDF", "voxelsSDF");
-		#end
-
 		path.drawMeshes("translucent");
 
 		#if rp_render_to_texture
@@ -537,6 +532,29 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
+
+		#if (rp_voxels != "Off")
+		#if (rp_voxels == "Voxel GI")
+		Inc.resolveDiffuse(true);
+		Inc.resolveSpecular(true);
+		path.bindTarget("voxels_diffuse", "voxels_diffuse");
+		path.bindTarget("voxels_specular", "voxels_specular");
+		#if arm_voxelgi_refract
+		Inc.resolveRefraction(true);
+		path.bindTarget("voxels_refraction", "voxels_refraction");
+		#end
+		#else
+		#if (rp_voxels == "Voxel AO")
+		Inc.resolveAO(true);
+		path.bindTarget("voxels_ao", "voxels_ao");
+		#end
+		#end
+		#end
+		#if arm_voxelgi_shadows
+		Inc.resolveShadows(true);
+		path.bindTarget("voxels_shadows", "voxels_shadows");
+		#end
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
@@ -993,7 +1011,7 @@ class Inc {
 	}
 	#end
 	#if (rp_voxels == "Voxel AO")
-	public static function resolveAO() {
+	public static function resolveAO(transluc: Bool) {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
 	 	var camera = iron.Scene.active.camera;
@@ -1004,11 +1022,16 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
-		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
-		#end
+		if (transluc == false) {
+			#if arm_deferred
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+			#else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+			#end
+		}
+		else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("revealage").image);
+
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
@@ -1068,7 +1091,7 @@ class Inc {
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}
 	#else
-	public static function resolveDiffuse() {
+	public static function resolveDiffuse(transluc: Bool) {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
 	 	var camera = iron.Scene.active.camera;
@@ -1079,11 +1102,17 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
-		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
-		#end
+
+		if (transluc == false) {
+			#if arm_deferred
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+			#else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+			#end
+		}
+		else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("revealage").image);
+
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
@@ -1143,7 +1172,7 @@ class Inc {
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}
 
-	public static function resolveSpecular() {
+	public static function resolveSpecular(transluc: Bool) {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
 	 	var camera = iron.Scene.active.camera;
@@ -1154,11 +1183,17 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta4, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb4, rts.get("half").image);
-		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("lbuffer1").image);
-		#end
+
+		if (transluc == false) {
+			#if arm_deferred
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+			#else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+			#end
+		}
+		else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("revealage").image);
+
 		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 
@@ -1220,7 +1255,7 @@ class Inc {
 	}
 
 	#if arm_voxelgi_refract
-	public static function resolveRefraction() {
+	public static function resolveRefraction(transluc: Bool) {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
 	 	var camera = iron.Scene.active.camera;
@@ -1231,11 +1266,15 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta6, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb6, rts.get("half").image);
-		#if arm_deferred
-		kha.compute.Compute.setSampledTexture(voxel_tc6, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc6, rts.get("lbuffer1").image);
-		#end
+		if (transluc == false) {
+			#if arm_deferred
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+			#else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+			#end
+		}
+		else
+			kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("revealage").image);
 		kha.compute.Compute.setSampledTexture(voxel_td6, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te6, rts.get("voxels_refraction").image, kha.compute.Access.Write);
 		kha.compute.Compute.setSampledTexture(voxel_tf6, rts.get("gbuffer_refraction").image);
@@ -1299,7 +1338,7 @@ class Inc {
 	#end
 	#end // voxel ao
 	#if arm_voxelgi_shadows
-	public static function resolveShadows() {
+	public static function resolveShadows(transluc: Bool) {
 		var rts = path.renderTargets;
 	 	var res = iron.RenderPath.getVoxelRes();
 	 	var camera = iron.Scene.active.camera;
@@ -1316,11 +1355,15 @@ class Inc {
 
 	 		kha.compute.Compute.setSampledTexture(voxel_ta7, rts.get("voxelsOut").image);
 			kha.compute.Compute.setSampledTexture(voxel_tb7, rts.get("half").image);
-			#if arm_deferred
-			kha.compute.Compute.setSampledTexture(voxel_tc7, rts.get("gbuffer0").image);
-			#else
-			kha.compute.Compute.setSampledTexture(voxel_tc7, rts.get("lbuffer1").image);
-			#end
+			if (transluc == false) {
+				#if arm_deferred
+				kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+				#else
+				kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+				#end
+			}
+			else
+				kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("revealage").image);
 			kha.compute.Compute.setSampledTexture(voxel_td7, rts.get("voxelsSDF").image);
 			kha.compute.Compute.setTexture(voxel_te7, rts.get("voxels_shadows").image, kha.compute.Access.Write);
 
