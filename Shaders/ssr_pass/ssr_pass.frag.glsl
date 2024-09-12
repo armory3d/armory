@@ -24,7 +24,7 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-const int numBinarySearchSteps = 7;
+#define numBinarySearchSteps 7
 const int maxSteps = int(ceil(1.0 / ssrRayStep) * ssrSearchDist);
 
 vec2 getProjectedCoord(const vec3 hit) {
@@ -96,9 +96,9 @@ void main() {
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
-		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
 	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
 	#endif
 
 	// * max(ssrMinRayStep, -viewPos.z)
@@ -109,9 +109,9 @@ void main() {
 
 	float reflectivity = 1.0 - roughness;
 	#ifdef _CPostprocess
-		float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, PPComp10.x) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
 	#else
-		float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	float intensity = pow(reflectivity, ssrFalloffExp) * screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) * clamp((ssrSearchDist - length(viewPos - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);

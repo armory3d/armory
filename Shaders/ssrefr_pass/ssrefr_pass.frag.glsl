@@ -12,6 +12,18 @@ uniform sampler2D tex1;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1;
+
+#ifdef _VoxelGI
+uniform sampler2D voxels_diffuse;
+uniform sampler2D voxels_specular;
+#ifdef _VoxelRefract
+uniform sampler2D voxels_refraction;
+#endif
+#else
+#ifdef _VoxelAO
+uniform sampler2D voxels_ao;
+#endif
+#endif
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
@@ -51,7 +63,7 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
+	if (abs(ddepth) > ss_refractionSearchDist) return vec4(texCoord, 0.0, 1.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -79,7 +91,7 @@ void main() {
 		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
         return;
 	}
-    if (d == 0.0) {
+    if (d == 0.0 || d == 1.0 || ior == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -88,12 +100,12 @@ void main() {
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
     n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    n = normalize(n);
+	n = normalize(n);
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
     vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
-    hitCoord = viewPos;
+    hitCoord = -viewPos;
 
     vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
     vec4 coords = rayCast(dir);
@@ -102,11 +114,23 @@ void main() {
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
 	float refractivity = 1.0 - roughness;
-	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((length(viewPos - hitCoord)), 0.0, 1.0) * coords.w;
+	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp(length(viewPos - hitCoord), 0.0, 1.0) * coords.w;
 
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
+	#ifdef _VoxelRefract
+	refractionCol += textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
+	#endif
+	refractionCol *= intensity;
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
-    fragColor.rgb = mix(refractionCol * intensity, color, opac);
+	#ifdef _VoxelGI
+	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	color += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	#else
+	#ifdef _VoxelAO
+	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
+	#endif
+	#endif
+    fragColor.rgb = mix(refractionCol, color, opac);
 }

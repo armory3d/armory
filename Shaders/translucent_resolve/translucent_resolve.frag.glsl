@@ -6,6 +6,18 @@
 uniform sampler2D gbuffer0; // accum
 uniform sampler2D gbuffer1; // revealage
 
+#ifdef _VoxelGI
+uniform sampler2D voxels_diffuse;
+uniform sampler2D voxels_specular;
+#ifdef _VoxelRefract
+uniform sampler2D voxels_refraction;
+#endif
+#else
+#ifdef _VoxelAO
+uniform sampler2D voxels_ao;
+#endif
+#endif
+
 uniform vec2 texSize;
 
 in vec2 texCoord;
@@ -20,6 +32,21 @@ void main() {
 		discard;
 	}
 
-	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
+	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).z;
+
+	#ifdef _VoxelRefract
+	if(revealage < 1.0)
+		accum.rgb += textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
+	#endif
+
+	#ifdef _VoxelGI
+	accum.rgb *= textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	accum.rgb *= textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	#else
+	#ifdef _VoxelAO
+	accum.rgb *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
+	#endif
+	#endif
+
 	fragColor = vec4(accum.rgb / clamp(f, 0.0001, 5000), revealage);
 }
