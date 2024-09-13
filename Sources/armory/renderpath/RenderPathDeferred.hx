@@ -21,7 +21,7 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission", #end
-			#if rp_ssrefr "gbuffer_refraction" #end
+			#if (rp_ssrefr || arm_voxelgi_refract) "gbuffer_refraction" #end
 		]);
 	}
 
@@ -468,13 +468,6 @@ class RenderPathDeferred {
 		{
 			path.setTarget("gbuffer2");
 			path.clearTarget(0xff000000);
-		}
-		#end
-
-		#if rp_ssrefr
-		{
-			path.setTarget("gbuffer_refraction");
-			path.clearTarget(0xffffff00);
 		}
 		#end
 

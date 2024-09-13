@@ -279,7 +279,7 @@ def make_deferred(con_mesh, rpasses):
     frag.write('#endif')
 
     if '_SSRefraction' in wrd.world_defs or '_VoxelRefract' in wrd.world_defs:
-        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
+        frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 1.0);')
 
     return con_mesh
 
@@ -557,7 +557,7 @@ def make_forward(con_mesh):
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
             if rpdat.rp_ss_refraction or rpdat.arm_voxelgi_refract:
-                frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
+                frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 1.0);')
 
         else:
             frag.add_out('vec4 fragColor[1]')

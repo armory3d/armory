@@ -74,14 +74,6 @@ void main() {
 	#endif
 	#endif
 
-	#ifdef _VoxelGI
-	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz))) / 255;
-	light.g = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-	light /= 3;
-	#endif
-
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
 		#ifdef _VoxelGI
@@ -103,27 +95,11 @@ void main() {
 
 		if (i < 6) {
 			#ifdef _VoxelGI
-			vec4 basecol = vec4(0.0);
-			basecol.r = float(imageLoad(voxels, src)) / 255;
-			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
-			basecol /= 4;
-			vec3 emission = vec3(0.0);
-			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
-			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
-			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
-			emission /= 3;
-			vec3 N = vec3(0.0);
-			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-			N /= 2;
-			vec3 wnormal = decode_oct(N.rg * 2 - 1);
-			vec3 envl = vec3(0.0);
-			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
-			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
-			envl /= 3;
+			vec3 light = convRGBA8ToVec4(imageLoad(voxelsLight, src).r).rgb;
+			vec4 basecol = convRGBA8ToVec4(imageLoad(voxels, src).r);
+			vec3 emission = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)).r).rgb;
+			vec3 wnormal = decNor(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r);
+			vec3 envl = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)).r).rgb;
 			#ifdef _HOSEK
 			envl *= 100;
 			#endif
