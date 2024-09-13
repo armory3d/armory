@@ -100,9 +100,6 @@ void main() {
 			vec3 emission = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)).r).rgb;
 			vec3 wnormal = decNor(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r);
 			vec3 envl = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)).r).rgb;
-			#ifdef _HOSEK
-			envl *= 100;
-			#endif
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
