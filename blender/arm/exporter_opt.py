@@ -114,7 +114,10 @@ def calc_tangents(posa, nora, uva, ias, scale_pos):
 
 
 def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Object, o, has_armature=False):
-    export_mesh.calc_normals_split()
+    if bpy.app.version < (4, 1, 0):
+        export_mesh.calc_normals_split()
+    else:
+        updated_normals = export_mesh.corner_normals
     # exportMesh.calc_loop_triangles()
     vcol0 = self.get_nth_vertex_colors(export_mesh, 0)
     vert_list = {Vertex(export_mesh, loop, vcol0): 0 for loop in export_mesh.loops}.keys()
