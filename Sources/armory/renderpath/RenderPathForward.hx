@@ -118,18 +118,20 @@ class RenderPathForward {
 			}
 			#end
 
+			#if (rp_ssrefr || arm_voxelgi_refract)
+			var t = new RenderTargetRaw();
+			t.name = "gbuffer_refraction";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+			#end
+
 			#if rp_ssrefr
 			{
-				var t = new RenderTargetRaw();
-				t.name = "gbuffer_refraction";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				t.depth_buffer = "main";
-				path.createRenderTarget(t);
-
 				//holds colors before refractive meshes are drawn
 				var t = new RenderTargetRaw();
 				t.name = "refr";
@@ -146,7 +148,7 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "R32";
+				t.format = "DEPTH24";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}

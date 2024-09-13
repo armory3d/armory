@@ -119,17 +119,20 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
-	refractionCol *= intensity;
-	#ifdef _VoxelRefract
-	refractionCol += textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
-	#endif
+	//refractionCol *= intensity;
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
 	#ifdef _VoxelGI
-	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
 	color += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	refractionCol += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	refractionCol += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
 	#else
 	#ifdef _VoxelAO
 	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
+	#endif
+	#ifdef _VoxelRefract
+	vec3 voxelsRefractionCol = textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
+	refractionCol += voxelsRefractionCol;
 	#endif
 	#endif
     fragColor.rgb = mix(refractionCol, color, opac);

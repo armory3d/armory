@@ -40,8 +40,8 @@ void main() {
 	#endif
 
 	#ifdef _VoxelGI
-	accum.rgb *= textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
-	accum.rgb *= textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	accum.rgb += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	accum.rgb += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
 	#else
 	#ifdef _VoxelAO
 	accum.rgb *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
