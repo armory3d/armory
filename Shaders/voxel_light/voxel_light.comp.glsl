@@ -109,7 +109,11 @@ void main() {
 		if (lightType == 0) { l = lightDir; visibility = vec3(1.0); }
 		else { l = normalize(lp); visibility = vec3(attenuate(distance(P, lightPos))); }
 
-		vec3 wnormal = decNor(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r);
+		vec3 N = vec3(0.0);
+		N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
+		N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+		N /= 2;
+		vec3 wnormal = decode_oct(N.rg * 2 - 1);
 
 		// float dotNL = max(dot(wnormal, l), 0.0);
 		// if (dotNL == 0.0) return;
