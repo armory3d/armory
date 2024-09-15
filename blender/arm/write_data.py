@@ -471,14 +471,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
         f.write(
 """// Auto-generated
 package;\n""")
-        
-        if winmode == 1 and state.target.startswith('html5'):
-            f.write("""
-import js.Browser.document;
-import js.Browser.window;
-import js.html.CanvasElement;
-import kha.Macros;\n""")
-        
+
         f.write("""
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
@@ -499,9 +492,6 @@ class Main {
 
         f.write("""\n
     public static function main() {""")
-        if winmode == 1 and state.target.startswith('html5'): 
-            f.write("""
-        setFullWindowCanvas();""")
 
         if rpdat.arm_skin != 'Off':
             f.write("""
@@ -546,37 +536,9 @@ class Main {
             """ + ('true' if wrd.arm_vsync else 'false') + """,
             """ + pathpack + """.renderpath.RenderPathCreator.get
         );
-    }""")
-        
-        if winmode == 1 and state.target.startswith('html5'):
-            f.write("""\n
-    static function setFullWindowCanvas(): Void {
-		document.documentElement.style.padding = "0";
-		document.documentElement.style.margin = "0";
-		document.body.style.padding = "0";
-		document.body.style.margin = "0";
-		final canvas: CanvasElement = cast document.getElementById(Macros.canvasId());
-		canvas.style.display = "block";
-		final resize = function() {
-			var w = document.documentElement.clientWidth;
-			var h = document.documentElement.clientHeight;
-			if (w == 0 || h == 0) {
-				w = window.innerWidth;
-				h = window.innerHeight;
-			}
-			canvas.width = Std.int(w * window.devicePixelRatio);
-			canvas.height = Std.int(h * window.devicePixelRatio);
-			if (canvas.style.width == "") {
-				canvas.style.width = "100%";
-				canvas.style.height = "100%";
-			}
-		}
-		window.onresize = resize;
-		resize();
-	}""")
-            
-        f.write("""
-}\n""")
+    }
+}""")
+
 
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
@@ -604,7 +566,7 @@ def write_indexhtml(w, h, is_publish):
 """)
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
+    <canvas style="object-fit: contain;  min-width: 100%;  max-width: 100%;  max-height: 100vh;  min-height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
 """)
         else:
             f.write("""
@@ -650,7 +612,7 @@ def write_compiledglsl(defs, make_variants):
                 f.write(f'#define GBUF_IDX_EMISSION {idx_emission}\n')
                 idx_refraction += 1
 
-            if '_SSRefraction' in wrd.world_defs:
+            if '_SSRefraction' in wrd.world_defs or '_VoxelRefract' in wrd.world_defs:
                 f.write(f'#define GBUF_IDX_REFRACTION {idx_refraction}\n')
 
         f.write("""#if defined(HLSL) || defined(METAL)
@@ -822,11 +784,12 @@ const float compoDOFLength = 160.0;
             f.write("""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """);
 const int voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """;
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
-const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;
-const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
+const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
+const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
+const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
+const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""

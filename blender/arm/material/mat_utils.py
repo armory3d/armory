@@ -5,6 +5,7 @@ import bpy
 import arm.utils
 import arm.make_state as make_state
 import arm.material.cycles as cycles
+import arm.assets as assets
 import arm.log as log
 
 if arm.is_reload(__name__):

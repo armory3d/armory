@@ -68,6 +68,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         col.prop(obj, 'arm_spawn')
         col.prop(obj, 'arm_mobile')
         col.prop(obj, 'arm_animation_enabled')
+        col.prop(obj, 'arm_lighting')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -724,7 +725,10 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY")
         else:
-            row.operator("arm.stop", icon="MESH_PLANE")
+            if bpy.app.version < (3, 0, 0):
+                row.operator("arm.stop", icon="CANCEL", text="")
+            else:
+                row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
         row.operator("arm.clean_menu", icon="BRUSH_DATA")
 
         col = layout.box().column()
@@ -1711,11 +1715,11 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col3 = col.column()
         col3.enabled = rpdat.rp_voxels == 'Voxel AO'
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
-        #col2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
-        #col2.prop(rpdat, 'arm_voxelgi_bounces')
+        col2.prop(rpdat, 'arm_voxelgi_refract', text='Refraction')
         col.prop(rpdat, 'arm_voxelgi_clipmap_count')
         #col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
+        col.prop(rpdat, 'arm_voxelgi_size')
         #col.prop(rpdat, 'rp_voxelgi_resolution_z')
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         #col.prop(rpdat, 'arm_voxelgi_temporal')
@@ -1724,13 +1728,13 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
-        #col2.prop(rpdat, 'arm_voxelgi_refr')
+        col2.prop(rpdat, 'arm_voxelgi_refr')
+        col.prop(rpdat, 'arm_voxelgi_shad')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
-        col.prop(rpdat, 'arm_voxelgi_size')
+        col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
-        #col.prop(rpdat, 'arm_voxelgi_offset')
         #col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
