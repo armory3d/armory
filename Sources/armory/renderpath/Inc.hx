@@ -570,14 +570,12 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.scale = getSuperSampling();
 			t.format = getHdrFormat();
 		}
 		else if (t.name == "voxels_ao") {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.scale = getSuperSampling();
 			t.format = "R8";
 		}
 		else {
@@ -621,7 +619,7 @@ class Inc {
 						t.width = res * 6;
 						t.height = res;
 						t.format = "R32";
-						t.depth = res * 9;
+						t.depth = res * 12;
 					}
 				}
 				#end
