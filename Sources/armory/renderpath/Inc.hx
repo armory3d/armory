@@ -35,30 +35,6 @@ class Inc {
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
 	static var voxel_tf1:kha.compute.TextureUnit;
-	static var voxel_tg1:kha.compute.TextureUnit;
-	static var voxel_th1:kha.compute.TextureUnit;
-	#if (rp_gbuffer2 && arm_deferred)
-	static var voxel_ti1:kha.compute.TextureUnit;
-	#end
-	#if arm_brdf
-	static var voxel_tj1:kha.compute.TextureUnit;
-	#end
-	#if arm_radiance
-	static var voxel_tk1:kha.compute.TextureUnit;
-	static var voxel_ce1:kha.compute.ConstantLocation;
-	#end
-	#if arm_irradiance
-	static var voxel_cc1:kha.compute.ConstantLocation;
-	#end
-	static var voxel_cd1:kha.compute.ConstantLocation;
-	#if arm_envldr
-	static var voxel_cf1:kha.compute.ConstantLocation;
-	#end
-	static var voxel_cg1:kha.compute.ConstantLocation;
-	#else
-	#if arm_voxelgi_shadows
-	static var voxel_tf1:kha.compute.TextureUnit;
-	#end
 	#end
 	#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
 	static var voxel_sh2:kha.compute.Shader = null;
@@ -581,7 +557,7 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R8";
+				t.format = "R16";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -733,31 +709,6 @@ class Inc {
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("voxelsLight");
 			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
-
-			voxel_tg1 = voxel_sh1.getTextureUnit("gbuffer0");
-			voxel_th1 = voxel_sh1.getTextureUnit("gbuffer1");
-			#if (rp_gbuffer2 && arm_deferred)
-			voxel_ti1 = voxel_sh1.getTextureUnit("gbuffer2");
-			#end
-			#if arm_brdf
-			voxel_tj1 = voxel_sh1.getTextureUnit("senvmapBrdf");
-			#end
-			#if arm_radiance
-			voxel_tk1 = voxel_sh1.getTextureUnit("senvmapRadiance");
-			voxel_ce1 = voxel_sh1.getConstantLocation("envmapNumMipmaps");
-			#end
-			#if arm_irradiance
-			voxel_cc1 = voxel_sh1.getConstantLocation("shirr");
-			#end
-			voxel_cd1 = voxel_sh1.getConstantLocation("envmapStrength");
-			#if arm_envldr
-			voxel_cf1 = voxel_sh1.getConstantLocation("backgroundCol");
-			#end
-			voxel_cg1 = voxel_sh1.getConstantLocation("eye");
-			#else
-			#if arm_voxelgi_shadows
-			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
-			#end
 			#end
 		}
 		#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
@@ -916,38 +867,6 @@ class Inc {
 		kha.compute.Compute.setFloats(voxel_ca1, fa);
 
 		kha.compute.Compute.setInt(voxel_cb1, iron.RenderPath.clipmapLevel);
-
-		#if (rp_voxels == "Voxel GI" && arm_deferred)
-		kha.compute.Compute.setSampledTexture(voxel_tg1, rts.get("gbuffer0").image);
-		kha.compute.Compute.setSampledTexture(voxel_th1, rts.get("gbuffer1").image);
-		#if rp_gbuffer2
-		kha.compute.Compute.setSampledTexture(voxel_ti1, rts.get("gbuffer2").image);
-		#end
-		#if arm_brdf
-		kha.compute.Compute.setSampledTexture(voxel_tj1, iron.Scene.active.embedded.get("brdf.png"));
-		#end
-		#if arm_radiance
-		kha.compute.Compute.setSampledTexture(voxel_tk1, iron.Scene.active.world.probe.radiance);
-		var w = iron.Scene.active.world;
-		var i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1;
-		kha.compute.Compute.setFloat(voxel_ce1, i);
-		#end
-		#if arm_irradiance
-		fa = iron.Scene.active.world == null ? iron.data.WorldData.getEmptyIrradiance() : iron.Scene.active.world.probe.irradiance;
-		kha.compute.Compute.setFloats(voxel_cc1, fa);
-		#end
-		kha.compute.Compute.setFloat(voxel_cd1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
-
-		#if arm_envldr
-		var envCol:iron.math.Vec3;
-		if (camera.data.raw.clear_color != null)
-			envCol = new iron.math.Vec3(camera.data.raw.clear_color[0], camera.data.raw.clear_color[1], camera.data.raw.clear_color[2]);
-		else
-			envCol = new iron.math.Vec3(0.0);
-		kha.compute.Compute.setFloat3(voxel_cf1, envCol.x, envCol.y, envCol.z);
-		#end
-		kha.compute.Compute.setFloat3(voxel_cg1, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-		#end
 
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 	}
