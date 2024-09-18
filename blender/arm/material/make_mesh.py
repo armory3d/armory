@@ -282,7 +282,7 @@ def make_deferred(con_mesh, rpasses):
         if 'refraction' in rpasses:
             frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(ior, opacity, 0.0, 0.0);')
         else:
-            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 0.0);')
+            frag.write('fragColor[GBUF_IDX_REFRACTION] = vec4(1.0, 1.0, 0.0, 1.0);')
 
     return con_mesh
 
@@ -563,7 +563,7 @@ def make_forward(con_mesh):
                 if parse_opacity:
                     frag.write(f'fragColor[2] = vec4(ior, opacity, 0.0, 0.0);')
                 else:
-                    frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
+                    frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 1.0);')
 
         else:
             frag.add_out('vec4 fragColor[1]')
