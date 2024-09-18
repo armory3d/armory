@@ -1301,7 +1301,7 @@ class Inc {
 	 		// LVP
 	 		m.setFrom(l.VP);
 	 		m.multmat(iron.object.Uniforms.biasMat);
-	 		/*
+
 	 		#if arm_shadowmap_atlas
 			if (l.data.raw.type == "sun")
 			{
@@ -1322,7 +1322,7 @@ class Inc {
 				#end
 			}
 			#end
-			*/
+
 	 		kha.compute.Compute.setMatrix(voxel_cj5, m.self);
 	 		// shadowsBias
 	 		kha.compute.Compute.setFloat(voxel_ck5, l.data.raw.shadows_bias);

@@ -31,8 +31,6 @@ uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(r32ui) uimage3D voxels;
-uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDFSampler;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
@@ -154,9 +152,6 @@ void main() {
 		}
 
 		const vec2 pixel = gl_GlobalInvocationID.xy;
-		#ifdef _VoxelShadow
-		visibility *= traceShadow(P, wnormal, voxelsSampler, voxelsSDFSampler, lp, clipmaps, pixel);
-		#endif
 		vec3 light = visibility * lightColor;
 		aniso_light[i] = light;
 
