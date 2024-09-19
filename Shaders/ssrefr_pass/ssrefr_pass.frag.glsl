@@ -126,7 +126,6 @@ void main() {
 	#else
 	#ifdef _VoxelAO
 	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
-	refractionCol *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
 	#endif
 	#endif
     fragColor.rgb = mix(refractionCol, color, opac);
