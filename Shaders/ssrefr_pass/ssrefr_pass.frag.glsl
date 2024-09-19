@@ -121,8 +121,8 @@ void main() {
 	#endif
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
 	#ifdef _VoxelGI
-	color *= textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
-	color *= textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	color += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
 	#else
 	#ifdef _VoxelAO
 	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;

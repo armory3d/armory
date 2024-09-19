@@ -32,11 +32,11 @@ void main() {
 		discard;
 	}
 
-	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).z;
+	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
 
 	#ifdef _VoxelGI
-	accum.rgb *= textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
-	accum.rgb *= textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	accum.rgb += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
+	accum.rgb += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
 	#endif
 
 	fragColor = vec4(accum.rgb / clamp(f, 0.0001, 5000), revealage);
