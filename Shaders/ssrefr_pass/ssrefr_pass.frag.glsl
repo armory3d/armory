@@ -87,11 +87,7 @@ void main() {
 
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (opac == 1.0) {
-		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
-        return;
-	}
-    if (d == 0.0) {
+    if (d == 0.0 || d == 1.0 || opac == 1.0 || ior == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -105,7 +101,7 @@ void main() {
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
     vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
-    hitCoord = viewPos;
+    hitCoord = -viewPos;
 
     vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
     vec4 coords = rayCast(dir);
@@ -119,17 +115,19 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
+	refractionCol *= intensity;
 	#ifdef _VoxelRefract
 	refractionCol += textureLod(voxels_refraction, texCoord.xy, 0.0).rgb;
 	#endif
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
 	#ifdef _VoxelGI
-	color += textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
-	color += textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	color *= textureLod(voxels_specular, texCoord.xy, 0.0).rgb;
+	color *= textureLod(voxels_diffuse, texCoord.xy, 0.0).rgb;
 	#else
 	#ifdef _VoxelAO
 	color *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
+	refractionCol *= textureLod(voxels_ao, texCoord.xy, 0.0).r;
 	#endif
 	#endif
-    fragColor.rgb = mix(refractionCol * intensity, color, opac);
+    fragColor.rgb = mix(refractionCol, color, opac);
 }

@@ -497,7 +497,7 @@ class Inc {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = getDisplayp();
-		t.format = "R16";
+		t.format = "R32";
 		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
