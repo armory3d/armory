@@ -31,8 +31,6 @@ uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(r32ui) uimage3D voxels;
-uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDFSampler;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
@@ -113,13 +111,13 @@ void main() {
 		if (lightType == 0) { l = lightDir; visibility = vec3(1.0); }
 		else { l = normalize(lp); visibility = vec3(attenuate(distance(P, lightPos))); }
 
-	bool transparent = bool((float(imageLoad(voxels, src).a) / 255) != 1.0);
+		bool transparent = bool((float(imageLoad(voxels, src).a) / 255) != 1.0);
 
-	vec3 N = vec3(0.0);
-			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-			N /= 2;
-			vec3 wnormal = decode_oct(N.rg * 2 - 1);
+		vec3 N = vec3(0.0);
+		N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
+		N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+		N /= 2;
+		vec3 wnormal = decode_oct(N.rg * 2 - 1);
 
 	// float dotNL = max(dot(wnormal, l), 0.0);
 	// if (dotNL == 0.0) return;
@@ -172,10 +170,6 @@ void main() {
 	}
 #endif
 
-		const vec2 pixel = gl_GlobalInvocationID.xy;
-		#ifdef _VoxelShadow
-		visibility *= traceShadow(P, wnormal, voxelsSampler, voxelsSDFSampler, lp, clipmaps, pixel);
-		#endif
 		vec3 light = visibility * lightColor;
 		aniso_light[i] = light;
 
