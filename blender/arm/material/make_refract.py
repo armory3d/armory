@@ -19,7 +19,6 @@ else:
 
 def make(context_id):
     con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
-    con_refract.data["vertex_elements"].append({'name' : 'pos', 'data' : 'short4norm'})
 
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
 
@@ -38,9 +37,9 @@ def make(context_id):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-    frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
-    frag.write('fragColor[2] = vec4(ior, opacity, 0.0, 0.0);')
+    frag.write('fragColor[0] = vec4(n.xy, roughness, metallic);')
+    frag.write('fragColor[1] = vec4(direct + indirect, packFloat2(occlusion, specular));')
+    frag.write('fragColor[2] = vec4(ior, opacity, 0.0, 1.0);')
     make_finalize.make(con_refract)
 
     # assets.vs_equal(con_refract, assets.shader_cons['transluc_vert']) # shader_cons has no transluc yet

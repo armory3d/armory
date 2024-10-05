@@ -497,7 +497,7 @@ class Inc {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = getDisplayp();
-		t.format = "R16";
+		t.format = "R32";
 		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
@@ -511,6 +511,7 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
+
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -537,6 +538,7 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");

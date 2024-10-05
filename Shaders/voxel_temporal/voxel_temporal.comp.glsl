@@ -46,15 +46,15 @@ uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(rgba8) image3D voxelsOut;
-uniform layout(r16) image3D SDF;
+uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r16) image3D SDF;
+uniform layout(r8) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16) image3D voxelsB;
+uniform layout(r16) image3D voxelsOut;
 #endif
 #endif
 
@@ -72,14 +72,6 @@ void main() {
 	#ifdef _VoxelShadow
 	float sdf = float(clipmaps[int(clipmapLevel * 10)]) * 2.0 * res;
 	#endif
-	#endif
-
-	#ifdef _VoxelGI
-	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz))) / 255;
-	light.g = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-	light /= 3;
 	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
@@ -103,6 +95,11 @@ void main() {
 
 		if (i < 6) {
 			#ifdef _VoxelGI
+			vec3 light = vec3(0.0);
+			light.r = float(imageLoad(voxelsLight, src)) / 255;
+			light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+			light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+			light /= 3;
 			vec4 basecol = vec4(0.0);
 			basecol.r = float(imageLoad(voxels, src)) / 255;
 			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
