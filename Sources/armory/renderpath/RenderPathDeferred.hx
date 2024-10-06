@@ -382,7 +382,7 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
-			t.format = Inc.getHdrFormat();
+			t.format = "RGBA64";
 			path.createRenderTarget(t);
 
 			var t = new RenderTargetRaw();
@@ -861,8 +861,8 @@ class RenderPathDeferred {
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex");
-				path.bindTarget("gbuffer1_refr", "tex1");
+				path.bindTarget("refr", "tex1");
+				path.bindTarget("gbuffer1_refr", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0_refr", "gbuffer0");

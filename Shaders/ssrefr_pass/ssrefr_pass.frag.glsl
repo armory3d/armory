@@ -77,7 +77,7 @@ void main() {
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
     if (d == 0.0 || d == 1.0 || opac == 1.0 || ior == 1.0) {
-        fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
+        fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
 
@@ -103,10 +103,10 @@ void main() {
 						clamp(-refracted.z, 0.0, 1.0) * clamp((length(viewPos - hitCoord)), 0.0, 1.0) * coords.w;
 	intensity = clamp(intensity, 0.0, 1.0);
 
-	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
+	vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol *= intensity;
 
-	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
+	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
 
 	fragColor.rgb = mix(refractionCol, color, opac);
 }
