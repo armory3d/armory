@@ -18,7 +18,7 @@ else:
 
 
 def make(context_id):
-    con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
 

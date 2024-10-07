@@ -18,7 +18,7 @@ else:
 
 
 def make(context_id):
-    con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
+    con_transluc = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise', \
 		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
 		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add' })
 

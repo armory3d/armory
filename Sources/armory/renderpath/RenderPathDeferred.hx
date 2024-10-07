@@ -353,7 +353,6 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			//t.depth_buffer = "main";
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
@@ -371,7 +370,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "DEPTH24";
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
@@ -391,15 +390,6 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			var t = new RenderTargetRaw();
-			t.name = "refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -847,22 +837,20 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("refr");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
 				path.setTarget("gbuffer0_refr", ["gbuffer1_refr", "gbuffer_refraction"]);
 
 				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
+				{
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+				}
 				#end
 
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex1");
-				path.bindTarget("gbuffer1_refr", "tex");
+				path.bindTarget("tex", "tex");
+				path.bindTarget("gbuffer1_refr", "tex1");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0_refr", "gbuffer0");

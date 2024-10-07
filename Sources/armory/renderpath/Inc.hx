@@ -523,8 +523,10 @@ class Inc {
 		#end
 
 		#if (rp_voxels != "Off")
-		path.bindTarget("voxelsOut", "voxels");
-		path.bindTarget("voxelsSDF", "voxelsSDF");
+		{
+			path.bindTarget("voxelsOut", "voxels");
+			path.bindTarget("voxelsSDF", "voxelsSDF");
+		}
 		#end
 
 		path.drawMeshes("translucent");
