@@ -146,14 +146,23 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
-				// holds background color
 				var t = new RenderTargetRaw();
-				t.name = "refr";
+				t.name = "lbuffer0_refr";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
+				t.format = Inc.getHdrFormat();
 				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+
+				var t = new RenderTargetRaw();
+				t.name = "lbuffer1_refr";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = Inc.getHdrFormat();
+				t.scale = Inc.getSuperSampling();
+				t.depth_buffer = "main";
 				path.createRenderTarget(t);
 			}
 			#end
@@ -516,12 +525,7 @@ class RenderPathForward {
 					path.bindTarget("_main", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
 
-					//save color
-					path.setTarget("refr");
-					path.bindTarget("lbuffer0", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("lbuffer1", ["lbuffer0", "gbuffer_refraction"]);
+					path.setTarget("lbuffer1_refr", ["lbuffer0_refr", "gbuffer_refraction"]);
 
 					#if (rp_voxels != "Off")
 					path.bindTarget("voxelsOut", "voxels");
@@ -532,10 +536,10 @@ class RenderPathForward {
 
 					path.setTarget("lbuffer0");
 					path.bindTarget("lbuffer0", "tex");
-					path.bindTarget("refr", "tex1");
+					path.bindTarget("lbuffer0_refr", "tex1");
 					path.bindTarget("_main", "gbufferD");
 					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer1", "gbuffer0");
+					path.bindTarget("lbuffer1_refr", "gbuffer0");
 					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");

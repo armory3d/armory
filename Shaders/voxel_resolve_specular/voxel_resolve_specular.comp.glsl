@@ -58,11 +58,11 @@ void main() {
 	vec4 v = vec4(x, y, 1.0, 1.0);
 	v = vec4(InvVP * v);
 	v.xyz /= v.w;
+
 	vec3 viewRay = v.xyz - eye;
-
 	vec3 P = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
-
 	vec4 g0 = textureLod(gbuffer0, uv, 0.0);
+
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
