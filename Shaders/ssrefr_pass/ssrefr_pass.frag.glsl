@@ -74,16 +74,17 @@ void main() {
     float ior = gr.x;
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-    float d2 = textureLod(gbufferD1, texCoord, 0.0).r * 2.0 - 1.0;
+    float d1 = textureLod(gbufferD1, texCoord, 0.0).r * 2.0 - 1.0;
 
     if (d == 0.0 || opac == 1.0 || ior == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
-    if (d2 == 1.0 && opac == 0.0) {
+    if (d1 == 1.0 && opac == 0.0) {
 		fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
 	}
+
 	vec2 enc = g0.rg;
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
