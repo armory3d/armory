@@ -523,8 +523,10 @@ class Inc {
 		#end
 
 		#if (rp_voxels != "Off")
-		path.bindTarget("voxelsOut", "voxels");
-		path.bindTarget("voxelsSDF", "voxelsSDF");
+		{
+			path.bindTarget("voxelsOut", "voxels");
+			path.bindTarget("voxelsSDF", "voxelsSDF");
+		}
 		#end
 
 		path.drawMeshes("translucent");
@@ -585,7 +587,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			//t.scale = Inc.getSuperSampling();
+			t.scale = Inc.getSuperSampling();
 			if (t.name == "voxels_ao" || t.name == "voxels_shadows")
 				t.format = "R8";
 			else
@@ -593,7 +595,7 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R16";
+				t.format = "R8";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -1057,12 +1059,12 @@ class Inc {
 		var dp = getDisplayp();
 		if (dp != null) { // 1080p/..
 			if (width > height) {
-				width = Std.int(width * (dp / height));
-				height = dp;
+				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
+				height = Std.int(dp * Inc.getSuperSampling());
 			}
 			else {
-				height = Std.int(height * (dp / width));
-				width = dp;
+				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
+				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
@@ -1132,12 +1134,12 @@ class Inc {
 		var dp = getDisplayp();
 		if (dp != null) { // 1080p/..
 			if (width > height) {
-				width = Std.int(width * (dp / height));
-				height = dp;
+				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
+				height = Std.int(dp * Inc.getSuperSampling());
 			}
 			else {
-				height = Std.int(height * (dp / width));
-				width = dp;
+				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
+				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
@@ -1208,12 +1210,12 @@ class Inc {
 		var dp = getDisplayp();
 		if (dp != null) { // 1080p/..
 			if (width > height) {
-				width = Std.int(width * (dp / height));
-				height = dp;
+				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
+				height = Std.int(dp * Inc.getSuperSampling());
 			}
 			else {
-				height = Std.int(height * (dp / width));
-				width = dp;
+				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
+				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf4, width, height);
@@ -1286,12 +1288,12 @@ class Inc {
 		var dp = getDisplayp();
 		if (dp != null) { // 1080p/..
 			if (width > height) {
-				width = Std.int(width * (dp / height));
-				height = dp;
+				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
+				height = Std.int(dp * Inc.getSuperSampling());
 			}
 			else {
-				height = Std.int(height * (dp / width));
-				width = dp;
+				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
+				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf6, width, height);
@@ -1370,12 +1372,12 @@ class Inc {
 			var dp = getDisplayp();
 			if (dp != null) { // 1080p/..
 				if (width > height) {
-					width = Std.int(width * (dp / height));
-					height = dp;
+					width = Std.int(width * (dp / height) * Inc.getSuperSampling());
+					height = Std.int(dp * Inc.getSuperSampling());
 				}
 				else {
-					height = Std.int(height * (dp / width));
-					width = dp;
+					height = Std.int(height * (dp / width) * Inc.getSuperSampling());
+					width = Std.int(dp * Inc.getSuperSampling());
 				}
 			}
 			kha.compute.Compute.setFloat2(voxel_cf7, width, height);
