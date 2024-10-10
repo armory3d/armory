@@ -501,13 +501,5 @@ void main() {
 	}
 #endif // _Clusters
 
-/*
-#ifdef _VoxelRefract
-if(opac < 1.0) {
-	vec3 refraction = traceRefraction(p, n, voxels, v, ior, roughness, eye) * voxelgiRefr;
-	fragColor.rgb = mix(refraction, fragColor.rgb, opac);
-}
-#endif
-*/
 	fragColor.a = 1.0; // Mark as opaque
 }
