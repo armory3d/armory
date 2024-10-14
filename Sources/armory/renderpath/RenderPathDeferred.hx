@@ -21,7 +21,7 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission", #end
-			#if rp_ssrefr "gbuffer_refraction" #end
+			#if (rp_ssrefr || arm_voxelgi_refract) "gbuffer_refraction" #end
 		]);
 	}
 
@@ -68,6 +68,9 @@ class RenderPathDeferred {
 			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
 			Inc.initGI("voxels_specular");
+			#if arm_voxelgi_refract
+			Inc.initGI("voxels_refraction");
+			#end
 			#else
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			Inc.initGI("voxels_ao");
@@ -343,30 +346,23 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
+		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			//t.depth_buffer = "main";
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
-			// holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
-			t.name = "refr";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = Inc.getHdrFormat();
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
+		}
+		#end
+
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			// holds background depth
 			var t = new RenderTargetRaw();
@@ -374,7 +370,17 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "R32";
+			t.format = "DEPTH24";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			// holds background depth
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -459,17 +465,17 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_gbuffer2
+		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
-			path.setTarget("gbuffer2");
+			path.setTarget("gbuffer_refraction"); // Only clear gbuffer0
 			path.clearTarget(0xff000000);
 		}
 		#end
 
-		#if rp_ssrefr
+		#if rp_gbuffer2
 		{
-			path.setTarget("gbuffer_refraction");
-			path.clearTarget(0xffffff00);
+			path.setTarget("gbuffer2");
+			path.clearTarget(0xff000000);
 		}
 		#end
 
@@ -594,9 +600,6 @@ class RenderPathDeferred {
 			}
 			else
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
@@ -829,22 +832,25 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				//save render
+				//save background color
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("tex", ["gbuffer0", "gbuffer_refraction"]);
+				path.setTarget("gbuffer0", ["tex", "gbuffer_refraction"]);
+
 				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
+				{
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+				}
 				#end
 
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex1");
-				path.bindTarget("tex", "tex");
+				path.bindTarget("refr", "tex");
+				path.bindTarget("tex", "tex1");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");

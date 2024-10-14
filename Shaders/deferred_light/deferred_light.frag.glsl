@@ -83,10 +83,12 @@ uniform mat4 invVP;
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
+	//!uniform sampler2D shadowMapSpotTransparent[1];
 	//!uniform mat4 LWVPSpot[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
+	//!uniform sampler2D shadowMapSpotTransparent[4];
 	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
@@ -109,9 +111,11 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[1];
+	//!uniform sampler2D shadowMapSpotTransparent[1];
 	//!uniform mat4 LWVPSpot[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
+	//!uniform samplerCube shadowMapPointTransparent[1];
 	//!uniform vec2 lightProj;
 	#endif
 #endif
@@ -119,24 +123,29 @@ uniform vec2 cameraPlane;
 	#ifdef _ShadowMapAtlas
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
+		uniform sampler2D shadowMapAtlasTransparent;
 		#endif
 	#endif
 	#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
+		//!uniform sampler2D shadowMapAtlasPointTransparent;
 		#endif
-		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
+		//!uniform vec4 pointLightDataArray[4];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
+		//!uniform samplerCube shadowMapPointTransparent[4];
 	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
 		#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasSpot;
+		//!uniform sampler2D shadowMapAtlasSpotTransparent;
 		#endif
 		#else
 		//!uniform sampler2DShadow shadowMapSpot[4];
+		//!uniform sampler2D shadowMapSpotTransparent[4];
 		#endif
 	//!uniform mat4 LWVPSpotArray[maxLightsCluster];
 	#endif
@@ -150,9 +159,11 @@ uniform vec3 sunCol;
 	#ifdef _ShadowMapAtlas
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
+	uniform sampler2D shadowMapAtlasSunTransparent;
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
+	uniform sampler2D shadowMapTransparent;
 	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
@@ -328,7 +339,7 @@ void main() {
 	float sdotNH = max(0.0, dot(n, sh));
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
-	float svisibility = 1.0;
+	vec3 svisibility = vec3(1.0);
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
 	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
@@ -337,14 +348,14 @@ void main() {
 			svisibility = shadowTestCascade(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
-					shadowMapAtlasSun
+					shadowMapAtlasSun, shadowMapAtlasSunTransparent
 					#else
-					shadowMapAtlas
+					shadowMapAtlas, shadowMapAtlasTransparent
 					#endif
 				#else
-				shadowMap
+				shadowMap, shadowMapTransparent
 				#endif
-				, eye, p + n * shadowsBias * 10, shadowsBias
+				, eye, p + n * shadowsBias * 10, shadowsBias, false
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
@@ -352,14 +363,14 @@ void main() {
 				svisibility = shadowTest(
 					#ifdef _ShadowMapAtlas
 						#ifndef _SingleAtlas
-						shadowMapAtlasSun
+						shadowMapAtlasSun, shadowMapAtlasSunTransparent
 						#else
-						shadowMapAtlas
+						shadowMapAtlas, shadowMapAtlasTransparent
 						#endif
 					#else
-					shadowMap
+					shadowMap, shadowMapTransparent
 					#endif
-					, lPos.xyz / lPos.w, shadowsBias
+					, lPos.xyz / lPos.w, shadowsBias, false
 				);
 			}
 		#endif
@@ -425,7 +436,7 @@ void main() {
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
-			, 0, pointBias, true
+			, 0, pointBias, true, false
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
@@ -478,7 +489,7 @@ void main() {
 			f0
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
-				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0, false
 			#endif
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
