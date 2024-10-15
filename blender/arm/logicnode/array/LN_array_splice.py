@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySpliceNode(ArmLogicTreeNode):
-    """Removes the given amount of elements from the given array.
+    """Removes the given amount of elements from the given array and returns it.
 
     @see [Haxe API](https://api.haxe.org/Array.html#splice)"""
     bl_idname = 'LNArraySpliceNode'
