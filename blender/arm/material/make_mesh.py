@@ -663,7 +663,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
 
-    # Computing texCoord in vertex shader from pos.xy doesn't work
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
             frag.add_include('std/conetrace.glsl')
@@ -674,7 +673,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform("sampler2D voxels_shadows", top=True)
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
-        frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+        vert.add_out('vec2 texCoord')
+        vert.write('texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
 
     if '_VoxelAOvar' in wrd.world_defs and not parse_opacity:
         frag.add_uniform("sampler2D voxels_ao");
