@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayFilterNode(ArmLogicTreeNode):
-    """Returns the length of the given array."""
+    """Returns an array with the filtered items of the given array."""
     bl_idname = 'LNArrayFilterNode'
     bl_label = 'Array Filter'
     arm_version = 1

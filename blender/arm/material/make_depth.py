@@ -6,8 +6,6 @@ import arm.material.mat_utils as mat_utils
 import arm.material.make_skin as make_skin
 import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
-import arm.material.make_mesh as make_mesh
-import arm.material.make_attrib as make_attrib
 import arm.material.make_particle as make_particle
 import arm.material.make_finalize as make_finalize
 import arm.material.make_morph_target as make_morph_target
@@ -29,43 +27,15 @@ else:
     arm.enable_reload(__name__)
 
 
-def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
+def make(context_id, rpasses, shadowmap=False):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
     vs = [{'name': 'pos', 'data': 'short4norm'}]
-    if is_disp or shadowmap_transparent:
+    if is_disp:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    if shadowmap_transparent:
-        con_depth = mat_state.data.add_context({
-            'name': context_id,
-            'vertex_elements': vs,
-            'depth_write': False,
-            'depth_read': True,
-            'compare_mode': 'less',
-            'cull_mode': 'clockwise',
-            'blend_source': 'blend_zero',
-            'blend_destination': 'source_color',
-            'blend_operation': 'add',
-            'color_writes_red': [True],
-            'color_writes_green': [True],
-            'color_writes_blue': [True],
-            'color_writes_alpha': [True]
-        })
-    else:
-        con_depth = mat_state.data.add_context({
-            'name': context_id,
-            'vertex_elements': vs,
-            'depth_write': True,
-            'depth_read': False,
-            'compare_mode': 'less',
-            'cull_mode': 'clockwise',
-            'color_writes_red': [False],
-            'color_writes_green': [False],
-            'color_writes_blue': [False],
-            'color_writes_alpha': [False]
-        })
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_writes_red': [False], 'color_writes_green': [False], 'color_writes_blue': [False], 'color_writes_alpha': [False] })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()
@@ -75,29 +45,15 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
 
     vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
     vert.add_include('compiled.inc')
-    frag.add_include('compiled.inc')
 
-    parse_opacity = 'translucent' in rpasses or 'refraction' in rpasses or mat_state.material.arm_discard
+    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard or 'refraction' in rpasses
 
     parse_custom_particle = (cycles.node_by_name(mat_state.nodes, 'ArmCustomParticleNode') is not None)
 
-    if shadowmap_transparent:
-        billboard = mat_state.material.arm_billboard
-        if billboard == 'spherical':
-            vert.add_uniform('mat3 N', '_normalMatrixSphere')
-        elif billboard == 'cylindrical':
-            vert.add_uniform('mat3 N', '_normalMatrixCylinder')
-        else:
-            vert.add_uniform('mat3 N', '_normalMatrix')
-        make_mesh._write_material_attribs_default(frag, parse_opacity) #TODO remove duplicate parsing
-        vert.add_out('vec3 wnormal')
-        make_attrib.write_norpos(con_depth, vert)
-        frag.write_attrib('vec3 n = normalize(wnormal);')
-        cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, basecol_only=True, parse_opacity=True)
-    elif parse_opacity:
+    if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
-
+    
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)
 
@@ -123,8 +79,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 vert.write('wposition = vec4(W * spos).xyz;')
                 if(con_depth.is_elem('irot')):
                     vert.write('wnormal = normalize(N * mirot * vec3(nor.xy, pos.w));')
-            if not shadowmap_transparent:
-                cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
                 vert.add_uniform('float texUnpack', link='_texUnpack')
@@ -159,8 +114,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             make_tess.interpolate(tese, 'wposition', 3)
             make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
 
-            if not shadowmap_transparent:
-                cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
 
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
@@ -214,7 +168,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             vert.write('gl_Position = WVP * spos;')
 
         if parse_opacity:
-            if not parse_custom_particle and not shadowmap_transparent:
+            if (not parse_custom_particle):
                 cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
 
             if con_depth.is_elem('tex'):
@@ -234,16 +188,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if shadowmap_transparent:
-        frag.add_out('vec4 fragColor')
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
-        frag.write('float depth = (wvpposition.z / wvpposition.w) * 0.5 + 0.5;')
-        frag.write('vec3 color = basecol;')
-        frag.write('color *= 1.0 - opacity;')
-        frag.write('fragColor = vec4(color, depth);')
-
-    if parse_opacity and not shadowmap_transparent:
+    if parse_opacity:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:

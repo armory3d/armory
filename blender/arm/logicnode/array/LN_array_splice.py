@@ -1,12 +1,12 @@
 from arm.logicnode.arm_nodes import *
 
 class ArraySpliceNode(ArmLogicTreeNode):
-    """Removes the given amount of elements from the given array.
+    """Removes the given amount of elements from the given array and returns it.
 
     @see [Haxe API](https://api.haxe.org/Array.html#splice)"""
     bl_idname = 'LNArraySpliceNode'
     bl_label = 'Array Splice'
-    arm_version = 1
+    arm_version = 2
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
@@ -15,3 +15,4 @@ class ArraySpliceNode(ArmLogicTreeNode):
         self.add_input('ArmIntSocket', 'Length')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketArray', 'Array')

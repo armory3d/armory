@@ -93,9 +93,6 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         elif rp == 'shadowmap':
             con = make_depth.make(rp, rpasses, shadowmap=True)
 
-        elif rp == 'shadowmap_transparent':
-            con = make_depth.make(rp, rpasses, shadowmap=True, shadowmap_transparent=True)
-
         elif rp == 'translucent':
             con = make_transluc.make(rp)
 
