@@ -276,7 +276,7 @@ void main() {
 #ifdef _VoxelGI
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl * (1.0 - roughness);
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #endif
 
 #ifdef _VoxelAOvar
@@ -368,7 +368,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= traceShadow(p, n, voxels, voxelsSDF, v, clipmaps, gl_FragCoord.xy).r * voxelgiShad;
+	svisibility *= traceShadow(p, n, voxels, voxelsSDF, v, clipmaps, gl_FragCoord.xy).r * (1.0 / voxelgiShad);
 	#endif
 	
 	#ifdef _SSRS

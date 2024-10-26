@@ -667,12 +667,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('envl *= envmapStrength * occlusion;')
 
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        if '_VoxelShadow' in wrd.world_defs:
+        if '_VoxelShadow' in wrd.world_defs and not parse_opacity:
             frag.add_uniform("sampler2D voxels_shadows", top=True)
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
-        frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+            vert.add_out('vec4 wvpposition')
+            vert.write('wvpposition = gl_Position;')
+            frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
         if parse_opacity or '_VoxelShadow' in wrd.world_defs:
+            frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.add_include("std/conetrace.glsl")
             frag.add_uniform("sampler3D voxels")
             frag.add_uniform("sampler3D voxelsSDF")
@@ -689,7 +690,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
-            frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.write("indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;")
             frag.write("if (specular > 0.0 && roughness < 1.0)")
             frag.write("    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), roughness, clipmaps, gl_FragCoord.xy).rgb * specular * voxelgiRefl * (1.0 - roughness);")
@@ -738,10 +738,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
             if '_VoxelShadow' in wrd.world_defs:
-                if parse_opacity:
+                if not parse_opacity:
                     frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
                 else:
-                    frag.write('svisibility *= traceShadows(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, texCoord).rgb * voxelgiShad;')
+                    frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), clipmaps, gl_FragCoord.xy).r;')
 
             frag.write('}') # receiveShadow
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
