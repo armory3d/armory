@@ -34,7 +34,9 @@ uniform sampler2D voxels_specular;
 uniform sampler2D voxels_ao;
 #endif
 #ifdef _VoxelShadow
-uniform sampler2D voxels_shadows;
+uniform sampler3D voxels;
+uniform sampler3D voxelsSDF;
+uniform float clipmaps[10 * voxelgiClipmapCount];
 #endif
 
 uniform float envmapStrength;
@@ -125,7 +127,7 @@ uniform vec2 cameraPlane;
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
-		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
+		//!uniform vec4 pointLightDataArray[4];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
 	#endif
@@ -138,7 +140,7 @@ uniform vec2 cameraPlane;
 		#else
 		//!uniform sampler2DShadow shadowMapSpot[4];
 		#endif
-	//!uniform mat4 LWVPSpotArray[maxLightsCluster];
+	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
 #endif
@@ -366,7 +368,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	svisibility *= traceShadow(p, n, voxels, voxelsSDF, v, clipmaps, gl_FragCoord.xy).r * (1.0 / voxelgiShad);
 	#endif
 	
 	#ifdef _SSRS
@@ -431,7 +433,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-		, texCoord
+		, voxels, voxelsSDF, clipmaps
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -489,7 +491,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, texCoord
+			, voxels, voxelsSDF, clipmaps
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
