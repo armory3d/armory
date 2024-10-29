@@ -12,6 +12,7 @@ uniform sampler2D tex1;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1;
+
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
@@ -72,14 +73,9 @@ void main() {
     vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
     float ior = gr.x;
     float opac = gr.y;
-
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (opac == 1.0) {
-		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
-        return;
-	}
-    if (d == 0.0) {
+    if (d == 0.0 || opac == 1.0 || ior == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -107,6 +103,7 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
+	refractionCol *= intensity;
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
-    fragColor.rgb = mix(refractionCol * intensity, color, opac);
+    fragColor.rgb = mix(refractionCol, color, opac);
 }
