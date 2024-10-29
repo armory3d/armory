@@ -25,10 +25,6 @@ class Signal {
         return callbacks;
     }
 
-    public function getObject():Int {
-        return object;
-    }
-
     public function isConnected(callBack:Function):Bool {
         return callbacks.contains(callBack);
     }
