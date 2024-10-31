@@ -30,10 +30,10 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "std/imageatomic.glsl"
 #include "std/conetrace.glsl"
 
-uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0;
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
+uniform sampler2D gbufferD;
+uniform sampler2D gbuffer0;
 uniform layout(rgba8) image2D voxels_specular;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];

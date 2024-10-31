@@ -72,4 +72,5 @@ void main() {
 	float occ = 1.0 - traceShadow(P, n, voxels, voxelsSDF, normalize(lPos - P), clipmaps, pixel);
 
 	imageStore(voxels_shadows, ivec2(pixel), vec4(occ));
+
 }

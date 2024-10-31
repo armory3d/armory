@@ -42,6 +42,7 @@ uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
 uniform sampler3D voxelsSampler;
+uniform sampler3D voxelsSDFSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba8) image3D voxelsB;
@@ -50,11 +51,11 @@ uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r8) image3D SDF;
+uniform layout(r16) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16) image3D voxelsB;
+uniform layout(r16) image3D voxelsOut;
 #endif
 #endif
 
@@ -132,10 +133,13 @@ void main() {
 
 			radiance = basecol;
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light.rgb + indirect.rgb;
+			vec3 diffuse_indirect = trace.rgb + envl * (1.0 - trace.a);
+			#ifdef _ShadowMap
+			radiance.rgb *= light + diffuse_indirect;
+			#else
+			radiance.rgb *= diffuse_indirect;
+			#endif
 			radiance.rgb += emission.rgb;
-
 			#else
 			opac = float(imageLoad(voxels, src)) / 255;
 			#endif

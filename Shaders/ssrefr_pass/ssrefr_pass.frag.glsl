@@ -53,6 +53,7 @@ vec4 binarySearch(vec3 dir) {
 		if (ddepth < 0.0) hitCoord += dir;
 	}
 	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
+
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -64,7 +65,7 @@ vec4 rayCast(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth > 0.0) return binarySearch(dir);
 	}
-	return vec4(0.0);
+	return vec4(texCoord, 0.0, 1.0);
 }
 
 void main() {
@@ -100,10 +101,12 @@ void main() {
 	float refractivity = 1.0 - roughness;
 	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((length(viewPos - hitCoord)), 0.0, 1.0) * coords.w;
 
+
 	intensity = clamp(intensity, 0.0, 1.0);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol *= intensity;
 	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+
     fragColor.rgb = mix(refractionCol, color, opac);
 }

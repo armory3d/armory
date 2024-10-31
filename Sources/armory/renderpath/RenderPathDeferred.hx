@@ -346,7 +346,6 @@ class RenderPathDeferred {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = Inc.getDisplayp();
-		//t.depth_buffer = "main";
 		t.format = "RGBA64";
 		t.scale = Inc.getSuperSampling();
 		path.createRenderTarget(t);
@@ -354,9 +353,9 @@ class RenderPathDeferred {
 
 		#if rp_ssrefr
 		{
+
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
-
 			// holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
 			t.name = "refr";
@@ -456,6 +455,11 @@ class RenderPathDeferred {
 		{
 			path.clearTarget(null, 1.0);
 		}
+		#end
+
+		#if (rp_ssrefr || arm_voxelgi_refract)
+		path.setTarget("gbuffer_refraction");
+		path.clearTarget(0x00ffff00);
 		#end
 
 		#if rp_gbuffer2
@@ -577,8 +581,7 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsBegin();
 
-			if (iron.RenderPath.pre_clear == true)
-			{
+			if (iron.RenderPath.pre_clear == true) {
 				#if (rp_voxels == "Voxel GI")
 				path.clearImage("voxelsLight", 0x00000000);
 				#end
@@ -594,7 +597,9 @@ class RenderPathDeferred {
 			else
 			{
 				#if (rp_voxels == "Voxel GI")
+				#if rp_shadowmap
 				path.clearImage("voxelsLight", 0x00000000);
+				#end
 				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
@@ -612,7 +617,7 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsTemporal();
 
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
 			Inc.computeVoxelsSDF();
 			#end
 
@@ -623,9 +628,6 @@ class RenderPathDeferred {
 				path.clearImage("voxels_specular", 0x00000000);
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
-				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
 				#end
 			}
 		}
@@ -680,10 +682,6 @@ class RenderPathDeferred {
 			Inc.resolveSpecular();
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
 			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if arm_voxelgi_shadows
-			path.bindTarget("voxelsOut", "voxels");
-			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
 		}
 		#end
@@ -837,7 +835,6 @@ class RenderPathDeferred {
 				path.bindTarget("voxelsOut", "voxels");
 				path.bindTarget("voxelsSDF", "voxelsSDF");
 				#end
-
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
