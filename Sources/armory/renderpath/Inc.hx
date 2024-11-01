@@ -35,10 +35,6 @@ class Inc {
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
 	static var voxel_tf1:kha.compute.TextureUnit;
-	#else
-	#if arm_voxelgi_shadows
-	static var voxel_tf1:kha.compute.TextureUnit;
-	#end
 	#end
 	static var voxel_tl1:kha.compute.TextureUnit;
 	#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
@@ -73,37 +69,6 @@ class Inc {
 	static var voxel_cd4:kha.compute.ConstantLocation;
 	static var voxel_ce4:kha.compute.ConstantLocation;
 	static var voxel_cf4:kha.compute.ConstantLocation;
-	#if arm_voxelgi_refract
-	static var voxel_sh6:kha.compute.Shader = null;
-	static var voxel_ta6:kha.compute.TextureUnit;
-	static var voxel_tb6:kha.compute.TextureUnit;
-	static var voxel_tc6:kha.compute.TextureUnit;
-	static var voxel_td6:kha.compute.TextureUnit;
-	static var voxel_te6:kha.compute.TextureUnit;
-	static var voxel_tf6:kha.compute.TextureUnit;
-	static var voxel_ca6:kha.compute.ConstantLocation;
-	static var voxel_cb6:kha.compute.ConstantLocation;
-	static var voxel_cc6:kha.compute.ConstantLocation;
-	static var voxel_cd6:kha.compute.ConstantLocation;
-	static var voxel_ce6:kha.compute.ConstantLocation;
-	static var voxel_cf6:kha.compute.ConstantLocation;
-	#end
-	#end
-	#if arm_voxelgi_shadows
-	static var voxel_sh7:kha.compute.Shader = null;
-	static var voxel_ta7:kha.compute.TextureUnit;
-	static var voxel_tb7:kha.compute.TextureUnit;
-	static var voxel_tc7:kha.compute.TextureUnit;
-	static var voxel_td7:kha.compute.TextureUnit;
-	static var voxel_te7:kha.compute.TextureUnit;
-	static var voxel_ca7:kha.compute.ConstantLocation;
-	static var voxel_cb7:kha.compute.ConstantLocation;
-	static var voxel_cc7:kha.compute.ConstantLocation;
-	static var voxel_cd7:kha.compute.ConstantLocation;
-	static var voxel_ce7:kha.compute.ConstantLocation;
-	static var voxel_cf7:kha.compute.ConstantLocation;
-	static var voxel_cg7:kha.compute.ConstantLocation;
-	#end
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh5:kha.compute.Shader = null;
 	static var voxel_ta5:kha.compute.TextureUnit;
@@ -130,6 +95,7 @@ class Inc {
 	static var voxel_cm5:kha.compute.ConstantLocation;
 	#if arm_shadowmap_atlas
 	static var m2 = iron.math.Mat4.identity();
+	#end
 	#end
 	#end
 	#end
