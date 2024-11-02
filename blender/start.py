@@ -7,6 +7,7 @@ import arm.nodes_material
 import arm.props_traits_props
 import arm.props_traits
 import arm.props_lod
+import arm.props_action
 import arm.props_tilesheet
 import arm.props_exporter
 import arm.props_bake
@@ -34,6 +35,7 @@ if arm.is_reload(__name__):
     arm.props_traits_props = arm.reload_module(arm.props_traits_props)
     arm.props_traits = arm.reload_module(arm.props_traits)
     arm.props_lod = arm.reload_module(arm.props_lod)
+    arm.props_action = arm.reload_module(arm.props_action)
     arm.props_tilesheet = arm.reload_module(arm.props_tilesheet)
     arm.props_exporter = arm.reload_module(arm.props_exporter)
     arm.props_bake = arm.reload_module(arm.props_bake)
@@ -58,6 +60,7 @@ def register(local_sdk=False):
     arm.props_traits_props.register()
     arm.props_traits.register()
     arm.props_lod.register()
+    arm.props_action.register()
     arm.props_tilesheet.register()
     arm.props_exporter.register()
     arm.props_bake.register()
@@ -89,6 +92,7 @@ def unregister():
     arm.props.unregister()
     arm.props_traits_props.unregister()
     arm.props_traits.unregister()
+    arm.props_action.unregister()
     arm.props_lod.unregister()
     arm.props_tilesheet.unregister()
     arm.props_exporter.unregister()

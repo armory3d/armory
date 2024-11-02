@@ -17,7 +17,7 @@ class RemoveParentBoneNode extends LogicNode {
 
 		if (object == null || parent == null) return;
 
-		var banim = object.getParentArmature(object.parent.name);
+		var banim = object.getBoneAnimation(object.parent.uid);
 		banim.removeBoneChild(bone, object);
 
 		runOutput(0);

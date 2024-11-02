@@ -1,7 +1,7 @@
 from arm.logicnode.arm_nodes import *
 
 class ArrayDisplayNode(ArmLogicTreeNode):
-    """Returns the length of the given array."""
+    """Returns the display of the given array."""
     bl_idname = 'LNArrayDisplayNode'
     bl_label = 'Array Display'
     arm_version = 1
