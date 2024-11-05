@@ -135,7 +135,7 @@ def make_gi(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
+    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
@@ -442,11 +442,13 @@ def make_ao(context_id):
     vert.add_out('vec3 voxnormalGeom')
 
     vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0));')
-    vert.write('voxnormalGeom = N * vec3(nor.xy, pos.w);')
+    vert.write('voxnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
     geom.add_out('vec3 voxnormal')
+    geom.add_uniform('float clipmaps[voxelgiClipmapCount * 10]', '_clipmaps')
+    geom.add_uniform('int clipmapLevel', '_clipmapLevel')
 
     geom.write('vec3 facenormal = abs(voxnormalGeom[0] + voxnormalGeom[1] + voxnormalGeom[2]);')
     geom.write('uint maxi = facenormal[1] > facenormal[0] ? 1 : 0;')
@@ -465,7 +467,7 @@ def make_ao(context_id):
     geom.write('}')
 
     geom.write('for (uint i = 0; i < 3; ++i) {')
-    geom.write('    voxposition[i].xy /= voxelgiResolution.x;')
+    geom.write('    voxposition[i].xy /= voxelgiResolution.xy;')
     geom.write('    voxposition[i].zw = vec2(1.0);')
     geom.write('    P = voxpositionGeom[i];')
     geom.write('    voxnormal = voxnormalGeom[i];')
@@ -474,17 +476,21 @@ def make_ao(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
+
+    frag.add_uniform('float clipmaps[voxelgiClipmapCount * 10]', '_clipmaps')
+    frag.add_uniform('int clipmapLevel', '_clipmapLevel')
+
     frag.write('vec3 uvw = (P - vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)])) / (float(clipmaps[int(clipmapLevel * 10)]) * voxelgiResolution);')
-    frag.write('uvw = uvw * 0.5 + 0.5;')
+    frag.write('uvw = (uvw * 0.5 + 0.5);')
     frag.write('if(any(notEqual(uvw, clamp(uvw, 0.0, 1.0)))) return;')
     frag.write('vec3 writecoords = floor(uvw * voxelgiResolution);')
-    frag.write('vec3 N = normalize(voxnormal);')
+    frag.write_attrib('vec3 N = normalize(voxnormal);')
     frag.write('vec3 aniso_direction = -N;')
     frag.write('uvec3 face_offsets = uvec3(')
-    frag.write('	aniso_direction.x > 0 ? 0 : 1,')
-    frag.write('	aniso_direction.y > 0 ? 2 : 3,')
-    frag.write('	aniso_direction.z > 0 ? 4 : 5')
-    frag.write('	) * voxelgiResolution;')
+    frag.write('    aniso_direction.x > 0 ? 0 : 1,')
+    frag.write('    aniso_direction.y > 0 ? 2 : 3,')
+    frag.write('    aniso_direction.z > 0 ? 4 : 5')
+    frag.write('    ) * voxelgiResolution;')
     frag.write('vec3 direction_weights = abs(N);')
 
     frag.write('if (direction_weights.x > 0) {')

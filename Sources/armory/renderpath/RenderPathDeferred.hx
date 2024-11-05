@@ -61,16 +61,10 @@ class RenderPathDeferred {
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
-			#if arm_voxelgi_shadows
-			Inc.initGI("voxels_shadows");
-			#end
 			#if (rp_voxels == "Voxel GI")
 			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
 			Inc.initGI("voxels_specular");
-			#if arm_voxelgi_refract
-			Inc.initGI("voxels_refraction");
-			#end
 			#else
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
 			Inc.initGI("voxels_ao");
@@ -370,7 +364,7 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			t.format = "DEPTH24";
+			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
@@ -468,7 +462,7 @@ class RenderPathDeferred {
 		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			path.setTarget("gbuffer_refraction"); // Only clear gbuffer0
-			path.clearTarget(0xff000000);
+			path.clearTarget(0xffffff00);
 		}
 		#end
 
@@ -600,6 +594,9 @@ class RenderPathDeferred {
 			}
 			else
 			{
+				#if (rp_voxels == "Voxel GI")
+				path.clearImage("voxelsLight", 0x00000000);
+				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
@@ -627,9 +624,6 @@ class RenderPathDeferred {
 				path.clearImage("voxels_specular", 0x00000000);
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
-				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
 				#end
 			}
 		}
@@ -686,8 +680,8 @@ class RenderPathDeferred {
 			path.bindTarget("voxels_specular", "voxels_specular");
 			#end
 			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
+			path.bindTarget("voxelsOut", "voxels");
+			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
 		}
 		#end

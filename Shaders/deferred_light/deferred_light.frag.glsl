@@ -34,7 +34,9 @@ uniform sampler2D voxels_specular;
 uniform sampler2D voxels_ao;
 #endif
 #ifdef _VoxelShadow
-uniform sampler2D voxels_shadows;
+uniform sampler3D voxels;
+uniform sampler3D voxelsSDF;
+uniform float clipmaps[10 * voxelgiClipmapCount];
 #endif
 
 uniform float envmapStrength;
@@ -377,7 +379,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	svisibility *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy).r * voxelgiShad;
 	#endif
 	
 	#ifdef _SSRS
@@ -442,7 +444,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-		, texCoord
+			, voxels, voxelsSDF, clipmaps
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -500,7 +502,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, texCoord
+			, voxels, voxelsSDF, clipmaps
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
