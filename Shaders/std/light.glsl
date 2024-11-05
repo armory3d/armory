@@ -146,7 +146,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelShadow
-	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, l, clipmaps, gl_FragCoord.xy).r) * voxelgiShad;
+	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, l, clipmaps, gl_FragCoord.xy).r) / voxelgiShad;
 	#endif
 
 	#ifdef _LTC
