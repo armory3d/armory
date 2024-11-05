@@ -267,7 +267,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 	float dist = voxelSize0;
 	float step_dist = dist * voxelgiOffset;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
