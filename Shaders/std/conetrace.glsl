@@ -155,7 +155,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 		if (cosTheta <= 0)
 			continue;
 		int precomputed_direction = 6 + i;
-		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceCone(voxels, dummy, origin, normal, -coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 
@@ -250,7 +250,7 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
-		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceConeAO(voxels, origin, normal, -coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 	amount /= sum;
@@ -265,7 +265,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
     float sampleCol = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
 	float dist = voxelSize0;
-	float step_dist = dist;
+	float step_dist = dist * voxelgiOffset;
 	vec3 samplePos;
 	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
 	int clipmap_index0 = 0;

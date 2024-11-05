@@ -74,13 +74,6 @@ void main() {
 	#endif
 	#endif
 
-	ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
-	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, src)) / 255;
-	light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-	light /= 3;
-
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
 		#ifdef _VoxelGI
@@ -89,7 +82,7 @@ void main() {
 		float aniso_colors[6];
 		#endif
 
-		src = ivec3(gl_GlobalInvocationID.xyz);
+		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 		ivec3 dst = src;
 		dst.y += clipmapLevel * res;
@@ -102,6 +95,11 @@ void main() {
 
 		if (i < 6) {
 			#ifdef _VoxelGI
+			vec3 light = vec3(0.0);
+			light.r = float(imageLoad(voxelsLight, src)) / 255;
+			light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+			light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+			light /= 3;
 			vec4 basecol = vec4(0.0);
 			basecol.r = float(imageLoad(voxels, src)) / 255;
 			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
