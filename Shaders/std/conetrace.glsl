@@ -89,10 +89,10 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const bool use_sdf, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
     vec4 sampleCol = vec4(0.0);
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
-	float dist = voxelSize0 * voxelgiOffset;
+	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0;
+	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -155,7 +155,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 		if (cosTheta <= 0)
 			continue;
 		int precomputed_direction = 6 + i;
-		amount += traceCone(voxels, dummy, origin, normal, -coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 
@@ -193,10 +193,10 @@ vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sam
 float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sampleCol = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
-	float dist = voxelSize0 * voxelgiOffset;
+	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0;
+	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -250,7 +250,7 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
-		amount += traceConeAO(voxels, origin, normal, -coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 	amount /= sum;
@@ -265,9 +265,9 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
     float sampleCol = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
 	float dist = voxelSize0;
-	float step_dist = dist * voxelgiOffset;
+	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0;
+	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
