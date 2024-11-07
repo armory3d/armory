@@ -46,11 +46,11 @@ uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(rgba8) image3D voxelsOut;
-uniform layout(r8) image3D SDF;
+uniform layout(r16) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r8) image3D SDF;
+uniform layout(r16) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r8) image3D voxelsB;
@@ -196,7 +196,7 @@ void main() {
 		else {
 			// precompute cone sampling:
 			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
-			vec3 aniso_direction = coneDirection;
+			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
 				aniso_direction.y > 0 ? 2 : 3,
