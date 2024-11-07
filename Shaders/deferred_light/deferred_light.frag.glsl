@@ -379,7 +379,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy).r) / voxelgiShad;
+	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy).r) * voxelgiShad;
 	#endif
 	
 	#ifdef _SSRS
