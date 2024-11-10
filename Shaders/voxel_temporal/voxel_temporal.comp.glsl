@@ -74,11 +74,12 @@ void main() {
 	#endif
 	#endif
 
+	ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 	#ifdef _VoxelGI
 	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz))) / 255;
-	light.g = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, ivec3(gl_GlobalInvocationID.xyz) + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+	light.r = float(imageLoad(voxelsLight, src)) / 255;
+	light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+	light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
 	light /= 3;
 	#endif
 
@@ -90,7 +91,7 @@ void main() {
 		float aniso_colors[6];
 		#endif
 
-		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
+		src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
 		ivec3 dst = src;
 		dst.y += clipmapLevel * res;
@@ -124,9 +125,7 @@ void main() {
 			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 			envl /= 3;
-			#ifdef _HOSEK
 			envl *= 100;
-			#endif
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
@@ -138,7 +137,7 @@ void main() {
 			radiance = basecol;
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light.rgb + indirect.rgb;
+			radiance.rgb *= light / PI + indirect.rgb;
 			radiance.rgb += emission.rgb;
 
 			#else

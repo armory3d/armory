@@ -19,32 +19,27 @@ else:
 
 
 def make(context_id):
-    con_refraction_buffer = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con_refraction_buffer = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     arm_discard = mat_state.material.arm_discard
     blend = mat_state.material.arm_blending
-    is_transluc = mat_utils.is_transluc(mat_state.material)
-    parse_opacity = (blend and is_transluc) or arm_discard
+    parse_opacity = blend or mat_utils.is_transluc(mat_state.material) or arm_discard
 
     make_mesh.make_base(con_refraction_buffer, parse_opacity)
 
     vert = con_refraction_buffer.vert
     frag = con_refraction_buffer.frag
-    tese = con_refraction_buffer.tese
 
-    frag.add_include('std/gbuffer.glsl')
     frag.add_out('vec4 fragColor')
 
     # Remove fragColor = ...;
     frag.main = frag.main[:frag.main.rfind('fragColor')]
     frag.write('\n')
 
-    wrd = bpy.data.worlds['Arm']
-
     if parse_opacity:
-        frag.write('fragColor = vec4(ior, opacity, 0.0, 0.0);')
+        frag.write('fragColor = vec4(ior, opacity, 0.0, 1.0);')
     else:
-        frag.write('fragColor = vec4(1.0, 1.0, 0.0, 0.0);')
+        frag.write('fragColor = vec4(1.0, 1.0, 0.0, 1.0);')
 
     make_finalize.make(con_refraction_buffer)
 
