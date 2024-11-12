@@ -66,7 +66,8 @@ def update_preset(self, context):
         rpdat.rp_stereo = False
         rpdat.rp_voxelgi_resolution = '32'
         rpdat.arm_voxelgi_size = 0.25
-        rpdat.rp_voxels = 'Voxel AO'
+        rpdat.arm_voxelgi_step = 0.25
+        rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -143,6 +144,7 @@ def update_preset(self, context):
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_size = 0.125
+        rpdat.arm_voxelgi_step = 0.125
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
@@ -483,7 +485,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
@@ -493,7 +495,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('128', '128', '128'),
                ('256', '256', '256'),
                ],
-        name="Resolution", description="3D texture resolution", default='64', update=update_renderpath)
+        name="Resolution", description="3D texture resolution", default='32', update=update_renderpath)
     rp_voxelgi_resolution_z: EnumProperty(
         items=[('1.0', '1.0', '1.0'),
                ('0.5', '0.5', '0.5'),
@@ -529,7 +531,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_shad: FloatProperty(name="Shadows", description="Contrast for voxels shadows", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
-    arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=2.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
