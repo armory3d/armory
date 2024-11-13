@@ -10,7 +10,8 @@ class ArrayIndexNode extends LogicNode {
 		var array: Array<Dynamic> = inputs[0].get();
 		array = array.map(item -> Std.string(item));
 		var value: Dynamic = inputs[1].get();
+		var from: Int = inputs[2].get();
 
-		return array.indexOf(Std.string(value));
+		return array.indexOf(Std.string(value), from);
 	}
 }
