@@ -672,7 +672,7 @@ class Inc {
 			t.height = 0;
 			t.displayp = getDisplayp();
 			t.scale = Inc.getSuperSampling();
-			t.format = t.name == "voxels_ao" ? "R8" : "RGBA32";
+			t.format = t.name == "voxels_ao" ? "R16" : "RGBA64";
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -685,7 +685,7 @@ class Inc {
 				#if (rp_voxels == "Voxel AO")
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "R8";
+						t.format = "R16";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
