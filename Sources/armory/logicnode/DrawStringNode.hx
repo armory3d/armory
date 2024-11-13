@@ -11,6 +11,7 @@ import armory.ui.Canvas;
 class DrawStringNode extends LogicNode {
 	var font: Font;
 	var lastFontName = "";
+	var string:String;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -19,7 +20,9 @@ class DrawStringNode extends LogicNode {
 	override function run(from: Int) {
 		RenderToTexture.ensure2DContext("DrawStringNode");
 
-		var string:String = Std.string(inputs[1].get());
+		string = Std.string(inputs[1].get());
+		var angle: Float = inputs[7].get();
+
 		var fontName = inputs[2].get();
 		if (fontName == "") {
 			#if arm_ui
@@ -42,6 +45,8 @@ class DrawStringNode extends LogicNode {
 			return;
 		}
 
+		RenderToTexture.g.rotate(angle, inputs[5].get(), inputs[6].get());
+
 		final colorVec = inputs[4].get();
 		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
@@ -50,6 +55,14 @@ class DrawStringNode extends LogicNode {
 
 		RenderToTexture.g.drawString(string, inputs[5].get(), inputs[6].get());
 
+		RenderToTexture.g.rotate(-angle, inputs[5].get(), inputs[6].get());
+
 		runOutput(0);
+	}
+
+	override function get(from: Int): Dynamic {
+
+		return from == 1 ? RenderToTexture.g.font.height(RenderToTexture.g.fontSize) : RenderToTexture.g.font.width(RenderToTexture.g.fontSize, string);
+	
 	}
 }
