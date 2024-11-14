@@ -684,7 +684,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
-            frag.write('indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;')
+            frag.write('indirect = traceDiffuse(wposition, n, voxels, clipmaps, gl_FragCoord.xy).rgb * albedo * voxelgiDiff;')
             frag.write('if (roughness < 1.0 && specular > 0.0)')
             frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), roughness, clipmaps, gl_FragCoord.xy).rgb * specular * voxelgiRefl;')
         else:

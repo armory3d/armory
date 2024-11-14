@@ -19,27 +19,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
-const int DIFFUSE_CONE_COUNT = 16;
 
-const float DIFFUSE_CONE_APERTURE = 0.523599f; // Approximately 30 degrees in radians
+const int DIFFUSE_CONE_COUNT = 16;
+const float DIFFUSE_CONE_APERTURE = 0.872665f;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
-    vec3(0.57735f, 0.57735f, 0.57735f),
-    vec3(0.57735f, -0.57735f, -0.57735f),
-    vec3(-0.57735f, 0.57735f, -0.57735f),
-    vec3(-0.57735f, -0.57735f, 0.57735f),
-    vec3(0.866025f, 0.0f, 0.5f),
-    vec3(0.866025f, 0.0f, -0.5f),
-    vec3(-0.866025f, 0.0f, 0.5f),
-    vec3(-0.866025f, 0.0f, -0.5f),
-    vec3(0.0f, 0.866025f, 0.5f),
-    vec3(0.0f, 0.866025f, -0.5f),
-    vec3(0.0f, -0.866025f, 0.5f),
-    vec3(0.0f, -0.866025f, -0.5f),
-    vec3(0.5f, 0.866025f, 0.0f),
-    vec3(0.5f, -0.866025f, 0.0f),
-    vec3(-0.5f, 0.866025f, 0.0f),
-    vec3(-0.5f, -0.866025f, 0.0f)
+	vec3(0.57735f, 0.57735f, 0.57735f),
+	vec3(0.57735f, -0.57735f, -0.57735f),
+	vec3(-0.57735f, 0.57735f, -0.57735f),
+	vec3(-0.57735f, -0.57735f, 0.57735f),
+	vec3(-0.903007f, -0.182696f, -0.388844f),
+	vec3(-0.903007f, 0.182696f, 0.388844f),
+	vec3(0.903007f, -0.182696f, 0.388844f),
+	vec3(0.903007f, 0.182696f, -0.388844f),
+	vec3(-0.388844f, -0.903007f, -0.182696f),
+	vec3(0.388844f, -0.903007f, 0.182696f),
+	vec3(0.388844f, 0.903007f, -0.182696f),
+	vec3(-0.388844f, 0.903007f, 0.182696f),
+	vec3(-0.182696f, -0.388844f, -0.903007f),
+	vec3(0.182696f, 0.388844f, -0.903007f),
+	vec3(-0.182696f, 0.388844f, 0.903007f),
+	vec3(0.182696f, -0.388844f, 0.903007f)
 };
 
 const float BayerMatrix8[8][8] =

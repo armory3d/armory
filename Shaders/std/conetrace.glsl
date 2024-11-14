@@ -107,7 +107,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 
     while (sampleCol.a < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
 		vec4 mipSample = vec4(0.0);
-		float diam = max(voxelSize0, dist * aperture);
+		float diam = max(voxelSize0, dist * coneCoefficient);
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
         float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
@@ -125,7 +125,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
 			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
@@ -145,16 +145,17 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
     return sampleCol;
 }
 
-vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
+vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel) {
 	float sum = 0.0;
 	vec4 amount = vec4(0.0);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
 		vec3 coneDir = DIFFUSE_CONE_DIRECTIONS[i];
+		vec3 P = origin + coneDir * (BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) * voxelgiStep;
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
 		int precomputed_direction = 6 + i;
-		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceCone(voxels, dummy, P, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 
