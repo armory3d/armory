@@ -3,12 +3,12 @@ from arm.logicnode.arm_nodes import *
 
 class PlayActionFromNode(ArmLogicTreeNode):
     """
-    Plays animation action, that starts from given frame, and ends at given frame.
+    Plays animation action, that starts from given frame (0 is the first), and ends at given frame (-1 for last frame).
 
     @input In: Activates the node logic.
     @input Object: States object/armature to run the animation action on.
     @input Action: States animation action to be played.
-    @input Start Frame: Sets frame the animation should start at.
+    @input Start Frame: Sets frame the animation should start at from 0.
     @input End Frame: Sets frame the animation should end at. HINT: Set to "-1" if you want the total frames length of the animation.
     @input Blend: Sets rate to blend multiple animations together.
     @input Speed: Sets rate the animation plays at.
