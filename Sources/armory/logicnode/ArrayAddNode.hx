@@ -21,8 +21,8 @@ class ArrayAddNode extends LogicNode {
 
 		array = ar.map(item -> Std.string(item));
 
-		if (inputs.length > 4) {
-			for (i in 4...inputs.length) {
+		if (inputs.length > 5) {
+			for (i in 5...inputs.length) {
 				var value: Dynamic = inputs[i].get();
 
 				// "Unique Values" options only supports primitive data types
@@ -33,7 +33,9 @@ class ArrayAddNode extends LogicNode {
 				var type: Bool = value is Bool || value is Float || value is Int || value is String;
 
 				if (!inputs[3].get() || (type ? ar.indexOf(value) : array.indexOf(Std.string(value))) == -1) {
-					ar.push(value);
+					if (inputs[4].get()) 
+						ar.unshift(value);
+					else ar.push(value);
 				}
 			}
 		}
