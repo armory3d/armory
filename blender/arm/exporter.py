@@ -786,6 +786,25 @@ class ArmoryExporter:
                 out_object['tilesheet_ref'] = bobject.arm_tilesheet
                 out_object['tilesheet_action_ref'] = bobject.arm_tilesheet_action
 
+
+            if len(bobject.vertex_groups) > 0:
+                out_object['vertex_groups'] = []
+                for group in bobject.vertex_groups:
+                    verts = []
+                    for v in bobject.data.vertices:
+                        for g in v.groups:
+                            if g.group == group.index:
+                                verts.append(str(v.co.x))
+                                verts.append(str(v.co.y))
+                                verts.append(str(v.co.z))
+
+                    out_vertex_groups = {
+                        'name': group.name,
+                        'value': verts
+                    }
+                    out_object['vertex_groups'].append(out_vertex_groups)
+
+
             if len(bobject.arm_propertylist) > 0:
                 out_object['properties'] = []
                 for proplist_item in bobject.arm_propertylist:
@@ -2688,6 +2707,7 @@ Make sure the mesh only has tris/quads.""")
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0  # BOX
+
             if rb.collision_shape == 'SPHERE':
                 shape = 1
             elif rb.collision_shape == 'CONVEX_HULL':
@@ -2700,6 +2720,7 @@ Make sure the mesh only has tris/quads.""")
                 shape = 5
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
+
             body_mass = rb.mass
             is_static = self.rigid_body_static(rb)
             if is_static:
