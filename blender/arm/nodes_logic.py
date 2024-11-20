@@ -105,7 +105,8 @@ class ARM_OT_AddNodeOverride(bpy.types.Operator):
         for setting in self.settings.values():
             setting_dicts.append({
                 "name": setting.name,
-                "value": setting.value
+                "value": setting.value,
+                "array_index": setting.array_index
             })
 
         bpy.ops.node.add_node('INVOKE_DEFAULT', type=self.type, use_transform=self.use_transform, settings=setting_dicts)
