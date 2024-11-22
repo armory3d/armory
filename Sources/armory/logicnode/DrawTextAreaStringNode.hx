@@ -23,6 +23,7 @@ class DrawTextAreaStringNode extends LogicNode {
 
 	var index: Int;
 	var max: Int;
+	var ar_lines: Array<String>;
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -34,10 +35,10 @@ class DrawTextAreaStringNode extends LogicNode {
 
 		var string:String = Std.string(inputs[1].get());
 		var length:Int = inputs[3].get();
+		var angle: Float = inputs[10].get();
 
 		var horA = TextLeft;
 		var verA = TextTop;
-
 
 		var fontName = inputs[2].get();
 		if (fontName == "") {
@@ -63,7 +64,7 @@ class DrawTextAreaStringNode extends LogicNode {
 
 		var len = string.length;
 
-		var ar_lines = [];
+		ar_lines = [];
 
 		var ar_words = string.split(' ');
 
@@ -115,6 +116,8 @@ class DrawTextAreaStringNode extends LogicNode {
 				case 'TextRight': {horA = TextRight;  xoffset = -width; }
 			}
 
+			RenderToTexture.g.rotate(angle, inputs[8].get(), inputs[9].get()+(ar_lines.length-1)/2*height*spacing);
+
 			RenderToTexture.g.color = Color.fromFloats(colorVecB.x, colorVecB.y, colorVecB.z, colorVecB.w);
 
 			RenderToTexture.g.fillRect(inputs[8].get()+xoffset, inputs[9].get()+yoffset+index*height*spacing, width, height);
@@ -124,9 +127,18 @@ class DrawTextAreaStringNode extends LogicNode {
 			RenderToTexture.g.drawAlignedString(line, inputs[8].get(), inputs[9].get()+index*height*spacing, horA, verA);
 			++index;
 
+			RenderToTexture.g.rotate(-angle, inputs[8].get(), inputs[9].get()+(ar_lines.length-1)/2*height*spacing);
+
 		}
+		
 		#end
 
 		runOutput(0);
+	}
+
+	override function get(from: Int): Dynamic {
+
+		return ar_lines.length;
+
 	}
 }

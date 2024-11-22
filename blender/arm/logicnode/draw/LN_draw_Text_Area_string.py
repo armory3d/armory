@@ -18,13 +18,15 @@ class DrawTextAreaStringNode(ArmLogicTreeNode):
     @input Color Font: The color of the string, supports alpha.
     @input Color Background: The color background of the text area, supports alpha, if no color is wanted used alpha 0.
     @input X/Y: Position of the string, in pixels from the top left corner.
+    @input Angle: Rotation angle in radians. Rectangle will be rotated cloclwiswe
+        at the anchor point.
 
     @see [`kha.graphics2.Graphics.drawString()`](http://kha.tech/api/kha/graphics2/Graphics.html#drawString).
     """
     bl_idname = 'LNDrawTextAreaStringNode'
     bl_label = 'Draw Text Area String'
     arm_section = 'draw'
-    arm_version = 1
+    arm_version = 3
 
     property0: HaxeEnumProperty(
     'property0',
@@ -58,10 +60,18 @@ class DrawTextAreaStringNode(ArmLogicTreeNode):
         self.add_input('ArmColorSocket', 'Color Background', default_value=[0.0, 0.0, 0.0, 1.0])
         self.add_input('ArmFloatSocket', 'X')
         self.add_input('ArmFloatSocket', 'Y')
+        self.add_input('ArmFloatSocket', 'Angle')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmIntSocket', 'Lines')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
         layout.prop(self, 'property1')
         layout.prop(self, 'property2')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 2):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)
