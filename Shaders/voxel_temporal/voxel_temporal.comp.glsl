@@ -53,8 +53,8 @@ uniform layout(r16) image3D SDF;
 uniform layout(r16) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16) image3D voxelsB;
+uniform layout(r16) image3D voxelsOut;
 #endif
 #endif
 
@@ -137,7 +137,7 @@ void main() {
 			radiance = basecol;
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light / PI + indirect.rgb;
+			radiance.rgb *= light + indirect;
 			radiance.rgb += emission.rgb;
 
 			#else

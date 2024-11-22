@@ -42,7 +42,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
             frag.add_uniform('samplerCube shadowMapPointTransparent[4]', included=True)
 
-    if not '_VoxelAOvar' in wrd.world_defs and not '_VoxelGI' in wrd.world_defs:
+    if not '_VoxelAOvar' in wrd.world_defs and not '_VoxelGI' in wrd.world_defs or ((parse_opacity or '_VoxelShadow' in wrd.world_defs) and ('_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs)):
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w

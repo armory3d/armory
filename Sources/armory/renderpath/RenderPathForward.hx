@@ -449,10 +449,10 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssrefr || arm_voxelgi_refract)
+		#if rp_ssrefr
 		{
-			path.setTarget("gbuffer_refraction"); // Only clear gbuffer0
-			path.clearTarget(0x00ffff00);
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffffff00);
 		}
 		#end
 

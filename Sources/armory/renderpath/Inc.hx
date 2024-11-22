@@ -685,7 +685,7 @@ class Inc {
 				#if (rp_voxels == "Voxel AO")
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "R8";
+						t.format = "R16";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
@@ -722,7 +722,7 @@ class Inc {
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = false;
+		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end

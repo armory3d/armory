@@ -285,7 +285,8 @@ void main() {
 	envl.rgb *= envmapStrength * occspec.x;
 
 #ifdef _VoxelGI
-	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
+	vec4 indirect_diffuse = textureLod(voxels_diffuse, texCoord, 0.0);
+	fragColor.rgb = (indirect_diffuse.rgb * albedo + envl.rgb * (1.0 - indirect_diffuse.a)) * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #endif
@@ -342,7 +343,7 @@ void main() {
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
 	vec3 svisibility = vec3(1.0);
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
+	vec3 sdirect =  lambertDiffuseBRDF(albedo, sdotNL) +
 	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
