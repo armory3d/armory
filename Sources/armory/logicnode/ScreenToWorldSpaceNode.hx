@@ -22,50 +22,58 @@ class ScreenToWorldSpaceNode extends LogicNode {
 		// Separator Out
 		if (property0) {
 			switch (from) {
-				// World
+				// At
 				case 0: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).at(inputs[2].get());
+				}
+				// Origin
+				case 1: {
 					return RayCaster.getRay(vInput.x, vInput.y, cam).origin;
 				}
-				// World X
-				case 1: {
+				// Origin X
+				case 2: {
 					return RayCaster.getRay(vInput.x, vInput.y, cam).origin.x;
 				}
-				// World Y
-				case 2: {
+				// Origin Y
+				case 3: {
 					return RayCaster.getRay(vInput.x, vInput.y, cam).origin.y;
 				}
-				// World Z
-				case 3: {
+				// Origin Z
+				case 4: {
 					return RayCaster.getRay(vInput.x, vInput.y, cam).origin.z;
 				}
 				// Direction
-				case 4: {
-					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.normalize();
+				case 5: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).direction;
 				}
 				// Direction X
-				case 5: {
-					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.normalize().x;
+				case 6: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.x;
 				}
 				// Direction Y
-				case 6: {
-					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.normalize().y;
+				case 7: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.y;
 				}
 				// Direction Z
-				case 7: {
-					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.normalize().z;
+				case 8: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.z;
 				}
 			}
 		}
 		else
 		{
 			switch (from) {
-				// World
+				// At
 				case 0: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).at(inputs[2].get());
+				}
+				// Origin
+				case 1: {
 					return RayCaster.getRay(vInput.x, vInput.y, cam).origin;
 				}
 				// Direction
-				case 1: {
-					return RayCaster.getRay(vInput.x, vInput.y, cam).direction.normalize();
+				case 2: {
+					return RayCaster.getRay(vInput.x, vInput.y, cam).direction;
 				}
 			}	
 		}
