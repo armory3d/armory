@@ -22,6 +22,7 @@ class TweenTransformNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
+		tree.notifyOnRemove(onRemove);
 	}
 
 	override function run(from:Int) {
@@ -125,5 +126,12 @@ class TweenTransformNode extends LogicNode {
 
 	function done() {
 		runOutput(2);		
-	}	
+	}
+
+	function onRemove() {
+		if(anim != null){
+			Tween.stop(anim);
+		}
+	}
+
 }
