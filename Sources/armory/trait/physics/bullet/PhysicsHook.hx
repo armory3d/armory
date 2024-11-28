@@ -57,7 +57,7 @@ class PhysicsHook extends Trait {
 	function init() {
 		// Hook to empty axes
 		target = targetName != "" ? iron.Scene.active.getChild(targetName) : null;
-		targetTransform = target != null ? target.transform : object.transform;
+		targetTransform = target != null ? target.transform : iron.Scene.global.transform;
 
 		var physics = PhysicsWorld.active;
 
@@ -107,9 +107,9 @@ class PhysicsHook extends Trait {
 				// Find nodes at marked vertex group locations
 				var numVerts = Std.int(verts.length / 3);
 				for (j in 0...numVerts) {
-					var x = verts[j * 3] + sb.vertOffsetX;
-					var y = verts[j * 3 + 1] + sb.vertOffsetY;
-					var z = verts[j * 3 + 2] + sb.vertOffsetZ;
+					var x = verts[j * 3] + sb.vertOffsetX + sb.object.transform.loc.x;
+					var y = verts[j * 3 + 1] + sb.vertOffsetY + sb.object.transform.loc.y;
+					var z = verts[j * 3 + 2] + sb.vertOffsetZ + sb.object.transform.loc.z;
 
 					// Anchor node to rigid body
 					if (Math.abs(nodePos.x() - x) < 0.01 && Math.abs(nodePos.y() - y) < 0.01 && Math.abs(nodePos.z() - z) < 0.01) {
