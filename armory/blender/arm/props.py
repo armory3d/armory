@@ -24,7 +24,7 @@ else:
 
 # Armory version
 arm_version = '2024.12'
-arm_commit = '$Id$'
+arm_commit = '$Id: 6b2644d47db169cedd95593497cc283207d23a74 $'
 
 def get_project_html5_copy(self):
     return self.get('arm_project_html5_copy', False)
