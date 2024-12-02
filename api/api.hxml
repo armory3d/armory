@@ -1,0 +1,63 @@
+-cp ../Kha/Sources
+-cp ../Kha/Backends/Krom
+-cp ../armory/Sources
+-cp ../iron/Sources
+-cp ../lib/haxebullet/Sources
+-cp ../lib/haxerecast/Sources
+-cp ../lib/zui/Sources
+--macro include('iron', true, null, ['../iron/Sources'])
+--macro include('haxebullet', true, null, ['../lib/haxebullet/Sources'])
+--macro include('haxerecast', true, null, ['../lib/haxerecast/Sources'])
+--macro include('armory', true, ['armory.network'], ['../armory/Sources','../iron/Sources'])
+--macro include('zui', true, null, ['../lib/zui/Sources'])
+-D arm_bullet
+-D arm_physics
+-D arm_terrain
+-D arm_stream
+-D rp_probes
+-D arm_batch
+-D arm_physics_soft
+-D arm_deferred
+-D arm_csm
+-D arm_ui
+-D rp_hdr
+-D rp_renderer=Deferred
+-D rp_shadowmap
+-D rp_shadowmap_cascade=1024
+-D rp_shadowmap_cube=512
+-D rp_background=World
+-D rp_render_to_texture
+-D rp_compositornodes
+-D rp_antialiasing=SMAA
+-D rp_supersampling=1
+-D rp_ssgi=SSAO
+-D arm_audio
+-D arm_noembed
+-D arm_soundcompress
+-D arm_skin
+-D arm_morph_target
+-D arm_particles
+-D sys_krom
+-D sys_g1
+-D sys_g2
+-D sys_g3
+-D sys_g4
+-D sys_a1
+-D sys_a2
+-D kha_js
+-D kha_krom
+-D kha_krom_js
+-D kha_direct3d11
+-D kha_g1
+-D kha_g2
+-D kha_g3
+-D kha_g4
+-D kha_a1
+-D kha_a2
+-D kha
+-D kha_version=1810
+-D kha_project_name=untitled
+--no-output
+-dce no
+-js krom\krom.js
+-main Main
