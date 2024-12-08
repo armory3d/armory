@@ -92,13 +92,22 @@ class DrawCameraNode extends LogicNode {
 		for(i in 0...cameras.length) {
 			final rt = renderTargets[i];
 
+			positions[i].set(
+						inputs[numStaticInputs + i * 5 + 1].get(),
+						inputs[numStaticInputs + i * 5 + 2].get()
+					);
+
 			final posX = positions[i].x;
 			final posY = positions[i].y;
 
 			g.color = 0xff000000;
 			g.fillRect(posX, posY, rt.width, rt.height);
 			g.color = 0xffffffff;
-			g.drawScaledImage(rt, posX, posY, rt.width, rt.height);
+			
+			if (kha.Image.renderTargetsInvertedY())
+				g.drawScaledImage(rt, posX, posY+rt.height, rt.width, -rt.height);
+			else
+				g.drawScaledImage(rt, posX, posY, rt.width, rt.height);
 		}
 	}
 }
