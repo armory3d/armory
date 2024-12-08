@@ -184,7 +184,7 @@ class DebugConsole extends Trait {
 	static var lastTraces: Array<String> = [""];
 	static function consoleTrace(v: Dynamic, ?inf: haxe.PosInfos) {
 		lastTraces.unshift(haxe.Log.formatOutput(v, traceWithPosition ? inf : null));
-		if (lastTraces.length > 10) lastTraces.pop();
+		if (lastTraces.length > 100) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
 
@@ -271,7 +271,7 @@ class DebugConsole extends Trait {
 
 			if (ui.tab(htab, "Scene")) {
 
-				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
+				if (ui.panel(Id.handle({selected: true}), "Outliner: obj.uid_obj.name")) {
 					ui.indent();
 					ui._y -= ui.ELEMENT_OFFSET();
 
@@ -280,7 +280,7 @@ class DebugConsole extends Trait {
 
 					function drawObjectNameInList(object: iron.object.Object, selected: Bool) {
 						var _y = ui._y;
-						ui.text(object.name);
+						ui.text(object.uid+'_'+object.name);
 
 						if (object == iron.Scene.active.camera) {
 							var tagWidth = 100;
@@ -528,6 +528,24 @@ class DebugConsole extends Trait {
 
 							ui.unindent();
 						}
+
+						var col: Array<String> = [];
+				
+						for (g in iron.Scene.active.raw.groups){
+							if(iron.Scene.active.getGroup(g.name).indexOf(selectedObject) != -1) col.push(g.name);
+						}
+
+						if (col.length > 0) {
+							ui.text("Collections: "+col.length);
+							ui.indent();
+
+							for (i => name in col) {
+								ui.text((i+1)+'-> '+name);
+							}
+
+							ui.unindent();
+						}
+
 
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
