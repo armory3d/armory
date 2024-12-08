@@ -251,9 +251,11 @@ class Canvas {
 				ui.t.LABEL_COL = getColor(element.color_text, getTheme(canvas.theme).TEXT_COL);
 				ui.t.ACCENT_COL = getColor(element.color, getTheme(canvas.theme).BUTTON_COL);
 				ui.t.ACCENT_HOVER_COL = getColor(element.color_hover, getTheme(canvas.theme).BUTTON_HOVER_COL);
+				if (element.editable == null) element.editable = true;
 
-				h.nest(element.id).text = getText(canvas, element);
-				zui.Ext.textArea(ui,h.nest(element.id), element.alignment,element.editable);
+				zui.Ext.textArea(ui, h.nest(element.id), element.alignment, element.editable, getText(canvas, element), true);
+				
+				//handle does not change
 				if (h.nest(element.id).changed) {
 					var e = element.event;
 					if (e != null && e != "") events.push(e);
