@@ -10,7 +10,7 @@ class SubStringNode extends LogicNode {
         var string: String = inputs[0].get();
 		var start: Int = inputs[1].get();
 		var end: Int = inputs[2].get();
-		if (start == null || end == null || string == null) return null;
+		if (string == null) return null;
 
         return string.substring(start, end);
 	}
