@@ -11,6 +11,13 @@ class OnTimerNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 	}
 
+	function reactivate() {
+		if (inputs[1].get() == true){
+			tree.notifyOnUpdate(update);
+			tree.removeUpdate(reactivate);
+		}
+	}
+
 	function update() {
 
 		if (duration <= 0.0) {
@@ -20,7 +27,7 @@ class OnTimerNode extends LogicNode {
 
 		duration -= iron.system.Time.delta;
 		if (duration <= 0.0) {
-			if (!repeat) tree.removeUpdate(update);
+			if (!repeat) { tree.removeUpdate(update); tree.notifyOnUpdate(reactivate); }
 			runOutput(0);
 		}
 	}
