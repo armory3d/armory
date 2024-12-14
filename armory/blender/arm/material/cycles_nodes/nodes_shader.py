@@ -184,7 +184,14 @@ if bpy.app.version < (4, 1, 0):
             state.out_basecol = c.parse_vector_input(node.inputs[0])
             state.out_roughness = c.parse_value_input(node.inputs[1])
             state.out_metallic = '1.0'
-
+else:
+    def parse_bsdfglossy(node: bpy.types.ShaderNodeBsdfAnisotropic, out_socket: NodeSocket, state: ParserState) -> None:
+        if state.parse_surface:
+            c.write_normal(node.inputs[4])
+            state.out_basecol = c.parse_vector_input(node.inputs[0])
+            state.out_roughness = c.parse_value_input(node.inputs[1])
+            state.out_metallic = '1.0'
+            
 
 def parse_ambientocclusion(node: bpy.types.ShaderNodeAmbientOcclusion, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
