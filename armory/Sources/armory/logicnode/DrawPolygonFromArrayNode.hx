@@ -22,7 +22,7 @@ class DrawPolygonFromArrayNode extends LogicNode {
 
 		var vertArr: Dynamic = inputs[6].get();
 
-		if (vertices == null) {
+		if (vertices == null || vertices.length != vertArr.length) {
 			// Preallocate
 			vertices = [];
 			vertices.resize(vertArr.length);
