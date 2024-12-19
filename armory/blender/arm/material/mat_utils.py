@@ -57,7 +57,10 @@ def get_rpasses(material):
             ar.append('depth')
 
     if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
-        ar.append('shadowmap')
+        if 'translucent' in ar or 'refraction' in ar:
+            ar.append('shadowmap_transparent')
+        else:
+            ar.append('shadowmap')
 
     return ar
 
