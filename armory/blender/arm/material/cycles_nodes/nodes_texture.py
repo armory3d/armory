@@ -285,7 +285,11 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     # Fac
     else:
         res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
-
+    if bpy.app.version >= (4, 1, 0):
+    	# Needs a switch for the new set of types for noise where the musgrave was moved
+        if node.noise_type == "FBM"
+    	    state.curshader.add_function(c_functions.str_tex_musgrave)
+    	    res = f'tex_musgrave_f({co} * {scale} * 1.0)'
     return res
 
 
