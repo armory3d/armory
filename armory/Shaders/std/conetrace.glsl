@@ -87,8 +87,7 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 
 #ifdef _VoxelGI
 vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const bool use_sdf, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
-    vec3 color = vec3(0.0);
-	float alpha = 0.0;
+    vec4 sampleCol = vec4(0.0);
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
 	float dist = voxelSize0;
 	float step_dist = dist;
@@ -98,15 +97,15 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 
 	vec3 aniso_direction = -dir;
 	vec3 face_offset = vec3(
-		aniso_direction.x > 0 ? 0 : 1,
-		aniso_direction.y > 0 ? 2 : 3,
-		aniso_direction.z > 0 ? 4 : 5
+		aniso_direction.x > 0.0 ? 0 : 1,
+		aniso_direction.y > 0.0 ? 2 : 3,
+		aniso_direction.z > 0.0 ? 4 : 5
 	) / (6 + DIFFUSE_CONE_COUNT);
 	vec3 direction_weight = abs(dir);
 
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
 
-    while (alpha < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
+    while (sampleCol.a < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
 		vec4 mipSample = vec4(0.0);
 		float diam = max(voxelSize0, dist * coneCoefficient);
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
@@ -126,12 +125,10 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
 			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
 		}
 
-		float a = 1.0 - alpha;
-		color += a * mipSample.rgb;
-		alpha += a * mipSample.a;
+		sampleCol += (1.0 - sampleCol.a) * mipSample;
 
 		float stepSizeCurrent = step_size;
 		if (use_sdf) {
@@ -145,7 +142,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 		step_dist = diam * stepSizeCurrent;
 		dist += step_dist;
 	}
-    return vec4(color, alpha);
+    return sampleCol;
 }
 
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
@@ -162,7 +159,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 	}
 
 	amount /= sum;
-	amount.rgb = max(vec3(0.0), amount.rgb);
+	amount.rgb = max(amount.rgb, vec3(0.0));
 	amount.a = clamp(amount.a, 0.0, 1.0);
 
 	return amount * voxelgiOcc;
@@ -253,7 +250,7 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
-		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, voxelgiStep, clipmaps) * cosTheta;
+		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 	amount /= sum;

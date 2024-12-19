@@ -67,7 +67,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceDiffuse(P, n, voxels, clipmaps).rgb;
+	vec4 color = traceDiffuse(P, n, voxels, clipmaps);
 
-	imageStore(voxels_diffuse, ivec2(pixel), vec4(color, 1.0));
+	imageStore(voxels_diffuse, ivec2(pixel), color);
 }
