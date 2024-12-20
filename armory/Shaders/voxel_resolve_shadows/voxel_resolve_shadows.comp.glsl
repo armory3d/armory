@@ -34,7 +34,7 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(r8) image2D voxels_shadows;
+uniform layout(r16) image2D voxels_shadows;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
