@@ -42,6 +42,7 @@ uniform vec2 cameraProj;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
+uniform sampler2D sveloc;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
@@ -68,7 +69,9 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z, clipmaps, pixel).rgb;
+	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
+
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z, clipmaps, pixel, velocity).rgb;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }
