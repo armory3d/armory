@@ -167,7 +167,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 
 vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
 	vec3 specularDir = reflect(-viewDir, normal);
-	vec3 P = origin + specularDir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
+	vec3 P = origin + specularDir * ((BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) + vec3(velocity.x, velocity.y, 1.0)) * voxelgiStep;
 	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);
@@ -176,10 +176,10 @@ vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels,
 	return amount * voxelgiOcc;
 }
 
-vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel) {
+vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
  	const float transmittance = 1.0;
  	vec3 refractionDir = refract(-viewDir, normal, 1.0 / ior);
- 	vec3 P = origin + refractionDir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
+ 	vec3 P = origin + refractionDir * ((BayerMatrix8[int(pixel.x) % 8][int(pixel.y) % 8] - 0.5) + vec3(velocity.x, velocity.y, 1.0)) * voxelgiStep;
 	vec4 amount =  transmittance * traceCone(voxels, voxelsSDF, P, normal, refractionDir, 0, true, roughness, voxelgiStep, clipmaps);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);
