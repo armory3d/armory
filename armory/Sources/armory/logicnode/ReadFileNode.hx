@@ -23,7 +23,7 @@ class ReadFileNode extends LogicNode {
 			runOutput(0);
 		});
 
-		runOutput(1);
+		if (data == null) runOutput(1);
 	}
 
 	override function get(from: Int): Dynamic {
