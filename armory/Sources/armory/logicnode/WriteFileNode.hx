@@ -25,5 +25,7 @@ class WriteFileNode extends LogicNode {
         a.click();
         js.html.URL.revokeObjectURL(url);
 		#end
+
+		runOutput(0);
 	}
 }
