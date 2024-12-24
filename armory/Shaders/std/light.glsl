@@ -137,7 +137,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelShadow
 	direct *= traceShadow(p, n, voxels, voxelsSDF, l, clipmaps, gl_FragCoord.xy).r;
 	#endif
-
 	#ifdef _LTC
 	#ifdef _ShadowMap
 		if (receiveShadow) {

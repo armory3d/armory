@@ -469,7 +469,11 @@ class RenderPathDeferred {
 		}
 		#end
 
+<<<<<<< HEAD
 		#if (rp_ssrefr || arm_voxelgi_refract)
+=======
+		#if rp_ssrefr
+>>>>>>> e084befe4da24a634ef5618619e54063560e0dc8
 		{
 			path.setTarget("gbuffer_refraction");
 			path.clearTarget(0xffffff00);
@@ -617,7 +621,7 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsTemporal();
 
-			#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
+			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
 			#end
 
