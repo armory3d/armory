@@ -31,7 +31,6 @@ uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(r32ui) uimage3D voxels;
-uniform sampler3D voxelsSampler;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;

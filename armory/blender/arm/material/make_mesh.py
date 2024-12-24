@@ -744,14 +744,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                     frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), clipmaps, gl_FragCoord.xy).r;')
 
             frag.write('}') # receiveShadow
-<<<<<<< HEAD
-=======
-        if '_VoxelShadow' in wrd.world_defs:
-            if parse_opacity:
-                frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord);')
-            else:
-                frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
->>>>>>> e084befe4da24a634ef5618619e54063560e0dc8
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
 
@@ -817,9 +809,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-<<<<<<< HEAD
         frag.write('float ior = 1.450;')
-
-=======
-        frag.write('float ior;')
->>>>>>> e084befe4da24a634ef5618619e54063560e0dc8

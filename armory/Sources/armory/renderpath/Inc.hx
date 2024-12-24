@@ -76,9 +76,7 @@ class Inc {
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh5:kha.compute.Shader = null;
 	static var voxel_ta5:kha.compute.TextureUnit;
-	static var voxel_te5:kha.compute.TextureUnit;
-	static var voxel_tf5:kha.compute.TextureUnit;
-	static var voxel_tg5:kha.compute.TextureUnit;
+	static var voxel_tb5:kha.compute.TextureUnit;
 	static var voxel_ca5:kha.compute.ConstantLocation;
 	static var voxel_cb5:kha.compute.ConstantLocation;
 	static var voxel_cc5:kha.compute.ConstantLocation;
@@ -87,13 +85,9 @@ class Inc {
 	static var voxel_cf5:kha.compute.ConstantLocation;
 	static var voxel_cg5:kha.compute.ConstantLocation;
 	#if rp_shadowmap
-	static var voxel_tb5:kha.compute.TextureUnit;
 	static var voxel_tc5:kha.compute.TextureUnit;
 	static var voxel_td5:kha.compute.TextureUnit;
 	static var voxel_te5:kha.compute.TextureUnit;
-	static var voxel_tf5:kha.compute.TextureUnit;
-	static var voxel_tg5:kha.compute.TextureUnit;
-	static var voxel_th5:kha.compute.TextureUnit;
 	static var voxel_ch5:kha.compute.ConstantLocation;
 	static var voxel_ci5:kha.compute.ConstantLocation;
 	static var voxel_cj5:kha.compute.ConstantLocation;
@@ -830,9 +824,7 @@ class Inc {
 		{
 			voxel_sh5 = path.getComputeShader("voxel_light");
 			voxel_ta5 = voxel_sh5.getTextureUnit("voxelsLight");
-			voxel_te5 = voxel_sh5.getTextureUnit("voxels");
-			voxel_tf5 = voxel_sh5.getTextureUnit("voxelsSampler");
-			voxel_tg5 = voxel_sh5.getTextureUnit("voxelsSDFSampler");
+			voxel_tb5 = voxel_sh5.getTextureUnit("voxels");
 
 	 		voxel_ca5 = voxel_sh5.getConstantLocation("clipmaps");
 			voxel_cb5 = voxel_sh5.getConstantLocation("clipmapLevel");
@@ -843,13 +835,9 @@ class Inc {
 	 		voxel_cf5 = voxel_sh5.getConstantLocation("lightDir");
 	 		voxel_cg5 = voxel_sh5.getConstantLocation("spotData");
 	 		#if rp_shadowmap
-	 		voxel_tb5 = voxel_sh5.getTextureUnit("shadowMap");
-	 		voxel_te5 = voxel_sh5.getTextureUnit("shadowMapTransparent");
-	 		voxel_tc5 = voxel_sh5.getTextureUnit("shadowMapSpot");
-	 		voxel_tf5 = voxel_sh5.getTextureUnit("shadowMapSpotTransparent");
-	 		voxel_td5 = voxel_sh5.getTextureUnit("shadowMapPoint");
-	 		voxel_tg5 = voxel_sh5.getTextureUnit("shadowMapPointTransparent");
-			voxel_th5 = voxel_sh5.getTextureUnit("voxels");
+	 		voxel_tc5 = voxel_sh5.getTextureUnit("shadowMap");
+	 		voxel_td5 = voxel_sh5.getTextureUnit("shadowMapSpot");
+	 		voxel_te5 = voxel_sh5.getTextureUnit("shadowMapPoint");
 
 	 		voxel_ch5 = voxel_sh5.getConstantLocation("lightShadow");
 	 		voxel_ci5 = voxel_sh5.getConstantLocation("lightProj");
@@ -1234,9 +1222,7 @@ class Inc {
 	 		kha.compute.Compute.setShader(voxel_sh5);
 
 			kha.compute.Compute.setTexture(voxel_ta5, rts.get("voxelsLight").image, kha.compute.Access.Write);
-			kha.compute.Compute.setTexture(voxel_te5, rts.get("voxels").image, kha.compute.Access.Read);
-			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("voxelsOut").image);
-			kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("voxelsSDF").image);
+			kha.compute.Compute.setTexture(voxel_tb5, rts.get("voxels").image, kha.compute.Access.Read);
 
 			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 			for (i in 0...Main.voxelgiClipmapCount) {
@@ -1260,30 +1246,24 @@ class Inc {
 	 		if (l.data.raw.type == "sun") {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
-	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlas").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlasTranparent").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlas").image);
 	 			#else
-	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMapAtlasSun").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlasSunTransparent").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlasSun").image);
 	 			#end
 	 			#else
-	 			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("shadowMap").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapTransparent").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMap").image);
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 1); // lightShadow
 	 		}
 	 		else if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
-	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlas").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapAtlasTranparent").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlas").image);
 	 			#else
-	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlasSpot").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapAtlasSpotTransparent").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlasSpot").image);
 	 			#end
 	 			#else
-	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapSpot[" + spotIndex + "]").image);
-	 			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("shadowMapSpotTransparent[" + spotIndex + "]").image);
+	 			kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapSpot[" + spotIndex + "]").image);
 	 			spotIndex++;
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 2);
@@ -1291,17 +1271,14 @@ class Inc {
 	 		else {
 				#if arm_shadowmap_atlas
 				#if arm_shadowmap_atlas_single_map
-				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlas").image);
-				kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("shadowMapAtlasTranparent").image);
+				kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlas").image);
 				#else
-				kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("shadowMapAtlasPoint").image);
-				kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("shadowMapAtlasPointTransparent").image);
+				kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("shadowMapAtlasPoint").image);
 				kha.compute.Compute.setInt(voxel_cl5, i);
 				kha.compute.Compute.setFloats(voxel_cm5, iron.object.LightObject.pointLightsData);
 				#end
 				#else
-	 			kha.compute.Compute.setSampledCubeMap(voxel_td5, rts.get("shadowMapPoint[" + pointIndex + "]").cubeMap);
-	 			kha.compute.Compute.setSampledCubeMap(voxel_tg5, rts.get("shadowMapPointTransparent[" + pointIndex + "]").cubeMap);
+	 			kha.compute.Compute.setSampledCubeMap(voxel_te5, rts.get("shadowMapPoint[" + pointIndex + "]").cubeMap);
 	 			pointIndex++;
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 3);
@@ -1343,8 +1320,6 @@ class Inc {
 	 		kha.compute.Compute.setMatrix(voxel_cj5, m.self);
 	 		// shadowsBias
 	 		kha.compute.Compute.setFloat(voxel_ck5, l.data.raw.shadows_bias);
-
-			kha.compute.Compute.setTexture(voxel_th5, rts.get("voxels").image, kha.compute.Access.Read);
 			#end // rp_shadowmap
 
 	 		// lightPos
