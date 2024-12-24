@@ -22,6 +22,8 @@ class ReadJsonNode extends LogicNode {
 			if (!useCache) iron.data.Data.cachedBlobs.remove(file);
 			runOutput(0);
 		});
+
+		if (data == null) runOutput(1);
 	}
 
 	override function get(from: Int): Dynamic {
