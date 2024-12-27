@@ -669,8 +669,31 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         if '_VoxelShadow' in wrd.world_defs and not parse_opacity:
             frag.add_uniform("sampler2D voxels_shadows", top=True)
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
+        if tese is None:
+            vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
+            vert.add_out('vec4 wvpposition')
+            vert.add_out('vec4 prevwvpposition')
+            vert.write('wvpposition = gl_Position;')
+            if is_displacement:
+                vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                vert.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
+            else:
+                vert.write('prevwvpposition = prevWVP * spos;')
+        else:
+            tese.add_out('vec4 wvpposition')
+            tese.add_out('vec4 prevwvpposition')
+            tese.write('wvpposition = gl_Position;')
+            if is_displacement:
+                tese.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                tese.add_uniform('mat4 prevWVP', '_prevWorldViewProjectionMatrix')
+                tese.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
+            else:
+                vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
+                vert.add_out('vec3 prevwposition')
+                vert.write('prevwposition = vec4(prevW * spos).xyz;')
+                tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
+                make_tess.interpolate(tese, 'prevwposition', 3)
+                tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
         frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
         if parse_opacity or '_VoxelShadow' in wrd.world_defs:
             frag.add_uniform('vec3 eye', '_cameraPosition')
@@ -691,8 +714,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
             frag.write("indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;")
-            frag.write("if (specular > 0.0 && roughness < 1.0)")
-            frag.write("    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), roughness, clipmaps, gl_FragCoord.xy).rgb * specular * voxelgiRefl * (1.0 - roughness);")
+            frag.write("if (specular > 0.0 && roughness < 1.0) {")
+            frag.write('    vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+            frag.write('    vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
+            frag.write("    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), roughness, clipmaps, gl_FragCoord.xy, vec2(posa - posb)).rgb * specular * voxelgiRefl * (1.0 - roughness);")
+            frag.write("}")
         else:
             frag.add_uniform("sampler2D voxels_diffuse")
             frag.add_uniform("sampler2D voxels_specular")

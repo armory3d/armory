@@ -34,6 +34,7 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
+uniform sampler2D sveloc;
 uniform layout(rgba8) image2D voxels_specular;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
@@ -68,7 +69,9 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps, pixel).rgb;
+	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
+
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps, pixel, velocity).rgb;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

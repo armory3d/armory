@@ -67,6 +67,7 @@ class Inc {
 	static var voxel_tc4:kha.compute.TextureUnit;
 	static var voxel_td4:kha.compute.TextureUnit;
 	static var voxel_te4:kha.compute.TextureUnit;
+	static var voxel_tf4:kha.compute.TextureUnit;
 	static var voxel_ca4:kha.compute.ConstantLocation;
 	static var voxel_cb4:kha.compute.ConstantLocation;
 	static var voxel_cc4:kha.compute.ConstantLocation;
@@ -796,6 +797,7 @@ class Inc {
 			voxel_tc4 = voxel_sh4.getTextureUnit("gbuffer0");
 			voxel_td4 = voxel_sh4.getTextureUnit("voxelsSDF");
 			voxel_te4 = voxel_sh4.getTextureUnit("voxels_specular");
+			voxel_tf4 = voxel_sh4.getTextureUnit("sveloc");
 	 		voxel_ca4 = voxel_sh4.getConstantLocation("clipmaps");
 	 		voxel_cb4 = voxel_sh4.getConstantLocation("InvVP");
 	 		voxel_cc4 = voxel_sh4.getConstantLocation("cameraProj");
@@ -1145,6 +1147,7 @@ class Inc {
 		#end
 		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
+		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {
