@@ -1,5 +1,5 @@
 # Armory - 3D Game Engine
-## [Download](https://armory3d.org/download) &bullet; [Release Notes](https://armory3d.org/notes) &bullet; [Manual](https://github.com/armory3d/armory/wiki) &bullet; [API](https://api.armory3d.org) &bullet; [Community](https://armory3d.org/community)
+## [Download](https://armory3d.org/engine/download) &bullet; [Release Notes](https://armory3d.org/engine/notes) &bullet; [Manual](https://github.com/armory3d/armory/wiki) &bullet; [API](https://api.armory3d.org) &bullet; [Community](https://armory3d.org/engine/community)
 
 Armory is an open-source 3D game engine focused on portability, minimal footprint and performance. The renderer is fully scriptable with deferred and forward paths supported out of the box.
 
