@@ -684,7 +684,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelAOvar' in wrd.world_defs and not parse_opacity:
         frag.add_uniform("sampler2D voxels_ao");
-        frag.write('envl *= textureLod(voxels_ao, texCoord, 0.0).rrr;')
+        frag.write('envl *= textureLod(voxels_ao, texCoord, 0.0).r;')
 
     if '_VoxelGI' in wrd.world_defs:
         frag.write('vec3 indirect = vec3(0.0);')
@@ -708,7 +708,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('float svisibility = 1.0;')
+        frag.write('float svisibility = 0.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = dot(n, sunDir);')
         frag.write('float sdotNH = dot(n, sh);')
@@ -801,6 +801,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('    direct = mix(refraction, direct, opacity);')
         frag.write('}')
 
+
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -813,4 +814,3 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior = 1.450;')
-

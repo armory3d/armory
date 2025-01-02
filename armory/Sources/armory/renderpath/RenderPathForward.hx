@@ -203,6 +203,9 @@ class RenderPathForward {
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
+			#if arm_voxelgi_shadows
+			Inc.initGI("voxels_shadows");
+			#end
 			#if (rp_voxels == "Voxel GI")
 			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
@@ -490,6 +493,15 @@ class RenderPathForward {
 		}
 		#end
 		RenderPathCreator.setTargetMeshes();
+
+		RenderPathCreator.setTargetMeshes();
+
+		#if rp_ssrefr
+		{
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffffff00);
+		}
+		#end
 
 		RenderPathCreator.setTargetMeshes();
 

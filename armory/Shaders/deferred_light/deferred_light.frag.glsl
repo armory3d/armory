@@ -127,7 +127,7 @@ uniform vec2 cameraPlane;
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
-		//!uniform vec4 pointLightDataArray[4];
+		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
 	#endif
