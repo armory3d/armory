@@ -23,8 +23,8 @@ class RenderPathForward {
 		#if rp_render_to_texture
 		{
 			path.setTarget("lbuffer0", [
-				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
-				#if rp_ssrefr "gbuffer_refraction" #end]
+				#if (rp_ssr || rp_ssrefr || arm_voxelgi_refract) "lbuffer1",  #end
+				#if (rp_ssrefr || arm_voxelgi_refract) "gbuffer_refraction" #end]
 			);
 		}
 		#else
@@ -118,7 +118,7 @@ class RenderPathForward {
 			}
 			#end
 
-			#if rp_ssrefr
+			#if (rp_ssrefr || arm_voxelgi_refract)
 			{
 				var t = new RenderTargetRaw();
 				t.name = "gbuffer_refraction";
@@ -129,14 +129,18 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling();
 				t.depth_buffer = "main";
 				path.createRenderTarget(t);
+			}
+			#end
 
+			#if rp_ssrefr
+			{
 				//holds colors before refractive meshes are drawn
 				var t = new RenderTargetRaw();
 				t.name = "refr";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
+				t.format = Inc.getHdrFormat();
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
@@ -301,7 +305,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half || (rp_voxels != "Off"))
+		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -314,15 +318,50 @@ class RenderPathForward {
 		}
 		#end
 
+
+
+		#if (rp_ssrefr || arm_voxelgi_refract)
+		var t = new RenderTargetRaw();
+		t.name = "gbuffer_refraction";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		//t.depth_buffer = "main";
+		t.format = "RGBA64";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
+		#end
+
 		#if rp_ssrefr
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
+
+			// holds colors before refractive meshes are drawn
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			// holds background depth
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD1";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
 		}
 		#end
 
 		#if rp_ssr
 		{
+
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
@@ -424,9 +463,6 @@ class RenderPathForward {
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
 				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
-				#end
 			}
 		}
 		#end
@@ -443,11 +479,22 @@ class RenderPathForward {
 		}
 		#end
 
+		#if (rp_ssrefr || arm_voxelgi_refract)
+		{
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffff0000);
+		}
+
+		#end
+
 		#if rp_depthprepass
 		{
 			path.drawMeshes("depth");
 		}
 		#end
+		RenderPathCreator.setTargetMeshes();
+
+		RenderPathCreator.setTargetMeshes();
 
 		#if rp_ssrefr
 		{
@@ -479,11 +526,6 @@ class RenderPathForward {
 			Inc.resolveDiffuse();
 			Inc.resolveSpecular();
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
-			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
 			#end
 		}
 		#end
@@ -527,7 +569,15 @@ class RenderPathForward {
 
 					path.drawMeshes("refraction");
 
+					#if arm_voxelgi_refract
+					path.setTarget("half");
+					path.bindTarget("_main", "texdepth");
+					path.drawShader("shader_datas/downsample_depth/downsample_depth");
+					Inc.resolveRefraction();
+					#end
+
 					path.setTarget("lbuffer0");
+
 					path.bindTarget("refr", "tex1");
 					path.bindTarget("lbuffer0", "tex");
 					path.bindTarget("_main", "gbufferD");

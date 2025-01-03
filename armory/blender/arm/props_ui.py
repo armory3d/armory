@@ -68,7 +68,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         col.prop(obj, 'arm_spawn')
         col.prop(obj, 'arm_mobile')
         col.prop(obj, 'arm_animation_enabled')
-        col.prop(obj, 'arm_lighting')
+        col.prop(obj, 'arm_visible_shadow')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -1731,6 +1731,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_refr')
         col.prop(rpdat, 'arm_voxelgi_shad')
         col.prop(rpdat, 'arm_voxelgi_occ')
+        col.enabled = rpdat.arm_voxelgi_shad != "Off"
         col.label(text="Ray")
         col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_step')

@@ -34,8 +34,10 @@ def write(vert: shader.Shader, frag: shader.Shader):
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
-    vert.add_out('vec4 wvpposition')
-    vert.write('wvpposition = gl_Position;')
+
+    if not '_VoxelAOvar' in wrd.world_defs and not '_VoxelGI' in wrd.world_defs:
+        vert.add_out('vec4 wvpposition')
+        vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w
     frag.write('float viewz = linearize(gl_FragCoord.z, cameraProj);')
     frag.write('int clusterI = getClusterI((wvpposition.xy / wvpposition.w) * 0.5 + 0.5, viewz, cameraPlane);')
@@ -61,7 +63,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-
     frag.write('direct += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
@@ -84,10 +85,14 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs:
-        frag.add_uniform("sampler2D voxels_shadows", top=True)
-        frag.write(', texCoord')
+        frag.write(', voxels, voxelsSDF, clipmaps')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
+    if '_SSRS' in wrd.world_defs:
+        frag.add_uniform('sampler2D gbufferD', top=True)
+        frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
+        frag.add_uniform('vec3 eye', '_cameraPosition')
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights
