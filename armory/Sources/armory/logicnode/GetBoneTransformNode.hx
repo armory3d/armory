@@ -23,8 +23,9 @@ class GetBoneTransformNode extends LogicNode {
 		// Get bone in armature
 		var bone = anim.getBone(boneName);
 
-		return anim.getAbsWorldMat(bone);
-
+		//return anim.getAbsWorldMat(bone);
+		return anim.getAbsMat(bone).clone().multmat(object.transform.world);
+		
         #else
         return null;
 
