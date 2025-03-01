@@ -255,7 +255,7 @@ class Zui {
 		Mouse.get().notifyWindowed(ops.khaWindowId, onMouseDown, onMouseUp, onMouseMove, onMouseWheel);
 		if (Pen.get() != null) Pen.get().notify(onPenDown, onPenUp, onPenMove);
 		Keyboard.get().notify(onKeyDown, onKeyUp, onKeyPress);
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		if (Surface.get() != null) Surface.get().notify(onTouchDown, onTouchUp, onTouchMove);
 		#end
 		// Reset mouse delta on foreground
@@ -268,7 +268,7 @@ class Zui {
 		Mouse.get().removeWindowed(ops.khaWindowId, onMouseDown, onMouseUp, onMouseMove, onMouseWheel);
 		if (Pen.get() != null) Pen.get().remove(onPenDown, onPenUp, onPenMove);
 		Keyboard.get().remove(onKeyDown, onKeyUp, onKeyPress);
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		if (Surface.get() != null) Surface.get().remove(onTouchDown, onTouchUp, onTouchMove);
 		#end
 		endInput();
@@ -1760,7 +1760,7 @@ class Zui {
 		button == 0 ? inputStarted = true : inputStartedR = true;
 		button == 0 ? inputDown = true : inputDownR = true;
 		inputStartedTime = kha.Scheduler.time();
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		setInputPosition(x, y);
 		#end
 		inputStartedX = x;
@@ -1787,7 +1787,7 @@ class Zui {
 			button == 0 ? inputReleased = true : inputReleasedR = true;
 		}
 		button == 0 ? inputDown = false : inputDownR = false;
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		setInputPosition(x, y);
 		#end
 		deselectText();
@@ -1811,7 +1811,7 @@ class Zui {
 	}
 
 	public function onPenDown(x: Int, y: Int, pressure: Float) {
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		return;
 		#end
 
@@ -1819,7 +1819,7 @@ class Zui {
 	}
 
 	public function onPenUp(x: Int, y: Int, pressure: Float) {
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		return;
 		#end
 
@@ -1829,7 +1829,7 @@ class Zui {
 	}
 
 	public function onPenMove(x: Int, y: Int, pressure: Float) {
-		#if (kha_android || kha_ios)
+		#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 		return;
 		#end
 
@@ -1889,7 +1889,7 @@ class Zui {
 		isKeyPressed = true;
 	}
 
-	#if (kha_android || kha_ios)
+	#if (kha_android || kha_ios || kha_html5 || kha_debug_html5)
 	public function onTouchDown(index: Int, x: Int, y: Int) {
 		// Reset movement delta on touch start
 		if (index == 0) {
