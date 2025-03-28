@@ -181,7 +181,7 @@ class Uniforms {
 						// Multiple voxel volumes, always set params
 						g.setImageTexture(context.textureUnits[j], rt.image); // image2D/3D
 						if (rt.raw.name.startsWith("voxels_")) {
-							g.setTextureParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.AnisotropicFilter, MipMapFilter.NoMipFilter);
+							g.setTextureParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
 						}
 						else if (rt.raw.name.startsWith("voxels"))
 						{

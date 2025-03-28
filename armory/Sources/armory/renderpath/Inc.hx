@@ -77,6 +77,9 @@ class Inc {
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh5:kha.compute.Shader = null;
 	static var voxel_ta5:kha.compute.TextureUnit;
+	static var voxel_te5:kha.compute.TextureUnit;
+	static var voxel_tf5:kha.compute.TextureUnit;
+	static var voxel_tg5:kha.compute.TextureUnit;
 	static var voxel_ca5:kha.compute.ConstantLocation;
 	static var voxel_cb5:kha.compute.ConstantLocation;
 	static var voxel_cc5:kha.compute.ConstantLocation;
@@ -676,7 +679,7 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R8";
+				t.format = "R16";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -891,6 +894,9 @@ class Inc {
 		{
 			voxel_sh5 = path.getComputeShader("voxel_light");
 			voxel_ta5 = voxel_sh5.getTextureUnit("voxelsLight");
+			voxel_te5 = voxel_sh5.getTextureUnit("voxels");
+			voxel_tf5 = voxel_sh5.getTextureUnit("voxelsSampler");
+			voxel_tg5 = voxel_sh5.getTextureUnit("voxelsSDFSampler");
 
 	 		voxel_ca5 = voxel_sh5.getConstantLocation("clipmaps");
 			voxel_cb5 = voxel_sh5.getConstantLocation("clipmapLevel");
@@ -1287,6 +1293,9 @@ class Inc {
 	 		kha.compute.Compute.setShader(voxel_sh5);
 
 			kha.compute.Compute.setTexture(voxel_ta5, rts.get("voxelsLight").image, kha.compute.Access.Write);
+			kha.compute.Compute.setTexture(voxel_te5, rts.get("voxels").image, kha.compute.Access.Read);
+			kha.compute.Compute.setSampledTexture(voxel_tf5, rts.get("voxelsOut").image);
+			kha.compute.Compute.setSampledTexture(voxel_tg5, rts.get("voxelsSDF").image);
 
 			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 			for (i in 0...Main.voxelgiClipmapCount) {

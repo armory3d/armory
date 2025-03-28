@@ -29,7 +29,6 @@ uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
-uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 
 #ifdef _ShadowMap
