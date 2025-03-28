@@ -77,8 +77,10 @@ void main() {
 	ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 
 	#ifdef _VoxelGI
-	float visibility = 0.0;
-	visibility = float(imageLoad(voxelsLight, src)) / 255;
+	vec3 light = vec3(0.0);
+	light.r = float(imageLoad(voxelsLight, src)) / 255;
+	light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+	light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
 	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
@@ -134,7 +136,7 @@ void main() {
 			radiance = basecol;
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
 			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= visibility + indirect;
+			radiance.rgb *= light + indirect;
 			radiance.rgb += emission.rgb;
 
 			#else
