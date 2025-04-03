@@ -1066,7 +1066,6 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
 
         col = layout.column(heading='Runtime', align=True)
         col.prop(wrd, 'arm_live_patch')
-        #col.prop(wrd, 'arm_render_viewport')
         col.prop(wrd, 'arm_stream_scene')
         col.prop(wrd, 'arm_loadscreen')
         col.prop(wrd, 'arm_write_config')

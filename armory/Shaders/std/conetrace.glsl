@@ -61,6 +61,7 @@ vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCo
 }
 
 #endif
+
 #ifdef _VoxelAOvar
 float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
  	float opac = 0.0;
