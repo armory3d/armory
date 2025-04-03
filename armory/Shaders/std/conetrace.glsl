@@ -177,8 +177,8 @@ vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels,
 	return amount * voxelgiOcc;
 }
 
-vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
- 	const float transmittance = 1.0;
+vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity, const float opacity) {
+ 	const float transmittance = 1.0 - opacity;
  	vec3 refractionDir = refract(-viewDir, normal, 1.0 / ior);
  	vec3 P = origin + refractionDir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
 	vec4 amount =  transmittance * traceCone(voxels, voxelsSDF, P, normal, refractionDir, 0, true, roughness, voxelgiStep, clipmaps);
