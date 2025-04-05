@@ -360,6 +360,8 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
+			path.createDepthBuffer("refraction", "DEPTH24");
+
 			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -866,7 +868,7 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.bindTarget("refr", "tex1");
 				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbufferD1", "gbufferD1");
+				path.bindTarget("refraction", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 

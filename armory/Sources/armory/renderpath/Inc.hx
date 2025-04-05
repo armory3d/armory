@@ -53,12 +53,30 @@ class Inc {
 	static var voxel_tb3:kha.compute.TextureUnit;
 	static var voxel_tc3:kha.compute.TextureUnit;
 	static var voxel_td3:kha.compute.TextureUnit;
+	static var voxel_te3:kha.compute.TextureUnit;
+	static var voxel_tf3:kha.compute.TextureUnit;
+	#if arm_brdf
+	static var voxel_tg3:kha.compute.TextureUnit;
+	#end
+	#if arm_radiance
+	static var voxel_th3:kha.compute.TextureUnit;
+	#end
 	static var voxel_ca3:kha.compute.ConstantLocation;
 	static var voxel_cb3:kha.compute.ConstantLocation;
 	static var voxel_cc3:kha.compute.ConstantLocation;
 	static var voxel_cd3:kha.compute.ConstantLocation;
 	static var voxel_ce3:kha.compute.ConstantLocation;
 	static var voxel_cf3:kha.compute.ConstantLocation;
+	static var voxel_cg3:kha.compute.ConstantLocation;
+	#if arm_irradiance
+	static var voxel_ch3:kha.compute.ConstantLocation;
+	#end
+	#if arm_radiance
+	static var voxel_ci3:kha.compute.ConstantLocation;
+	#end
+	#if arm_envcol
+	static var voxel_cj3:kha.compute.ConstantLocation;
+	#end
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh4:kha.compute.Shader = null;
 	static var voxel_ta4:kha.compute.TextureUnit;
@@ -864,12 +882,30 @@ class Inc {
 			#else
 			voxel_td3 = voxel_sh3.getTextureUnit("voxels_diffuse");
 			#end
-	 		voxel_ca3 = voxel_sh3.getConstantLocation("clipmaps");
+			voxel_te3 = voxel_sh3.getTextureUnit("gbuffer1");
+			voxel_tf3 = voxel_sh3.getTextureUnit("gbuffer2");
+			#if arm_brdf
+			voxel_tg3 = voxel_sh3.getTextureUnit("senvmapBrdf");
+			#end
+			#if arm_radiance
+			voxel_th3 = voxel_sh3.getTextureUnit("senvmapRadiance");
+			#end
+			voxel_ca3 = voxel_sh3.getConstantLocation("clipmaps");
 	 		voxel_cb3 = voxel_sh3.getConstantLocation("InvVP");
 	 		voxel_cc3 = voxel_sh3.getConstantLocation("cameraProj");
 	 		voxel_cd3 = voxel_sh3.getConstantLocation("eye");
 	 		voxel_ce3 = voxel_sh3.getConstantLocation("eyeLook");
 	 		voxel_cf3 = voxel_sh3.getConstantLocation("postprocess_resolution");
+	 		voxel_cg3 = voxel_sh3.getConstantLocation("envmapStrenght");
+	 		#if arm_irradiance
+	 		voxel_ch3 = voxel_sh3.getConstantLocation("shirr");
+	 		#end
+	 		#if arm_radiance
+	 		voxel_ci3 = voxel_sh3.getConstantLocation("envmapNumMipmaps");
+	 		#end
+	 		#if arm_envcol
+	 		voxel_cj3 = voxel_sh3.getConstantLocation("backgroundCol");
+			#end
 		}
 		#if (rp_voxels == "Voxel GI")
 		if (voxel_sh4 == null)
@@ -1141,6 +1177,14 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
 		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
+		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
+		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
+		#if arm_brdf
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("$brdf.png"));
+		#end
+		#if arm_radiance
+		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
+		#end
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {
@@ -1176,7 +1220,6 @@ class Inc {
 
 		kha.compute.Compute.setFloat2(voxel_cc3, v.x, v.y);
 
-
 		kha.compute.Compute.setFloat3(voxel_cd3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 		var eyeLook = camera.lookWorld().normalize();
 		kha.compute.Compute.setFloat3(voxel_ce3, eyeLook.x, eyeLook.y, eyeLook.z);
@@ -1195,6 +1238,28 @@ class Inc {
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
+
+		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+		#if arm_irradiance
+		kha.compute.Compute.setFloats(voxel_ch3, iron.Scene.active.world == null ? iron.data.WorldData.getEmptyIrradiance() : iron.Scene.active.world.probe.irradiance);
+		#end
+		#if arm_radiance
+		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
+		#end
+
+		#if arm_envcol
+		var x: kha.FastFloat = 0.0;
+		var y: kha.FastFloat = 0.0;
+		var z: kha.FastFloat = 0.0;
+
+		if (camera.data.raw.clear_color != null) {
+			x = camera.data.raw.clear_color[0];
+			y = camera.data.raw.clear_color[1];
+			z = camera.data.raw.clear_color[2];
+		}
+
+		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
+		#end
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}

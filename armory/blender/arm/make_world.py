@@ -190,6 +190,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
         world.world_defs += '_EnvCol'
+        assets.add_khafile_def("arm_envcol")
 
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:
