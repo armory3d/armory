@@ -71,7 +71,7 @@ void main() {
 
 	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z, clipmaps, pixel, velocity).rgb;
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

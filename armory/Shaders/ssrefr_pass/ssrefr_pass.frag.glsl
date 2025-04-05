@@ -57,14 +57,18 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
-	float ddepth;
-	dir *= ss_refractionRayStep;
-	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth > 0.0) return binarySearch(dir);
-	}
-	return vec4(texCoord, 0.0, 1.0);
+    float ddepth;
+    dir *= ss_refractionRayStep;
+    for (int i = 0; i < maxSteps; i++) {
+        hitCoord += dir;
+        ddepth = getDeltaDepth(hitCoord);
+        if (ddepth > 0.0)
+            return binarySearch(dir);
+    }
+
+    // No hit — fallback to projecting the ray to UV space
+    vec2 fallbackUV = getProjectedCoord(hitCoord);
+    return vec4(fallbackUV, 0.0, 0.5); // We set .w lower to indicate fallback
 }
 
 void main() {
@@ -74,7 +78,7 @@ void main() {
     float ior = gr.x;
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-    if (d == 0.0 || d == 1.0 || opac == 1.0 || ior == 1.0) {
+    if (d == 0.0 || opac == 1.0 || ior == 1.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
@@ -86,7 +90,7 @@ void main() {
 
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
+    vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
     vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
