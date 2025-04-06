@@ -49,6 +49,7 @@ def make(con_mesh: ShaderContext):
             if not has_normals:
                 vertex_elems.append({'name': 'nor', 'data': 'short2norm'})
 
+    write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
         if tese is not None:
             tese.add_out('vec3 eyeDir')
@@ -57,8 +58,7 @@ def make(con_mesh: ShaderContext):
 
         else:
             if not vert.contains('wposition'):
-                vert.add_uniform('mat4 W', '_worldMatrix')
-                vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
+                write_wpos = True
             vert.add_out('vec3 eyeDir')
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
@@ -76,6 +76,9 @@ def make(con_mesh: ShaderContext):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
         vert.write('wposition = vec4(W * spos).xyz;')
+    elif write_wpos:
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
 
     frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
     if frag_mpos:
