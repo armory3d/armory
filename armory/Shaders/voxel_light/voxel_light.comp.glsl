@@ -130,8 +130,8 @@ void main() {
 		if (any(notEqual(uvw_light, clamp(uvw_light, 0.0, 1.0)))) return;
 		vec3 writecoords_light = floor(uvw_light * voxelgiResolution);
 
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
+		imageAtomicMax(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
+		imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
+		imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
 	}
 }
