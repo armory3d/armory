@@ -34,7 +34,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
-uniform layout(rgba8) image2D voxels_specular;
+uniform layout(rgba16) image2D voxels_specular;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;

@@ -46,11 +46,11 @@ uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(rgba8) image3D voxelsOut;
-uniform layout(r16) image3D SDF;
+uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r16) image3D SDF;
+uniform layout(r8) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r8) image3D voxelsB;
@@ -125,7 +125,6 @@ void main() {
 			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 			envl /= 3;
-			envl *= 10;
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
