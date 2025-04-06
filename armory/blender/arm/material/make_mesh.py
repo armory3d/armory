@@ -608,6 +608,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
+    sh = tese if tese is not None else vert
+    sh.add_uniform('mat4 W', '_worldMatrix')
+    sh.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
+    sh.add_out('vec3 eyeDir')
+    sh.add_uniform('vec3 eye', '_cameraPosition')
+    sh.write('eyeDir = eye - wposition;')
+
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -672,7 +679,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelAOvar' in wrd.world_defs:
         if parse_opacity:
-            frag.write('envl *= 1.0 - traceAO(wposition, n, voxels, clipmaps);')
+            frag.write('envl *= 1.0 - traceAO(wposition, wnormal, voxels, clipmaps);')
         else:
             frag.add_uniform("sampler2D voxels_ao");
             frag.write('envl *= textureLod(voxels_ao, texCoord, 0.0).rrr;')
@@ -685,11 +692,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
             frag.write('vec4 indirect_diffuse = traceDiffuse(wposition, n, voxels, clipmaps);')
-            frag.write('indirect = (indirect_diffuse.rgb + envl.rgb * (1.0 - indirect_diffuse.a)) * albedo * voxelgiDiff;')
+            frag.write('indirect = (indirect_diffuse.rgb * albedo + envl.rgb * (1.0 - indirect_diffuse.a)) * voxelgiDiff;')
             frag.add_uniform('sampler2D sveloc')
             frag.write('if (roughness < 1.0 && specular > 0.0) {')
             frag.write('    vec2 velocity = -textureLod(sveloc, gl_FragCoord.xy, 0.0).rg;')
-            frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * specular * voxelgiRefl; }')
+            frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * specular * voxelgiRefl; }')
         else:
             frag.add_uniform("sampler2D voxels_diffuse")
             frag.add_uniform("sampler2D voxels_specular")
