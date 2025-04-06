@@ -121,7 +121,7 @@ class RenderPathDeferred {
 		t.scale = Inc.getSuperSampling();
 		path.createRenderTarget(t);
 
-		#if (rp_gbuffer2 || (rp_voxels == "Voxel GI"))
+		#if rp_gbuffer2
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer2";
@@ -132,7 +132,6 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			#if rp_gbuffer2
 			var t = new RenderTargetRaw();
 			t.name = "taa";
 			t.width = 0;
@@ -141,7 +140,6 @@ class RenderPathDeferred {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			#end
 		}
 		#end
 
@@ -856,7 +854,7 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("voxelsOut", "voxels");
 					path.bindTarget("voxelsSDF", "voxelsSDF");
-					path.bindTarget("gbuffer2", "sveloc");
+					path.bindTarget("gbuffer2", "gbuffer2");
 				}
 				#end
 
