@@ -76,6 +76,9 @@ def make(con_mesh: ShaderContext):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
         vert.write('wposition = vec4(W * spos).xyz;')
+        vert.add_out('vec3 eyeDir')
+        vert.add_uniform('vec3 eye', '_cameraPosition')
+        vert.write('eyeDir = eye - wposition;')
     elif write_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')

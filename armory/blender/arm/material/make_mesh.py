@@ -608,11 +608,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
-    sh = tese if tese is not None else vert
-    sh.add_out('vec3 eyeDir')
-    sh.add_uniform('vec3 eye', '_cameraPosition')
-    sh.write('eyeDir = eye - spos.xyz;')
-
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
