@@ -7,12 +7,12 @@
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform sampler2D gbufferEmission;
 uniform vec2 cameraProj;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform mat4 invVP;
+uniform sampler2D prevGI;
 
 #ifdef _CPostprocess
     uniform vec3 PPComp12;
@@ -24,10 +24,6 @@ out vec3 fragColor;
 
 vec3 getBaseColor(vec2 uv) {
     return textureLod(gbuffer1, uv, 0.0).rgb;
-}
-
-vec3 getEmission(vec2 uv) {
-    return textureLod(gbufferEmission, uv, 0.0).rgb;
 }
 
 vec3 getWorldPos(vec2 uv, float depth) {
@@ -104,46 +100,22 @@ void main() {
         float sampleNdotL = clamp(dot(sampleN, -dir) + 0.2, 0.0, 1.0);
         float attenuation = 1.0 / (1.0 + dist * dist * 8.0);
 
-        vec3 sampleColor = getBaseColor(sampleUV) + getEmission(sampleUV);
+        vec3 sampleColor = getBaseColor(sampleUV);
         float weight = NdotL * sampleNdotL * attenuation;
         gi += sampleColor * weight;
         weightSum += weight;
     }
 
-    // == PATCH: Fill empty pixels by sampling neighbors ==
-	if (weightSum == 0.0) {
-		const vec2 offsets[4] = vec2[](
-			vec2(1.0, 0.0), vec2(-1.0, 0.0),
-			vec2(0.0, 1.0), vec2(0.0, -1.0)
-		);
-		vec3 avg = vec3(0.0);
-		float valid = 0.0;
+	gi /= weightSum;
+	#ifdef _CPostprocess
+		gi *= PPComp12.x * 0.25;
+	#else
+		gi *= ssaoStrength * 0.25;
+	#endif
 
-		for (int i = 0; i < 4; ++i) {
-			vec2 uv = texCoord + offsets[i] / screenSize;
-			float d = textureLod(gbufferD, uv, 0.0).r;
-			if (d == 1.0) continue;
+	vec3 gi2 = textureLod(prevGI, texCoord, 0.0).rgb;
 
-			vec3 sampleBase = getBaseColor(uv);
-			vec3 sampleEm = getEmission(uv);
-			vec3 sampleGI = sampleBase + sampleEm;
-
-			if (length(sampleGI) > 0.0001) {
-				avg += sampleGI;
-				valid += 1.0;
-			}
-		}
-
-		gi = valid > 0.0 ? avg / valid : getBaseColor(texCoord) * 0.05;
-	} else {
-		gi /= weightSum;
-		#ifdef _CPostprocess
-			gi *= PPComp12.x * 0.25;
-		#else
-			gi *= ssaoStrength * 0.25;
-		#endif
-	}
-
+	gi = mix(gi, gi2, 0.5);
 
     // Final output
     fragColor = gi / (1.0 + gi);

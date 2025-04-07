@@ -391,7 +391,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
                ('SSGI', 'SSGI', 'Screen space global illumination'),
-               ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
+               # ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                # ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
