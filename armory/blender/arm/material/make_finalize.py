@@ -55,7 +55,6 @@ def make(con_mesh: ShaderContext):
             tese.add_out('vec3 eyeDir')
             tese.add_uniform('vec3 eye', '_cameraPosition')
             tese.write('eyeDir = eye - wposition;')
-
         else:
             if not vert.contains('wposition'):
                 write_wpos = True
@@ -63,6 +62,9 @@ def make(con_mesh: ShaderContext):
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
         frag.write_attrib('vec3 vVec = normalize(eyeDir);')
+
+    if frag.contains('dotNV') and not frag.contains('float dotNV'):
+        frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
