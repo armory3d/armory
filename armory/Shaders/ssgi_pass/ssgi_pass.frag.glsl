@@ -65,11 +65,9 @@ void main() {
     n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
     n = normalize(n);
 
-    // Get world position
     vec3 currentPos = getWorldPos(texCoord, depth);
     float currentDistance = length(currentPos - eye);
 
-    // Calculate adaptive sample radius
     #ifdef _CPostprocess
         float baseRadius = PPComp12.z * (1.0 / PPComp12.y);
     #else
@@ -79,10 +77,9 @@ void main() {
 
     vec3 gi = vec3(0.0);
     float weightSum = 0.0;
-    const int samples = 16;
+    const int samples = 32;
 
     for (int i = 0; i < samples; i++) {
-        // Get artifact-free sample offset
         vec2 offset = getSampleOffset(i, texCoord * screenSize, pixelRadius);
         vec2 sampleUV = texCoord + offset;
 
@@ -94,41 +91,61 @@ void main() {
         float dist = length(toSample);
         vec3 dir = normalize(toSample);
 
-        // Depth-aware rejection with adaptive threshold
         float depthThreshold = 0.05 + dist * 0.15;
         if (abs(currentPos.z - samplePos.z) > depthThreshold) continue;
 
-        // Get sample normal
         vec2 sampleEnc = textureLod(gbuffer0, sampleUV, 0.0).rg;
         vec3 sampleN;
         sampleN.z = 1.0 - abs(sampleEnc.x) - abs(sampleEnc.y);
         sampleN.xy = sampleN.z >= 0.0 ? sampleEnc.xy : octahedronWrap(sampleEnc.xy);
         sampleN = normalize(sampleN);
 
-        // Calculate lighting with perspective correction
         float NdotL = clamp(dot(n, dir) + 0.2, 0.0, 1.0);
         float sampleNdotL = clamp(dot(sampleN, -dir) + 0.2, 0.0, 1.0);
         float attenuation = 1.0 / (1.0 + dist * dist * 8.0);
 
-        // Get sample color with emission
         vec3 sampleColor = getBaseColor(sampleUV) + getEmission(sampleUV);
-
-        // Accumulate with artifact-reducing weighting
         float weight = NdotL * sampleNdotL * attenuation;
         gi += sampleColor * weight;
         weightSum += weight;
     }
 
-    // Normalize and apply intensity
-    if (weightSum > 0.0) {
-        gi /= weightSum;
-        #ifdef _CPostprocess
-            gi *= PPComp12.x * 0.25;
-        #else
-            gi *= ssaoStrength * 0.25;
-        #endif
-    }
+    // == PATCH: Fill empty pixels by sampling neighbors ==
+	if (weightSum == 0.0) {
+		const vec2 offsets[4] = vec2[](
+			vec2(1.0, 0.0), vec2(-1.0, 0.0),
+			vec2(0.0, 1.0), vec2(0.0, -1.0)
+		);
+		vec3 avg = vec3(0.0);
+		float valid = 0.0;
 
-    // Final output with adaptive tonemapping
+		for (int i = 0; i < 4; ++i) {
+			vec2 uv = texCoord + offsets[i] / screenSize;
+			float d = textureLod(gbufferD, uv, 0.0).r;
+			if (d == 1.0) continue;
+
+			vec3 sampleBase = getBaseColor(uv);
+			vec3 sampleEm = getEmission(uv);
+			vec3 sampleGI = sampleBase + sampleEm;
+
+			if (length(sampleGI) > 0.0001) {
+				avg += sampleGI;
+				valid += 1.0;
+			}
+		}
+
+		gi = valid > 0.0 ? avg / valid : getBaseColor(texCoord) * 0.05;
+	} else {
+		gi /= weightSum;
+		#ifdef _CPostprocess
+			gi *= PPComp12.x * 0.25;
+		#else
+			gi *= ssaoStrength * 0.25;
+		#endif
+	}
+
+
+    // Final output
     fragColor = gi / (1.0 + gi);
 }
+
