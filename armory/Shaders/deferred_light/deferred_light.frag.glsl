@@ -56,6 +56,10 @@ uniform vec3 backgroundCol;
 
 #ifdef _SSAO
 uniform sampler2D ssaotex;
+#else
+#ifdef _SSGI
+uniform sampler2D ssaotex;
+#endif
 #endif
 
 #ifdef _SSS
@@ -317,6 +321,10 @@ void main() {
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#else
+#ifdef _SSGI
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
+#endif
 #endif
 
 #ifdef _EmissionShadeless

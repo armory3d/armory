@@ -643,7 +643,7 @@ const float waterDensity = """ + str(round(rpdat.arm_water_density * 100) / 100)
 const float waterRefract = """ + str(round(rpdat.arm_water_refract * 100) / 100) + """;
 const float waterReflect = """ + str(round(rpdat.arm_water_reflect * 100) / 100) + """;
 """)
-        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
+        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'SSGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(
 """const float ssaoRadius = """ + str(round(rpdat.arm_ssgi_radius * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;

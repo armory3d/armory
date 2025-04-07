@@ -151,7 +151,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAO'
+        rpdat.rp_ssgi = 'SSGI'
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
@@ -390,6 +390,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
+               ('SSGI', 'SSGI', 'Screen space global illumination'),
                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                # ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],

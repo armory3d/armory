@@ -195,6 +195,12 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+		}
 		#end
 
 		#if ((rp_ssgi != "Off") || rp_volumetriclight)
@@ -204,7 +210,11 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
+			#if (rp_ssgi == "SSGI")
+			t.format = "RGBA32";
+			#else
 			t.format = "R8";
+			#end
 			t.scale = Inc.getSuperSampling();
 			#if rp_ssgi_half
 			t.scale *= 0.5;
@@ -216,7 +226,11 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
+			#if (rp_ssgi == "SSGI")
+			t.format = "RGBA32";
+			#else
 			t.format = "R8";
+			#end
 			t.scale = Inc.getSuperSampling();
 			#if rp_ssgi_half
 			t.scale *= 0.5;
@@ -554,6 +568,26 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/ssao_pass/ssao_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
