@@ -115,11 +115,19 @@ void main() {
 			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
 			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
 			emission /= 3;
-			vec3 N = vec3(0.0);
-			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-			N /= 2;
-			vec3 wnormal = decode_oct(N.rg);
+			// Retrieve encoded normal (stored in 8-bit format)
+			vec2 enc;
+			enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255.0;
+			enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255.0;
+			enc /= 2;
+			// Remap from [0,1] to [-1,1] for octahedral decoding
+			vec2 octNormal = enc * 2.0 - 1.0;
+
+			// Decode octahedral normal
+			vec3 wnormal;
+			wnormal.z = 1.0 - abs(octNormal.x) - abs(octNormal.y);
+			wnormal.xy = wnormal.z >= 0.0 ? octNormal.xy : octahedronWrap(octNormal.xy);
+			wnormal = normalize(wnormal);
 			vec3 envl = vec3(0.0);
 			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
 			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;

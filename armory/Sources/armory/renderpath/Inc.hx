@@ -676,6 +676,7 @@ class Inc {
 			t.height = 0;
 			t.displayp = getDisplayp();
 			t.format = t.name == "voxels_ao" ? "R8" : "RGBA32";
+			t.mipmaps = true;
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -725,7 +726,6 @@ class Inc {
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = false;
 		path.createRenderTarget(t);
 	}
 	#end
