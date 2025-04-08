@@ -119,7 +119,7 @@ void main() {
 			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
 			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
 			N /= 2;
-			vec3 wnormal = decode_oct(N.rg * 2 - 1);
+			vec3 wnormal = decode_oct(N.rg);
 			vec3 envl = vec3(0.0);
 			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
 			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;

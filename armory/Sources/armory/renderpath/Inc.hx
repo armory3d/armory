@@ -725,7 +725,7 @@ class Inc {
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = true;
+		t.mipmaps = false;
 		path.createRenderTarget(t);
 	}
 	#end

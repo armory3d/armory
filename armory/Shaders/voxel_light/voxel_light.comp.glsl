@@ -87,7 +87,8 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 void main() {
 	int res = voxelgiResolution.x;
-	for (int i = 0; i < 6; i++) {
+	//for (int i = 0; i < 6; i++)
+	{
 		ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
 		vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
 		P = P * 2.0 - 1.0;
