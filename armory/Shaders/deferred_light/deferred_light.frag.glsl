@@ -291,9 +291,7 @@ void main() {
 #endif
 
 #ifdef _VoxelAOvar
-	float occ = textureLod(voxels_ao, texCoord, 0.0).r;
-	envl *= occ * voxelgiOcc;
-	fragColor.rgb = envl * voxelgiEnv;
+	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
 #endif
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);

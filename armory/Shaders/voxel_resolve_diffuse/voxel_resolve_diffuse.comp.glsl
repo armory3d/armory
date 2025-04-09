@@ -35,7 +35,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(rgba8) image2D voxels_diffuse;
+uniform layout(rgba16f) image2D voxels_diffuse;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;

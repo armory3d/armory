@@ -693,7 +693,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = t.name == "voxels_ao" ? "R8" : "RGBA32";
+			t.format = "RGBA64";
 			t.mipmaps = true;
 		}
 		else {
@@ -1103,6 +1103,17 @@ class Inc {
 		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
 
+		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
+		#if rp_gbuffer2
+		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
+		#end
+		#if arm_brdf
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("$brdf.png"));
+		#end
+		#if arm_radiance
+		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
+		#end
+
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {
 			fa[i * 10] = clipmaps[i].voxelSize;
@@ -1156,6 +1167,35 @@ class Inc {
 			}
 		}
 		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
+
+		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+		#if arm_irradiance
+		var irradiance = iron.Scene.active.world == null ?
+			iron.data.WorldData.getEmptyIrradiance() :
+			iron.Scene.active.world.probe.irradiance;
+		var shCoeffs = new Float32Array(28);
+		for (i in 0...28) {
+			shCoeffs[i] = irradiance[i];
+		}
+		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
+		#end
+		#if arm_radiance
+		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
+		#end
+
+		#if arm_envcol
+		var x: kha.FastFloat = 0.0;
+		var y: kha.FastFloat = 0.0;
+		var z: kha.FastFloat = 0.0;
+
+		if (camera.data.raw.clear_color != null) {
+			x = camera.data.raw.clear_color[0];
+			y = camera.data.raw.clear_color[1];
+			z = camera.data.raw.clear_color[2];
+		}
+
+		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
+		#end
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}

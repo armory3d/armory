@@ -331,6 +331,8 @@ def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) 
     world = state.world
     curshader = state.curshader
 
+    world.arm_envtex_strength *= 0.1;
+
     assets.add_khafile_def('arm_hosek')
     curshader.add_uniform('vec3 A', link="_hosekA")
     curshader.add_uniform('vec3 B', link="_hosekB")
