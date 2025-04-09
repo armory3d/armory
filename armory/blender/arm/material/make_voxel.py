@@ -222,7 +222,7 @@ def make_gi(context_id):
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
         frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance')
-        frag.write('vec3 envl = shIrradiance(voxnormal, shirr);')
+        frag.write('vec3 envl = shIrradiance(N, shirr);')
         if '_EnvTex' in wrd.world_defs:
             frag.write('envl /= PI;')
     else:
@@ -231,7 +231,7 @@ def make_gi(context_id):
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-        frag.write('vec3 reflectionWorld = reflect(-normalize(eyeDir), voxnormal);')
+        frag.write('vec3 reflectionWorld = reflect(-normalize(eyeDir), N);')
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
 
@@ -253,10 +253,14 @@ def make_gi(context_id):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
 
+    frag.write('vec3 octNormal = N / (abs(N.x) + abs(N.y) + abs(N.z));')
+    frag.write('octNormal.xy = octNormal.z >= 0.0 ? octNormal.xy : octahedronWrap(octNormal.xy);')
+    frag.write('vec2 encodedNormal = octNormal.rg * 0.5 + 0.5;')
+
     frag.write('if (direction_weights.x > 0) {')
     frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.x, 1.0);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.x;')
-    frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.x) * 0.5 + 0.5;')
+    frag.write('    vec2 normal_direction = encodedNormal * direction_weights.x;')
     frag.write('    vec3 envl_direction = envl * direction_weights.x;')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(basecol_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
@@ -275,7 +279,7 @@ def make_gi(context_id):
     frag.write('if (direction_weights.y > 0) {')
     frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.y, 1.0);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.y;')
-    frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.y) * 0.5 + 0.5;')
+    frag.write('    vec2 normal_direction = encodedNormal * direction_weights.y;')
     frag.write('    vec3 envl_direction = envl * direction_weights.y;')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(basecol_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')
@@ -294,7 +298,7 @@ def make_gi(context_id):
     frag.write('if (direction_weights.z > 0) {')
     frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.z, 1.0);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.z;')
-    frag.write('    vec2 normal_direction = encode_oct(n * direction_weights.z) * 0.5 + 0.5;')
+    frag.write('    vec2 normal_direction = encodedNormal * direction_weights.z;')
     frag.write('    vec3 envl_direction = envl * direction_weights.z;')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(basecol_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x)), uint(basecol_direction.g * 255));')

@@ -302,9 +302,14 @@ def build():
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':
-            wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
+                wrd.world_defs += '_SSAO'
                 assets.add_shader_pass('ssao_pass')
+                assets.add_shader_pass('blur_edge_pass')
+            elif rpdat.rp_ssgi == 'SSGI':
+                wrd.world_defs += '_SSGI'
+                assets.add_shader_pass('ssgi_pass')
+                assets.add_shader_pass('resolve_ssgi')
                 assets.add_shader_pass('blur_edge_pass')
             else:
                 assets.add_shader_pass('ssgi_pass')
@@ -452,7 +457,7 @@ def build():
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
 
-    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'

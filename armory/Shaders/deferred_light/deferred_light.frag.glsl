@@ -20,7 +20,7 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 #ifdef _gbuffer2
-	uniform sampler2D gbuffer2;
+	//!uniform sampler2D gbuffer2;
 #endif
 #ifdef _EmissionShaded
 	uniform sampler2D gbufferEmission;
@@ -379,9 +379,9 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy).r) * voxelgiShad;
+	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, g2.rg).r) * voxelgiShad;
 	#endif
-	
+
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);

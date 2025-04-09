@@ -15,6 +15,11 @@ class RenderPathDeferred {
 	static var bloomUpsampler: Upsampler;
 	#end
 
+	#if (rp_ssgi == "SSGI")
+	static var ssgitex = "singleb";
+	static var ssgitexb = "singleb";
+	#end
+
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -121,7 +126,7 @@ class RenderPathDeferred {
 		t.scale = Inc.getSuperSampling();
 		path.createRenderTarget(t);
 
-		#if (rp_gbuffer2 || (rp_voxels == "Voxel GI"))
+		#if rp_gbuffer2
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer2";
@@ -132,7 +137,6 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
-			#if rp_gbuffer2
 			var t = new RenderTargetRaw();
 			t.name = "taa";
 			t.width = 0;
@@ -141,7 +145,6 @@ class RenderPathDeferred {
 			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-			#end
 		}
 		#end
 
@@ -197,6 +200,13 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/resolve_ssgi/resolve_ssgi");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+		}
 		#end
 
 		#if ((rp_ssgi != "Off") || rp_volumetriclight)
@@ -206,7 +216,11 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
+			#if (rp_ssgi == "SSGI")
+			t.format = "RGBA32";
+			#else
 			t.format = "R8";
+			#end
 			t.scale = Inc.getSuperSampling();
 			#if rp_ssgi_half
 			t.scale *= 0.5;
@@ -218,7 +232,11 @@ class RenderPathDeferred {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
+			#if (rp_ssgi == "SSGI")
+			t.format = "RGBA32";
+			#else
 			t.format = "R8";
+			#end
 			t.scale = Inc.getSuperSampling();
 			#if rp_ssgi_half
 			t.scale *= 0.5;
@@ -528,30 +546,7 @@ class RenderPathDeferred {
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
 		#end
 
-		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				#if rp_ssgi_half
-				path.bindTarget("half", "gbufferD");
-				#else
-				path.bindTarget("_main", "gbufferD");
-				#end
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#elseif (rp_ssgi == "SSAO")
+		#if (rp_ssgi == "SSAO")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
 				path.setTarget("singlea");
@@ -717,6 +712,36 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_light/deferred_light");
 		#end
 
+		#if (rp_ssgi == "SSGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				ssgitex = ssgitex == "singleb" ? "singlea" : "singleb";
+				ssgitexb = ssgitex == "singleb" ? "singlea" : "singleb";
+				path.setTarget(ssgitex);
+				path.bindTarget(ssgitexb, "prevGI");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("tex", "gbuffer1");
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+
+				path.setTarget(ssgitexb);
+				path.bindTarget(ssgitex, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget(ssgitex);
+				path.bindTarget(ssgitexb, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+
+				path.setTarget("tex");
+				path.bindTarget(ssgitex, "ssgitex");
+				path.bindTarget("tex", "tex");
+				path.drawShader("shader_datas/resolve_ssgi/resolve_ssgi");
+			}
+		}
+		#end
+
 		#if rp_probes
 		if (!path.isProbe) {
 			var probes = iron.Scene.active.probes;
@@ -858,7 +883,7 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("voxelsOut", "voxels");
 					path.bindTarget("voxelsSDF", "voxelsSDF");
-					path.bindTarget("gbuffer2", "sveloc");
+					path.bindTarget("gbuffer2", "gbuffer2");
 				}
 				#end
 

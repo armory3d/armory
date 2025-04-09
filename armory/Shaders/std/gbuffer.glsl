@@ -101,26 +101,6 @@ vec3 decodeRGBM(const vec4 rgbm) {
 	return rgbm.rgb * rgbm.a * maxRange;
 }
 
-vec2 signNotZero(vec2 v)
-{
-	return vec2((v.x >= 0.0) ? +1.0 : -1.0, (v.y >= 0.0) ? +1.0 : -1.0);
-}
-
-vec2 encode_oct(vec3 v)
-{
-	// Project the sphere onto the octahedron, and then onto the xy plane
-	vec2 p = v.xy * (1.0 / (abs(v.x) + abs(v.y) + abs(v.z)));
-	// Reflect the folds of the lower hemisphere over the diagonals
-	return (v.z <= 0.0) ? ((1.0 - abs(p.yx)) * signNotZero(p)) : p;
-}
-
-vec3 decode_oct(vec2 e)
-{
-	vec3 v = vec3(e.xy, 1.0 - abs(e.x) - abs(e.y));
-	if (v.z < 0) v.xy = (1.0 - abs(v.yx)) * signNotZero(v.xy);
-	return normalize(v);
-}
-
 uint encNor(vec3 n) {
 	ivec3 nor = ivec3(n * 255.0f);
 	uvec3 norSigns;

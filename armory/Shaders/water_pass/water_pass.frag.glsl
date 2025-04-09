@@ -75,16 +75,18 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
-	#ifdef _CPostprocess
-		dir *= PPComp9.x;
-	#else
-		dir *= ssrRayStep;
-	#endif
-	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-	}
-	return vec4(0.0);
+    float ddepth;
+    dir *= ss_refractionRayStep;
+    for (int i = 0; i < maxSteps; i++) {
+        hitCoord += dir;
+        ddepth = getDeltaDepth(hitCoord);
+        if (ddepth > 0.0)
+            return binarySearch(dir);
+    }
+
+    // No hit — fallback to projecting the ray to UV space
+    vec2 fallbackUV = getProjectedCoord(hitCoord);
+    return vec4(fallbackUV, 0.0, 0.5); // We set .w lower to indicate fallback
 }
 #endif //SSR
 

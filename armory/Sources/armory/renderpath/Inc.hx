@@ -694,10 +694,11 @@ class Inc {
 			t.height = 0;
 			t.displayp = getDisplayp();
 			t.format = t.name == "voxels_ao" ? "R8" : "RGBA32";
+			t.mipmaps = true;
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R16";
+				t.format = "R8";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -743,7 +744,6 @@ class Inc {
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end
