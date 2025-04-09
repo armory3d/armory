@@ -896,7 +896,7 @@ class Inc {
 	 		voxel_cd3 = voxel_sh3.getConstantLocation("eye");
 	 		voxel_ce3 = voxel_sh3.getConstantLocation("eyeLook");
 	 		voxel_cf3 = voxel_sh3.getConstantLocation("postprocess_resolution");
-	 		voxel_cg3 = voxel_sh3.getConstantLocation("envmapStrenght");
+	 		voxel_cg3 = voxel_sh3.getConstantLocation("envmapStrength");
 	 		#if arm_irradiance
 	 		voxel_ch3 = voxel_sh3.getConstantLocation("shirr");
 	 		#end
@@ -1178,7 +1178,9 @@ class Inc {
 		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
 		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
+		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
+		#end
 		#if arm_brdf
 		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("$brdf.png"));
 		#end
@@ -1241,7 +1243,14 @@ class Inc {
 
 		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
-		kha.compute.Compute.setFloats(voxel_ch3, iron.Scene.active.world == null ? iron.data.WorldData.getEmptyIrradiance() : iron.Scene.active.world.probe.irradiance);
+		var irradiance = iron.Scene.active.world == null ?
+			iron.data.WorldData.getEmptyIrradiance() :
+			iron.Scene.active.world.probe.irradiance;
+		var shCoeffs = new Float32Array(28);
+		for (i in 0...28) {
+			shCoeffs[i] = irradiance[i];
+		}
+		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);

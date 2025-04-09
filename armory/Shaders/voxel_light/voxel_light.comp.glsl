@@ -87,51 +87,49 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 void main() {
 	int res = voxelgiResolution.x;
-	for (int i = 0; i < 6; i++) {
-		ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
-		vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
-		P = P * 2.0 - 1.0;
+	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
+	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
+	P = P * 2.0 - 1.0;
 
-		float visibility;
-		vec3 lp = lightPos - P;
-		vec3 l;
-		if (lightType == 0) { l = lightDir; visibility = 1.0; }
-		else { l = normalize(lp); visibility = attenuate(distance(P, lightPos)); }
+	float visibility;
+	vec3 lp = lightPos - P;
+	vec3 l;
+	if (lightType == 0) { l = lightDir; visibility = 1.0; }
+	else { l = normalize(lp); visibility = attenuate(distance(P, lightPos)); }
 
 #ifdef _ShadowMap
-		if (lightShadow == 1) {
-			vec4 lightPosition = LVP * vec4(P, 1.0);
-			vec3 lPos = lightPosition.xyz / lightPosition.w;
-			visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
-		}
-		else if (lightShadow == 2) {
-			vec4 lightPosition = LVP * vec4(P, 1.0);
-			vec3 lPos = lightPosition.xyz / lightPosition.w;
-			visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
-		}
-		else if (lightShadow == 3) {
-			#ifdef _ShadowMapAtlas
-			int faceIndex = 0;
-			const int lightIndex = index * 6;
-			const vec2 uv = sampleCube(-l, faceIndex);
-			vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
-			vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
-			#ifdef _FlipY
-			uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-			#endif
-			visibility *= texture(shadowMapPoint, vec3(uvtiled, lpToDepth(lp, lightProj) - shadowsBias)).r;
-			#else
-			visibility *= texture(shadowMapPoint, vec4(-l, lpToDepth(lp, lightProj) - shadowsBias)).r;
-			#endif
-		}
-	#endif
-		vec3 uvw_light = (P - vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)])) / (float(clipmaps[int(clipmapLevel * 10)]) * voxelgiResolution);
-		uvw_light = (uvw_light * 0.5 + 0.5);
-		if (any(notEqual(uvw_light, clamp(uvw_light, 0.0, 1.0)))) return;
-		vec3 writecoords_light = floor(uvw_light * voxelgiResolution);
-
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
-		imageAtomicAdd(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
+	if (lightShadow == 1) {
+		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec3 lPos = lightPosition.xyz / lightPosition.w;
+		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
+	else if (lightShadow == 2) {
+		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec3 lPos = lightPosition.xyz / lightPosition.w;
+		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
+	}
+	else if (lightShadow == 3) {
+		#ifdef _ShadowMapAtlas
+		int faceIndex = 0;
+		const int lightIndex = index * 6;
+		const vec2 uv = sampleCube(-l, faceIndex);
+		vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
+		vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
+		#ifdef _FlipY
+		uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+		#endif
+		visibility *= texture(shadowMapPoint, vec3(uvtiled, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		#else
+		visibility *= texture(shadowMapPoint, vec4(-l, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		#endif
+	}
+#endif
+	vec3 uvw_light = (P - vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)])) / (float(clipmaps[int(clipmapLevel * 10)]) * voxelgiResolution);
+	uvw_light = (uvw_light * 0.5 + 0.5);
+	if (any(notEqual(uvw_light, clamp(uvw_light, 0.0, 1.0)))) return;
+	vec3 writecoords_light = floor(uvw_light * voxelgiResolution);
+
+	imageAtomicMax(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
+	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
+	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
 }

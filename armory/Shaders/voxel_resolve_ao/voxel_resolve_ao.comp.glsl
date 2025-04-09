@@ -33,7 +33,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(r16) image2D voxels_ao;
+uniform layout(r8) image2D voxels_ao;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
@@ -54,12 +54,9 @@ void main() {
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;
-	vec4 v = vec4(x, y, 1.0, 1.0);
-	v = vec4(InvVP * v);
-	v.xyz /= v.w;
-	vec3 viewRay = v.xyz - eye;
-
-	vec3 P = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	vec4 clipPos = vec4(x, y, depth, 1.0);
+    vec4 worldPos = InvVP * clipPos;
+    vec3 P = worldPos.xyz / worldPos.w;
 
 	vec4 g0 = textureLod(gbuffer0, uv, 0.0);
 	vec3 n;

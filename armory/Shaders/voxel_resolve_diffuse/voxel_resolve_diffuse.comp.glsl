@@ -49,7 +49,7 @@ uniform sampler2D gbuffer2;
 
 uniform float envmapStrength;
 #ifdef _Irr
-uniform vec4 shirr[7];
+uniform float shirr[7 * 4];
 #endif
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
@@ -74,12 +74,10 @@ void main() {
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;
-	vec4 v = vec4(x, y, 1.0, 1.0);
-	v = vec4(InvVP * v);
-	v.xyz /= v.w;
-	vec3 viewRay = v.xyz - eye;
-
-	vec3 P = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	vec4 clipPos = vec4(x, y, depth, 1.0);
+    vec4 worldPos = InvVP * clipPos;
+    vec3 P = worldPos.xyz / worldPos.w;
+	vec3 v = eye - P;
 
 	vec4 g0 = textureLod(gbuffer0, uv, 0.0);
 	vec3 n;
@@ -96,7 +94,7 @@ void main() {
 	vec2 occspec = unpackFloat2(g1.a);
 	vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
-	float dotNV = max(dot(n, v.xyz), 0.0);
+	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _gbuffer2
 	vec4 g2 = textureLod(gbuffer2, uv, 0.0);
@@ -112,8 +110,17 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
-
-	vec3 envl = shIrradiance(n, shirr);
+	vec4 shPacked[7];
+    for (int i = 0; i < 7; i++) {
+        int base = i * 4;
+        shPacked[i] = vec4(
+            shirr[base],
+            shirr[base + 1],
+            shirr[base + 2],
+            shirr[base + 3]
+        );
+    }
+	vec3 envl = shIrradiance(n, shPacked);
 
 	#ifdef _gbuffer2
 		if (g2.b < 0.5) {
@@ -131,7 +138,7 @@ void main() {
 #endif
 
 #ifdef _Rad
-	vec3 reflectionWorld = reflect(-v.xyz, n);
+	vec3 reflectionWorld = reflect(-v, n);
 	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif

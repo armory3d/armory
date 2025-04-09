@@ -605,14 +605,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
-
-    sh = tese if tese is not None else vert
-    sh.add_out('vec3 eyeDir')
-    sh.add_uniform('vec3 eye', '_cameraPosition')
-    sh.write('eyeDir = eye - spos.xyz;')
-
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -689,8 +681,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_VoxelGI' in wrd.world_defs:
         if parse_opacity:
-            frag.write('vec4 indirect_diffuse = traceDiffuse(wposition, n, voxels, clipmaps);')
-            frag.write('indirect = (indirect_diffuse.rgb * albedo + envl.rgb * (1.0 - indirect_diffuse.a)) * voxelgiDiff;')
+            frag.write('indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb;')
             frag.add_uniform('sampler2D sveloc')
             frag.write('if (roughness < 1.0 && specular > 0.0) {')
             frag.write('    vec2 velocity = -textureLod(sveloc, gl_FragCoord.xy, 0.0).rg;')
