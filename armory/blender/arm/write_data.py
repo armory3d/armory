@@ -792,6 +792,7 @@ const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100)
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""

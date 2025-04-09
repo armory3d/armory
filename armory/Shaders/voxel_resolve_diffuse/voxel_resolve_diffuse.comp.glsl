@@ -150,7 +150,7 @@ void main() {
 	#endif
 #endif
 
-	envl.rgb *= albedo;
+	//envl.rgb *= albedo;
 
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
@@ -164,7 +164,9 @@ void main() {
 	#endif
 #endif
 
-	envl.rgb *= envmapStrength * occspec.x;
+	//envl.rgb *= envmapStrength * occspec.x;
+
+	envl.rgb *= voxelgiEnv;
 
 	vec4 trace = traceDiffuse(P, n, voxels, clipmaps);
 	vec3 color = trace.rgb + envl * (1.0 - trace.a);
