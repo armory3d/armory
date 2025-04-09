@@ -45,8 +45,9 @@ uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
 
 uniform sampler2D gbuffer1;
+#ifdef _gbuffer2
 uniform sampler2D gbuffer2;
-
+#endif
 uniform float envmapStrength;
 #ifdef _Irr
 uniform float shirr[7 * 4];
@@ -61,6 +62,7 @@ uniform int envmapNumMipmaps;
 #ifdef _EnvCol
 uniform vec3 backgroundCol;
 #endif
+
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
