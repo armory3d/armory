@@ -44,8 +44,8 @@ uniform mat4 LVP;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba16) image3D voxelsB;
-uniform layout(rgba16) image3D voxelsOut;
+uniform layout(rgba16f) image3D voxelsB;
+uniform layout(rgba16f) image3D voxelsOut;
 uniform layout(r16) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -133,6 +133,7 @@ void main() {
 			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 			envl /= 3;
+			envl *= voxelgiEnv;
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
