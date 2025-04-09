@@ -120,6 +120,8 @@ class Inc {
 	#end
 	#end
 	#end
+	static var voxel_sh6:kha.compute.Shader = null;
+	static var voxel_ta6:kha.compute.TextureUnit;
 	#end //rp_voxels
 
 	public static function init(_path: RenderPath) {
@@ -698,7 +700,7 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R8";
+				t.format = "R16";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -722,7 +724,7 @@ class Inc {
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "RGBA32";
+						t.format = "RGBA64";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
@@ -958,6 +960,11 @@ class Inc {
 	 		#end
 		}
 		#end
+		if (voxel_sh6 == null)
+		{
+			voxel_sh6 = path.getComputeShader("clear_rgba64");
+			voxel_ta6 = voxel_sh6.getTextureUnit("image");
+		}
 	}
 
 	public static function computeVoxelsOffsetPrev() {
@@ -1490,6 +1497,15 @@ class Inc {
 		}
 	}
 	#end // GI
+	public static function clear(image: String) {
+	 	var res = iron.RenderPath.getVoxelRes();
+		var rts = path.renderTargets;
+
+		kha.compute.Compute.setShader(voxel_sh6);
+		kha.compute.Compute.setTexture(voxel_ta6, rts.get(image).image, kha.compute.Access.Write);
+		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
+	}
+
 	#end // Voxels
 }
 

@@ -77,7 +77,7 @@ void main() {
 	vec4 clipPos = vec4(x, y, depth, 1.0);
     vec4 worldPos = InvVP * clipPos;
     vec3 P = worldPos.xyz / worldPos.w;
-	vec3 v = eye - P;
+	vec3 v = normalize(eye - P);
 
 	vec4 g0 = textureLod(gbuffer0, uv, 0.0);
 	vec3 n;
@@ -150,7 +150,7 @@ void main() {
 	#endif
 #endif
 
-	//envl.rgb *= albedo;
+	envl.rgb *= albedo;
 
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
@@ -164,8 +164,7 @@ void main() {
 	#endif
 #endif
 
-	//envl.rgb *= envmapStrength * occspec.x;
-
+	envl.rgb *= envmapStrength * occspec.x;
 	envl.rgb *= voxelgiEnv;
 
 	vec4 trace = traceDiffuse(P, n, voxels, clipmaps);
