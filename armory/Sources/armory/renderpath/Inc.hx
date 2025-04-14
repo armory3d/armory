@@ -630,10 +630,8 @@ class Inc {
 		#end
 
 		#if (rp_voxels != "Off")
-		{
-			path.bindTarget("voxelsOut", "voxels");
-			path.bindTarget("voxelsSDF", "voxelsSDF");
-		}
+		path.bindTarget("voxelsOut", "voxels");
+		path.bindTarget("voxelsSDF", "voxelsSDF");
 		#end
 
 		path.drawMeshes("translucent");
@@ -924,8 +922,6 @@ class Inc {
 	 		voxel_ce4 = voxel_sh4.getConstantLocation("eyeLook");
 	 		voxel_cf4 = voxel_sh4.getConstantLocation("postprocess_resolution");
 		}
-		#end
-		#if (rp_voxels == "Voxel GI")
 		if (voxel_sh5 == null)
 		{
 			voxel_sh5 = path.getComputeShader("voxel_light");
@@ -1468,6 +1464,7 @@ class Inc {
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMap").image);
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ck5, 1); // lightShadow
+
 	 		}
 	 		else if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
 				#if arm_shadowmap_atlas
@@ -1564,7 +1561,6 @@ class ShadowMapAtlas {
 	public var updateRenderTarget = false;
 	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
 	public static var shadowMapAtlasesTransparent:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
-
 
 	#if arm_debug
 	public var lightType: String;
@@ -1672,6 +1668,7 @@ class ShadowMapAtlas {
 	}
 
 	public static inline function shadowMapAtlasName(type: String, transparent: Bool): String {
+
 		#if arm_shadowmap_atlas_single_map
 		return "shadowMapAtlas";
 		#else

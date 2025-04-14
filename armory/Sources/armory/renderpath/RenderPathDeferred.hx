@@ -422,6 +422,7 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
+
 		}
 		#end
 
@@ -571,6 +572,63 @@ class RenderPathDeferred {
 		#end
 		#end
 
+		#if (rp_ssgi == "SSAO")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/ssao_pass/ssao_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#if rp_gbuffer_emission
+				{
+					path.bindTarget("gbuffer_emission", "gbufferEmission");
+				}
+				#end
+
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
+
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#end
+
 		// Voxels
 		#if (rp_voxels != 'Off')
 		if (armory.data.Config.raw.rp_gi != false)
@@ -629,64 +687,6 @@ class RenderPathDeferred {
 			}
 		}
 		#end
-
-		#if (rp_ssgi == "SSAO")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/ssao_pass/ssao_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#elseif (rp_ssgi == "SSGI")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end
-
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
-
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#end
-
 		// ---
 		// Deferred light
 		// ---

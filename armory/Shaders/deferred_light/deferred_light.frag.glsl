@@ -391,6 +391,7 @@ void main() {
 	#ifdef _VoxelShadow
 	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, g2.rg).r) * voxelgiShad;
 	#endif
+
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);

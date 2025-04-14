@@ -186,6 +186,7 @@ class Uniforms {
 						else if (rt.raw.name.startsWith("voxelsSDF"))
 						{
 							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.PointFilter, TextureFilter.PointFilter, MipMapFilter.NoMipFilter);
+
 						}
 						else if (rt.raw.name.startsWith("voxels"))
 						{
