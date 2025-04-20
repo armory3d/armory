@@ -187,24 +187,28 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 void main() {
 	int res = voxelgiResolution.x;
 	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
-	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
-	P = P * 2.0 - 1.0;
+	//clipmap to world
+	vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
+	wposition = wposition * 2.0 - 1.0;
+	wposition *= float(clipmaps[int(clipmapLevel * 10)]);
+	wposition *= voxelgiResolution.x;
+	wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
 
 	float visibility;
-	vec3 lp = lightPos - P;
+	vec3 lp = lightPos - wposition;
 	vec3 l;
 	if (lightType == 0) { l = lightDir; visibility = 1.0; }
-	else { l = normalize(lp); visibility = attenuate(distance(P, lightPos)); }
+	else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
 
 #ifdef _ShadowMap
 	if (lightShadow == 1) {
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
 	else if (lightShadow == 2) {
 		#ifdef _Spot
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 		visibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
@@ -228,12 +232,8 @@ void main() {
 		#endif
 	}
 #endif
-	vec3 uvw_light = (P - vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)])) / (float(clipmaps[int(clipmapLevel * 10)]) * voxelgiResolution);
-	uvw_light = (uvw_light * 0.5 + 0.5);
-	if (any(notEqual(uvw_light, clamp(uvw_light, 0.0, 1.0)))) return;
-	vec3 writecoords_light = floor(uvw_light * voxelgiResolution);
 
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
+	imageAtomicMax(voxelsLight, dst, uint(visibility * lightColor.r * 1024));
+	imageAtomicMax(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 1024));
+	imageAtomicMax(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 1024));
 }

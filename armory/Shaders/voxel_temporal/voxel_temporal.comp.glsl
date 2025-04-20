@@ -78,9 +78,10 @@ void main() {
 
 	#ifdef _VoxelGI
 	vec3 light = vec3(0.0);
-	light.r = float(imageLoad(voxelsLight, src)) / 255;
-	light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-	light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+	light.r = float(imageLoad(voxelsLight, src)) / 1024;
+	light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
+	light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
+	light /= 3;
 	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
@@ -105,20 +106,20 @@ void main() {
 		if (i < 6) {
 			#ifdef _VoxelGI
 			vec4 basecol = vec4(0.0);
-			basecol.r = float(imageLoad(voxels, src)) / 255;
-			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
+			basecol.r = float(imageLoad(voxels, src)) / 1024;
+			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
+			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
+			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 1024;
 			basecol /= 4;
 			vec3 emission = vec3(0.0);
-			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
-			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
-			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
+			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 1024;
+			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 1024;
+			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 1024;
 			emission /= 3;
 			// Retrieve encoded normal (stored in 8-bit format)
 			vec2 enc;
-			enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255.0;
-			enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255.0;
+			enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 1024.0;
+			enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 1024.0;
 			enc /= 2;
 			// Remap from [0,1] to [-1,1] for octahedral decoding
 			vec2 octNormal = enc * 2.0 - 1.0;
@@ -129,9 +130,9 @@ void main() {
 			wnormal.xy = wnormal.z >= 0.0 ? octNormal.xy : octahedronWrap(octNormal.xy);
 			wnormal = normalize(wnormal);
 			vec3 envl = vec3(0.0);
-			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
-			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
+			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 1024;
+			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 1024;
+			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 1024;
 			envl /= 3;
 			envl *= voxelgiEnv;
 
@@ -149,7 +150,7 @@ void main() {
 			radiance.rgb += emission.rgb;
 
 			#else
-			opac = float(imageLoad(voxels, src)) / 255;
+			opac = float(imageLoad(voxels, src)) / 1024;
 			#endif
 
 			#ifdef _VoxelGI

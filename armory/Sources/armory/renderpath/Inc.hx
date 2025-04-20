@@ -66,16 +66,14 @@ class Inc {
 	static var voxel_cc3:kha.compute.ConstantLocation;
 	static var voxel_cd3:kha.compute.ConstantLocation;
 	static var voxel_ce3:kha.compute.ConstantLocation;
-	static var voxel_cf3:kha.compute.ConstantLocation;
-	static var voxel_cg3:kha.compute.ConstantLocation;
 	#if arm_irradiance
-	static var voxel_ch3:kha.compute.ConstantLocation;
+	static var voxel_cf3:kha.compute.ConstantLocation;
 	#end
 	#if arm_radiance
-	static var voxel_ci3:kha.compute.ConstantLocation;
+	static var voxel_cg3:kha.compute.ConstantLocation;
 	#end
 	#if arm_envcol
-	static var voxel_cj3:kha.compute.ConstantLocation;
+	static var voxel_ch3:kha.compute.ConstantLocation;
 	#end
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh4:kha.compute.Shader = null;
@@ -89,8 +87,6 @@ class Inc {
 	static var voxel_cb4:kha.compute.ConstantLocation;
 	static var voxel_cc4:kha.compute.ConstantLocation;
 	static var voxel_cd4:kha.compute.ConstantLocation;
-	static var voxel_ce4:kha.compute.ConstantLocation;
-	static var voxel_cf4:kha.compute.ConstantLocation;
 	#end
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_sh5:kha.compute.Shader = null;
@@ -187,9 +183,11 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
+		#end
 	}
 
 	static function getShadowMapAtlas(atlas:ShadowMapAtlas, transparent: Bool):String {
@@ -230,9 +228,11 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
 		}
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			atlas.rejectedLights = [];
 		}
+		#end
 		#end
 
 		for (light in iron.Scene.active.lights) {
@@ -240,14 +240,18 @@ class Inc {
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, false);
 			}
+			#if rp_shadowmap_transparent
 			if (!light.lightInAtlasTransparent && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, true);
 			}
+			#end
 		}
 		// update point light data before rendering
-		updatePointLightAtlasData(true);
 		updatePointLightAtlasData(false);
+		#if rp_shadowmap_transparent
+		updatePointLightAtlasData(true);
+		#end
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			var tilesToRemove = [];
@@ -323,8 +327,26 @@ class Inc {
 				path.currentFace = -1;
 			}
 			path.endStream();
+
+			#if arm_shadowmap_atlas_lod
+			for (tile in tilesToChangeSize) {
+				tilesToRemove.push(tile);
+
+				var newTile = ShadowMapTile.assignTiles(tile.light, atlas, tile);
+				if (newTile != null)
+					atlas.activeTiles.push(newTile);
+			}
+			// update point light data after changing size of tiles to avoid render issues
+			updatePointLightAtlasData(false);
+			#end
+
+			for (tile in tilesToRemove) {
+				atlas.activeTiles.remove(tile);
+				tile.freeTile();
+			}
 		}
 
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			var tilesToRemove = [];
 			#if arm_shadowmap_atlas_lod
@@ -409,7 +431,6 @@ class Inc {
 					atlas.activeTiles.push(newTile);
 			}
 			// update point light data after changing size of tiles to avoid render issues
-			updatePointLightAtlasData(false);
 			updatePointLightAtlasData(true);
 			#end
 
@@ -421,7 +442,8 @@ class Inc {
 		#if arm_debug
 		endShadowsLogicProfile();
 		#end
-		#end // rp_shadowmap
+		#end
+		#end
 	}
 	#else
 	public static function bindShadowMap() {
@@ -429,21 +451,27 @@ class Inc {
 			if (!l.visible || l.data.raw.type != "sun") continue;
 			var n = "shadowMap";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapTransparent";
 			path.bindTarget(n, n);
+			#end
 			break;
 		}
 		for (i in 0...pointIndex) {
 			var n = "shadowMapPoint[" + i + "]";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapPointTransparent[" + i + "]";
 			path.bindTarget(n, n);
+			#end
 		}
 		for (i in 0...spotIndex) {
 			var n = "shadowMapSpot[" + i + "]";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapSpotTransparent[" + i + "]";
 			path.bindTarget(n, n);
+			#end
 		}
 	}
 
@@ -524,6 +552,7 @@ class Inc {
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
 
+		#if rp_shadowmap_transparent
 		pointIndex = 0;
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
@@ -545,6 +574,7 @@ class Inc {
 			if (l.data.raw.type == "point") pointIndex++;
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
+		#end
 		#end // rp_shadowmap
 	}
 	#end
@@ -691,7 +721,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = getHdrFormat();
+			t.format = "RGBA32";
 			t.mipmaps = true;
 		}
 		else {
@@ -890,19 +920,17 @@ class Inc {
 			#end
 			voxel_ca3 = voxel_sh3.getConstantLocation("clipmaps");
 	 		voxel_cb3 = voxel_sh3.getConstantLocation("InvVP");
-	 		voxel_cc3 = voxel_sh3.getConstantLocation("cameraProj");
-	 		voxel_cd3 = voxel_sh3.getConstantLocation("eye");
-	 		voxel_ce3 = voxel_sh3.getConstantLocation("eyeLook");
-	 		voxel_cf3 = voxel_sh3.getConstantLocation("postprocess_resolution");
-	 		voxel_cg3 = voxel_sh3.getConstantLocation("envmapStrength");
+	 		voxel_cc3 = voxel_sh3.getConstantLocation("eye");
+	 		voxel_cd3 = voxel_sh3.getConstantLocation("postprocess_resolution");
+	 		voxel_ce3 = voxel_sh3.getConstantLocation("envmapStrength");
 	 		#if arm_irradiance
-	 		voxel_ch3 = voxel_sh3.getConstantLocation("shirr");
+	 		voxel_cf3 = voxel_sh3.getConstantLocation("shirr");
 	 		#end
 	 		#if arm_radiance
-	 		voxel_ci3 = voxel_sh3.getConstantLocation("envmapNumMipmaps");
+	 		voxel_cg3 = voxel_sh3.getConstantLocation("envmapNumMipmaps");
 	 		#end
 	 		#if arm_envcol
-	 		voxel_cj3 = voxel_sh3.getConstantLocation("backgroundCol");
+	 		voxel_ch3 = voxel_sh3.getConstantLocation("backgroundCol");
 			#end
 		}
 		#if (rp_voxels == "Voxel GI")
@@ -917,10 +945,8 @@ class Inc {
 			voxel_tf4 = voxel_sh4.getTextureUnit("sveloc");
 	 		voxel_ca4 = voxel_sh4.getConstantLocation("clipmaps");
 	 		voxel_cb4 = voxel_sh4.getConstantLocation("InvVP");
-	 		voxel_cc4 = voxel_sh4.getConstantLocation("cameraProj");
-	 		voxel_cd4 = voxel_sh4.getConstantLocation("eye");
-	 		voxel_ce4 = voxel_sh4.getConstantLocation("eyeLook");
-	 		voxel_cf4 = voxel_sh4.getConstantLocation("postprocess_resolution");
+	 		voxel_cc4 = voxel_sh4.getConstantLocation("eye");
+	 		voxel_cd4 = voxel_sh4.getConstantLocation("postprocess_resolution");
 		}
 		if (voxel_sh5 == null)
 		{
@@ -1083,6 +1109,7 @@ class Inc {
 		}
 	}
 	#end
+
 	#if (rp_voxels == "Voxel AO")
 	public static function resolveAO() {
 		var rts = path.renderTargets;
@@ -1135,18 +1162,7 @@ class Inc {
 
 		kha.compute.Compute.setMatrix(voxel_cb3, m.self);
 
-		var near = camera.data.raw.near_plane;
-		var far = camera.data.raw.far_plane;
-		var v = new iron.math.Vec2();
-		v.x = far / (far - near);
-		v.y = (-far * near) / (far - near);
-
-		kha.compute.Compute.setFloat2(voxel_cc3, v.x, v.y);
-
-
-		kha.compute.Compute.setFloat3(voxel_cd3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-		var eyeLook = camera.lookWorld().normalize();
-		kha.compute.Compute.setFloat3(voxel_ce3, eyeLook.x, eyeLook.y, eyeLook.z);
+		kha.compute.Compute.setFloat3(voxel_cc3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
 		var width = iron.App.w();
 		var height = iron.App.h();
@@ -1161,9 +1177,9 @@ class Inc {
 				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
-		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
+		kha.compute.Compute.setFloat2(voxel_cd3, width, height);
 
-		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
 		var irradiance = iron.Scene.active.world == null ?
 			iron.data.WorldData.getEmptyIrradiance() :
@@ -1172,10 +1188,10 @@ class Inc {
 		for (i in 0...28) {
 			shCoeffs[i] = irradiance[i];
 		}
-		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
+		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
 		#end
 		#if arm_radiance
-		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
+		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
 		#end
 
 		#if arm_envcol
@@ -1189,7 +1205,7 @@ class Inc {
 			z = camera.data.raw.clear_color[2];
 		}
 
-		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
+		kha.compute.Compute.setFloat3(voxel_ch3, x, y, z);
 		#end
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
@@ -1245,17 +1261,7 @@ class Inc {
 
 		kha.compute.Compute.setMatrix(voxel_cb3, m.self);
 
-		var near = camera.data.raw.near_plane;
-		var far = camera.data.raw.far_plane;
-		var v = new iron.math.Vec2();
-		v.x = far / (far - near);
-		v.y = (-far * near) / (far - near);
-
-		kha.compute.Compute.setFloat2(voxel_cc3, v.x, v.y);
-
-		kha.compute.Compute.setFloat3(voxel_cd3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-		var eyeLook = camera.lookWorld().normalize();
-		kha.compute.Compute.setFloat3(voxel_ce3, eyeLook.x, eyeLook.y, eyeLook.z);
+		kha.compute.Compute.setFloat3(voxel_cc3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
 		var width = iron.App.w();
 		var height = iron.App.h();
@@ -1270,9 +1276,9 @@ class Inc {
 				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
-		kha.compute.Compute.setFloat2(voxel_cf3, width, height);
+		kha.compute.Compute.setFloat2(voxel_cd3, width, height);
 
-		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
 		var irradiance = iron.Scene.active.world == null ?
 			iron.data.WorldData.getEmptyIrradiance() :
@@ -1281,10 +1287,10 @@ class Inc {
 		for (i in 0...28) {
 			shCoeffs[i] = irradiance[i];
 		}
-		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
+		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
 		#end
 		#if arm_radiance
-		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
+		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
 		#end
 
 		#if arm_envcol
@@ -1298,7 +1304,7 @@ class Inc {
 			z = camera.data.raw.clear_color[2];
 		}
 
-		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
+		kha.compute.Compute.setFloat3(voxel_ch3, x, y, z);
 		#end
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
@@ -1348,18 +1354,7 @@ class Inc {
 
 		kha.compute.Compute.setMatrix(voxel_cb4, m.self);
 
-		var near = camera.data.raw.near_plane;
-		var far = camera.data.raw.far_plane;
-		var v = new iron.math.Vec2();
-		v.x = far / (far - near);
-		v.y = (-far * near) / (far - near);
-
-		kha.compute.Compute.setFloat2(voxel_cc4, v.x, v.y);
-
-
-		kha.compute.Compute.setFloat3(voxel_cd4, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-		var eyeLook = camera.lookWorld().normalize();
-		kha.compute.Compute.setFloat3(voxel_ce4, eyeLook.x, eyeLook.y, eyeLook.z);
+		kha.compute.Compute.setFloat3(voxel_cc4, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
 		var width = iron.App.w();
 		var height = iron.App.h();
@@ -1374,7 +1369,7 @@ class Inc {
 				width = Std.int(dp * Inc.getSuperSampling());
 			}
 		}
-		kha.compute.Compute.setFloat2(voxel_cf4, width, height);
+		kha.compute.Compute.setFloat2(voxel_cd4, width, height);
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}

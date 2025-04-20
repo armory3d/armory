@@ -33,14 +33,17 @@ def write(vert: shader.Shader, frag: shader.Shader):
         if is_shadows_atlas:
             if not is_single_atlas:
                 frag.add_uniform('sampler2DShadow shadowMapAtlasPoint', included=True)
-                frag.add_uniform('sampler2D shadowMapAtlasPointTransparent', included=True)
+                if '_ShadowMapTransparent' in wrd.world_defs:
+                    frag.add_uniform('sampler2D shadowMapAtlasPointTransparent', included=True)
             else:
                 frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
-                frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
+                if '_ShadowMapTransparent' in wrd.world_defs:
+                    frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
-            frag.add_uniform('samplerCube shadowMapPointTransparent[4]', included=True)
+            if '_ShadowMapTransparent' in wrd.world_defs:
+                frag.add_uniform('samplerCube shadowMapPointTransparent[4]', included=True)
 
     vert.add_out('vec4 wvpposition')
     vert.write('wvpposition = gl_Position;')
@@ -61,13 +64,16 @@ def write(vert: shader.Shader, frag: shader.Shader):
             if is_shadows_atlas:
                 if not is_single_atlas:
                     frag.add_uniform('sampler2DShadow shadowMapAtlasSpot', included=True)
-                    frag.add_uniform('sampler2D shadowMapAtlasSpotTransparent', included=True)
+                    if '_ShadowMapTransparent' in wrd.world_defs:
+                        frag.add_uniform('sampler2D shadowMapAtlasSpotTransparent', included=True)
                 else:
                     frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
-                    frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
+                    if '_ShadowMapTransparent' in wrd.world_defs:
+                        frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
             else:
                 frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
-                frag.add_uniform('sampler2D shadowMapSpotTransparent[4]', included=True)
+                if '_ShadowMapTransparent' in wrd.world_defs:
+                    frag.add_uniform('sampler2D shadowMapSpotTransparent[4]', included=True)
             frag.add_uniform('mat4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
