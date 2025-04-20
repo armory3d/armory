@@ -118,6 +118,7 @@ class Inc {
 	static var voxel_cp5:kha.compute.ConstantLocation;
 	#end
 	#end
+	static var voxel_cq5:kha.compute.ConstantLocation;
 	#end
 	#end //rp_voxels
 
@@ -757,7 +758,7 @@ class Inc {
 					}
 					else if (t.name == "voxelsLight") {
 						t.format = "R32";
-						t.width = res;
+						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 3;
 					}
@@ -952,7 +953,7 @@ class Inc {
 		{
 			voxel_sh5 = path.getComputeShader("voxel_light");
 			voxel_ta5 = voxel_sh5.getTextureUnit("voxelsLight");
-			voxel_tb5 = voxel_sh5.getTextureUnit("voxels");
+			voxel_tb5 = voxel_sh5.getTextureUnit("gbuffer0");
 
 	 		voxel_ca5 = voxel_sh5.getConstantLocation("clipmaps");
 			voxel_cb5 = voxel_sh5.getConstantLocation("clipmapLevel");
@@ -980,6 +981,7 @@ class Inc {
 	 		voxel_co5 = voxel_sh5.getConstantLocation("index");
 	 		voxel_cp5 = voxel_sh5.getConstantLocation("pointLightDataArray");
 	 		#end
+	 		voxel_cq5 = voxel_sh5.getConstantLocation("VP");
 	 		#end
 		}
 		#end
@@ -1391,7 +1393,7 @@ class Inc {
 	 		kha.compute.Compute.setShader(voxel_sh5);
 
 			kha.compute.Compute.setTexture(voxel_ta5, rts.get("voxelsLight").image, kha.compute.Access.Write);
-			kha.compute.Compute.setTexture(voxel_tb5, rts.get("voxels").image, kha.compute.Access.Read);
+			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("gbuffer0").image);
 
 			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 			for (i in 0...Main.voxelgiClipmapCount) {
@@ -1527,6 +1529,8 @@ class Inc {
 	 		// shadowsBias
 	 		kha.compute.Compute.setFloat(voxel_cn5, l.data.raw.shadows_bias);
 			#end // rp_shadowmap
+	 		m.setFrom(iron.Scene.active.camera.VP);
+	 		kha.compute.Compute.setMatrix(voxel_cq5, m.self);
 
 	 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 		}
