@@ -249,7 +249,7 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "R8";
 			t.scale = Inc.getSuperSampling();
-			#if rp_ssgi_half
+			#if rp_ssgi_half // Do we keep this ?
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
@@ -603,6 +603,7 @@ class RenderPathDeferred {
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
 				#end
+				path.bindTarget("gbuffer2", "sveloc");
 
 				#if rp_shadowmap
 				{
@@ -615,7 +616,6 @@ class RenderPathDeferred {
 				#end
 
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");

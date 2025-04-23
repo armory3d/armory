@@ -58,6 +58,9 @@ def add_world_defs():
         if rpdat.rp_shadowmap_cascades != '1':
             wrd.world_defs += '_CSM'
             assets.add_khafile_def('arm_csm')
+        if rpdat.rp_shadowmap_transparent:
+            wrd.world_defs += '_ShadowMapTransparent'
+            assets.add_khafile_def('rp_shadowmap_transparent')
         if rpdat.rp_shadowmap_atlas:
             assets.add_khafile_def('arm_shadowmap_atlas')
             wrd.world_defs += '_ShadowMapAtlas'
@@ -455,7 +458,7 @@ def build():
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
 
-    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSGI' in wrd.world_defs
 
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
