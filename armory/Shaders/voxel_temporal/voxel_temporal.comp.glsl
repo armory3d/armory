@@ -93,15 +93,10 @@ void main() {
 		float opac = 0.0;
 		#endif
 
-		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12)));
+		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
 
 		if (i < 6) {
 			#ifdef _VoxelGI
-			vec3 light = vec3(0.0);
-			light.r = float(imageLoad(voxelsLight, src)) / 1024;
-			light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
-			light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
-			light /= count;
 			vec4 basecol = vec4(0.0);
 			basecol.r = float(imageLoad(voxels, src)) / 1024;
 			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
@@ -126,6 +121,11 @@ void main() {
 			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 1024;
 			envl /= count;
 			envl *= voxelgiEnv;
+			vec3 light = vec3(0.0);
+			light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 1024;
+			light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 1024;
+			light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 1024;
+			light /= count;
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;

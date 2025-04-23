@@ -665,9 +665,18 @@ class RenderPathDeferred {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
 			path.drawMeshes("voxel");
 			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
+			//Inc.computeVoxelsLight();
 			#end
 
 			Inc.computeVoxelsTemporal();
