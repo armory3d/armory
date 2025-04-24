@@ -713,7 +713,7 @@ class Inc {
 						t.format = "R32UI";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res;
+						t.depth = res * 2;
 					}
 				}
 				#else

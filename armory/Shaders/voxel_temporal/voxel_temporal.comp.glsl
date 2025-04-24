@@ -142,6 +142,8 @@ void main() {
 
 			#else
 			opac = float(imageLoad(voxels, src)) / 1024;
+			count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			opac /= count;
 			#endif
 
 			#ifdef _VoxelGI

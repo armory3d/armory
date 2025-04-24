@@ -766,14 +766,17 @@ def make_ao(context_id):
 
     frag.write('if (direction_weights.x > 0.0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(direction_weights.x * 1024));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0.0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(direction_weights.y * 1024));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0.0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(direction_weights.z * 1024));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     return con_voxel
