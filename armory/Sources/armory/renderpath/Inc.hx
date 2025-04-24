@@ -34,10 +34,9 @@ class Inc {
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
-	static var voxel_tf1:kha.compute.TextureUnit;
 	#else
 	#if arm_voxelgi_shadows
-	static var voxel_tf1:kha.compute.TextureUnit;
+	static var voxel_te1:kha.compute.TextureUnit;
 	#end
 	#end
 	#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
@@ -844,11 +843,10 @@ class Inc {
 
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
-			voxel_te1 = voxel_sh1.getTextureUnit("voxelsLight");
-			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
+			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
 			#else
 			#if arm_voxelgi_shadows
-			voxel_tf1 = voxel_sh1.getTextureUnit("SDF");
+			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
 			#end
 			#end
 		}
@@ -966,11 +964,10 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_tc1, rts.get("voxelsOut").image, kha.compute.Access.Write);
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
-		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsLight").image, kha.compute.Access.Read);
-		kha.compute.Compute.setTexture(voxel_tf1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
 		#else
 		#if arm_voxelgi_shadows
-		kha.compute.Compute.setTexture(voxel_tf1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
 		#end
 		#end
 
