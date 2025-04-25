@@ -206,6 +206,8 @@ project.addSources('Sources');
                 # Include all logic node classes so that they can later
                 # get instantiated
                 khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
+                if wrd.arm_render_viewport:
+                    assets.add_khafile_def('arm_render_viewport')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
@@ -641,16 +643,16 @@ const float waterDensity = """ + str(round(rpdat.arm_water_density * 100) / 100)
 const float waterRefract = """ + str(round(rpdat.arm_water_refract * 100) / 100) + """;
 const float waterReflect = """ + str(round(rpdat.arm_water_reflect * 100) / 100) + """;
 """)
-        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
+        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'SSGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(
 """const float ssaoRadius = """ + str(round(rpdat.arm_ssgi_radius * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
 
-        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_ssgi == 'SSGI':
             f.write(
-"""const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
+"""const int ssgiSamples = """ + str(rpdat.arm_ssgi_samples) + """;
 const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
@@ -790,6 +792,7 @@ const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100)
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""

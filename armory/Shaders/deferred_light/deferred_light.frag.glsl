@@ -20,7 +20,7 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 #ifdef _gbuffer2
-	uniform sampler2D gbuffer2;
+	//!uniform sampler2D gbuffer2;
 #endif
 #ifdef _EmissionShaded
 	uniform sampler2D gbufferEmission;
@@ -56,6 +56,10 @@ uniform vec3 backgroundCol;
 
 #ifdef _SSAO
 uniform sampler2D ssaotex;
+#else
+#ifdef _SSGI
+uniform sampler2D ssaotex;
+#endif
 #endif
 
 #ifdef _SSS
@@ -220,6 +224,8 @@ void main() {
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
 
+#ifndef _VoxelGI
+#ifndef _VoxelAOvar
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
@@ -273,6 +279,10 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
+	fragColor.rgb = envl;
+#endif
+#endif
+
 #ifdef _VoxelGI
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
@@ -280,11 +290,7 @@ void main() {
 #endif
 
 #ifdef _VoxelAOvar
-	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
-#endif
-
-#ifndef _VoxelGI
-	fragColor.rgb = envl;
+	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb;
 #endif
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
@@ -305,6 +311,10 @@ void main() {
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#else
+#ifdef _SSGI
+	fragColor.rgb += textureLod(ssaotex, texCoord, 0.0).rgb;
+#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -368,7 +378,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, v, clipmaps, gl_FragCoord.xy).r * voxelgiShad;
+	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord, -g2.rg).r) * voxelgiShad;
 	#endif
 	
 	#ifdef _SSRS

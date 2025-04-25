@@ -118,17 +118,14 @@ def add_world_defs():
         if rpdat.arm_voxelgi_shadows and (point_lights > 0 or '_Sun' in wrd.world_defs):
             wrd.world_defs += '_VoxelShadow'
             assets.add_khafile_def('arm_voxelgi_shadows')
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_shadows/voxel_resolve_shadows.comp.glsl')
 
         if voxelgi:
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_specular/voxel_resolve_specular.comp.glsl')
             wrd.world_defs += '_VoxelGI'
             if rpdat.arm_voxelgi_refract:
                 wrd.world_defs += '_VoxelRefract'
                 assets.add_khafile_def('arm_voxelgi_refract')
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_refraction/voxel_resolve_refraction.comp.glsl')
 
         elif voxelao:
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_ao/voxel_resolve_ao.comp.glsl')
@@ -302,11 +299,12 @@ def build():
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':
-            wrd.world_defs += '_SSAO'
             if rpdat.rp_ssgi == 'SSAO':
+                wrd.world_defs += '_SSAO'
                 assets.add_shader_pass('ssao_pass')
                 assets.add_shader_pass('blur_edge_pass')
             else:
+                wrd.world_defs += '_SSGI'
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')
             if rpdat.arm_ssgi_half_res:
@@ -452,7 +450,7 @@ def build():
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
 
-    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')
         wrd.world_defs += '_gbuffer2'

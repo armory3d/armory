@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2024.12'
+arm_version = '2025.1'
 arm_commit = '$Id: 6b2644d47db169cedd95593497cc283207d23a74 $'
 
 def get_project_html5_copy(self):
@@ -287,6 +287,7 @@ def init_properties():
         name="Assertion Level", description="Ignore all assertions below this level (assertions are turned off completely for published builds)", default='Warning', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_assert_quit = BoolProperty(name="Quit On Assertion Fail", description="Whether to close the game when an 'Error' level assertion fails", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_live_patch = BoolProperty(name="Live Patch", description="Live patching for Krom", default=False)
+    bpy.types.World.arm_render_viewport = BoolProperty(name="Viewport Render", description="Viewport rendering", default=False)
     bpy.types.World.arm_clear_on_compile = BoolProperty(name="Clear Console", description="Clears the system console on compile", default=False)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
@@ -343,7 +344,7 @@ def init_properties():
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_visible = BoolProperty(name="Visible", description="Render this object", default=True, override={'LIBRARY_OVERRIDABLE'})
-    bpy.types.Object.arm_visible_shadow = BoolProperty(name="Visible Shadow", description="Object contributes to the lighting even if invisible", default=True, override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_visible_shadow = BoolProperty(name="Lighting", description="Object contributes to the lighting even if invisible", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_soft_body_margin = FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
     bpy.types.Object.arm_rb_linear_factor = FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])

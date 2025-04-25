@@ -35,9 +35,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
 
-    if not '_VoxelAOvar' in wrd.world_defs and not '_VoxelGI' in wrd.world_defs:
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
+    vert.add_out('vec4 wvpposition')
+    vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w
     frag.write('float viewz = linearize(gl_FragCoord.z, cameraProj);')
     frag.write('int clusterI = getClusterI((wvpposition.xy / wvpposition.w) * 0.5 + 0.5, viewz, cameraPlane);')

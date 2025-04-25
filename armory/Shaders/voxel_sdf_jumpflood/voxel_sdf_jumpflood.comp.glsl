@@ -23,8 +23,8 @@ THE SOFTWARE.
 
 #include "compiled.inc"
 
-uniform layout(r16) image3D input_sdf;
-uniform layout(r16) image3D output_sdf;
+uniform layout(r16f) image3D input_sdf;
+uniform layout(r16f) image3D output_sdf;
 
 uniform float jump_size;
 uniform int clipmapLevel;
@@ -71,4 +71,5 @@ void main()
 		}
 	}
 	imageStore(output_sdf, dst, vec4(best_distance));
+	memoryBarrierImage();
 }

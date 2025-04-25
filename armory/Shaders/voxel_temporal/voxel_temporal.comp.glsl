@@ -42,20 +42,19 @@ uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
 uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDFSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba8) image3D voxelsB;
 uniform layout(rgba8) image3D voxelsOut;
-uniform layout(r8) image3D SDF;
+uniform layout(r16f) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r16) image3D SDF;
+uniform layout(r16f) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r16) image3D voxelsB;
-uniform layout(r16) image3D voxelsOut;
+uniform layout(r16f) image3D voxelsB;
+uniform layout(r16f) image3D voxelsOut;
 #endif
 #endif
 
@@ -94,35 +93,39 @@ void main() {
 		float opac = 0.0;
 		#endif
 
+		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
+
 		if (i < 6) {
 			#ifdef _VoxelGI
-			vec3 light = vec3(0.0);
-			light.r = float(imageLoad(voxelsLight, src)) / 255;
-			light.g = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-			light.b = float(imageLoad(voxelsLight, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-			light /= 3;
 			vec4 basecol = vec4(0.0);
-			basecol.r = float(imageLoad(voxels, src)) / 255;
-			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
-			basecol /= 4;
+			basecol.r = float(imageLoad(voxels, src)) / 1024;
+			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
+			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
+			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 1024;
+			basecol /= count;
 			vec3 emission = vec3(0.0);
-			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
-			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
-			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
-			emission /= 3;
-			vec3 N = vec3(0.0);
-			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-			N /= 2;
-			vec3 wnormal = decode_oct(N.rg * 2 - 1);
+			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 1024;
+			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 1024;
+			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 1024;
+			emission /= count;
+			// Retrieve encoded normal (stored in 8-bit format)
+			vec2 enc;
+			enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 1024.0;
+			enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 1024.0;
+			enc /= 2;
+			// Decode octahedral normal
+			vec3 wnormal = decode_oct(enc * 2.0 - 1.0);
 			vec3 envl = vec3(0.0);
-			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
-			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
-			envl /= 3;
-			envl *= 100;
+			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 1024;
+			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 1024;
+			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 1024;
+			envl /= count;
+			envl *= voxelgiEnv;
+			vec3 light = vec3(0.0);
+			light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 1024;
+			light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 1024;
+			light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 1024;
+			light /= count;
 
 			//clipmap to world
 			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
@@ -133,15 +136,14 @@ void main() {
 
 			radiance = basecol;
 			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec3 diffuse_indirect = trace.rgb + envl * (1.0 - trace.a);
-			#ifdef _ShadowMap
-			radiance.rgb *= light + diffuse_indirect;
-			#else
-			radiance.rgb *= diffuse_indirect;
-			#endif
+			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
+			radiance.rgb *= light / PI + indirect;
 			radiance.rgb += emission.rgb;
+
 			#else
-			opac = float(imageLoad(voxels, src)) / 255;
+			opac = float(imageLoad(voxels, src)) / 1024;
+			count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			opac /= count;
 			#endif
 
 			#ifdef _VoxelGI
@@ -221,19 +223,23 @@ void main() {
 		}
 		#ifdef _VoxelGI
 		imageStore(voxelsOut, dst, radiance);
+		memoryBarrierImage();
 		#else
 		imageStore(voxelsOut, dst, vec4(opac));
+		memoryBarrierImage();
 		#endif
 	}
 	#ifdef _VoxelGI
 	ivec3 dst_sdf = ivec3(gl_GlobalInvocationID.xyz);
 	dst_sdf.y += clipmapLevel * res;
 	imageStore(SDF, dst_sdf, vec4(sdf));
+	memoryBarrierImage();
 	#else
 	#ifdef _VoxelShadow
 	ivec3 dst_sdf = ivec3(gl_GlobalInvocationID.xyz);
 	dst_sdf.y += clipmapLevel * res;
 	imageStore(SDF, dst_sdf, vec4(sdf));
+	memoryBarrierImage();
 	#endif
 	#endif
 }
