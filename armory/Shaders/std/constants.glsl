@@ -21,29 +21,28 @@ THE SOFTWARE.
  */
 
 const int DIFFUSE_CONE_COUNT = 16;
-const float DIFFUSE_CONE_APERTURE = 0.7854f; // ~45 degrees in radians
-const float SHADOW_CONE_APERTURE = 0.1745f;
+
+const float SHADOW_CONE_APERTURE = radians(15.0);
+
+const float DIFFUSE_CONE_APERTURE = radians(45.0);
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
-    vec3( 0.000f,  0.000f,  1.000f),  // top center
-
-    vec3( 0.382f,  0.000f,  0.924f),
-    vec3( 0.270f,  0.270f,  0.924f),
-    vec3( 0.000f,  0.382f,  0.924f),
-    vec3(-0.270f,  0.270f,  0.924f),
-    vec3(-0.382f,  0.000f,  0.924f),
-    vec3(-0.270f, -0.270f,  0.924f),
-    vec3( 0.000f, -0.382f,  0.924f),
-    vec3( 0.270f, -0.270f,  0.924f),
-
-    vec3( 0.500f,  0.500f,  0.707f),
-    vec3(-0.500f,  0.500f,  0.707f),
-    vec3(-0.500f, -0.500f,  0.707f),
-    vec3( 0.500f, -0.500f,  0.707f),
-
-    vec3( 0.707f,  0.000f,  0.707f),
-    vec3( 0.000f,  0.707f,  0.707f),
-    vec3(-0.707f,  0.000f,  0.707f)
+	vec3(0.0000, 0.0000, 1.0000),   // Central direction
+	vec3(0.3827, 0.0000, 0.9239),   // Ring 1
+	vec3(-0.3827, 0.0000, 0.9239),
+	vec3(0.0000, 0.3827, 0.9239),
+	vec3(0.0000, -0.3827, 0.9239),
+	vec3(0.2706, 0.2706, 0.9239),   // Ring 2
+	vec3(-0.2706, 0.2706, 0.9239),
+	vec3(0.2706, -0.2706, 0.9239),
+	vec3(-0.2706, -0.2706, 0.9239),
+	vec3(0.1802, 0.3604, 0.9239),   // Ring 3
+	vec3(-0.1802, 0.3604, 0.9239),
+	vec3(0.1802, -0.3604, 0.9239),
+	vec3(-0.1802, -0.3604, 0.9239),
+	vec3(0.3604, 0.1802, 0.9239),
+	vec3(-0.3604, 0.1802, 0.9239),
+	vec3(0.3604, -0.1802, 0.9239)
 };
 
 

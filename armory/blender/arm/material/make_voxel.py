@@ -201,7 +201,7 @@ def make_gi(context_id):
     if export_bpos:
         geom.write('bposition = bpositionGeom[i];')
     geom.write('    eyeDir = eyeDirGeom[i];')
-    if '_Sun' in wrd.world_defs and '_CSM' in wrd.world_defs and '_ShadowMap' in wrd.world_defs:
+    if '_Sun' in wrd.world_defs and not '_CSM' in wrd.world_defs and '_ShadowMap' in wrd.world_defs:
         geom.write('    lightPosition = lightPositionGeom[i];')
     geom.write('    gl_Position = voxposition[i];')
     if '_Clusters' in wrd.world_defs and '_ShadowMap' in wrd.world_defs:
