@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 const int DIFFUSE_CONE_COUNT = 16;
 const float DIFFUSE_CONE_APERTURE = 0.7854f; // ~45 degrees in radians
+const float SHADOW_CONE_APERTURE = 0.1745f;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
     vec3( 0.000f,  0.000f,  1.000f),  // top center
