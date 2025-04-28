@@ -170,5 +170,4 @@ void main() {
 	vec3 occ = envl * (1.0 - traceAO(P, n, voxels, clipmaps));
 
 	imageStore(voxels_ao, ivec2(pixel), vec4(occ, 1.0));
-	memoryBarrierImage();
 }

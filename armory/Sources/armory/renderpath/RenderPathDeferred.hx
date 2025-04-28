@@ -60,6 +60,9 @@ class RenderPathDeferred {
 			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
+			#if arm_voxelgi_shadows
+			Inc.initGI("voxels_shadows");
+			#end
 			#end
 			#if (rp_voxels == "Voxel GI")
 			Inc.initGI("voxels_diffuse");
@@ -736,6 +739,8 @@ class RenderPathDeferred {
 			path.bindTarget("voxels_specular", "voxels_specular");
 			#end
 			#if arm_voxelgi_shadows
+			Inc.resolveShadows();
+			path.bindTarget("voxels_shadows", "voxels_shadows");
 			path.bindTarget("voxelsOut", "voxels");
 			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
@@ -941,9 +946,6 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("voxelsOut", "voxels");
 					path.bindTarget("voxelsSDF", "voxelsSDF");
-					#if rp_gbuffer2
-					path.bindTarget("gbuffer2", "gbuffer2");
-					#end
 				}
 				#end
 

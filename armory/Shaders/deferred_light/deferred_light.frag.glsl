@@ -29,14 +29,16 @@ uniform sampler2D gbuffer1;
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
-#endif
+#else
 #ifdef _VoxelAOvar
 uniform sampler2D voxels_ao;
+#endif
 #endif
 #ifdef _VoxelShadow
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform float clipmaps[10 * voxelgiClipmapCount];
+//!uniform sampler2D voxels_shadows;
 #endif
 
 uniform float envmapStrength;
@@ -89,10 +91,16 @@ uniform mat4 invVP;
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
+	#ifdef _ShadowMapTransparent
+	//!uniform sampler2D shadowMapSpotTransparent[1];
+	#endif
 	//!uniform mat4 LWVPSpot[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
+	#ifdef _ShadowMapTransparent
+	//!uniform sampler2D shadowMapSpotTransparent[4];
+	#endif
 	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
@@ -115,9 +123,15 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[1];
+	#ifdef _ShadowMapTransparent
+	//!uniform sampler2D shadowMapSpotTransparent[1];
+	#endif
 	//!uniform mat4 LWVPSpot[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
+	#ifdef _ShadowMapTransparent
+	//!uniform samplerCube shadowMapPointTransparent[1];
+	#endif
 	//!uniform vec2 lightProj;
 	#endif
 #endif
@@ -125,24 +139,39 @@ uniform vec2 cameraPlane;
 	#ifdef _ShadowMapAtlas
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
+		#if _ShadowMapTransparent
+		uniform sampler2D shadowMapAtlasTransparent;
+		#endif
 		#endif
 	#endif
 	#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
+		#ifdef _ShadowMapTransparent
+		//!uniform sampler2D shadowMapAtlasPointTransparent;
+		#endif
 		#endif
 		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
+		#ifdef _ShadowMapTransparent
+		//!uniform samplerCube shadowMapPointTransparent[4];
+		#endif
 	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
 		#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasSpot;
+		#ifdef _ShadowMapTransparent
+		//!uniform sampler2D shadowMapAtlasSpotTransparent;
+		#endif
 		#endif
 		#else
 		//!uniform sampler2DShadow shadowMapSpot[4];
+		#ifdef _ShadowMapTransparent
+		//!uniform sampler2D shadowMapSpotTransparent[4];
+		#endif
 		#endif
 	//!uniform mat4 LWVPSpotArray[maxLightsCluster];
 	#endif
@@ -156,9 +185,15 @@ uniform vec3 sunCol;
 	#ifdef _ShadowMapAtlas
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
+	#ifdef _ShadowMapTransparent
+	uniform sampler2D shadowMapAtlasSunTransparent;
+	#endif
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
+	#ifdef _ShadowMapTransparent
+	uniform sampler2D shadowMapTransparent;
+	#endif
 	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
@@ -220,12 +255,13 @@ void main() {
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
 #endif
 
+#ifndef _VoxelAOvar
+#ifndef _VoxelGI
+
 #ifdef _MicroShadowing
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
 
-#ifndef _VoxelGI
-#ifndef _VoxelAOvar
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
 #endif
@@ -287,11 +323,12 @@ void main() {
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
+#else
+#ifdef _VoxelAOvar
+	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
+#endif
 #endif
 
-#ifdef _VoxelAOvar
-	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb;
-#endif
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
 	// vec3 direction = vec3(0.0, 0.0, -1.0);
@@ -340,8 +377,8 @@ void main() {
 	float sdotNH = max(0.0, dot(n, sh));
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
-	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
+	vec3 svisibility = vec3(1.0);
+	vec3 sdirect =  lambertDiffuseBRDF(albedo, sdotNL) +
 	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
@@ -349,14 +386,26 @@ void main() {
 			svisibility = shadowTestCascade(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
-					shadowMapAtlasSun
+					#ifdef _ShadowMapTransparent
+					shadowMapAtlasSun, shadowMapAtlasSunTransparent
+					#else
+					_ShadowMapAtlasSun
+					#endif
+					#else
+					#ifdef _ShadowMapTransparent
+					shadowMapAtlas, shadowMapAtlasTransparent
 					#else
 					shadowMapAtlas
 					#endif
+					#endif
+				#else
+				#ifdef _ShadowMapTransparent
+				shadowMap, shadowMapTransparent
 				#else
 				shadowMap
 				#endif
-				, eye, p + n * shadowsBias * 10, shadowsBias
+				#endif
+				, eye, p + n * shadowsBias * 10, shadowsBias, false
 			);
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
@@ -364,23 +413,35 @@ void main() {
 				svisibility = shadowTest(
 					#ifdef _ShadowMapAtlas
 						#ifndef _SingleAtlas
+						#ifdef _ShadowMapTransparent
+						shadowMapAtlasSun, shadowMapAtlasSunTransparent
+						#else
 						shadowMapAtlasSun
+						#endif
+						#else
+						#ifdef _ShadowMapTransparent
+						shadowMapAtlas, shadowMapAtlasTransparent
 						#else
 						shadowMapAtlas
 						#endif
+						#endif
+					#else
+					#ifdef _ShadowMapTransparent
+					shadowMap, shadowMapTransparent
 					#else
 					shadowMap
 					#endif
-					, lPos.xyz / lPos.w, shadowsBias
+					#endif
+					, lPos.xyz / lPos.w, shadowsBias, false
 				);
 			}
 		#endif
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord, -g2.rg).r) * voxelgiShad;
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
-	
+
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -437,13 +498,13 @@ void main() {
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
-			, 0, pointBias, true
+			, 0, pointBias, true, false
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-		, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, g2.rg
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -490,7 +551,7 @@ void main() {
 			f0
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
-				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0, false
 			#endif
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
@@ -501,7 +562,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, g2.rg // dummies
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
