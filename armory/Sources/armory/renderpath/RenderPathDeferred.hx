@@ -198,7 +198,6 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/resolve_ssgi/resolve_ssgi");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
