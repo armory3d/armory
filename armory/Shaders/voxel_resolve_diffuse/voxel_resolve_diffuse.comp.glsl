@@ -170,4 +170,6 @@ void main() {
 	vec3 color = trace.rgb + envl * (1.0 - trace.a);
 
 	imageStore(voxels_diffuse, ivec2(pixel), vec4(color, 1.0));
+	memoryBarrierImage();
+	barrier();
 }

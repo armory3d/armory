@@ -945,7 +945,9 @@ class RenderPathDeferred {
 				#if (rp_voxels != "Off")
 				{
 					path.bindTarget("voxelsOut", "voxels");
+					#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
 					path.bindTarget("voxelsSDF", "voxelsSDF");
+					#end
 				}
 				#end
 

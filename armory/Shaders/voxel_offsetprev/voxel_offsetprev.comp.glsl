@@ -75,5 +75,6 @@ void main() {
 
 		imageStore(voxelsOut, dst, col);
 		memoryBarrierImage();
+		barrier();
 	}
 }

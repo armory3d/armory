@@ -1391,7 +1391,7 @@ class Inc {
 	 		// lightType
 	 		kha.compute.Compute.setInt(voxel_cd5, iron.data.LightData.typeToInt(l.data.raw.type));
 	 		// lightDir
-	 		var v = l.look();
+	 		var v = l.look().normalize();
 	 		kha.compute.Compute.setFloat3(voxel_ce5, v.x, v.y, v.z);
 	 		var width = iron.App.w();
 			var height = iron.App.h();
