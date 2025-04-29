@@ -6,21 +6,15 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 #include "std/imageatomic.glsl"
-#ifdef _Spot
-#include "std/light_common.glsl"
+#ifdef _VoxelShadow
+#include "std/conetrace.glsl"
 #endif
 
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
-#ifdef _Spot
-uniform float spotSize;
-uniform vec3 spotDir;
-uniform vec2 scale;
-uniform float spotBlend;
-uniform vec3 right;
-#endif
+uniform vec2 spotData;
 #ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
@@ -31,10 +25,12 @@ uniform int index;
 uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 #endif
 #endif
+uniform mat4 VP;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
+uniform sampler2D gbuffer0;
 uniform layout(r32ui) uimage3D voxelsLight;
 
 #ifdef _ShadowMap
@@ -49,99 +45,6 @@ uniform samplerCubeShadow shadowMapPoint;
 #endif
 
 #ifdef _ShadowMapAtlas
-// transform "out-of-bounds" coordinates to the correct face/coordinate system
-// https://www.khronos.org/opengl/wiki/File:CubeMapAxes.png
-vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
-	if (uv.x < 0.0) {
-		if (faceIndex == 0) { // X+
-			newFaceIndex = 4; // Z+
-		}
-		else if (faceIndex == 1) { // X-
-			newFaceIndex = 5; // Z-
-		}
-		else if (faceIndex == 2) { // Y+
-			newFaceIndex = 1; // X-
-		}
-		else if (faceIndex == 3) { // Y-
-			newFaceIndex = 1; // X-
-		}
-		else if (faceIndex == 4) { // Z+
-			newFaceIndex = 1; // X-
-		}
-		else { // Z-
-			newFaceIndex = 0; // X+
-		}
-		uv = vec2(1.0 + uv.x, uv.y);
-	}
-	else if (uv.x > 1.0)  {
-		if (faceIndex == 0) { // X+
-			newFaceIndex = 5; // Z-
-		}
-		else if (faceIndex == 1) { // X-
-			newFaceIndex = 4; // Z+
-		}
-		else if (faceIndex == 2) { // Y+
-			newFaceIndex = 0; // X+
-		}
-		else if (faceIndex == 3) { // Y-
-			newFaceIndex = 0; // X+
-		}
-		else if (faceIndex == 4) { // Z+
-			newFaceIndex = 0; // X+
-		}
-		else { // Z-
-			newFaceIndex = 1; // X-
-		}
-		uv = vec2(1.0 - uv.x, uv.y);
-	}
-	else if (uv.y < 0.0) {
-		if (faceIndex == 0) { // X+
-			newFaceIndex = 2; // Y+
-		}
-		else if (faceIndex == 1) { // X-
-			newFaceIndex = 2; // Y+
-		}
-		else if (faceIndex == 2) { // Y+
-			newFaceIndex = 5; // Z-
-		}
-		else if (faceIndex == 3) { // Y-
-			newFaceIndex = 4; // Z+
-		}
-		else if (faceIndex == 4) { // Z+
-			newFaceIndex = 2; // Y+
-		}
-		else { // Z-
-			newFaceIndex = 2; // Y+
-		}
-		uv = vec2(uv.x, 1.0 + uv.y);
-	}
-	else if (uv.y > 1.0) {
-		if (faceIndex == 0) { // X+
-			newFaceIndex = 3; // Y-
-		}
-		else if (faceIndex == 1) { // X-
-			newFaceIndex = 3; // Y-
-		}
-		else if (faceIndex == 2) { // Y+
-			newFaceIndex = 4; // Z+
-		}
-		else if (faceIndex == 3) { // Y-
-			newFaceIndex = 5; // Z-
-		}
-		else if (faceIndex == 4) { // Z+
-			newFaceIndex = 3; // Y-
-		}
-		else { // Z-
-			newFaceIndex = 3; // Y-
-		}
-		uv = vec2(uv.x, 1.0 - uv.y);
-	} else {
-		newFaceIndex = faceIndex;
-	}
-	// cover corner cases too
-	return uv;
-}
-
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec20.pdf // p:168
 // https://www.gamedev.net/forums/topic/687535-implementing-a-cube-map-lookup-function/5337472/
 vec2 sampleCube(vec3 dir, out int faceIndex) {
@@ -186,39 +89,39 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 void main() {
 	int res = voxelgiResolution.x;
-	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
-	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
-	P = P * 2.0 - 1.0;
+	vec3 dst = gl_GlobalInvocationID.xyz;
+
+	//clipmap to world
+	vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
+	wposition = wposition * 2.0 - 1.0;
+	wposition *= float(clipmaps[int(clipmapLevel * 10)]);
+	wposition *= voxelgiResolution.x;
+	wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
 
 	float visibility;
-	vec3 lp = lightPos - P;
+	vec3 lp = lightPos - wposition;
 	vec3 l;
 	if (lightType == 0) { l = lightDir; visibility = 1.0; }
-	else { l = normalize(lp); visibility = attenuate(distance(P, lightPos)); }
+	else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
 
 #ifdef _ShadowMap
 	if (lightShadow == 1) {
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
 	else if (lightShadow == 2) {
-		#ifdef _Spot
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
-		visibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
-		#endif
 	}
 	else if (lightShadow == 3) {
 		#ifdef _ShadowMapAtlas
 		int faceIndex = 0;
-		int newFaceIndex;
 		const int lightIndex = index * 6;
 		const vec2 uv = sampleCube(-l, faceIndex);
-		vec2 transformedUV = transformOffsetedUV(faceIndex, newFaceIndex, uv);
 		vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
-		vec2 uvtiled = pointLightTile.z * transformedUV + pointLightTile.xy;
+		vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
 		#ifdef _FlipY
 		uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 		#endif
@@ -228,12 +131,41 @@ void main() {
 		#endif
 	}
 #endif
-	vec3 uvw_light = (P - vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)])) / (float(clipmaps[int(clipmapLevel * 10)]) * voxelgiResolution);
-	uvw_light = (uvw_light * 0.5 + 0.5);
-	if (any(notEqual(uvw_light, clamp(uvw_light, 0.0, 1.0)))) return;
-	vec3 writecoords_light = floor(uvw_light * voxelgiResolution);
+	vec4 screenPos = VP * vec4(wposition, 1.0);
+	vec3 ndc = screenPos.xyz / screenPos.w;
+	vec2 texCoord = ndc.xy * 0.5 + 0.5;
+	texCoord = clamp(texCoord, vec2(0.0), vec2(1.0)); // Prevent out-of-bounds
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light), uint(visibility * lightColor.r * 255));
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
-	imageAtomicMax(voxelsLight, ivec3(writecoords_light) + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
+	vec3 n;
+	n.z = 1.0 - abs(g0.x) - abs(g0.y);
+	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
+	n = normalize(n);
+
+	uvec3 face_indices = uvec3(
+		n.x > 0 ? 0 : 1,
+		n.y > 0 ? 2 : 3,
+		n.z > 0 ? 4 : 5
+	) * res;
+
+	vec3 weights = abs(n);
+
+	vec3 light = visibility * lightColor;
+
+	// Scale intensity per direction
+	if (weights.x > 0.0) {
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.x, 0, 0), uint(light.r * weights.x * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.x, 0, voxelgiResolution.x), uint(light.g * weights.x * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.x, 0, voxelgiResolution.x * 2), uint(light.b * weights.x * 1024));
+	}
+	if (weights.y > 0.0) {
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.y, 0, 0), uint(light.r * weights.y * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.y, 0, voxelgiResolution.x), uint(light.g * weights.y * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.y, 0, voxelgiResolution.x * 2), uint(light.b * weights.y * 1024));
+	}
+	if (weights.z > 0.0) {
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.z, 0, 0), uint(light.r * weights.z * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.z, 0, voxelgiResolution.x), uint(light.g * weights.z * 1024));
+		imageAtomicAdd(voxelsLight, ivec3(dst) + ivec3(face_indices.z, 0, voxelgiResolution.x * 2), uint(light.b * weights.z * 1024));
+	}
 }
