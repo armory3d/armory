@@ -1,6 +1,6 @@
 [submodule "Kha"]
 	path = Kha
-	url = https://github.com/armory3d/Kha
+	url = https://github.com/e2002e/Kha
 [submodule "Krom"]
 	path = Krom
 	url = https://github.com/e2002e/armorcore_bin
