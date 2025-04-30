@@ -65,7 +65,7 @@ def update_preset(self, context):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_voxelgi_resolution = '32'
-        rpdat.arm_voxelgi_size = 0.125
+        rpdat.arm_voxelgi_size = 0.25
         rpdat.rp_voxels = 'Voxel AO'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
@@ -142,7 +142,7 @@ def update_preset(self, context):
         rpdat.rp_stereo = False
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '64'
-        rpdat.arm_voxelgi_size = 0.125
+        rpdat.arm_voxelgi_size = 0.25
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
@@ -329,6 +329,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
     rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
+    rp_shadowmap_transparent: BoolProperty(name="Transparency", description="Enable transparent shadowmaps", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
         items=[('2', '2', '2'),
                ('3', '3', '3'),
@@ -495,7 +496,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('128', '128', '128'),
                ('256', '256', '256'),
                ],
-        name="Resolution", description="3D texture resolution", default='32', update=update_renderpath)
+        name="Resolution", description="3D texture resolution", default='64', update=update_renderpath)
     rp_voxelgi_resolution_z: EnumProperty(
         items=[('1.0', '1.0', '1.0'),
                ('0.5', '0.5', '0.5'),
@@ -507,7 +508,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         	   ('1', '1', '1'),
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
-    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3, update=assets.invalidate_compiled_data)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=5, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
@@ -546,14 +547,16 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_refract: FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
+    arm_ssgi_radius: FloatProperty(name="Radius", default=8.0, update=assets.invalidate_shader_cache)
     arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
+    arm_ssgi_samples: IntProperty(name="Samples", default=32, update=assets.invalidate_shader_cache)
+    """
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
         name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
+    """
     arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
     arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8, update=assets.invalidate_shader_cache)
     arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)

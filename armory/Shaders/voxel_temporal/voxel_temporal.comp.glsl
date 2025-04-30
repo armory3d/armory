@@ -103,53 +103,54 @@ void main() {
 		#endif
 
 		if (i < 6) {
+
 			#ifdef _VoxelGI
-			vec4 basecol = vec4(0.0);
-			basecol.r = float(imageLoad(voxels, src)) / 255;
-			basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-			basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-			basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
-			basecol /= 4;
-			vec3 emission = vec3(0.0);
-			emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
-			emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
-			emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
-			emission /= 3;
-			// Retrieve encoded normal (stored in 8-bit format)
-			vec2 enc;
-			enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255.0;
-			enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255.0;
-			enc /= 2;
-			// Remap from [0,1] to [-1,1] for octahedral decoding
-			vec2 octNormal = enc * 2.0 - 1.0;
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12)));
+			if (count > 0) {
+				vec4 basecol = vec4(0.0);
+				basecol.r = float(imageLoad(voxels, src)) / 255;
+				basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+				basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+				basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
+				basecol /= count;
+				vec3 emission = vec3(0.0);
+				emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
+				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
+				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
+				emission /= count;
+				// Retrieve encoded normal (stored in 8-bit format)
+				vec3 N = vec3(0.0);
+				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
+				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+				N /= count;
+				// Remap from [0,1] to [-1,1] for octahedral decoding
+				N = decode_oct(N.rg * 2.0 - 1.0);
+				vec3 envl = vec3(0.0);
+				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
+				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
+				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
+				envl /= count;
+				envl *= voxelgiEnv;
 
-			// Decode octahedral normal
-			vec3 wnormal;
-			wnormal.z = 1.0 - abs(octNormal.x) - abs(octNormal.y);
-			wnormal.xy = wnormal.z >= 0.0 ? octNormal.xy : octahedronWrap(octNormal.xy);
-			wnormal = normalize(wnormal);
-			vec3 envl = vec3(0.0);
-			envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-			envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
-			envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
-			envl /= 3;
-			envl *= voxelgiEnv;
+				//clipmap to world
+				vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
+				P = P * 2.0 - 1.0;
+				P *= float(clipmaps[int(clipmapLevel * 10)]);
+				P *= voxelgiResolution.x;
+				P += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
 
-			//clipmap to world
-			vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
-			wposition = wposition * 2.0 - 1.0;
-			wposition *= float(clipmaps[int(clipmapLevel * 10)]);
-			wposition *= voxelgiResolution.x;
-			wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
-
-			radiance = basecol;
-			vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
-			vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-			radiance.rgb *= light / PI + indirect;
-			radiance.rgb += emission.rgb;
-
+				radiance = basecol;
+				vec4 trace = traceDiffuse(P, N, voxelsSampler, clipmaps);
+				vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
+				radiance.rgb *= light / PI + indirect;
+				radiance.rgb += emission.rgb;
+			}
 			#else
-			opac = float(imageLoad(voxels, src)) / 255;
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			if (count > 0) {
+				opac = float(imageLoad(voxels, src)) / 255;
+				opac /= count;
+			}
 			#endif
 
 			#ifdef _VoxelGI

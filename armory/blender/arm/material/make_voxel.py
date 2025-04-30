@@ -274,6 +274,7 @@ def make_gi(context_id):
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x * 12)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0) {')
@@ -293,6 +294,7 @@ def make_gi(context_id):
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x * 12)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0) {')
@@ -312,6 +314,7 @@ def make_gi(context_id):
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 9)), uint(envl_direction.r * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 10)), uint(envl_direction.g * 255));')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 11)), uint(envl_direction.b * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x * 12)), uint(1));')
     frag.write('}')
 
     return con_voxel

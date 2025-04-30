@@ -22,7 +22,7 @@ THE SOFTWARE.
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-#include "std/voxels_constants.glsl"
+#include "std/constants.glsl"
 
 // References
 // https://github.com/Friduric/voxel-cone-tracing

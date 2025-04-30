@@ -716,7 +716,7 @@ class Inc {
 						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res;
+						t.depth = res * 2;
 					}
 				}
 				#else
@@ -737,7 +737,7 @@ class Inc {
 						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 12;
+						t.depth = res * 13;
 					}
 				}
 				#end
@@ -1517,7 +1517,7 @@ class Inc {
 	 		// lightType
 	 		kha.compute.Compute.setInt(voxel_ce5, iron.data.LightData.typeToInt(l.data.raw.type));
 	 		// lightDir
-	 		var v = l.look();
+	 		var v = l.look().normalize();
 	 		kha.compute.Compute.setFloat3(voxel_cf5, v.x, v.y, v.z);
 	 		// spotData
 	 		if (l.data.raw.type == "spot") {

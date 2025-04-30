@@ -650,9 +650,9 @@ const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
 
-        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_ssgi == 'SSGI':
             f.write(
-"""const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
+"""const int ssgiSamples = """ + str(rpdat.arm_ssgi_samples) + """;
 const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)

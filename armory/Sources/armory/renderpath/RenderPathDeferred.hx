@@ -203,7 +203,6 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/resolve_ssgi/resolve_ssgi");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -495,13 +494,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
-		{
-			path.setTarget("gbuffer_refraction");
-			path.clearTarget(0xffffff00);
-		}
-		#end
-
 		RenderPathCreator.setTargetMeshes();
 
 		#if rp_dynres
@@ -560,6 +552,31 @@ class RenderPathDeferred {
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
 				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#if rp_gbuffer_emission
+				{
+					path.bindTarget("gbuffer_emission", "gbufferEmission");
+				}
+				#end
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("tex");
 				path.bindTarget("singleb", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
@@ -710,36 +727,6 @@ class RenderPathDeferred {
 		voxelao_pass ?
 			path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
 			path.drawShader("shader_datas/deferred_light/deferred_light");
-		#end
-
-		#if (rp_ssgi == "SSGI")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				ssgitex = ssgitex == "singleb" ? "singlea" : "singleb";
-				ssgitexb = ssgitex == "singleb" ? "singlea" : "singleb";
-				path.setTarget(ssgitex);
-				path.bindTarget(ssgitexb, "prevGI");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("tex", "gbuffer1");
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
-				path.setTarget(ssgitexb);
-				path.bindTarget(ssgitex, "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget(ssgitex);
-				path.bindTarget(ssgitexb, "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-
-				path.setTarget("tex");
-				path.bindTarget(ssgitex, "ssgitex");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/resolve_ssgi/resolve_ssgi");
-			}
-		}
 		#end
 
 		#if rp_probes
