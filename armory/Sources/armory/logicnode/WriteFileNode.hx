@@ -15,6 +15,17 @@ class WriteFileNode extends LogicNode {
 		var path = Krom.getFilesLocation() + "/" + file;
 		var bytes = haxe.io.Bytes.ofString(data);
 		Krom.fileSaveBytes(path, bytes.getData());
+		
+		#elseif kha_html5
+		var blob = new js.html.Blob([data], {type: "application"});
+        var url = js.html.URL.createObjectURL(blob);
+        var a = cast(js.Browser.document.createElement("a"), js.html.AnchorElement);
+        a.href = url;
+        a.download = file;
+        a.click();
+        js.html.URL.revokeObjectURL(url);
 		#end
+
+		runOutput(0);
 	}
 }

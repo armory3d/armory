@@ -17,9 +17,17 @@ class WriteJsonNode(ArmLogicTreeNode):
     bl_idname = 'LNWriteJsonNode'
     bl_label = 'Write JSON'
     arm_section = 'file'
-    arm_version = 1
+    arm_version = 2
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'File')
         self.add_input('ArmDynamicSocket', 'Dynamic')
+
+        self.add_output('ArmNodeSocketAction', 'Out')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+
+        return NodeReplacement.Identity(self)

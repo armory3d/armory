@@ -268,24 +268,31 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     c.assets_add(os.path.join(arm.utils.get_sdk_path(), 'armory', 'Assets', 'noise256.png'))
     c.assets_add_embedded_data('noise256.png')
     state.curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
-
     if node.inputs[0].is_linked:
         co = c.parse_vector_input(node.inputs[0])
     else:
         co = 'bposition'
-
     scale = c.parse_value_input(node.inputs[2])
     detail = c.parse_value_input(node.inputs[3])
     roughness = c.parse_value_input(node.inputs[4])
     distortion = c.parse_value_input(node.inputs[5])
-
-    # Color
-    if out_socket == node.outputs[1]:
-        res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
-    # Fac
+    if bpy.app.version >= (4, 1, 0):
+        if node.noise_type == "FBM":
+            if out_socket == node.outputs[1]:
+                state.curshader.add_function(c_functions.str_tex_musgrave)
+                res = 'vec3(tex_musgrave_f({0} * {1}), tex_musgrave_f({0} * {1} + 120.0), tex_musgrave_f({0} * {1} + 168.0))'.format(co, scale, detail, distortion)
+            else:
+                res = f'tex_musgrave_f({co} * {scale} * 1.0)'
+        else:
+            if out_socket == node.outputs[1]:
+                res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
+            else:
+                res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
     else:
-        res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
-
+        if out_socket == node.outputs[1]:
+            res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
+        else:
+            res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
     return res
 
 

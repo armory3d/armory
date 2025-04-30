@@ -443,7 +443,7 @@ void main() {
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot[0], p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
 	#endif
 	#endif
 

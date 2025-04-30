@@ -203,9 +203,12 @@ if bpy.app.version > (3, 2, 0):
     ALL_NODES['SEPARATE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_separate_color)
     ALL_NODES['COMBINE_COLOR'] = MaterialNodeMeta(parse_func=nodes_converter.parse_combine_color)
 if bpy.app.version < (4, 1, 0):
-    ALL_NODES['BSDF_GLOSSY'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglossy)
     ALL_NODES['BSDF_VELVET'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet)
     ALL_NODES['TEX_MUSGRAVE'] = MaterialNodeMeta(parse_func=nodes_texture.parse_tex_musgrave)
+if bpy.app.version >= (4, 0, 0):
+    ALL_NODES['BSDF_SHEEN'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfsheen)
+    
+ALL_NODES['BSDF_GLOSSY'] = MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfglossy)
 
 def get_node_meta(node: bpy.types.Node) -> MaterialNodeMeta:
     type_identifier = node.type if node.type != 'CUSTOM' else node.bl_idname

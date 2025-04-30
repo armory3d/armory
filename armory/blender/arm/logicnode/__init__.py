@@ -31,6 +31,7 @@ def init_categories():
     arm_nodes.add_category('Native', icon='MEMORY', section="basic",
                            description="The Native category contains nodes which interact with the system (Input/Output functionality, etc.) or Haxe.")
 
+    arm_nodes.add_category('Browser', icon='URL', section="basic")
     arm_nodes.add_category('Camera', icon='OUTLINER_OB_CAMERA', section="data")
     arm_nodes.add_category('Material', icon='MATERIAL', section="data")
     arm_nodes.add_category('Light', icon='LIGHT', section="data")
