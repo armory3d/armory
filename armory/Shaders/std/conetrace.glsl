@@ -22,7 +22,7 @@ THE SOFTWARE.
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-#include "std/voxels_constants.glsl"
+#include "std/constants.glsl"
 
 // References
 // https://github.com/Friduric/voxel-cone-tracing
@@ -287,7 +287,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 		float clipmap_blend = fract(lod);
 		vec3 p0 = start_pos + dir * dist;
 
-        samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution.x);
+        samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
 		samplePos = samplePos * 0.5 + 0.5;
 
 		if ((any(notEqual(samplePos, clamp(samplePos, 0.0, 1.0))))) {
@@ -330,7 +330,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 
 float traceShadow(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 dir, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
  	vec3 P = origin + dir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
-	float amount = traceConeShadow(voxels, voxelsSDF, P, normal, dir, DIFFUSE_CONE_APERTURE, voxelgiStep, clipmaps);
+	float amount = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep, clipmaps);
 	amount = clamp(amount, 0.0, 1.0);
 	return amount * voxelgiOcc;
 }

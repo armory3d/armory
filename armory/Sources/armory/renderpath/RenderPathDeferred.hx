@@ -198,7 +198,6 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/resolve_ssgi/resolve_ssgi");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -249,7 +248,7 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "R8";
 			t.scale = Inc.getSuperSampling();
-			#if rp_ssgi_half
+			#if rp_ssgi_half // Do we keep this ?
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
@@ -603,6 +602,7 @@ class RenderPathDeferred {
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
 				#end
+				path.bindTarget("gbuffer2", "sveloc");
 
 				#if rp_shadowmap
 				{
@@ -615,7 +615,6 @@ class RenderPathDeferred {
 				#end
 
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
@@ -665,9 +664,18 @@ class RenderPathDeferred {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
 			path.drawMeshes("voxel");
 			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
+			//Inc.computeVoxelsLight();
 			#end
 
 			Inc.computeVoxelsTemporal();
