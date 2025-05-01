@@ -58,6 +58,9 @@ def add_world_defs():
         if rpdat.rp_shadowmap_cascades != '1':
             wrd.world_defs += '_CSM'
             assets.add_khafile_def('arm_csm')
+        if rpdat.rp_shadowmap_transparent:
+            wrd.world_defs += '_ShadowMapTransparent'
+            assets.add_khafile_def('rp_shadowmap_transparent')
         if rpdat.rp_shadowmap_atlas:
             assets.add_khafile_def('arm_shadowmap_atlas')
             wrd.world_defs += '_ShadowMapAtlas'
@@ -120,7 +123,6 @@ def add_world_defs():
             assets.add_khafile_def('arm_voxelgi_shadows')
 
         if voxelgi:
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_specular/voxel_resolve_specular.comp.glsl')
             wrd.world_defs += '_VoxelGI'
@@ -307,7 +309,6 @@ def build():
             elif rpdat.rp_ssgi == 'SSGI':
                 wrd.world_defs += '_SSGI'
                 assets.add_shader_pass('ssgi_pass')
-                assets.add_shader_pass('resolve_ssgi')
                 assets.add_shader_pass('blur_edge_pass')
             else:
                 assets.add_shader_pass('ssgi_pass')
@@ -455,7 +456,7 @@ def build():
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
 
-    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSGI' in wrd.world_defs
 
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')

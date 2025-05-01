@@ -35,13 +35,11 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(rgba16f) image2D voxels_diffuse;
+uniform layout(rgba8) image2D voxels_diffuse;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
-uniform vec2 cameraProj;
 uniform vec3 eye;
-uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
 
 uniform sampler2D gbuffer1;
@@ -71,7 +69,7 @@ void main() {
 	#endif
 
 	float depth = textureLod(gbufferD, uv, 0.0).r * 2.0 - 1.0;
-	if (depth == 0) return;
+	if (depth == 0.0) return;
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;

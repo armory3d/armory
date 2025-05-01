@@ -1585,6 +1585,7 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
+        layout.prop(rpdat, 'rp_shadowmap_transparent')
         col = layout.column()
         col2 = col.column()
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'
@@ -1714,9 +1715,9 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_voxels == 'Voxel GI'
         col3 = col.column()
         col3.enabled = rpdat.rp_voxels == 'Voxel AO'
-        col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        #col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'arm_voxelgi_refract', text='Refraction')
-        col.prop(rpdat, 'arm_voxelgi_clipmap_count')
+        #col.prop(rpdat, 'arm_voxelgi_clipmap_count')
         #col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'arm_voxelgi_size')
@@ -1729,11 +1730,11 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col2.prop(rpdat, 'arm_voxelgi_refr')
-        col.prop(rpdat, 'arm_voxelgi_shad')
+        #col.prop(rpdat, 'arm_voxelgi_shad')
         col.prop(rpdat, 'arm_voxelgi_env')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
-        col.prop(rpdat, 'arm_voxelgi_offset')
+        #col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
         #col.prop(rpdat, 'arm_voxelgi_aperture')
