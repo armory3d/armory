@@ -347,9 +347,6 @@ project.addSources('Sources');
         if wrd.arm_winresize or state.target == 'html5':
             assets.add_khafile_def('arm_resizable')
 
-        if get_winmode(wrd.arm_winmode) == 1 and state.target.startswith('html5'):
-            assets.add_khafile_def('kha_html5_disable_automatic_size_adjust')
-
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
@@ -554,26 +551,22 @@ def write_indexhtml(w, h, is_publish):
 """<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8"/>""")
+    <meta charset='utf-8'/>""")
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-""")
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>""")
         f.write("""
     <title>"""+html.escape( wrd.arm_project_name)+"""</title>
 </head>
-<body style="margin: 0; padding: 0;">
-""")
+<body style='margin: 0; padding: 0;'>""")
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="object-fit: contain;  min-width: 100%;  max-width: 100%;  max-height: 100vh;  min-height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
-""")
+    <canvas style='object-fit: contain; min-width: 100%; max-width: 100%; max-height: 100vh; min-height: 100vh; display: block;' id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>""")
         else:
             f.write("""
-    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>
-""")
+    <p align='center'><canvas align='center' style='outline: none;' id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>""")
         f.write("""
-    <script src='kha.js'></script>
+    <script type='text/javascript' src='kha.js'></script>
 </body>
 </html>
 """)
