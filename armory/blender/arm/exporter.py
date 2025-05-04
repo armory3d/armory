@@ -317,16 +317,15 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        if bpy.app.version >= (4, 2, 0):
+        if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
-            if bobject.users_scene:
-                bpy.context.window.scene = bobject.users_scene[0]
-                bpy.context.view_layer.update()
+            
+            bpy.context.window.scene = bobject.users_scene[0]
+            bpy.context.view_layer.update()
 
-            if bobject.type == 'CAMERA':
-                bobject.select_set(True)
-                bpy.context.view_layer.update()
-                bobject.select_set(False)
+            bobject.select_set(True)
+            bpy.context.view_layer.update()
+            bobject.select_set(False)
 
             bpy.context.window.scene = current_scene
             bpy.context.view_layer.update()
