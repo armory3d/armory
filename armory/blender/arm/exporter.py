@@ -317,6 +317,7 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
+        # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
             
