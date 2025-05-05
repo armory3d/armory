@@ -197,34 +197,34 @@ def init_properties():
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_bullet_dbg_draw_wireframe = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
         name="Collider Wireframes", default=False,
         description="Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations"
     )
-    bpy.types.World.arm_bullet_dbg_draw_aabb = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_aabb = BoolProperty(
         name="Axis-aligned Minimum Bounding Boxes", default=False,
         description="Draw axis-aligned minimum bounding boxes (AABBs) of the physics collider meshes"
     )
-    bpy.types.World.arm_bullet_dbg_draw_contact_points = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_contact_points = BoolProperty(
         name="Contact Points", default=False,
         description="Visualize contact points of multiple colliders"
     )
-    bpy.types.World.arm_bullet_dbg_draw_constraints = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_constraints = BoolProperty(
         name="Constraints", default=False,
         description="Draw axis gizmos for important constraint points"
     )
-    bpy.types.World.arm_bullet_dbg_draw_constraint_limits = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_constraint_limits = BoolProperty(
         name="Constraint Limits", default=False,
         description="Draw additional constraint information such as distance or angle limits"
     )
-    bpy.types.World.arm_bullet_dbg_draw_normals = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_normals = BoolProperty(
         name="Face Normals", default=False,
         description=(
             "Draw the normal vectors of the triangles of the physics collider meshes."
             " This only works for mesh collision shapes"
         )
     )
-    bpy.types.World.arm_bullet_dbg_draw_axis_gizmo = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_axis_gizmo = BoolProperty(
         name="Axis Gizmos", default=False,
         description=(
             "Draw a small axis gizmo at the origin of the collision shape."
