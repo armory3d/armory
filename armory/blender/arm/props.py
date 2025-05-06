@@ -221,7 +221,7 @@ def init_properties():
         name="Face Normals", default=False,
         description=(
             "Draw the normal vectors of the triangles of the physics collider meshes."
-            " This only works for mesh collision shapes"
+            " This only works with Bullet physics, for mesh collision shapes"
         )
     )
     bpy.types.World.arm_physics_dbg_draw_axis_gizmo = BoolProperty(
@@ -235,6 +235,7 @@ def init_properties():
         name="Raycast", default=False,
         description=(
             "Draw raycasts to trace the results."
+            "This only works with Oimo physics at the moment"
         )
     )
     bpy.types.World.arm_navigation = EnumProperty(
