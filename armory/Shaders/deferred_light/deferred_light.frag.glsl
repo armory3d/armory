@@ -375,7 +375,7 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, g2.rg).r) * voxelgiShad;
+	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, -g2.rg).r) * voxelgiShad;
 	#endif
 
 	#ifdef _SSRS
@@ -440,7 +440,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-			, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, -g2.rg
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -498,7 +498,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, -g2.rg
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
