@@ -292,7 +292,11 @@ class PhysicsWorld extends Trait {
 		if (preUpdates != null) for (f in preUpdates) f();
 
 		//Bullet physics fixed timescale
+		#if kha_krom
+		var fixedTime = kha.Display.primary != null ? 1 / Krom.displayFrequency() : 1 / 60;
+		#else
 		var fixedTime = 1.0 / 60;
+		#end
 
 		//This condition must be satisfied to not loose time
 		var currMaxSteps = t < (fixedTime * maxSteps) ? maxSteps : 1;
@@ -300,7 +304,7 @@ class PhysicsWorld extends Trait {
 		world.stepSimulation(t, currMaxSteps, fixedTime);
 		updateContacts();
 
-		for (rb in rbMap) @:privateAccess rb.physicsUpdate();
+		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } }
 
 		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;
