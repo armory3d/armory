@@ -231,6 +231,12 @@ def init_properties():
             " Only works if \"Collider Wireframes\" is enabled as well"
         )
     )
+    bpy.types.World.arm_physics_dbg_draw_raycast = BoolProperty(
+        name="Raycast", default=False,
+        description=(
+            "Draw raycasts to trace the results."
+        )
+    )
     bpy.types.World.arm_navigation = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),

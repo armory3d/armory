@@ -3015,6 +3015,7 @@ Make sure the mesh only has tris/quads.""")
                     debug_draw_mode |= 4096 if wrd.arm_physics_dbg_draw_constraint_limits else 0
                     debug_draw_mode |= 16384 if wrd.arm_physics_dbg_draw_normals else 0
                     debug_draw_mode |= 32768 if wrd.arm_physics_dbg_draw_axis_gizmo else 0
+                    debug_draw_mode |= 65536 if wrd.arm_physics_dbg_draw_raycast else 0
                     out_trait['parameters'].append(str(debug_draw_mode))
 
             self.output['traits'].append(out_trait)

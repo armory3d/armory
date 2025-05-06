@@ -2716,6 +2716,7 @@ class ARM_PT_BulletDebugDrawingPanel(bpy.types.Panel):
         col.prop(wrd, "arm_physics_dbg_draw_constraint_limits")
         col.prop(wrd, "arm_physics_dbg_draw_normals")
         col.prop(wrd, "arm_physics_dbg_draw_axis_gizmo")
+        col.prop(wrd, "arm_physics_dbg_draw_raycast")
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
