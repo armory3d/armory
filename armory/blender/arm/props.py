@@ -235,7 +235,7 @@ def init_properties():
         name="Raycast", default=False,
         description=(
             "Draw raycasts to trace the results."
-            "This only works with Oimo physics at the moment"
+            " This only works with Oimo physics at the moment"
         )
     )
     bpy.types.World.arm_navigation = EnumProperty(
