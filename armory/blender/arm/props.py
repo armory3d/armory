@@ -232,7 +232,7 @@ def init_properties():
         )
     )
     bpy.types.World.arm_physics_dbg_draw_raycast = BoolProperty(
-        name="Raycast", default=False,
+        name="Raycasts", default=False,
         description=(
             "Draw raycasts to trace the results."
             " This only works with Oimo physics at the moment"
