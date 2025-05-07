@@ -118,12 +118,10 @@ void main() {
 				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
 				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
 				emission /= count;
-				// Retrieve encoded normal (stored in 8-bit format)
 				vec3 N = vec3(0.0);
 				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
 				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
 				N /= count;
-				// Remap from [0,1] to [-1,1] for octahedral decoding
 				N = decode_oct(N.rg * 2.0 - 1.0);
 				vec3 envl = vec3(0.0);
 				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
@@ -205,7 +203,7 @@ void main() {
 		else {
 			// precompute cone sampling:
 			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
-			vec3 aniso_direction = -coneDirection;
+			vec3 aniso_direction = coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
 				aniso_direction.y > 0 ? 2 : 3,
