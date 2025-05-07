@@ -20,15 +20,6 @@ class Hit {
 	}
 }
 
-class RayCastInfo {
-	public var from: Vec4 = new Vec4();
-	public var to: Vec4 = new Vec4();
-	public var hasHit: Bool = false;
-	public var hitPoint: Vec4 = new Vec4();
-	public function new() {
-	}
-}
-
 class ConvexHit {
 	public var pos: Vec4;
 	public var normal: Vec4;
@@ -593,6 +584,16 @@ class PhysicsWorld extends Trait {
 	@:hlNative("bullet", "debugDrawer_setDraw3dText")
 	public static function hlDebugDrawer_setDraw3dText(func: bullet.Bt.Vector3->hl.Bytes->Void) {}
 	#end
+}
+
+private class RayCastInfo {
+	public var from: Vec4 = new Vec4();
+	public var to: Vec4 = new Vec4();
+	public var hasHit: Bool = false;
+	public var hitPoint: Vec4 = new Vec4();
+
+	public function new() {
+	}
 }
 
 /**
