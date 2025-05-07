@@ -18,6 +18,10 @@ class DebugDrawHelper {
 	static inline var contactPointNormalColor = 0xffffffff;
 	static inline var contactPointDrawLifetime = true;
 
+	final rayCastColor: Vec4 = new Vec4(0.0, 1.0, 0.0);
+	final rayCastHitColor: Vec4 = new Vec4(1.0, 0.0, 0.0);
+	final rayCastHitPointColor: Vec4 = new Vec4(1.0, 1.0, 0.0);
+
 	final physicsWorld: PhysicsWorld;
 	final lines: Array<LineData> = [];
 	final texts: Array<TextData> = [];
@@ -107,6 +111,57 @@ class DebugDrawHelper {
 					y: contactPointScreenSpace.y,
 					color: color,
 					text: Std.string(lifeTime), // lifeTime: number of frames the contact point existed
+				});
+			}
+		}
+	}
+
+	public function drawRayCast(f: Vec4, t: Vec4, hit: Bool) {
+		final from = worldToScreenFast(f.clone());
+		final to = worldToScreenFast(t.clone());
+		var c: kha.Color;
+
+		if (from.w == 1 && to.w == 1) {
+			if (hit) c = kha.Color.fromFloats(rayCastHitColor.x, rayCastHitColor.y, rayCastHitColor.z);
+			else c = kha.Color.fromFloats(rayCastColor.x, rayCastColor.y, rayCastColor.z);
+
+			lines.push({
+				fromX: from.x,
+				fromY: from.y,
+				toX: to.x,
+				toY: to.y,
+				color: c
+			});
+		}
+	}
+
+	public function drawHitPoint(hp: Vec4) {
+		final hitPoint = worldToScreenFast(hp.clone());
+		final c = kha.Color.fromFloats(rayCastHitPointColor.x, rayCastHitPointColor.y, rayCastHitPointColor.z);
+
+		if (hitPoint.w == 1) {
+			lines.push({
+				fromX: hitPoint.x - contactPointSizePx,
+				fromY: hitPoint.y - contactPointSizePx,
+				toX: hitPoint.x + contactPointSizePx,
+				toY: hitPoint.y + contactPointSizePx,
+				color: c
+			});
+
+			lines.push({
+				fromX: hitPoint.x - contactPointSizePx,
+				fromY: hitPoint.y + contactPointSizePx,
+				toX: hitPoint.x + contactPointSizePx,
+				toY: hitPoint.y - contactPointSizePx,
+				color: c
+			});
+
+			if (font != null) {
+				texts.push({
+					x: hitPoint.x,
+					y: hitPoint.y,
+					color: c,
+					text: 'RAYCAST HIT'
 				});
 			}
 		}

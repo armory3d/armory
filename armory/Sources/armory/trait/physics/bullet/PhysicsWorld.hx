@@ -410,6 +410,14 @@ class PhysicsWorld extends Trait {
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
 			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
 			#end
+			if (debugDrawHelper != null && DrawRayCast != 0) {
+				debugDrawHelper.drawRayCast(from, hitPointWorld, true);
+				debugDrawHelper.drawHitPoint(hitPointWorld);
+			}
+		} else {
+			if (debugDrawHelper != null && DrawRayCast != 0) {
+				debugDrawHelper.drawRayCast(from, to, false);
+			}
 		}
 
 		#if js
@@ -656,6 +664,8 @@ enum abstract DebugDrawMode(Int) from Int to Int {
 		Only works if `DrawWireframe` is enabled as well.
 	 **/
 	var DrawFrames = 1 << 15;
+
+	var DrawRayCast = 1 << 16;
 
 	@:op(~A) public inline function bitwiseNegate(): DebugDrawMode {
 		return ~this;
