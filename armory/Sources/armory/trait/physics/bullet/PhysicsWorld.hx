@@ -20,6 +20,15 @@ class Hit {
 	}
 }
 
+class RayCastInfo {
+	public var from: Vec4 = new Vec4();
+	public var to: Vec4 = new Vec4();
+	public var hasHit: Bool = false;
+	public var hitPoint: Vec4 = new Vec4();
+	public function new() {
+	}
+}
+
 class ConvexHit {
 	public var pos: Vec4;
 	public var normal: Vec4;
@@ -66,6 +75,7 @@ class PhysicsWorld extends Trait {
 	public var timeScale = 1.0;
 	var maxSteps = 1;
 	public var solverIterations = 10;
+	public var rayCastInfo = new RayCastInfo();
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
 	public var convexHitPointWorld = new Vec4();
@@ -129,6 +139,17 @@ class PhysicsWorld extends Trait {
 		iron.Scene.active.notifyOnRemove(function() {
 			sceneRemoved = true;
 		});
+
+		if (debugDrawHelper != null && DrawRayCast != 0) {
+			notifyOnRender2D(function (g: kha.graphics2.Graphics) {
+				if (rayCastInfo.hasHit) {
+					debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.hitPoint, true);
+					debugDrawHelper.drawHitPoint(rayCastInfo.hitPoint);
+				} else {
+					debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.to, false);
+				}
+			});
+		}
 	}
 
 	public function reset() {
@@ -410,15 +431,12 @@ class PhysicsWorld extends Trait {
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
 			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
 			#end
-			if (debugDrawHelper != null && DrawRayCast != 0) {
-				debugDrawHelper.drawRayCast(from, hitPointWorld, true);
-				debugDrawHelper.drawHitPoint(hitPointWorld);
-			}
-		} else {
-			if (debugDrawHelper != null && DrawRayCast != 0) {
-				debugDrawHelper.drawRayCast(from, to, false);
-			}
 		}
+
+		rayCastInfo.from = from;
+		rayCastInfo.to = to;
+		rayCastInfo.hasHit = rc.hasHit();
+		rayCastInfo.hitPoint = hitPointWorld;
 
 		#if js
 		bullet.Bt.Ammo.destroy(rayCallback);
