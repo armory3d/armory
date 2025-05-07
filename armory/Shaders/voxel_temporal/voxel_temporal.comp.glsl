@@ -203,7 +203,7 @@ void main() {
 		else {
 			// precompute cone sampling:
 			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
-			vec3 aniso_direction = coneDirection;
+			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
 				aniso_direction.y > 0 ? 2 : 3,
