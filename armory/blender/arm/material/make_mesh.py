@@ -692,16 +692,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('vec3 indirect = envl;')
 
     if '_VoxelGI' in wrd.world_defs:
-        if parse_opacity:
-            frag.write('indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb;')
-            frag.write('if (roughness < 1.0 && specular > 0.0) {')
-            frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, posa.xy, velocity).rgb * specular * voxelgiRefl; }')
-        else:
-            frag.add_uniform("sampler2D voxels_diffuse")
-            frag.add_uniform("sampler2D voxels_specular")
-            frag.write("indirect = textureLod(voxels_diffuse, posa, 0.0).rgb * albedo * voxelgiDiff;")
-            frag.write("if (roughness < 1.0 && specular > 0.0)")
-            frag.write("    indirect += textureLod(voxels_specular, posa, 0.0).rgb * specular * voxelgiRefl;")
+        frag.write('indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb;')
+        frag.write('if (roughness < 1.0 && specular > 0.0) {')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * specular * voxelgiRefl; }')
 
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -748,7 +741,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 else:
                     frag.write(f'svisibility = PCF({shadowmap_sun}, {shadowmap_sun_tr}, lPos.xy, lPos.z - shadowsBias, smSize, false);')
             if '_VoxelShadow' in wrd.world_defs:
-                frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, posa.xy, velocity).r) * voxelgiShad;')
+                frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;')
             frag.write('}') # receiveShadow
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun

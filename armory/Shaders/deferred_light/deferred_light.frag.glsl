@@ -20,7 +20,7 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 #ifdef _gbuffer2
-	//!uniform sampler2D gbuffer2;
+	uniform sampler2D gbuffer2;
 #endif
 #ifdef _EmissionShaded
 	uniform sampler2D gbufferEmission;

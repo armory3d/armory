@@ -219,7 +219,8 @@ def make_gi(context_id):
     frag.write('    aniso_direction.y > 0 ? 2 : 3,')
     frag.write('    aniso_direction.z > 0 ? 4 : 5')
     frag.write('    ) * voxelgiResolution;')
-    frag.write('vec3 direction_weights = abs(N);')
+    frag.write('vec3 direction_weights = max(vec3(0.0), N);')
+    frag.write('direction_weights /= (direction_weights.x + direction_weights.y + direction_weights.z + 1e-6);')
 
     frag.write('vec3 clipmap_pixel = uvw * voxelgiResolution;')
     frag.write('vec3 clipmap_uvw_center = (clipmap_pixel + 0.5) / voxelgiResolution;')
@@ -533,18 +534,22 @@ def make_ao(context_id):
     frag.write('    aniso_direction.y > 0 ? 2 : 3,')
     frag.write('    aniso_direction.z > 0 ? 4 : 5')
     frag.write('    ) * voxelgiResolution;')
-    frag.write('vec3 direction_weights = abs(N);')
+    frag.write('vec3 direction_weights = max(vec3(0.0), N);')
+    frag.write('direction_weights /= (direction_weights.x + direction_weights.y + direction_weights.z + 1e-6);')
 
     frag.write('if (direction_weights.x > 0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, 0)), uint(direction_weights.x * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.x, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, 0)), uint(direction_weights.y * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.y, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0) {')
     frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, 0)), uint(direction_weights.z * 255));')
+    frag.write('    imageAtomicAdd(voxels, ivec3(writecoords + ivec3(face_offsets.z, 0, voxelgiResolution.x)), uint(1));')
     frag.write('}')
 
     return con_voxel

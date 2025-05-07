@@ -10,9 +10,6 @@
 #ifdef _VoxelShadow
 #include "std/conetrace.glsl"
 #endif
-#ifdef _gbuffer2
-uniform sampler2D gbuffer2;
-#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
