@@ -2,12 +2,8 @@ package armory.trait.physics;
 
 #if (!arm_physics)
 
-class Hit {
-}
-
-class PhysicsWorld extends iron.Trait {
-	public function new() { super(); }
-}
+class Hit { }
+class PhysicsWorld extends iron.Trait { public function new() { super(); } }
 
 #else
 
