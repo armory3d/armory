@@ -245,7 +245,8 @@ def make_gi(context_id):
 
     vert.add_uniform('vec3 eye', '_cameraPosition')
     vert.add_out('vec3 eyeDirGeom')
-    vert.write('eyeDirGeom = eye - pos.xyz;')
+    vert.write('eyeDirGeom = eye - vec3(W * vec4(pos.xyz, 1.0));')
+    frag.write('vec3 vVec = normalize(eyeDir);')
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
@@ -263,7 +264,7 @@ def make_gi(context_id):
     if '_Rad' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
         frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
-        frag.write('vec3 reflectionWorld = reflect(-normalize(eyeDir), N);')
+        frag.write('vec3 reflectionWorld = reflect(-vVec, N);')
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
 
