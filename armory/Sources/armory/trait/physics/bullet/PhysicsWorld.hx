@@ -66,7 +66,7 @@ class PhysicsWorld extends Trait {
 	public var timeScale = 1.0;
 	var maxSteps = 1;
 	public var solverIterations = 10;
-	public var rayCastInfo = new RayCastInfo();
+	var rayCastInfos:Array<RayCastInfo> = [];
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
 	public var convexHitPointWorld = new Vec4();
@@ -133,12 +133,18 @@ class PhysicsWorld extends Trait {
 
 		if (debugDrawHelper != null && DrawRayCast != 0) {
 			notifyOnRender2D(function (g: kha.graphics2.Graphics) {
-				if (rayCastInfo.hasHit) {
-					debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.hitPoint, true);
-					debugDrawHelper.drawHitPoint(rayCastInfo.hitPoint);
-				} else {
-					debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.to, false);
+				for (rayCastInfo in rayCastInfos) {
+					if (rayCastInfo.hasHit) {
+						debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.hitPoint, true);
+						debugDrawHelper.drawHitPoint(rayCastInfo.hitPoint);
+					} else {
+						debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.to, false);
+					}
 				}
+			});
+
+			notifyOnUpdate(function () {
+				rayCastInfos.resize(0);
 			});
 		}
 	}
@@ -424,10 +430,7 @@ class PhysicsWorld extends Trait {
 			#end
 		}
 
-		rayCastInfo.from = from;
-		rayCastInfo.to = to;
-		rayCastInfo.hasHit = rc.hasHit();
-		rayCastInfo.hitPoint = hitPointWorld;
+		rayCastInfos.push(new RayCastInfo(from, to, rc.hasHit(), hitPointWorld));
 
 		#if js
 		bullet.Bt.Ammo.destroy(rayCallback);
@@ -587,12 +590,16 @@ class PhysicsWorld extends Trait {
 }
 
 private class RayCastInfo {
-	public var from: Vec4 = new Vec4();
-	public var to: Vec4 = new Vec4();
-	public var hasHit: Bool = false;
-	public var hitPoint: Vec4 = new Vec4();
+	public var from: Vec4;
+	public var to: Vec4;
+	public var hasHit: Bool;
+	public var hitPoint: Vec4;
 
-	public function new() {
+	public function new(from: Vec4, to: Vec4, hasHit: Bool, hitPoint: Vec4) {
+		this.from = from;
+		this.to = to;
+		this.hasHit = hasHit;
+		this.hitPoint = hitPoint;
 	}
 }
 
