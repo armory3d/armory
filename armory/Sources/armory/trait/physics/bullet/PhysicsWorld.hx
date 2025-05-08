@@ -292,8 +292,8 @@ class PhysicsWorld extends Trait {
 		if (preUpdates != null) for (f in preUpdates) f();
 
 		//Bullet physics fixed timescale
-		#if kha_krom
-		var fixedTime = kha.Display.primary != null ? 1 / Krom.displayFrequency() : 1 / 60;
+		#if !(kha_html5 || kha_debug_html5)
+		var fixedTime = kha.Display.primary != null ? 1 / kha.Display.primary.frequency : 1 / 60;
 		#else
 		var fixedTime = 1.0 / 60;
 		#end
