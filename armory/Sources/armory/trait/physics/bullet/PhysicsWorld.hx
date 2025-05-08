@@ -66,7 +66,7 @@ class PhysicsWorld extends Trait {
 	public var timeScale = 1.0;
 	var maxSteps = 1;
 	public var solverIterations = 10;
-	var rayCastInfos:Array<RayCastInfo> = [];
+	var rayCasts:Array<TRayCast> = [];
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
 	public var convexHitPointWorld = new Vec4();
@@ -133,18 +133,18 @@ class PhysicsWorld extends Trait {
 
 		if (debugDrawHelper != null && DrawRayCast != 0) {
 			notifyOnRender2D(function (g: kha.graphics2.Graphics) {
-				for (rayCastInfo in rayCastInfos) {
-					if (rayCastInfo.hasHit) {
-						debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.hitPoint, true);
-						debugDrawHelper.drawHitPoint(rayCastInfo.hitPoint);
+				for (rayCastData in rayCasts) {
+					if (rayCastData.hasHit) {
+						debugDrawHelper.drawRayCast(rayCastData.from, rayCastData.hitPoint, true);
+						debugDrawHelper.drawHitPoint(rayCastData.hitPoint);
 					} else {
-						debugDrawHelper.drawRayCast(rayCastInfo.from, rayCastInfo.to, false);
+						debugDrawHelper.drawRayCast(rayCastData.from, rayCastData.to, false);
 					}
 				}
 			});
 
 			notifyOnUpdate(function () {
-				rayCastInfos.resize(0);
+				rayCasts.resize(0);
 			});
 		}
 	}
@@ -318,7 +318,7 @@ class PhysicsWorld extends Trait {
 		world.stepSimulation(t, currMaxSteps, fixedTime);
 		updateContacts();
 
-		for (rb in rbMap) @:privateAccess rb.physicsUpdate();
+		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } }
 
 		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;
@@ -430,7 +430,12 @@ class PhysicsWorld extends Trait {
 			#end
 		}
 
-		rayCastInfos.push(new RayCastInfo(from, to, rc.hasHit(), hitPointWorld));
+		rayCasts.push({
+			from: from,
+			to: to,
+			hasHit: rc.hasHit(),
+			hitPoint: hitPointWorld
+		});
 
 		#if js
 		bullet.Bt.Ammo.destroy(rayCallback);
@@ -589,18 +594,11 @@ class PhysicsWorld extends Trait {
 	#end
 }
 
-private class RayCastInfo {
-	public var from: Vec4;
-	public var to: Vec4;
-	public var hasHit: Bool;
-	public var hitPoint: Vec4;
-
-	public function new(from: Vec4, to: Vec4, hasHit: Bool, hitPoint: Vec4) {
-		this.from = from;
-		this.to = to;
-		this.hasHit = hasHit;
-		this.hitPoint = hitPoint;
-	}
+typedef TRayCast = {
+	var from: Vec4;
+	var to: Vec4;
+	var hasHit: Bool;
+	@:optional var hitPoint: Vec4;
 }
 
 /**
