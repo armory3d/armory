@@ -4,7 +4,7 @@ import iron.object.Object;
 
 #if arm_physics
 import armory.trait.physics.RigidBody;
-import armory.trait.physics.bullet.RigidBody.Shape;
+import armory.trait.physics.RigidBody.Shape;
 #end
 
 

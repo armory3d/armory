@@ -2,9 +2,11 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-#if arm_physics
+#if arm_bullet
 import armory.trait.physics.PhysicsConstraint;
 import armory.trait.physics.bullet.PhysicsConstraint.ConstraintType;
+#elseif arm_oimo
+// TODO
 #end
 
 class AddPhysicsConstraintNode extends LogicNode {
@@ -25,7 +27,7 @@ class AddPhysicsConstraintNode extends LogicNode {
 
 		if (pivotObject == null || rb1 == null || rb2 == null) return;
 
-#if arm_physics
+#if arm_bullet
 
 		var disableCollisions: Bool = inputs[4].get();
 		var breakable: Bool = inputs[5].get();
@@ -108,6 +110,8 @@ class AddPhysicsConstraintNode extends LogicNode {
 			}
 			pivotObject.addTrait(con);
 		}
+#elseif arm_oimo
+// TODO
 #end
 		runOutput(0);
 	}
