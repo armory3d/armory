@@ -304,7 +304,7 @@ class PhysicsWorld extends Trait {
 		world.stepSimulation(t, currMaxSteps, fixedTime);
 		updateContacts();
 
-		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } }
+		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } } // HACK: see this recommendation: https://github.com/armory3d/armory/issues/3044#issuecomment-2558199944.
 
 		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;
