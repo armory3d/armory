@@ -413,7 +413,8 @@ class PhysicsWorld extends Trait {
 				from: from,
 				to: to,
 				hasHit: rc.hasHit(),
-				hitPoint: hitPointWorld
+				hitPoint: hitPointWorld,
+				hitNormal: hitNormalWorld
 			});
 		}
 

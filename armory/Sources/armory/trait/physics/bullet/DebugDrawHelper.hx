@@ -308,5 +308,6 @@ typedef TRayCastData = {
 	var to: Vec4;
 	var hasHit: Bool;
 	@:optional var hitPoint: Vec4;
+	@:optional var hitNormal: Vec4;
 }
 #end
