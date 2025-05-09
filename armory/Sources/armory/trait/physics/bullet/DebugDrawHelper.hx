@@ -1,5 +1,8 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+import armory.trait.physics.bullet.PhysicsWorld.DebugDrawMode;
+
 import bullet.Bt.Vector3;
 
 import kha.FastFloat;
@@ -27,9 +30,10 @@ class DebugDrawHelper {
 	final texts: Array<TextData> = [];
 	var font: kha.Font = null;
 
-	var debugMode: PhysicsWorld.DebugDrawMode = NoDebug;
+	var rayCasts:Array<TRayCastData> = [];
+	var debugDrawMode: DebugDrawMode = NoDebug;
 
-	public function new(physicsWorld: PhysicsWorld) {
+	public function new(physicsWorld: PhysicsWorld, debugDrawMode: DebugDrawMode) {
 		this.physicsWorld = physicsWorld;
 
 		#if arm_ui
@@ -39,6 +43,12 @@ class DebugDrawHelper {
 		#end
 
 		iron.App.notifyOnRender2D(onRender);
+
+		if (debugDrawMode & DrawRayCast != 0) {
+			iron.App.notifyOnUpdate(function () {
+				rayCasts.resize(0);
+			});
+		}
 	}
 
 	public function drawLine(from: bullet.Bt.Vector3, to: bullet.Bt.Vector3, color: bullet.Bt.Vector3) {
@@ -116,7 +126,11 @@ class DebugDrawHelper {
 		}
 	}
 
-	public function drawRayCast(f: Vec4, t: Vec4, hit: Bool) {
+	public function rayCast(rayCastData:TRayCastData) {
+		rayCasts.push(rayCastData);
+	}
+
+	function drawRayCast(f: Vec4, t: Vec4, hit: Bool) {
 		final from = worldToScreenFast(f.clone());
 		final to = worldToScreenFast(t.clone());
 		var c: kha.Color;
@@ -135,7 +149,7 @@ class DebugDrawHelper {
 		}
 	}
 
-	public function drawHitPoint(hp: Vec4) {
+	function drawHitPoint(hp: Vec4) {
 		final hitPoint = worldToScreenFast(hp.clone());
 		final c = kha.Color.fromFloats(rayCastHitPointColor.x, rayCastHitPointColor.y, rayCastHitPointColor.z);
 
@@ -190,13 +204,13 @@ class DebugDrawHelper {
 		});
 	}
 
-	public function setDebugMode(debugMode: PhysicsWorld.DebugDrawMode) {
-		this.debugMode = debugMode;
+	public function setDebugMode(debugDrawMode: DebugDrawMode) {
+		this.debugDrawMode = debugDrawMode;
 	}
 
-	public function getDebugMode(): PhysicsWorld.DebugDrawMode {
+	public function getDebugMode(): DebugDrawMode {
 		#if js
-			return debugMode;
+			return debugDrawMode;
 		#elseif hl
 			return physicsWorld.getDebugDrawMode();
 		#else
@@ -234,6 +248,17 @@ class DebugDrawHelper {
 				g.drawString(text.text, text.x, text.y);
 			}
 			texts.resize(0);
+		}
+
+		if (debugDrawMode & DrawRayCast != 0) {
+			for (rayCastData in rayCasts) {
+				if (rayCastData.hasHit) {
+					drawRayCast(rayCastData.from, rayCastData.hitPoint, true);
+					drawHitPoint(rayCastData.hitPoint);
+				} else {
+					drawRayCast(rayCastData.from, rayCastData.to, false);
+				}
+			}
 		}
 	}
 
@@ -277,3 +302,11 @@ class TextData {
 	public var color: kha.Color;
 	public var text: String;
 }
+
+typedef TRayCastData = {
+	var from: Vec4;
+	var to: Vec4;
+	var hasHit: Bool;
+	@:optional var hitPoint: Vec4;
+}
+#end

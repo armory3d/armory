@@ -1,7 +1,6 @@
 package armory.trait.physics.bullet;
 
 #if arm_bullet
-
 import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
@@ -9,7 +8,6 @@ import iron.math.Quat;
 import iron.math.RayCaster;
 
 class Hit {
-
 	public var rb: RigidBody;
 	public var pos: Vec4;
 	public var normal: Vec4;
@@ -32,7 +30,6 @@ class ConvexHit {
 }
 
 class ContactPair {
-
 	public var a: Int;
 	public var b: Int;
 	public var posA: Vec4;
@@ -47,7 +44,6 @@ class ContactPair {
 }
 
 class PhysicsWorld extends Trait {
-
 	public static var active: PhysicsWorld = null;
 	static var sceneRemoved = false;
 
@@ -66,7 +62,6 @@ class PhysicsWorld extends Trait {
 	public var timeScale = 1.0;
 	var maxSteps = 1;
 	public var solverIterations = 10;
-	var rayCasts:Array<TRayCast> = [];
 	public var hitPointWorld = new Vec4();
 	public var hitNormalWorld = new Vec4();
 	public var convexHitPointWorld = new Vec4();
@@ -130,23 +125,6 @@ class PhysicsWorld extends Trait {
 		iron.Scene.active.notifyOnRemove(function() {
 			sceneRemoved = true;
 		});
-
-		if (debugDrawHelper != null && DrawRayCast != 0) {
-			notifyOnRender2D(function (g: kha.graphics2.Graphics) {
-				for (rayCastData in rayCasts) {
-					if (rayCastData.hasHit) {
-						debugDrawHelper.drawRayCast(rayCastData.from, rayCastData.hitPoint, true);
-						debugDrawHelper.drawHitPoint(rayCastData.hitPoint);
-					} else {
-						debugDrawHelper.drawRayCast(rayCastData.from, rayCastData.to, false);
-					}
-				}
-			});
-
-			notifyOnUpdate(function () {
-				rayCasts.resize(0);
-			});
-		}
 	}
 
 	public function reset() {
@@ -430,12 +408,14 @@ class PhysicsWorld extends Trait {
 			#end
 		}
 
-		rayCasts.push({
-			from: from,
-			to: to,
-			hasHit: rc.hasHit(),
-			hitPoint: hitPointWorld
-		});
+		if (getDebugDrawMode() & DrawRayCast != 0) {
+			debugDrawHelper.rayCast({
+				from: from,
+				to: to,
+				hasHit: rc.hasHit(),
+				hitPoint: hitPointWorld
+			});
+		}
 
 		#if js
 		bullet.Bt.Ammo.destroy(rayCallback);
@@ -518,7 +498,7 @@ class PhysicsWorld extends Trait {
 			if (debugDrawMode == NoDebug) {
 				return;
 			}
-			initDebugDrawing();
+			initDebugDrawing(debugDrawMode);
 		}
 
 		#if js
@@ -542,8 +522,8 @@ class PhysicsWorld extends Trait {
 		#end
 	}
 
-	function initDebugDrawing() {
-		debugDrawHelper = new DebugDrawHelper(this);
+	function initDebugDrawing(debugDrawMode: DebugDrawMode) {
+		debugDrawHelper = new DebugDrawHelper(this, debugDrawMode);
 
 		#if js
 			final drawer = new bullet.Bt.DebugDrawer();
@@ -592,13 +572,6 @@ class PhysicsWorld extends Trait {
 	@:hlNative("bullet", "debugDrawer_setDraw3dText")
 	public static function hlDebugDrawer_setDraw3dText(func: bullet.Bt.Vector3->hl.Bytes->Void) {}
 	#end
-}
-
-typedef TRayCast = {
-	var from: Vec4;
-	var to: Vec4;
-	var hasHit: Bool;
-	@:optional var hitPoint: Vec4;
 }
 
 /**
