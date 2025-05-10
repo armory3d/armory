@@ -11,6 +11,14 @@
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
+					"name": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3"
+				},
+				{
 					"name": "eye",
 					"link": "_cameraPosition"
 				},

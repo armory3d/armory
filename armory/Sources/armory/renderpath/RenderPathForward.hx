@@ -204,9 +204,6 @@ class RenderPathForward {
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
-			#if (rp_voxels == "Voxel GI")
-			Inc.initGI("voxelsLight");
-			#end
 			iron.RenderPath.clipmaps = new Array<Clipmap>();
 			for (i in 0...Main.voxelgiClipmapCount) {
 				var clipmap = new iron.object.Clipmap();
@@ -382,9 +379,6 @@ class RenderPathForward {
 
 			if (iron.RenderPath.pre_clear == true)
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
@@ -396,9 +390,6 @@ class RenderPathForward {
 			}
 			else
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
@@ -410,9 +401,6 @@ class RenderPathForward {
 			path.bindTarget("voxels", "voxels");
 			path.drawMeshes("voxel");
 
-			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
-			#end
 			Inc.computeVoxelsTemporal();
 
 			#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))

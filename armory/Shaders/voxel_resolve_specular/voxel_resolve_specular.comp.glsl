@@ -29,18 +29,17 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "std/gbuffer.glsl"
 #include "std/imageatomic.glsl"
 #include "std/conetrace.glsl"
+#include "std/brdf.glsl"
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
-uniform layout(rgba16f) image2D voxels_specular;
+uniform layout(rgba16) image2D voxels_specular;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
-uniform vec2 cameraProj;
 uniform vec3 eye;
-uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
 uniform sampler2D sveloc;
 
@@ -69,7 +68,7 @@ void main() {
 
 	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb;
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb * voxelgiRefl;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

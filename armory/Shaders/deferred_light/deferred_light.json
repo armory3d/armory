@@ -12,18 +12,12 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "voxelBlend",
-					"link": "_voxelBlend",
-					"ifdef": ["_VoxelTemporal"]
-				},
-				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
 				},
 				{
 					"name": "clipmaps",
-					"link": "_clipmaps",
-					"ifdef": ["_VoxelShadow"]
+					"link": "_clipmaps"
 				},
 				{
 					"name": "invVP",

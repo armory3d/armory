@@ -21,6 +21,9 @@ THE SOFTWARE.
  */
 
 const int DIFFUSE_CONE_COUNT = 16;
+
+const float SHADOW_CONE_APERTURE = radians(15.0);
+
 const float DIFFUSE_CONE_APERTURE = 0.872665f;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
@@ -41,6 +44,7 @@ const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
 	vec3(-0.182696f, 0.388844f, 0.903007f),
 	vec3(0.182696f, -0.388844f, 0.903007f)
 };
+
 
 const float BayerMatrix8[8][8] =
 {

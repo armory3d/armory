@@ -329,6 +329,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
     rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
+    rp_shadowmap_transparent: BoolProperty(name="Transparency", description="Enable transparent shadowmaps", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
         items=[('2', '2', '2'),
                ('3', '3', '3'),
@@ -507,7 +508,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         	   ('1', '1', '1'),
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
-    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3, update=assets.invalidate_compiled_data)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=5, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
