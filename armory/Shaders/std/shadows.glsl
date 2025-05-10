@@ -1,3 +1,6 @@
+//Transparent shadow implemented by Yvain Douard with reference:
+//https://wickedengine.net/2018/01/easy-transparent-shadow-maps/comment-page-1/
+
 #ifndef _SHADOWS_GLSL_
 #define _SHADOWS_GLSL_
 
@@ -55,17 +58,32 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 }
 #endif
 
-float PCF(sampler2DShadow shadowMap, const vec2 uv, const float compare, const vec2 smSize) {
-	float result = texture(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(-1.0, 1.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(0.0, -1.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv, compare));
-	result += texture(shadowMap, vec3(uv + (vec2(0.0, 1.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(1.0, -1.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(1.0, 0.0) / smSize), compare));
-	result += texture(shadowMap, vec3(uv + (vec2(1.0, 1.0) / smSize), compare));
-	return result / 9.0;
+vec3 PCF(sampler2DShadow shadowMap,
+		 #ifdef _ShadowMapTransparent
+		 sampler2D shadowMapTransparent,
+		 #endif
+		 const vec2 uv, const float compare, const vec2 smSize, const bool transparent) {
+	vec3 result = vec3(0.0);
+	result.x = texture(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(-1.0, 1.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(0.0, -1.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv, compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(0.0, 1.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(1.0, -1.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(1.0, 0.0) / smSize), compare));
+	result.x += texture(shadowMap, vec3(uv + (vec2(1.0, 1.0) / smSize), compare));
+	result = result.xxx / 9.0;
+
+	#ifdef _ShadowMapTransparent
+	if (transparent == false) {
+		vec4 shadowmap_transparent = texture(shadowMapTransparent, uv);
+		if (shadowmap_transparent.a < compare)
+			result *= shadowmap_transparent.rgb;
+	}
+	#endif
+
+	return result;
 }
 
 float lpToDepth(vec3 lp, const vec2 lightProj) {
@@ -75,23 +93,38 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 	return zcomp * 0.5 + 0.5;
 }
 
-float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n) {
+vec3 PCFCube(samplerCubeShadow shadowMapCube,
+			 #ifdef _ShadowMapTransparent
+			 samplerCube shadowMapCubeTransparent,
+			 #endif
+			 const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const bool transparent) {
 	const float s = shadowmapCubePcfSize; // TODO: incorrect...
 	float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
 	#ifdef _InvY
 	ml.y = -ml.y;
 	#endif
-	float result = texture(shadowMapCube, vec4(ml, compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(s, s, s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(-s, s, s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(s, -s, s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(s, s, -s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(-s, -s, s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(s, -s, -s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(-s, s, -s), compare));
-	result += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
-	return result / 9.0;
+	vec3 result = vec3(0.0);
+	result.x = texture(shadowMapCube, vec4(ml, compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(s, s, s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, s, s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(s, -s, s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(s, s, -s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, -s, s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(s, -s, -s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, s, -s), compare));
+	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
+	result = result.xxx / 9.0;
+
+	#ifdef _ShadowMapTransparent
+	if (transparent == false) {
+		vec4 shadowmap_transparent = texture(shadowMapCubeTransparent, ml);
+		if (shadowmap_transparent.a < compare)
+			result *= shadowmap_transparent.rgb;
+	}
+	#endif
+
+	return result;
 }
 
 #ifdef _ShadowMapAtlas
@@ -188,7 +221,11 @@ vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
 	return uv;
 }
 
-float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index) {
+vec3 PCFFakeCube(sampler2DShadow shadowMap,
+		#ifdef _ShadowMapTransparent
+		sampler2D shadowMapTransparent,
+		#endif
+		const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index, const bool transparent) {
 	const vec2 smSize = smSizeUniform; // TODO: incorrect...
 	const float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
@@ -203,85 +240,65 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 
-	float result = texture(shadowMap, vec3(uvtiled, compare));
-	// soft shadowing
-	int newFaceIndex = 0;
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
+	if (any(lessThan(uvtiled, vec2(0.0))) || any(greaterThan(uvtiled, vec2(1.0)))) {
+		return vec3(1.0); // Or handle edge cases differently
+	}
+
+	vec3 result = vec3(0.0);
+	// In PCFFakeCube(), modify the sampling pattern to be more robust:
+	const vec2 offsets[9] = vec2[](
+		vec2(0, 0),
+		vec2(1, 0), vec2(-1, 0), vec2(0, 1), vec2(0, -1),
+		vec2(1, 1), vec2(-1, 1), vec2(1, -1), vec2(-1, -1)
+	);
+
+	for (int i = 0; i < 9; i++) {
+		vec2 sampleUV = uv + offsets[i] / smSize;
+		int newFaceIndex;
+		vec2 transformedUV = transformOffsetedUV(faceIndex, newFaceIndex, sampleUV);
+		pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+		uvtiled = pointLightTile.z * transformedUV + pointLightTile.xy;
+		#ifdef _FlipY
+		uvtiled.y = 1.0 - uvtiled.y;
+		#endif
+		result.x += texture(shadowMap, vec3(uvtiled, compare));
+	}
+	result = result.xxx / 9.0;
+
+	pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
+	uvtiled = pointLightTile.z * uv + pointLightTile.xy;
 	#ifdef _FlipY
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
 
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+	#ifdef _ShadowMapTransparent
+	if (transparent == false) {
+		vec4 shadowmap_transparent = texture(shadowMapTransparent, uvtiled);
+		if (shadowmap_transparent.a < compare)
+			result *= shadowmap_transparent.rgb;
+	}
 	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
 
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, 1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 0.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result += texture(shadowMap, vec3(uvtiled, compare));
-
-	return result / 9.0;
+	return result;
 }
 #endif
 
-float shadowTest(sampler2DShadow shadowMap, const vec3 lPos, const float shadowsBias) {
+vec3 shadowTest(sampler2DShadow shadowMap,
+				#ifdef _ShadowMapTransparent
+				sampler2D shadowMapTransparent,
+				#endif
+				const vec3 lPos, const float shadowsBias, const bool transparent) {
 	#ifdef _SMSizeUniform
 	vec2 smSize = smSizeUniform;
 	#else
 	const vec2 smSize = shadowmapSize;
 	#endif
-	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
-	return PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);
+	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return vec3(1.0);
+	return PCF(shadowMap,
+				#ifdef _ShadowMapTransparent
+				shadowMapTransparent,
+				#endif
+				lPos.xy, lPos.z - shadowsBias, smSize, transparent);
 }
 
 #ifdef _CSM
@@ -317,7 +334,11 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	// ..
 }
 
-float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p, const float shadowsBias) {
+vec3 shadowTestCascade(sampler2DShadow shadowMap,
+		#ifdef _ShadowMapTransparent
+		sampler2D shadowMapTransparent,
+		#endif
+		const vec3 eye, const vec3 p, const float shadowsBias, const bool transparent) {
 	#ifdef _SMSizeUniform
 	vec2 smSize = smSizeUniform;
 	#else
@@ -333,8 +354,12 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	vec4 lPos = LWVP * vec4(p, 1.0);
 	lPos.xyz /= lPos.w;
 
-	float visibility = 1.0;
-	if (lPos.w > 0.0) visibility = PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);
+	vec3 visibility = vec3(1.0);
+	if (lPos.w > 0.0) visibility = PCF(shadowMap,
+		#ifdef _ShadowMapTransparent
+		shadowMapTransparent,
+		#endif
+		lPos.xy, lPos.z - shadowsBias, smSize, transparent);
 
 	// Blend cascade
 	// https://github.com/TheRealMJP/Shadows
@@ -352,8 +377,12 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 
 		vec4 lPos2 = LWVP2 * vec4(p, 1.0);
 		lPos2.xyz /= lPos2.w;
-		float visibility2 = 1.0;
-		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap, lPos2.xy, lPos2.z - shadowsBias, smSize);
+		vec3 visibility2 = vec3(1.0);
+		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap,
+			#ifdef _ShadowMapTransparent
+			shadowMapTransparent,
+			#endif
+			lPos2.xy, lPos2.z - shadowsBias, smSize, transparent);
 
 		float lerpAmt = smoothstep(0.0, blendThres, splitDist);
 		return mix(visibility2, visibility, lerpAmt);
@@ -367,5 +396,4 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	// if (ci == 12) albedo.rgb = vec3(1.0, 1.0, 0.0);
 }
 #endif
-
 #endif
