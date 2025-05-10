@@ -1,7 +1,6 @@
 package armory.trait.physics.bullet;
 
 #if arm_bullet
-
 import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
@@ -9,7 +8,6 @@ import iron.math.Quat;
 import iron.math.RayCaster;
 
 class Hit {
-
 	public var rb: RigidBody;
 	public var pos: Vec4;
 	public var normal: Vec4;
@@ -32,7 +30,6 @@ class ConvexHit {
 }
 
 class ContactPair {
-
 	public var a: Int;
 	public var b: Int;
 	public var posA: Vec4;
@@ -47,7 +44,6 @@ class ContactPair {
 }
 
 class PhysicsWorld extends Trait {
-
 	public static var active: PhysicsWorld = null;
 	static var sceneRemoved = false;
 
@@ -300,7 +296,7 @@ class PhysicsWorld extends Trait {
 		world.stepSimulation(t, currMaxSteps, fixedTime);
 		updateContacts();
 
-		for (rb in rbMap) @:privateAccess rb.physicsUpdate();
+		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } } // HACK: see this recommendation: https://github.com/armory3d/armory/issues/3044#issuecomment-2558199944.
 
 		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;
@@ -412,6 +408,16 @@ class PhysicsWorld extends Trait {
 			#end
 		}
 
+		if (getDebugDrawMode() & DrawRayCast != 0) {
+			debugDrawHelper.rayCast({
+				from: from,
+				to: to,
+				hasHit: rc.hasHit(),
+				hitPoint: hitPointWorld,
+				hitNormal: hitNormalWorld
+			});
+		}
+
 		#if js
 		bullet.Bt.Ammo.destroy(rayCallback);
 		#else
@@ -493,7 +499,7 @@ class PhysicsWorld extends Trait {
 			if (debugDrawMode == NoDebug) {
 				return;
 			}
-			initDebugDrawing();
+			initDebugDrawing(debugDrawMode);
 		}
 
 		#if js
@@ -517,8 +523,8 @@ class PhysicsWorld extends Trait {
 		#end
 	}
 
-	function initDebugDrawing() {
-		debugDrawHelper = new DebugDrawHelper(this);
+	function initDebugDrawing(debugDrawMode: DebugDrawMode) {
+		debugDrawHelper = new DebugDrawHelper(this, debugDrawMode);
 
 		#if js
 			final drawer = new bullet.Bt.DebugDrawer();
@@ -656,6 +662,8 @@ enum abstract DebugDrawMode(Int) from Int to Int {
 		Only works if `DrawWireframe` is enabled as well.
 	 **/
 	var DrawFrames = 1 << 15;
+
+	var DrawRayCast = 1 << 16;
 
 	@:op(~A) public inline function bitwiseNegate(): DebugDrawMode {
 		return ~this;

@@ -1,7 +1,7 @@
 package armory.logicnode;
 
 #if arm_physics
-import armory.trait.physics.bullet.PhysicsWorld;
+import armory.trait.physics.PhysicsWorld;
 #end
 import armory.trait.navigation.Navigation;
 import iron.object.Object;

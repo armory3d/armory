@@ -3021,14 +3021,15 @@ Make sure the mesh only has tris/quads.""")
             if rbw is not None and rbw.enabled:
                 out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
 
-                if phys_pkg == 'bullet':
-                    debug_draw_mode = 1 if wrd.arm_bullet_dbg_draw_wireframe else 0
-                    debug_draw_mode |= 2 if wrd.arm_bullet_dbg_draw_aabb else 0
-                    debug_draw_mode |= 8 if wrd.arm_bullet_dbg_draw_contact_points else 0
-                    debug_draw_mode |= 2048 if wrd.arm_bullet_dbg_draw_constraints else 0
-                    debug_draw_mode |= 4096 if wrd.arm_bullet_dbg_draw_constraint_limits else 0
-                    debug_draw_mode |= 16384 if wrd.arm_bullet_dbg_draw_normals else 0
-                    debug_draw_mode |= 32768 if wrd.arm_bullet_dbg_draw_axis_gizmo else 0
+                if phys_pkg == 'bullet' or phys_pkg == 'oimo':
+                    debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0
+                    debug_draw_mode |= 2 if wrd.arm_physics_dbg_draw_aabb else 0
+                    debug_draw_mode |= 8 if wrd.arm_physics_dbg_draw_contact_points else 0
+                    debug_draw_mode |= 2048 if wrd.arm_physics_dbg_draw_constraints else 0
+                    debug_draw_mode |= 4096 if wrd.arm_physics_dbg_draw_constraint_limits else 0
+                    debug_draw_mode |= 16384 if wrd.arm_physics_dbg_draw_normals else 0
+                    debug_draw_mode |= 32768 if wrd.arm_physics_dbg_draw_axis_gizmo else 0
+                    debug_draw_mode |= 65536 if wrd.arm_physics_dbg_draw_raycast else 0
                     out_trait['parameters'].append(str(debug_draw_mode))
 
             self.output['traits'].append(out_trait)
