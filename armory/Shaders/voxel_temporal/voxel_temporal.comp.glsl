@@ -44,8 +44,8 @@ uniform mat4 LVP;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba16f) image3D voxelsB;
-uniform layout(rgba16f) image3D voxelsOut;
+uniform layout(rgba8) image3D voxelsB;
+uniform layout(rgba8) image3D voxelsOut;
 uniform layout(r16f) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -139,7 +139,7 @@ void main() {
 				radiance = basecol;
 				vec4 trace = traceDiffuse(P, N, voxelsSampler, clipmaps);
 				vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-				radiance.rgb *= light / PI + indirect;
+				radiance.rgb *= light + indirect;
 				radiance.rgb += emission.rgb;
 			}
 			#else
