@@ -233,11 +233,13 @@ void main() {
 
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #endif
 
-	// Envmap
+#ifndef _VoxelGI
+#ifndef _VoxelAOvar
+// Envmap
 #ifdef _Irr
-
 	vec3 envl = shIrradiance(n, shirr);
 
 	#ifdef _gbuffer2
@@ -271,23 +273,27 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - F; //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * F; //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * F; //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
 
+	fragColor.rgb = envl;
+#endif
+#endif
+
 #ifdef _VoxelGI
-	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
+	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * F * voxelgiRefl;
 #endif
 
 #ifdef _VoxelAOvar
