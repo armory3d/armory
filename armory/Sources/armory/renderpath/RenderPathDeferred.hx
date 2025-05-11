@@ -870,7 +870,6 @@ class RenderPathDeferred {
 				{
 					path.bindTarget("voxelsOut", "voxels");
 					path.bindTarget("voxelsSDF", "voxelsSDF");
-					path.bindTarget("gbuffer2", "gbuffer2");
 				}
 				#end
 
