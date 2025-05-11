@@ -57,12 +57,11 @@ class RenderPathDeferred {
 			Inc.initGI("voxels");
 			Inc.initGI("voxelsOut");
 			Inc.initGI("voxelsOutB");
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
 			#if (rp_voxels == "Voxel GI")
-			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
 			Inc.initGI("voxels_specular");
 			#else
@@ -198,7 +197,6 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/resolve_ssgi/resolve_ssgi");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -249,7 +247,7 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "R8";
 			t.scale = Inc.getSuperSampling();
-			#if rp_ssgi_half
+			#if rp_ssgi_half // Do we keep this ?
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
@@ -603,6 +601,7 @@ class RenderPathDeferred {
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
 				#end
+				path.bindTarget("gbuffer2", "sveloc");
 
 				#if rp_shadowmap
 				{
@@ -615,7 +614,6 @@ class RenderPathDeferred {
 				#end
 
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
@@ -639,9 +637,6 @@ class RenderPathDeferred {
 
 			if (iron.RenderPath.pre_clear == true)
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
@@ -653,9 +648,6 @@ class RenderPathDeferred {
 			}
 			else
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
@@ -665,10 +657,16 @@ class RenderPathDeferred {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
-			path.drawMeshes("voxel");
-			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
 			#end
+			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();
 
@@ -683,6 +681,10 @@ class RenderPathDeferred {
 				path.clearImage("voxels_specular", 0x00000000);
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
+				#end
+				#if arm_voxelgi_shadows
+				path.bindTarget("voxelsOut", "voxels");
+				path.bindTarget("voxelsSDF", "voxelsSDF");
 				#end
 			}
 		}

@@ -1,9 +1,11 @@
 [submodule "Kha"]
 	path = Kha
-	url = https://github.com/armory3d/Kha
+	url = https://github.com/e2002e/Kha
+	branch = 47ef84b
 [submodule "Krom"]
 	path = Krom
-	url = https://github.com/armory3d/armorcore_bin
+	url = https://github.com/e2002e/armorcore_bin
+	branch = 46a1179
 [submodule "nodejs"]
 	path = nodejs
 	url = https://github.com/armory3d/nodejs_bin

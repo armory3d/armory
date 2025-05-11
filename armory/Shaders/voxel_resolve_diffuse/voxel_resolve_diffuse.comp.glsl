@@ -35,13 +35,11 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 uniform sampler3D voxels;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform layout(rgba16f) image2D voxels_diffuse;
+uniform layout(rgba16) image2D voxels_diffuse;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
-uniform vec2 cameraProj;
 uniform vec3 eye;
-uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
 
 uniform sampler2D gbuffer1;
@@ -71,7 +69,7 @@ void main() {
 	#endif
 
 	float depth = textureLod(gbufferD, uv, 0.0).r * 2.0 - 1.0;
-	if (depth == 0) return;
+	if (depth == 0.0) return;
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;
@@ -107,6 +105,7 @@ void main() {
 
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec3 F = (f0 * envBRDF.x + envBRDF.y);
 #endif
 
 	// Envmap
@@ -154,14 +153,14 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - F; //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * F; //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * F; //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
@@ -169,7 +168,8 @@ void main() {
 	envl.rgb *= voxelgiEnv;
 
 	vec4 trace = traceDiffuse(P, n, voxels, clipmaps);
-	vec3 color = trace.rgb + envl * (1.0 - trace.a);
+	vec3 color = trace.rgb * albedo * (1.0 - F);
+	color += envl * (1.0 - trace.a);
 
 	imageStore(voxels_diffuse, ivec2(pixel), vec4(color, 1.0));
 }
