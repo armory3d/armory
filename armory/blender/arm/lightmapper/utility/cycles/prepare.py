@@ -811,7 +811,7 @@ def set_settings():
     
     print(bpy.app.version)
 
-    if bpy.app.version[0] == 3:
+    if bpy.app.version[0] == 3 or bpy.app.version[0] == 4:
         if cycles.device == "GPU":
             scene.cycles.tile_size = 256
         else:
