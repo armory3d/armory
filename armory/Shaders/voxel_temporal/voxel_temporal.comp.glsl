@@ -96,8 +96,8 @@ void main() {
 		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
 
 		if (i < 6) {
+
 			#ifdef _VoxelGI
-			// Early out for empty voxels
 			if (count > 0) {
 				vec4 basecol = vec4(0.0);
 				basecol.r = float(imageLoad(voxels, src)) / 255;
@@ -129,6 +129,7 @@ void main() {
 				light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 255;
 				light /= count;
 
+
 				//clipmap to world
 				vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
 				P = P * 2.0 - 1.0;
@@ -139,13 +140,12 @@ void main() {
 				radiance = basecol;
 				vec4 trace = traceDiffuse(P, N, voxelsSampler, clipmaps);
 				vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
-				radiance.rgb *= light + indirect;
+				radiance.rgb *= light / PI + indirect;
 				radiance.rgb += emission.rgb;
 			}
 			#else
 			count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
-			// Early out for empty voxels
-			if (count > 0) {
+			if (count > 0)
 				opac = float(imageLoad(voxels, src)) / 255;
 				opac /= count;
 			}

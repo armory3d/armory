@@ -15,6 +15,11 @@ class RenderPathDeferred {
 	static var bloomUpsampler: Upsampler;
 	#end
 
+	#if (rp_ssgi == "SSGI")
+	static var ssgitex = "singleb";
+	static var ssgitexb = "singleb";
+	#end
+
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -420,7 +425,6 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
-
 		}
 		#end
 
@@ -601,8 +605,9 @@ class RenderPathDeferred {
 					path.bindTarget("gbuffer_emission", "gbufferEmission");
 				}
 				#end
+				#if rp_gbuffer2
 				path.bindTarget("gbuffer2", "sveloc");
-
+				#end
 				#if rp_shadowmap
 				{
 					#if arm_shadowmap_atlas

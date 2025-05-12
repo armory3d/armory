@@ -142,7 +142,7 @@ def update_preset(self, context):
         rpdat.rp_stereo = False
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '64'
-        rpdat.arm_voxelgi_size = 0.125
+        rpdat.arm_voxelgi_size = 0.25
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False

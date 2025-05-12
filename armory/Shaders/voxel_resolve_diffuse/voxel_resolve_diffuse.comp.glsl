@@ -105,7 +105,7 @@ void main() {
 
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
-	vec3 F = (f0 * envBRDF.x + envBRDF.y);
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #endif
 
 	// Envmap

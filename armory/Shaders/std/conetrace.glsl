@@ -61,6 +61,7 @@ vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCo
 }
 
 #endif
+
 #ifdef _VoxelAOvar
 float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
  	float opac = 0.0;
@@ -125,7 +126,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
 			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
+			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
@@ -229,7 +230,7 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
 			float mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
+			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
 		sampleCol += (1.0 - sampleCol) * mipSample;
@@ -307,7 +308,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 			#else
 			float mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, 0, face_offset, direction_weight).a;
 			#endif
-			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
+			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
 		sampleCol += (1.0 - sampleCol) * mipSample;

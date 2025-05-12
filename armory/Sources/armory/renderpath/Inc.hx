@@ -151,11 +151,9 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
-		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
-		#end
 	}
 
 	static function getShadowMapAtlas(atlas:ShadowMapAtlas, transparent: Bool):String {
@@ -196,11 +194,9 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
 		}
-		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			atlas.rejectedLights = [];
 		}
-		#end
 		#end
 
 		for (light in iron.Scene.active.lights) {
@@ -208,18 +204,14 @@ class Inc {
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, false);
 			}
-			#if rp_shadowmap_transparent
 			if (!light.lightInAtlasTransparent && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, true);
 			}
-			#end
 		}
 		// update point light data before rendering
-		updatePointLightAtlasData(false);
-		#if rp_shadowmap_transparent
 		updatePointLightAtlasData(true);
-		#end
+		updatePointLightAtlasData(false);
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			var tilesToRemove = [];
@@ -295,26 +287,8 @@ class Inc {
 				path.currentFace = -1;
 			}
 			path.endStream();
-
-			#if arm_shadowmap_atlas_lod
-			for (tile in tilesToChangeSize) {
-				tilesToRemove.push(tile);
-
-				var newTile = ShadowMapTile.assignTiles(tile.light, atlas, tile);
-				if (newTile != null)
-					atlas.activeTiles.push(newTile);
-			}
-			// update point light data after changing size of tiles to avoid render issues
-			updatePointLightAtlasData(false);
-			#end
-
-			for (tile in tilesToRemove) {
-				atlas.activeTiles.remove(tile);
-				tile.freeTile();
-			}
 		}
 
-		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			var tilesToRemove = [];
 			#if arm_shadowmap_atlas_lod
@@ -399,6 +373,8 @@ class Inc {
 					atlas.activeTiles.push(newTile);
 			}
 			// update point light data after changing size of tiles to avoid render issues
+			updatePointLightAtlasData(false);
+			// update point light data after changing size of tiles to avoid render issues
 			updatePointLightAtlasData(true);
 			#end
 
@@ -411,7 +387,6 @@ class Inc {
 		endShadowsLogicProfile();
 		#end
 		#end
-		#end
 	}
 	#else
 	public static function bindShadowMap() {
@@ -419,27 +394,21 @@ class Inc {
 			if (!l.visible || l.data.raw.type != "sun") continue;
 			var n = "shadowMap";
 			path.bindTarget(n, n);
-			#if rp_shadowmap_transparent
 			var n = "shadowMapTransparent";
 			path.bindTarget(n, n);
-			#end
 			break;
 		}
 		for (i in 0...pointIndex) {
 			var n = "shadowMapPoint[" + i + "]";
 			path.bindTarget(n, n);
-			#if rp_shadowmap_transparent
 			var n = "shadowMapPointTransparent[" + i + "]";
 			path.bindTarget(n, n);
-			#end
 		}
 		for (i in 0...spotIndex) {
 			var n = "shadowMapSpot[" + i + "]";
 			path.bindTarget(n, n);
-			#if rp_shadowmap_transparent
 			var n = "shadowMapSpotTransparent[" + i + "]";
 			path.bindTarget(n, n);
-			#end
 		}
 	}
 
@@ -520,7 +489,6 @@ class Inc {
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
 
-		#if rp_shadowmap_transparent
 		pointIndex = 0;
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
@@ -542,7 +510,6 @@ class Inc {
 			if (l.data.raw.type == "point") pointIndex++;
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
-		#end
 		#end // rp_shadowmap
 	}
 	#end
@@ -617,6 +584,7 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
+
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -628,8 +596,10 @@ class Inc {
 		#end
 
 		#if (rp_voxels != "Off")
-		path.bindTarget("voxelsOut", "voxels");
-		path.bindTarget("voxelsSDF", "voxelsSDF");
+		{
+			path.bindTarget("voxelsOut", "voxels");
+			path.bindTarget("voxelsSDF", "voxelsSDF");
+		}
 		#end
 
 		path.drawMeshes("translucent");
@@ -643,6 +613,7 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
+
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
@@ -1134,6 +1105,35 @@ class Inc {
 		kha.compute.Compute.setFloat3(voxel_ch3, x, y, z);
 		#end
 
+		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+		#if arm_irradiance
+		var irradiance = iron.Scene.active.world == null ?
+			iron.data.WorldData.getEmptyIrradiance() :
+			iron.Scene.active.world.probe.irradiance;
+		var shCoeffs = new Float32Array(28);
+		for (i in 0...28) {
+			shCoeffs[i] = irradiance[i];
+		}
+		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
+		#end
+		#if arm_radiance
+		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
+		#end
+
+		#if arm_envcol
+		var x: kha.FastFloat = 0.0;
+		var y: kha.FastFloat = 0.0;
+		var z: kha.FastFloat = 0.0;
+
+		if (camera.data.raw.clear_color != null) {
+			x = camera.data.raw.clear_color[0];
+			y = camera.data.raw.clear_color[1];
+			z = camera.data.raw.clear_color[2];
+		}
+
+		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
+		#end
+
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}
 	#else
@@ -1253,6 +1253,8 @@ class Inc {
 		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
 		#end
+
+		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {
@@ -1431,7 +1433,6 @@ class ShadowMapAtlas {
 	}
 
 	public static inline function shadowMapAtlasName(type: String, transparent: Bool): String {
-
 		#if arm_shadowmap_atlas_single_map
 		return "shadowMapAtlas";
 		#else

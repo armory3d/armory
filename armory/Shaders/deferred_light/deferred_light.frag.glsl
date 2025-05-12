@@ -37,9 +37,9 @@ uniform float clipmaps[10 * voxelgiClipmapCount];
 #endif
 #endif
 #ifdef _VoxelShadow
-//!uniform sampler2D voxels_shadows;
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
+uniform float clipmaps[10 * voxelgiClipmapCount];
 #endif
 
 uniform float envmapStrength;
@@ -92,16 +92,12 @@ uniform mat4 invVP;
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
-	#ifdef _ShadowMapTransparent
 	//!uniform sampler2D shadowMapSpotTransparent[1];
-	#endif
 	//!uniform mat4 LWVPSpot[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
-	#ifdef _ShadowMapTransparent
 	//!uniform sampler2D shadowMapSpotTransparent[4];
-	#endif
 	//!uniform mat4 LWVPSpotArray[4];
 	#endif
 #endif
@@ -124,15 +120,11 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[1];
-	#ifdef _ShadowMapTransparent
 	//!uniform sampler2D shadowMapSpotTransparent[1];
-	#endif
 	//!uniform mat4 LWVPSpot[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
-	#ifdef _ShadowMapTransparent
 	//!uniform samplerCube shadowMapPointTransparent[1];
-	#endif
 	//!uniform vec2 lightProj;
 	#endif
 #endif
@@ -140,39 +132,29 @@ uniform vec2 cameraPlane;
 	#ifdef _ShadowMapAtlas
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
-		#if _ShadowMapTransparent
 		uniform sampler2D shadowMapAtlasTransparent;
-		#endif
 		#endif
 	#endif
 	#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
-		#ifdef _ShadowMapTransparent
 		//!uniform sampler2D shadowMapAtlasPointTransparent;
 		#endif
-		#endif
-		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
+		//!uniform vec4 pointLightDataArray[4];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
-		#ifdef _ShadowMapTransparent
 		//!uniform samplerCube shadowMapPointTransparent[4];
-		#endif
 	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
 		#ifdef _ShadowMapAtlas
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasSpot;
-		#ifdef _ShadowMapTransparent
 		//!uniform sampler2D shadowMapAtlasSpotTransparent;
-		#endif
 		#endif
 		#else
 		//!uniform sampler2DShadow shadowMapSpot[4];
-		#ifdef _ShadowMapTransparent
 		//!uniform sampler2D shadowMapSpotTransparent[4];
-		#endif
 		#endif
 	//!uniform mat4 LWVPSpotArray[maxLightsCluster];
 	#endif
@@ -186,15 +168,11 @@ uniform vec3 sunCol;
 	#ifdef _ShadowMapAtlas
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
-	#ifdef _ShadowMapTransparent
 	uniform sampler2D shadowMapAtlasSunTransparent;
-	#endif
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
-	#ifdef _ShadowMapTransparent
 	uniform sampler2D shadowMapTransparent;
-	#endif
 	#endif
 	uniform float shadowsBias;
 	#ifdef _CSM
@@ -262,14 +240,13 @@ void main() {
 
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
-	vec3 F = (f0 * envBRDF.x + envBRDF.y);
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #endif
 
 #ifndef _VoxelGI
 #ifndef _VoxelAOvar
-	// Envmap
+// Envmap
 #ifdef _Irr
-
 	vec3 envl = shIrradiance(n, shirr);
 
 	#ifdef _gbuffer2
@@ -320,14 +297,14 @@ void main() {
 #endif
 #endif
 
-#ifdef _VoxelAOvar
-	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb;
-#endif
-
 #ifdef _VoxelGI
-	fragColor.rgb += textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
+	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * F * voxelgiRefl;
+#endif
+
+#ifdef _VoxelAOvar
+	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
 #endif
 
 	// Show voxels
@@ -387,24 +364,12 @@ void main() {
 			svisibility = shadowTestCascade(
 				#ifdef _ShadowMapAtlas
 					#ifndef _SingleAtlas
-					#ifdef _ShadowMapTransparent
 					shadowMapAtlasSun, shadowMapAtlasSunTransparent
 					#else
-					shadowMapAtlasSun
-					#endif
-					#else
-					#ifdef _ShadowMapTransparent
 					shadowMapAtlas, shadowMapAtlasTransparent
-					#else
-					shadowMapAtlas
-					#endif
 					#endif
 				#else
-				#ifdef _ShadowMapTransparent
 				shadowMap, shadowMapTransparent
-				#else
-				shadowMap
-				#endif
 				#endif
 				, eye, p + n * shadowsBias * 10, shadowsBias, false
 			);
@@ -414,24 +379,12 @@ void main() {
 				svisibility = shadowTest(
 					#ifdef _ShadowMapAtlas
 						#ifndef _SingleAtlas
-						#ifdef _ShadowMapTransparent
 						shadowMapAtlasSun, shadowMapAtlasSunTransparent
 						#else
-						shadowMapAtlasSun
-						#endif
-						#else
-						#ifdef _ShadowMapTransparent
 						shadowMapAtlas, shadowMapAtlasTransparent
-						#else
-						shadowMapAtlas
-						#endif
 						#endif
 					#else
-					#ifdef _ShadowMapTransparent
 					shadowMap, shadowMapTransparent
-					#else
-					shadowMap
-					#endif
 					#endif
 					, lPos.xyz / lPos.w, shadowsBias, false
 				);
@@ -497,9 +450,9 @@ void main() {
 #ifdef _SinglePoint
 
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
-			, 0, pointBias, true
+			, 0, pointBias, true, false
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
@@ -549,11 +502,10 @@ void main() {
 			albedo,
 			roughness,
 			occspec.y,
-			f0,
-			false
+			f0
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
-				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0, false
 			#endif
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
