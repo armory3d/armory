@@ -72,9 +72,9 @@ class ParticleSystem {
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
 
 			for (i in 0...r.count) {
-				var random = Math.random() * 2 - 1;
+				var random = Math.random();
 				var particle = new Particle(i);
-				particle.sr = 1 + random * r.size_random;
+				particle.sr = 1 - random * r.size_random;
 				particles.push(particle);
 			}
 
