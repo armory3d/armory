@@ -278,8 +278,8 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     distortion = c.parse_value_input(node.inputs[5])
     if bpy.app.version >= (4, 1, 0):
         if node.noise_type == "FBM":
+            state.curshader.add_function(c_functions.str_tex_musgrave)
             if out_socket == node.outputs[1]:
-                state.curshader.add_function(c_functions.str_tex_musgrave)
                 res = 'vec3(tex_musgrave_f({0} * {1}), tex_musgrave_f({0} * {1} + 120.0), tex_musgrave_f({0} * {1} + 168.0))'.format(co, scale, detail, distortion)
             else:
                 res = f'tex_musgrave_f({co} * {scale} * 1.0)'
