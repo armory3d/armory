@@ -86,7 +86,7 @@ def write(vert, particle_info=None, shadowmap=False):
         vert.write('p_fade = sin(min((p_age / 2) * 3.141592, 3.141592));')
 
     if out_index:
-        vert.add_out('float p_index');
+        vert.add_out('float p_index')
         vert.write('p_index = gl_InstanceID;')
 
 def write_tilesheet(vert):
