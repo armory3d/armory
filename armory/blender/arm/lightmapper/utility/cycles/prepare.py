@@ -518,7 +518,7 @@ def configure_meshes(self):
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("The material group is not supported!")
 
-                        if (mainNode.type == "ShaderNodeMixRGB"):
+                        if (mainNode.type == "ShaderNodeMix"):
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                 print("Mix shader found")
 
