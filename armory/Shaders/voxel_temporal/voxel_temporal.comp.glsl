@@ -44,8 +44,8 @@ uniform mat4 LVP;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba8) image3D voxelsB;
-uniform layout(rgba8) image3D voxelsOut;
+uniform layout(rgba16f) image3D voxelsB;
+uniform layout(rgba16f) image3D voxelsOut;
 uniform layout(r16f) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -93,11 +93,9 @@ void main() {
 		float opac = 0.0;
 		#endif
 
-		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
-
 		if (i < 6) {
-
 			#ifdef _VoxelGI
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
 			if (count > 0) {
 				vec4 basecol = vec4(0.0);
 				basecol.r = float(imageLoad(voxels, src)) / 255;
@@ -144,8 +142,8 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
-			if (count > 0)
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 255;
 				opac /= count;
 			}

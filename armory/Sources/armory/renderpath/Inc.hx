@@ -660,7 +660,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = "RGBA64";
+			t.format = "RGBA32";
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -688,7 +688,7 @@ class Inc {
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "RGBA32";
+						t.format = "RGBA64";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
@@ -1103,35 +1103,6 @@ class Inc {
 		}
 
 		kha.compute.Compute.setFloat3(voxel_ch3, x, y, z);
-		#end
-
-		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
-		#if arm_irradiance
-		var irradiance = iron.Scene.active.world == null ?
-			iron.data.WorldData.getEmptyIrradiance() :
-			iron.Scene.active.world.probe.irradiance;
-		var shCoeffs = new Float32Array(28);
-		for (i in 0...28) {
-			shCoeffs[i] = irradiance[i];
-		}
-		kha.compute.Compute.setFloats(voxel_ch3, shCoeffs);
-		#end
-		#if arm_radiance
-		kha.compute.Compute.setFloat(voxel_ci3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
-		#end
-
-		#if arm_envcol
-		var x: kha.FastFloat = 0.0;
-		var y: kha.FastFloat = 0.0;
-		var z: kha.FastFloat = 0.0;
-
-		if (camera.data.raw.clear_color != null) {
-			x = camera.data.raw.clear_color[0];
-			y = camera.data.raw.clear_color[1];
-			z = camera.data.raw.clear_color[2];
-		}
-
-		kha.compute.Compute.setFloat3(voxel_cj3, x, y, z);
 		#end
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);

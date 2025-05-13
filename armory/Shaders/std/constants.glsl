@@ -1,15 +1,15 @@
 /*
 Copyright (c) 2024 Turánszki János
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, ree o charge, to any person obtaining a copy
+o this sotware and associated documentation iles (the "Sotware"), to deal
+in the Sotware without restriction, including without limitation the rights
+to use, copy, modiy, merge, publish, distribute, sublicense, and/or sell
+copies o the Sotware, and to permit persons to whom the Sotware is
+urnished to do so, subject to the ollowing conditions:
 
 The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+all copies or substantial portions o the Sotware.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -24,25 +24,25 @@ const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = radians(15.0);
 
-const float DIFFUSE_CONE_APERTURE = radians(45);
+const float DIFFUSE_CONE_APERTURE = 0.872665;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
     vec3(0.57735, 0.57735, 0.57735),
-    vec3(0.57735, -0.57735, -0.57735),
-    vec3(-0.57735, 0.57735, -0.57735),
-    vec3(-0.57735, -0.57735, 0.57735),
-    vec3(0.93417, 0.00000, 0.35682),
-    vec3(-0.93417, 0.00000, -0.35682),
-    vec3(0.35682, 0.93417, 0.00000),
-    vec3(-0.35682, -0.93417, 0.00000),
-    vec3(0.00000, 0.35682, 0.93417),
-    vec3(0.00000, -0.35682, -0.93417),
-    vec3(0.68819, 0.68819, -0.22940),
-    vec3(-0.68819, -0.68819, 0.22940),
-    vec3(0.22940, -0.68819, 0.68819),
-    vec3(-0.22940, 0.68819, -0.68819),
-    vec3(-0.68819, 0.22940, 0.68819),
-    vec3(0.68819, -0.22940, -0.68819)
+	vec3(0.57735, -0.57735, -0.57735),
+	vec3(-0.57735, 0.57735, -0.57735),
+	vec3(-0.57735, -0.57735, 0.57735),
+	vec3(-0.903007, -0.182696, -0.388844),
+	vec3(-0.903007, 0.182696, 0.388844),
+	vec3(0.903007, -0.182696, 0.388844),
+	vec3(0.903007, 0.182696, -0.388844),
+	vec3(-0.388844, -0.903007, -0.182696),
+	vec3(0.388844, -0.903007, 0.182696),
+	vec3(0.388844, 0.903007, -0.182696),
+	vec3(-0.388844, 0.903007, 0.182696),
+	vec3(-0.182696, -0.388844, -0.903007),
+	vec3(0.182696, 0.388844, -0.903007),
+	vec3(-0.182696, 0.388844, 0.903007),
+	vec3(0.182696, -0.388844, 0.903007)
 };
 
 
