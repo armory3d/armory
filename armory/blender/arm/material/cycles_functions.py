@@ -157,8 +157,6 @@ float tex_noise(const vec3 p, const float detail, const float distortion) {
 }
 """
 
-# Based on noise created by Nikita Miropolskiy, nikat/2013
-# Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 str_tex_musgrave = """
 vec3 random3(const vec3 c) {
     float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
@@ -170,32 +168,64 @@ vec3 random3(const vec3 c) {
     r.y = fract(512.0 * j);
     return r - 0.5;
 }
-float tex_musgrave_f(const vec3 p) {
+
+float noise_tex(const vec3 p) {
     const float F3 = 0.3333333;
     const float G3 = 0.1666667;
+
     vec3 s = floor(p + dot(p, vec3(F3)));
     vec3 x = p - s + dot(s, vec3(G3));
     vec3 e = step(vec3(0.0), x - x.yzx);
-    vec3 i1 = e*(1.0 - e.zxy);
-    vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+    vec3 i1 = e * (1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+
     vec3 x1 = x - i1 + G3;
-    vec3 x2 = x - i2 + 2.0*G3;
-    vec3 x3 = x - 1.0 + 3.0*G3;
-    vec4 w, d;
-    w.x = dot(x, x);
-    w.y = dot(x1, x1);
-    w.z = dot(x2, x2);
-    w.w = dot(x3, x3);
-    w = max(0.6 - w, 0.0);
+    vec3 x2 = x - i2 + 2.0 * G3;
+    vec3 x3 = x - 1.0 + 3.0 * G3;
+
+    vec4 w;
+    w.x = max(0.6 - dot(x, x), 0.0);
+    w.y = max(0.6 - dot(x1, x1), 0.0);
+    w.z = max(0.6 - dot(x2, x2), 0.0);
+    w.w = max(0.6 - dot(x3, x3), 0.0);
+
+    w = w * w;
+    w = w * w;
+
+    vec4 d;
     d.x = dot(random3(s), x);
     d.y = dot(random3(s + i1), x1);
     d.z = dot(random3(s + i2), x2);
     d.w = dot(random3(s + 1.0), x3);
-    w *= w;
-    w *= w;
+
     d *= w;
     return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
 }
+
+float tex_musgrave_f(const vec3 p, float detail, float distortion) {
+    // Apply distortion to the input coordinates smoothly with noise_tex
+    vec3 distorted_p = p + distortion * vec3(
+        noise_tex(p + vec3(5.2, 1.3, 7.1)),
+        noise_tex(p + vec3(1.7, 9.2, 3.8)),
+        noise_tex(p + vec3(8.3, 2.8, 4.5))
+    );
+
+    float value = 0.0;
+    float amplitude = 1.0;
+    float frequency = 1.0;
+
+    // Use 'detail' as number of octaves, clamped between 1 and 8
+    int octaves = int(clamp(detail, 1.0, 8.0));
+
+    for (int i = 0; i < octaves; i++) {
+        value += amplitude * noise_tex(distorted_p * frequency);
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+
+    return clamp(value, 0.0, 1.0);
+}
+
 """
 
 # col: the incoming color
