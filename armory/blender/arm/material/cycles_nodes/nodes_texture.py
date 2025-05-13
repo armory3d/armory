@@ -254,10 +254,10 @@ if bpy.app.version < (4, 1, 0):
             co = 'bposition'
     
         scale = c.parse_value_input(node.inputs['Scale'])
-        # detail = c.parse_value_input(node.inputs[2])
-        # distortion = c.parse_value_input(node.inputs[3])
-    
-        res = f'tex_musgrave_f({co} * {scale} * 0.5)'
+        detail = c.parse_value_input(node.inputs[3])
+        distortion = c.parse_value_input(node.inputs[4])
+
+        res = f'tex_musgrave_f({co} * {scale} * 0.5, {detail}, {distortion})'
     
         return res
 
@@ -280,9 +280,9 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
         if node.noise_type == "FBM":
             state.curshader.add_function(c_functions.str_tex_musgrave)
             if out_socket == node.outputs[1]:
-                res = 'vec3(tex_musgrave_f({0} * {1}), tex_musgrave_f({0} * {1} + 120.0), tex_musgrave_f({0} * {1} + 168.0))'.format(co, scale, detail, distortion)
+                res = 'vec3(tex_musgrave_f({0} * {1}, {2}, {3}), tex_musgrave_f({0} * {1} + 120.0, {2}, {3}), tex_musgrave_f({0} * {1} + 168.0, {2}, {3}))'.format(co, scale, detail, distortion)
             else:
-                res = f'tex_musgrave_f({co} * {scale} * 1.0)'
+                res = f'tex_musgrave_f({co} * {scale} * 1.0, {detail}, {distortion})'
         else:
             if out_socket == node.outputs[1]:
                 res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
