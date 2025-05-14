@@ -1,7 +1,6 @@
 package iron.object;
 
 #if arm_particles
-import kha.FastFloat;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
 import iron.data.Data;
@@ -55,6 +54,7 @@ class ParticleSystem {
 		Data.getParticle(sceneName, pref.particle, function(b: ParticleData) {
 			data = b;
 			r = data.raw;
+
 			if (Scene.active.raw.gravity != null) {
 				gx = Scene.active.raw.gravity[0] * r.weight_gravity;
 				gy = Scene.active.raw.gravity[1] * r.weight_gravity;
@@ -65,9 +65,11 @@ class ParticleSystem {
 				gy = 0;
 				gz = -9.81 * r.weight_gravity;
 			}
-			alignx = r.object_align_factor[0] / 2;
-			aligny = r.object_align_factor[1] / 2;
-			alignz = r.object_align_factor[2] / 2;
+
+			alignx = r.object_align_factor[0];
+			aligny = r.object_align_factor[1];
+			alignz = r.object_align_factor[2];
+
 			lifetime = r.lifetime / frameRate;
 			animtime = (r.frame_end - r.frame_start) / frameRate;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
@@ -132,7 +134,7 @@ class ParticleSystem {
 		m._10 = hair ? 0 : alignx;
 		m._11 = hair ? 0 : aligny;
 		m._12 = hair ? 0 : alignz;
-		m._13 = hair ? 0 : r.factor_random;
+		m._13 = hair ? 0 : r.factor_random * 2;
 		m._20 = hair ? 0 : gx * r.mass;
 		m._21 = hair ? 0 : gy * r.mass;
 		m._22 = hair ? 0 : gz * r.mass;

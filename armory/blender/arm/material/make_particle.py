@@ -17,6 +17,8 @@ def write(vert, particle_info=None, shadowmap=False):
     ramp_colors_b = []
     size_over_time_factor = 0
 
+    # align_normal = 0.0
+
     for obj in bpy.data.objects:
         for psys in obj.particle_systems:
             psettings = psys.settings
@@ -126,9 +128,9 @@ def write(vert, particle_info=None, shadowmap=False):
     # particles.length = pd[0][3]
 
     # gxyz
-    vert.write('p_velocity.x += (pd[2][0] * p_age) / 5;')
-    vert.write('p_velocity.y += (pd[2][1] * p_age) / 5;')
-    vert.write('p_velocity.z += (pd[2][2] * p_age) / 5;')
+    vert.write('p_velocity.x += (pd[2][0] * p_age) / 2;')
+    vert.write('p_velocity.y += (pd[2][1] * p_age) / 2;')
+    vert.write('p_velocity.z += (pd[2][2] * p_age) / 2;')
 
     prep = 'vec3 '
     if out_location:

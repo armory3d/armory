@@ -320,7 +320,6 @@ class ArmoryExporter:
         # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
-
             bpy.context.window.scene = bobject.users_scene[0]
             bpy.context.view_layer.update()
 
@@ -2288,7 +2287,7 @@ Make sure the mesh only has tris/quads.""")
                 'lifetime_random': psettings.lifetime_random,
                 'emit_from': emit_from,
                 # Velocity
-                # 'normal_factor': psettings.normal_factor,
+                # 'normal_factor': psettings.normal_factor, # HACK: using in `make_particle.py`
                 # 'tangent_factor': psettings.tangent_factor,
                 # 'tangent_phase': psettings.tangent_phase,
                 'object_align_factor': (
