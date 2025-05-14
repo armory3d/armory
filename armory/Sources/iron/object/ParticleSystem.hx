@@ -66,9 +66,9 @@ class ParticleSystem {
 				gz = -9.81 * r.weight_gravity;
 			}
 
-			alignx = r.object_align_factor[0];
-			aligny = r.object_align_factor[1];
-			alignz = r.object_align_factor[2];
+			alignx = r.object_align_factor[0] / 2;
+			aligny = r.object_align_factor[1] / 2;
+			alignz = r.object_align_factor[2] / 2;
 
 			lifetime = r.lifetime / frameRate;
 			animtime = (r.frame_end - r.frame_start) / frameRate;
@@ -134,7 +134,7 @@ class ParticleSystem {
 		m._10 = hair ? 0 : alignx;
 		m._11 = hair ? 0 : aligny;
 		m._12 = hair ? 0 : alignz;
-		m._13 = hair ? 0 : r.factor_random * 2;
+		m._13 = hair ? 0 : r.factor_random;
 		m._20 = hair ? 0 : gx * r.mass;
 		m._21 = hair ? 0 : gy * r.mass;
 		m._22 = hair ? 0 : gz * r.mass;

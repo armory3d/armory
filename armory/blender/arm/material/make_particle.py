@@ -128,9 +128,9 @@ def write(vert, particle_info=None, shadowmap=False):
     # particles.length = pd[0][3]
 
     # gxyz
-    vert.write('p_velocity.x += (pd[2][0] * p_age) / 2;')
-    vert.write('p_velocity.y += (pd[2][1] * p_age) / 2;')
-    vert.write('p_velocity.z += (pd[2][2] * p_age) / 2;')
+    vert.write('p_velocity.x += (pd[2][0] * p_age) / 5;')
+    vert.write('p_velocity.y += (pd[2][1] * p_age) / 5;')
+    vert.write('p_velocity.z += (pd[2][2] * p_age) / 5;')
 
     prep = 'vec3 '
     if out_location:
