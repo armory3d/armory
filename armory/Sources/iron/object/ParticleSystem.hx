@@ -47,8 +47,6 @@ class ParticleSystem {
 	var ownerRot = new Quat();
 	var ownerScl = new Vec4();
 
-	var texture_slots: Map<String, Dynamic> = [];
-
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
 		particles = [];
@@ -79,20 +77,6 @@ class ParticleSystem {
 				particle.sr = 1 - Math.random() * r.size_random;
 				particles.push(particle);
 			}
-
-			for (slot in Reflect.fields(r.texture_slots)) {
-				texture_slots[slot] = Reflect.field(r.texture_slots, slot);
-			}
-
-			// Trace data used for size over lifetime
-			// for (slot in texture_slots.keys()) {
-			// 	trace(texture_slots[slot].use_map_size);
-			// 	trace(texture_slots[slot].size_factor);
-			// 	trace(texture_slots[slot].texture.use_color_ramp);
-			// 	if (texture_slots[slot].texture.use_color_ramp) {
-			// 		trace(texture_slots[slot].texture.color_ramp);
-			// 	}
-			// }
 
 			ready = true;
 		});
@@ -158,54 +142,6 @@ class ParticleSystem {
 		m._32 = 1 / tilesFramerate;
 		m._33 = hair ? 1 : lapTime;
 		return m;
-	}
-
-	public function getRampSizeFactor(): FastFloat {
-		// Just using the first slot for now: 1 texture slot
-		// TODO: use all available slots ?
-		for (slot in texture_slots.keys()) {
-			if (texture_slots[slot].use_map_size) return texture_slots[slot].size_factor;
-		}
-		return null;
-	}
-
-	public function getRampElementsLength(): Int {
-		for (slot in texture_slots.keys()) {
-			if (texture_slots[slot].texture.use_color_ramp) {
-				return texture_slots[slot].texture.color_ramp.elements.length;
-			}
-		}
-		return null;
-	}
-
-	public function getRampPositions(): Float32Array {
-		// Just using the first slot for now: 1 texture slot
-		// TODO: use all available slots ?
-		for (slot in texture_slots.keys()) {
-			if (texture_slots[slot].texture.use_color_ramp) {
-				var positions: Float32Array = new Float32Array(texture_slots[slot].texture.color_ramp.elements.length);
-				for (i in 0...texture_slots[slot].texture.color_ramp.elements.length) {
-					positions.set(i, texture_slots[slot].texture.color_ramp.elements[i].position);
-				}
-				return positions;
-			}
-		}
-		return null;
-	}
-
-	public function getRampColors(): Float32Array {
-		// Just using the first slot for now: 1 texture slot
-		// TODO: use all available slots ?
-		for (slot in texture_slots.keys()) {
-			if (texture_slots[slot].texture.use_color_ramp) {
-				var colors: Float32Array = new Float32Array(texture_slots[slot].texture.color_ramp.elements.length);
-				for (i in 0...texture_slots[slot].texture.color_ramp.elements.length) {
-					colors.set(i, texture_slots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white image. Using B as it can be interpreted as V with HSV
-				}
-				return colors;
-			}
-		}
-		return null;
 	}
 
 	function updateGpu(object: MeshObject, owner: MeshObject) {
