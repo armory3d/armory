@@ -14,18 +14,22 @@ def write(vert, particle_info=None, shadowmap=False):
     ramp_el_len = 0
 
     # TODO: get the proper psettings from current system
+    # Getting closer...
     for obj in bpy.data.objects:
         for psys in obj.particle_systems:
             psettings = psys.settings
+
+            if psettings.instance_object:
+                for mat_slot in psettings.instance_object.material_slots:
+                    arm.log.debug("instanced object mat_name: " + mat_slot.material.name)
 
             if psettings.texture_slots:
                 for tex_slot in psettings.texture_slots:
                     if tex_slot and tex_slot.texture and tex_slot.texture.use_color_ramp:
                         if tex_slot.texture.color_ramp and tex_slot.texture.color_ramp.elements:
                             ramp_el_len = len(tex_slot.texture.color_ramp.elements.items())
-                            break
 
-    arm.log.debug(str(ramp_el_len))
+    arm.log.debug("vert mat_name: " + str(vert.context.matname))
 
     # HINT: maybe the particle system can be reached by accessing the vert->material
 
