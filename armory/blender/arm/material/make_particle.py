@@ -1,5 +1,7 @@
+import arm.log
 import arm.utils
 import arm.material.mat_state as mat_state
+import bpy
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
@@ -9,7 +11,6 @@ else:
 
 
 def write(vert, particle_info=None, shadowmap=False):
-
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
     out_age = True if particle_info != None and particle_info['age'] else False
@@ -21,8 +22,33 @@ def write(vert, particle_info=None, shadowmap=False):
 
     vert.add_uniform('mat4 pd', '_particleData')
 
+    vert.add_uniform('float p_size_factor', '_particleRampSizeFactor')
+    ramp_el_len = len(bpy.data.textures["Texture"].color_ramp.elements.items()) # TODO: find a way to get the 'Texture' or elements.length from the particle system
+    vert.add_uniform(f'float p_ramp_positions[{ramp_el_len}]', '_particleRampPositions')
+    vert.add_uniform(f'float p_ramp_colors[{ramp_el_len}]', '_particleRampColors')
+
     str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }\n"
     vert.add_function(str_tex_hash)
+
+    str_tex_ramp_scale = f"""float get_ramp_scale(float age) {{
+        if ({ramp_el_len} == 0) return 1.0;
+
+        for (int i = 0; i < {ramp_el_len} - 1; ++i) {{
+            float pos_a = p_ramp_positions[i];
+            float pos_b = p_ramp_positions[i + 1];
+
+            if (age >= pos_a && age <= pos_b) {{
+                float t = (age - pos_a) / (pos_b - pos_a);
+                float scale_a = p_ramp_colors[i];
+                float scale_b = p_ramp_colors[i + 1];
+                return mix(scale_a, scale_b, t);
+            }}
+        }}
+
+        return p_ramp_colors[{ramp_el_len} - 1];
+    }}
+    """
+    vert.add_function(str_tex_ramp_scale)
 
     prep = 'float '
     if out_age:
@@ -49,6 +75,9 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('    gl_Position /= 0.0;')
     vert.write('    return;')
     vert.write('}')
+
+    vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
+    vert.write('spos.xyz *= get_ramp_scale(n_age);')
 
     # vert.write('p_age /= 2;') # Match
 
@@ -86,7 +115,7 @@ def write(vert, particle_info=None, shadowmap=False):
         vert.write('p_fade = sin(min((p_age / 2) * 3.141592, 3.141592));')
 
     if out_index:
-        vert.add_out('float p_index');
+        vert.add_out('float p_index')
         vert.write('p_index = gl_InstanceID;')
 
 def write_tilesheet(vert):

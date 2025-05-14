@@ -320,7 +320,7 @@ class ArmoryExporter:
         # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
-            
+
             bpy.context.window.scene = bobject.users_scene[0]
             bpy.context.view_layer.update()
 
@@ -824,7 +824,7 @@ class ArmoryExporter:
                 for proplist_item in bobject.arm_propertylist:
                     # Check if the property is a collection (array type).
                     if proplist_item.type_prop == 'array':
-                        # Convert the collection to a list. 
+                        # Convert the collection to a list.
                         array_type = proplist_item.array_item_type
                         collection_value = getattr(proplist_item, 'array_prop')
                         property_name = array_type + '_prop'
@@ -2258,6 +2258,7 @@ Make sure the mesh only has tris/quads.""")
         if rebuild_rp:
             make_renderpath.build()
 
+
     def export_particle_systems(self):
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
@@ -2275,6 +2276,12 @@ Make sure the mesh only has tris/quads.""")
                 emit_from = 1
             elif psettings.emit_from == 'VOLUME':
                 emit_from = 2
+
+            texture_slots = {}
+
+            for key, slot in psettings.texture_slots.items():
+                slot_data = self.extract_props(slot)
+                texture_slots[key] = slot_data
 
             out_particlesys = {
                 'name': particleRef[1]["structName"],
@@ -2306,7 +2313,9 @@ Make sure the mesh only has tris/quads.""")
                 # Render
                 'instance_object': arm.utils.asset_name(psettings.instance_object),
                 # Field weights
-                'weight_gravity': psettings.effector_weights.gravity
+                'weight_gravity': psettings.effector_weights.gravity,
+                # Textures
+                'texture_slots': texture_slots
             }
 
             if psettings.instance_object not in self.object_to_arm_object_dict:
@@ -2317,6 +2326,47 @@ Make sure the mesh only has tris/quads.""")
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
 
             self.output['particle_datas'].append(out_particlesys)
+
+    def extract_props(self, bpy_struct, depth=0, max_depth=2):
+        result = {}
+        for prop in bpy_struct.bl_rna.properties:
+            name = prop.identifier
+            if name == "rna_type":
+                continue
+            try:
+                value = getattr(bpy_struct, name)
+
+                if name == "color_ramp" and hasattr(value, "elements"):
+                    result[name] = {
+                        "elements": [
+                            {
+                                "position": el.position,
+                                "color": {
+                                    "r": el.color[0],
+                                    "g": el.color[1],
+                                    "b": el.color[2],
+                                    "a": el.color[3]
+                                }
+                            }
+                            for el in value.elements
+                        ],
+                        "interpolation": value.interpolation,
+                        "hue_interpolation": value.hue_interpolation,
+                        "color_mode": value.color_mode
+                    }
+                elif isinstance(value, (int, float, bool, str)):
+                    result[name] = value
+                elif isinstance(value, (tuple, list)):
+                    result[name] = list(value)
+                elif hasattr(value, "bl_rna") and depth < max_depth:
+                    result[name] = self.extract_props(value, depth + 1, max_depth)
+                else:
+                    result[name] = str(value)
+
+            except Exception as e:
+                result[name] = f"<unreadable: {e}>"
+
+        return result
 
     def export_tilesheets(self):
         wrd = bpy.data.worlds['Arm']

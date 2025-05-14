@@ -1109,6 +1109,14 @@ class Uniforms {
 				case "_texUnpack": {
 					f = texUnpack != null ? texUnpack : 1.0;
 				}
+				#if arm_particles
+				case "_particleRampSizeFactor": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						f = mo.particleOwner.particleSystems[mo.particleIndex].getRampSizeFactor();
+					}
+				}
+				#end
 			}
 
 			if (f == null && externalFloatLinks != null) {
@@ -1144,6 +1152,20 @@ class Uniforms {
 					fa = cast(object, MeshObject).morphTarget.morphWeights;
 				}
 				#end
+				#if arm_particles
+				case "_particleRampPositions": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						fa = mo.particleOwner.particleSystems[mo.particleIndex].getRampPositions();
+					}
+				}
+				case "_particleRampColors": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						fa = mo.particleOwner.particleSystems[mo.particleIndex].getRampColors(); // Just need R, G or B for black and white image
+					}
+				}
+				#end
 			}
 
 			if (fa == null && externalFloatsLinks != null) {
@@ -1162,6 +1184,14 @@ class Uniforms {
 				case "_uid": {
 					i = object.uid;
 				}
+				#if arm_particles
+				case "_particleRampElementsLength": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						i = mo.particleOwner.particleSystems[mo.particleIndex].getRampElementsLength();
+					}
+				}
+				#end
 			}
 
 			if (i == null && externalIntLinks != null) {

@@ -1,7 +1,7 @@
 package iron.object;
 
 #if arm_particles
-
+import kha.FastFloat;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
 import iron.data.Data;
@@ -47,10 +47,13 @@ class ParticleSystem {
 	var ownerRot = new Quat();
 	var ownerScl = new Vec4();
 
+	var texture_slots: Map<String, Dynamic> = [];
+
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
 		particles = [];
 		ready = false;
+
 		Data.getParticle(sceneName, pref.particle, function(b: ParticleData) {
 			data = b;
 			r = data.raw;
@@ -70,7 +73,27 @@ class ParticleSystem {
 			lifetime = r.lifetime / frameRate;
 			animtime = (r.frame_end - r.frame_start) / frameRate;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
-			for (i in 0...r.count) particles.push(new Particle(i));
+
+			for (i in 0...r.count) {
+				var particle = new Particle(i);
+				particle.sr = 1 - Math.random() * r.size_random;
+				particles.push(particle);
+			}
+
+			for (slot in Reflect.fields(r.texture_slots)) {
+				texture_slots[slot] = Reflect.field(r.texture_slots, slot);
+			}
+
+			// Trace data used for size over lifetime
+			// for (slot in texture_slots.keys()) {
+			// 	trace(texture_slots[slot].use_map_size);
+			// 	trace(texture_slots[slot].size_factor);
+			// 	trace(texture_slots[slot].texture.use_color_ramp);
+			// 	if (texture_slots[slot].texture.use_color_ramp) {
+			// 		trace(texture_slots[slot].texture.color_ramp);
+			// 	}
+			// }
+
 			ready = true;
 		});
 	}
@@ -108,7 +131,7 @@ class ParticleSystem {
 		}
 
 		// Animate
-		time += Time.realDelta * speed;
+		time += Time.realDelta * Time.scale * speed;
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
@@ -137,13 +160,61 @@ class ParticleSystem {
 		return m;
 	}
 
+	public function getRampSizeFactor(): FastFloat {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in texture_slots.keys()) {
+			if (texture_slots[slot].use_map_size) return texture_slots[slot].size_factor;
+		}
+		return null;
+	}
+
+	public function getRampElementsLength(): Int {
+		for (slot in texture_slots.keys()) {
+			if (texture_slots[slot].texture.use_color_ramp) {
+				return texture_slots[slot].texture.color_ramp.elements.length;
+			}
+		}
+		return null;
+	}
+
+	public function getRampPositions(): Float32Array {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in texture_slots.keys()) {
+			if (texture_slots[slot].texture.use_color_ramp) {
+				var positions: Float32Array = new Float32Array(texture_slots[slot].texture.color_ramp.elements.length);
+				for (i in 0...texture_slots[slot].texture.color_ramp.elements.length) {
+					positions.set(i, texture_slots[slot].texture.color_ramp.elements[i].position);
+				}
+				return positions;
+			}
+		}
+		return null;
+	}
+
+	public function getRampColors(): Float32Array {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in texture_slots.keys()) {
+			if (texture_slots[slot].texture.use_color_ramp) {
+				var colors: Float32Array = new Float32Array(texture_slots[slot].texture.color_ramp.elements.length);
+				for (i in 0...texture_slots[slot].texture.color_ramp.elements.length) {
+					colors.set(i, texture_slots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white image. Using B as it can be interpreted as V with HSV
+				}
+				return colors;
+			}
+		}
+		return null;
+	}
+
 	function updateGpu(object: MeshObject, owner: MeshObject) {
 		if (!object.data.geom.instanced) setupGeomGpu(object, owner);
 		// GPU particles transform is attached to owner object
 	}
 
 	function setupGeomGpu(object: MeshObject, owner: MeshObject) {
-		var instancedData = new Float32Array(particles.length * 3);
+		var instancedData = new Float32Array(particles.length * 6);
 		var i = 0;
 
 		var normFactor = 1 / 32767; // pa.values are not normalized
@@ -162,6 +233,10 @@ class ParticleSystem {
 					instancedData.set(i, pa.values[j * pa.size    ] * normFactor * scaleFactor.x); i++;
 					instancedData.set(i, pa.values[j * pa.size + 1] * normFactor * scaleFactor.y); i++;
 					instancedData.set(i, pa.values[j * pa.size + 2] * normFactor * scaleFactor.z); i++;
+
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
 				}
 
 			case 1: // Face
@@ -185,6 +260,10 @@ class ParticleSystem {
 					instancedData.set(i, pos.x * normFactor * scaleFactor.x); i++;
 					instancedData.set(i, pos.y * normFactor * scaleFactor.y); i++;
 					instancedData.set(i, pos.z * normFactor * scaleFactor.z); i++;
+
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
 				}
 
 			case 2: // Volume
@@ -195,9 +274,13 @@ class ParticleSystem {
 					instancedData.set(i, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.x); i++;
 					instancedData.set(i, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y); i++;
 					instancedData.set(i, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z); i++;
+
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
+					instancedData.set(i, p.sr); i++;
 				}
 		}
-		object.data.geom.setupInstanced(instancedData, 1, Usage.StaticUsage);
+		object.data.geom.setupInstanced(instancedData, 3, Usage.StaticUsage);
 	}
 
 	function fhash(n: Int): Float {
@@ -236,14 +319,17 @@ class ParticleSystem {
 
 class Particle {
 	public var i: Int;
-	public var x = 0.0;
-	public var y = 0.0;
-	public var z = 0.0;
+
+	public var px = 0.0;
+	public var py = 0.0;
+	public var pz = 0.0;
+
+	public var sr = 1.0; // Size random
+
 	public var cameraDistance: Float;
 
 	public function new(i: Int) {
 		this.i = i;
 	}
 }
-
 #end

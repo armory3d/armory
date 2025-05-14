@@ -407,6 +407,7 @@ typedef TParticleData = {
 	public var mass: FastFloat;
 	public var instance_object: String; // Object reference
 	public var weight_gravity: FastFloat;
+	public var texture_slots: Dynamic;
 }
 
 #if js

@@ -206,7 +206,8 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
                     global_elems.append({'name': 'ipos', 'data': 'float3'})
                     if 'Rot' in inst:
                         global_elems.append({'name': 'irot', 'data': 'float3'})
-                    if 'Scale' in inst:
+                    #HACK: checking `mat.arm_particle_flag` to force appending 'iscl' to the particle's vertex shader
+                    if 'Scale' in inst or mat.arm_particle_flag:
                         global_elems.append({'name': 'iscl', 'data': 'float3'})
 
             elif inst == 'Off':
