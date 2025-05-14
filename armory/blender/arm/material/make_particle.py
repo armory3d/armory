@@ -26,7 +26,7 @@ def write(vert, particle_info=None, shadowmap=False):
                     if psettings.instance_object.active_material.name.replace(".", "_") == vert.context.matname:
                         if psettings.texture_slots:
                             for tex_slot in psettings.texture_slots:
-                                if not tex_slot.use_map_size: return # TODO: check also for other influences
+                                if not tex_slot.use_map_size: break # TODO: check also for other influences
                                 if tex_slot and tex_slot.texture and tex_slot.texture.use_color_ramp:
                                     if tex_slot.texture.color_ramp and tex_slot.texture.color_ramp.elements:
                                         ramp_el_len = len(tex_slot.texture.color_ramp.elements.items())
@@ -62,9 +62,8 @@ def write(vert, particle_info=None, shadowmap=False):
         for i in range(ramp_el_len):
             if i == 0:
                 str_ramp_scale += f"if (age <= P_RAMP_POSITION_{i + 1})"
-            elif i == ramp_el_len - 2:
-                str_ramp_scale += "else"
             elif i == ramp_el_len - 1:
+                str_ramp_scale += f"return P_RAMP_COLOR_B_{ramp_el_len - 1};"
                 break
             else:
                 str_ramp_scale += f"else if (age <= P_RAMP_POSITION_{i + 1})"
