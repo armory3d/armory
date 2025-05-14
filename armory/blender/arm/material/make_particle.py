@@ -11,6 +11,24 @@ else:
 
 
 def write(vert, particle_info=None, shadowmap=False):
+    ramp_el_len = 0
+
+    # TODO: get the proper psettings from current system
+    for obj in bpy.data.objects:
+        for psys in obj.particle_systems:
+            psettings = psys.settings
+
+            if psettings.texture_slots:
+                for tex_slot in psettings.texture_slots:
+                    if tex_slot and tex_slot.texture and tex_slot.texture.use_color_ramp:
+                        if tex_slot.texture.color_ramp and tex_slot.texture.color_ramp.elements:
+                            ramp_el_len = len(tex_slot.texture.color_ramp.elements.items())
+                            break
+
+    arm.log.debug(str(ramp_el_len))
+
+    # HINT: maybe the particle system can be reached by accessing the vert->material
+
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
     out_age = True if particle_info != None and particle_info['age'] else False
@@ -22,33 +40,34 @@ def write(vert, particle_info=None, shadowmap=False):
 
     vert.add_uniform('mat4 pd', '_particleData')
 
-    vert.add_uniform('float p_size_factor', '_particleRampSizeFactor')
-    ramp_el_len = len(bpy.data.textures["Texture"].color_ramp.elements.items()) # TODO: find a way to get the 'Texture' or elements.length from the particle system
-    vert.add_uniform(f'float p_ramp_positions[{ramp_el_len}]', '_particleRampPositions')
-    vert.add_uniform(f'float p_ramp_colors[{ramp_el_len}]', '_particleRampColors')
+    if (ramp_el_len != 0):
+        vert.add_uniform('float p_size_factor', '_particleRampSizeFactor')
+        # TODO: use data from Python creating constants, instead of creating uniforms from Haxe ?
+        vert.add_uniform(f'float p_ramp_positions[{ramp_el_len}]', '_particleRampPositions')
+        vert.add_uniform(f'float p_ramp_colors[{ramp_el_len}]', '_particleRampColors')
 
     str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }\n"
     vert.add_function(str_tex_hash)
 
-    str_tex_ramp_scale = f"""float get_ramp_scale(float age) {{
-        if ({ramp_el_len} == 0) return 1.0;
+    # TODO: do the for loop in python then generate hardcoded blocks in the vertex shader ?
+    if (ramp_el_len != 0):
+        str_tex_ramp_scale = f"""float get_ramp_scale(float age) {{
+            for (int i = 0; i < {ramp_el_len} - 1; ++i) {{
+                float pos_a = p_ramp_positions[i];
+                float pos_b = p_ramp_positions[i + 1];
 
-        for (int i = 0; i < {ramp_el_len} - 1; ++i) {{
-            float pos_a = p_ramp_positions[i];
-            float pos_b = p_ramp_positions[i + 1];
-
-            if (age >= pos_a && age <= pos_b) {{
-                float t = (age - pos_a) / (pos_b - pos_a);
-                float scale_a = p_ramp_colors[i];
-                float scale_b = p_ramp_colors[i + 1];
-                return mix(scale_a, scale_b, t);
+                if (age >= pos_a && age <= pos_b) {{
+                    float t = (age - pos_a) / (pos_b - pos_a);
+                    float scale_a = p_ramp_colors[i];
+                    float scale_b = p_ramp_colors[i + 1];
+                    return mix(scale_a, scale_b, t);
+                }}
             }}
-        }}
 
-        return p_ramp_colors[{ramp_el_len} - 1];
-    }}
-    """
-    vert.add_function(str_tex_ramp_scale)
+            return p_ramp_colors[{ramp_el_len} - 1];
+        }}
+        """
+        vert.add_function(str_tex_ramp_scale)
 
     prep = 'float '
     if out_age:
@@ -76,8 +95,9 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('    return;')
     vert.write('}')
 
-    vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
-    vert.write('spos.xyz *= get_ramp_scale(n_age);')
+    if (ramp_el_len != 0):
+        vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
+        vert.write('spos.xyz *= get_ramp_scale(n_age);')
 
     # vert.write('p_age /= 2;') # Match
 
