@@ -1,4 +1,3 @@
-// Projection-Artifact-Free SSGI
 #version 450
 
 #include "compiled.inc"

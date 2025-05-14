@@ -209,7 +209,6 @@ void main() {
 			);
 			vec3 direction_weights = abs(coneDirection);
 			#ifdef _VoxelGI
-			// Normalize direction weights
 			vec4 sam =
 				aniso_colors[face_offsets.x] * direction_weights.x +
 				aniso_colors[face_offsets.y] * direction_weights.y +

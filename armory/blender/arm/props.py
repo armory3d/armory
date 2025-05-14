@@ -293,7 +293,6 @@ def init_properties():
         name="Assertion Level", description="Ignore all assertions below this level (assertions are turned off completely for published builds)", default='Warning', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_assert_quit = BoolProperty(name="Quit On Assertion Fail", description="Whether to close the game when an 'Error' level assertion fails", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_live_patch = BoolProperty(name="Live Patch", description="Live patching for Krom", default=False)
-    bpy.types.World.arm_render_viewport = BoolProperty(name="Viewport Render", description="Viewport rendering", default=False)
     bpy.types.World.arm_clear_on_compile = BoolProperty(name="Clear Console", description="Clears the system console on compile", default=False)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),

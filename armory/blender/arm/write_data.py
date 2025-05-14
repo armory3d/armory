@@ -206,8 +206,6 @@ project.addSources('Sources');
                 # Include all logic node classes so that they can later
                 # get instantiated
                 khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
-                if wrd.arm_render_viewport:
-                    assets.add_khafile_def('arm_render_viewport')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):

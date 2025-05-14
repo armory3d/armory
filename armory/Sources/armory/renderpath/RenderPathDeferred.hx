@@ -405,7 +405,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			path.createDepthBuffer("refraction", "DEPTH24");
-
 			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -658,9 +657,6 @@ class RenderPathDeferred {
 			}
 
 			path.setTarget("");
-			var res = iron.RenderPath.getVoxelRes();
-			path.setViewport(res, res);
-
 			path.bindTarget("voxels", "voxels");
 			#if rp_shadowmap
 			{
@@ -671,6 +667,10 @@ class RenderPathDeferred {
 				#end
 			}
 			#end
+
+			var res = iron.RenderPath.getVoxelRes();
+			path.setViewport(res, res);
+
 			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();
@@ -694,6 +694,7 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
 		// ---
 		// Deferred light
 		// ---

@@ -358,6 +358,8 @@ def parse_sky_hosekwilkie(node: bpy.types.ShaderNodeTexSky, state: ParserState) 
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
 
+    wrd.world_defs += '_HOSEK'
+
     if not state.radiance_written:
         # Irradiance json file name
         wname = arm.utils.safestr(world.name)
