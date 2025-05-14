@@ -35,6 +35,8 @@ def write(vert, particle_info=None, shadowmap=False):
                                             ramp_colors_b.append(element.color[2])
                                         size_over_time_factor = tex_slot.size_factor
                                         break
+                else:
+                    raise Exception("Particle object must have a material.")
 
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
@@ -50,8 +52,8 @@ def write(vert, particle_info=None, shadowmap=False):
     if ramp_el_len != 0:
         vert.add_const('float', 'P_SIZE_OVER_TIME_FACTOR', str(size_over_time_factor))
         for i in range(ramp_el_len):
-            vert.add_const('float', 'P_RAMP_POSITION_' + str(i), str(ramp_positions[i]))
-            vert.add_const('float', 'P_RAMP_COLOR_B_' + str(i), str(ramp_colors_b[i]))
+            vert.add_const('float', f'P_RAMP_POSITION_{i}', str(ramp_positions[i]))
+            vert.add_const('float', f'P_RAMP_COLOR_B_{i}', str(ramp_colors_b[i]))
 
     str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }\n"
     vert.add_function(str_tex_hash)
