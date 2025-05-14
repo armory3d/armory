@@ -165,7 +165,6 @@ void main() {
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
-	envl.rgb *= voxelgiEnv;
 
 	vec3 occ = envl * (1.0 - traceAO(P, n, voxels, clipmaps));
 

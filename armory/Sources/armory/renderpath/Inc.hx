@@ -31,6 +31,7 @@ class Inc {
 	static var m = iron.math.Mat4.identity();
 	static var voxel_ca1:kha.compute.ConstantLocation;
 	static var voxel_cb1:kha.compute.ConstantLocation;
+	static var voxel_cc1:kha.compute.ConstantLocation;
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
@@ -805,6 +806,7 @@ class Inc {
 
 	 		voxel_ca1 = voxel_sh1.getConstantLocation("clipmaps");
 	 		voxel_cb1 = voxel_sh1.getConstantLocation("clipmapLevel");
+	 		voxel_cc1 = voxel_sh1.getConstantLocation("envmapStrength");
 
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
@@ -954,6 +956,8 @@ class Inc {
 
 		kha.compute.Compute.setInt(voxel_cb1, iron.RenderPath.clipmapLevel);
 
+		kha.compute.Compute.setFloat(voxel_cc1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
+
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 	}
 
@@ -1079,13 +1083,9 @@ class Inc {
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
 		var irradiance = iron.Scene.active.world == null ?
-			iron.data.WorldData.getEmptyIrradiance() :
-			iron.Scene.active.world.probe.irradiance;
-		var shCoeffs = new Float32Array(28);
-		for (i in 0...28) {
-			shCoeffs[i] = irradiance[i];
-		}
-		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
+		iron.data.WorldData.getEmptyIrradiance() :
+		iron.Scene.active.world.probe.irradiance;
+		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
@@ -1178,13 +1178,9 @@ class Inc {
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
 		var irradiance = iron.Scene.active.world == null ?
-			iron.data.WorldData.getEmptyIrradiance() :
-			iron.Scene.active.world.probe.irradiance;
-		var shCoeffs = new Float32Array(28);
-		for (i in 0...28) {
-			shCoeffs[i] = irradiance[i];
-		}
-		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
+		iron.data.WorldData.getEmptyIrradiance() :
+		iron.Scene.active.world.probe.irradiance;
+		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);

@@ -41,6 +41,7 @@ uniform vec2 lightProj;
 uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
+uniform float envmapStrength;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
@@ -120,7 +121,7 @@ void main() {
 				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 				envl /= count;
-				envl *= voxelgiEnv;
+				envl *= envmapStrength;
 				vec3 light = vec3(0.0);
 				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 255;
 				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;

@@ -165,7 +165,6 @@ void main() {
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
-	envl.rgb *= voxelgiEnv;
 
 	vec4 trace = traceDiffuse(P, n, voxels, clipmaps);
 	vec3 color = trace.rgb * albedo * (1.0 - F);
