@@ -17,8 +17,6 @@ def write(vert, particle_info=None, shadowmap=False):
     ramp_colors_b = []
     size_over_time_factor = 0
 
-    # align_normal = 0.0
-
     for obj in bpy.data.objects:
         for psys in obj.particle_systems:
             psettings = psys.settings
