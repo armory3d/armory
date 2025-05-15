@@ -110,7 +110,7 @@ def write(vert, particle_info=None, shadowmap=False):
 
     if (ramp_el_len != 0):
         vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
-        vert.write('spos.xyz *= get_ramp_scale(n_age);')
+        vert.write(f'spos.xyz *= 1 + (get_ramp_scale(n_age) - 1) * {size_over_time_factor};')
 
     # vert.write('p_age /= 2;') # Match
 
