@@ -15,7 +15,7 @@ import iron.math.Vec4;
 class ParticleSystem {
 	public var data: ParticleData;
 	public var speed = 1.0;
-	var currentSpeed = 1.0;
+	var currentSpeed = 0.0;
 	var particles: Array<Particle>;
 	var ready: Bool;
 	var frameRate = 24;
@@ -47,9 +47,12 @@ class ParticleSystem {
 	var ownerRot = new Quat();
 	var ownerScl = new Vec4();
 
+	var random = 0.0;
+
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
 		currentSpeed = speed;
+		speed = 0;
 		particles = [];
 		ready = false;
 
@@ -78,10 +81,13 @@ class ParticleSystem {
 
 			for (i in 0...r.count) particles.push(new Particle(i));
 			ready = true;
+
+			start();
 		});
 	}
 
 	public function start() {
+		random = Math.random();
 		lifetime = r.lifetime / frameRate;
 		time = 0;
 		lap = 0;
@@ -161,6 +167,10 @@ class ParticleSystem {
 
 	public function getSizeRandom(): kha.FastFloat {
 		return r.size_random;
+	}
+
+	public function getRandom(): kha.FastFloat {
+		return random;
 	}
 
 	function updateGpu(object: MeshObject, owner: MeshObject) {

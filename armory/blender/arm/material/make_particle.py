@@ -50,6 +50,7 @@ def write(vert, particle_info=None, shadowmap=False):
 
     vert.add_uniform('mat4 pd', '_particleData')
     vert.add_uniform('float pd_size_random', '_particleSizeRandom')
+    vert.add_uniform('float pd_random', '_particleRandom')
 
     if ramp_el_len != 0:
         vert.add_const('float', 'P_SIZE_OVER_TIME_FACTOR', str(size_over_time_factor))
@@ -109,7 +110,7 @@ def write(vert, particle_info=None, shadowmap=False):
     if (ramp_el_len != 0):
         vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
         vert.write(f'spos.xyz *= 1 + (get_ramp_scale(n_age) - 1) * {size_over_time_factor};')
-    vert.write('spos.xyz *= 1 - (fhash(gl_InstanceID + 3 * pd[0][3]) * pd_size_random);')
+    vert.write('spos.xyz *= 1 - (fhash(gl_InstanceID + 3 * pd[0][3] + pd_random) * pd_size_random);')
 
     # vert.write('p_age /= 2;') # Match
 
@@ -120,9 +121,9 @@ def write(vert, particle_info=None, shadowmap=False):
         vert.add_out('vec3 p_velocity')
     vert.write(prep + 'p_velocity = vec3(pd[1][0], pd[1][1], pd[1][2]);')
 
-    vert.write('p_velocity.x += fhash(gl_InstanceID)                * pd[1][3] - pd[1][3] / 2;')
-    vert.write('p_velocity.y += fhash(gl_InstanceID +     pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
-    vert.write('p_velocity.z += fhash(gl_InstanceID + 2 * pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
+    vert.write('p_velocity.x += fhash(gl_InstanceID + pd_random)                * pd[1][3] - pd[1][3] / 2;')
+    vert.write('p_velocity.y += fhash(gl_InstanceID + pd_random +     pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
+    vert.write('p_velocity.z += fhash(gl_InstanceID + pd_random + 2 * pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
 
     # factor_random = pd[1][3]
     # p.i = gl_InstanceID
