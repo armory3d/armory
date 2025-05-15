@@ -23,10 +23,10 @@ def write(vert, particle_info=None, shadowmap=False):
             if psettings.instance_object:
                 if psettings.instance_object.active_material:
                     if psettings.instance_object.active_material.name.replace(".", "_") == vert.context.matname:
-                        if psettings.texture_slots:
+                        if psettings.texture_slots and len(psettings.texture_slots.items()) != 0:
                             for tex_slot in psettings.texture_slots:
                                 if not tex_slot.use_map_size: break # TODO: check also for other influences
-                                if tex_slot and tex_slot.texture and tex_slot.texture.use_color_ramp:
+                                if tex_slot.texture and tex_slot.texture.use_color_ramp:
                                     if tex_slot.texture.color_ramp and tex_slot.texture.color_ramp.elements:
                                         ramp_el_len = len(tex_slot.texture.color_ramp.elements.items())
                                         for element in tex_slot.texture.color_ramp.elements:
@@ -34,8 +34,6 @@ def write(vert, particle_info=None, shadowmap=False):
                                             ramp_colors_b.append(element.color[2])
                                         size_over_time_factor = tex_slot.size_factor
                                         break
-                else:
-                    raise Exception("Particle object must have a material.")
 
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
@@ -51,6 +49,7 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('#endif')
 
     vert.add_uniform('mat4 pd', '_particleData')
+    vert.add_uniform('float pd_size_random', '_particleSizeRandom')
 
     if ramp_el_len != 0:
         vert.add_const('float', 'P_SIZE_OVER_TIME_FACTOR', str(size_over_time_factor))
@@ -110,6 +109,7 @@ def write(vert, particle_info=None, shadowmap=False):
     if (ramp_el_len != 0):
         vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
         vert.write(f'spos.xyz *= 1 + (get_ramp_scale(n_age) - 1) * {size_over_time_factor};')
+    vert.write('spos.xyz *= 1 - (fhash(gl_InstanceID + 3 * pd[0][3]) * pd_size_random);')
 
     # vert.write('p_age /= 2;') # Match
 
