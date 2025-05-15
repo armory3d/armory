@@ -2288,7 +2288,7 @@ Make sure the mesh only has tris/quads.""")
                 'lifetime_random': psettings.lifetime_random,
                 'emit_from': emit_from,
                 # Velocity
-                # 'normal_factor': psettings.normal_factor, # HACK: using in `make_particle.py`
+                # 'normal_factor': psettings.normal_factor,
                 # 'tangent_factor': psettings.tangent_factor,
                 # 'tangent_phase': psettings.tangent_phase,
                 'object_align_factor': (

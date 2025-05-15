@@ -49,6 +49,10 @@ def write(vert, particle_info=None, shadowmap=False):
     out_velocity = True if particle_info != None and particle_info['velocity'] else False
     out_angular_velocity = True if particle_info != None and particle_info['angular_velocity'] else False
 
+    # Force Armory to create a new shader per material ID
+    vert.write(f'#ifdef PARTICLE_ID_{vert.context.material.arm_material_id}')
+    vert.write('#endif')
+
     vert.add_uniform('mat4 pd', '_particleData')
 
     if ramp_el_len != 0:
