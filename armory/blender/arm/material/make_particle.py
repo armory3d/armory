@@ -1,4 +1,3 @@
-import arm.log
 import arm.utils
 import arm.material.mat_state as mat_state
 import bpy
