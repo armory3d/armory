@@ -15,6 +15,7 @@ import iron.math.Vec4;
 class ParticleSystem {
 	public var data: ParticleData;
 	public var speed = 1.0;
+	var currentSpeed = 1.0;
 	var particles: Array<Particle>;
 	var ready: Bool;
 	var frameRate = 24;
@@ -48,6 +49,7 @@ class ParticleSystem {
 
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
+		currentSpeed = speed;
 		particles = [];
 		ready = false;
 
@@ -84,16 +86,31 @@ class ParticleSystem {
 		});
 	}
 
+	public function start() {
+		lifetime = r.lifetime / frameRate;
+		time = 0;
+		lap = 0;
+		lapTime = 0;
+		speed = currentSpeed;
+	}
+
 	public function pause() {
-		lifetime = 0;
+		speed = 0;
 	}
 
 	public function resume() {
 		lifetime = r.lifetime / frameRate;
+		speed = currentSpeed;
+	}
+
+	public function stop() {
+		lifetime = 0;
+		speed = 0;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
+		var prevLap = lap;
 
 		// Copy owner world transform but discard scale
 		owner.transform.world.decompose(ownerLoc, ownerRot, ownerScl);
@@ -123,6 +140,7 @@ class ParticleSystem {
 		count = Std.int(lapTime / spawnRate);
 
 		updateGpu(object, owner);
+		if (lap > prevLap && !r.loop) stop();
 	}
 
 	public function getData(): Mat4 {
