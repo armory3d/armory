@@ -71,7 +71,7 @@ class ParticleSystem {
 			alignz = r.object_align_factor[2] / 2;
 
 			lifetime = r.lifetime / frameRate;
-			animtime = (r.frame_end - r.frame_start) / frameRate;
+			animtime = r.loop ? ((r.frame_end - r.frame_start) / frameRate) : ((r.frame_end + r.lifetime) / frameRate);
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
 
 			for (i in 0...r.count) {

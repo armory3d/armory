@@ -320,6 +320,7 @@ class ArmoryExporter:
         # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
+
             bpy.context.window.scene = bobject.users_scene[0]
             bpy.context.view_layer.update()
 
