@@ -20,10 +20,8 @@ class ParticleSystem {
 	var ready: Bool;
 	var frameRate = 24;
 	var lifetime = 0.0;
-	var starttime = 0.0;
 	var looptime = 0.0;
 	var animtime = 0.0;
-	var endtime = 0.0; // TODO: add to smoothly interrupt emission ?
 	var time = 0.0;
 	var spawnRate = 0.0;
 	var seed = 0;
@@ -79,10 +77,9 @@ class ParticleSystem {
 			aligny = r.object_align_factor[1] / 2;
 			alignz = r.object_align_factor[2] / 2;
 
-			lifetime = r.lifetime / frameRate;
-			starttime = (r.frame_end - r.frame_start + r.lifetime) / frameRate;
 			looptime = (r.frame_end - r.frame_start) / frameRate;
-			animtime = starttime;
+			lifetime = r.lifetime / frameRate;
+			animtime = lifetime + looptime;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
 
 			for (i in 0...r.count) particles.push(new Particle(i));
@@ -95,6 +92,7 @@ class ParticleSystem {
 	public function start() {
 		if (r.is_unique) random = Math.random();
 		lifetime = r.lifetime / frameRate;
+		animtime = looptime + lifetime;
 		time = 0;
 		lap = 0;
 		lapTime = 0;
@@ -120,7 +118,6 @@ class ParticleSystem {
 		speed = 0;
 		lap = 0;
 		lapLoop = 0;
-		animtime = starttime;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
