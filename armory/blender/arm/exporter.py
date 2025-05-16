@@ -2279,6 +2279,8 @@ Make sure the mesh only has tris/quads.""")
             out_particlesys = {
                 'name': particleRef[1]["structName"],
                 'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
+                'auto_start': psettings.arm_auto_start,
+                'is_unique': psettings.arm_is_unique,
                 'loop': psettings.arm_loop,
                 # Emission
                 'count': int(psettings.count * psettings.arm_count_mult),

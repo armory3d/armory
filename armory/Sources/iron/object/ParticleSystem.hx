@@ -82,12 +82,12 @@ class ParticleSystem {
 			for (i in 0...r.count) particles.push(new Particle(i));
 			ready = true;
 
-			start();
+			if (r.auto_start) start();
 		});
 	}
 
 	public function start() {
-		random = Math.random();
+		if (r.is_unique) random = Math.random();
 		lifetime = r.lifetime / frameRate;
 		time = 0;
 		lap = 0;
