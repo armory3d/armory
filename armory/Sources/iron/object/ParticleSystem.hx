@@ -20,7 +20,10 @@ class ParticleSystem {
 	var ready: Bool;
 	var frameRate = 24;
 	var lifetime = 0.0;
+	var starttime = 0.0;
+	var looptime = 0.0;
 	var animtime = 0.0;
+	var endtime = 0.0; // TODO: add to smoothly interrupt emission ?
 	var time = 0.0;
 	var spawnRate = 0.0;
 	var seed = 0;
@@ -40,6 +43,7 @@ class ParticleSystem {
 
 	var count = 0;
 	var lap = 0;
+	var lapLoop = 0;
 	var lapTime = 0.0;
 	var m = Mat4.identity();
 
@@ -76,7 +80,9 @@ class ParticleSystem {
 			alignz = r.object_align_factor[2] / 2;
 
 			lifetime = r.lifetime / frameRate;
-			animtime = r.loop ? ((r.frame_end - r.frame_start) / frameRate) : ((r.frame_end - r.frame_start + r.lifetime) / frameRate);
+			starttime = (r.frame_end - r.frame_start + r.lifetime) / frameRate;
+			looptime = (r.frame_end - r.frame_start) / frameRate;
+			animtime = starttime;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
 
 			for (i in 0...r.count) particles.push(new Particle(i));
@@ -104,14 +110,23 @@ class ParticleSystem {
 		speed = currentSpeed;
 	}
 
+	// TODO: interrupt smoothly
 	public function stop() {
+		end();
+	}
+
+	function end() {
 		lifetime = 0;
 		speed = 0;
+		lap = 0;
+		lapLoop = 0;
+		animtime = starttime;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
 		var prevLap = lap;
+		var prevLapLoop = lapLoop;
 
 		// Copy owner world transform but discard scale
 		owner.transform.world.decompose(ownerLoc, ownerRot, ownerScl);
@@ -136,17 +151,28 @@ class ParticleSystem {
 
 		// Animate
 		time += Time.realDelta * Time.scale * speed;
+
+		if (r.loop) {
+			lapLoop = Std.int(time / looptime);
+			if (lapLoop > prevLapLoop) {
+				animtime = looptime;
+			}
+		}
+
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
 
+		if ((lap > prevLap && !r.loop)) {
+			end();
+		}
+
 		updateGpu(object, owner);
-		if (lap > prevLap && !r.loop) stop();
 	}
 
 	public function getData(): Mat4 {
 		var hair = r.type == 1;
-		m._00 = r.loop ? animtime : -animtime;
+		m._00 = animtime;
 		m._01 = hair ? 1 / particles.length : spawnRate;
 		m._02 = hair ? 1 : lifetime;
 		m._03 = particles.length;
