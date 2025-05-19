@@ -224,76 +224,29 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, cons
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 
-	vec3 result = vec3(0.0);
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-	// soft shadowing
-	int newFaceIndex = 0;
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	#ifdef _ShadowMapTransparent
-	if (transparent == false) {
-		vec4 shadowmap_transparent = texture(shadowMapTransparent, uvtiled);
-		if (shadowmap_transparent.a < compare)
-			result *= shadowmap_transparent.rgb;
+	if (any(lessThan(uvtiled, vec2(0.0))) || any(greaterThan(uvtiled, vec2(1.0)))) {
+		return vec3(1.0); // Or handle edge cases differently
 	}
-	#endif
 
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
+	vec3 result = vec3(0.0);
+	// In PCFFakeCube(), modify the sampling pattern to be more robust:
+	const vec2 offsets[9] = vec2[](
+		vec2(0, 0),
+		vec2(1, 0), vec2(-1, 0), vec2(0, 1), vec2(0, -1),
+		vec2(1, 1), vec2(-1, 1), vec2(1, -1), vec2(-1, -1)
+	);
 
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(0.0, 1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, -1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 0.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
-	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(1.0, 1.0) / smSize)));
-	pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
-	uvtiled = pointLightTile.z * uvtiled + pointLightTile.xy;
-	#ifdef _FlipY
-	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
-	#endif
-	result.x += texture(shadowMap, vec3(uvtiled, compare));
-
+	for (int i = 0; i < 9; i++) {
+		vec2 sampleUV = uv + offsets[i] / smSize;
+		int newFaceIndex;
+		vec2 transformedUV = transformOffsetedUV(faceIndex, newFaceIndex, sampleUV);
+		pointLightTile = pointLightDataArray[lightIndex + newFaceIndex];
+		uvtiled = pointLightTile.z * transformedUV + pointLightTile.xy;
+		#ifdef _FlipY
+		uvtiled.y = 1.0 - uvtiled.y;
+		#endif
+		result.x += texture(shadowMap, vec3(uvtiled, compare));
+	}
 	result = result.xxx / 9.0;
 
 	pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
