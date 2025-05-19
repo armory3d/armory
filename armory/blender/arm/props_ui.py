@@ -1585,7 +1585,7 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
-        #layout.prop(rpdat, 'rp_shadowmap_transparent')
+        layout.prop(rpdat, 'rp_shadowmap_transparent')
         col = layout.column()
         col2 = col.column()
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'

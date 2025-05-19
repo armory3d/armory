@@ -152,9 +152,11 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			path.bindTarget(atlas.target, atlas.target);
 		}
+		#end
 	}
 
 	static function getShadowMapAtlas(atlas:ShadowMapAtlas, transparent: Bool):String {
@@ -195,9 +197,11 @@ class Inc {
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			atlas.rejectedLights = [];
 		}
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			atlas.rejectedLights = [];
 		}
+		#end
 		#end
 
 		for (light in iron.Scene.active.lights) {
@@ -205,14 +209,18 @@ class Inc {
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, false);
 			}
+			#if rp_shadowmap_transparent
 			if (!light.lightInAtlasTransparent && !light.culledLight && light.visible && light.shadowMapScale > 0.0
 				&& light.data.raw.strength > 0.0 && light.data.raw.cast_shadow) {
 				ShadowMapAtlas.addLight(light, true);
 			}
+			#end
 		}
 		// update point light data before rendering
-		updatePointLightAtlasData(true);
 		updatePointLightAtlasData(false);
+		#if rp_shadowmap_transparent
+		updatePointLightAtlasData(true);
+		#end
 
 		for (atlas in ShadowMapAtlas.shadowMapAtlases) {
 			var tilesToRemove = [];
@@ -290,6 +298,7 @@ class Inc {
 			path.endStream();
 		}
 
+		#if rp_shadowmap_transparent
 		for (atlas in ShadowMapAtlas.shadowMapAtlasesTransparent) {
 			var tilesToRemove = [];
 			#if arm_shadowmap_atlas_lod
@@ -386,6 +395,7 @@ class Inc {
 		}
 		#if arm_debug
 		endShadowsLogicProfile();
+		#end
 		#end
 		#end
 	}
@@ -490,6 +500,7 @@ class Inc {
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
 
+		#if rp_shadowmap_transparent
 		pointIndex = 0;
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
@@ -511,6 +522,7 @@ class Inc {
 			if (l.data.raw.type == "point") pointIndex++;
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
+		#end
 		#end // rp_shadowmap
 	}
 	#end

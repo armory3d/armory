@@ -329,7 +329,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
     rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
-    rp_shadowmap_transparent: BoolProperty(name="Transparency", description="Enable transparent shadowmaps", default=True, update=update_renderpath)
+    rp_shadowmap_transparent: BoolProperty(name="Transparent shadowmaps", description="Enable shadows for transparent objects", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
         items=[('2', '2', '2'),
                ('3', '3', '3'),

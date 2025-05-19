@@ -58,7 +58,15 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 }
 #endif
 
-vec3 PCF(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec2 uv, const float compare, const vec2 smSize, const bool transparent) {
+vec3 PCF(sampler2DShadow shadowMap,
+		#ifdef _ShadowMapTransparent
+		sampler2D shadowMapTransparent,
+		#endif
+		const vec2 uv, const float compare, const vec2 smSize
+		#ifdef _ShadowMapTransparent
+		, const bool transparent
+		#endif
+		) {
 	vec3 result = vec3(0.0);
 	result.x = texture(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare));
 	result.x += texture(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare));
@@ -71,11 +79,13 @@ vec3 PCF(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec2 u
 	result.x += texture(shadowMap, vec3(uv + (vec2(1.0, 1.0) / smSize), compare));
 	result = result.xxx / 9.0;
 
+	#ifdef _ShadowMapTransparent
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uv);
 		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
+	#endif
 
 	return result;
 }
@@ -87,7 +97,15 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 	return zcomp * 0.5 + 0.5;
 }
 
-vec3 PCFCube(samplerCubeShadow shadowMapCube, samplerCube shadowMapCubeTransparent, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const bool transparent) {
+vec3 PCFCube(samplerCubeShadow shadowMapCube,
+			#ifdef _ShadowMapTransparent
+			samplerCube shadowMapCubeTransparent,
+			#endif
+			const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n
+			#ifdef _ShadowMapTransparent
+			, const bool transparent
+			#endif
+			) {
 	const float s = shadowmapCubePcfSize; // TODO: incorrect...
 	float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
@@ -106,11 +124,13 @@ vec3 PCFCube(samplerCubeShadow shadowMapCube, samplerCube shadowMapCubeTranspare
 	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
 	result = result.xxx / 9.0;
 
+	#ifdef _ShadowMapTransparent
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapCubeTransparent, ml);
 		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
+	#endif
 
 	return result;
 }
@@ -209,7 +229,15 @@ vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
 	return uv;
 }
 
-vec3 PCFFakeCube(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index, const bool transparent) {
+vec3 PCFFakeCube(sampler2DShadow shadowMap,
+				#ifdef _ShadowMapTransparent
+				sampler2D shadowMapTransparent,
+				#endif
+				const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index
+				#ifdef _ShadowMapTransparent
+				, const bool transparent
+				#endif
+				) {
 	const vec2 smSize = smSizeUniform; // TODO: incorrect...
 	const float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
@@ -255,24 +283,42 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, cons
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 
+	#ifdef _ShadowMapTransparent
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uvtiled);
 		if (shadowmap_transparent.a < compare)
 			result *= shadowmap_transparent.rgb;
 	}
+	#endif
 
 	return result;
 }
 #endif
 
-vec3 shadowTest(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec3 lPos, const float shadowsBias, const bool transparent) {
+vec3 shadowTest(sampler2DShadow shadowMap,
+				#ifdef _ShadowMapTransparent
+				sampler2D shadowMapTransparent,
+				#endif
+				const vec3 lPos, const float shadowsBias
+				#ifdef _ShadowMapTransparent
+				, const bool transparent
+				#endif
+				) {
 	#ifdef _SMSizeUniform
 	vec2 smSize = smSizeUniform;
 	#else
 	const vec2 smSize = shadowmapSize;
 	#endif
 	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return vec3(1.0);
-	return PCF(shadowMap, shadowMapTransparent, lPos.xy, lPos.z - shadowsBias, smSize, transparent);
+	return PCF(shadowMap,
+				#ifdef _ShadowMapTransparent
+				shadowMapTransparent,
+				#endif
+				lPos.xy, lPos.z - shadowsBias, smSize
+				#ifdef _ShadowMapTransparent
+				, transparent
+				#endif
+				);
 }
 
 #ifdef _CSM
@@ -308,7 +354,15 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	// ..
 }
 
-vec3 shadowTestCascade(sampler2DShadow shadowMap, sampler2D shadowMapTransparent, const vec3 eye, const vec3 p, const float shadowsBias, const bool transparent) {
+vec3 shadowTestCascade(sampler2DShadow shadowMap,
+					   #ifdef _ShadowMapTransparent
+					   sampler2D shadowMapTransparent,
+					   #endif
+					   const vec3 eye, const vec3 p, const float shadowsBias
+					   #ifdef _ShadowMapTransparent
+					   , const bool transparent
+					   #endif
+					   ) {
 	#ifdef _SMSizeUniform
 	vec2 smSize = smSizeUniform;
 	#else
@@ -325,7 +379,15 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap, sampler2D shadowMapTransparent
 	lPos.xyz /= lPos.w;
 
 	vec3 visibility = vec3(1.0);
-	if (lPos.w > 0.0) visibility = PCF(shadowMap, shadowMapTransparent, lPos.xy, lPos.z - shadowsBias, smSize, transparent);
+	if (lPos.w > 0.0) visibility = PCF(shadowMap,
+									#ifdef _ShadowMapTransparent
+									shadowMapTransparent,
+									#endif
+									lPos.xy, lPos.z - shadowsBias, smSize
+									#ifdef _ShadowMapTransparent
+									, transparent
+									#endif
+									);
 
 	// Blend cascade
 	// https://github.com/TheRealMJP/Shadows
@@ -344,7 +406,15 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap, sampler2D shadowMapTransparent
 		vec4 lPos2 = LWVP2 * vec4(p, 1.0);
 		lPos2.xyz /= lPos2.w;
 		vec3 visibility2 = vec3(1.0);
-		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap, shadowMapTransparent, lPos2.xy, lPos2.z - shadowsBias, smSize, transparent);
+		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap,
+											#ifdef _ShadowMapTransparent
+											shadowMapTransparent,
+											#endif
+											lPos.xy, lPos.z - shadowsBias, smSize
+											#ifdef _ShadowMapTransparent
+											, transparent
+											#endif
+											);
 
 		float lerpAmt = smoothstep(0.0, blendThres, splitDist);
 		return mix(visibility2, visibility, lerpAmt);
