@@ -23,7 +23,7 @@
 				{
 					"name": "clipmaps",
 					"link": "_clipmaps",
-					"ifdef": ["VoxelShadow"]
+					"ifdef": ["_VoxelShadow"]
 				},
 				{
 					"name": "invVP",

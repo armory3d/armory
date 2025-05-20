@@ -206,6 +206,8 @@ project.addSources('Sources');
                 # Include all logic node classes so that they can later
                 # get instantiated
                 khafile.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
+                if wrd.arm_render_viewport:
+                    assets.add_khafile_def('arm_render_viewport')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
@@ -346,9 +348,6 @@ project.addSources('Sources');
 
         if wrd.arm_winresize or state.target == 'html5':
             assets.add_khafile_def('arm_resizable')
-
-        if get_winmode(wrd.arm_winmode) == 1 and state.target.startswith('html5'):
-            assets.add_khafile_def('kha_html5_disable_automatic_size_adjust')
 
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
@@ -554,26 +553,22 @@ def write_indexhtml(w, h, is_publish):
 """<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8"/>""")
+    <meta charset='utf-8'/>""")
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-""")
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>""")
         f.write("""
     <title>"""+html.escape( wrd.arm_project_name)+"""</title>
 </head>
-<body style="margin: 0; padding: 0;">
-""")
+<body style='margin: 0; padding: 0;'>""")
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="object-fit: contain;  min-width: 100%;  max-width: 100%;  max-height: 100vh;  min-height: 100vh; display: block;" id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>
-""")
+    <canvas style='object-fit: contain; min-width: 100%; max-width: 100%; max-height: 100vh; min-height: 100vh; display: block;' id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>""")
         else:
             f.write("""
-    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>
-""")
+    <p align='center'><canvas align='center' style='outline: none;' id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>""")
         f.write("""
-    <script src='kha.js'></script>
+    <script type='text/javascript' src='kha.js'></script>
 </body>
 </html>
 """)
@@ -654,7 +649,6 @@ const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + "
 const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
-
         if rpdat.rp_bloom:
             follow_blender = rpdat.arm_bloom_follow_blender
             eevee_settings = bpy.context.scene.eevee
@@ -787,8 +781,6 @@ const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + "
 const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
-const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':

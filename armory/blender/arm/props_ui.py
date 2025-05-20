@@ -1585,6 +1585,7 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
+        #layout.prop(rpdat, 'rp_shadowmap_transparent')
         col = layout.column()
         col2 = col.column()
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'
@@ -1716,8 +1717,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col3.enabled = rpdat.rp_voxels == 'Voxel AO'
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'arm_voxelgi_refract', text='Refraction')
-
-        col.prop(rpdat, 'arm_voxelgi_clipmap_count')
+        #col.prop(rpdat, 'arm_voxelgi_clipmap_count')
         #col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'arm_voxelgi_size')
@@ -1732,9 +1732,8 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_refr')
         col.prop(rpdat, 'arm_voxelgi_shad')
         col.prop(rpdat, 'arm_voxelgi_occ')
-        col.enabled = rpdat.arm_voxelgi_shad != "Off"
         col.label(text="Ray")
-        col.prop(rpdat, 'arm_voxelgi_offset')
+        #col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
         #col.prop(rpdat, 'arm_voxelgi_aperture')
@@ -1855,9 +1854,6 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ss_refraction_search_dist')
         col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
         col.prop(rpdat, 'arm_ss_refraction_jitter')
-        col2 = col.column()
-        col2.enabled = rpdat.rp_voxels == "Voxel GI"
-        col2.prop(rpdat, 'arm_voxelgi_refract', text='Voxels Refraction')
         layout.separator()
 
         col = layout.column()
@@ -1871,7 +1867,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, "rp_bloom")
         _col = col.column()
         _col.enabled = rpdat.rp_bloom
-        if bpy.app.version <= (4, 2, 4):
+        if bpy.app.version < (4, 3, 0):
             _col.prop(rpdat, 'arm_bloom_follow_blender')
             if not rpdat.arm_bloom_follow_blender:
                 _col.prop(rpdat, 'arm_bloom_threshold')
@@ -2708,19 +2704,20 @@ class ARM_PT_BulletDebugDrawingPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
-        if wrd.arm_physics_engine != 'Bullet':
+        if wrd.arm_physics_engine != 'Bullet' and wrd.arm_physics_engine != 'Oimo':
             row = layout.row()
             row.alert = True
-            row.label(text="Physics debug drawing is only supported for the Bullet physics engine")
+            row.label(text="Physics debug drawing is only supported for the Bullet and Oimo physics engines")
 
         col = layout.column(align=False)
-        col.prop(wrd, "arm_bullet_dbg_draw_wireframe")
-        col.prop(wrd, "arm_bullet_dbg_draw_aabb")
-        col.prop(wrd, "arm_bullet_dbg_draw_contact_points")
-        col.prop(wrd, "arm_bullet_dbg_draw_constraints")
-        col.prop(wrd, "arm_bullet_dbg_draw_constraint_limits")
-        col.prop(wrd, "arm_bullet_dbg_draw_normals")
-        col.prop(wrd, "arm_bullet_dbg_draw_axis_gizmo")
+        col.prop(wrd, "arm_physics_dbg_draw_wireframe")
+        col.prop(wrd, "arm_physics_dbg_draw_aabb")
+        col.prop(wrd, "arm_physics_dbg_draw_contact_points")
+        col.prop(wrd, "arm_physics_dbg_draw_constraints")
+        col.prop(wrd, "arm_physics_dbg_draw_constraint_limits")
+        col.prop(wrd, "arm_physics_dbg_draw_normals")
+        col.prop(wrd, "arm_physics_dbg_draw_axis_gizmo")
+        col.prop(wrd, "arm_physics_dbg_draw_raycast")
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.

@@ -360,11 +360,9 @@ def make_forward_mobile(con_mesh):
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
-    shadowmap_sun_tr = 'shadowMapTransparent'
     if is_shadows_atlas:
         is_single_atlas = '_SingleAtlas' in wrd.world_defs
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
-        shadowmap_sun_tr = 'shadowMapAtlasSunTransparent' if not is_single_atlas else 'shadowMapAtlasTransparent'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
     frag.write('vec3 direct = vec3(0.0);')
 
@@ -379,7 +377,6 @@ def make_forward_mobile(con_mesh):
             vert.write('lightPosition = LWVP * spos;')
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}')
-            frag.add_uniform(f'sampler2D {shadowmap_sun_tr}')
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
 
             frag.write('if (receiveShadow) {')
@@ -387,14 +384,14 @@ def make_forward_mobile(con_mesh):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, {shadowmap_sun_tr}, eye, wposition + n * shadowsBias * 10, shadowsBias, opacity != 1.0);')
+                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition + n * shadowsBias * 10, shadowsBias, opacity != 1.0);')
             else:
                 frag.write('if (lightPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 if '_Legacy' in wrd.world_defs:
-                    frag.write(f'    svisibility = float(texture({shadowmap_sun}, {shadowmap_sun_tr}, vec2(lPos.xy)).r > lPos.z - shadowsBias, opacity != 1.0);')
+                    frag.write(f'    svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias, opacity != 1.0);')
                 else:
-                    frag.write(f'    svisibility = texture({shadowmap_sun}, {shadowmap_sun_tr}, vec3(lPos.xy, lPos.z - shadowsBias), opacity != 1.0).r;')
+                    frag.write(f'    svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias), opacity != 1.0).r;')
                 frag.write('}')
             frag.write('}') # receiveShadow
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
@@ -598,9 +595,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             opac = '0.9999' # 1.0 - eps
             frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    else:
-        frag.write('float opacity = 1.0;')
-
     if blend:
         frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
@@ -611,13 +605,47 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
+    #frag.write_attrib('vec3 vVec = normalize(eyeDir);')
+    #frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
-    sh = tese if tese is not None else vert
-    sh.add_out('vec3 eyeDir')
-    sh.add_uniform('vec3 eye', '_cameraPosition')
-    sh.write('eyeDir = eye - wposition;')
+    #sh.add_out('vec3 eyeDir')
+    #sh.add_uniform('vec3 eye', '_cameraPosition')
+    #sh.write('eyeDir = eye - wposition;')
+    if '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs:
+        sh = tese if tese is not None else vert
+        sh.add_out('vec4 wvpposition')
+        sh.add_out('vec4 prevwvpposition')
+        if '_gbuffer2' in wrd.world_defs:
+            if '_Veloc' in wrd.world_defs:
+                if tese is None:
+                    vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
+                    vert.add_out('vec4 wvpposition')
+                    vert.add_out('vec4 prevwvpposition')
+                    vert.write('wvpposition = gl_Position;')
+                    if is_displacement:
+                        vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                        vert.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
+                    else:
+                        vert.write('prevwvpposition = prevWVP * spos;')
+                else:
+                    tese.add_out('vec4 wvpposition')
+                    tese.add_out('vec4 prevwvpposition')
+                    tese.write('wvpposition = gl_Position;')
+                    if is_displacement:
+                        tese.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                        tese.add_uniform('mat4 prevWVP', '_prevWorldViewProjectionMatrix')
+                        tese.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
+                    else:
+                        vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
+                        vert.add_out('vec3 prevwposition')
+                        vert.write('prevwposition = vec4(prevW * spos).xyz;')
+                        tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
+                        make_tess.interpolate(tese, 'prevwposition', 3)
+                        tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+            frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+            frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
+            frag.write('vec2 velocity = vec2(posa - posb);')
+
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
@@ -634,6 +662,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
         frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;')
+        frag.write('vec3 F = f0 * envBRDF.x + envBRDF.y;')
 
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
@@ -659,32 +688,24 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('envl *= albedo;')
 
     if '_Brdf' in wrd.world_defs:
-        frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl.rgb *= 1.0 - F;')
     if '_Rad' in wrd.world_defs:
-        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += prefilteredColor * F;')
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += backgroundCol * F;')
 
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
 
     if '_VoxelAOvar' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
-        if '_VoxelShadow' in wrd.world_defs and not parse_opacity:
-            frag.add_uniform("sampler2D voxels_shadows", top=True)
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
-        frag.write('vec2 texCoord = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
-        if parse_opacity or '_VoxelShadow' in wrd.world_defs:
-            frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.add_include("std/conetrace.glsl")
-            frag.add_uniform("sampler3D voxels")
-            frag.add_uniform("sampler3D voxelsSDF")
-            frag.add_uniform("float clipmaps[10 * voxelgiClipmapCount]", '_clipmaps')
+        frag.add_include('std/conetrace.glsl')
+        frag.add_uniform('sampler3D voxels')
+        frag.add_uniform('sampler3D voxelsSDF')
+        frag.add_uniform('float clipmaps[10 * voxelgiClipmapCount]', '_clipmaps')
 
-    if '_VoxelAOvar' in wrd.world_defs and not parse_opacity:
-        frag.add_uniform("sampler2D voxels_ao");
-        frag.write('envl *= textureLod(voxels_ao, texCoord, 0.0).rrr;')
+    if '_VoxelAOvar' in wrd.world_defs:
+        frag.write('envl *= (1.0 - traceAO(wposition, n, voxels, clipmaps));')
 
     if '_VoxelGI' in wrd.world_defs:
         frag.write('vec3 indirect = vec3(0.0);')
@@ -692,23 +713,18 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('vec3 indirect = envl;')
 
     if '_VoxelGI' in wrd.world_defs:
-        if parse_opacity:
-            frag.write("indirect = traceDiffuse(wposition, n, voxels, clipmaps).rgb * albedo * voxelgiDiff;")
-            frag.write("if (specular > 0.0 && roughness < 1.0)")
-            frag.write("    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), roughness, clipmaps, gl_FragCoord.xy).rgb * specular * voxelgiRefl * (1.0 - roughness);")
-        else:
-            frag.add_uniform("sampler2D voxels_diffuse")
-            frag.add_uniform("sampler2D voxels_specular")
-            frag.write("indirect = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;")
-            frag.write("if (roughness < 1.0 && specular > 0.0)")
-            frag.write("    indirect += textureLod(voxels_specular, texCoord, 0.0).rgb * specular * voxelgiRefl;")
+        frag.write('vec4 diffuse_indirect = traceDiffuse(wposition, n, voxels, clipmaps);')
+        frag.write('indirect = (diffuse_indirect.rgb * albedo * (1.0 - F) + envl * (1.0 - diffuse_indirect.a)) * voxelgiDiff;')
+        frag.write('if (roughness < 1.0 && specular > 0.0) {')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * F * voxelgiRefl;')
+        frag.write('}')
 
     frag.write('vec3 direct = vec3(0.0);')
 
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('float svisibility = 1.0;')
+        frag.write('vec3 svisibility = vec3(1.0);')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = dot(n, sunDir);')
         frag.write('float sdotNH = dot(n, sh);')
@@ -741,11 +757,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write(f'svisibility = PCF({shadowmap_sun}, lPos.xy, lPos.z - shadowsBias, smSize);')
             if '_VoxelShadow' in wrd.world_defs:
-                if not parse_opacity:
-                    frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
-                else:
-                    frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), clipmaps, gl_FragCoord.xy).r;')
-
+                frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;')
             frag.write('}') # receiveShadow
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
@@ -764,11 +776,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 # Skip world matrix, already in world-space
                 frag.add_uniform('mat4 LWVPSpot[1]', link='_biasLightViewProjectionMatrixSpotArray', included=True)
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
-                frag.add_uniform('sampler2D shadowMapSpotTransparent[1]', included=True)
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-                frag.add_uniform('samplerCube shadowMapPointTransparent[1]', included=True)
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
@@ -776,11 +786,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs:
-            frag.write(', voxels, voxelsSDF, clipmaps')
+            frag.write(', voxels, voxelsSDF, clipmaps, velocity')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
-            frag.add_uniform('sampler2D gbufferD', top=True)
+            frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.write(', gbufferD, invVP, eye')
@@ -794,12 +804,13 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('direct = vec3(0.0);')
         frag.write('indirect += emissionCol;')
 
-    if parse_opacity and '_VoxelRefract' in wrd.world_defs:
+    if '_VoxelRefract' in wrd.world_defs and parse_opacity:
         frag.write('if (opacity < 1.0) {')
-        frag.write('vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, normalize(eye - wposition), ior, roughness, clipmaps, texCoord).rgb;')
+        frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness, clipmaps, gl_FragCoord.xy, velocity, opacity).rgb * (1.0 - F) * voxelgiRefr;')
         frag.write('    indirect = mix(refraction, indirect, opacity);')
         frag.write('    direct = mix(refraction, direct, opacity);')
         frag.write('}')
+
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')
@@ -812,5 +823,4 @@ def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 emissionCol;')
     if parse_opacity:
         frag.write('float opacity;')
-        frag.write('float ior = 1.450;')
-
+        frag.write('float ior;')

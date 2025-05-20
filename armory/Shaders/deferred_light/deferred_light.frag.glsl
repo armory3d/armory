@@ -29,14 +29,16 @@ uniform sampler2D gbuffer1;
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
-#endif
+#else
 #ifdef _VoxelAOvar
 uniform sampler2D voxels_ao;
+#endif
 #endif
 #ifdef _VoxelShadow
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform float clipmaps[10 * voxelgiClipmapCount];
+//!uniform sampler2D voxels_shadows;
 #endif
 
 uniform float envmapStrength;
@@ -56,6 +58,10 @@ uniform vec3 backgroundCol;
 
 #ifdef _SSAO
 uniform sampler2D ssaotex;
+#else
+#ifdef _SSGI
+uniform sampler2D ssaotex;
+#endif
 #endif
 
 #ifdef _SSS
@@ -127,7 +133,7 @@ uniform vec2 cameraPlane;
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
-		//!uniform vec4 pointLightDataArray[4];
+		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
 	#endif
@@ -216,14 +222,18 @@ void main() {
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
 #endif
 
+
 #ifdef _MicroShadowing
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
 
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #endif
 
+#ifndef _VoxelAOvar
+#ifndef _VoxelGI
 	// Envmap
 #ifdef _Irr
 
@@ -260,32 +270,33 @@ void main() {
 	envl.rgb *= albedo;
 
 #ifdef _Brdf
-	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
+	envl.rgb *= 1.0 - F; //LV: We should take refracted light into account
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * F; //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * F; //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifdef _VoxelGI
-	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
-	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
-#endif
-
-#ifdef _VoxelAOvar
-	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
-#endif
-
-#ifndef _VoxelGI
 	fragColor.rgb = envl;
 #endif
+#endif
+
+#ifdef _VoxelGI
+	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
+	if(roughness < 1.0 && occspec.y > 0.0)
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * F * voxelgiRefl;
+#else
+#ifdef _VoxelAOvar
+	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
+#endif
+#endif
+
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
 	// vec3 direction = vec3(0.0, 0.0, -1.0);
@@ -305,6 +316,10 @@ void main() {
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#else
+#ifdef _SSGI
+	fragColor.rgb += textureLod(ssaotex, texCoord, 0.0).rgb;
+#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -330,8 +345,8 @@ void main() {
 	float sdotNH = max(0.0, dot(n, sh));
 	float sdotVH = max(0.0, dot(v, sh));
 	float sdotNL = max(0.0, dot(n, sunDir));
-	float svisibility = 1.0;
-	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
+	vec3 svisibility = vec3(1.0);
+	vec3 sdirect =  lambertDiffuseBRDF(albedo, sdotNL) +
 	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
@@ -368,9 +383,9 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(p, n, voxels, voxelsSDF, v, clipmaps, gl_FragCoord.xy).r * voxelgiShad;
+	svisibility *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, -g2.rg).r) * voxelgiShad;
 	#endif
-	
+
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -433,7 +448,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-		, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, -g2.rg
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -491,7 +506,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, voxels, voxelsSDF, clipmaps
+			, voxels, voxelsSDF, clipmaps, -g2.rg // dummies
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x

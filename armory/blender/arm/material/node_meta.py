@@ -158,7 +158,6 @@ ALL_NODES: dict[str, MaterialNodeMeta] = {
     'BSDF_TRANSLUCENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftranslucent),
     'BSDF_TRANSPARENT': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdftransparent),
     'BSDF_REFRACTION': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfrefraction),
-    'BSDF_VELVET': MaterialNodeMeta(parse_func=nodes_shader.parse_bsdfvelvet),
     'EMISSION': MaterialNodeMeta(parse_func=nodes_shader.parse_emission),
     'HOLDOUT': MaterialNodeMeta(
         parse_func=nodes_shader.parse_holdout,

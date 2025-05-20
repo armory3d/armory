@@ -97,7 +97,6 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
     elif parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
-    
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)
 
@@ -234,14 +233,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if shadowmap_transparent:
-        frag.add_out('vec4 fragColor')
-        frag.write('float depth = wposition.z;')
-        frag.write('vec3 color = basecol;')
-        frag.write('color *= 1.0 - opacity;')
-        frag.write('fragColor = vec4(color, depth);')
-
-    if parse_opacity and not shadowmap_transparent:
+    if parse_opacity:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:

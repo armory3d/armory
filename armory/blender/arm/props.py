@@ -23,7 +23,7 @@ else:
     arm.enable_reload(__name__)
 
 # Armory version
-arm_version = '2024.12'
+arm_version = '2025.1'
 arm_commit = '$Id: 6b2644d47db169cedd95593497cc283207d23a74 $'
 
 def get_project_html5_copy(self):
@@ -197,38 +197,44 @@ def init_properties():
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_bullet_dbg_draw_wireframe = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
         name="Collider Wireframes", default=False,
         description="Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations"
     )
-    bpy.types.World.arm_bullet_dbg_draw_aabb = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_aabb = BoolProperty(
         name="Axis-aligned Minimum Bounding Boxes", default=False,
         description="Draw axis-aligned minimum bounding boxes (AABBs) of the physics collider meshes"
     )
-    bpy.types.World.arm_bullet_dbg_draw_contact_points = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_contact_points = BoolProperty(
         name="Contact Points", default=False,
         description="Visualize contact points of multiple colliders"
     )
-    bpy.types.World.arm_bullet_dbg_draw_constraints = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_constraints = BoolProperty(
         name="Constraints", default=False,
         description="Draw axis gizmos for important constraint points"
     )
-    bpy.types.World.arm_bullet_dbg_draw_constraint_limits = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_constraint_limits = BoolProperty(
         name="Constraint Limits", default=False,
         description="Draw additional constraint information such as distance or angle limits"
     )
-    bpy.types.World.arm_bullet_dbg_draw_normals = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_normals = BoolProperty(
         name="Face Normals", default=False,
         description=(
             "Draw the normal vectors of the triangles of the physics collider meshes."
-            " This only works for mesh collision shapes"
+            " This only works with Bullet physics, for mesh collision shapes"
         )
     )
-    bpy.types.World.arm_bullet_dbg_draw_axis_gizmo = BoolProperty(
+    bpy.types.World.arm_physics_dbg_draw_axis_gizmo = BoolProperty(
         name="Axis Gizmos", default=False,
         description=(
             "Draw a small axis gizmo at the origin of the collision shape."
             " Only works if \"Collider Wireframes\" is enabled as well"
+        )
+    )
+    bpy.types.World.arm_physics_dbg_draw_raycast = BoolProperty(
+        name="Raycasts", default=False,
+        description=(
+            "Draw raycasts to trace the results."
         )
     )
     bpy.types.World.arm_navigation = EnumProperty(
@@ -287,6 +293,7 @@ def init_properties():
         name="Assertion Level", description="Ignore all assertions below this level (assertions are turned off completely for published builds)", default='Warning', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_assert_quit = BoolProperty(name="Quit On Assertion Fail", description="Whether to close the game when an 'Error' level assertion fails", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_live_patch = BoolProperty(name="Live Patch", description="Live patching for Krom", default=False)
+    bpy.types.World.arm_render_viewport = BoolProperty(name="Viewport Render", description="Viewport rendering", default=False)
     bpy.types.World.arm_clear_on_compile = BoolProperty(name="Clear Console", description="Clears the system console on compile", default=False)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
@@ -343,7 +350,7 @@ def init_properties():
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_visible = BoolProperty(name="Visible", description="Render this object", default=True, override={'LIBRARY_OVERRIDABLE'})
-    bpy.types.Object.arm_visible_shadow = BoolProperty(name="Visible Shadow", description="Object contributes to the lighting even if invisible", default=True, override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_visible_shadow = BoolProperty(name="Lighting", description="Object contributes to the lighting even if invisible", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_soft_body_margin = FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
     bpy.types.Object.arm_rb_linear_factor = FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
