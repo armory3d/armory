@@ -138,7 +138,7 @@ def parse(material: Material, mat_data, mat_users: Dict[Material, List[Object]],
         elif rp == 'translucent' or rp == 'refraction':
             c['bind_constants'].append({'name': 'receiveShadow', 'boolValue': material.arm_receive_shadow})
         
-        elif rp == 'shadowmap' or rp == 'shadowmap_transparent':
+        elif rp == 'shadowmap':
             if wrd.arm_batch_materials:
                 if len(c['bind_textures']) > 0:
                     c['bind_textures'] = batch_cached_textures

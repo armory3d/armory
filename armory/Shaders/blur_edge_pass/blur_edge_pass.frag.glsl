@@ -31,7 +31,6 @@ void main() {
 		float w = blurWeights[i] * influenceFactor;
 		fragColor += col * w;
 		weight += w;
-
 		nor2 = getNor(textureLod(gbuffer0, texCoord - i * dirInv, 0.0).rg);
 		influenceFactor = step(discardThreshold, dot(nor2, nor));
 		col = textureLod(tex, texCoord - posadd * dirInv, 0.0).r;

@@ -306,7 +306,7 @@ def make_gi(context_id):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('vec3 svisibility = vec3(1.0);')
+        frag.write('float svisibility = 1.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = dot(N, sunDir);')
         frag.write('float sdotNH = dot(N, sh);')

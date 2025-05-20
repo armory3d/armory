@@ -15,8 +15,6 @@ else:
 def write(vert: shader.Shader, frag: shader.Shader):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    blend = mat_state.material.arm_blending
-    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
     is_mobile = rpdat.arm_material_model == 'Mobile'
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
@@ -38,7 +36,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
             frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
         else:
             frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
-
     vert.add_out('vec4 wvpposition')
     vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w

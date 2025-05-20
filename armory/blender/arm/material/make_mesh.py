@@ -369,7 +369,7 @@ def make_forward_mobile(con_mesh):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('vec3 svisibility = vec3(1.0);')
+        frag.write('float svisibility = 1.0;')
         frag.write('float sdotNL = max(dot(n, sunDir), 0.0);')
         if is_shadows:
             vert.add_out('vec4 lightPosition')
@@ -384,14 +384,14 @@ def make_forward_mobile(con_mesh):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition + n * shadowsBias * 10, shadowsBias, opacity != 1.0);')
+                frag.write(f'svisibility = shadowTestCascade({shadowmap_sun}, eye, wposition + n * shadowsBias * 10, shadowsBias);')
             else:
                 frag.write('if (lightPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 if '_Legacy' in wrd.world_defs:
-                    frag.write(f'    svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias, opacity != 1.0);')
+                    frag.write(f'    svisibility = float(texture({shadowmap_sun}, vec2(lPos.xy)).r > lPos.z - shadowsBias);')
                 else:
-                    frag.write(f'    svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias), opacity != 1.0).r;')
+                    frag.write(f'    svisibility = texture({shadowmap_sun}, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
                 frag.write('}')
             frag.write('}') # receiveShadow
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
@@ -605,16 +605,14 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         # TODO: Fade out fragments near depth buffer here
         return
 
-    #frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-    #frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
+    frag.write_attrib('vec3 vVec = normalize(eyeDir);')
+    frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
-    #sh.add_out('vec3 eyeDir')
-    #sh.add_uniform('vec3 eye', '_cameraPosition')
-    #sh.write('eyeDir = eye - wposition;')
+    sh = tese if tese is not None else vert
+    sh.add_out('vec3 eyeDir')
+    sh.add_uniform('vec3 eye', '_cameraPosition')
+    sh.write('eyeDir = eye - wposition;')
     if '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs:
-        sh = tese if tese is not None else vert
-        sh.add_out('vec4 wvpposition')
-        sh.add_out('vec4 prevwvpposition')
         if '_gbuffer2' in wrd.world_defs:
             if '_Veloc' in wrd.world_defs:
                 if tese is None:
@@ -724,7 +722,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('vec3 svisibility = vec3(1.0);')
+        frag.write('float svisibility = 1.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = dot(n, sunDir);')
         frag.write('float sdotNH = dot(n, sh);')

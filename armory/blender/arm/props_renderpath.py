@@ -329,7 +329,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
     rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
-    rp_shadowmap_transparent: BoolProperty(name="Transparency", description="Enable transparent shadowmaps", default=True, update=update_renderpath)
     rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
         items=[('2', '2', '2'),
                ('3', '3', '3'),
@@ -533,6 +532,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
@@ -551,8 +551,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('5', '5', '5'),
                ],
         name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
-    arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
-
     arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
     arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8, update=assets.invalidate_shader_cache)
     arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)

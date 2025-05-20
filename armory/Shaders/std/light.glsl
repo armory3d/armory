@@ -154,7 +154,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			#endif
 			#ifdef _Clusters
-			vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[index] * vec4(p + n * bias * 10, 1.0);
 			if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
 			else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
 			else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
