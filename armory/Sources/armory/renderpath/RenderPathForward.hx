@@ -295,7 +295,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if (rp_ssr_half || rp_ssgi_half || rp_voxels != "Off")
+		#if (rp_ssr_half || rp_ssgi_half || (rp_voxels != "Off"))
 		{
 			path.loadShader("shader_datas/downsample_depth/downsample_depth");
 			var t = new RenderTargetRaw();
@@ -536,6 +536,10 @@ class RenderPathForward {
 					#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 					path.bindTarget("voxelsSDF", "voxelsSDF");
 					#end
+					#end
+
+					#if rp_ssrs
+					path.bindTarget("_main", "gbufferD");
 					#end
 
 					path.drawMeshes("refraction");

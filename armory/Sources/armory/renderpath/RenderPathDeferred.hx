@@ -366,7 +366,6 @@ class RenderPathDeferred {
 			path.createRenderTarget(t);	
 		}
 		#end
-
 		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			var t = new RenderTargetRaw();
@@ -384,8 +383,6 @@ class RenderPathDeferred {
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
-
-			path.createDepthBuffer("refraction", "DEPTH24");
 
 			// holds background depth
 			var t = new RenderTargetRaw();
@@ -915,6 +912,10 @@ class RenderPathDeferred {
 				#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 				path.bindTarget("voxelsSDF", "voxelsSDF");
 				#end
+				#end
+
+				#if rp_ssrs
+				path.bindTarget("_main", "gbufferD");
 				#end
 
 				path.drawMeshes("refraction");

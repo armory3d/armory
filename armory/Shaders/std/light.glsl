@@ -7,9 +7,6 @@
 #ifdef _ShadowMap
 #include "std/shadows.glsl"
 #endif
-#ifdef _VoxelShadow
-#include "std/conetrace.glsl"
-#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -21,6 +18,9 @@
 #endif
 #ifdef _Spot
 #include "std/light_common.glsl"
+#endif
+#ifdef _VoxelShadow
+#include "std/conetrace.glsl"
 #endif
 
 #ifdef _ShadowMap
@@ -126,7 +126,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
 

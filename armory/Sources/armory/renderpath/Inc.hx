@@ -482,6 +482,10 @@ class Inc {
 		#end
 		#end
 
+		#if rp_ssrs
+		path.bindTarget("_main", "gbufferD");
+		#end
+
 		path.drawMeshes("translucent");
 
 		#if rp_render_to_texture
@@ -900,7 +904,11 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
+		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
 
 		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
@@ -1000,7 +1008,11 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
+		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
+		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
 		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
 		#if rp_gbuffer2
@@ -1099,7 +1111,11 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta4, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb4, rts.get("half").image);
+		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("gbuffer0").image);
+		#else
+		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("lbuffer1").image);
+		#end
 		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 		#if rp_gbuffer2

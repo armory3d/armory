@@ -12,15 +12,14 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-    vec4 accum = texelFetch(gbuffer0, ivec2(texCoord * texSize), 0);
-    float revealage = 1.0 - accum.a;
+	vec4 accum = texelFetch(gbuffer0, ivec2(texCoord * texSize), 0);
+	float revealage = 1.0 - accum.a;
 
-    // Save the blending and color texture fetch cost
-    if (revealage == 0.0) {
-        discard;
-    }
+	// Save the blending and color texture fetch cost
+	if (revealage == 0.0) {
+		discard;
+	}
 
-    float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
-
-    fragColor = vec4(accum.rgb / clamp(f, 0.001, 5000), revealage);
+	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
+	fragColor = vec4(accum.rgb / clamp(f, 0.0001, 5000), revealage);
 }

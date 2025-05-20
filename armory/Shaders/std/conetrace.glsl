@@ -259,7 +259,6 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 }
 #endif
 
-
 #ifdef _VoxelShadow
 float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 origin, const vec3 n, const vec3 dir, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
     float sampleCol = 0.0;

@@ -121,8 +121,6 @@ def add_world_defs():
         if rpdat.arm_voxelgi_shadows and (point_lights > 0 or '_Sun' in wrd.world_defs):
             wrd.world_defs += '_VoxelShadow'
             assets.add_khafile_def('arm_voxelgi_shadows')
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_shadows/voxel_resolve_shadows.comp.glsl')
-
         if voxelgi:
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_specular/voxel_resolve_specular.comp.glsl')

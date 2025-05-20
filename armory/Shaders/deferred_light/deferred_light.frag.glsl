@@ -38,7 +38,6 @@ uniform sampler2D voxels_ao;
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform float clipmaps[10 * voxelgiClipmapCount];
-//!uniform sampler2D voxels_shadows;
 #endif
 
 uniform float envmapStrength;

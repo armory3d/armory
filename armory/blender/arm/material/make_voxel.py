@@ -178,7 +178,6 @@ def make_gi(context_id):
     geom.write('    }')
     geom.write('}')
 
-
     geom.write('vec2 side0N = normalize(voxposition[1].xy - voxposition[0].xy);')
     geom.write('vec2 side1N = normalize(voxposition[2].xy - voxposition[1].xy);')
     geom.write('vec2 side2N = normalize(voxposition[0].xy - voxposition[2].xy);')
