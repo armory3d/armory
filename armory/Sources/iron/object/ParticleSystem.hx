@@ -51,6 +51,9 @@ class ParticleSystem {
 
 	var random = 0.0;
 
+	var isPlaying = false;
+	var isStopping = false;
+
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
 		currentSpeed = speed;
@@ -90,6 +93,8 @@ class ParticleSystem {
 	}
 
 	public function start() {
+		if (isStopping) return;
+
 		if (r.is_unique) random = Math.random();
 		lifetime = r.lifetime / frameRate;
 		animtime = looptime + lifetime;
@@ -97,6 +102,7 @@ class ParticleSystem {
 		lap = 0;
 		lapTime = 0;
 		speed = currentSpeed;
+		isPlaying = true;
 	}
 
 	public function pause() {
@@ -108,9 +114,12 @@ class ParticleSystem {
 		speed = currentSpeed;
 	}
 
-	// TODO: interrupt smoothly
+	// WIP: interrupt smoothly
 	public function stop() {
-		end();
+		if (!isPlaying) return;
+
+		isStopping = true;
+		animtime = looptime + lifetime;
 	}
 
 	function end() {
@@ -118,6 +127,9 @@ class ParticleSystem {
 		speed = 0;
 		lap = 0;
 		lapLoop = 0;
+
+		isPlaying = false;
+		isStopping = false;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
@@ -151,7 +163,7 @@ class ParticleSystem {
 
 		if (r.loop) {
 			lapLoop = Std.int(time / looptime);
-			if (lapLoop > prevLapLoop) {
+			if (lapLoop > prevLapLoop && !isStopping) {
 				animtime = looptime;
 			}
 		}
@@ -160,7 +172,7 @@ class ParticleSystem {
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
 
-		if ((lap > prevLap && !r.loop)) {
+		if ((lap > prevLap && (!r.loop || isStopping))) {
 			end();
 		}
 
