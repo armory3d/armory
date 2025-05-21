@@ -916,7 +916,7 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf
-		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("$brdf.png"));
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"));
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
@@ -1019,7 +1019,7 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf
-		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("$brdf.png"));
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"));
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
