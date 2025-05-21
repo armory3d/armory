@@ -241,11 +241,9 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap,
 	const vec2 smSize = smSizeUniform; // TODO: incorrect...
 	const float compare = lpToDepth(lp, lightProj) - bias * 1.5;
 	ml = ml + n * bias * 20;
-
 	int faceIndex = 0;
 	const int lightIndex = index * 6;
 	const vec2 uv = sampleCube(ml, faceIndex);
-
 	vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
 	vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
 	#ifdef _FlipY
@@ -324,7 +322,6 @@ vec3 shadowTest(sampler2DShadow shadowMap,
 #ifdef _CSM
 mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	const int c = shadowmapCascades;
-
 	// Get cascade index
 	// TODO: use bounding box slice selection instead of sphere
 	const vec4 ci = vec4(float(c > 0), float(c > 1), float(c > 2), float(c > 3));
@@ -340,16 +337,13 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 		float(d > casData[c * 4].z),
 		float(d > casData[c * 4].w));
 	casi = int(min(dot(ci, comp), c));
-
 	// Get cascade mat
 	casIndex = casi * 4;
-
 	return mat4(
 		casData[casIndex    ],
 		casData[casIndex + 1],
 		casData[casIndex + 2],
 		casData[casIndex + 3]);
-
 	// if (casIndex == 0) return mat4(casData[0], casData[1], casData[2], casData[3]);
 	// ..
 }
@@ -370,11 +364,9 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap,
 	#endif
 	const int c = shadowmapCascades;
 	float d = distance(eye, p);
-
 	int casi;
 	int casIndex;
 	mat4 LWVP = getCascadeMat(d, casi, casIndex);
-
 	vec4 lPos = LWVP * vec4(p, 1.0);
 	lPos.xyz /= lPos.w;
 
@@ -420,7 +412,6 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap,
 		return mix(visibility2, visibility, lerpAmt);
 	}
 	return visibility;
-
 	// Visualize cascades
 	// if (ci == 0) albedo.rgb = vec3(1.0, 0.0, 0.0);
 	// if (ci == 4) albedo.rgb = vec3(0.0, 1.0, 0.0);

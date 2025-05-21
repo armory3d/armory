@@ -146,12 +146,13 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
+				//holds colors before refractive meshes are drawn
 				var t = new RenderTargetRaw();
 				t.name = "refr";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
+				t.format = Inc.getHdrFormat();
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
@@ -200,7 +201,7 @@ class RenderPathForward {
 			Inc.initGI("voxels");
 			Inc.initGI("voxelsOut");
 			Inc.initGI("voxelsOutB");
-			#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
+			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
@@ -319,6 +320,7 @@ class RenderPathForward {
 			path.createRenderTarget(t);
 		}
 		#end
+
 		#if rp_ssr
 		{
 
@@ -397,7 +399,6 @@ class RenderPathForward {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
-			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();
 
@@ -422,7 +423,7 @@ class RenderPathForward {
 		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			path.setTarget("gbuffer_refraction"); // Only clear gbuffer0
-			path.clearTarget(0xff000000);
+			path.clearTarget(0xffffff00);
 		}
 		#end
 
@@ -448,9 +449,11 @@ class RenderPathForward {
 		#if (rp_voxels != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
+			#if (rp_voxels != "Off")
 			path.bindTarget("voxelsOut", "voxels");
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			path.bindTarget("voxelsSDF", "voxelsSDF");
+			#end
 			#end
 		}
 		#end
@@ -501,12 +504,19 @@ class RenderPathForward {
 
 					#if (rp_voxels != "Off")
 					path.bindTarget("voxelsOut", "voxels");
+					#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 					path.bindTarget("voxelsSDF", "voxelsSDF");
+					#end
+					#end
+
+					#if rp_ssrs
+					path.bindTarget("_main", "gbufferD");
 					#end
 
 					path.drawMeshes("refraction");
 
 					path.setTarget("lbuffer0");
+
 					path.bindTarget("lbuffer0", "tex");
 					path.bindTarget("refr", "tex1");
 					path.bindTarget("_main", "gbufferD");

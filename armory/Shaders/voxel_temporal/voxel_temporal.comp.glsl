@@ -35,13 +35,13 @@ uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
 uniform vec2 spotData;
+uniform float envmapStrength;
 #ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
 uniform float shadowsBias;
 uniform mat4 LVP;
 #endif
-uniform float envmapStrength;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
@@ -116,6 +116,7 @@ void main() {
 				N /= count;
 				// Decode octahedral normal
 				N = decode_oct(N.rg * 2.0 - 1.0);
+
 				vec3 envl = vec3(0.0);
 				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
 				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
@@ -127,7 +128,6 @@ void main() {
 				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;
 				light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 255;
 				light /= count;
-
 
 				//clipmap to world
 				vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;

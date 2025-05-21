@@ -139,7 +139,7 @@ def make_gi(context_id):
 
     geom.add_out('vec4 voxposition[3]')
     geom.add_out('vec3 P')
-    geom.add_out('vec3 voxnormal')
+    geom.add_out('vec3 wnormal')
     geom.add_out('vec4 lightPosition')
     geom.add_out('vec4 wvpposition')
     geom.add_out('vec3 eyeDir')
@@ -188,7 +188,7 @@ def make_gi(context_id):
     geom.write('    voxposition[i].xy /= voxelgiResolution.xy;')
     geom.write('    voxposition[i].zw = vec2(1.0);')
     geom.write('    P = voxpositionGeom[i];')
-    geom.write('    voxnormal = voxnormalGeom[i];')
+    geom.write('    wnormal = voxnormalGeom[i];')
     if con_voxel.is_elem('col'):
         geom.write('vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
@@ -215,7 +215,7 @@ def make_gi(context_id):
 
     frag.write('if(any(notEqual(uvw, clamp(uvw, 0.0, 1.0)))) return;')
     frag.write('vec3 writecoords = floor(uvw * voxelgiResolution);')
-    frag.write_attrib('vec3 N = normalize(voxnormal);')
+    frag.write_attrib('vec3 N = normalize(wnormal);')
     frag.write('vec3 aniso_direction = N;')
     frag.write('uvec3 face_offsets = uvec3(')
     frag.write('    aniso_direction.x > 0 ? 0 : 1,')

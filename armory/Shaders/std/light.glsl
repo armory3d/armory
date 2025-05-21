@@ -22,6 +22,9 @@
 #ifdef _Spot
 #include "std/light_common.glsl"
 #endif
+#ifdef _VoxelShadow
+#include "std/conetrace.glsl"
+#endif
 
 #ifdef _ShadowMap
 	#ifdef _SinglePoint
@@ -168,7 +171,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelShadow
 	vec3 lightDir = l;
 	#ifdef _Spot
-	if(isSpot)
+	if (isSpot)
 		lightDir = spotDir;
 	#endif
 	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
@@ -178,7 +181,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
-			vec4 lPos = LWVPSpotArray[0] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0],
 								#ifdef _ShadowMapTransparent
 								shadowMapSpotTransparent[0],
@@ -190,7 +193,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 								);
 			#endif
 			#ifdef _Clusters
-			vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[index] * vec4(p + n * bias * 10, 1.0);
 			if (index == 0) direct *= shadowTest(shadowMapSpot[0],
 												#ifdef _ShadowMapTransparent
 												shadowMapSpotTransparent[0],
@@ -448,7 +451,7 @@ vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dot
 	#ifdef _ShadowMap
 		if (receiveShadow) {
 			#ifdef _SinglePoint
-			vec4 lPos = LWVPSpotArray[0] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0],
 								#ifdef _ShadowMapTransparent
 								shadowMapSpotTransparent[0],
@@ -460,7 +463,7 @@ vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dot
 								);
 			#endif
 			#ifdef _Clusters
-			vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
+			vec4 lPos = LWVPSpot[index] * vec4(p + n * bias * 10, 1.0);
 			if (index == 0) direct *= shadowTest(shadowMapSpot[0],
 												#ifdef _ShadowMapTransparent
 												shadowMapSpotTransparent[0],

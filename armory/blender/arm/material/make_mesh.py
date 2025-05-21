@@ -557,7 +557,7 @@ def make_forward(con_mesh):
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
             frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
             if rpdat.rp_ss_refraction or rpdat.arm_voxelgi_refract:
-                frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 0.0);')
+                frag.write(f'fragColor[2] = vec4(1.0, 1.0, 0.0, 1.0);')
 
         else:
             frag.add_out('vec4 fragColor[1]')
@@ -644,6 +644,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
                 frag.write('vec2 velocity = -vec2(posa - posb);')
 
+
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
     is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
@@ -718,6 +719,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('if (roughness < 1.0 && specular > 0.0) {')
         frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * F * voxelgiRefl;')
         frag.write('}')
+
     frag.write('vec3 direct = vec3(0.0);')
 
     if '_Sun' in wrd.world_defs:
@@ -809,9 +811,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
+            frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.write(', wposition.z, invVP, eye')
+            frag.write(', gbufferD, invVP, eye')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:

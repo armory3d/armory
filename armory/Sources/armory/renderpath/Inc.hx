@@ -31,10 +31,10 @@ class Inc {
 	static var m = iron.math.Mat4.identity();
 	static var voxel_ca1:kha.compute.ConstantLocation;
 	static var voxel_cb1:kha.compute.ConstantLocation;
-	static var voxel_cc1:kha.compute.ConstantLocation;
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
+	static var voxel_cc1:kha.compute.ConstantLocation;
 	#else
 	#if arm_voxelgi_shadows
 	static var voxel_te1:kha.compute.TextureUnit;
@@ -393,9 +393,6 @@ class Inc {
 				tile.freeTile();
 			}
 		}
-		#if arm_debug
-		endShadowsLogicProfile();
-		#end
 		#end
 		#end
 	}
@@ -609,10 +606,14 @@ class Inc {
 		#end
 
 		#if (rp_voxels != "Off")
-		{
-			path.bindTarget("voxelsOut", "voxels");
-			path.bindTarget("voxelsSDF", "voxelsSDF");
-		}
+		path.bindTarget("voxelsOut", "voxels");
+		#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
+		path.bindTarget("voxelsSDF", "voxelsSDF");
+		#end
+		#end
+
+		#if rp_ssrs
+		path.bindTarget("_main", "gbufferD");
 		#end
 
 		path.drawMeshes("translucent");
@@ -823,6 +824,7 @@ class Inc {
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
+	 		voxel_cc1 = voxel_sh1.getConstantLocation("envmapStrength");
 			#else
 			#if arm_voxelgi_shadows
 			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
@@ -944,6 +946,7 @@ class Inc {
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
+		kha.compute.Compute.setFloat(voxel_cc1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#else
 		#if arm_voxelgi_shadows
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
@@ -1232,8 +1235,6 @@ class Inc {
 		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
 		#end
-
-		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
 		for (i in 0...Main.voxelgiClipmapCount) {

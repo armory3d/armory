@@ -271,6 +271,34 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_volumetriclight
+		{
+			var t = new RenderTargetRaw();
+			t.name = "volumetrica";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half // Do we keep this ?
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "volumetricb";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+		}
+		#end
+
 		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
 			var t = new RenderTargetRaw();
@@ -404,7 +432,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			path.createDepthBuffer("refraction", "DEPTH24");
 			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
@@ -508,7 +535,7 @@ class RenderPathDeferred {
 
 		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
-			path.setTarget("gbuffer_refraction"); // Only clear gbuffer0
+			path.setTarget("gbuffer_refraction");
 			path.clearTarget(0xffffff00);
 		}
 		#end
@@ -675,7 +702,7 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsTemporal();
 
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
 			#end
 
@@ -687,14 +714,9 @@ class RenderPathDeferred {
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
 				#end
-				#if arm_voxelgi_shadows
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
-				#end
 			}
 		}
 		#end
-
 		// ---
 		// Deferred light
 		// ---
@@ -948,13 +970,14 @@ class RenderPathDeferred {
 				#end
 
 				#if (rp_voxels != "Off")
-				{
-					path.bindTarget("voxelsOut", "voxels");
-					path.bindTarget("voxelsSDF", "voxelsSDF");
-					#if rp_gbuffer2
-					path.bindTarget("gbuffer2", "gbuffer2");
-					#end
-				}
+				path.bindTarget("voxelsOut", "voxels");
+				#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
+				path.bindTarget("voxelsSDF", "voxelsSDF");
+				#end
+				#end
+
+				#if rp_ssrs
+				path.bindTarget("_main", "gbufferD");
 				#end
 
 				path.drawMeshes("refraction");

@@ -250,6 +250,7 @@ void main() {
 	vec4 g2 = textureLod(gbuffer2, texCoord, 0.0);
 #endif
 
+
 #ifdef _MicroShadowing
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
@@ -259,9 +260,9 @@ void main() {
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #endif
 
-#ifndef _VoxelGI
 #ifndef _VoxelAOvar
-// Envmap
+#ifndef _VoxelGI
+	// Envmap
 #ifdef _Irr
 	vec3 envl = shIrradiance(n, shirr);
 
@@ -317,10 +318,10 @@ void main() {
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * F * voxelgiRefl;
-#endif
-
+#else
 #ifdef _VoxelAOvar
 	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
+#endif
 #endif
 
 	// Show voxels

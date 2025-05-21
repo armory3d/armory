@@ -91,7 +91,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0')
-
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if is_transparent_shadows:
@@ -108,9 +107,10 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     if '_SSRS' in wrd.world_defs:
+        frag.add_uniform('sampler2D gbufferD')
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
-        frag.write(', wposition.z, invVP, eye')
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights
