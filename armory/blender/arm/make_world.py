@@ -271,6 +271,7 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
         # Append irradiance define
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
+            assets.add_khafile_def("arm_irradiance")
 
         # Extract environment strength
         # Todo: follow/parse strength input
@@ -284,6 +285,7 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
             solid_mat = rpdat.arm_material_model == 'Solid'
             if rpdat.arm_irradiance and not solid_mat:
                 world.world_defs += '_Irr'
+                assets.add_khafile_def("arm_irradiance")
             world.arm_envtex_color = node_surface.inputs[0].default_value
             world.arm_envtex_strength = 1.0
 

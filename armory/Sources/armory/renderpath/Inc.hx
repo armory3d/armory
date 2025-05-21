@@ -963,6 +963,7 @@ class Inc {
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
+		var irradiance = iron.Scene.active.world == null ?
 		iron.data.WorldData.getEmptyIrradiance() :
 		iron.Scene.active.world.probe.irradiance;
 		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
@@ -1057,6 +1058,7 @@ class Inc {
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
+		var irradiance = iron.Scene.active.world == null ?
 		iron.data.WorldData.getEmptyIrradiance() :
 		iron.Scene.active.world.probe.irradiance;
 		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
