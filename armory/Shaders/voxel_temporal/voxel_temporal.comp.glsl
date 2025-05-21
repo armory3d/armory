@@ -35,7 +35,6 @@ uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
 uniform vec2 spotData;
-uniform float envmapStrength;
 #ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
@@ -109,12 +108,10 @@ void main() {
 				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
 				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
 				emission /= count;
-				// Retrieve encoded normal (stored in 8-bit format)
 				vec3 N = vec3(0.0);
 				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255.0;
 				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255.0;
 				N /= count;
-				// Decode octahedral normal
 				N = decode_oct(N.rg * 2.0 - 1.0);
 
 				vec3 envl = vec3(0.0);
@@ -122,7 +119,6 @@ void main() {
 				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 				envl /= count;
-				envl *= envmapStrength;
 				vec3 light = vec3(0.0);
 				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 255;
 				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;

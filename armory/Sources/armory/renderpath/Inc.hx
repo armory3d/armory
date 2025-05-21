@@ -34,7 +34,6 @@ class Inc {
 	#if (rp_voxels == "Voxel GI")
 	static var voxel_td1:kha.compute.TextureUnit;
 	static var voxel_te1:kha.compute.TextureUnit;
-	static var voxel_cc1:kha.compute.ConstantLocation;
 	#else
 	#if arm_voxelgi_shadows
 	static var voxel_te1:kha.compute.TextureUnit;
@@ -819,12 +818,10 @@ class Inc {
 
 	 		voxel_ca1 = voxel_sh1.getConstantLocation("clipmaps");
 	 		voxel_cb1 = voxel_sh1.getConstantLocation("clipmapLevel");
-	 		voxel_cc1 = voxel_sh1.getConstantLocation("envmapStrength");
 
 			#if (rp_voxels == "Voxel GI")
 			voxel_td1 = voxel_sh1.getTextureUnit("voxelsSampler");
 			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
-	 		voxel_cc1 = voxel_sh1.getConstantLocation("envmapStrength");
 			#else
 			#if arm_voxelgi_shadows
 			voxel_te1 = voxel_sh1.getTextureUnit("SDF");
@@ -946,7 +943,6 @@ class Inc {
 		#if (rp_voxels == "Voxel GI")
 		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
-		kha.compute.Compute.setFloat(voxel_cc1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#else
 		#if arm_voxelgi_shadows
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
@@ -970,8 +966,6 @@ class Inc {
 		kha.compute.Compute.setFloats(voxel_ca1, fa);
 
 		kha.compute.Compute.setInt(voxel_cb1, iron.RenderPath.clipmapLevel);
-
-		kha.compute.Compute.setFloat(voxel_cc1, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 
 		kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 	}
