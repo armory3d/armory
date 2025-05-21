@@ -904,11 +904,7 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
-		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
-		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
 
 		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
@@ -967,14 +963,9 @@ class Inc {
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
-		var irradiance = iron.Scene.active.world == null ?
-			iron.data.WorldData.getEmptyIrradiance() :
-			iron.Scene.active.world.probe.irradiance;
-		var shCoeffs = new Float32Array(28);
-		for (i in 0...28) {
-			shCoeffs[i] = irradiance[i];
-		}
-		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
+		iron.data.WorldData.getEmptyIrradiance() :
+		iron.Scene.active.world.probe.irradiance;
+		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
@@ -1008,11 +999,7 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
-		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("lbuffer1").image);
-		#end
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
 		kha.compute.Compute.setSampledTexture(voxel_te3, rts.get("gbuffer1").image);
 		#if rp_gbuffer2
@@ -1070,14 +1057,9 @@ class Inc {
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
 		#if arm_irradiance
-		var irradiance = iron.Scene.active.world == null ?
-			iron.data.WorldData.getEmptyIrradiance() :
-			iron.Scene.active.world.probe.irradiance;
-		var shCoeffs = new Float32Array(28);
-		for (i in 0...28) {
-			shCoeffs[i] = irradiance[i];
-		}
-		kha.compute.Compute.setFloats(voxel_cf3, shCoeffs);
+		iron.data.WorldData.getEmptyIrradiance() :
+		iron.Scene.active.world.probe.irradiance;
+		kha.compute.Compute.setFloats(voxel_cf3, irradiance);
 		#end
 		#if arm_radiance
 		kha.compute.Compute.setFloat(voxel_cg3, iron.Scene.active.world != null ? iron.Scene.active.world.probe.raw.radiance_mipmaps + 1 - 2 : 1);
@@ -1111,11 +1093,7 @@ class Inc {
 
 		kha.compute.Compute.setSampledTexture(voxel_ta4, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb4, rts.get("half").image);
-		#if arm_deferred
 		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("gbuffer0").image);
-		#else
-		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("lbuffer1").image);
-		#end
 		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 		#if rp_gbuffer2

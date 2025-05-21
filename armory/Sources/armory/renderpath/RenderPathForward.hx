@@ -23,7 +23,7 @@ class RenderPathForward {
 		#if rp_render_to_texture
 		{
 			path.setTarget("lbuffer0", [
-				#if (rp_ssr || rp_ssrefr || arm_voxelgi_refract) "lbuffer1",  #end
+				#if (rp_ssr || rp_ssrefr) "lbuffer1",  #end
 				#if (rp_ssrefr || arm_voxelgi_refract) "gbuffer_refraction" #end]
 			);
 		}
@@ -105,7 +105,7 @@ class RenderPathForward {
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 
-			#if rp_ssr
+			#if (rp_ssr || rp_ssrefr)
 			{
 				var t = new RenderTargetRaw();
 				t.name = "lbuffer1";

@@ -505,7 +505,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, voxels, voxelsSDF, clipmaps, -g2.rg // dummies
+			, voxels, voxelsSDF, clipmaps, -g2.rg
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
