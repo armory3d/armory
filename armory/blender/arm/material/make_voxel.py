@@ -336,8 +336,7 @@ def make_gi(context_id):
                 vert.write('lightPositionGeom = LWVP * vec4(pos.xyz, 1.0);')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
-                if is_transparent_shadows:
-                    frag.write(f'svisibility = PCF({shadowmap_sun},')
+                frag.write(f'svisibility = PCF({shadowmap_sun},')
                 if is_transparent_shadows:
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')

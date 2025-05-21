@@ -762,8 +762,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                         vert.write('lightPosition = LWVP * pos;')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
-                if is_transparent_shadows:
-                    frag.write(f'svisibility = PCF({shadowmap_sun},')
+                frag.write(f'svisibility = PCF({shadowmap_sun},')
                 if is_transparent_shadows:
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')
