@@ -51,8 +51,8 @@ class ParticleSystem {
 
 	var random = 0.0;
 
-	var isPlaying = false;
-	var isStopping = false;
+	// var isPlaying = false;
+	// var isStopping = false;
 
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
@@ -82,7 +82,7 @@ class ParticleSystem {
 
 			looptime = (r.frame_end - r.frame_start) / frameRate;
 			lifetime = r.lifetime / frameRate;
-			animtime = lifetime + looptime;
+			animtime = r.loop ? looptime : looptime + lifetime;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
 
 			for (i in 0...r.count) particles.push(new Particle(i));
@@ -93,16 +93,15 @@ class ParticleSystem {
 	}
 
 	public function start() {
-		if (isStopping) return;
-
+		// if (isStopping) return;
 		if (r.is_unique) random = Math.random();
 		lifetime = r.lifetime / frameRate;
-		animtime = looptime + lifetime;
 		time = 0;
 		lap = 0;
 		lapTime = 0;
 		speed = currentSpeed;
-		isPlaying = true;
+		// animtime = looptime + lifetime;
+		// isPlaying = true;
 	}
 
 	public function pause() {
@@ -114,12 +113,14 @@ class ParticleSystem {
 		speed = currentSpeed;
 	}
 
-	// WIP: interrupt smoothly
+	// TODO: interrupt smoothly
 	public function stop() {
-		if (!isPlaying) return;
-
-		isStopping = true;
-		animtime = looptime + lifetime;
+		end();
+		// if (!isPlaying) return;
+		// isStopping = true;
+		// var previousAnimtime = animtime;
+		// animtime = looptime + lifetime;
+		// time += animtime - previousAnimtime;
 	}
 
 	function end() {
@@ -127,9 +128,8 @@ class ParticleSystem {
 		speed = 0;
 		lap = 0;
 		lapLoop = 0;
-
-		isPlaying = false;
-		isStopping = false;
+		// isPlaying = false;
+		// isStopping = false;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
@@ -161,18 +161,20 @@ class ParticleSystem {
 		// Animate
 		time += Time.realDelta * Time.scale * speed;
 
-		if (r.loop) {
-			lapLoop = Std.int(time / looptime);
-			if (lapLoop > prevLapLoop && !isStopping) {
-				animtime = looptime;
-			}
-		}
+		// if (r.loop) {
+		// 	lapLoop = Std.int(time / looptime);
+		// 	if (lapLoop > prevLapLoop) {
+		// 		if (!isStopping) {
+		// 			animtime = looptime;
+		// 		}
+		// 	}
+		// }
 
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
 
-		if ((lap > prevLap && (!r.loop || isStopping))) {
+		if (lap > prevLap && !r.loop) {
 			end();
 		}
 
