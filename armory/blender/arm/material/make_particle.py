@@ -49,6 +49,7 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('#endif')
 
     vert.add_uniform('mat4 pd', '_particleData')
+    vert.add_uniform('float pd_size_random', '_particleSizeRandom')
     vert.add_uniform('float pd_random', '_particleRandom')
 
     if ramp_el_len != 0:
@@ -87,6 +88,7 @@ def write(vert, particle_info=None, shadowmap=False):
     # var p_age = lapTime - p.i * spawnRate
     vert.write(prep + 'p_age = pd[3][3] - gl_InstanceID * pd[0][1];')
     # p_age -= p_age * fhash(i) * r.lifetime_random;
+    vert.write('p_age -= p_age * fhash(gl_InstanceID) * pd[2][3];')
 
     # Loop
     # pd[0][0] - animtime, loop stored in sign
@@ -108,7 +110,7 @@ def write(vert, particle_info=None, shadowmap=False):
     if (ramp_el_len != 0):
         vert.write('float n_age = clamp(p_age / p_lifetime, 0.0, 1.0);')
         vert.write(f'spos.xyz *= 1 + (get_ramp_scale(n_age) - 1) * {size_over_time_factor};')
-    vert.write('spos.xyz *= 1 - (fhash(gl_InstanceID + 3 * pd[0][3] + pd_random) * pd[2][3]);')
+    vert.write('spos.xyz *= 1 - (fhash(gl_InstanceID + 3 * pd[0][3] + pd_random) * pd_size_random);')
 
     # vert.write('p_age /= 2;') # Match
 
