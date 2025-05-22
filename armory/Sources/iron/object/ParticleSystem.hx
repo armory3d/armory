@@ -1,7 +1,6 @@
 package iron.object;
 
 #if arm_particles
-// import armory.math.Helper;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
 import iron.data.Data;
@@ -42,7 +41,6 @@ class ParticleSystem {
 
 	var count = 0;
 	var lap = 0;
-	// var lapLoop = 0;
 	var lapTime = 0.0;
 	var m = Mat4.identity();
 
@@ -51,9 +49,6 @@ class ParticleSystem {
 	var ownerScl = new Vec4();
 
 	var random = 0.0;
-
-	// var isPlaying = false;
-	// var isStopping = false;
 
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
@@ -94,16 +89,12 @@ class ParticleSystem {
 	}
 
 	public function start() {
-		// if (isStopping) return;
 		if (r.is_unique) random = Math.random();
 		lifetime = r.lifetime / frameRate;
 		time = 0;
 		lap = 0;
-		// lapLoop = 0;
 		lapTime = 0;
 		speed = currentSpeed;
-		// animtime = looptime + lifetime;
-		// isPlaying = true;
 	}
 
 	public function pause() {
@@ -118,27 +109,17 @@ class ParticleSystem {
 	// TODO: interrupt smoothly
 	public function stop() {
 		end();
-		// if (!isPlaying) return;
-		// isStopping = true;
-		// var previousAnimtime = animtime;
-		// animtime = looptime + lifetime;
-		// time += animtime - previousAnimtime;
-		// lapTime = Helper.map(lapTime, 0, animtime, 0, looptime);
 	}
 
 	function end() {
 		lifetime = 0;
 		speed = 0;
 		lap = 0;
-		// lapLoop = 0;
-		// isPlaying = false;
-		// isStopping = false;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
 		var prevLap = lap;
-		// var prevLapLoop = lapLoop;
 
 		// Copy owner world transform but discard scale
 		owner.transform.world.decompose(ownerLoc, ownerRot, ownerScl);
@@ -163,16 +144,6 @@ class ParticleSystem {
 
 		// Animate
 		time += Time.realDelta * Time.scale * speed;
-
-		// if (r.loop) {
-		// 	lapLoop = Std.int(time / looptime);
-		// 	if (lapLoop > prevLapLoop) {
-		// 		if (!isStopping) {
-		// 			animtime = looptime;
-		// 		}
-		// 	}
-		// }
-
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
