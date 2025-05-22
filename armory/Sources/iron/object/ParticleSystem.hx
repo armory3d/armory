@@ -41,7 +41,7 @@ class ParticleSystem {
 
 	var count = 0;
 	var lap = 0;
-	var lapLoop = 0;
+	// var lapLoop = 0;
 	var lapTime = 0.0;
 	var m = Mat4.identity();
 
@@ -98,6 +98,7 @@ class ParticleSystem {
 		lifetime = r.lifetime / frameRate;
 		time = 0;
 		lap = 0;
+		// lapLoop = 0;
 		lapTime = 0;
 		speed = currentSpeed;
 		// animtime = looptime + lifetime;
@@ -127,7 +128,7 @@ class ParticleSystem {
 		lifetime = 0;
 		speed = 0;
 		lap = 0;
-		lapLoop = 0;
+		// lapLoop = 0;
 		// isPlaying = false;
 		// isStopping = false;
 	}
@@ -135,7 +136,7 @@ class ParticleSystem {
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
 		var prevLap = lap;
-		var prevLapLoop = lapLoop;
+		// var prevLapLoop = lapLoop;
 
 		// Copy owner world transform but discard scale
 		owner.transform.world.decompose(ownerLoc, ownerRot, ownerScl);
