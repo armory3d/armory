@@ -11,17 +11,22 @@ class SetParticleSpeedNode extends LogicNode {
 	override function run(from: Int) {
 		#if arm_particles
 		var object: Object = inputs[1].get();
-		var speed: Float = inputs[2].get();
+		var slot: Int = inputs[2].get();
+		var speed: Float = inputs[3].get();
 
 		if (object == null) return;
 
 		var mo = cast(object, iron.object.MeshObject);
-		var psys = mo.particleSystems.length > 0 ? mo.particleSystems[0] : null;
-		if (psys == null) mo.particleOwner.particleSystems[0];
+	
+		var psys = mo.particleSystems != null ? mo.particleSystems[slot] : 
+			mo.particleOwner != null && mo.particleOwner.particleSystems != null ? mo.particleOwner.particleSystems[slot] : null;
+			
+		if (psys == null) return;
 
 		psys.speed = speed;
 
-		runOutput(0);
 		#end
+
+		runOutput(0);
 	}
 }
