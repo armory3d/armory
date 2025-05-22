@@ -18,29 +18,29 @@ class ParticleSystem {
 	public var speed = 1.0;
 	var particles: Array<Particle>;
 	var ready: Bool;
-	var frameRate = 24;
-	var lifetime = 0.0;
-	var animtime = 0.0;
-	var time = 0.0;
-	var spawnRate = 0.0;
+	public var frameRate = 24;
+	public var lifetime = 0.0;
+	public var animtime = 0.0;
+	public var time = 0.0;
+	public var spawnRate = 0.0;
 	var seed = 0;
 
-	var r: TParticleData;
-	var gx: Float;
-	var gy: Float;
-	var gz: Float;
-	var alignx: Float;
-	var aligny: Float;
-	var alignz: Float;
+	public var r: TParticleData;
+	public var gx: Float;
+	public var gy: Float;
+	public var gz: Float;
+	public var alignx: Float;
+	public var aligny: Float;
+	public var alignz: Float;
 	var dimx: Float;
 	var dimy: Float;
 	var tilesx: Int;
 	var tilesy: Int;
 	var tilesFramerate: Int;
 
-	var count = 0;
-	var lap = 0;
-	var lapTime = 0.0;
+	public var count = 0;
+	public var lap = 0;
+	public var lapTime = 0.0;
 	var m = Mat4.identity();
 
 	var ownerLoc = new Vec4();
@@ -142,7 +142,7 @@ class ParticleSystem {
 		// GPU particles transform is attached to owner object
 	}
 
-	function setupGeomGpu(object: MeshObject, owner: MeshObject) {
+	public function setupGeomGpu(object: MeshObject, owner: MeshObject) {
 		var instancedData = new Float32Array(particles.length * 3);
 		var i = 0;
 
