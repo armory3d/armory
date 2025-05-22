@@ -77,6 +77,25 @@ class ARM_MT_NodeAddOverride(bpy.types.Menu):
                 layout.separator()
                 layout.menu(f'ARM_MT_{INTERNAL_GROUPS_MENU_ID}_menu', text=internal_groups_menu_class.bl_label, icon='OUTLINER_OB_GROUP_INSTANCE')
 
+        elif context.space_data.tree_type == 'ShaderNodeTree' and bpy.app.version > (4, 0, 0):
+            # TO DO - Recursively gather nodes and draw them to menu
+
+            ARM_MT_NodeAddOverride.overridden_draw(self, context)
+            
+            layout = self.layout
+            layout.separator()
+            layout.separator()
+            col = layout.column()
+            col.label(text="Custom")
+            
+            shader_data_op = col.operator("node.add_node", text="Shader Data")
+            shader_data_op.type = "ArmShaderDataNode"
+            shader_data_op.use_transform = True
+            
+            particle_op = col.operator("node.add_node", text="Custom Particle")
+            particle_op.type = "ArmCustomParticleNode"
+            particle_op.use_transform = True
+
         else:
             ARM_MT_NodeAddOverride.overridden_draw(self, context)
 
