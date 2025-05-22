@@ -87,8 +87,6 @@ def write(vert, particle_info=None, shadowmap=False):
         vert.add_out('float p_age')
     # var p_age = lapTime - p.i * spawnRate
     vert.write(prep + 'p_age = pd[3][3] - gl_InstanceID * pd[0][1];')
-    # p_age -= p_age * fhash(i) * r.lifetime_random;
-    vert.write('p_age -= p_age * fhash(gl_InstanceID) * pd[2][3];')
 
     # Loop
     # pd[0][0] - animtime, loop stored in sign
@@ -100,7 +98,7 @@ def write(vert, particle_info=None, shadowmap=False):
     if out_lifetime:
         prep = ''
         vert.add_out('float p_lifetime')
-    vert.write(prep + 'p_lifetime = pd[0][2];')
+    vert.write(prep + 'p_lifetime = pd[0][2] * (1 - (fhash(gl_InstanceID + 4 * pd[0][3] + pd_random) * pd[2][3]));')
     # clip with nan
     vert.write('if (p_age < 0 || p_age > p_lifetime) {')
     vert.write('    gl_Position /= 0.0;')
