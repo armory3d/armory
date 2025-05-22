@@ -32,7 +32,6 @@ class AddParticleToObjectNode extends LogicNode {
 			var mobjTo = cast(objTo, iron.object.MeshObject);
 	
 			mobjTo.setupParticleSystem(iron.Scene.active.raw.name, {name: 'ArmPS', seed: 0, particle: psys.r.name});
-			trace(mobjTo.particleSystems.length);
 			
 			mobjTo.render_emitter = inputs[4].get();
 

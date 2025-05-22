@@ -28,12 +28,11 @@ class RemoveParticleFromObjectNode extends LogicNode {
 			mo.render_emitter = true;
 		} 
 		else {
-			//remuevo y quedan mas o remuevo solo 1 y queda en null???
+			
 			var slot: Int = -1;
 			if (property0 == 'Name'){
 				var name: String = inputs[2].get();
 				for (i => psys in mo.particleSystems){
-					trace(psys.r.name, psys.r.name == name, i);
 					if (psys.r.name == name){ slot = i; break; }
 				}
 			} 
