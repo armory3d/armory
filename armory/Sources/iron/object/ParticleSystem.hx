@@ -194,16 +194,12 @@ class ParticleSystem {
 		m._20 = hair ? 0 : gx * r.mass;
 		m._21 = hair ? 0 : gy * r.mass;
 		m._22 = hair ? 0 : gz * r.mass;
-		m._23 = hair ? 0 : r.lifetime_random;
+		m._23 = hair ? 0 : r.size_random;
 		m._30 = tilesx;
 		m._31 = tilesy;
 		m._32 = 1 / tilesFramerate;
 		m._33 = hair ? 1 : lapTime;
 		return m;
-	}
-
-	public function getSizeRandom(): kha.FastFloat {
-		return r.size_random;
 	}
 
 	public function getRandom(): kha.FastFloat {

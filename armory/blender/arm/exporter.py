@@ -2287,7 +2287,7 @@ Make sure the mesh only has tris/quads.""")
                 'frame_start': int(psettings.frame_start),
                 'frame_end': int(psettings.frame_end),
                 'lifetime': psettings.lifetime,
-                'lifetime_random': psettings.lifetime_random,
+                # 'lifetime_random': psettings.lifetime_random,
                 'emit_from': emit_from,
                 # Velocity
                 # 'normal_factor': psettings.normal_factor,
