@@ -21,6 +21,7 @@ class MeshObject extends Object {
 	public var particleChildren: Array<MeshObject> = null;
 	public var particleOwner: MeshObject = null; // Particle object
 	public var particleIndex = -1;
+	public var render_emitter = true;
 	#end
 	public var cameraDistance: Float;
 	public var screenSize = 0.0;
@@ -255,10 +256,12 @@ class MeshObject extends Object {
 				particleSystems[i].update(particleChildren[i], this);
 			}
 		}
-		if (particleSystems != null && particleSystems.length > 0 && !raw.render_emitter) return;
-		#end
+		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
+        if (particleSystems == null && cullMaterial(context)) return;
 
-		if (cullMaterial(context)) return;
+        #else
+        if (cullMaterial(context)) return;
+		#end
 
 		// Get lod
 		var mats = materials;
