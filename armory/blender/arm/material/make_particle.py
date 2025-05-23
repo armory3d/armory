@@ -193,6 +193,29 @@ def write(vert, particle_info=None, shadowmap=False):
                         vert.write('wnormal = vec3(-wnormal.z, wnormal.y, wnormal.x);')
                         vert.write('vec2 n_rot = vec2(wnormal.x * c - wnormal.y * s, wnormal.x * s + wnormal.y * c);')
                         vert.write('wnormal = normalize(vec3(n_rot.x, n_rot.y, wnormal.z));')
+                case 'VEL':
+                    vert.write('vec3 forward = -normalize(p_velocity);')
+                    vert.write('if (length(forward) > 1e-5) {')
+                    vert.write('vec3 world_up = vec3(0.0, 0.0, 1.0);')
+
+                    vert.write('if (abs(dot(forward, world_up)) > 0.999) {')
+                    vert.write('world_up = vec3(-1.0, 0.0, 0.0);')
+                    vert.write('}')
+
+                    vert.write('vec3 right = cross(world_up, forward);')
+                    vert.write('if (length(right) < 1e-5) {')
+                    vert.write('forward = -forward;')
+                    vert.write('right = cross(world_up, forward);')
+                    vert.write('}')
+                    vert.write('right = normalize(right);')
+
+                    vert.write('vec3 up = cross(forward, right);')
+                    vert.write('mat3 rot = mat3(right, -forward, up);')
+
+                    vert.write('spos.xyz = rot * center + p_location;')
+                    if (not shadowmap):
+                        vert.write('wnormal = normalize(rot * wnormal);')
+                    vert.write('}')
 
             if rotation_factor_random != 0:
                 str_rotate_around = '''vec3 rotate_around(vec3 v, vec3 angle) {
