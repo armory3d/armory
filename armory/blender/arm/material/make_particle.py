@@ -25,6 +25,7 @@ def write(vert, particle_info=None, shadowmap=False):
                     if psettings.instance_object.active_material.name.replace(".", "_") == vert.context.matname:
                         if psettings.texture_slots and len(psettings.texture_slots.items()) != 0:
                             for tex_slot in psettings.texture_slots:
+                                if not tex_slot: break
                                 if not tex_slot.use_map_size: break # TODO: check also for other influences
                                 if tex_slot.texture and tex_slot.texture.use_color_ramp:
                                     if tex_slot.texture.color_ramp and tex_slot.texture.color_ramp.elements:
@@ -119,18 +120,18 @@ def write(vert, particle_info=None, shadowmap=False):
         vert.add_out('vec3 p_velocity')
     vert.write(prep + 'p_velocity = vec3(pd[1][0], pd[1][1], pd[1][2]);')
 
-    vert.write('p_velocity.x += fhash(gl_InstanceID + pd_random)                * pd[1][3] - pd[1][3] / 2;')
-    vert.write('p_velocity.y += fhash(gl_InstanceID + pd_random +     pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
-    vert.write('p_velocity.z += fhash(gl_InstanceID + pd_random + 2 * pd[0][3]) * pd[1][3] - pd[1][3] / 2;')
+    vert.write('p_velocity.x += (fhash(gl_InstanceID + pd_random)                * 4.0 - 2.0) * pd[1][3];')
+    vert.write('p_velocity.y += (fhash(gl_InstanceID + pd_random +     pd[0][3]) * 4.0 - 2.0) * pd[1][3];')
+    vert.write('p_velocity.z += (fhash(gl_InstanceID + pd_random + 2 * pd[0][3]) * 4.0 - 2.0) * pd[1][3];')
 
     # factor_random = pd[1][3]
     # p.i = gl_InstanceID
     # particles.length = pd[0][3]
 
     # gxyz
-    vert.write('p_velocity.x += (pd[2][0] * p_age) / 5;')
-    vert.write('p_velocity.y += (pd[2][1] * p_age) / 5;')
-    vert.write('p_velocity.z += (pd[2][2] * p_age) / 5;')
+    vert.write('p_velocity.x += pd[2][0] * p_age;')
+    vert.write('p_velocity.y += pd[2][1] * p_age;')
+    vert.write('p_velocity.z += pd[2][2] * p_age;')
 
     prep = 'vec3 '
     if out_location:

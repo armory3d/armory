@@ -72,9 +72,9 @@ class ParticleSystem {
 				gz = -9.81 * r.weight_gravity;
 			}
 
-			alignx = r.object_align_factor[0] / 2;
-			aligny = r.object_align_factor[1] / 2;
-			alignz = r.object_align_factor[2] / 2;
+			alignx = r.object_align_factor[0] * 2;
+			aligny = r.object_align_factor[1] * 2;
+			alignz = r.object_align_factor[2] * 2;
 
 			looptime = (r.frame_end - r.frame_start) / frameRate;
 			lifetime = r.lifetime / frameRate;
