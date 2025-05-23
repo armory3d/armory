@@ -1,6 +1,7 @@
 package iron.object;
 
 #if arm_particles
+import kha.FastFloat;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
 import iron.data.Data;
@@ -72,9 +73,9 @@ class ParticleSystem {
 				gz = -9.81 * r.weight_gravity;
 			}
 
-			alignx = r.object_align_factor[0] * 2;
-			aligny = r.object_align_factor[1] * 2;
-			alignz = r.object_align_factor[2] * 2;
+			alignx = r.object_align_factor[0];
+			aligny = r.object_align_factor[1];
+			alignz = r.object_align_factor[2];
 
 			looptime = (r.frame_end - r.frame_start) / frameRate;
 			lifetime = r.lifetime / frameRate;
@@ -165,9 +166,9 @@ class ParticleSystem {
 		m._11 = hair ? 0 : aligny;
 		m._12 = hair ? 0 : alignz;
 		m._13 = hair ? 0 : r.factor_random;
-		m._20 = hair ? 0 : gx * r.mass;
-		m._21 = hair ? 0 : gy * r.mass;
-		m._22 = hair ? 0 : gz * r.mass;
+		m._20 = hair ? 0 : gx;
+		m._21 = hair ? 0 : gy;
+		m._22 = hair ? 0 : gz;
 		m._23 = hair ? 0 : r.lifetime_random;
 		m._30 = tilesx;
 		m._31 = tilesy;
@@ -176,12 +177,16 @@ class ParticleSystem {
 		return m;
 	}
 
-	public function getSizeRandom(): kha.FastFloat {
+	public function getSizeRandom(): FastFloat {
 		return r.size_random;
 	}
 
-	public function getRandom(): kha.FastFloat {
+	public function getRandom(): FastFloat {
 		return random;
+	}
+
+	public function getSize(): FastFloat {
+		return r.particle_size;
 	}
 
 	function updateGpu(object: MeshObject, owner: MeshObject) {

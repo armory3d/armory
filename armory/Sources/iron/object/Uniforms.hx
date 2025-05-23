@@ -1122,6 +1122,12 @@ class Uniforms {
 						f = mo.particleOwner.particleSystems[mo.particleIndex].getRandom();
 					}
 				}
+				case "_particleSize": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						f = mo.particleOwner.particleSystems[mo.particleIndex].getSize();
+					}
+				}
 				#end
 			}
 
