@@ -16,13 +16,28 @@ def write(vert, particle_info=None, shadowmap=False):
     ramp_colors_b = []
     size_over_time_factor = 0
 
+    use_rotations = False
+    rotation_mode = 'NONE'
+    rotation_factor_random = 0
+    phase_factor = 0
+    phase_factor_random = 0
+
     for obj in bpy.data.objects:
         for psys in obj.particle_systems:
             psettings = psys.settings
 
             if psettings.instance_object:
                 if psettings.instance_object.active_material:
+                    # FIXME: Different particle systems may share the same particle object. This ideally should check the correct `ParticleSystem` using an id or name in the particle's object material.
                     if psettings.instance_object.active_material.name.replace(".", "_") == vert.context.matname:
+                        # Rotation data
+                        use_rotations = psettings.use_rotations
+                        rotation_mode = psettings.rotation_mode
+                        rotation_factor_random = psettings.rotation_factor_random
+                        phase_factor = psettings.phase_factor
+                        phase_factor_random = psettings.phase_factor_random
+
+                        # Texture slots data
                         if psettings.texture_slots and len(psettings.texture_slots.items()) != 0:
                             for tex_slot in psettings.texture_slots:
                                 if not tex_slot: break
@@ -141,6 +156,74 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write(prep + 'p_location = p_velocity * p_age;')
 
     vert.write('spos.xyz += p_location;')
+
+    # Rotation
+    if use_rotations:
+        if rotation_mode != 'NONE':
+            vert.write(f'float p_angle = ({phase_factor} + (fhash(gl_InstanceID + pd_random + 5 * pd[0][3])) * {phase_factor_random});')
+            vert.write('p_angle *= 3.141592;')
+            vert.write('float c = cos(p_angle);')
+            vert.write('float s = sin(p_angle);')
+            vert.write('vec3 center = spos.xyz - p_location;')
+
+            match rotation_mode:
+                case 'OB_X':
+                    vert.write('vec3 rz = vec3(center.y, -center.x, center.z);')
+                    vert.write('vec2 rotation = vec2(rz.y * c - rz.z * s, rz.y * s + rz.z * c);')
+                    vert.write('spos.xyz = vec3(rz.x, rotation.x, rotation.y) + p_location;')
+
+                    if (not shadowmap):
+                        vert.write('wnormal = vec3(wnormal.y, -wnormal.x, wnormal.z);')
+                        vert.write('vec2 n_rot = vec2(wnormal.y * c - wnormal.z * s, wnormal.y * s + wnormal.z * c);')
+                        vert.write('wnormal = normalize(vec3(wnormal.x, n_rot.x, n_rot.y));')
+                case 'OB_Y':
+                    vert.write('vec2 rotation = vec2(center.x * c + center.z * s, -center.x * s + center.z * c);')
+                    vert.write('spos.xyz = vec3(rotation.x, center.y, rotation.y) + p_location;')
+
+                    if (not shadowmap):
+                        vert.write('wnormal = normalize(vec3(wnormal.x * c + wnormal.z * s, wnormal.y, -wnormal.x * s + wnormal.z * c));')
+                case 'OB_Z':
+                    vert.write('vec3 rz = vec3(center.y, -center.x, center.z);')
+                    vert.write('vec3 ry = vec3(-rz.z, rz.y, rz.x);')
+                    vert.write('vec2 rotation = vec2(ry.x * c - ry.y * s, ry.x * s + ry.y * c);')
+                    vert.write('spos.xyz = vec3(rotation.x, rotation.y, ry.z) + p_location;')
+
+                    if (not shadowmap):
+                        vert.write('wnormal = vec3(wnormal.y, -wnormal.x, wnormal.z);')
+                        vert.write('wnormal = vec3(-wnormal.z, wnormal.y, wnormal.x);')
+                        vert.write('vec2 n_rot = vec2(wnormal.x * c - wnormal.y * s, wnormal.x * s + wnormal.y * c);')
+                        vert.write('wnormal = normalize(vec3(n_rot.x, n_rot.y, wnormal.z));')
+
+            if rotation_factor_random != 0:
+                str_rotate_around = '''vec3 rotate_around(vec3 v, vec3 angle) {
+                    // Rotate around X
+                    float cx = cos(angle.x);
+                    float sx = sin(angle.x);
+                    v = vec3(v.x, v.y * cx - v.z * sx, v.y * sx + v.z * cx);
+
+                    // Rotate around Y
+                    float cy = cos(angle.y);
+                    float sy = sin(angle.y);
+                    v = vec3(v.x * cy + v.z * sy, v.y, -v.x * sy + v.z * cy);
+
+                    // Rotate around Z
+                    float cz = cos(angle.z);
+                    float sz = sin(angle.z);
+                    v = vec3(v.x * cz - v.y * sz, v.x * sz + v.y * cz, v.z);
+
+                    return v;
+                }'''
+                vert.add_function(str_rotate_around)
+
+                vert.write(f'''vec3 r_angle = vec3((fhash(gl_InstanceID + pd_random + 6 * pd[0][3]) * 4 - 2) * {rotation_factor_random},
+                           (fhash(gl_InstanceID + pd_random + 7 * pd[0][3]) * 4 - 2) * {rotation_factor_random},
+                           (fhash(gl_InstanceID + pd_random + 8 * pd[0][3]) * 4 - 2) * {rotation_factor_random});''')
+                vert.write('vec3 r_center = spos.xyz - p_location;')
+                vert.write('r_center = rotate_around(r_center, r_angle);')
+                vert.write('spos.xyz = r_center + p_location;')
+
+                if not shadowmap:
+                    vert.write('wnormal = normalize(rotate_around(wnormal, r_angle));')
 
     # Particle fade
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
