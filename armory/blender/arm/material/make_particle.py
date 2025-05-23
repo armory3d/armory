@@ -211,10 +211,11 @@ def write(vert, particle_info=None, shadowmap=False):
 
                     vert.write('vec3 up = cross(forward, right);')
                     vert.write('mat3 rot = mat3(right, -forward, up);')
-
-                    vert.write('spos.xyz = rot * center + p_location;')
+                    vert.write('mat3 phase = mat3(vec3(c, 0.0, -s), vec3(0.0, 1.0, 0.0), vec3(s, 0.0, c));')
+                    vert.write('mat3 final_rot = rot * phase;')
+                    vert.write('spos.xyz = final_rot * center + p_location;')
                     if (not shadowmap):
-                        vert.write('wnormal = normalize(rot * wnormal);')
+                        vert.write('wnormal = normalize(final_rot * wnormal);')
                     vert.write('}')
 
             if rotation_factor_random != 0:
