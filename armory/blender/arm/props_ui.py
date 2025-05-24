@@ -1866,7 +1866,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, "rp_bloom")
         _col = col.column()
         _col.enabled = rpdat.rp_bloom
-        if bpy.app.version <= (4, 2, 4):
+        if bpy.app.version < (4, 3, 0):
             _col.prop(rpdat, 'arm_bloom_follow_blender')
             if not rpdat.arm_bloom_follow_blender:
                 _col.prop(rpdat, 'arm_bloom_threshold')
@@ -2703,19 +2703,20 @@ class ARM_PT_BulletDebugDrawingPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
-        if wrd.arm_physics_engine != 'Bullet':
+        if wrd.arm_physics_engine != 'Bullet' and wrd.arm_physics_engine != 'Oimo':
             row = layout.row()
             row.alert = True
-            row.label(text="Physics debug drawing is only supported for the Bullet physics engine")
+            row.label(text="Physics debug drawing is only supported for the Bullet and Oimo physics engines")
 
         col = layout.column(align=False)
-        col.prop(wrd, "arm_bullet_dbg_draw_wireframe")
-        col.prop(wrd, "arm_bullet_dbg_draw_aabb")
-        col.prop(wrd, "arm_bullet_dbg_draw_contact_points")
-        col.prop(wrd, "arm_bullet_dbg_draw_constraints")
-        col.prop(wrd, "arm_bullet_dbg_draw_constraint_limits")
-        col.prop(wrd, "arm_bullet_dbg_draw_normals")
-        col.prop(wrd, "arm_bullet_dbg_draw_axis_gizmo")
+        col.prop(wrd, "arm_physics_dbg_draw_wireframe")
+        col.prop(wrd, "arm_physics_dbg_draw_aabb")
+        col.prop(wrd, "arm_physics_dbg_draw_contact_points")
+        col.prop(wrd, "arm_physics_dbg_draw_constraints")
+        col.prop(wrd, "arm_physics_dbg_draw_constraint_limits")
+        col.prop(wrd, "arm_physics_dbg_draw_normals")
+        col.prop(wrd, "arm_physics_dbg_draw_axis_gizmo")
+        col.prop(wrd, "arm_physics_dbg_draw_raycast")
 
 def draw_custom_node_menu(self, context):
     """Extension of the node context menu.
