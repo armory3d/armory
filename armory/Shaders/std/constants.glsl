@@ -24,29 +24,37 @@ const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = radians(15.0);
 
-const float DIFFUSE_CONE_APERTURE = radians(50.0);
+const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees in radians
 
-const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
-    vec3( 0.0000,  0.0000,  1.0000),
-    vec3( 0.7236,  0.5257,  0.4472),
-    vec3(-0.2764,  0.8506,  0.4472),
-    vec3(-0.8944,  0.0000,  0.4472),
-    vec3(-0.2764, -0.8506,  0.4472),
-    vec3( 0.7236, -0.5257,  0.4472),
-    vec3( 0.7236,  0.5257, -0.4472),
-    vec3(-0.2764,  0.8506, -0.4472),
-    vec3(-0.8944,  0.0000, -0.4472),
-    vec3(-0.2764, -0.8506, -0.4472),
-    vec3( 0.7236, -0.5257, -0.4472),
-    vec3( 0.2764,  0.8506,  0.4472),
-    vec3(-0.7236,  0.5257,  0.4472),
-    vec3(-0.7236, -0.5257,  0.4472),
-    vec3( 0.2764, -0.8506,  0.4472),
-    vec3( 0.0000,  0.0000, -1.0000)
+const vec3 DIFFUSE_CONE_DIRECTIONS[DIFFUSE_CONE_COUNT] = vec3[](
+    vec3( 0.000,  0.000,  1.000), // top
+    vec3( 0.525,  0.000,  0.851),
+    vec3(-0.525,  0.000,  0.851),
+    vec3( 0.000,  0.525,  0.851),
+    vec3( 0.000, -0.525,  0.851),
+    vec3( 0.309,  0.309,  0.901),
+    vec3(-0.309,  0.309,  0.901),
+    vec3( 0.309, -0.309,  0.901),
+    vec3(-0.309, -0.309,  0.901),
+    vec3( 0.707,  0.000,  0.707),
+    vec3(-0.707,  0.000,  0.707),
+    vec3( 0.000,  0.707,  0.707),
+    vec3( 0.000, -0.707,  0.707),
+    vec3( 0.500,  0.500,  0.707),
+    vec3(-0.500,  0.500,  0.707),
+    vec3(-0.500, -0.500,  0.707)
 );
 
-
-
+mat3 makeTangentBasis(in vec3 N) {
+    vec3 tangent;
+    if (abs(N.z) < 0.999) {
+        tangent = normalize(cross(vec3(0.0, 0.0, 1.0), N)); // Works for most cases
+    } else {
+        tangent = normalize(cross(vec3(0.0, 1.0, 0.0), N)); // Avoids degeneracy when N ~ Z axis
+    }
+    vec3 bitangent = cross(N, tangent); // Ensures orthogonality
+    return mat3(tangent, bitangent, N); // TBN matrix
+}
 
 const float BayerMatrix8[8][8] =
 {

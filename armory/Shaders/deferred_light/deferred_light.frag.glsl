@@ -317,7 +317,7 @@ void main() {
 #ifdef _VoxelGI
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
-		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * F * voxelgiRefl;
+		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #else
 #ifdef _VoxelAOvar
 	fragColor.rgb = textureLod(voxels_ao, texCoord, 0.0).rgb * voxelgiOcc;
