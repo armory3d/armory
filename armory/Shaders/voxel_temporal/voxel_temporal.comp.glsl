@@ -45,8 +45,8 @@ uniform mat4 LVP;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba16f) image3D voxelsB;
-uniform layout(rgba16f) image3D voxelsOut;
+uniform layout(rgba8) image3D voxelsB;
+uniform layout(rgba8) image3D voxelsOut;
 uniform layout(r16) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -77,7 +77,7 @@ void main() {
 
 	int nor_count = 0;
 	vec3 avgNormal = vec3(0.0);
-	mat3 TBN = mat3(1.0);
+	mat3 TBN = mat3(0.0);
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
@@ -119,13 +119,21 @@ void main() {
 				N /= count;
 				N = decode_oct(N.rg * 2.0 - 1.0);
 
-				if (length(N) > 0.0) {
-					avgNormal += N;
+				if (abs(N.x) > 0.0) {
+					avgNormal.x += N.x;
 					nor_count++;
 				}
-				if (i == 5) {
+				if (abs(N.y) > 0.0) {
+					avgNormal.y += N.y;
+					nor_count++;
+				}
+				if (abs(N.z) > 0.0) {
+					avgNormal.z += N.z;
+					nor_count++;
+				}
+				{
 					avgNormal = normalize(avgNormal / float(nor_count));
-					TBN = makeTangentBasis(avgNormal);
+					TBN += makeTangentBasis(avgNormal) / 6;
 				}
 
 				vec3 envl = vec3(0.0);
