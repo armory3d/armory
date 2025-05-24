@@ -10,6 +10,10 @@ class KinematicCharacterController extends iron.Trait { public function new() { 
 
 	typedef KinematicCharacterController = armory.trait.physics.bullet.KinematicCharacterController;
 
+	#else
+
+	typedef KinematicCharacterController = armory.trait.physics.oimo.KinematicCharacterController;
+
 	#end
 
 #end

@@ -1,5 +1,8 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+import armory.trait.physics.bullet.PhysicsWorld.DebugDrawMode;
+
 import bullet.Bt.Vector3;
 
 import kha.FastFloat;
@@ -18,14 +21,19 @@ class DebugDrawHelper {
 	static inline var contactPointNormalColor = 0xffffffff;
 	static inline var contactPointDrawLifetime = true;
 
+	final rayCastColor: Vec4 = new Vec4(0.0, 1.0, 0.0);
+	final rayCastHitColor: Vec4 = new Vec4(1.0, 0.0, 0.0);
+	final rayCastHitPointColor: Vec4 = new Vec4(1.0, 1.0, 0.0);
+
 	final physicsWorld: PhysicsWorld;
 	final lines: Array<LineData> = [];
 	final texts: Array<TextData> = [];
 	var font: kha.Font = null;
 
-	var debugMode: PhysicsWorld.DebugDrawMode = NoDebug;
+	var rayCasts:Array<TRayCastData> = [];
+	var debugDrawMode: DebugDrawMode = NoDebug;
 
-	public function new(physicsWorld: PhysicsWorld) {
+	public function new(physicsWorld: PhysicsWorld, debugDrawMode: DebugDrawMode) {
 		this.physicsWorld = physicsWorld;
 
 		#if arm_ui
@@ -35,6 +43,12 @@ class DebugDrawHelper {
 		#end
 
 		iron.App.notifyOnRender2D(onRender);
+
+		if (debugDrawMode & DrawRayCast != 0) {
+			iron.App.notifyOnUpdate(function () {
+				rayCasts.resize(0);
+			});
+		}
 	}
 
 	public function drawLine(from: bullet.Bt.Vector3, to: bullet.Bt.Vector3, color: bullet.Bt.Vector3) {
@@ -112,6 +126,61 @@ class DebugDrawHelper {
 		}
 	}
 
+	public function rayCast(rayCastData:TRayCastData) {
+		rayCasts.push(rayCastData);
+	}
+
+	function drawRayCast(f: Vec4, t: Vec4, hit: Bool) {
+		final from = worldToScreenFast(f.clone());
+		final to = worldToScreenFast(t.clone());
+		var c: kha.Color;
+
+		if (from.w == 1 && to.w == 1) {
+			if (hit) c = kha.Color.fromFloats(rayCastHitColor.x, rayCastHitColor.y, rayCastHitColor.z);
+			else c = kha.Color.fromFloats(rayCastColor.x, rayCastColor.y, rayCastColor.z);
+
+			lines.push({
+				fromX: from.x,
+				fromY: from.y,
+				toX: to.x,
+				toY: to.y,
+				color: c
+			});
+		}
+	}
+
+	function drawHitPoint(hp: Vec4) {
+		final hitPoint = worldToScreenFast(hp.clone());
+		final c = kha.Color.fromFloats(rayCastHitPointColor.x, rayCastHitPointColor.y, rayCastHitPointColor.z);
+
+		if (hitPoint.w == 1) {
+			lines.push({
+				fromX: hitPoint.x - contactPointSizePx,
+				fromY: hitPoint.y - contactPointSizePx,
+				toX: hitPoint.x + contactPointSizePx,
+				toY: hitPoint.y + contactPointSizePx,
+				color: c
+			});
+
+			lines.push({
+				fromX: hitPoint.x - contactPointSizePx,
+				fromY: hitPoint.y + contactPointSizePx,
+				toX: hitPoint.x + contactPointSizePx,
+				toY: hitPoint.y - contactPointSizePx,
+				color: c
+			});
+
+			if (font != null) {
+				texts.push({
+					x: hitPoint.x,
+					y: hitPoint.y,
+					color: c,
+					text: 'RAYCAST HIT'
+				});
+			}
+		}
+	}
+
 	public function reportErrorWarning(warningString: bullet.Bt.BulletString) {
 		trace(warningString.toHaxeString().trim());
 	}
@@ -135,13 +204,13 @@ class DebugDrawHelper {
 		});
 	}
 
-	public function setDebugMode(debugMode: PhysicsWorld.DebugDrawMode) {
-		this.debugMode = debugMode;
+	public function setDebugMode(debugDrawMode: DebugDrawMode) {
+		this.debugDrawMode = debugDrawMode;
 	}
 
-	public function getDebugMode(): PhysicsWorld.DebugDrawMode {
+	public function getDebugMode(): DebugDrawMode {
 		#if js
-			return debugMode;
+			return debugDrawMode;
 		#elseif hl
 			return physicsWorld.getDebugDrawMode();
 		#else
@@ -179,6 +248,17 @@ class DebugDrawHelper {
 				g.drawString(text.text, text.x, text.y);
 			}
 			texts.resize(0);
+		}
+
+		if (debugDrawMode & DrawRayCast != 0) {
+			for (rayCastData in rayCasts) {
+				if (rayCastData.hasHit) {
+					drawRayCast(rayCastData.from, rayCastData.hitPoint, true);
+					drawHitPoint(rayCastData.hitPoint);
+				} else {
+					drawRayCast(rayCastData.from, rayCastData.to, false);
+				}
+			}
 		}
 	}
 
@@ -222,3 +302,12 @@ class TextData {
 	public var color: kha.Color;
 	public var text: String;
 }
+
+typedef TRayCastData = {
+	var from: Vec4;
+	var to: Vec4;
+	var hasHit: Bool;
+	@:optional var hitPoint: Vec4;
+	@:optional var hitNormal: Vec4;
+}
+#end
