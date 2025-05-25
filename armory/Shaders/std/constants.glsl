@@ -45,15 +45,11 @@ const vec3 DIFFUSE_CONE_DIRECTIONS[DIFFUSE_CONE_COUNT] = vec3[](
     vec3(-0.500, -0.500,  0.707)
 );
 
-mat3 makeTangentBasis(in vec3 N) {
-    vec3 tangent;
-    if (abs(N.z) < 0.999) {
-        tangent = normalize(cross(vec3(0.0, 0.0, 1.0), N)); // Works for most cases
-    } else {
-        tangent = normalize(cross(vec3(0.0, 1.0, 0.0), N)); // Avoids degeneracy when N ~ Z axis
-    }
-    vec3 bitangent = cross(N, tangent); // Ensures orthogonality
-    return mat3(tangent, bitangent, N); // TBN matrix
+mat3 makeTangentBasis(vec3 N) {
+    vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 T = normalize(cross(up, N));
+    vec3 B = cross(N, T);
+    return mat3(T, B, N);
 }
 
 const float BayerMatrix8[8][8] =

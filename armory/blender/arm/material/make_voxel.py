@@ -461,7 +461,7 @@ def make_gi(context_id):
         frag.write('}')
 
     frag.write('if (direction_weights.x > 0.0) {')
-    frag.write('    vec4 basecol_direction = vec4(basecol, opacity) * direction_weights.x;')
+    frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.x, opacity);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.x;')
     frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.x) * 0.5 + 0.5;')
     frag.write('    vec3 envl_direction = envl * direction_weights.x;')
@@ -485,7 +485,7 @@ def make_gi(context_id):
     frag.write('}')
 
     frag.write('if (direction_weights.y > 0.0) {')
-    frag.write('    vec4 basecol_direction = vec4(basecol, opacity) * direction_weights.y;')
+    frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.y, opacity);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.y;')
     frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.y) * 0.5 + 0.5;')
     frag.write('    vec3 envl_direction = envl * direction_weights.y;')
@@ -509,7 +509,7 @@ def make_gi(context_id):
     frag.write('}')
 
     frag.write('if (direction_weights.z > 0.0) {')
-    frag.write('    vec4 basecol_direction = vec4(basecol, opacity) * direction_weights.z;')
+    frag.write('    vec4 basecol_direction = vec4(basecol * direction_weights.z, opacity);')
     frag.write('    vec3 emission_direction = emissionCol * direction_weights.z;')
     frag.write('    vec2 normal_direction = encode_oct(N * direction_weights.z) * 0.5 + 0.5;')
     frag.write('    vec3 envl_direction = envl * direction_weights.z;')
