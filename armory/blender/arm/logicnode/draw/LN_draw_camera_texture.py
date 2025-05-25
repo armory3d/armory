@@ -11,6 +11,7 @@ class DrawCameraTextureNode(ArmLogicTreeNode):
     @input Object: Object of which to choose the material in the `Material Slot` input.
     @input Material Slot: Index of the material slot of which the diffuse
         texture is replaced with the camera's render target.
+    @input Node: Node name of the Image Texture Node.
 
     @output On Start: Activated after the `Start` input has been activated.
     @output On Stop: Activated after the `Stop` input has been activated.
@@ -18,7 +19,7 @@ class DrawCameraTextureNode(ArmLogicTreeNode):
     bl_idname = 'LNDrawCameraTextureNode'
     bl_label = 'Draw Camera to Texture'
     arm_section = 'draw'
-    arm_version = 1
+    arm_version = 2
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Start')
@@ -26,6 +27,13 @@ class DrawCameraTextureNode(ArmLogicTreeNode):
         self.add_input('ArmNodeSocketObject', 'Camera')
         self.add_input('ArmNodeSocketObject', 'Object')
         self.add_input('ArmIntSocket', 'Material Slot')
+        self.add_input('ArmStringSocket', 'Node')
 
         self.add_output('ArmNodeSocketAction', 'On Start')
         self.add_output('ArmNodeSocketAction', 'On Stop')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)
