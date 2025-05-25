@@ -32,7 +32,9 @@ class DrawCameraTextureNode extends LogicNode {
 				final c = inputs[2].get();
 				assert(Error, Std.isOfType(c, CameraObject), "Camera must be a camera object!");
 				cam = cast(c, CameraObject);
-				rt = kha.Image.createRenderTarget(iron.App.w(), iron.App.h());
+				rt = kha.Image.createRenderTarget(iron.App.w(), iron.App.h(),
+					kha.graphics4.TextureFormat.RGBA32,
+					kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
 
 				assert(Error, mo.materials[matSlot].contexts[0].textures != null, 'Object "${mo.name}" has no diffuse texture to render to');
 				final n = inputs[5].get();
