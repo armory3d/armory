@@ -26,31 +26,41 @@ const float SHADOW_CONE_APERTURE = radians(15.0);
 
 const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees in radians
 
-const vec3 DIFFUSE_CONE_DIRECTIONS[DIFFUSE_CONE_COUNT] = vec3[](
-    vec3( 0.000,  0.000,  1.000), // top
-    vec3( 0.525,  0.000,  0.851),
-    vec3(-0.525,  0.000,  0.851),
-    vec3( 0.000,  0.525,  0.851),
-    vec3( 0.000, -0.525,  0.851),
-    vec3( 0.309,  0.309,  0.901),
-    vec3(-0.309,  0.309,  0.901),
-    vec3( 0.309, -0.309,  0.901),
-    vec3(-0.309, -0.309,  0.901),
-    vec3( 0.707,  0.000,  0.707),
-    vec3(-0.707,  0.000,  0.707),
-    vec3( 0.000,  0.707,  0.707),
-    vec3( 0.000, -0.707,  0.707),
-    vec3( 0.500,  0.500,  0.707),
-    vec3(-0.500,  0.500,  0.707),
-    vec3(-0.500, -0.500,  0.707)
-);
+mat3 makeTangentBasis(const vec3 normal) {
+    // Create a tangent basis from normal vector
+    vec3 tangent;
+    vec3 bitangent;
 
-mat3 makeTangentBasis(vec3 N) {
-    vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 T = normalize(cross(up, N));
-    vec3 B = cross(N, T);
-    return mat3(T, B, N);
+    // Compute tangent (Frisvad's method)
+    if (abs(normal.z) < 0.999) {
+        tangent = normalize(cross(vec3(0, 1, 0), normal));
+    } else {
+        tangent = normalize(cross(normal, vec3(1, 0, 0)));
+    }
+    bitangent = cross(normal, tangent);
+
+    return mat3(tangent, bitangent, normal);
 }
+
+// 16 optimized cone directions for hemisphere sampling (Z-up, normalized)
+const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
+    vec3(0.707107, 0.000000, 0.707107),  // Front
+    vec3(-0.707107, 0.000000, 0.707107), // Back
+    vec3(0.000000, 0.707107, 0.707107),  // Right
+    vec3(0.000000, -0.707107, 0.707107), // Left
+    vec3(0.500000, 0.500000, 0.707107),  // Front-right
+    vec3(-0.500000, 0.500000, 0.707107), // Back-right
+    vec3(0.500000, -0.500000, 0.707107), // Front-left
+    vec3(-0.500000, -0.500000, 0.707107),// Back-left
+    vec3(0.353553, 0.000000, 0.935414),  // Narrow front
+    vec3(-0.353553, 0.000000, 0.935414), // Narrow back
+    vec3(0.000000, 0.353553, 0.935414),  // Narrow right
+    vec3(0.000000, -0.353553, 0.935414), // Narrow left
+    vec3(0.270598, 0.270598, 0.923880),  // Narrow front-right
+    vec3(-0.270598, 0.270598, 0.923880), // Narrow back-right
+    vec3(0.270598, -0.270598, 0.923880), // Narrow front-left
+    vec3(-0.270598, -0.270598, 0.923880) // Narrow back-left
+);
 
 const float BayerMatrix8[8][8] =
 {

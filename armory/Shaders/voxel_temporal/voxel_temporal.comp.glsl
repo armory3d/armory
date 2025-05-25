@@ -118,20 +118,16 @@ void main() {
 				N /= count;
 				N = decode_oct(N.rg * 2.0 - 1.0);
 
-				if (i == 0)
+				if (abs(N.x) > 0)
 					avgNormal.x += N.x;
-				if (i == 1)
-					avgNormal.x -= N.x;
-				if (i == 2)
+				if (abs(N.y) > 0)
 					avgNormal.y += N.y;
-				if (i == 3)
-					avgNormal.y -= N.y;
-				if (i == 4)
+				if (abs(N.z) > 0)
 					avgNormal.z += N.z;
 				if (i == 5)
 				{
-					avgNormal.z -= N.z;
-					TBN = makeTangentBasis(avgNormal) / 6;
+					avgNormal = normalize(avgNormal);
+					TBN = makeTangentBasis(avgNormal);
 				}
 
 				vec3 envl = vec3(0.0);
