@@ -78,8 +78,8 @@ class WriteImageNode extends LogicNode {
 				}
 			}
 
-			var pngwriter = new iron.format.bmp.Writer(bo);
-			pngwriter.write(iron.format.bmp.Tools.buildFromARGB(tw, th, rgb));
+			var imgwriter = new iron.format.bmp.Writer(bo);
+			imgwriter.write(iron.format.bmp.Tools.buildFromARGB(tw, th, rgb));
 
 			#if kha_krom
 			Krom.fileSaveBytes(Krom.getFilesLocation() +  "/" + file, bo.getBytes().getData());
