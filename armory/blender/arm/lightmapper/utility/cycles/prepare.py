@@ -518,7 +518,7 @@ def configure_meshes(self):
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("The material group is not supported!")
 
-                        if (mainNode.type == "ShaderNodeMixRGB"):
+                        if (mainNode.type == "ShaderNodeMix"):
                             if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                 print("Mix shader found")
 
@@ -811,7 +811,7 @@ def set_settings():
     
     print(bpy.app.version)
 
-    if bpy.app.version[0] == 3:
+    if bpy.app.version[0] == 3 or bpy.app.version[0] == 4:
         if cycles.device == "GPU":
             scene.cycles.tile_size = 256
         else:
