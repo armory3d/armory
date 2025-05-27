@@ -288,7 +288,7 @@ class PhysicsWorld extends Trait {
 		if (preUpdates != null) for (f in preUpdates) f();
 
 		//Bullet physics fixed timescale
-		var fixedTime = Time.delta;
+		var fixedTime = 1.0 / 60;
 
 		//This condition must be satisfied to not loose time
 		var currMaxSteps = t < (fixedTime * maxSteps) ? maxSteps : 1;

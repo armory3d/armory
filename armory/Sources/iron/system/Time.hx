@@ -27,7 +27,11 @@ class Time {
 	static var frequency: Null<Int> = null;
 
 	static function initFrequency() {
+		#if (kha_html5 || kha_debug_html5 || kha_krom)
+		frequency = 60;
+		#else
 		frequency = kha.Display.primary != null ? kha.Display.primary.frequency : 60;
+		#end
 	}
 
 	public static function update() {
