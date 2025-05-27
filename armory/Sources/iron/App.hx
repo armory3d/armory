@@ -12,6 +12,7 @@ class App {
 	static var traitInits: Array<Void->Void> = [];
 	static var traitUpdates: Array<Void->Void> = [];
 	static var traitLateUpdates: Array<Void->Void> = [];
+	static var traitFixedUpdates: Array<Void->Void> = [];
 	static var traitRenders: Array<kha.graphics4.Graphics->Void> = [];
 	static var traitRenders2D: Array<kha.graphics2.Graphics->Void> = [];
 	public static var framebuffer: kha.Framebuffer;
@@ -23,6 +24,8 @@ class App {
 	public static var renderPathTime: Float;
 	public static var endFrameCallbacks: Array<Void->Void> = [];
 	#end
+	static var last = 0.0;
+	static var time = 0.0;
 	static var lastw = -1;
 	static var lasth = -1;
 	public static var onResize: Void->Void = null;
@@ -41,6 +44,7 @@ class App {
 		traitInits = [];
 		traitUpdates = [];
 		traitLateUpdates = [];
+		traitFixedUpdates = [];
 		traitRenders = [];
 		traitRenders2D = [];
 		if (onResets != null) for (f in onResets) f();
@@ -75,6 +79,13 @@ class App {
 		while (i < l) {
 			traitLateUpdates[i]();
 			l <= traitLateUpdates.length ? i++ : l = traitLateUpdates.length;
+		}
+
+		time += iron.system.Time.realTime() - last;
+		last = iron.system.Time.realTime();
+		while (time >= iron.system.Time.fixedStep) {
+			for (f in traitFixedUpdates) f();
+			time -= iron.system.Time.fixedStep;
 		}
 
 		if (onEndFrames != null) for (f in onEndFrames) f();
@@ -170,6 +181,14 @@ class App {
 
 	public static function removeLateUpdate(f: Void->Void) {
 		traitLateUpdates.remove(f);
+	}
+
+	public static function notifyOnFixedUpdate(f: Void->Void) {
+		traitFixedUpdates.push(f);
+	}
+
+	public static function removeFixedUpdate(f: Void->Void) {
+		traitFixedUpdates.remove(f);
 	}
 
 	public static function notifyOnRender(f: kha.graphics4.Graphics->Void) {

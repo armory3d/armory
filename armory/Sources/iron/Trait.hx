@@ -16,6 +16,7 @@ class Trait {
 	var _remove: Array<Void->Void> = null;
 	var _update: Array<Void->Void> = null;
 	var _lateUpdate: Array<Void->Void> = null;
+	var _fixedUpdate: Array<Void->Void> = null;
 	var _render: Array<kha.graphics4.Graphics->Void> = null;
 	var _render2D: Array<kha.graphics2.Graphics->Void> = null;
 
@@ -85,6 +86,23 @@ class Trait {
 	public function removeLateUpdate(f: Void->Void) {
 		_lateUpdate.remove(f);
 		App.removeLateUpdate(f);
+	}
+
+    /**
+      Add fixed game logic handler.
+    **/
+	public function notifyOnFixedUpdate(f: Void->Void) {
+		if (_fixedUpdate == null) _fixedUpdate = [];
+		_fixedUpdate.push(f);
+		App.notifyOnFixedUpdate(f);
+	}
+
+    /**
+      Remove fixed game logic handler.
+    **/
+	public function removeFixedUpdate(f: Void->Void) {
+		_fixedUpdate.remove(f);
+		App.removeFixedUpdate(f);
 	}
 
     /**

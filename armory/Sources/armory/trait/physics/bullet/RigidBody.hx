@@ -153,6 +153,7 @@ class RigidBody extends iron.Trait {
 		if (!Std.isOfType(object, MeshObject)) return; // No mesh data
 
 		transform = object.transform;
+		transform.buildMatrix();
 		physics = armory.trait.physics.PhysicsWorld.active;
 
 		if (shape == Shape.Box) {

@@ -99,8 +99,6 @@ class DrawImageSequenceNode extends LogicNode {
 		final colorVec = inputs[4].get();
 		g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 
-		trace(currentImgIdx);
-
 		g.drawScaledImage(images[currentImgIdx], inputs[5].get(), inputs[6].get(), inputs[7].get(), inputs[8].get());
 	}
 }

@@ -191,7 +191,7 @@ def apply_materials(load_atlas=0):
 
                                 mainNode = outputNode.inputs[0].links[0].from_node.inputs[0].links[0].from_node
 
-                            if (mainNode.type == "ShaderNodeMixRGB"):
+                            if (mainNode.type == "ShaderNodeMix"):
                                 if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
                                     print("Mix RGB shader found")
                                 
@@ -199,9 +199,13 @@ def apply_materials(load_atlas=0):
 
                             #Add all nodes first
                             #Add lightmap multipliction texture
-                            mixNode = node_tree.nodes.new(type="ShaderNodeMixRGB")
+                            mixNode = node_tree.nodes.new(type="ShaderNodeMix")
                             mixNode.name = "Lightmap_Multiplication"
                             mixNode.location = -800, 300
+
+                            mixNode.data_type = 'RGBA'
+                            mixNode.inputs[0].default_value = 1
+
                             if scene.TLM_EngineProperties.tlm_lighting_mode == "indirect" or scene.TLM_EngineProperties.tlm_lighting_mode == "indirectAO":
                                 mixNode.blend_type = 'MULTIPLY'
                             else:
@@ -312,8 +316,8 @@ def apply_materials(load_atlas=0):
                                     else:
                                         mat.node_tree.links.new(lightmapNode.outputs[1], DecodeNode.inputs[1]) #Connect lightmap node to decodenode
 
-                                    mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[1]) #Connect decode node to mixnode
-                                    mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[1]) #Connect exposure node to mixnode
+                                    mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[6]) #Connect decode node to mixnode
+                                    mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[6]) #Connect exposure node to mixnode
                                 
                                 else:
                                     
@@ -323,10 +327,10 @@ def apply_materials(load_atlas=0):
                                     else:
                                         mat.node_tree.links.new(lightmapNode.outputs[1], DecodeNode.inputs[1]) #Connect lightmap node to decodenode
 
-                                    mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                                    mat.node_tree.links.new(DecodeNode.outputs[0], mixNode.inputs[6]) #Connect lightmap node to mixnode
                                 
-                                mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[2]) #Connect basecolor to pbr node
-                                mat.node_tree.links.new(mixNode.outputs[0], mainNode.inputs[0]) #Connect mixnode to pbr node
+                                mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[7]) #Connect basecolor to pbr node
+                                mat.node_tree.links.new(mixNode.outputs[2], mainNode.inputs[0]) #Connect mixnode to pbr node
 
                                 if not scene.TLM_EngineProperties.tlm_target == "vertex":
                                     mat.node_tree.links.new(UVLightmap.outputs[0], lightmapNode.inputs[0]) #Connect uvnode to lightmapnode
@@ -338,11 +342,11 @@ def apply_materials(load_atlas=0):
 
                                 if(scene.TLM_EngineProperties.tlm_exposure_multiplier > 0):
                                     mat.node_tree.links.new(lightmapNode.outputs[0], ExposureNode.inputs[0]) #Connect lightmap node to mixnode
-                                    mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
+                                    mat.node_tree.links.new(ExposureNode.outputs[0], mixNode.inputs[6]) #Connect lightmap node to mixnode
                                 else:
-                                    mat.node_tree.links.new(lightmapNode.outputs[0], mixNode.inputs[1]) #Connect lightmap node to mixnode
-                                mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[2]) #Connect basecolor to pbr node
-                                mat.node_tree.links.new(mixNode.outputs[0], mainNode.inputs[0]) #Connect mixnode to pbr node
+                                    mat.node_tree.links.new(lightmapNode.outputs[0], mixNode.inputs[6]) #Connect lightmap node to mixnode
+                                mat.node_tree.links.new(baseColorNode.outputs[0], mixNode.inputs[7]) #Connect basecolor to pbr node
+                                mat.node_tree.links.new(mixNode.outputs[2], mainNode.inputs[0]) #Connect mixnode to pbr node
                                 if not scene.TLM_EngineProperties.tlm_target == "vertex":
                                     mat.node_tree.links.new(UVLightmap.outputs[0], lightmapNode.inputs[0]) #Connect uvnode to lightmapnode
 
@@ -491,8 +495,9 @@ def applyAOPass():
                                 AOMap.image = AOImage
                                 AOMap.location = -800, 0
 
-                                AOMult = nodes.new(type="ShaderNodeMixRGB")
+                                AOMult = nodes.new(type="ShaderNodeMix")
                                 AOMult.name = "TLM_AOMult"
+                                AOMult.data_type = 'RGBA'
                                 AOMult.blend_type = 'MULTIPLY'
                                 AOMult.inputs[0].default_value = 1.0
                                 AOMult.location = -300, 300

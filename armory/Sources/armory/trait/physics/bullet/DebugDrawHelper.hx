@@ -35,6 +35,7 @@ class DebugDrawHelper {
 
 	public function new(physicsWorld: PhysicsWorld, debugDrawMode: DebugDrawMode) {
 		this.physicsWorld = physicsWorld;
+		this.debugDrawMode = debugDrawMode;
 
 		#if arm_ui
 		iron.data.Data.getFont(Canvas.defaultFontName, function(defaultFont: kha.Font) {
