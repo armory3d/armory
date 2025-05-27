@@ -1,7 +1,7 @@
 package iron.object;
 
 #if arm_particles
-
+import kha.FastFloat;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
 import iron.data.Data;
@@ -16,10 +16,12 @@ import iron.math.Vec4;
 class ParticleSystem {
 	public var data: ParticleData;
 	public var speed = 1.0;
+	var currentSpeed = 0.0;
 	var particles: Array<Particle>;
 	var ready: Bool;
 	var frameRate = 24;
 	var lifetime = 0.0;
+	var looptime = 0.0;
 	var animtime = 0.0;
 	var time = 0.0;
 	var spawnRate = 0.0;
@@ -47,13 +49,19 @@ class ParticleSystem {
 	var ownerRot = new Quat();
 	var ownerScl = new Vec4();
 
+	var random = 0.0;
+
 	public function new(sceneName: String, pref: TParticleReference) {
 		seed = pref.seed;
+		currentSpeed = speed;
+		speed = 0;
 		particles = [];
 		ready = false;
+
 		Data.getParticle(sceneName, pref.particle, function(b: ParticleData) {
 			data = b;
 			r = data.raw;
+
 			if (Scene.active.raw.gravity != null) {
 				gx = Scene.active.raw.gravity[0] * r.weight_gravity;
 				gy = Scene.active.raw.gravity[1] * r.weight_gravity;
@@ -64,27 +72,55 @@ class ParticleSystem {
 				gy = 0;
 				gz = -9.81 * r.weight_gravity;
 			}
-			alignx = r.object_align_factor[0] / 2;
-			aligny = r.object_align_factor[1] / 2;
-			alignz = r.object_align_factor[2] / 2;
+
+			alignx = r.object_align_factor[0];
+			aligny = r.object_align_factor[1];
+			alignz = r.object_align_factor[2];
+
+			looptime = (r.frame_end - r.frame_start) / frameRate;
 			lifetime = r.lifetime / frameRate;
-			animtime = (r.frame_end - r.frame_start) / frameRate;
+			animtime = r.loop ? looptime : looptime + lifetime;
 			spawnRate = ((r.frame_end - r.frame_start) / r.count) / frameRate;
+
 			for (i in 0...r.count) particles.push(new Particle(i));
 			ready = true;
+
+			if (r.auto_start) start();
 		});
 	}
 
+	public function start() {
+		if (r.is_unique) random = Math.random();
+		lifetime = r.lifetime / frameRate;
+		time = 0;
+		lap = 0;
+		lapTime = 0;
+		speed = currentSpeed;
+	}
+
 	public function pause() {
-		lifetime = 0;
+		speed = 0;
 	}
 
 	public function resume() {
 		lifetime = r.lifetime / frameRate;
+		speed = currentSpeed;
+	}
+
+	// TODO: interrupt smoothly
+	public function stop() {
+		end();
+	}
+
+	function end() {
+		lifetime = 0;
+		speed = 0;
+		lap = 0;
 	}
 
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
+		var prevLap = lap;
 
 		// Copy owner world transform but discard scale
 		owner.transform.world.decompose(ownerLoc, ownerRot, ownerScl);
@@ -108,17 +144,21 @@ class ParticleSystem {
 		}
 
 		// Animate
-		time += Time.realDelta * speed;
+		time += Time.realDelta * Time.scale * speed;
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
+
+		if (lap > prevLap && !r.loop) {
+			end();
+		}
 
 		updateGpu(object, owner);
 	}
 
 	public function getData(): Mat4 {
 		var hair = r.type == 1;
-		m._00 = r.loop ? animtime : -animtime;
+		m._00 = animtime;
 		m._01 = hair ? 1 / particles.length : spawnRate;
 		m._02 = hair ? 1 : lifetime;
 		m._03 = particles.length;
@@ -126,15 +166,27 @@ class ParticleSystem {
 		m._11 = hair ? 0 : aligny;
 		m._12 = hair ? 0 : alignz;
 		m._13 = hair ? 0 : r.factor_random;
-		m._20 = hair ? 0 : gx * r.mass;
-		m._21 = hair ? 0 : gy * r.mass;
-		m._22 = hair ? 0 : gz * r.mass;
+		m._20 = hair ? 0 : gx;
+		m._21 = hair ? 0 : gy;
+		m._22 = hair ? 0 : gz;
 		m._23 = hair ? 0 : r.lifetime_random;
 		m._30 = tilesx;
 		m._31 = tilesy;
 		m._32 = 1 / tilesFramerate;
 		m._33 = hair ? 1 : lapTime;
 		return m;
+	}
+
+	public function getSizeRandom(): FastFloat {
+		return r.size_random;
+	}
+
+	public function getRandom(): FastFloat {
+		return random;
+	}
+
+	public function getSize(): FastFloat {
+		return r.particle_size;
 	}
 
 	function updateGpu(object: MeshObject, owner: MeshObject) {
@@ -236,14 +288,15 @@ class ParticleSystem {
 
 class Particle {
 	public var i: Int;
+
 	public var x = 0.0;
 	public var y = 0.0;
 	public var z = 0.0;
+
 	public var cameraDistance: Float;
 
 	public function new(i: Int) {
 		this.i = i;
 	}
 }
-
 #end
