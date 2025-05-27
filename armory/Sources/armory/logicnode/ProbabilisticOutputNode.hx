@@ -18,7 +18,6 @@ class ProbabilisticOutputNode extends LogicNode {
 		}
 
 		if (sum > 1){
-			trace(sum);
 			for (p in 0...probs.length)
 				probs[p] /= sum;
 		}
