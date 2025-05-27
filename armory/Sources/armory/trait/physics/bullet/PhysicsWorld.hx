@@ -116,9 +116,9 @@ class PhysicsWorld extends Trait {
 		conMap = new Map();
 		active = this;
 
-		// Ensure physics are updated first in the lateUpdate list
-		_lateUpdate = [lateUpdate];
-		@:privateAccess iron.App.traitLateUpdates.insert(0, lateUpdate);
+		// Ensure physics are updated first in the fixedUpdate list
+		_fixedUpdate = [fixedUpdate];
+		@:privateAccess iron.App.traitFixedUpdates.insert(0, fixedUpdate);
 
 		setDebugDrawMode(debugDrawMode);
 
@@ -277,7 +277,7 @@ class PhysicsWorld extends Trait {
 		return rb;
 	}
 
-	function lateUpdate() {
+	function fixedUpdate() {
 		var t = Time.delta * timeScale;
 		if (t == 0.0) return; // Simulation paused
 
@@ -291,9 +291,9 @@ class PhysicsWorld extends Trait {
 		var fixedTime = 1.0 / 60;
 
 		//This condition must be satisfied to not loose time
-		var currMaxSteps = t < (fixedTime * maxSteps) ? maxSteps : 1;
+		var currMaxSteps = t < (Time.fixedStep * maxSteps) ? maxSteps : 1;
 
-		world.stepSimulation(t, currMaxSteps, fixedTime);
+		world.stepSimulation(t, currMaxSteps, Time.fixedStep);
 		updateContacts();
 
 		for (rb in rbMap) { @:privateAccess try { rb.physicsUpdate(); } catch(e:haxe.Exception) { trace(e.message); } } // HACK: see this recommendation: https://github.com/armory3d/armory/issues/3044#issuecomment-2558199944.

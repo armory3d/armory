@@ -7,6 +7,11 @@ class Time {
 		if (frequency == null) initFrequency();
 		return 1 / frequency;
 	}
+	// TODO: set physics step from Blender's editor
+	public static var fixedStep(get, never): Float;
+	static function get_fixedStep(): Float {
+		return 1 / 60;
+	}
 
 	public static var scale = 1.0;
 	public static var delta(get, never): Float;
