@@ -728,9 +728,9 @@ const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
 """)
 
-        if bpy.data.scenes[0].view_settings.exposure != 0.0:
+        if arm.utils.get_active_scene().view_settings.exposure != 0.0:
             f.write(
-"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].view_settings.exposure * 100) / 100) + """;
+"""const float compoExposureStrength = """ + str(round(arm.utils.get_active_scene().view_settings.exposure * 100) / 100) + """;
 """)
 
         if rpdat.arm_fog:
