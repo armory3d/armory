@@ -493,7 +493,7 @@ class Main {
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
-        
+
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -502,7 +502,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
-        
+
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -511,7 +511,7 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
-        
+
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
                 f.write("""
@@ -519,7 +519,7 @@ class Main {
             elif wrd.arm_canvas_img_scaling_quality == 'high':
                 f.write("""
         armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
-        
+
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -561,7 +561,7 @@ def write_indexhtml(w, h, is_publish):
 <body style='margin: 0; padding: 0;'>""")
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style='object-fit: contain; min-width: 100%; max-width: 100%; max-height: 100vh; min-height: 100vh; display: block;' id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>""")
+    <canvas style='object-fit: contain; width: 100vw; height: 100vh; display: block;' id='khanvas' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas>""")
         else:
             f.write("""
     <p align='center'><canvas align='center' style='outline: none;' id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'""" + str(popupmenu_in_browser) + """></canvas></p>""")
