@@ -45,7 +45,7 @@ class GetParticleDataNode extends LogicNode {
 			case 9:
 				psys.r.loop;
 			case 10:
-				new iron.math.Vec3(psys.alignx*2, psys.aligny*2, psys.alignz*2);
+				new iron.math.Vec3(psys.alignx, psys.aligny, psys.alignz);
 			case 11:
 				psys.r.factor_random;
 			case 12:
