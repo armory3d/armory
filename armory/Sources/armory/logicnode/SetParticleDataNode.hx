@@ -43,11 +43,17 @@ class SetParticleDataNode extends LogicNode {
 					psys.r.emit_from = emit_from;
 					psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(psys.data.raw.instance_object), iron.object.MeshObject), mo);
 				}
+			case 'Auto Start':
+				psys.r.auto_start = inputs[3].get(); 
+			case 'Is Unique':
+				psys.r.is_unique = inputs[3].get();
+			case 'Loop':
+				psys.r.loop = inputs[3].get();
 			case 'Velocity':
 				var vel: iron.math.Vec3 = inputs[3].get();
-				psys.alignx = vel.x / 2;
-				psys.aligny = vel.y / 2;
-				psys.alignz = vel.z / 2;
+				psys.alignx = vel.x;
+				psys.aligny = vel.y;
+				psys.alignz = vel.z;
 			case 'Velocity Random':
 				psys.r.factor_random = inputs[3].get();
 			case 'Weight Gravity':

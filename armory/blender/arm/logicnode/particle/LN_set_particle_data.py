@@ -8,7 +8,7 @@ class SetParticleDataNode(ArmLogicTreeNode):
 
     def remove_extra_inputs(self, context):
         while len(self.inputs) > 3:
-                self.inputs.remove(self.inputs[-1])
+            self.inputs.remove(self.inputs[-1])
         if self.property0 == 'Particle Size':
             self.add_input('ArmFloatSocket', 'Particle Size')
         if self.property0 == 'Frame End':
@@ -21,6 +21,12 @@ class SetParticleDataNode(ArmLogicTreeNode):
             self.add_input('ArmFloatSocket', 'Lifetime Random')
         if self.property0 == 'Emit From':
             self.add_input('ArmIntSocket', 'Emit From')
+        if self.property0 == 'Auto Start':
+            self.add_input('ArmBoolSocket', 'Auto Start')
+        if self.property0 == 'Is Unique':
+            self.add_input('ArmBoolSocket', 'Is Unique')
+        if self.property0 == 'Loop':
+            self.add_input('ArmBoolSocket', 'Loop')
         if self.property0 == 'Velocity':
             self.add_input('ArmVectorSocket', 'Velocity')
         if self.property0 == 'Velocity Random':
@@ -39,6 +45,9 @@ class SetParticleDataNode(ArmLogicTreeNode):
              ('Lifetime', 'Lifetime', 'for the instance'),
              ('Lifetime Random', 'Lifetime Random', 'for the system'),
              ('Emit From', 'Emit From', 'for the system (Vertices:0 Faces:1 Volume: 2)'),
+             ('Auto Start', 'Auto Start', 'for the system'),
+             ('Is Unique', 'Is Unique', 'for the system'),
+             ('Loop', 'Loop', 'for the system'),
              ('Velocity', 'Velocity', 'for the instance'),
              ('Velocity Random', 'Velocity Random', 'for the system'),
              ('Weight Gravity', 'Weight Gravity', 'for the instance'),

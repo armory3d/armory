@@ -39,22 +39,28 @@ class GetParticleDataNode extends LogicNode {
 			case 6:
 				psys.r.emit_from;
 			case 7:
-				new iron.math.Vec3(psys.alignx*2, psys.aligny*2, psys.alignz*2);
+				psys.r.auto_start;
 			case 8:
-				psys.r.factor_random;
+				psys.r.is_unique;
 			case 9:
-				new iron.math.Vec3(psys.gx, psys.gy, psys.gz);
+				psys.r.loop;
 			case 10:
-				psys.r.weight_gravity;
+				new iron.math.Vec3(psys.alignx*2, psys.aligny*2, psys.alignz*2);
 			case 11:
-				psys.speed;
+				psys.r.factor_random;
 			case 12:
-				psys.time;
+				new iron.math.Vec3(psys.gx, psys.gy, psys.gz);
 			case 13:
-				psys.lap;
+				psys.r.weight_gravity;
 			case 14:
-				psys.lapTime;
+				psys.speed;
 			case 15:
+				psys.time;
+			case 16:
+				psys.lap;
+			case 17:
+				psys.lapTime;
+			case 18:
 				psys.count;
 			default: 
 				null;
