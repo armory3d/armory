@@ -393,27 +393,11 @@ class RigidBody extends iron.Trait {
 		currentRot.set(2, q.z());
 		currentRot.set(3, q.w());
 
-		// else {
-		// 	var trans = body.getWorldTransform();
-		// 	var p = trans.getOrigin();
-		// 	var q = trans.getRotation();
-
-		// 	transform.loc.set(p.x(), p.y(), p.z());
-		// 	transform.rot.set(q.x(), q.y(), q.z(), q.w());
-		// 	if (object.parent != null) {
-		// 		var ptransform = object.parent.transform;
-		// 		transform.loc.x -= ptransform.worldx();
-		// 		transform.loc.y -= ptransform.worldy();
-		// 		transform.loc.z -= ptransform.worldz();
-		// 	}
-		// 	transform.buildMatrix();
-
-		// 	#if hl
-		// 	p.delete();
-		// 	q.delete();
-		// 	trans.delete();
-		// 	#end
-		// }
+		#if hl
+		p.delete();
+		q.delete();
+		trans.delete();
+		#end
 
 		if (onContact != null) {
 			var rbs = physics.getContacts(this);
