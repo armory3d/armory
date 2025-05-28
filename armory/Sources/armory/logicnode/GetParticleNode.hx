@@ -16,19 +16,19 @@ class GetParticleNode extends LogicNode {
 	#if arm_particles
 
 		var mo = cast(object, iron.object.MeshObject);
-	
+
 		switch (from) {
 			case 0:
 				var names: Array<String> = [];
 				if (mo.particleSystems != null)
 					for (psys in mo.particleSystems)
-						names.push(psys.r.name);
+						names.push(@:privateAccess psys.r.name);
 				return names;
 			case 1:
 				return mo.particleSystems != null ? mo.particleSystems.length : 0;
 			case 2:
 				return mo.render_emitter;
-			default: 
+			default:
 				null;
 		}
 	#end
