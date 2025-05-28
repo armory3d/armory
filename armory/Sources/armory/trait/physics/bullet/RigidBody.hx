@@ -148,7 +148,7 @@ class RigidBody extends iron.Trait {
 		this.lastTime = Time.realTime();
 
 		notifyOnAdd(init);
-		notifyOnLateUpdate(lateUpdate);
+		notifyOnUpdate(update);
 	}
 
 	inline function withMargin(f: Float) {
@@ -338,7 +338,7 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
-	function lateUpdate() {
+	function update() {
 		var now = Time.realTime();
 		var delta = now - lastTime;
 		lastTime = now;
