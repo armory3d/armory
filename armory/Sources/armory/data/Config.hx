@@ -47,6 +47,7 @@ typedef TConfig = {
 	@:optional var rp_ssr: Null<Bool>;
 	@:optional var rp_ssrefr: Null<Bool>;
 	@:optional var rp_bloom: Null<Bool>;
+	@:optional var rp_ca: Null<Bool>;
 	@:optional var rp_motionblur: Null<Bool>;
 	@:optional var rp_gi: Null<Bool>; // voxelao
 	@:optional var rp_dynres: Null<Bool>; // dynamic resolution scaling

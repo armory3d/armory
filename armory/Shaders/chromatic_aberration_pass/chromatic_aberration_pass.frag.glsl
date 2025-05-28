@@ -43,13 +43,15 @@ void main() {
 	#ifdef _CPostprocess
 		float max_distort = PPComp13.x;
 		int num_iter = int(PPComp13.y);
+		int CAType = int(PPComp13.z);
 	#else
 		float max_distort = compoChromaticStrength;
 		int num_iter = compoChromaticSamples;
+		int CAType = compoChromaticType;
 	#endif
 
 	// Spectral
-	if (compoChromaticType == 1) {
+	if (CAType == 1) {
 		float reci_num_iter_f = 1.0 / float(num_iter);
 
 		vec2 resolution = vec2(1,1);
