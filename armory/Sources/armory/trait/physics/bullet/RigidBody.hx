@@ -145,6 +145,8 @@ class RigidBody extends iron.Trait {
 		this.staticObj = flags.staticObj;
 		this.useDeactivation = flags.useDeactivation;
 
+		this.lastTime = Time.realTime();
+
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
 	}
