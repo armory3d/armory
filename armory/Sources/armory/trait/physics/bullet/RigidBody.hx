@@ -78,7 +78,6 @@ class RigidBody extends iron.Trait {
 	static var usersCache = new Map<MeshData, Int>();
 
 	// Interpolation
-	var interpolate: Bool = false;
 	var lastTime: Float = 0.0;
 	var time: Float = 0.0;
 	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
@@ -336,6 +335,7 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
+	// FIXME: interpolation has some jittering
 	function update() {
 		var now = Time.realTime();
 		var delta = now - lastTime;
@@ -370,6 +370,7 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
+	// FIXME: interpolation has some jittering
 	function physicsUpdate() {
 		if (!ready) return;
 
