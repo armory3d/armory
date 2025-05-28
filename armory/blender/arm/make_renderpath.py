@@ -40,11 +40,11 @@ def add_world_defs():
     if rpdat.rp_hdr == False:
         wrd.world_defs += '_LDR'
 
-    if arm.utils.get_active_scene().arm_light_ies_texture == True:
+    if arm.utils.get_active_scene().world.arm_light_ies_texture == True:
         wrd.world_defs += '_LightIES'
         assets.add_embedded_data('iestexture.png')
 
-    if arm.utils.get_active_scene().arm_light_clouds_texture == True:
+    if arm.utils.get_active_scene().world.arm_light_clouds_texture == True:
         wrd.world_defs += '_LightClouds'
         assets.add_embedded_data('cloudstexture.png')
 
