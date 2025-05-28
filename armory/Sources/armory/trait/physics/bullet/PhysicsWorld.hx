@@ -278,7 +278,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	function fixedUpdate() {
-		var t = Time.delta * timeScale;
+		var t = Time.fixedStep * timeScale;
 		if (t == 0.0) return; // Simulation paused
 
 		#if arm_debug
@@ -286,9 +286,6 @@ class PhysicsWorld extends Trait {
 		#end
 
 		if (preUpdates != null) for (f in preUpdates) f();
-
-		//Bullet physics fixed timescale
-		var fixedTime = 1.0 / 60;
 
 		//This condition must be satisfied to not loose time
 		var currMaxSteps = t < (Time.fixedStep * maxSteps) ? maxSteps : 1;

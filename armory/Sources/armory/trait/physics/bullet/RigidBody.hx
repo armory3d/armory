@@ -1,12 +1,13 @@
 package armory.trait.physics.bullet;
 
 #if arm_bullet
-
+import armory.math.Helper;
+import iron.data.MeshData;
 import iron.math.Vec4;
 import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
-import iron.data.MeshData;
+import iron.system.Time;
 
 /**
    RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
@@ -76,6 +77,16 @@ class RigidBody extends iron.Trait {
 	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
 	static var usersCache = new Map<MeshData, Int>();
 
+	// Interpolation
+	var interpolate: Bool = false;
+	var lastTime: Float = 0.0;
+	var time: Float = 0.0;
+	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
+	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
+	var currentRot: kha.math.Quaternion = new kha.math.Quaternion();
+	var prevRot: kha.math.Quaternion = new kha.math.Quaternion();
+	var tRot: kha.math.Quaternion = new kha.math.Quaternion();
+
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
 						params: RigidBodyParams = null, flags: RigidBodyFlags = null) {
 		super();
@@ -135,6 +146,7 @@ class RigidBody extends iron.Trait {
 		this.useDeactivation = flags.useDeactivation;
 
 		notifyOnAdd(init);
+		notifyOnLateUpdate(lateUpdate);
 	}
 
 	inline function withMargin(f: Float) {
@@ -245,6 +257,12 @@ class RigidBody extends iron.Trait {
 		quat1.setValue(quat.x, quat.y, quat.z, quat.w);
 		trans1.setRotation(quat1);
 
+		currentPos.setValue(vec1.x(), vec1.y(), vec1.z());
+		currentRot.set(0, quat.x);
+		currentRot.set(1, quat.y);
+		currentRot.set(2, quat.z);
+		currentRot.set(3, quat.w);
+
 		var centerOfMassOffset = trans2;
 		centerOfMassOffset.setIdentity();
 		motionState = new bullet.Bt.DefaultMotionState(trans1, centerOfMassOffset);
@@ -318,32 +336,84 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
-	function physicsUpdate() {
-		if (!ready) return;
-		if (animated) {
-			syncTransform();
-		}
-		else {
-			var trans = body.getWorldTransform();
-			var p = trans.getOrigin();
-			var q = trans.getRotation();
+	function lateUpdate() {
+		var now = Time.realTime();
+		var delta = now - lastTime;
+		lastTime = now;
+		time += delta;
 
-			transform.loc.set(p.x(), p.y(), p.z());
-			transform.rot.set(q.x(), q.y(), q.z(), q.w());
+		while (time >= Time.fixedStep) {
+			time -= Time.fixedStep;
+		}
+
+		var t: Float = time / Time.fixedStep;
+		t = Helper.clamp(t, 0, 1);
+
+		var tx: Float = prevPos.x() * (1.0 - t) + currentPos.x() * t;
+		var ty: Float = prevPos.y() * (1.0 - t) + currentPos.y() * t;
+		var tz: Float = prevPos.z() * (1.0 - t) + currentPos.z() * t;
+
+		var tRot: kha.math.Quaternion = prevRot.slerp(t, currentRot);
+
+		if (object.animation == null && !animated) {
+			transform.loc.set(tx, ty, tz, 1.0);
+			transform.rot.set(tRot.get(0), tRot.get(1), tRot.get(2), tRot.get(3));
+
 			if (object.parent != null) {
 				var ptransform = object.parent.transform;
 				transform.loc.x -= ptransform.worldx();
 				transform.loc.y -= ptransform.worldy();
 				transform.loc.z -= ptransform.worldz();
 			}
-			transform.buildMatrix();
 
-			#if hl
-			p.delete();
-			q.delete();
-			trans.delete();
-			#end
+			transform.buildMatrix();
 		}
+	}
+
+	function physicsUpdate() {
+		if (!ready) return;
+
+		prevPos.setValue(currentPos.x(), currentPos.y(), currentPos.z());
+		prevRot.set(0, currentRot.get(0));
+		prevRot.set(1, currentRot.get(1));
+		prevRot.set(2, currentRot.get(2));
+		prevRot.set(3, currentRot.get(3));
+
+		if (animated) {
+			syncTransform();
+		}
+
+		var trans = body.getWorldTransform();
+		var p = trans.getOrigin();
+		var q = trans.getRotation();
+
+		currentPos.setValue(p.x(), p.y(), p.z());
+		currentRot.set(0, q.x());
+		currentRot.set(1, q.y());
+		currentRot.set(2, q.z());
+		currentRot.set(3, q.w());
+
+		// else {
+		// 	var trans = body.getWorldTransform();
+		// 	var p = trans.getOrigin();
+		// 	var q = trans.getRotation();
+
+		// 	transform.loc.set(p.x(), p.y(), p.z());
+		// 	transform.rot.set(q.x(), q.y(), q.z(), q.w());
+		// 	if (object.parent != null) {
+		// 		var ptransform = object.parent.transform;
+		// 		transform.loc.x -= ptransform.worldx();
+		// 		transform.loc.y -= ptransform.worldy();
+		// 		transform.loc.z -= ptransform.worldz();
+		// 	}
+		// 	transform.buildMatrix();
+
+		// 	#if hl
+		// 	p.delete();
+		// 	q.delete();
+		// 	trans.delete();
+		// 	#end
+		// }
 
 		if (onContact != null) {
 			var rbs = physics.getContacts(this);

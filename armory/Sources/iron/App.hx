@@ -60,6 +60,13 @@ class App {
 
 		Scene.active.updateFrame();
 
+		time += iron.system.Time.realTime() - last;
+		last = iron.system.Time.realTime();
+		while (time >= iron.system.Time.fixedStep) {
+			for (f in traitFixedUpdates) f();
+			time -= iron.system.Time.fixedStep;
+		}
+
 		var i = 0;
 		var l = traitUpdates.length;
 		while (i < l) {
@@ -79,13 +86,6 @@ class App {
 		while (i < l) {
 			traitLateUpdates[i]();
 			l <= traitLateUpdates.length ? i++ : l = traitLateUpdates.length;
-		}
-
-		time += iron.system.Time.realTime() - last;
-		last = iron.system.Time.realTime();
-		while (time >= iron.system.Time.fixedStep) {
-			for (f in traitFixedUpdates) f();
-			time -= iron.system.Time.fixedStep;
 		}
 
 		if (onEndFrames != null) for (f in onEndFrames) f();
