@@ -278,7 +278,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	function fixedUpdate() {
-		var t = Time.fixedStep * timeScale;
+		var t = Time.fixedStep * timeScale * Time.scale;
 		if (t == 0.0) return; // Simulation paused
 
 		#if arm_debug
