@@ -17,11 +17,11 @@ class Time {
 		_fixedStep = value;
 	}
 
-	static var lastRealDelta = 0.0;
-	public static var realDelta = 0.0;
-
 	static var lastDelta = 0.0;
 	public static var delta = 0.0;
+
+	static var lastRealDelta = 0.0;
+	public static var realDelta = 0.0;
 
 	public static inline function time(): Float {
 		return kha.Scheduler.time();
