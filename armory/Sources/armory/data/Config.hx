@@ -17,7 +17,7 @@ class Config {
 	}
 
 	public static function save() {
-		var path = iron.data.Data.dataPath + "config.arm";
+		var path = iron.data.Data.dataPath != '' ? iron.data.Data.dataPath + "config.arm" : Krom.getFilesLocation() + "/config.arm";
 		var bytes = haxe.io.Bytes.ofString(haxe.Json.stringify(raw));
 		#if kha_krom
 		Krom.fileSaveBytes(path, bytes.getData());
@@ -47,7 +47,7 @@ typedef TConfig = {
 	@:optional var rp_ssr: Null<Bool>;
 	@:optional var rp_ssrefr: Null<Bool>;
 	@:optional var rp_bloom: Null<Bool>;
-	@:optional var rp_ca: Null<Bool>;
+	@:optional var rp_chromatic_aberration: Null<Bool>;
 	@:optional var rp_motionblur: Null<Bool>;
 	@:optional var rp_gi: Null<Bool>; // voxelao
 	@:optional var rp_dynres: Null<Bool>; // dynamic resolution scaling
