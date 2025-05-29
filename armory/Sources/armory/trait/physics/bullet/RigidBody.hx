@@ -8,6 +8,7 @@ import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.system.Time;
+import kha.math.Quaternion;
 
 /**
    RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
@@ -337,7 +338,6 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
-	// FIXME: rotation has some jittering
 	function update() {
 		if (interpolate) {
 			time += Time.delta;
@@ -353,7 +353,7 @@ class RigidBody extends iron.Trait {
 			var ty: Float = prevPos.y() * (1.0 - t) + currentPos.y() * t;
 			var tz: Float = prevPos.z() * (1.0 - t) + currentPos.z() * t;
 
-			var tRot: kha.math.Quaternion = prevRot.slerp(t, currentRot);
+			var tRot: Quaternion = nlerp(prevRot, currentRot, t);
 
 			transform.loc.set(tx, ty, tz, 1.0);
 			transform.rot.set(tRot.get(0), tRot.get(1), tRot.get(2), tRot.get(3));
@@ -370,6 +370,19 @@ class RigidBody extends iron.Trait {
 		}
 
 		transform.buildMatrix();
+	}
+
+	function nlerp(q1: Quaternion, q2: Quaternion, t: Float): Quaternion {
+		var dot = q1.get(0) * q2.get(0) + q1.get(1) * q2.get(1) + q1.get(2) * q2.get(2) + q1.get(3) * q2.get(3);
+		var _q2 = dot < 0 ? new Quaternion(-q2.get(0), -q2.get(1), -q2.get(2), -q2.get(3)) : q2;
+
+		var x = q1.get(0) * (1.0 - t) + _q2.get(0) * t;
+		var y = q1.get(1) * (1.0 - t) + _q2.get(1) * t;
+		var z = q1.get(2) * (1.0 - t) + _q2.get(2) * t;
+		var w = q1.get(3) * (1.0 - t) + _q2.get(3) * t;
+
+		var len = Math.sqrt(x * x + y * y + z * z + w * w);
+		return new Quaternion(x / len, y / len, z / len, w / len);
 	}
 
 	function physicsUpdate() {
