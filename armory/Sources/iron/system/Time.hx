@@ -17,10 +17,10 @@ class Time {
 		_fixedStep = value;
 	}
 
-	static var lastDelta = 0.0;
+	static var lastTime = 0.0;
 	public static var delta = 0.0;
 
-	static var lastRealDelta = 0.0;
+	static var lastRealTime = 0.0;
 	public static var realDelta = 0.0;
 
 	public static inline function time(): Float {
@@ -37,12 +37,12 @@ class Time {
 	}
 
 	public static function update() {
-		delta = (realTime() - lastDelta) * scale;
-		lastDelta = realTime();
+		delta = (realTime() - lastTime) * scale;
+		lastTime = realTime();
 	}
 
 	public static function render() {
-		realDelta = (realTime() - lastRealDelta) * scale;
-		lastRealDelta = realTime();
+		realDelta = (realTime() - lastRealTime) * scale;
+		lastRealTime = realTime();
 	}
 }
