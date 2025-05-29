@@ -17,14 +17,18 @@ class Time {
 	}
 
 	public static var scale = 1.0;
-	public static var delta(get, never): Float;
-	static function get_delta(): Float {
+	public static var refreshDelta(get, never): Float;
+	static function get_refreshDelta(): Float {
 		if (frequency == null) initFrequency();
 		return (1 / frequency) * scale;
 	}
 
-	static var last = 0.0;
+	static var lastRealDelta = 0.0;
 	public static var realDelta = 0.0;
+
+	static var lastDelta = 0.0;
+	public static var delta = 0.0;
+
 	public static inline function time(): Float {
 		return kha.Scheduler.time();
 	}
@@ -39,7 +43,12 @@ class Time {
 	}
 
 	public static function update() {
-		realDelta = realTime() - last;
-		last = realTime();
+		delta = realTime() - lastDelta;
+		lastDelta = realTime();
+	}
+
+	public static function render() {
+		realDelta = realTime() - lastRealDelta;
+		lastRealDelta = realTime();
 	}
 }

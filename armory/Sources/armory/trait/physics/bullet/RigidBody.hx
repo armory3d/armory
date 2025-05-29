@@ -79,7 +79,6 @@ class RigidBody extends iron.Trait {
 
 	// Interpolation
 	var interpolate: Bool = false;
-	var lastTime: Float = 0.0;
 	var time: Float = 0.0;
 	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
 	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
@@ -338,13 +337,10 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
-	// FIXME: interpolation has some jittering
+	// FIXME: rotation has some jittering
 	function update() {
 		if (interpolate) {
-			var now = Time.realTime();
-			var delta = now - lastTime;
-			lastTime = now;
-			time += delta;
+			time += Time.delta;
 
 			while (time >= Time.fixedStep) {
 				time -= Time.fixedStep;
@@ -376,7 +372,6 @@ class RigidBody extends iron.Trait {
 		transform.buildMatrix();
 	}
 
-	// FIXME: interpolation has some jittering
 	function physicsUpdate() {
 		if (!ready) return;
 
