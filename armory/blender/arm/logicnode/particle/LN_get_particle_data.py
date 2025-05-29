@@ -17,6 +17,9 @@ class GetParticleDataNode(ArmLogicTreeNode):
         self.outputs.new('ArmIntSocket', 'Lifetime')
         self.outputs.new('ArmFloatSocket', 'Lifetime Random')
         self.outputs.new('ArmIntSocket', 'Emit From')
+        self.outputs.new('ArmBoolSocket', 'Auto Start')
+        self.outputs.new('ArmBoolSocket', 'Is Unique')
+        self.outputs.new('ArmBoolSocket', 'Loop')
 
         self.outputs.new('ArmVectorSocket', 'Velocity')
         self.outputs.new('ArmFloatSocket', 'Velocity Random')

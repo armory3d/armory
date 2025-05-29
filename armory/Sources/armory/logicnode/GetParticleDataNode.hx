@@ -25,37 +25,43 @@ class GetParticleDataNode extends LogicNode {
 
 		return switch (from) {
 			case 0:
-				psys.r.name;
+				@:privateAccess psys.r.name;
 			case 1:
-				psys.r.particle_size;
+				@:privateAccess psys.r.particle_size;
 			case 2:
-				psys.r.frame_start;
+				@:privateAccess psys.r.frame_start;
 			case 3:
-				psys.r.frame_end;
+				@:privateAccess psys.r.frame_end;
 			case 4:
-				psys.lifetime;
+				@:privateAccess psys.lifetime;
 			case 5:
-				psys.r.lifetime;
+				@:privateAccess psys.r.lifetime;
 			case 6:
-				psys.r.emit_from;
+				@:privateAccess psys.r.emit_from;
 			case 7:
-				new iron.math.Vec3(psys.alignx*2, psys.aligny*2, psys.alignz*2);
+				@:privateAccess psys.r.auto_start;
 			case 8:
-				psys.r.factor_random;
+				@:privateAccess psys.r.is_unique;
 			case 9:
-				new iron.math.Vec3(psys.gx, psys.gy, psys.gz);
+				@:privateAccess psys.r.loop;
 			case 10:
-				psys.r.weight_gravity;
+				new iron.math.Vec3(@:privateAccess psys.alignx, @:privateAccess psys.aligny, @:privateAccess psys.alignz);
 			case 11:
-				psys.speed;
+				@:privateAccess psys.r.factor_random;
 			case 12:
-				psys.time;
+				new iron.math.Vec3(@:privateAccess psys.gx, @:privateAccess psys.gy, @:privateAccess psys.gz);
 			case 13:
-				psys.lap;
+				@:privateAccess psys.r.weight_gravity;
 			case 14:
-				psys.lapTime;
+				psys.speed;
 			case 15:
-				psys.count;
+				@:privateAccess psys.time;
+			case 16:
+				@:privateAccess psys.lap;
+			case 17:
+				@:privateAccess psys.lapTime;
+			case 18:
+				@:privateAccess psys.count;
 			default: 
 				null;
 		}
