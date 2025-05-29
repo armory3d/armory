@@ -357,6 +357,7 @@ def init_properties():
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
+    bpy.types.Object.arm_rb_interpolate = BoolProperty(name="Interpolation", description="Smooths out the object's transform on physics steps", default=False)
     bpy.types.Object.arm_rb_collision_filter_mask = bpy.props.BoolVectorProperty(
             name="Collision Collections Filter Mask",
             description="Collision collections rigid body interacts with",

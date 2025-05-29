@@ -241,6 +241,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_angular_friction')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
+            layout.prop(obj, 'arm_rb_interpolate')
 
         if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')

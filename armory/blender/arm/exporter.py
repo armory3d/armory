@@ -2797,6 +2797,7 @@ Make sure the mesh only has tris/quads.""")
             body_flags['animated'] = rb.kinematic
             body_flags['trigger'] = bobject.arm_rb_trigger
             body_flags['ccd'] = bobject.arm_rb_ccd
+            body_flags['interpolate'] = bobject.arm_rb_interpolate
             body_flags['staticObj'] = is_static
             body_flags['useDeactivation'] = rb.use_deactivation
             x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
