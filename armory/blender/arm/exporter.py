@@ -3022,7 +3022,7 @@ Make sure the mesh only has tris/quads.""")
 
             rbw = self.scene.rigidbody_world
             if rbw is not None and rbw.enabled:
-                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
+                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations), str(wrd.arm_physics_fixed_step)]
 
                 if phys_pkg == 'bullet' or phys_pkg == 'oimo':
                     debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0

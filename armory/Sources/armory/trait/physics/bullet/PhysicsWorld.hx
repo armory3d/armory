@@ -81,7 +81,7 @@ class PhysicsWorld extends Trait {
 	public static var physTime = 0.0;
 	#end
 
-	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10, debugDrawMode: DebugDrawMode = NoDebug) {
+	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10, fixedStep = 1 / 60, debugDrawMode: DebugDrawMode = NoDebug) {
 		super();
 
 		if (nullvec) {
@@ -100,6 +100,7 @@ class PhysicsWorld extends Trait {
 		this.timeScale = timeScale;
 		this.maxSteps = maxSteps;
 		this.solverIterations = solverIterations;
+		Time.initFixedStep(fixedStep);
 
 		// First scene
 		if (active == null) {

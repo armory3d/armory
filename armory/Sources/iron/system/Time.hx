@@ -1,16 +1,19 @@
 package iron.system;
 
 class Time {
-
 	public static var step(get, never): Float;
 	static function get_step(): Float {
 		if (frequency == null) initFrequency();
 		return 1 / frequency;
 	}
-	// TODO: set physics step from Blender's editor
+
+	static var _fixedStep: Null<Float>;
 	public static var fixedStep(get, never): Float;
 	static function get_fixedStep(): Float {
-		return 1 / 60;
+		return _fixedStep;
+	}
+	public static function initFixedStep(value: Float = 1 / 60) {
+		_fixedStep = value;
 	}
 
 	public static var scale = 1.0;
@@ -32,7 +35,11 @@ class Time {
 	static var frequency: Null<Int> = null;
 
 	static function initFrequency() {
+		#if (kha_html5 || kha_debug_html5 || kha_krom)
+		frequency = 60;
+		#else
 		frequency = kha.Display.primary != null ? kha.Display.primary.frequency : 60;
+		#end
 	}
 
 	public static function update() {

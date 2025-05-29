@@ -2687,8 +2687,33 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ARM_PT_PhysicsProps(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "SCENE_PT_rigid_body_world"
 
-class ARM_PT_BulletDebugDrawingPanel(bpy.types.Panel):
+    @classmethod
+    def poll(cls, context):
+        return context.scene.rigidbody_world is not None
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+
+        if wrd.arm_physics_engine != 'Bullet' and wrd.arm_physics_engine != 'Oimo':
+            row = layout.row()
+            row.alert = True
+            row.label(text="Physics debug drawing is only supported for the Bullet and Oimo physics engines")
+
+        col = layout.column(align=False)
+        col.prop(wrd, "arm_physics_fixed_step")
+
+class ARM_PT_PhysicsDebugDrawingPanel(bpy.types.Panel):
     bl_label = "Armory Debug Drawing"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -2854,7 +2879,8 @@ __REG_CLASSES = (
     ArmoryUpdateListAndroidEmulatorButton,
     ArmoryUpdateListAndroidEmulatorRunButton,
     ArmoryUpdateListInstalledVSButton,
-    ARM_PT_BulletDebugDrawingPanel,
+    ARM_PT_PhysicsProps,
+    ARM_PT_PhysicsDebugDrawingPanel,
     scene.TLM_PT_Settings,
     scene.TLM_PT_Denoise,
     scene.TLM_PT_Filtering,

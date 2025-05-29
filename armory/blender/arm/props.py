@@ -197,6 +197,10 @@ def init_properties():
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_physics_fixed_step = FloatProperty(
+        name="Fixed Step", default=1/60, min=0, max=1,
+        description="Physics steps for fixed update"
+    )
     bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
         name="Collider Wireframes", default=False,
         description="Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations"
