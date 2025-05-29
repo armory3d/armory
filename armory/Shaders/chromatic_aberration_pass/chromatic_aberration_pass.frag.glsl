@@ -5,7 +5,7 @@
 uniform sampler2D tex;
 
 #ifdef _CPostprocess
-uniform vec3 PPComp13;
+uniform vec4 PPComp13;
 #endif
 
 in vec2 texCoord;
@@ -43,13 +43,17 @@ void main() {
 	#ifdef _CPostprocess
 		float max_distort = PPComp13.x;
 		int num_iter = int(PPComp13.y);
+		int CAType = int(PPComp13.z);
+		int on = int(PPComp13.w);
 	#else
 		float max_distort = compoChromaticStrength;
 		int num_iter = compoChromaticSamples;
+		int CAType = compoChromaticType;
+		int on = 1;
 	#endif
 
 	// Spectral
-	if (compoChromaticType == 1) {
+	if (CAType == 1) {
 		float reci_num_iter_f = 1.0 / float(num_iter);
 
 		vec2 resolution = vec2(1,1);
@@ -64,7 +68,7 @@ void main() {
 			sumcol += w * texture(tex, barrelDistortion(uv, 0.6 * max_distort * t));
 		}
 
-		fragColor = sumcol / sumw;
+		if (on == 1) fragColor = sumcol / sumw; else fragColor = texture(tex, texCoord);
 	}
 
 	// Simple
@@ -73,6 +77,7 @@ void main() {
 		col.x = texture(tex, texCoord + ((vec2(0.0, 1.0) * max_distort) / vec2(1000.0))).x;
 		col.y = texture(tex, texCoord + ((vec2(-0.85, -0.5) * max_distort) / vec2(1000.0))).y;
 		col.z = texture(tex, texCoord + ((vec2(0.85, -0.5) * max_distort) / vec2(1000.0))).z;
-		fragColor = vec4(col.x, col.y, col.z, fragColor.w);
+		if (on == 1) fragColor = vec4(col.x, col.y, col.z, fragColor.w); 
+		else fragColor = texture(tex, texCoord);
 	}
 }

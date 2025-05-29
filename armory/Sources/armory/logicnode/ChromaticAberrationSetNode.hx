@@ -10,6 +10,7 @@ class ChromaticAberrationSetNode extends LogicNode {
 
         armory.renderpath.Postprocess.chromatic_aberration_uniforms[0] = inputs[1].get();
         armory.renderpath.Postprocess.chromatic_aberration_uniforms[1] = inputs[2].get();
+        armory.renderpath.Postprocess.chromatic_aberration_uniforms[2] = inputs[3].get();
 
 		runOutput(0);
 	}
