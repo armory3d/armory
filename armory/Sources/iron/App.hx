@@ -37,7 +37,7 @@ class App {
 	function new(done: Void->Void) {
 		done();
 		kha.System.notifyOnFrames(render);
-		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.refreshDelta);
+		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.step);
 	}
 
 	public static function reset() {
