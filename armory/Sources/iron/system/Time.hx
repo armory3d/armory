@@ -37,12 +37,12 @@ class Time {
 	}
 
 	public static function update() {
-		delta = realTime() - lastDelta;
+		delta = (realTime() - lastDelta) * scale;
 		lastDelta = realTime();
 	}
 
 	public static function render() {
-		realDelta = realTime() - lastRealDelta;
+		realDelta = (realTime() - lastRealDelta) * scale;
 		lastRealDelta = realTime();
 	}
 }
