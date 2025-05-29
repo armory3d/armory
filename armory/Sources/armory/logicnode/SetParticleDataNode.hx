@@ -24,49 +24,49 @@ class SetParticleDataNode extends LogicNode {
 
 		switch (property0) {
 			case 'Particle Size':
-				psys.r.particle_size = inputs[3].get();
+				@:privateAccess psys.r.particle_size = inputs[3].get();
 			case 'Frame Start':
-				psys.r.frame_start = inputs[3].get();
-				psys.animtime = (psys.r.frame_end - psys.r.frame_start) / psys.frameRate;
-				psys.spawnRate = ((psys.r.frame_end - psys.r.frame_start) / psys.count) / psys.frameRate;
+				@:privateAccess psys.r.frame_start = inputs[3].get();
+				@:privateAccess psys.animtime = (@:privateAccess psys.r.frame_end - @:privateAccess psys.r.frame_start) / @:privateAccess psys.frameRate;
+				@:privateAccess psys.spawnRate = ((@:privateAccess psys.r.frame_end - @:privateAccess psys.r.frame_start) / @:privateAccess psys.count) / @:privateAccess psys.frameRate;
 			case 'Frame End':
-				psys.r.frame_end = inputs[3].get();
-				psys.animtime = (psys.r.frame_end - psys.r.frame_start) / psys.frameRate;
-				psys.spawnRate = ((psys.r.frame_end - psys.r.frame_start) / psys.count) / psys.frameRate;
+				@:privateAccess psys.r.frame_end = inputs[3].get();
+				@:privateAccess psys.animtime = (@:privateAccess psys.r.frame_end - @:privateAccess psys.r.frame_start) / @:privateAccess psys.frameRate;
+				@:privateAccess psys.spawnRate = ((@:privateAccess psys.r.frame_end - @:privateAccess psys.r.frame_start) / @:privateAccess psys.count) / @:privateAccess psys.frameRate;
 			case 'Lifetime':
-				psys.lifetime = inputs[3].get() / psys.frameRate;
+				@:privateAccess psys.lifetime = inputs[3].get() / @:privateAccess psys.frameRate;
 			case 'Lifetime Random':
-				psys.r.lifetime_random = inputs[3].get();
+				@:privateAccess psys.r.lifetime_random = inputs[3].get();
 			case 'Emit From':
 				var emit_from: Int = inputs[3].get();
 				if (emit_from == 0 || emit_from == 1 || emit_from == 2) {
-					psys.r.emit_from = emit_from;
-					psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(psys.data.raw.instance_object), iron.object.MeshObject), mo);
+					@:privateAccess psys.r.emit_from = emit_from;
+					@:privateAccess psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(@:privateAccess psys.data.raw.instance_object), iron.object.MeshObject), mo);
 				}
 			case 'Auto Start':
-				psys.r.auto_start = inputs[3].get(); 
+				@:privateAccess psys.r.auto_start = inputs[3].get(); 
 			case 'Is Unique':
-				psys.r.is_unique = inputs[3].get();
+				@:privateAccess psys.r.is_unique = inputs[3].get();
 			case 'Loop':
-				psys.r.loop = inputs[3].get();
+				@:privateAccess psys.r.loop = inputs[3].get();
 			case 'Velocity':
 				var vel: iron.math.Vec3 = inputs[3].get();
-				psys.alignx = vel.x;
-				psys.aligny = vel.y;
-				psys.alignz = vel.z;
+				@:privateAccess psys.alignx = vel.x;
+				@:privateAccess psys.aligny = vel.y;
+				@:privateAccess psys.alignz = vel.z;
 			case 'Velocity Random':
-				psys.r.factor_random = inputs[3].get();
+				@:privateAccess psys.r.factor_random = inputs[3].get();
 			case 'Weight Gravity':
-				psys.r.weight_gravity = inputs[3].get();
+				@:privateAccess psys.r.weight_gravity = inputs[3].get();
 				if (iron.Scene.active.raw.gravity != null) {
-					psys.gx = iron.Scene.active.raw.gravity[0] * psys.r.weight_gravity;
-					psys.gy = iron.Scene.active.raw.gravity[1] * psys.r.weight_gravity;
-					psys.gz = iron.Scene.active.raw.gravity[2] * psys.r.weight_gravity;
+					@:privateAccess psys.gx = iron.Scene.active.raw.gravity[0] * @:privateAccess psys.r.weight_gravity;
+					@:privateAccess psys.gy = iron.Scene.active.raw.gravity[1] * @:privateAccess psys.r.weight_gravity;
+					@:privateAccess psys.gz = iron.Scene.active.raw.gravity[2] * @:privateAccess psys.r.weight_gravity;
 				}
 				else {
-					psys.gx = 0;
-					psys.gy = 0;
-					psys.gz = -9.81 * psys.r.weight_gravity;
+					@:privateAccess psys.gx = 0;
+					@:privateAccess psys.gy = 0;
+					@:privateAccess psys.gz = -9.81 * @:privateAccess psys.r.weight_gravity;
 				}
 			case 'Speed':
 				psys.speed = inputs[3].get();
