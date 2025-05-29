@@ -44,10 +44,12 @@ void main() {
 		float max_distort = PPComp13.x;
 		int num_iter = int(PPComp13.y);
 		int CAType = int(PPComp13.z);
+		int on = int(PPComp13.w);
 	#else
 		float max_distort = compoChromaticStrength;
 		int num_iter = compoChromaticSamples;
 		int CAType = compoChromaticType;
+		int on = 1;
 	#endif
 
 	// Spectral
@@ -66,7 +68,7 @@ void main() {
 			sumcol += w * texture(tex, barrelDistortion(uv, 0.6 * max_distort * t));
 		}
 
-		if (PPComp13.w == 1) fragColor = sumcol / sumw; else fragColor = texture(tex, texCoord);
+		if (on == 1) fragColor = sumcol / sumw; else fragColor = texture(tex, texCoord);
 	}
 
 	// Simple
@@ -75,7 +77,7 @@ void main() {
 		col.x = texture(tex, texCoord + ((vec2(0.0, 1.0) * max_distort) / vec2(1000.0))).x;
 		col.y = texture(tex, texCoord + ((vec2(-0.85, -0.5) * max_distort) / vec2(1000.0))).y;
 		col.z = texture(tex, texCoord + ((vec2(0.85, -0.5) * max_distort) / vec2(1000.0))).z;
-		if (PPComp13.w == 1) fragColor = vec4(col.x, col.y, col.z, fragColor.w); 
+		if (on == 1) fragColor = vec4(col.x, col.y, col.z, fragColor.w); 
 		else fragColor = texture(tex, texCoord);
 	}
 }
