@@ -144,7 +144,7 @@ class ParticleSystem {
 		}
 
 		// Animate
-		time += Time.delta * Time.scale * speed;
+		time += Time.delta * speed;
 		lap = Std.int(time / animtime);
 		lapTime = time - lap * animtime;
 		count = Std.int(lapTime / spawnRate);
