@@ -54,8 +54,13 @@ class Postprocess {
 		0,					//9: Tonemapping Method
 		2.0,				//10: Distort
 		2.0,				//11: Film Grain
-		0.25,				//12: Sharpen
+		0.25,				//12: Sharpen Strength
 		0.7					//13: Vignette
+	];
+
+	public static var sharpen_uniforms = [
+		[0.0, 0.0, 0.0],	//0: Sharpen Color
+		[2.5]				//1: Sharpen Size
 	];
 
 	public static var tonemapper_uniforms = [
@@ -104,6 +109,28 @@ class Postprocess {
 		2.0,				//0: Strength
 		32					//1: Samples
 	];
+
+	public static var exposure = [
+		1 					//0: Exposure
+	];
+
+	public static var auto_exposure = [
+		1, 					//0: Auto Exposure Strength
+		1 					//1: Auto Exposure Speed
+	];
+
+	public static var volumetric_light_uniforms = [
+		[1.0, 1.0, 1.0], 	//0: Volumetric Light Air Color
+		[1.0], 				//1: Volumetric Light Air Turbidity
+		[20.0]				//2: Volumetric Light Steps
+	];
+
+	public static var volumetric_fog_uniforms = [
+		[0.5, 0.6, 0.7], 	//0: Volumetric Fog Color
+		[0.25], 			//1: Volumetric Fog Amount A
+		[50.0]				//2: Volumetric Fog Amount B
+	];
+
 
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 		var v:Vec4 = null;
@@ -284,6 +311,11 @@ class Postprocess {
 			v.x = lenstexture_uniforms[2]; //Lum min
 			v.y = lenstexture_uniforms[3]; //Lum max
 			v.z = lenstexture_uniforms[4]; //Expo
+		case "_PPComp8":
+			v = iron.object.Uniforms.helpVec;
+			v.x = exposure[0];	   //Exposure
+			v.y = auto_exposure[0]; //Auto Exposure Strength
+			v.z = auto_exposure[1]; //Auto Exposure Speed
 		case "_PPComp9":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[0]; //Step
@@ -297,8 +329,8 @@ class Postprocess {
 		case "_PPComp11":
 			v = iron.object.Uniforms.helpVec;
 			v.x = bloom_uniforms[2]; // Bloom Strength
-			v.y = 0; // Unused
-			v.z = 0; // Unused
+			v.y = volumetric_light_uniforms[2][0]; //Volumetric Light Steps
+			v.z = volumetric_fog_uniforms[2][0]; //Volumetric Fog Amount B
 		case "_PPComp12":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssao_uniforms[0]; //SSAO Strength
@@ -338,6 +370,24 @@ class Postprocess {
 			v.y = letterbox_uniforms[0][1];
 			v.z = letterbox_uniforms[0][2];
 			v.w = letterbox_uniforms[1][0]; //Size
+		case "_PPComp16":
+			v = iron.object.Uniforms.helpVec;
+			v.x = sharpen_uniforms[0][0]; //Color
+			v.y = sharpen_uniforms[0][1];
+			v.z = sharpen_uniforms[0][2];
+			v.w = sharpen_uniforms[1][0]; //Size
+		case "_PPComp17":
+			v = iron.object.Uniforms.helpVec;
+			v.x = volumetric_light_uniforms[0][0]; //Air Color
+			v.y = volumetric_light_uniforms[0][1];
+			v.z = volumetric_light_uniforms[0][2];
+			v.w = volumetric_light_uniforms[1][0]; //Air Turbidity
+		case "_PPComp18":
+			v = iron.object.Uniforms.helpVec;
+			v.x = volumetric_fog_uniforms[0][0]; //Color
+			v.y = volumetric_fog_uniforms[0][1];
+			v.z = volumetric_fog_uniforms[0][2];
+			v.w = volumetric_fog_uniforms[1][0]; //Amount A
 		}
 
 		return v;

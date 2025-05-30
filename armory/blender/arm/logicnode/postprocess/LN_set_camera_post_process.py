@@ -37,6 +37,8 @@ class CameraSetNode(ArmLogicTreeNode):
             self.add_input('ArmFloatSocket', 'Sharpen', default_value=0.25)#12
         if self.property0 == 'Vignette':    
             self.add_input('ArmFloatSocket', 'Vignette', default_value=0.7)#13
+        if self.property0 == 'Exposure':    
+            self.add_input('ArmFloatSocket', 'Exposure', default_value=1)#14
 
 
     property0: HaxeEnumProperty(
@@ -54,7 +56,8 @@ class CameraSetNode(ArmLogicTreeNode):
              ('Distort', 'Distort', 'Distort'),
              ('Film Grain', 'Film Grain', 'Film Grain'),
              ('Sharpen', 'Sharpen', 'Sharpen'),
-             ('Vignette', 'Vignette', 'Vignette')],
+             ('Vignette', 'Vignette', 'Vignette'),
+             ('Exposure', 'Exposure', 'Exposure')],
     name='', default='F-stop', update=remove_extra_inputs)
 
 
