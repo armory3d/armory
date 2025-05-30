@@ -20,8 +20,8 @@ class Time {
 	static var lastTime = 0.0;
 	public static var delta = 0.0;
 
-	static var lastRealTime = 0.0;
-	public static var realDelta = 0.0;
+	static var lastRenderTime = 0.0;
+	public static var renderDelta = 0.0;
 
 	public static inline function time(): Float {
 		return kha.Scheduler.time();
@@ -42,7 +42,7 @@ class Time {
 	}
 
 	public static function render() {
-		realDelta = (realTime() - lastRealTime) * scale;
-		lastRealTime = realTime();
+		renderDelta = (realTime() - lastRealTime) * scale;
+		lastRenderTime = realTime();
 	}
 }
