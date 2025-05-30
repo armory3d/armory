@@ -40,7 +40,7 @@ class CameraSetNode extends LogicNode {
 			case 'Vignette':
 				armory.renderpath.Postprocess.camera_uniforms[13] = inputs[1].get();//Vignette
 			case 'Exposure':
-				armory.renderpath.Postprocess.exposure[0] = inputs[1].get();//Exposure
+				armory.renderpath.Postprocess.exposure_uniforms[0] = inputs[1].get();//Exposure
 			default: 
 				null;
 			}

@@ -7,8 +7,8 @@ class AutoExposureSetNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-        armory.renderpath.Postprocess.auto_exposure[0] = inputs[1].get();
-        armory.renderpath.Postprocess.auto_exposure[1] = inputs[2].get();
+        armory.renderpath.Postprocess.auto_exposure_uniforms[0] = inputs[1].get();
+        armory.renderpath.Postprocess.auto_exposure_uniforms[1] = inputs[2].get();
 
 		runOutput(0);
 	}

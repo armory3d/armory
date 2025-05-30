@@ -110,11 +110,11 @@ class Postprocess {
 		32					//1: Samples
 	];
 
-	public static var exposure = [
+	public static var exposure_uniforms = [
 		1 					//0: Exposure
 	];
 
-	public static var auto_exposure = [
+	public static var auto_exposure_uniforms = [
 		1, 					//0: Auto Exposure Strength
 		1 					//1: Auto Exposure Speed
 	];
@@ -313,9 +313,9 @@ class Postprocess {
 			v.z = lenstexture_uniforms[4]; //Expo
 		case "_PPComp8":
 			v = iron.object.Uniforms.helpVec;
-			v.x = exposure[0];	   //Exposure
-			v.y = auto_exposure[0]; //Auto Exposure Strength
-			v.z = auto_exposure[1]; //Auto Exposure Speed
+			v.x = exposure_uniforms[0];	   //Exposure
+			v.y = auto_exposure_uniforms[0]; //Auto Exposure Strength
+			v.z = auto_exposure_uniforms[1]; //Auto Exposure Speed
 		case "_PPComp9":
 			v = iron.object.Uniforms.helpVec;
 			v.x = ssr_uniforms[0]; //Step

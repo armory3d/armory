@@ -8,8 +8,8 @@ class AutoExposureGetNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		return switch (from) {
-			case 0: armory.renderpath.Postprocess.auto_exposure[0];
-			case 1: armory.renderpath.Postprocess.auto_exposure[1];
+			case 0: armory.renderpath.Postprocess.auto_exposure_uniforms[0];
+			case 1: armory.renderpath.Postprocess.auto_exposure_uniforms[1];
 			default: 0.0;
 		}
 	}
