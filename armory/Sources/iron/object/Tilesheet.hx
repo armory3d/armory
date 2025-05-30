@@ -80,7 +80,7 @@ class Tilesheet {
 	function update() {
 		if (!ready || paused || action.start >= action.end) return;
 
-		time += Time.realDelta;
+		time += Time.renderDelta;
 
 		var frameTime = 1 / raw.framerate;
 		var framesToAdvance = 0;

@@ -8,7 +8,7 @@ class GetFPSNode extends LogicNode {
 
     override function get(from: Int): Dynamic {
         if (from == 0) {
-            var fps = Math.round(1 / iron.system.Time.realDelta);
+            var fps = Math.round(1 / iron.system.Time.renderDelta);
             if ((fps == Math.POSITIVE_INFINITY) || (fps == Math.NEGATIVE_INFINITY) || (Math.isNaN(fps))) {
                 return 0;
             }
