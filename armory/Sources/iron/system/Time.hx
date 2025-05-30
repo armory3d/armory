@@ -42,7 +42,7 @@ class Time {
 	}
 
 	public static function render() {
-		renderDelta = (realTime() - lastRealTime) * scale;
+		renderDelta = (realTime() - lastRenderTime) * scale;
 		lastRenderTime = realTime();
 	}
 }
