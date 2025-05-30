@@ -46,11 +46,11 @@ uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba16f) image3D voxelsB;
 uniform layout(rgba16f) image3D voxelsOut;
-uniform layout(r16f) image3D SDF;
+uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r16f) image3D SDF;
+uniform layout(r8) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r16f) image3D voxelsB;
