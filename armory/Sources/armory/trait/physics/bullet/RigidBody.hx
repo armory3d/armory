@@ -8,7 +8,6 @@ import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.system.Time;
-import kha.math.Quaternion;
 
 /**
    RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
@@ -83,8 +82,8 @@ class RigidBody extends iron.Trait {
 	var time: Float = 0.0;
 	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
 	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
-	var currentRot: kha.math.Quaternion = new kha.math.Quaternion();
-	var prevRot: kha.math.Quaternion = new kha.math.Quaternion();
+	var currentRot: bullet.Bt.Quaternion = new bullet.Bt.Quaternion(0, 0, 0, 1);
+	var prevRot: bullet.Bt.Quaternion = new bullet.Bt.Quaternion(0, 0, 0, 1);
 
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
 						params: RigidBodyParams = null, flags: RigidBodyFlags = null) {
@@ -95,7 +94,7 @@ class RigidBody extends iron.Trait {
 			vec1 = new bullet.Bt.Vector3(0, 0, 0);
 			vec2 = new bullet.Bt.Vector3(0, 0, 0);
 			vec3 = new bullet.Bt.Vector3(0, 0, 0);
-			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 0);
+			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 1);
 			trans1 = new bullet.Bt.Transform();
 			trans2 = new bullet.Bt.Transform();
 		}
@@ -258,10 +257,7 @@ class RigidBody extends iron.Trait {
 		trans1.setRotation(quat1);
 
 		currentPos.setValue(vec1.x(), vec1.y(), vec1.z());
-		currentRot.set(0, quat.x);
-		currentRot.set(1, quat.y);
-		currentRot.set(2, quat.z);
-		currentRot.set(3, quat.w);
+		currentRot.setValue(quat.x, quat.y, quat.z, quat.w);
 
 		var centerOfMassOffset = trans2;
 		centerOfMassOffset.setIdentity();
@@ -352,13 +348,13 @@ class RigidBody extends iron.Trait {
 			var ty: Float = prevPos.y() * (1.0 - t) + currentPos.y() * t;
 			var tz: Float = prevPos.z() * (1.0 - t) + currentPos.z() * t;
 
-			var tRot: Quaternion = nlerp(prevRot, currentRot, t);
+			var tRot: bullet.Bt.Quaternion = nlerp(prevRot, currentRot, t);
 
 			transform.loc.set(tx, ty, tz, 1.0);
-			transform.rot.set(tRot.get(0), tRot.get(1), tRot.get(2), tRot.get(3));
+			transform.rot.set(tRot.x(), tRot.y(), tRot.z(), tRot.w());
 		} else {
 			transform.loc.set(currentPos.x(), currentPos.y(), currentPos.z(), 1.0);
-			transform.rot.set(currentRot.get(0), currentRot.get(1), currentRot.get(2), currentRot.get(3));
+			transform.rot.set(currentRot.x(), currentRot.y(), currentRot.z(), currentRot.w());
 		}
 
 		if (object.parent != null) {
@@ -371,17 +367,17 @@ class RigidBody extends iron.Trait {
 		transform.buildMatrix();
 	}
 
-	function nlerp(q1: Quaternion, q2: Quaternion, t: Float): Quaternion {
-		var dot = q1.get(0) * q2.get(0) + q1.get(1) * q2.get(1) + q1.get(2) * q2.get(2) + q1.get(3) * q2.get(3);
-		var _q2 = dot < 0 ? new Quaternion(-q2.get(0), -q2.get(1), -q2.get(2), -q2.get(3)) : q2;
+	function nlerp(q1: bullet.Bt.Quaternion, q2: bullet.Bt.Quaternion, t: Float): bullet.Bt.Quaternion {
+		var dot = q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z() + q1.w() * q2.w();
+		var _q2 = dot < 0 ? new bullet.Bt.Quaternion(-q2.x(), -q2.y(), -q2.z(), -q2.w()) : q2;
 
-		var x = q1.get(0) * (1.0 - t) + _q2.get(0) * t;
-		var y = q1.get(1) * (1.0 - t) + _q2.get(1) * t;
-		var z = q1.get(2) * (1.0 - t) + _q2.get(2) * t;
-		var w = q1.get(3) * (1.0 - t) + _q2.get(3) * t;
+		var x = q1.x() * (1.0 - t) + _q2.x() * t;
+		var y = q1.y() * (1.0 - t) + _q2.y() * t;
+		var z = q1.z() * (1.0 - t) + _q2.z() * t;
+		var w = q1.w() * (1.0 - t) + _q2.w() * t;
 
 		var len = Math.sqrt(x * x + y * y + z * z + w * w);
-		return new Quaternion(x / len, y / len, z / len, w / len);
+		return new bullet.Bt.Quaternion(x / len, y / len, z / len, w / len);
 	}
 
 	function physicsUpdate() {
@@ -392,10 +388,7 @@ class RigidBody extends iron.Trait {
 		} else {
 			if (interpolate) {
 				prevPos.setValue(currentPos.x(), currentPos.y(), currentPos.z());
-				prevRot.set(0, currentRot.get(0));
-				prevRot.set(1, currentRot.get(1));
-				prevRot.set(2, currentRot.get(2));
-				prevRot.set(3, currentRot.get(3));
+				prevRot.setValue(currentRot.x(), currentRot.y(), currentRot.z(), currentRot.w());
 			}
 
 			var trans = body.getWorldTransform();
@@ -403,17 +396,14 @@ class RigidBody extends iron.Trait {
 			var q = trans.getRotation();
 
 			currentPos.setValue(p.x(), p.y(), p.z());
-			currentRot.set(0, q.x());
-			currentRot.set(1, q.y());
-			currentRot.set(2, q.z());
-			currentRot.set(3, q.w());
-		}
+			currentRot.setValue(q.x(), q.y(), q.z(), q.w());
 
-		#if hl
-		p.delete();
-		q.delete();
-		trans.delete();
-		#end
+			#if hl
+			p.delete();
+			q.delete();
+			trans.delete();
+			#end
+		}
 
 		if (onContact != null) {
 			var rbs = physics.getContacts(this);
