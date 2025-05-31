@@ -30,11 +30,11 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "std/constants.glsl"
 
 #ifdef _VoxelGI
-uniform layout(rgba16f) image3D voxelsB;
-uniform layout(rgba16f) image3D voxelsOut;
+uniform layout(rgba8) image3D voxelsB;
+uniform layout(rgba8) image3D voxelsOut;
 #else
-uniform layout(r16f) image3D voxelsB;
-uniform layout(r16f) image3D voxelsOut;
+uniform layout(r8) image3D voxelsB;
+uniform layout(r8) image3D voxelsOut;
 #endif
 
 uniform int clipmapLevel;
