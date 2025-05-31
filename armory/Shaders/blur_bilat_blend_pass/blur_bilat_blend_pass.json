@@ -19,6 +19,11 @@
 				{
 					"name": "screenSize",
 					"link": "_screenSize"
+				},
+				{
+					"name": "PPComp17",
+					"link": "_PPComp17",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

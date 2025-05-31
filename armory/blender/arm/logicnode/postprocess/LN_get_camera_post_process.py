@@ -21,6 +21,7 @@ class CameraGetNode(ArmLogicTreeNode):
         self.add_output('ArmFloatSocket', 'Film Grain')#11
         self.add_output('ArmFloatSocket', 'Sharpen')#12
         self.add_output('ArmFloatSocket', 'Vignette')#13
+        self.add_output('ArmFloatSocket', 'Exposure')#14
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 3):

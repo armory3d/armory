@@ -62,8 +62,11 @@ uniform vec3 PPComp5;
 uniform vec3 PPComp6;
 uniform vec3 PPComp7;
 uniform vec3 PPComp8;
+uniform vec3 PPComp11;
 uniform vec3 PPComp14;
 uniform vec4 PPComp15;
+uniform vec4 PPComp16;
+uniform vec4 PPComp18;
 #endif
 
 // #ifdef _CPos
@@ -106,6 +109,16 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 #ifdef _CFog
+	#ifdef _CPostprocess
+		vec3 FogColor = vec3(PPComp18.x, PPComp18.y, PPComp18.z);
+		float FogAmountA = PPComp18.w;
+		float FogAmountB = PPComp11.z;
+	#else
+		vec3 FogColor = compoFogColor;
+		float FogAmountA = compoFogAmountA;
+		float FogAmountB = compoFogAmountB;
+	#endif
+
 // const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
 // const float compoFogAmountA = 1.0; // b = 0.01
 // const float compoFogAmountB = 1.0; // c = 0.1
@@ -113,13 +126,13 @@ out vec4 fragColor;
 		 // float distance, // camera to point distance
 		 // vec3 rayOri, // camera position
 		 // vec3 rayDir) { // camera to point vector
-	// float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
-	// return mix(rgb, compoFogColor, fogAmount);
+	// float fogAmount = FogAmountB * exp(-rayOri.y * FogAmountA) * (1.0 - exp(-distance * rayDir.y * FogAmountA)) / rayDir.y;
+	// return mix(rgb, FogColor, fogAmount);
 // }
 vec3 applyFog(vec3 rgb, float distance) {
 	// float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
-	float fogAmount = 1.0 - exp(-distance * (compoFogAmountA / 100));
-	return mix(rgb, compoFogColor, fogAmount);
+	float fogAmount = 1.0 - exp(-distance * (FogAmountA / 100));
+	return mix(rgb, FogColor, fogAmount);
 }
 #endif
 
@@ -350,15 +363,21 @@ void main() {
 #ifdef _CSharpen
 	#ifdef _CPostprocess
 		float strengthSharpen = PPComp14.y;
+		vec3 SharpenColor = vec3(PPComp16.x, PPComp16.y, PPComp16.z); 
+		float SharpenSize = PPComp16.w;
 	#else
 		float strengthSharpen = compoSharpenStrength;
+		vec3 SharpenColor = compoSharpenColor;
+		float SharpenSize = compoSharpenSize;
 	#endif
-	vec3 col1 = textureLod(tex, texCo + vec2(-texStep.x, -texStep.y) * 1.5, 0.0).rgb;
-	vec3 col2 = textureLod(tex, texCo + vec2(texStep.x, -texStep.y) * 1.5, 0.0).rgb;
-	vec3 col3 = textureLod(tex, texCo + vec2(-texStep.x, texStep.y) * 1.5, 0.0).rgb;
-	vec3 col4 = textureLod(tex, texCo + vec2(texStep.x, texStep.y) * 1.5, 0.0).rgb;
+	vec3 col1 = textureLod(tex, texCo + vec2(-texStep.x, -texStep.y) * SharpenSize, 0.0).rgb;
+	vec3 col2 = textureLod(tex, texCo + vec2(texStep.x, -texStep.y) * SharpenSize, 0.0).rgb;
+	vec3 col3 = textureLod(tex, texCo + vec2(-texStep.x, texStep.y) * SharpenSize, 0.0).rgb;
+	vec3 col4 = textureLod(tex, texCo + vec2(texStep.x, texStep.y) * SharpenSize, 0.0).rgb;
 	vec3 colavg = (col1 + col2 + col3 + col4) * 0.25;
-	fragColor.rgb += (fragColor.rgb - colavg) * strengthSharpen;
+
+	float edgeMagnitude = length(fragColor.rgb - colavg); 
+	fragColor.rgb = mix(fragColor.rgb, SharpenColor, min(edgeMagnitude * strengthSharpen * 2.0, 1.0));
 #endif
 
 #ifdef _CFog
@@ -407,7 +426,11 @@ void main() {
 #endif
 
 #ifdef _CExposure
-	fragColor.rgb += fragColor.rgb * compoExposureStrength;
+#ifdef _CPostprocess
+	fragColor.rgb+=fragColor.rgb*PPComp8.x;
+#else
+	fragColor.rgb+= fragColor.rgb*compoExposureStrength;
+#endif
 #endif
 
 #ifdef _CPostprocess
@@ -415,8 +438,14 @@ void main() {
 #endif
 
 #ifdef _AutoExposure
+	#ifdef _CPostprocess
+		float AEStrength = PPComp8.y;
+	#else
+		float AEStrength = autoExposureStrength;
+	#endif
+
 	float expo = 2.0 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
-	fragColor.rgb *= pow(expo, autoExposureStrength * 2.0);
+	fragColor.rgb *= pow(expo, AEStrength * 2.0);
 #endif
 
 // Clamp color to get rid of INF values that don't work for the tone mapping below

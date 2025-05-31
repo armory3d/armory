@@ -11,6 +11,11 @@
 #include "std/light_common.glsl"
 #endif
 
+#ifdef _CPostprocess
+uniform vec3 PPComp11;
+uniform vec4 PPComp17;
+#endif
+
 uniform sampler2D gbufferD;
 uniform sampler2D snoise;
 
@@ -87,7 +92,15 @@ out float fragColor;
 const float tScat = 0.08;
 const float tAbs = 0.0;
 const float tExt = tScat + tAbs;
-const float stepLen = 1.0 / volumSteps;
+
+#ifdef _CPostprocess
+	float stepLen = 1.0 / int(PPComp11.y);
+	float AirTurbidity = PPComp17.w;
+#else
+	const float stepLen = 1.0 / volumSteps;
+	float AirTurbidity = volumAirTurbidity;
+#endif
+
 const float lighting = 0.4;
 
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
@@ -162,5 +175,5 @@ void main() {
 		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
 	}
 
-	fragColor = scatteredLightAmount * volumAirTurbidity;
+	fragColor = scatteredLightAmount * AirTurbidity;
 }
