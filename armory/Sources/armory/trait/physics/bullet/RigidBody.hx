@@ -85,7 +85,6 @@ class RigidBody extends iron.Trait {
 	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
 	var currentRot: kha.math.Quaternion = new kha.math.Quaternion();
 	var prevRot: kha.math.Quaternion = new kha.math.Quaternion();
-	var tRot: kha.math.Quaternion = new kha.math.Quaternion();
 
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
 						params: RigidBodyParams = null, flags: RigidBodyFlags = null) {
