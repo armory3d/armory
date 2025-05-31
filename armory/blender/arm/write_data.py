@@ -481,7 +481,10 @@ class Main {
             public static inline var voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;""")
 
         if rpdat.rp_bloom:
-            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
+            
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
+
+            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if follow_blender else rpdat.arm_bloom_radius};")
 
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
@@ -649,7 +652,8 @@ const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 """)
 
         if rpdat.rp_bloom:
-            follow_blender = rpdat.arm_bloom_follow_blender
+
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
             eevee_settings = bpy.context.scene.eevee
 
             threshold = eevee_settings.bloom_threshold if follow_blender else rpdat.arm_bloom_threshold
