@@ -726,8 +726,8 @@ const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[
         if rpdat.arm_sharpen:
             f.write(
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
-   const float compoSharpenSize = """ + str(round(rpdat.arm_sharpen_size * 100) / 100) + """;
-   const vec3 compoSharpenColor = vec3(""" + str(round(rpdat.arm_sharpen_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[2] * 100) / 100) + """);
+const float compoSharpenSize = """ + str(round(rpdat.arm_sharpen_size * 100) / 100) + """;
+const vec3 compoSharpenColor = vec3(""" + str(round(rpdat.arm_sharpen_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[2] * 100) / 100) + """);
 """)
 
         if bpy.data.scenes[0].view_settings.exposure != 0.0:
