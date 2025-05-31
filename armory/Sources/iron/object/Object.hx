@@ -172,6 +172,10 @@ class Object {
 			for (f in t._init) App.removeInit(f);
 			t._init = null;
 		}
+		if (t._fixedUpdate != null) {
+			for (f in t._fixedUpdate) App.removeFixedUpdate(f);
+			t._fixedUpdate = null;
+		}
 		if (t._update != null) {
 			for (f in t._update) App.removeUpdate(f);
 			t._update = null;
