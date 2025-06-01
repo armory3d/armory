@@ -37,7 +37,7 @@ class App {
 	function new(done: Void->Void) {
 		done();
 		kha.System.notifyOnFrames(render);
-		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.delta);
+		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.step);
 	}
 
 	public static function reset() {
@@ -54,11 +54,20 @@ class App {
 		if (Scene.active == null || !Scene.active.ready) return;
 		if (pauseUpdates) return;
 
+		iron.system.Time.update();
+
 		#if arm_debug
 		startTime = kha.Scheduler.realTime();
 		#end
 
 		Scene.active.updateFrame();
+
+		time += iron.system.Time.delta;
+
+		while (time >= iron.system.Time.fixedStep) {
+			for (f in traitFixedUpdates) f();
+			time -= iron.system.Time.fixedStep;
+		}
 
 		var i = 0;
 		var l = traitUpdates.length;
@@ -79,13 +88,6 @@ class App {
 		while (i < l) {
 			traitLateUpdates[i]();
 			l <= traitLateUpdates.length ? i++ : l = traitLateUpdates.length;
-		}
-
-		time += iron.system.Time.realTime() - last;
-		last = iron.system.Time.realTime();
-		while (time >= iron.system.Time.fixedStep) {
-			for (f in traitFixedUpdates) f();
-			time -= iron.system.Time.fixedStep;
 		}
 
 		if (onEndFrames != null) for (f in onEndFrames) f();
@@ -117,7 +119,7 @@ class App {
 		var frame = frames[0];
 		framebuffer = frame;
 
-		iron.system.Time.update();
+		iron.system.Time.render();
 
 		if (Scene.active == null || !Scene.active.ready) {
 			render2D(frame);
