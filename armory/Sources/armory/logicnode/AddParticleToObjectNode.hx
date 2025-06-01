@@ -15,24 +15,24 @@ class AddParticleToObjectNode extends LogicNode {
 	override function run(from: Int) {
 		#if arm_particles
 
-		if (property0 == 'Scene Active'){		
+		if (property0 == 'Scene Active'){
 			var objFrom: Object = inputs[1].get();
 			var slot: Int = inputs[2].get();
 			var objTo: Object = inputs[3].get();
-	
+
 			if (objFrom == null || objTo == null) return;
-	
+
 			var mobjFrom = cast(objFrom, iron.object.MeshObject);
-	
-			var psys = mobjFrom.particleSystems != null ? mobjFrom.particleSystems[slot] : 
+
+			var psys = mobjFrom.particleSystems != null ? mobjFrom.particleSystems[slot] :
 				mobjFrom.particleOwner != null && mobjFrom.particleOwner.particleSystems != null ? mobjFrom.particleOwner.particleSystems[slot] : null;
 
 			if (psys == null) return;
-	
+
 			var mobjTo = cast(objTo, iron.object.MeshObject);
-	
-			mobjTo.setupParticleSystem(iron.Scene.active.raw.name, {name: 'ArmPS', seed: 0, particle: psys.r.name});
-			
+
+			mobjTo.setupParticleSystem(iron.Scene.active.raw.name, {name: 'ArmPS', seed: 0, particle: @:privateAccess psys.r.name});
+
 			mobjTo.render_emitter = inputs[4].get();
 
 			iron.Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
@@ -44,11 +44,11 @@ class AddParticleToObjectNode extends LogicNode {
 					c.particleIndex = mobjTo.particleChildren.length - 1;
 				}
 			});
-	
+
 			var oslot: Int = mobjTo.particleSystems.length-1;
 			var opsys = mobjTo.particleSystems[oslot];
-			opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
-		
+			@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
+
 		} else {
 			var sceneName: String = inputs[1].get();
 			var objectName: String = inputs[2].get();
@@ -68,7 +68,7 @@ class AddParticleToObjectNode extends LogicNode {
 			for (obj in rawScene.objects) {
 				if (obj.name == objectName) {
 					mobjTo.setupParticleSystem(sceneName, obj.particle_refs[slot]);
-					mobjTo.render_emitter = inputs[5].get();					
+					mobjTo.render_emitter = inputs[5].get();
 
 					iron.Scene.active.spawnObject(rawScene.particle_datas[slot].instance_object, null, function(o: Object) {
 						if (o != null) {
@@ -82,7 +82,7 @@ class AddParticleToObjectNode extends LogicNode {
 
 					var oslot: Int = mobjTo.particleSystems.length-1;
 					var opsys = mobjTo.particleSystems[oslot];
-					opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
+					@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
 
 					break;
 				}
