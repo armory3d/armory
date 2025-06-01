@@ -3,6 +3,10 @@
 
 #include "compiled.inc"
 
+#ifdef _CPostprocess
+uniform vec4 PPComp17;
+#endif
+
 uniform sampler2D tex;
 uniform vec2 dir;
 uniform vec2 screenSize;
@@ -45,6 +49,12 @@ void main() {
 		res += factor * col;
 	}
 
+	#ifdef _CPostprocess
+		vec3 AirColor = vec3(PPComp17.x, PPComp17.y, PPComp17.z);
+	#else
+		vec3 AirColor = volumAirColor;
+	#endif
+
 	res /= sumfactor;
-	fragColor = vec4(volumAirColor * res, 1.0);
+	fragColor = vec4(AirColor * res, 1.0);
 }
