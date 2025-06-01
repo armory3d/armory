@@ -441,6 +441,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
+        'rp_chromatic_aberration': rpdat.rp_chromatic_aberration != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
         'rp_gi': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
@@ -481,7 +482,10 @@ class Main {
             public static inline var voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;""")
 
         if rpdat.rp_bloom:
-            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
+            
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
+
+            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if follow_blender else rpdat.arm_bloom_radius};")
 
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
@@ -649,7 +653,8 @@ const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 """)
 
         if rpdat.rp_bloom:
-            follow_blender = rpdat.arm_bloom_follow_blender
+
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
             eevee_settings = bpy.context.scene.eevee
 
             threshold = eevee_settings.bloom_threshold if follow_blender else rpdat.arm_bloom_threshold
@@ -726,11 +731,13 @@ const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[
         if rpdat.arm_sharpen:
             f.write(
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
+const float compoSharpenSize = """ + str(round(rpdat.arm_sharpen_size * 100) / 100) + """;
+const vec3 compoSharpenColor = vec3(""" + str(round(rpdat.arm_sharpen_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[2] * 100) / 100) + """);
 """)
 
-        if bpy.data.scenes[0].view_settings.exposure != 0.0:
+        if arm.utils.get_active_scene().view_settings.exposure != 0.0:
             f.write(
-"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].view_settings.exposure * 100) / 100) + """;
+"""const float compoExposureStrength = """ + str(round(arm.utils.get_active_scene().view_settings.exposure * 100) / 100) + """;
 """)
 
         if rpdat.arm_fog:

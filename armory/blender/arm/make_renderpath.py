@@ -40,11 +40,11 @@ def add_world_defs():
     if rpdat.rp_hdr == False:
         wrd.world_defs += '_LDR'
 
-    if wrd.arm_light_ies_texture != '':
+    if arm.utils.get_active_scene().world.arm_light_ies_texture == True:
         wrd.world_defs += '_LightIES'
         assets.add_embedded_data('iestexture.png')
 
-    if wrd.arm_light_clouds_texture != '':
+    if arm.utils.get_active_scene().world.arm_light_clouds_texture == True:
         wrd.world_defs += '_LightClouds'
         assets.add_embedded_data('cloudstexture.png')
 
@@ -229,7 +229,7 @@ def build():
                 wrd.compo_defs += '_CGrain'
             if rpdat.arm_sharpen:
                 wrd.compo_defs += '_CSharpen'
-            if bpy.data.scenes[0].view_settings.exposure != 0.0:
+            if arm.utils.get_active_scene().view_settings.exposure != 0.0:
                 wrd.compo_defs += '_CExposure'
             if rpdat.arm_fog:
                 wrd.compo_defs += '_CFog'

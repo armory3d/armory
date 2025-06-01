@@ -197,6 +197,10 @@ def init_properties():
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_physics_fixed_step = FloatProperty(
+        name="Fixed Step", default=1/60, min=0, max=1,
+        description="Physics steps for fixed update"
+    )
     bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
         name="Collider Wireframes", default=False,
         description="Draw wireframes of the physics collider meshes and suspensions of raycast vehicle simulations"
@@ -357,6 +361,7 @@ def init_properties():
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
+    bpy.types.Object.arm_rb_interpolate = BoolProperty(name="Interpolation", description="Smooths out the object's transform on physics steps", default=False)
     bpy.types.Object.arm_rb_collision_filter_mask = bpy.props.BoolVectorProperty(
             name="Collision Collections Filter Mask",
             description="Collision collections rigid body interacts with",
@@ -505,8 +510,10 @@ def init_properties():
     bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
     bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
     bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    bpy.types.World.arm_light_ies_texture = StringProperty(name="IES Texture", default="")
-    bpy.types.World.arm_light_clouds_texture = StringProperty(name="Clouds Texture", default="")
+
+    # For world
+    bpy.types.World.arm_light_ies_texture = BoolProperty(name="IES Texture (iestexture.png)", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_light_clouds_texture = BoolProperty(name="Clouds Texture (cloudstexture.png)", default=False, update=assets.invalidate_compiler_cache)
 
     bpy.types.World.arm_rpcache_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)

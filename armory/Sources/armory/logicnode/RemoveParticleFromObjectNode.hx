@@ -26,18 +26,18 @@ class RemoveParticleFromObjectNode extends LogicNode {
 			mo.particleChildren = null;
 			mo.particleOwner = null;
 			mo.render_emitter = true;
-		} 
+		}
 		else {
-			
+
 			var slot: Int = -1;
 			if (property0 == 'Name'){
 				var name: String = inputs[2].get();
 				for (i => psys in mo.particleSystems){
-					if (psys.r.name == name){ slot = i; break; }
+					if (@:privateAccess psys.r.name == name){ slot = i; break; }
 				}
-			} 
+			}
 			else slot = inputs[2].get();
-				
+
 			if (mo.particleSystems.length > slot){
 				for (i in slot+1...mo.particleSystems.length){
 					var mi = cast(mo.particleChildren[i], iron.object.MeshObject);

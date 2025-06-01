@@ -81,7 +81,7 @@ class PhysicsWorld extends Trait {
 	public static var physTime = 0.0;
 	#end
 
-	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10, debugDrawMode: DebugDrawMode = NoDebug) {
+	public function new(timeScale = 1.0, maxSteps = 10, solverIterations = 10, fixedStep = 1 / 60, debugDrawMode: DebugDrawMode = NoDebug) {
 		super();
 
 		if (nullvec) {
@@ -100,6 +100,7 @@ class PhysicsWorld extends Trait {
 		this.timeScale = timeScale;
 		this.maxSteps = maxSteps;
 		this.solverIterations = solverIterations;
+		Time.initFixedStep(fixedStep);
 
 		// First scene
 		if (active == null) {
@@ -278,7 +279,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	function fixedUpdate() {
-		var t = Time.delta * timeScale;
+		var t = Time.fixedStep * timeScale * Time.scale;
 		if (t == 0.0) return; // Simulation paused
 
 		#if arm_debug
@@ -286,9 +287,6 @@ class PhysicsWorld extends Trait {
 		#end
 
 		if (preUpdates != null) for (f in preUpdates) f();
-
-		//Bullet physics fixed timescale
-		var fixedTime = 1.0 / 60;
 
 		//This condition must be satisfied to not loose time
 		var currMaxSteps = t < (Time.fixedStep * maxSteps) ? maxSteps : 1;

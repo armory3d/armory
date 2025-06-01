@@ -241,6 +241,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_angular_friction')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
+            layout.prop(obj, 'arm_rb_interpolate')
 
         if obj.soft_body is not None:
             layout.prop(obj, 'arm_soft_body_margin')
@@ -275,8 +276,6 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_clip_end')
             layout.prop(obj.data, 'arm_fov')
             layout.prop(obj.data, 'arm_shadows_bias')
-            layout.prop(wrd, 'arm_light_ies_texture')
-            layout.prop(wrd, 'arm_light_clouds_texture')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'arm_play_on_start')
             layout.prop(obj.data, 'arm_loop')
@@ -299,6 +298,9 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         world = context.world
         if world is None:
             return
+
+        layout.prop(world, 'arm_light_ies_texture')
+        layout.prop(world, 'arm_light_clouds_texture')
 
         layout.prop(world, 'arm_use_clouds')
         col = layout.column(align=True)
@@ -1946,9 +1948,17 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         layout.separator()
 
         col = layout.column()
+        col.prop(rpdat, 'arm_sharpen')
+        col = col.column(align=True)
+        col.enabled = rpdat.arm_sharpen
+        col.prop(rpdat, 'arm_sharpen_color')
+        col.prop(rpdat, 'arm_sharpen_size')
+        col.prop(rpdat, 'arm_sharpen_strength')
+        layout.separator()
+
+        col = layout.column()
         draw_conditional_prop(col, 'Distort', rpdat, 'arm_distort', 'arm_distort_strength')
         draw_conditional_prop(col, 'Film Grain', rpdat, 'arm_grain', 'arm_grain_strength')
-        draw_conditional_prop(col, 'Sharpen', rpdat, 'arm_sharpen', 'arm_sharpen_strength')
         draw_conditional_prop(col, 'Vignette', rpdat, 'arm_vignette', 'arm_vignette_strength')
         layout.separator()
 
@@ -2686,8 +2696,33 @@ class ArmoryUpdateListInstalledVSButton(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ARM_PT_PhysicsProps(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "SCENE_PT_rigid_body_world"
 
-class ARM_PT_BulletDebugDrawingPanel(bpy.types.Panel):
+    @classmethod
+    def poll(cls, context):
+        return context.scene.rigidbody_world is not None
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+
+        if wrd.arm_physics_engine != 'Bullet' and wrd.arm_physics_engine != 'Oimo':
+            row = layout.row()
+            row.alert = True
+            row.label(text="Physics debug drawing is only supported for the Bullet and Oimo physics engines")
+
+        col = layout.column(align=False)
+        col.prop(wrd, "arm_physics_fixed_step")
+
+class ARM_PT_PhysicsDebugDrawingPanel(bpy.types.Panel):
     bl_label = "Armory Debug Drawing"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -2853,7 +2888,8 @@ __REG_CLASSES = (
     ArmoryUpdateListAndroidEmulatorButton,
     ArmoryUpdateListAndroidEmulatorRunButton,
     ArmoryUpdateListInstalledVSButton,
-    ARM_PT_BulletDebugDrawingPanel,
+    ARM_PT_PhysicsProps,
+    ARM_PT_PhysicsDebugDrawingPanel,
     scene.TLM_PT_Settings,
     scene.TLM_PT_Denoise,
     scene.TLM_PT_Filtering,

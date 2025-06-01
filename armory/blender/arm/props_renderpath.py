@@ -602,6 +602,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_sharpen: BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
+    arm_sharpen_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    arm_sharpen_size: FloatProperty(name="Size", default=2.5, update=assets.invalidate_shader_cache)
     arm_sharpen_strength: FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
     arm_fog: BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
     arm_fog_color: FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)

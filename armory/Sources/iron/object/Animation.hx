@@ -130,6 +130,13 @@ class Animation {
 				if (frameIndex == anim.marker_frames[i]) {
 					var ar = markerEvents.get(anim.marker_names[i]);
 					if (ar != null) for (f in ar) f();
+				} else {
+					for (j in 0...(frameIndex - lastFrameIndex)) {
+						if (lastFrameIndex + j + 1 == anim.marker_frames[i]) {
+							var ar = markerEvents.get(anim.marker_names[i]);
+							if (ar != null) for (f in ar) f();
+						}
+					}
 				}
 			}
 			lastFrameIndex = frameIndex;
