@@ -229,7 +229,7 @@ def build():
                 wrd.compo_defs += '_CGrain'
             if rpdat.arm_sharpen:
                 wrd.compo_defs += '_CSharpen'
-            if bpy.data.scenes[0].view_settings.exposure != 0.0:
+            if arm.utils.get_active_scene().view_settings.exposure != 0.0:
                 wrd.compo_defs += '_CExposure'
             if rpdat.arm_fog:
                 wrd.compo_defs += '_CFog'
