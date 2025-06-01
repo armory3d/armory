@@ -102,8 +102,9 @@ class Postprocess {
 
 	public static var chromatic_aberration_uniforms = [
 		2.0,				//0: Strength
-		32					//1: Samples
-	];
+		32,					//1: Samples
+		0,					//2: Type				
+		1];					//3: On/Off
 
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 		var v:Vec4 = null;
@@ -304,11 +305,6 @@ class Postprocess {
 			v.x = ssao_uniforms[0]; //SSAO Strength
 			v.y = ssao_uniforms[1]; //SSAO Radius
 			v.z = ssao_uniforms[2]; //SSAO Max Steps
-		case "_PPComp13":
-			v = iron.object.Uniforms.helpVec;
-			v.x = chromatic_aberration_uniforms[0]; //CA Strength
-			v.y = chromatic_aberration_uniforms[1]; //CA Samples
-			v.z = 0;
 		case "_PPComp14":
 			v = iron.object.Uniforms.helpVec;
 			v.x = camera_uniforms[10]; //Distort
@@ -332,6 +328,12 @@ class Postprocess {
 				v.z = 2 * bloom_uniforms[1];
 				v.w = 0.25 / (bloom_uniforms[1] + 6.2e-5);
 			}
+		case "_PPComp13":
+			v = iron.object.Uniforms.helpVec;
+			v.x = chromatic_aberration_uniforms[0]; //CA Strength
+			v.y = chromatic_aberration_uniforms[1]; //CA Samples
+			v.z = chromatic_aberration_uniforms[2]; //CA Type
+			v.w = chromatic_aberration_uniforms[3]; //On/Off
 		case "_PPComp15":
 			v = iron.object.Uniforms.helpVec;
 			v.x = letterbox_uniforms[0][0]; //Color

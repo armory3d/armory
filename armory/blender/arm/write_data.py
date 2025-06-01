@@ -441,6 +441,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
+        'rp_chromatic_aberration': rpdat.rp_chromatic_aberration != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
         'rp_gi': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
