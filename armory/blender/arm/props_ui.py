@@ -275,8 +275,6 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_clip_end')
             layout.prop(obj.data, 'arm_fov')
             layout.prop(obj.data, 'arm_shadows_bias')
-            layout.prop(wrd, 'arm_light_ies_texture')
-            layout.prop(wrd, 'arm_light_clouds_texture')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'arm_play_on_start')
             layout.prop(obj.data, 'arm_loop')
@@ -299,6 +297,9 @@ class ARM_PT_WorldPropsPanel(bpy.types.Panel):
         world = context.world
         if world is None:
             return
+
+        layout.prop(world, 'arm_light_ies_texture')
+        layout.prop(world, 'arm_light_clouds_texture')
 
         layout.prop(world, 'arm_use_clouds')
         col = layout.column(align=True)

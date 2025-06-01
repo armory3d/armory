@@ -505,8 +505,10 @@ def init_properties():
     bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
     bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
     bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    bpy.types.World.arm_light_ies_texture = StringProperty(name="IES Texture", default="")
-    bpy.types.World.arm_light_clouds_texture = StringProperty(name="Clouds Texture", default="")
+
+    # For world
+    bpy.types.World.arm_light_ies_texture = BoolProperty(name="IES Texture (iestexture.png)", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_light_clouds_texture = BoolProperty(name="Clouds Texture (cloudstexture.png)", default=False, update=assets.invalidate_compiler_cache)
 
     bpy.types.World.arm_rpcache_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)
