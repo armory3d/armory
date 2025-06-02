@@ -21,10 +21,10 @@ class ParticleSystem {
 	var ready: Bool;
 	var frameRate = 24;
 	var lifetime = 0.0;
+	var looptime = 0.0;
 	var animtime = 0.0;
 	var time = 0.0;
 	var spawnRate = 0.0;
-	var looptime = 0.0;
 	var seed = 0;
 
 	var r: TParticleData;
@@ -120,6 +120,8 @@ class ParticleSystem {
 
 	public function update(object: MeshObject, owner: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
+		if (iron.App.pauseUpdates) return;
+
 		var prevLap = lap;
 
 		// Copy owner world transform but discard scale

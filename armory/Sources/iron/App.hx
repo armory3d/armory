@@ -52,9 +52,9 @@ class App {
 
 	static function update() {
 		if (Scene.active == null || !Scene.active.ready) return;
-		if (pauseUpdates) return;
-
 		iron.system.Time.update();
+
+		if (pauseUpdates) return;
 
 		#if arm_debug
 		startTime = kha.Scheduler.realTime();
