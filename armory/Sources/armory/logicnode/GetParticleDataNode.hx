@@ -18,7 +18,7 @@ class GetParticleDataNode extends LogicNode {
 
 		var mo = cast(object, iron.object.MeshObject);
 
-		var psys = mo.particleSystems != null ? mo.particleSystems[slot] :
+		var psys = mo.particleSystems != null ? mo.particleSystems[slot] : 
 			mo.particleOwner != null && mo.particleOwner.particleSystems != null ? mo.particleOwner.particleSystems[slot] : null;
 
 		if (psys == null) return null;
@@ -39,24 +39,30 @@ class GetParticleDataNode extends LogicNode {
 			case 6:
 				@:privateAccess psys.r.emit_from;
 			case 7:
-				new iron.math.Vec3(@:privateAccess psys.alignx*2, @:privateAccess psys.aligny*2, @:privateAccess psys.alignz*2);
+				@:privateAccess psys.r.auto_start;
 			case 8:
-				@:privateAccess psys.r.factor_random;
+				@:privateAccess psys.r.is_unique;
 			case 9:
-				new iron.math.Vec3(@:privateAccess psys.gx, @:privateAccess psys.gy, @:privateAccess psys.gz);
+				@:privateAccess psys.r.loop;
 			case 10:
-				@:privateAccess psys.r.weight_gravity;
+				new iron.math.Vec3(@:privateAccess psys.alignx, @:privateAccess psys.aligny, @:privateAccess psys.alignz);
 			case 11:
-				psys.speed;
+				@:privateAccess psys.r.factor_random;
 			case 12:
-				@:privateAccess psys.time;
+				new iron.math.Vec3(@:privateAccess psys.gx, @:privateAccess psys.gy, @:privateAccess psys.gz);
 			case 13:
-				@:privateAccess psys.lap;
+				@:privateAccess psys.r.weight_gravity;
 			case 14:
-				@:privateAccess psys.lapTime;
+				psys.speed;
 			case 15:
+				@:privateAccess psys.time;
+			case 16:
+				@:privateAccess psys.lap;
+			case 17:
+				@:privateAccess psys.lapTime;
+			case 18:
 				@:privateAccess psys.count;
-			default:
+			default: 
 				null;
 		}
 	#end

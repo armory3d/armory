@@ -19,8 +19,8 @@ class SetParticleDataNode extends LogicNode {
 
 		var mo = cast(object, iron.object.MeshObject);
 
-		var psys = mo.particleSystems != null ? mo.particleSystems[slot] :
-			mo.particleOwner != null && mo.particleOwner.particleSystems != null ? mo.particleOwner.particleSystems[slot] : null; if (psys == null) return;
+		var psys = mo.particleSystems != null ? mo.particleSystems[slot] : 
+			mo.particleOwner != null && mo.particleOwner.particleSystems != null ? mo.particleOwner.particleSystems[slot] : null;		if (psys == null) return;
 
 		switch (property0) {
 			case 'Particle Size':
@@ -41,13 +41,19 @@ class SetParticleDataNode extends LogicNode {
 				var emit_from: Int = inputs[3].get();
 				if (emit_from == 0 || emit_from == 1 || emit_from == 2) {
 					@:privateAccess psys.r.emit_from = emit_from;
-					@:privateAccess psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(psys.data.raw.instance_object), iron.object.MeshObject), mo);
+					@:privateAccess psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(@:privateAccess psys.data.raw.instance_object), iron.object.MeshObject), mo);
 				}
+			case 'Auto Start':
+				@:privateAccess psys.r.auto_start = inputs[3].get(); 
+			case 'Is Unique':
+				@:privateAccess psys.r.is_unique = inputs[3].get();
+			case 'Loop':
+				@:privateAccess psys.r.loop = inputs[3].get();
 			case 'Velocity':
 				var vel: iron.math.Vec3 = inputs[3].get();
-				@:privateAccess psys.alignx = vel.x / 2;
-				@:privateAccess psys.aligny = vel.y / 2;
-				@:privateAccess psys.alignz = vel.z / 2;
+				@:privateAccess psys.alignx = vel.x;
+				@:privateAccess psys.aligny = vel.y;
+				@:privateAccess psys.alignz = vel.z;
 			case 'Velocity Random':
 				@:privateAccess psys.r.factor_random = inputs[3].get();
 			case 'Weight Gravity':
@@ -64,7 +70,7 @@ class SetParticleDataNode extends LogicNode {
 				}
 			case 'Speed':
 				psys.speed = inputs[3].get();
-			default:
+			default: 
 				null;
 		}
 
