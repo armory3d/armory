@@ -17,9 +17,10 @@ class Config {
 	}
 
 	public static function save() {
-		var path = iron.data.Data.dataPath != '' ? iron.data.Data.dataPath + "config.arm" : Krom.getFilesLocation() + "/config.arm";
+		var path = iron.data.Data.dataPath + "config.arm";
 		var bytes = haxe.io.Bytes.ofString(haxe.Json.stringify(raw));
 		#if kha_krom
+		if (iron.data.Data.dataPath == '') path = Krom.getFilesLocation() + "/config.arm";
 		Krom.fileSaveBytes(path, bytes.getData());
 		#elseif kha_kore
 		sys.io.File.saveBytes(path, bytes);
