@@ -46,7 +46,7 @@ class DebugDrawHelper {
 		iron.App.notifyOnRender2D(onRender);
 
 		if (debugDrawMode & DrawRayCast != 0) {
-			iron.App.notifyOnUpdate(function () {
+			iron.App.notifyOnFixedUpdate(function () {
 				rayCasts.resize(0);
 			});
 		}
