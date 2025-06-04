@@ -4,7 +4,7 @@ class CameraSetNode(ArmLogicTreeNode):
     """Set the post-processing effects of a camera."""
     bl_idname = 'LNCameraSetNode'
     bl_label = 'Set Camera Post Process'
-    arm_version = 5
+    arm_version = 6
 
     def remove_extra_inputs(self, context):
         while len(self.inputs) > 1:
@@ -28,7 +28,7 @@ class CameraSetNode(ArmLogicTreeNode):
         if self.property0 == 'DoF F-Stop':    
             self.add_input('ArmFloatSocket', 'DoF F-Stop', default_value=128.0)#8
         if self.property0 == 'Tonemapping':   
-            self.add_input('ArmBoolSocket', 'Tonemapping', default_value=False)#9
+            self.add_input('ArmIntSocket', 'Tonemapping', default_value=0)#9
         if self.property0 == 'Distort':    
             self.add_input('ArmFloatSocket', 'Distort', default_value=2.0)#10
         if self.property0 == 'Film Grain':    
@@ -68,6 +68,13 @@ class CameraSetNode(ArmLogicTreeNode):
         self.add_output('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
+        if self.property0 == 'Tonemapping':
+            layout.label(text="0: Filmic")
+            layout.label(text="1: Filmic2")
+            layout.label(text="2: Reinhard")
+            layout.label(text="3: Uncharted2")
+            layout.label(text="5: None")
+
         layout.prop(self, 'property0')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
