@@ -49,7 +49,7 @@ class Postprocess {
 		0.01,				//4: Fisheye Distortion
 		1,					//5: DoF AutoFocus §§ If true, it ignores the DoF Distance setting
 		10.0,				//6: DoF Distance
-		160.0,				//7: DoF Focal Length mm
+		50.0,				//7: DoF Focal Length mm
 		128,				//8: DoF F-Stop
 		0,					//9: Tonemapping Method
 		2.0,				//10: Distort

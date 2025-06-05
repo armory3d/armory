@@ -769,16 +769,17 @@ const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 
         focus_distance = 0.0
         fstop = 0.0
-        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
-            focus_distance = bpy.data.cameras[0].dof.focus_distance
-            fstop = bpy.data.cameras[0].dof.aperture_fstop
+        if len(bpy.data.cameras) > 0 and arm.utils.get_active_scene().camera.data.dof.use_dof:
+            focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
+            fstop = arm.utils.get_active_scene().camera.data.dof.aperture_fstop
+            lens = arm.utils.get_active_scene().camera.data.lens
 
         if focus_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(focus_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
-const float compoDOFLength = 160.0;
-""") # str(round(bpy.data.cameras[0].lens * 100) / 100)
+const float compoDOFLength = """ + str(round(lens * 100) / 100) +""";
+""") #160.0;
 
         if rpdat.rp_voxels != 'Off':
             f.write("""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """);
