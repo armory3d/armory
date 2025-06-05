@@ -16,6 +16,10 @@ class ChromaticAberrationSetNode(ArmLogicTreeNode):
 
         self.add_output('ArmNodeSocketAction', 'Out')
 
+    def draw_buttons(self, context, layout):
+        layout.label(text="Type 0: Simple")
+        layout.label(text="Type 1: Spectral")
+
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()

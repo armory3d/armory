@@ -505,9 +505,7 @@ fragColor.rgb = min(fragColor.rgb, 65504 * 0.5);
 				fragColor.rgb = mix(midLumColor, maxLumColor, luminance);
 			}
 
-		} else {
-			fragColor.rgb = vec3(0,1,0); //ERROR
-		}
+		} //else { fragColor.rgb = vec3(0,1,0); //ERROR}
 	#endif
 
 #else
