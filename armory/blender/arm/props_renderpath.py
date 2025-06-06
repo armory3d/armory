@@ -444,7 +444,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Depth Texture', description='Whether materials can read from a depth texture', default='Auto', update=update_depth_texture_state)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
-    rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
+    rp_pp: BoolProperty(name="Realtime Post Process", description="Realtime Post Process", default=False, update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)

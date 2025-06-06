@@ -144,7 +144,7 @@ float ConvertEV100ToExposure(float EV100) {
     return 1/0.8 * exp2(-EV100);
 }
 float ComputeEV(float avgLuminance) {
-    const float sqAperture = PPComp1[0].x * PPComp1.x;
+    const float sqAperture = PPComp1.x * PPComp1.x;
     const float shutterTime = 1.0 / PPComp1.y;
     const float ISO = PPComp1.z;
     const float EC = PPComp2.x;
