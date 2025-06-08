@@ -132,6 +132,10 @@ class Postprocess {
 		[50.0]				//2: Volumetric Fog Amount B
 	];
 
+	public static var resolution_uniforms = [
+		720,				//0: Size
+		0					//1: Filter
+	];
 
 	public static function vec3Link(object: Object, mat: MaterialData, link: String): iron.math.Vec4 {
 		var v:Vec4 = null;

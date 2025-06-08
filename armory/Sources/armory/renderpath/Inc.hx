@@ -699,7 +699,11 @@ class Inc {
 
 	public static inline function getDisplayp(): Null<Int> {
 		#if rp_resolution_filter // Custom resolution set
+		#if rp_pp
+		return armory.renderpath.Postprocess.resolution_uniforms[0];
+		#else
 		return Main.resolutionSize;
+		#end
 		#else
 		return null;
 		#end
