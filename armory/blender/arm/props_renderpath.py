@@ -449,9 +449,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
-        items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
-               ('Linear', 'Linear', 'Linear'),
+        items=[('Linear', 'Linear', 'Linear'),
                ('Point', 'Closest', 'Point'),
+               ('Cubic', 'Cubic', 'Cubic'),
+               ('Anisotropic', 'Smart', 'Anisotropic'),
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model: EnumProperty(
