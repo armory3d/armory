@@ -1,6 +1,6 @@
 from arm.logicnode.arm_nodes import *
 
-class SetWorldNode(ArmLogicTreeNode):
+class GetWorldNode(ArmLogicTreeNode):
     """Gets the World of the active scene."""
     bl_idname = 'LNGetWorldNode'
     bl_label = 'Get World'
