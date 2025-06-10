@@ -7,7 +7,6 @@ class GetWorldNode extends LogicNode {
 	}
 
 	override function get(from: Int): Dynamic {
-		trace(iron.Scene.active.world);
 		return iron.Scene.active.raw.world_ref;
 	}
 }
