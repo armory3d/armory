@@ -24,6 +24,7 @@ class MeshObject extends Object {
 	public var render_emitter = true;
 	#end
 	public var cameraDistance: Float;
+	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
 	public var frustumCulling = true;
 	public var activeTilesheet: Tilesheet = null;
@@ -235,6 +236,8 @@ class MeshObject extends Object {
 		if (cullMesh(context, Scene.active.camera, RenderPath.active.light)) return;
 		var meshContext = raw != null ? context == "mesh" : false;
 
+		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
+
 		#if arm_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
 		if (particleSystems != null && meshContext) {
@@ -245,6 +248,8 @@ class MeshObject extends Object {
 					Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
 						if (o != null) {
 							var c: MeshObject = cast o;
+							c.cameraList = this.cameraList;
+							//trace(c);
 							particleChildren.push(c);
 							c.particleOwner = this;
 							c.particleIndex = particleChildren.length - 1;

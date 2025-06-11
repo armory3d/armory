@@ -819,6 +819,16 @@ class ArmoryExporter:
                     out_object['vertex_groups'].append(out_vertex_groups)
 
 
+            if len(bobject.arm_camera_list) > 0:
+                out_camera_list = []
+                for camera in bobject.arm_camera_list:
+                    if camera.arm_camera_object_ptr != None:
+                        out_camera_list.append(camera.arm_camera_object_ptr.name)
+
+                if len(out_camera_list) > 0:
+                    out_object['camera_list'] = out_camera_list
+
+
             if len(bobject.arm_propertylist) > 0:
                 out_object['properties'] = []
                 for proplist_item in bobject.arm_propertylist:
