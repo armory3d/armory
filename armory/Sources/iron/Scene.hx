@@ -799,7 +799,6 @@ class Scene {
 
 
 			if (o.camera_list != null){
-				trace(o.name, o.camera_list);
 				cast(object, MeshObject).cameraList = o.camera_list;
 			}
 

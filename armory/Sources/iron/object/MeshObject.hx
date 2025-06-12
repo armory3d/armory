@@ -249,7 +249,6 @@ class MeshObject extends Object {
 						if (o != null) {
 							var c: MeshObject = cast o;
 							c.cameraList = this.cameraList;
-							//trace(c);
 							particleChildren.push(c);
 							c.particleOwner = this;
 							c.particleIndex = particleChildren.length - 1;
