@@ -15,6 +15,7 @@ import arm.props_properties
 import arm.props_collision_filter_mask
 import arm.props
 import arm.props_ui
+import arm.props_camera_render_filter
 import arm.handlers
 import arm.utils
 import arm.keymap
@@ -42,6 +43,7 @@ if arm.is_reload(__name__):
     arm.props_collision_filter_mask = arm.reload_module(arm.props_collision_filter_mask)
     arm.props = arm.reload_module(arm.props)
     arm.props_ui = arm.reload_module(arm.props_ui)
+    arm.props_camera_render_filter = arm.reload_module(arm.props_camera_render_filter)
     arm.handlers = arm.reload_module(arm.handlers)
     arm.utils = arm.reload_module(arm.utils)
     arm.keymap = arm.reload_module(arm.keymap)
@@ -65,6 +67,7 @@ def register(local_sdk=False):
     arm.props_properties.register()
     arm.props.register()
     arm.props_ui.register()
+    arm.props_camera_render_filter.register()
     arm.nodes_logic.register()
     arm.nodes_material.register()
     arm.keymap.register()
@@ -96,3 +99,4 @@ def unregister():
     arm.props_renderpath.unregister()
     arm.props_properties.unregister()
     arm.props_collision_filter_mask.unregister()
+    arm.props_camera_render_filter.unregister()
