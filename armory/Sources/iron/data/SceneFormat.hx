@@ -441,6 +441,7 @@ typedef TObj = {
 	@:optional public var traits: Array<TTrait>;
 	@:optional public var properties: Array<TProperty>;
 	@:optional public var vertex_groups: Array<TVertex_groups>;
+	@:optional public var camera_list: Array<String>;
 	@:optional public var constraints: Array<TConstraint>;
 	@:optional public var dimensions: Float32Array; // Geometry objects
 	@:optional public var object_actions: Array<String>;
