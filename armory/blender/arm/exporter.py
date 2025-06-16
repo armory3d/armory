@@ -2277,15 +2277,15 @@ Make sure the mesh only has tris/quads.""")
 
             padd = False;
 
-            for obj in self.output['objects']:
-                if 'particle_refs' in obj:
-                    for pref in obj['particle_refs']:
-                        if pref['particle'] == particleRef[1]["structName"]:
-                            if bpy.data.objects[obj['name']].modifiers[pref['name']].show_render == True:
-                                padd = True;
+            for obj in bpy.data.objects:
+                for mod in obj.modifiers:
+                    if mod.type == 'PARTICLE_SYSTEM':
+                        if mod.particle_system.settings.name == particleRef[1]["structName"]:
+                            if mod.show_render == True:
+                                padd = True
 
             if not padd:
-                continue;
+                continue
 
             psettings = particleRef[0]
 
