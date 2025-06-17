@@ -710,9 +710,9 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec3 sunDir', '_sunDirection')
         frag.write('float svisibility = 0.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
-        frag.write('float sdotNL = dot(n, sunDir);')
-        frag.write('float sdotNH = dot(n, sh);')
-        frag.write('float sdotVH = dot(vVec, sh);')
+        frag.write('float sdotNL = max(dot(n, sunDir), 0);')
+        frag.write('float sdotNH = max(dot(n, sh), 0);')
+        frag.write('float sdotVH = max(dot(vVec, sh), 0);')
         if is_shadows:
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
