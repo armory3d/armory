@@ -523,7 +523,7 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
-        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
+        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export or not bpy.data.objects[out_object['name']].modifiers[psys.name].show_render:
             return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
@@ -903,7 +903,8 @@ class ArmoryExporter:
                     out_object['particle_refs'] = []
                     out_object['render_emitter'] = bobject.show_instancer_for_render
                     for i in range(num_psys):
-                        self.export_particle_system_ref(bobject.particle_systems[i], out_object)
+                        if bobject.modifiers[bobject.particle_systems[i].name].show_render:
+                            self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
@@ -2271,7 +2272,21 @@ Make sure the mesh only has tris/quads.""")
     def export_particle_systems(self):
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
+
         for particleRef in self.particle_system_array.items():
+
+            padd = False;
+
+            for obj in self.output['objects']:
+                if 'particle_refs' in obj:
+                    for pref in obj['particle_refs']:
+                        if pref['particle'] == particleRef[1]["structName"]:
+                            if bpy.data.objects[obj['name']].modifiers[pref['name']].show_render == True:
+                                padd = True;
+
+            if not padd:
+                continue;
+
             psettings = particleRef[0]
 
             if psettings is None:
