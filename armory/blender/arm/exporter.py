@@ -523,8 +523,14 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
-        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export or not bpy.data.objects[out_object['name']].modifiers[psys.name].show_render:
-            return
+        if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
+           return
+
+        for mod in bpy.data.objects[out_object['name']].modifiers:
+            if mod.type == 'PARTICLE_SYSTEM':
+                if mod.particle_system.name == psys.name:
+                    if not mod.show_render:
+                        return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
         pref = {
@@ -903,8 +909,12 @@ class ArmoryExporter:
                     out_object['particle_refs'] = []
                     out_object['render_emitter'] = bobject.show_instancer_for_render
                     for i in range(num_psys):
-                        if bobject.modifiers[bobject.particle_systems[i].name].show_render:
-                            self.export_particle_system_ref(bobject.particle_systems[i], out_object)
+                        for obj in bpy.data.objects:
+                            for mod in obj.modifiers:
+                                if mod.type == 'PARTICLE_SYSTEM':
+                                    if mod.particle_system.name == bobject.particle_systems[i].name:
+                                        if mod.show_render:
+                                            self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
@@ -2281,7 +2291,7 @@ Make sure the mesh only has tris/quads.""")
                 for mod in obj.modifiers:
                     if mod.type == 'PARTICLE_SYSTEM':
                         if mod.particle_system.settings.name == particleRef[1]["structName"]:
-                            if mod.show_render == True:
+                            if mod.show_render:
                                 padd = True
 
             if not padd:
