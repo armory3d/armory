@@ -317,6 +317,20 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
+        # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
+        if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
+            current_scene = bpy.context.window.scene
+            
+            bpy.context.window.scene = bobject.users_scene[0]
+            bpy.context.view_layer.update()
+
+            bobject.select_set(True)
+            bpy.context.view_layer.update()
+            bobject.select_set(False)
+
+            bpy.context.window.scene = current_scene
+            bpy.context.view_layer.update()
+
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
 
@@ -770,7 +784,7 @@ class ArmoryExporter:
             else:
                 if not bobject.visible_camera:
                     out_object['visible_mesh'] = False
-                if not bobject.visible_shadow:
+                if not bobject.arm_visible_shadow:
                     out_object['visible_shadow'] = False
 
             if not bobject.arm_spawn:
@@ -3007,14 +3021,15 @@ Make sure the mesh only has tris/quads.""")
             if rbw is not None and rbw.enabled:
                 out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
 
-                if phys_pkg == 'bullet':
-                    debug_draw_mode = 1 if wrd.arm_bullet_dbg_draw_wireframe else 0
-                    debug_draw_mode |= 2 if wrd.arm_bullet_dbg_draw_aabb else 0
-                    debug_draw_mode |= 8 if wrd.arm_bullet_dbg_draw_contact_points else 0
-                    debug_draw_mode |= 2048 if wrd.arm_bullet_dbg_draw_constraints else 0
-                    debug_draw_mode |= 4096 if wrd.arm_bullet_dbg_draw_constraint_limits else 0
-                    debug_draw_mode |= 16384 if wrd.arm_bullet_dbg_draw_normals else 0
-                    debug_draw_mode |= 32768 if wrd.arm_bullet_dbg_draw_axis_gizmo else 0
+                if phys_pkg == 'bullet' or phys_pkg == 'oimo':
+                    debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0
+                    debug_draw_mode |= 2 if wrd.arm_physics_dbg_draw_aabb else 0
+                    debug_draw_mode |= 8 if wrd.arm_physics_dbg_draw_contact_points else 0
+                    debug_draw_mode |= 2048 if wrd.arm_physics_dbg_draw_constraints else 0
+                    debug_draw_mode |= 4096 if wrd.arm_physics_dbg_draw_constraint_limits else 0
+                    debug_draw_mode |= 16384 if wrd.arm_physics_dbg_draw_normals else 0
+                    debug_draw_mode |= 32768 if wrd.arm_physics_dbg_draw_axis_gizmo else 0
+                    debug_draw_mode |= 65536 if wrd.arm_physics_dbg_draw_raycast else 0
                     out_trait['parameters'].append(str(debug_draw_mode))
 
             self.output['traits'].append(out_trait)

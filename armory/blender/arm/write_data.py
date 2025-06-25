@@ -647,7 +647,6 @@ const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + "
 const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
-
         if rpdat.rp_bloom:
             follow_blender = rpdat.arm_bloom_follow_blender
             eevee_settings = bpy.context.scene.eevee
@@ -780,8 +779,6 @@ const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + "
 const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
-const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':

@@ -21,7 +21,7 @@ class RenderPathDeferred {
 			"gbuffer1",
 			#if rp_gbuffer2 "gbuffer2", #end
 			#if rp_gbuffer_emission "gbuffer_emission", #end
-			#if (rp_ssrefr || arm_voxelgi_shadows) "gbuffer_refraction" #end
+			#if (rp_ssrefr || arm_voxelgi_refract) "gbuffer_refraction" #end
 		]);
 	}
 
@@ -57,15 +57,11 @@ class RenderPathDeferred {
 			Inc.initGI("voxels");
 			Inc.initGI("voxelsOut");
 			Inc.initGI("voxelsOutB");
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
-			#if arm_voxelgi_shadows
-			Inc.initGI("voxels_shadows");
-			#end
 			#if (rp_voxels == "Voxel GI")
-			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
 			Inc.initGI("voxels_specular");
 			#else
@@ -228,6 +224,34 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_volumetriclight
+		{
+			var t = new RenderTargetRaw();
+			t.name = "volumetrica";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half // Do we keep this ?
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+
+			var t = new RenderTargetRaw();
+			t.name = "volumetricb";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+		}
+		#end
+
 		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
 			var t = new RenderTargetRaw();
@@ -342,16 +366,14 @@ class RenderPathDeferred {
 			path.createRenderTarget(t);	
 		}
 		#end
-
-		#if (rp_ssrefr || arm_voxelgi_shadows)
+		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
-			//t.depth_buffer = "main";
-			t.format = "RGBA64";
+			t.format = Inc.getHdrFormat();
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -361,16 +383,6 @@ class RenderPathDeferred {
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
-
-			// holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer1_refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
 
 			// holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
@@ -392,6 +404,17 @@ class RenderPathDeferred {
 			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
+
+			// holds background color
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
 		}
 		#end
 
@@ -474,17 +497,17 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_ssrefr || arm_voxelgi_refract)
+		{
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffffff00);
+		}
+		#end
+
 		#if rp_gbuffer2
 		{
 			path.setTarget("gbuffer2");
 			path.clearTarget(0xff000000);
-		}
-		#end
-
-		#if rp_ssrefr
-		{
-			path.setTarget("gbuffer_refraction");
-			path.clearTarget(0xffffff00);
 		}
 		#end
 
@@ -595,9 +618,6 @@ class RenderPathDeferred {
 
 			if (iron.RenderPath.pre_clear == true)
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
@@ -609,9 +629,6 @@ class RenderPathDeferred {
 			}
 			else
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
@@ -621,14 +638,20 @@ class RenderPathDeferred {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
-			path.drawMeshes("voxel");
-			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
 			#end
+			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();
 
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
 			#end
 
@@ -640,13 +663,9 @@ class RenderPathDeferred {
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
 				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
-				#end
 			}
 		}
 		#end
-
 		// ---
 		// Deferred light
 		// ---
@@ -698,8 +717,8 @@ class RenderPathDeferred {
 			path.bindTarget("voxels_specular", "voxels_specular");
 			#end
 			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
+			path.bindTarget("voxelsOut", "voxels");
+			path.bindTarget("voxelsSDF", "voxelsSDF");
 			#end
 		}
 		#end
@@ -778,15 +797,9 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_translucency && !rp_ssrefr)
-		{
-			Inc.drawTranslucency("tex");
-		}
-		#end
-
 		#if rp_volumetriclight
 		{
-			path.setTarget("singlea");
+			path.setTarget("volumetrica");
 			path.bindTarget("_main", "gbufferD");
 			#if arm_shadowmap_atlas
 			Inc.bindShadowMapAtlas();
@@ -795,74 +808,13 @@ class RenderPathDeferred {
 			#end
 			path.drawShader("shader_datas/volumetric_light/volumetric_light");
 
-			path.setTarget("singleb");
-			path.bindTarget("singlea", "tex");
+			path.setTarget("volumetricb");
+			path.bindTarget("volumetrica", "tex");
 			path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 
 			path.setTarget("tex");
-			path.bindTarget("singleb", "tex");
+			path.bindTarget("volumetricb", "tex");
 			path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-		}
-		#end
-
-		#if rp_bloom
-		{
-			inline Inc.drawBloom("tex", bloomDownsampler, bloomUpsampler);
-		}
-		#end
-
-		#if rp_sss
-		{
-			#if (!kha_opengl)
-			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
-			#end
-
-			path.setTarget("buf");
-			path.bindTarget("tex", "tex");
-			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/sss_pass/sss_pass_x");
-
-			path.setTarget("tex");
-			path.bindTarget("buf", "tex");
-			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/sss_pass/sss_pass_y");
-
-			#if (!kha_opengl)
-			path.setDepthFrom("tex", "gbuffer0");
-			#end
-		}
-		#end
-
-		#if rp_ssrefr
-		{
-			if (armory.data.Config.raw.rp_ssrefr != false)
-			{
-				//save depth
-				path.setTarget("gbufferD1");
-				path.bindTarget("_main", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
-				path.setTarget("gbuffer0_refr", ["gbuffer1_refr", "gbuffer_refraction"]);
-
-				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
-				#end
-
-				path.drawMeshes("refraction");
-
-				path.setTarget("tex");
-				path.bindTarget("tex", "tex");
-				path.bindTarget("gbuffer1_refr", "tex1");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("gbuffer0_refr", "gbuffer0");
-				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			}
 		}
 		#end
 
@@ -906,6 +858,88 @@ class RenderPathDeferred {
 				#if (!kha_opengl)
 				path.setDepthFrom("tex", "gbuffer0");
 				#end
+			}
+		}
+		#end
+
+		#if rp_sss
+		{
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+			#end
+
+			path.setTarget("buf");
+			path.bindTarget("tex", "tex");
+			path.bindTarget("_main", "gbufferD");
+			path.bindTarget("gbuffer0", "gbuffer0");
+			path.drawShader("shader_datas/sss_pass/sss_pass_x");
+
+			path.setTarget("tex");
+			path.bindTarget("buf", "tex");
+			path.bindTarget("_main", "gbufferD");
+			path.bindTarget("gbuffer0", "gbuffer0");
+			path.drawShader("shader_datas/sss_pass/sss_pass_y");
+
+			#if (!kha_opengl)
+			path.setDepthFrom("tex", "gbuffer0");
+			#end
+		}
+		#end
+
+		#if (rp_translucency && !rp_ssrefr)
+		{
+			Inc.drawTranslucency("tex");
+		}
+		#end
+
+		#if rp_ssrefr
+		{
+			if (armory.data.Config.raw.rp_ssrefr != false)
+			{
+				//save depth
+				path.setTarget("gbufferD1");
+				path.bindTarget("_main", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
+				//save background color
+				path.setTarget("refr");
+				path.bindTarget("tex", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
+				path.setTarget("gbuffer0", ["tex", "gbuffer_refraction"]);
+
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
+
+				#if (rp_voxels != "Off")
+				path.bindTarget("voxelsOut", "voxels");
+				#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
+				path.bindTarget("voxelsSDF", "voxelsSDF");
+				#end
+				#end
+
+				#if rp_ssrs
+				path.bindTarget("_main", "gbufferD");
+				#end
+
+				path.drawMeshes("refraction");
+
+				path.setTarget("tex");
+				path.bindTarget("tex", "tex");
+				path.bindTarget("refr", "tex1");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbufferD1", "gbufferD1");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+
+				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			}
 		}
 		#end
@@ -971,6 +1005,12 @@ class RenderPathDeferred {
 			path.bindTarget("tex", "tex");
 			#end
 			path.drawShader("shader_datas/histogram_pass/histogram_pass");
+		}
+		#end
+
+		#if rp_bloom
+		{
+			inline Inc.drawBloom("tex", bloomDownsampler, bloomUpsampler);
 		}
 		#end
 
