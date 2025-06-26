@@ -526,13 +526,11 @@ class ArmoryExporter:
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
 
-        for obj in bpy.data.objects:
-            if obj.name == out_object['name']:
-                for mod in obj.modifiers:
-                    if mod.type == 'PARTICLE_SYSTEM':
-                        if mod.particle_system.name == psys.name:
-                            if not mod.show_render:
-                                return
+        for mod in bpy.data.objects[out_object['name']].modifiers:
+            if mod.type == 'PARTICLE_SYSTEM':
+                if mod.particle_system.name == psys.name:
+                    if not mod.show_render:
+                        return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
         pref = {
