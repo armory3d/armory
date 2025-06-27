@@ -646,7 +646,10 @@ class ArmoryExporter:
                 continue
 
             for slot in bobject.material_slots:
-                if slot.material is None or slot.material.library is not None:
+                if slot.material is None:
+                    continue
+                if slot.material.library is not None:
+                    slot.material.arm_particle_flag = True
                     continue
                 if slot.material.name.endswith('_armpart'):
                     continue
