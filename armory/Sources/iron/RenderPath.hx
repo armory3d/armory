@@ -518,7 +518,7 @@ class RenderPath {
 		return Reflect.field(kha.Shaders, handle + "_comp");
 	}
 
-	#if (kha_krom && arm_vr)
+	#if arm_vr
 	public function drawStereo(drawMeshes: Void->Void) {
 		var vr = kha.vr.VrInterface.instance;
 		var appw = iron.App.w();
