@@ -518,12 +518,44 @@ class RenderPath {
 		return Reflect.field(kha.Shaders, handle + "_comp");
 	}
 
-	#if (kha_krom && arm_vr)
-	public function drawStereo(drawMeshes: Int->Void) {
-		for (eye in 0...2) {
-			Krom.vrBeginRender(eye);
-			drawMeshes(eye);
-			Krom.vrEndRender(eye);
+	#if arm_vr
+	public function drawStereo(drawMeshes: Void->Void) {
+		var vr = kha.vr.VrInterface.instance;
+		var appw = iron.App.w();
+		var apph = iron.App.h();
+		var halfw = Std.int(appw / 2);
+		var g = currentG;
+
+		if (vr != null && vr.IsPresenting()) {
+			// Left eye
+			Scene.active.camera.V.setFrom(Scene.active.camera.leftV);
+			Scene.active.camera.P.self = vr.GetProjectionMatrix(0);
+			g.viewport(0, 0, halfw, apph);
+			drawMeshes();
+
+			// Right eye
+			begin(g, additionalTargets);
+			Scene.active.camera.V.setFrom(Scene.active.camera.rightV);
+			Scene.active.camera.P.self = vr.GetProjectionMatrix(1);
+			g.viewport(halfw, 0, halfw, apph);
+			drawMeshes();
+		}
+		else { // Simulate
+			Scene.active.camera.buildProjection(halfw / apph);
+
+			// Left eye
+			g.viewport(0, 0, halfw, apph);
+			drawMeshes();
+
+			// Right eye
+			begin(g, additionalTargets);
+			Scene.active.camera.transform.move(Scene.active.camera.right(), 0.032);
+			Scene.active.camera.buildMatrix();
+			g.viewport(halfw, 0, halfw, apph);
+			drawMeshes();
+
+			Scene.active.camera.transform.move(Scene.active.camera.right(), -0.032);
+			Scene.active.camera.buildMatrix();
 		}
 	}
 	#end
