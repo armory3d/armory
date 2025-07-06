@@ -581,7 +581,7 @@ def update_armory_world():
     if bpy.data.filepath != '' and (file_version < sdk_version or wrd.arm_commit != arm_commit):
         # This allows for seamless migration from earlier versions of Armory
         for rp in wrd.arm_rplist:  # TODO: deprecated
-            if rp.rp_gi != 'Off':
+            if hasattr(rp, 'rp_gi') and rp.rp_gi != 'Off':
                 rp.rp_gi = 'Off'
                 rp.rp_voxels = rp.rp_gi
 
