@@ -121,7 +121,6 @@ void main() {
 				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
 				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
 				envl /= count;
-				envl *= envmapStrength;
 				vec3 light = vec3(0.0);
 				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 255;
 				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;
