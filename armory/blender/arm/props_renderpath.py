@@ -490,9 +490,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
-        items=[('16', '16', '16'),
-               ('32', '32', '32'),
-               ('64', '64', '64'),
+        items=[('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
                ],
@@ -574,11 +572,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         update=assets.invalidate_shader_cache
     )
     arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssr_ray_step: FloatProperty(name="Step", default=0.03, update=assets.invalidate_shader_cache)
+    arm_ssr_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)

@@ -23,23 +23,23 @@ THE SOFTWARE.
 const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = radians(15.0);
+const float DIFFUSE_CONE_APERTURE_WIDE = radians(50.0);  // for z=0.7071 cones
+const float DIFFUSE_CONE_APERTURE_NARROW = radians(30.0); // for z≈0.935 cones
+const float REFERENCE_APERTURE = 0.872665; // 50 degrees in radians
 
-const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees in radians
 
-mat3 makeTangentBasis(const vec3 normal) {
-    // Create a tangent basis from normal vector
-    vec3 tangent;
-    vec3 bitangent;
-
-    // Compute tangent (Frisvad's method)
-    if (abs(normal.z) < 0.999) {
-        tangent = normalize(cross(vec3(0, 1, 0), normal));
+mat3 makeTangentBasis(vec3 n) {
+    vec3 t, b;
+    if (n.z < -0.9999999) {
+        t = vec3(0.0, -1.0, 0.0);
+        b = vec3(-1.0, 0.0, 0.0);
     } else {
-        tangent = normalize(cross(normal, vec3(1, 0, 0)));
+        float a = 1.0 / (1.0 + n.z);
+        float b_ = -n.x * n.y * a;
+        t = vec3(1.0 - n.x * n.x * a, b_, -n.x);
+        b = vec3(b_, 1.0 - n.y * n.y * a, -n.y);
     }
-    bitangent = cross(normal, tangent);
-
-    return mat3(tangent, bitangent, normal);
+    return mat3(t, b, n);
 }
 
 // 16 optimized cone directions for hemisphere sampling (Z-up, normalized)
