@@ -419,7 +419,7 @@ def fetch_script_props(filename: str):
 
         # Property type is annotated
         if p_type is not None:
-            if p_type.startswith("iron.object."):
+            if p_type.startswith("iron.object.") or p_type == "iron.data.SceneFormat.TSceneFormat":
                 p_type = p_type[12:]
             elif p_type.startswith("iron.math."):
                 p_type = p_type[10:]
@@ -497,7 +497,7 @@ def get_type_default_value(prop_type: str):
     if prop_type == "Float":
         return 0.0
     if prop_type == "String" or prop_type in (
-            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject", "TSceneFormat"):
         return ""
     if prop_type == "Bool":
         return False

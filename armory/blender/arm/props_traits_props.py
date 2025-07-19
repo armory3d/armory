@@ -15,7 +15,8 @@ PROP_TYPE_ICONS = {
     "CameraObject": "CAMERA_DATA",
     "LightObject": "LIGHT_DATA",
     "MeshObject": "MESH_DATA",
-    "SpeakerObject": "OUTLINER_DATA_SPEAKER"
+    "SpeakerObject": "OUTLINER_DATA_SPEAKER",
+    "TSceneFormat": "SCENE_DATA"
 }
 
 
@@ -59,7 +60,8 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             ("CameraObject", "Camera Object", "Camera Object Type"),
             ("LightObject", "Light Object", "Light Object Type"),
             ("MeshObject", "Mesh Object", "Mesh Object Type"),
-            ("SpeakerObject", "Speaker Object", "Speaker Object Type")),
+            ("SpeakerObject", "Speaker Object", "Speaker Object Type"),
+            ("TSceneFormat", "Scene", "Scene Type")),
         name="Type",
         description="The type of this property",
         default="String",
@@ -78,6 +80,7 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
         name="Value", type=bpy.types.Object, poll=filter_objects,
         override={"LIBRARY_OVERRIDABLE"}
     )
+    value_scene: PointerProperty(name="Value", type=bpy.types.Scene, override={"LIBRARY_OVERRIDABLE"})
 
     def set_value(self, val):
         # Would require way too much effort, so it's out of scope here.
@@ -126,6 +129,10 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
             if self.value_object is not None:
                 return self.value_object.name
             return ""
+        if self.type == "TSceneFormat":
+            if self.value_scene is not None:
+                return self.value_scene.name
+            return ""
 
         return self.value_string
 
@@ -144,6 +151,8 @@ class ARM_UL_PropList(bpy.types.UIList):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             if item.type.endswith("Object"):
                 sp.prop_search(item, "value_object", context.scene, "objects", text="", icon=custom_icon)
+            elif item.type.endswith("TSceneFormat"):
+                sp.prop_search(item, "value_scene", bpy.data, "scenes", text="", icon=custom_icon)
             else:
                 use_emboss = item.type in ("Bool", "String")
                 sp.prop(item, item_value_ref, text="", emboss=use_emboss)
