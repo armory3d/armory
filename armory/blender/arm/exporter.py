@@ -3032,6 +3032,8 @@ Make sure the mesh only has tris/quads.""")
 
                         if trait_prop.type.endswith("Object"):
                             value = arm.utils.asset_name(trait_prop.value_object)
+                        elif trait_prop.type == "TSceneFormat":
+                            value = arm.utils.asset_name(trait_prop.value_scene)
                         else:
                             value = trait_prop.get_value()
 
