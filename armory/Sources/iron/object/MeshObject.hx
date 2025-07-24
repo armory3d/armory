@@ -16,7 +16,7 @@ class MeshObject extends Object {
 	public var materials: Vector<MaterialData>;
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
-	#if arm_particles
+	#if arm_gpu_particles
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
 	public var particleChildren: Array<MeshObject> = null;
 	public var particleOwner: MeshObject = null; // Particle object
@@ -24,7 +24,6 @@ class MeshObject extends Object {
 	public var render_emitter = true;
 	#end
 	public var cameraDistance: Float;
-	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
 	public var frustumCulling = true;
 	public var activeTilesheet: Tilesheet = null;
@@ -72,7 +71,7 @@ class MeshObject extends Object {
 		#if arm_batch
 		Scene.active.meshBatch.removeMesh(this);
 		#end
-		#if arm_particles
+		#if arm_gpu_particles
 		if (particleChildren != null) {
 			for (c in particleChildren) c.remove();
 			particleChildren = null;
@@ -110,7 +109,7 @@ class MeshObject extends Object {
 	}
 	#end
 
-	#if arm_particles
+	#if arm_gpu_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
 		var psys = new ParticleSystem(sceneName, pref);
@@ -179,7 +178,7 @@ class MeshObject extends Object {
 			// Scale radius for skinned mesh and particle system
 			// TODO: define skin & particle bounds
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
-			#if arm_particles
+			#if arm_gpu_particles
 			// particleSystems for update, particleOwner for render
 			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
 			#end
@@ -236,9 +235,7 @@ class MeshObject extends Object {
 		if (cullMesh(context, Scene.active.camera, RenderPath.active.light)) return;
 		var meshContext = raw != null ? context == "mesh" : false;
 
-		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
-
-		#if arm_particles
+		#if arm_gpu_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
 		if (particleSystems != null && meshContext) {
 			if (particleChildren == null) {
@@ -248,7 +245,6 @@ class MeshObject extends Object {
 					Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
 						if (o != null) {
 							var c: MeshObject = cast o;
-							c.cameraList = this.cameraList;
 							particleChildren.push(c);
 							c.particleOwner = this;
 							c.particleIndex = particleChildren.length - 1;

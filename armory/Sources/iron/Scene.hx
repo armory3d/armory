@@ -786,7 +786,7 @@ class Scene {
 			#end
 
 			// Attach particle systems
-			#if arm_particles
+			#if arm_gpu_particles
 			if (o.particle_refs != null) {
 				cast(object, MeshObject).render_emitter = o.render_emitter;
 				for (ref in o.particle_refs) cast(object, MeshObject).setupParticleSystem(sceneName, ref);
@@ -796,12 +796,6 @@ class Scene {
 			if (o.tilesheet_ref != null) {
 				cast(object, MeshObject).setupTilesheet(sceneName, o.tilesheet_ref, o.tilesheet_action_ref);
 			}
-
-
-			if (o.camera_list != null){
-				cast(object, MeshObject).cameraList = o.camera_list;
-			}
-
 			returnObject(object, o, done);
 		});
 	}

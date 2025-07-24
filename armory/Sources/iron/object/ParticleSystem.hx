@@ -1,6 +1,6 @@
 package iron.object;
 
-#if arm_particles
+#if arm_gpu_particles
 import kha.FastFloat;
 import kha.graphics4.Usage;
 import kha.arrays.Float32Array;
