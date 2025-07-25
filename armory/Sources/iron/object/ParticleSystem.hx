@@ -470,7 +470,7 @@ class ParticleSystem {
             }
 
 			if (!localCoords) o.transform.rot.setFrom(objectRot);
-			o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5); // only when rotations are inactive or disabled?
+			if (!rotation || orientationAxis == 0) o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 			var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
 			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random());
 			o.transform.scale.setFrom(sc);
@@ -484,14 +484,21 @@ class ParticleSystem {
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
+			switch (orientationAxis) {
+				case 3: // Velocity/Hair
+					// FIXME: local Z rotation is not giving more than 180 degrees?
+					var targetRot: Quat = new Quat().fromTo(new Vec4(0, 1, 0, 1), rotatedVelocity.clone().normalize());
+					o.transform.rot.setFrom(targetRot);
+				default:
+				}
+
             Tween.to({
                 tick: function () {
                     g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-			//     // FIXME: this doesn't look correctly when the object's initial rotation isn't `Quat.identity()`, it has some weird rolling along the local Y axis.
-			//     var targetRot: Quat = new Quat().fromTo(new Vec4(0, -1, 0, 1), rotatedVelocity.clone().normalize());
-			//     o.transform.rot.setFrom(targetRot);
+
+					// TODO: rotation on tick implementation pending
                     o.transform.buildMatrix();
                 },
                 target: null,

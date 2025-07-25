@@ -2318,6 +2318,27 @@ Make sure the mesh only has tris/quads.""")
             elif psettings.emit_from == 'VOLUME':
                 emit_from = 2
 
+            if psettings.rotation_mode == 'NONE':
+                rotation_mode = 0
+            elif psettings.rotation_mode == 'NOR':
+                rotation_mode = 1
+            elif psettings.rotation_mode == 'NOR_TAN':
+                rotation_mode = 2
+            elif psettings.rotation_mode == 'VEL':
+                rotation_mode = 3
+            elif psettings.rotation_mode == 'GLOB_X':
+                rotation_mode = 4
+            elif psettings.rotation_mode == 'GLOB_Y':
+                rotation_mode = 5
+            elif psettings.rotation_mode == 'GLOB_Z':
+                rotation_mode = 6
+            elif psettings.rotation_mode == 'OB_X':
+                rotation_mode = 7
+            elif psettings.rotation_mode == 'OB_Y':
+                rotation_mode = 8
+            elif psettings.rotation_mode == 'OB_Z':
+                rotation_mode = 9
+
             out_particlesys = {
                 'fps': render.fps,
                 'name': particleRef[1]["structName"],
@@ -2346,7 +2367,7 @@ Make sure the mesh only has tris/quads.""")
                 'factor_random': psettings.factor_random,
                 # Rotation
                 'use_rotations': psettings.use_rotations,
-                'rotation_mode': psettings.rotation_mode,
+                'rotation_mode': rotation_mode,
                 'rotation_factor_random': psettings.rotation_factor_random,
                 'phase_factor': psettings.phase_factor,
                 'phase_factor_random': psettings.phase_factor_random,
