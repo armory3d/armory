@@ -18,12 +18,12 @@ class MeshObject extends Object {
 	public var depthRead(default, null) = false;
 	#if (arm_gpu_particles || arm_cpu_particles)
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
+	public var render_emitter = true;
 	#end
 	#if arm_gpu_particles
 	public var particleOwner: MeshObject = null; // Particle object
 	public var particleChildren: Array<MeshObject> = null;
 	public var particleIndex = -1;
-	public var render_emitter = true;
 	#end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
@@ -267,10 +267,11 @@ class MeshObject extends Object {
 				particleSystems[i].update(particleChildren[i], this);
 			}
 		}
+		#end
+		#if (arm_gpu_particles || arm_cpu_particles)
 		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
         if (particleSystems == null && cullMaterial(context)) return;
-
-        #else
+		#else
         if (cullMaterial(context)) return;
 		#end
 
