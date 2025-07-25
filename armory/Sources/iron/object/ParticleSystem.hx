@@ -306,8 +306,7 @@ class Particle {
 import iron.Scene;
 import iron.data.Data;
 import iron.data.ParticleData;
-import iron.data.SceneFormat.TParticleData;
-import iron.data.SceneFormat.TParticleReference;
+import iron.data.SceneFormat;
 import iron.math.Quat;
 import iron.math.Vec3;
 import iron.math.Vec4;
@@ -324,38 +323,38 @@ class ParticleSystem {
     var r: TParticleData;
 
     // Format
-    public var frameRate: Float = 24.0; // TODO
+    var frameRate: Float = 24.0; // TODO
 
     // Emission
-    public var count: Int = 10; // count
-    public var frameStart: Float = 1; // frame_start
-    public var frameEnd: Float = 10.0; // frame_end
-    public var lifetime: Float = 24.0; // lifetime
-    public var lifetimeRandom: Float = 0.0; // lifetime_random
-    public var emitFrom: Int = 1; // emit_from 0 - Vert, 1 - Face, 2 - Volume // TODO: implement Vert and Volume
+    var count: Int = 10; // count
+    var frameStart: Float = 1; // frame_start
+    var frameEnd: Float = 10.0; // frame_end
+    var lifetime: Float = 24.0; // lifetime
+    var lifetimeRandom: Float = 0.0; // lifetime_random
+    var emitFrom: Int = 1; // emit_from 0 - Vert, 1 - Face, 2 - Volume // TODO: fully integrate Blender's properties
 
     // Velocity
-    public var velocity: Vec3 = new Vec3(0.0, 0.0, 1.0); // object_align_factor: Float32Array
-    public var velocityRandom: Float = 0.0; // factor_random
+    var velocity: Vec3 = new Vec3(0.0, 0.0, 1.0); // object_align_factor: Float32Array
+    var velocityRandom: Float = 0.0; // factor_random
 
     // Rotation // TODO: all rotations, starting with `rotation_mode`
-    public var rotationVelocityHair: Bool = false; // TODO
-    public var rotationDynamic: Bool = false; // TODO
+    var rotationVelocityHair: Bool = false; // TODO
+    var rotationDynamic: Bool = false; // TODO
 
     // Render
-    public var instanceObject: String; // instance_object
-    public var scale: Float = 1.0; // particle_size
-    public var scaleRandom: Float = 0.0; // size_random
-    public var showEmitter: Bool = false; // TODO
+    var instanceObject: String; // instance_object
+    var scale: Float = 1.0; // particle_size
+    var scaleRandom: Float = 0.0; // size_random
+    var showEmitter: Bool = false;
 
     // TODO: scale over lifetime and color over lifetime
     // Field weights
-    public var gravity: Vec3 = new Vec3(0, 0, -9.8);
-    public var gravityFactor: Float = 0.0; // weight_gravity
+    var gravity: Vec3 = new Vec3(0, 0, -9.8);
+    var gravityFactor: Float = 0.0; // weight_gravity
 
     // Custom props
-    public var autoStart: Bool = true; // auto_start
-    public var loop: Bool = false; // loop
+    var autoStart: Bool = true; // auto_start
+    var loop: Bool = false; // loop
 
     // Internal logic
     var meshObject: MeshObject;
@@ -386,6 +385,7 @@ class ParticleSystem {
 
             scale = r.particle_size;
             scaleRandom = r.size_random;
+			showEmitter = r.show_instancer_for_render;
 
 
             if (Scene.active.raw.gravity != null) {
@@ -412,8 +412,6 @@ class ParticleSystem {
         spawnParticle();
 		if (loop) {
 			loopAnim = Tween.timer(lifetimeSeconds, function () {
-				trace("loop");
-				trace(c);
 				if (spawnAnim != null) {
 					Tween.stop(spawnAnim);
 					spawnAnim = null;
@@ -457,6 +455,7 @@ class ParticleSystem {
             var objectPos: Vec4 = new Vec4();
             var objectRot: Quat = new Quat();
             var objectScale: Vec4 = new Vec4();
+			meshObject.transform.world.decompose(objectPos, objectRot, objectScale);
 
             o.visible = true;
             meshObject.transform.buildMatrix();
@@ -467,8 +466,12 @@ class ParticleSystem {
             var scaleFactor: Vec4  = new Vec4().setFrom(meshObject.transform.scale);
             scaleFactor.mult(scalePos / (scale * scalePosParticle));
 
+			// TODO: add all properties from Blender's UI
             switch (emitFrom) {
                 case 0: // Vertices
+					var pa: TVertexArray = meshObject.data.geom.positions;
+					var i: Int = Std.int(fhash(0) * (pa.values.length / pa.size));
+					o.transform.loc.setFrom(new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1).add(objectPos));
                 case 1: // Faces
                     var positions: Int16Array = meshObject.data.geom.positions.values;
                     var ia: Uint32Array = meshObject.data.geom.indices[Std.random(meshObject.data.geom.indices.length)];
@@ -484,12 +487,14 @@ class ParticleSystem {
 
                     var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
 
-                    meshObject.transform.world.decompose(objectPos, objectRot, objectScale);
-
                     o.transform.loc.setFrom(new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor).add(objectPos));
-                    o.transform.scale.setFrom(new Vec4(o.transform.scale.x / objectScale.x, o.transform.scale.y / objectScale.y, o.transform.scale.z / objectScale.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random()));
                 case 2: // Volume
+					var scaleFactorVolume: Vec4 = new Vec4().setFrom(o.transform.dim);
+					scaleFactorVolume.mult(0.5 / (scale * scalePosParticle));
+					o.transform.loc.setFrom(new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1).add(objectPos));
             }
+
+			o.transform.scale.setFrom(new Vec4(o.transform.scale.x / objectScale.x, o.transform.scale.y / objectScale.y, o.transform.scale.z / objectScale.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random()));
             o.transform.buildMatrix();
 
             var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
@@ -523,6 +528,13 @@ class ParticleSystem {
             c++;
         });
     }
+
+	function fhash(n: Int): Float {
+		var s = n + 1.0;
+		s *= 9301.0 % s;
+		s = (s * 9301.0 + 49297.0) % 233280.0;
+		return s / 233280.0;
+	}
 
 	public function remove() {}
 
