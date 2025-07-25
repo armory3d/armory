@@ -308,7 +308,7 @@ class ParticleSystem {
     var scale: FastFloat = 1.0; // particle_size
     var scaleRandom: FastFloat = 0.0; // size_random
 
-    // TODO: scale over lifetime and color over lifetime
+    // TODO: scale over lifetime
     // Field weights
     var gravity: Vec3 = new Vec3(0, 0, -9.8);
     var gravityFactor: FastFloat = 0.0; // weight_gravity
@@ -484,7 +484,8 @@ class ParticleSystem {
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
-			// Rotation phase. Wrap values between -1 and 1.
+			// Rotation phase and randomness. Wrap values between -1 and 1.
+			var randQuat: Quat = new Quat().fromEuler(Math.random() * rotationRandom * 2 * Math.PI, Math.random() * rotationRandom * 2 * Math.PI, Math.random() * rotationRandom * 2 * Math.PI);
 			var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
 			var phaseValue: FastFloat = phase + phaseRand;
 			while (phaseValue > 1) phaseValue -= 2;
@@ -496,6 +497,7 @@ class ParticleSystem {
 					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
 					var pitch: FastFloat = Math.asin(dir.z);
 					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+					targetRot.mult(randQuat);
 					var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
 					o.transform.rot.setFrom(targetRot.mult(phaseQuat));
 				default:
@@ -515,6 +517,7 @@ class ParticleSystem {
 								var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
 								var pitch: FastFloat = Math.asin(dir.z);
 								var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+								targetRot.mult(randQuat);
 								var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
 								o.transform.rot.setFrom(targetRot.mult(phaseQuat));
 							default:
