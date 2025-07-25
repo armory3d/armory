@@ -1,5 +1,7 @@
 package iron.object;
 
+#if (arm_gpu_particles || arm_cpu_particles)
+// TODO: clean common imports
 #if arm_gpu_particles
 import kha.FastFloat;
 import kha.graphics4.Usage;
@@ -12,8 +14,27 @@ import iron.math.Mat4;
 import iron.math.Quat;
 import iron.math.Vec3;
 import iron.math.Vec4;
+#end
+
+#if arm_cpu_particles
+import iron.Scene;
+import iron.data.Data;
+import iron.data.ParticleData;
+import iron.data.SceneFormat;
+import iron.math.Quat;
+import iron.math.Vec3;
+import iron.math.Vec4;
+import iron.object.MeshObject;
+import iron.object.Object;
+import iron.system.Time;
+import iron.system.Tween;
+import kha.FastFloat;
+import kha.arrays.Int16Array;
+import kha.arrays.Uint32Array;
+#end
 
 class ParticleSystem {
+	#if arm_gpu_particles
 	public var data: ParticleData;
 	public var speed = 1.0;
 	var currentSpeed = 0.0;
@@ -253,72 +274,9 @@ class ParticleSystem {
 		}
 		object.data.geom.setupInstanced(instancedData, 1, Usage.StaticUsage);
 	}
+	#end
 
-	function fhash(n: Int): Float {
-		var s = n + 1.0;
-		s *= 9301.0 % s;
-		s = (s * 9301.0 + 49297.0) % 233280.0;
-		return s / 233280.0;
-	}
-
-	public function remove() {}
-
-	/**
-		Generates a random point in the triangle with vertex positions abc.
-
-		Please note that the given position vectors are changed in-place by this
-		function and can be considered garbage afterwards, so make sure to clone
-		them first if needed.
-	**/
-	public static inline function randomPointInTriangle(a: Vec3, b: Vec3, c: Vec3): Vec3 {
-		// Generate a random point in a square where (0, 0) <= (x, y) < (1, 1)
-		var x = Math.random();
-		var y = Math.random();
-
-		if (x + y > 1) {
-			// We're in the upper right triangle in the square, mirror to lower left
-			x = 1 - x;
-			y = 1 - y;
-		}
-
-		// Transform the point to the triangle abc
-		var u = b.sub(a);
-		var v = c.sub(a);
-		return a.add(u.mult(x).add(v.mult(y)));
-	}
-}
-
-class Particle {
-	public var i: Int;
-
-	public var x = 0.0;
-	public var y = 0.0;
-	public var z = 0.0;
-
-	public var cameraDistance: Float;
-
-	public function new(i: Int) {
-		this.i = i;
-	}
-}
-
-#elseif arm_cpu_particles
-import iron.Scene;
-import iron.data.Data;
-import iron.data.ParticleData;
-import iron.data.SceneFormat;
-import iron.math.Quat;
-import iron.math.Vec3;
-import iron.math.Vec4;
-import iron.object.MeshObject;
-import iron.object.Object;
-import iron.system.Time;
-import iron.system.Tween;
-import kha.FastFloat;
-import kha.arrays.Int16Array;
-import kha.arrays.Uint32Array;
-
-class ParticleSystem {
+	#if arm_cpu_particles
     public var data: ParticleData;
     var r: TParticleData;
 
@@ -493,6 +451,7 @@ class ParticleSystem {
             }
 
 			o.transform.rot.setFrom(objectRot);
+			o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5); // only when rotations are inactive or disabled?
 			o.transform.scale.setFrom(new Vec4(o.transform.scale.x / objectScale.x, o.transform.scale.y / objectScale.y, o.transform.scale.z / objectScale.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random()));
             o.transform.buildMatrix();
 
@@ -527,6 +486,7 @@ class ParticleSystem {
             c++;
         });
     }
+	#end
 
 	function fhash(n: Int): Float {
 		var s = n + 1.0;
@@ -537,7 +497,7 @@ class ParticleSystem {
 
 	public function remove() {}
 
-    /**
+	/**
 		Generates a random point in the triangle with vertex positions abc.
 
 		Please note that the given position vectors are changed in-place by this
@@ -559,6 +519,22 @@ class ParticleSystem {
 		var u = b.sub(a);
 		var v = c.sub(a);
 		return a.add(u.mult(x).add(v.mult(y)));
+	}
+}
+#end
+
+#if arm_gpu_particles
+class Particle {
+	public var i: Int;
+
+	public var x = 0.0;
+	public var y = 0.0;
+	public var z = 0.0;
+
+	public var cameraDistance: Float;
+
+	public function new(i: Int) {
+		this.i = i;
 	}
 }
 #end
