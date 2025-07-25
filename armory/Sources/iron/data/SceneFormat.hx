@@ -395,6 +395,7 @@ typedef TParticleData = {
 	public var type: Int; // 0 - Emitter, Hair
 	public var auto_start: Bool;
 	public var is_unique: Bool;
+	public var local_coords: Bool;
 	public var loop: Bool;
 	public var count: Int;
 	public var frame_start: FastFloat;

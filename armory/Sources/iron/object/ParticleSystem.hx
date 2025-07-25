@@ -311,6 +311,7 @@ class ParticleSystem {
 
     // Custom props
     var autoStart: Bool = true; // auto_start
+	var localCoords: Bool = false; // local_coords
     var loop: Bool = false; // loop
 
     // Internal logic
@@ -351,6 +352,7 @@ class ParticleSystem {
             gravityFactor = r.weight_gravity * (frameRate / 24.0);
 
             autoStart = r.auto_start;
+			localCoords = r.local_coords;
             loop = r.loop;
 
             // TODO: implement rest of the TParticleData
@@ -407,7 +409,7 @@ class ParticleSystem {
             if (active) spawnParticle();
         });
 
-        Scene.active.spawnObject(instanceObject, null, function (o: Object) {
+        Scene.active.spawnObject(instanceObject, localCoords ? meshObject : null, function (o: Object) {
             var objectPos: Vec4 = new Vec4();
             var objectRot: Quat = new Quat();
             var objectScale: Vec4 = new Vec4();
@@ -427,7 +429,9 @@ class ParticleSystem {
                 case 0: // Vertices
 					var pa: TVertexArray = meshObject.data.geom.positions;
 					var i: Int = Std.int(fhash(0) * (pa.values.length / pa.size));
-					o.transform.loc.setFrom(new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1).add(objectPos));
+					var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
+					if (!localCoords) loc.add(objectPos);
+					o.transform.loc.setFrom(loc);
                 case 1: // Faces
                     var positions: Int16Array = meshObject.data.geom.positions.values;
                     var ia: Uint32Array = meshObject.data.geom.indices[Std.random(meshObject.data.geom.indices.length)];
@@ -442,17 +446,23 @@ class ParticleSystem {
                     var v2: Vec3 = new Vec3(positions[i2 * 4], positions[i2 * 4 + 1], positions[i2 * 4 + 2]);
 
                     var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
+					var loc: Vec4 = new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor);
+					if (!localCoords) loc.add(objectPos);
 
-                    o.transform.loc.setFrom(new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor).add(objectPos));
+                    o.transform.loc.setFrom(loc);
                 case 2: // Volume
 					var scaleFactorVolume: Vec4 = new Vec4().setFrom(o.transform.dim);
 					scaleFactorVolume.mult(0.5 / (scale * scalePosParticle));
-					o.transform.loc.setFrom(new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1).add(objectPos));
+					var loc: Vec4 = new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1);
+					if (!localCoords) loc.add(objectPos);
+					o.transform.loc.setFrom(loc);
             }
 
-			o.transform.rot.setFrom(objectRot);
+			if (!localCoords) o.transform.rot.setFrom(objectRot);
 			o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5); // only when rotations are inactive or disabled?
-			o.transform.scale.setFrom(new Vec4(o.transform.scale.x / objectScale.x, o.transform.scale.y / objectScale.y, o.transform.scale.z / objectScale.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random()));
+			var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
+			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random());
+			o.transform.scale.setFrom(sc);
             o.transform.buildMatrix();
 
             var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
@@ -460,7 +470,8 @@ class ParticleSystem {
             var randomZ: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
             var g: Vec3 = new Vec3();
 
-            var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1).applyQuat(objectRot);
+            var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
+			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
             // if (rotationVelocityHair)  // TODO: use `rotation_mode`
 
             Tween.to({

@@ -550,6 +550,7 @@ def init_properties():
     # Particles
     bpy.types.ParticleSettings.arm_auto_start = BoolProperty(name="Auto Start", description="Automatically start this particle system on load", default=True)
     bpy.types.ParticleSettings.arm_is_unique = BoolProperty(name="Is Unique", description="Make this particle system look different each time it starts", default=False)
+    bpy.types.ParticleSettings.arm_local_coords = BoolProperty(name="Local Coords", description="Keep spawned particles parented to their emitter", default=False)
     bpy.types.ParticleSettings.arm_loop = BoolProperty(name="Loop", description="Loop this particle system", default=False)
     bpy.types.ParticleSettings.arm_count_mult = FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
 
@@ -582,6 +583,7 @@ def update_armory_world():
         # This allows for seamless migration from earlier versions of Armory
         for rp in wrd.arm_rplist:  # TODO: deprecated
             if hasattr(rp, 'rp_gi') and rp.rp_gi != 'Off':
+            if rp.rp_gi != 'Off':
                 rp.rp_gi = 'Off'
                 rp.rp_voxels = rp.rp_gi
 
