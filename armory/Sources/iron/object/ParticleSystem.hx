@@ -469,8 +469,6 @@ class ParticleSystem {
 					o.transform.loc.setFrom(loc);
             }
 
-			if (!localCoords) o.transform.rot.setFrom(objectRot);
-			if (!rotation || orientationAxis == 0) o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 			var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
 			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random());
 			o.transform.scale.setFrom(sc);
@@ -484,23 +482,55 @@ class ParticleSystem {
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
-			// Rotation phase and randomness. Wrap values between -1 and 1.
-			var randQuat: Quat = new Quat().fromEuler(Math.random() * rotationRandom * 2 * Math.PI, Math.random() * rotationRandom * 2 * Math.PI, Math.random() * rotationRandom * 2 * Math.PI);
-			var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
-			var phaseValue: FastFloat = phase + phaseRand;
-			while (phaseValue > 1) phaseValue -= 2;
-			while (phaseValue < -1) phaseValue += 2;
+			// FIXME: clean these up on refactor
+			var randQuat: Quat;
+			var phaseQuat: Quat;
+			var targetRot: Quat;
 
-			switch (orientationAxis) {
-				case 3: // Velocity/Hair
-					var dir: Vec4 = rotatedVelocity.clone().normalize();
-					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
-					var pitch: FastFloat = Math.asin(dir.z);
-					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
-					targetRot.mult(randQuat);
-					var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
-					o.transform.rot.setFrom(targetRot.mult(phaseQuat));
-				default:
+			if (rotation) {
+				// Rotation phase and randomness. Wrap values between -1 and 1.
+				randQuat = new Quat().fromEuler((Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom);
+				var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
+				var phaseValue: FastFloat = phase + phaseRand;
+				while (phaseValue > 1) phaseValue -= 2;
+				while (phaseValue < -1) phaseValue += 2;
+				var dirQuat: Quat = new Quat();
+				phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+				targetRot = new Quat();
+
+				switch (orientationAxis) {
+					case 0:
+						o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+					case 3: // Velocity/Hair
+						var dir: Vec4 = rotatedVelocity.clone().normalize();
+						var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+						var pitch: FastFloat = Math.asin(dir.z);
+
+						targetRot.fromEuler(pitch, 0, yaw);
+						targetRot.mult(randQuat);
+
+						o.transform.rot.setFrom(targetRot.mult(phaseQuat));
+					case 4: // Global X
+						o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+					case 5: // Global Y
+						o.transform.rot.fromEuler(0, 0, 0).mult(phaseQuat).mult(randQuat);
+					case 6: // Global Z
+						o.transform.rot.fromEuler(0, -Math.PI * 0.5, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+					case 7: // Object X
+						o.transform.rot.setFrom(objectRot);
+						dirQuat.fromEuler(0, 0, -Math.PI * 0.5);
+						o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+					case 8: // Object Y
+						o.transform.rot.setFrom(objectRot);
+						o.transform.rot.mult(phaseQuat).mult(randQuat);
+					case 9: // Object Z
+						o.transform.rot.setFrom(objectRot);
+						dirQuat.fromEuler(0, -Math.PI * 0.5, 0).mult(new Quat().fromEuler(0, 0, -Math.PI * 0.5));
+						o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+					default:
+				}
+			} else {
+				o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 			}
 
             Tween.to({
@@ -509,16 +539,17 @@ class ParticleSystem {
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
 
-					if (dynamicRotation) {
+					if (rotation && dynamicRotation) {
 						// TODO: remove duplicated code
 						switch (orientationAxis) {
 							case 3: // Velocity/Hair
 								var dir: Vec4 = rotatedVelocity.clone().normalize();
 								var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
 								var pitch: FastFloat = Math.asin(dir.z);
-								var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+
+								targetRot.fromEuler(pitch, 0, yaw);
 								targetRot.mult(randQuat);
-								var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+
 								o.transform.rot.setFrom(targetRot.mult(phaseQuat));
 							default:
 						}
