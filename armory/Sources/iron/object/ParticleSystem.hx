@@ -364,6 +364,7 @@ class ParticleSystem {
     var active: Bool = false;
     var c: Int = 0;
 	var loopAnim: TAnim;
+	var spawnAnim: TAnim;
 
     public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
@@ -406,10 +407,17 @@ class ParticleSystem {
     }
 
     public function start() {
-        active = true;
+		c = 0;
+		active = true;
         spawnParticle();
 		if (loop) {
 			loopAnim = Tween.timer(lifetimeSeconds, function () {
+				trace("loop");
+				trace(c);
+				if (spawnAnim != null) {
+					Tween.stop(spawnAnim);
+					spawnAnim = null;
+				}
 				start();
 			});
 		}
@@ -418,24 +426,30 @@ class ParticleSystem {
     public function stop() {
         active = false;
         c = 0;
+
 		if (loop) {
 			if (loopAnim != null) {
 				Tween.stop(loopAnim);
 				loopAnim = null;
 			}
 		}
+
+		if (spawnAnim != null) {
+			Tween.stop(spawnAnim);
+			spawnAnim = null;
+		}
     }
 
     // TODO for optimization: create array containing all the particles and reuse them, instead of spawning and destroying them?
     function spawnParticle() {
 		if (c >= count) {
+			c = 0;
 			active = false;
-        	c = 0;
 			return;
         }
 
         // Set the particle's rate
-        Tween.timer(spawnRate, function () {
+        spawnAnim = Tween.timer(spawnRate, function () {
             if (active) spawnParticle();
         });
 
