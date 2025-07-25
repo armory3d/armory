@@ -71,7 +71,7 @@ class DrawTextAreaStringNode(ArmLogicTreeNode):
         layout.prop(self, 'property2')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 2):
+        if self.arm_version not in (0, 1, 2):
             raise LookupError()
             
         return NodeReplacement.Identity(self)
