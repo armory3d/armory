@@ -484,13 +484,22 @@ class ParticleSystem {
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
+			// Rotation phase. Wrap values between -1 and 1.
+			var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
+			var phaseValue: FastFloat = phase + phaseRand;
+			while (phaseValue > 1) phaseValue -= 2;
+			while (phaseValue < -1) phaseValue += 2;
+
 			switch (orientationAxis) {
 				case 3: // Velocity/Hair
-					// FIXME: local Z rotation is not giving more than 180 degrees?
-					var targetRot: Quat = new Quat().fromTo(new Vec4(0, 1, 0, 1), rotatedVelocity.clone().normalize());
-					o.transform.rot.setFrom(targetRot);
+					var dir: Vec4 = rotatedVelocity.clone().normalize();
+					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+					var pitch: FastFloat = Math.asin(dir.z);
+					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+					var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+					o.transform.rot.setFrom(targetRot.mult(phaseQuat));
 				default:
-				}
+			}
 
             Tween.to({
                 tick: function () {
@@ -498,7 +507,19 @@ class ParticleSystem {
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
 
-					// TODO: rotation on tick implementation pending
+					if (dynamicRotation) {
+						// TODO: remove duplicated code
+						switch (orientationAxis) {
+							case 3: // Velocity/Hair
+								var dir: Vec4 = rotatedVelocity.clone().normalize();
+								var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+								var pitch: FastFloat = Math.asin(dir.z);
+								var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+								var phaseQuat: Quat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+								o.transform.rot.setFrom(targetRot.mult(phaseQuat));
+							default:
+						}
+					}
                     o.transform.buildMatrix();
                 },
                 target: null,
@@ -512,6 +533,10 @@ class ParticleSystem {
             c++;
         });
     }
+
+	// function setParticleRotation() {
+
+	// }
 	#end
 
 	function fhash(n: Int): Float {
