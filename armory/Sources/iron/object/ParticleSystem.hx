@@ -281,33 +281,37 @@ class ParticleSystem {
     var r: TParticleData;
 
     // Format
-    var frameRate: Float = 24.0;
+    var frameRate: FastFloat = 24.0;
 
     // Emission
     var count: Int = 10; // count
-    var frameStart: Float = 1; // frame_start
-    var frameEnd: Float = 10.0; // frame_end
-    var lifetime: Float = 24.0; // lifetime
-    var lifetimeRandom: Float = 0.0; // lifetime_random
-    var emitFrom: Int = 1; // emit_from 0 - Vert, 1 - Face, 2 - Volume // TODO: fully integrate Blender's properties
+    var frameStart: FastFloat = 1; // frame_start
+    var frameEnd: FastFloat = 10.0; // frame_end
+    var lifetime: FastFloat = 24.0; // lifetime
+    var lifetimeRandom: FastFloat = 0.0; // lifetime_random
+    var emitFrom: Int = 1; // emit_from: 0 - Vert, 1 - Face, 2 - Volume // TODO: fully integrate Blender's properties
 
     // Velocity
     var velocity: Vec3 = new Vec3(0.0, 0.0, 1.0); // object_align_factor: Float32Array
-    var velocityRandom: Float = 0.0; // factor_random
+    var velocityRandom: FastFloat = 0.0; // factor_random
 
-    // Rotation // TODO: all rotations, starting with `rotation_mode`
-    // var rotationVelocityHair: Bool = false; // TODO
-    // var rotationDynamic: Bool = false; // TODO
+    // Rotation
+	var rotation: Bool = false; // use_rotations
+	var orientationAxis: Int = 0; // rotation_mode: 0 - None, 1 - Normal, 2 - Normal-Tangent, 3 - Velocity/Hair, 4 - Global X, 5 - Global Y, 6 - Global Z, 7 - Object X, 8 - Object Y, 9 - Object Z
+	var rotationRandom: FastFloat = 0.0; // rotation_factor_random
+	var phase: FastFloat = 0.0; // phase_factor
+	var phaseRandom: FastFloat = 0.0; // phase_factor_random
+	var dynamicRotation: Bool = false; // use_dynamic_rotation
 
     // Render
     var instanceObject: String; // instance_object
-    var scale: Float = 1.0; // particle_size
-    var scaleRandom: Float = 0.0; // size_random
+    var scale: FastFloat = 1.0; // particle_size
+    var scaleRandom: FastFloat = 0.0; // size_random
 
     // TODO: scale over lifetime and color over lifetime
     // Field weights
     var gravity: Vec3 = new Vec3(0, 0, -9.8);
-    var gravityFactor: Float = 0.0; // weight_gravity
+    var gravityFactor: FastFloat = 0.0; // weight_gravity
 
     // Custom props
     var autoStart: Bool = true; // auto_start
@@ -339,6 +343,13 @@ class ParticleSystem {
 
             velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / 24.0);
             velocityRandom = r.factor_random * (frameRate / 24.0);
+
+			rotation = r.use_rotations;
+			orientationAxis = r.rotation_mode;
+			rotationRandom = r.rotation_factor_random;
+			phase = r.phase_factor;
+			phaseRandom = r.phase_factor_random;
+			dynamicRotation = r.use_dynamic_rotation;
 
             instanceObject = r.instance_object;
 
@@ -472,18 +483,15 @@ class ParticleSystem {
 
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
-            // if (rotationVelocityHair)  // TODO: use `rotation_mode`
 
             Tween.to({
                 tick: function () {
                     g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-                    // if (rotationVelocityHair && rotationDynamic) { // TODO: use `rotation_mode`
-                    //     // FIXME: this doesn't look correctly when the object's initial rotation isn't `Quat.identity()`, it has some weird rolling along the local Y axis.
-                    //     var targetRot: Quat = new Quat().fromTo(new Vec4(0, -1, 0, 1), rotatedVelocity.clone().normalize());
-                    //     o.transform.rot.setFrom(targetRot);
-                    // }
+			//     // FIXME: this doesn't look correctly when the object's initial rotation isn't `Quat.identity()`, it has some weird rolling along the local Y axis.
+			//     var targetRot: Quat = new Quat().fromTo(new Vec4(0, -1, 0, 1), rotatedVelocity.clone().normalize());
+			//     o.transform.rot.setFrom(targetRot);
                     o.transform.buildMatrix();
                 },
                 target: null,

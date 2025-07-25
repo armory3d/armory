@@ -2344,6 +2344,13 @@ Make sure the mesh only has tris/quads.""")
                 ),
                 # 'object_factor': psettings.object_factor,
                 'factor_random': psettings.factor_random,
+                # Rotation
+                'use_rotations': psettings.use_rotations,
+                'rotation_mode': psettings.rotation_mode,
+                'rotation_factor_random': psettings.rotation_factor_random,
+                'phase_factor': psettings.phase_factor,
+                'phase_factor_random': psettings.phase_factor_random,
+                'use_dynamic_rotation': psettings.use_dynamic_rotation,
                 # Physics
                 'physics_type': 1 if psettings.physics_type == 'NEWTON' else 0,
                 'particle_size': psettings.particle_size,
