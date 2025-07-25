@@ -281,6 +281,7 @@ class ParticleSystem {
     var r: TParticleData;
 
     // Format
+	final baseFrameRate: FastFloat = 24.0;
     var frameRate: FastFloat = 24.0;
 
     // Emission
@@ -308,12 +309,14 @@ class ParticleSystem {
     var scale: FastFloat = 1.0; // particle_size
     var scaleRandom: FastFloat = 0.0; // size_random
 
-    // TODO: scale over lifetime
     // Field weights
     var gravity: Vec3 = new Vec3(0, 0, -9.8);
     var gravityFactor: FastFloat = 0.0; // weight_gravity
 
-    // Custom props
+	// TODO
+	// Textures
+
+    // Armory props
     var autoStart: Bool = true; // auto_start
 	var localCoords: Bool = false; // local_coords
     var loop: Bool = false; // loop
@@ -341,8 +344,8 @@ class ParticleSystem {
             lifetimeRandom = r.lifetime_random;
             emitFrom = r.emit_from;
 
-            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / 24.0);
-            velocityRandom = r.factor_random * (frameRate / 24.0);
+            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / baseFrameRate);
+            velocityRandom = r.factor_random * (frameRate / baseFrameRate);
 
 			rotation = r.use_rotations;
 			orientationAxis = r.rotation_mode;
@@ -356,17 +359,14 @@ class ParticleSystem {
             scale = r.particle_size;
             scaleRandom = r.size_random;
 
-
             if (Scene.active.raw.gravity != null) {
-                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / 24.0);
+                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / baseFrameRate);
             }
-            gravityFactor = r.weight_gravity * (frameRate / 24.0);
+            gravityFactor = r.weight_gravity * (frameRate / baseFrameRate);
 
             autoStart = r.auto_start;
 			localCoords = r.local_coords;
             loop = r.loop;
-
-            // TODO: implement rest of the TParticleData
 
             spawnRate = ((frameEnd - frameStart) / count) / frameRate;
             lifetimeSeconds = lifetime / frameRate;
@@ -482,10 +482,9 @@ class ParticleSystem {
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
-			// FIXME: clean these up on refactor
+			// TODO: clean these up on refactor?
 			var randQuat: Quat;
 			var phaseQuat: Quat;
-			var targetRot: Quat;
 
 			if (rotation) {
 				// Rotation phase and randomness. Wrap values between -1 and 1.
@@ -496,20 +495,12 @@ class ParticleSystem {
 				while (phaseValue < -1) phaseValue += 2;
 				var dirQuat: Quat = new Quat();
 				phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
-				targetRot = new Quat();
 
 				switch (orientationAxis) {
 					case 0:
 						o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 					case 3: // Velocity/Hair
-						var dir: Vec4 = rotatedVelocity.clone().normalize();
-						var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
-						var pitch: FastFloat = Math.asin(dir.z);
-
-						targetRot.fromEuler(pitch, 0, yaw);
-						targetRot.mult(randQuat);
-
-						o.transform.rot.setFrom(targetRot.mult(phaseQuat));
+						setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
 					case 4: // Global X
 						o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
 					case 5: // Global Y
@@ -538,22 +529,7 @@ class ParticleSystem {
                     g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-
-					if (rotation && dynamicRotation) {
-						// TODO: remove duplicated code
-						switch (orientationAxis) {
-							case 3: // Velocity/Hair
-								var dir: Vec4 = rotatedVelocity.clone().normalize();
-								var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
-								var pitch: FastFloat = Math.asin(dir.z);
-
-								targetRot.fromEuler(pitch, 0, yaw);
-								targetRot.mult(randQuat);
-
-								o.transform.rot.setFrom(targetRot.mult(phaseQuat));
-							default:
-						}
-					}
+					if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
                     o.transform.buildMatrix();
                 },
                 target: null,
@@ -568,9 +544,15 @@ class ParticleSystem {
         });
     }
 
-	// function setParticleRotation() {
+	function setVelocityHair(object: Object, velocity: Vec4, randQuat: Quat, phaseQuat: Quat) {
+		var dir: Vec4 = velocity.clone().normalize();
+		var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+		var pitch: FastFloat = Math.asin(dir.z);
+		var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
 
-	// }
+		targetRot.mult(randQuat);
+		object.transform.rot.setFrom(targetRot.mult(phaseQuat));
+	}
 	#end
 
 	function fhash(n: Int): Float {
