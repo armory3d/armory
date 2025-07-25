@@ -338,8 +338,8 @@ class ParticleSystem {
     public var velocity: Vec3 = new Vec3(0.0, 0.0, 1.0); // object_align_factor: Float32Array
     public var velocityRandom: Float = 0.0; // factor_random
 
-    // Rotation // TODO: all rotations
-    public var rotationVelocityHair: Bool = false;
+    // Rotation // TODO: all rotations, starting with `rotation_mode`
+    public var rotationVelocityHair: Bool = false; // TODO
     public var rotationDynamic: Bool = false; // TODO
 
     // Render
@@ -474,14 +474,14 @@ class ParticleSystem {
             var g: Vec3 = new Vec3();
 
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1).applyQuat(objectRot);
-            if (rotationVelocityHair) o.transform.rot.setFrom(objectRot);
+            if (rotationVelocityHair) o.transform.rot.setFrom(objectRot); // TODO: use `rotation_mode`
 
             Tween.to({
                 tick: function () {
                     g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-                    if (rotationVelocityHair && rotationDynamic) {
+                    if (rotationVelocityHair && rotationDynamic) { // TODO: use `rotation_mode`
                         // FIXME: this doesn't look correctly when the object's initial rotation isn't `Quat.identity()`, it has some weird rolling along the local Y axis.
                         var targetRot: Quat = new Quat().fromTo(new Vec4(0, -1, 0, 1), rotatedVelocity.clone().normalize());
                         o.transform.rot.setFrom(targetRot);
