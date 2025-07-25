@@ -16,10 +16,12 @@ class MeshObject extends Object {
 	public var materials: Vector<MaterialData>;
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
-	#if arm_gpu_particles
+	#if (arm_gpu_particles || arm_cpu_particles)
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
-	public var particleChildren: Array<MeshObject> = null;
+	#end
+	#if arm_gpu_particles
 	public var particleOwner: MeshObject = null; // Particle object
+	public var particleChildren: Array<MeshObject> = null;
 	public var particleIndex = -1;
 	public var render_emitter = true;
 	#end
@@ -77,8 +79,13 @@ class MeshObject extends Object {
 			for (c in particleChildren) c.remove();
 			particleChildren = null;
 		}
+		#end
+		#if (arm_gpu_particles || arm_cpu_particles)
 		if (particleSystems != null) {
-			for (psys in particleSystems) psys.remove();
+			for (psys in particleSystems) {
+				#if arm_cpu_particles psys.stop(); #end
+				psys.remove();
+			}
 			particleSystems = null;
 		}
 		#end
@@ -110,10 +117,10 @@ class MeshObject extends Object {
 	}
 	#end
 
-	#if arm_gpu_particles
+	#if (arm_gpu_particles || arm_cpu_particles)
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref);
+		var psys = new ParticleSystem(sceneName, pref #if arm_cpu_particles , this #end);
 		particleSystems.push(psys);
 	}
 	#end

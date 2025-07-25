@@ -301,4 +301,229 @@ class Particle {
 		this.i = i;
 	}
 }
+
+#elseif arm_cpu_particles
+import iron.Scene;
+import iron.data.Data;
+import iron.data.ParticleData;
+import iron.data.SceneFormat.TParticleData;
+import iron.data.SceneFormat.TParticleReference;
+import iron.math.Quat;
+import iron.math.Vec3;
+import iron.math.Vec4;
+import iron.object.MeshObject;
+import iron.object.Object;
+import iron.system.Time;
+import iron.system.Tween;
+import kha.FastFloat;
+import kha.arrays.Int16Array;
+import kha.arrays.Uint32Array;
+
+class ParticleSystem {
+    public var data: ParticleData;
+    var r: TParticleData;
+
+    // Format
+    public var frameRate: Float = 24.0; // TODO
+
+    // Emission
+    public var count: Int = 10; // count
+    public var frameStart: Float = 1; // frame_start
+    public var frameEnd: Float = 10.0; // frame_end
+    public var lifetime: Float = 24.0; // lifetime
+    public var lifetimeRandom: Float = 0.0; // lifetime_random
+    public var emitFrom: Int = 1; // emit_from 0 - Vert, 1 - Face, 2 - Volume // TODO: implement Vert and Volume
+
+    // Velocity
+    public var velocity: Vec3 = new Vec3(0.0, 0.0, 1.0); // object_align_factor: Float32Array
+    public var velocityRandom: Float = 0.0; // factor_random
+
+    // Rotation // TODO: all rotations
+    public var rotationVelocityHair: Bool = false;
+    public var rotationDynamic: Bool = false; // TODO
+
+    // Render
+    public var instanceObject: String; // instance_object
+    public var scale: Float = 1.0; // particle_size
+    public var scaleRandom: Float = 0.0; // size_random
+    public var showEmitter: Bool = false; // TODO
+
+    // TODO: scale over lifetime and color over lifetime
+    // Field weights
+    public var gravity: Vec3 = new Vec3(0, 0, -9.8);
+    public var gravityFactor: Float = 0.0; // weight_gravity
+
+    // Custom props
+    public var autoStart: Bool = true; // auto_start
+    public var loop: Bool = false; // loop
+
+    // Internal logic
+    var meshObject: MeshObject;
+    var lifetimeSeconds: FastFloat = 0.0;
+    var spawnRate: FastFloat = 0.0;
+    var active: Bool = false;
+    var c: Int = 0;
+
+    public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
+        Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
+            data = b;
+            r = data.raw;
+			meshObject = mo;
+
+            count = r.count;
+            frameStart = r.frame_start;
+            frameEnd = r.frame_end;
+            lifetime = r.lifetime;
+            lifetimeRandom = r.lifetime_random;
+            emitFrom = r.emit_from;
+
+            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]);
+            velocityRandom = r.factor_random;
+
+            instanceObject = r.instance_object;
+
+            scale = r.particle_size;
+            scaleRandom = r.size_random;
+
+
+            if (Scene.active.raw.gravity != null) {
+                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]);
+            }
+            gravityFactor = r.weight_gravity;
+
+            autoStart = r.auto_start;
+            loop = r.loop;
+
+            // TODO: implement rest of the TParticleData
+
+            meshObject.visible = showEmitter;
+            spawnRate = ((frameEnd - frameStart) / count) / frameRate;
+            lifetimeSeconds = lifetime / frameRate;
+
+            if (autoStart) start();
+        });
+    }
+
+    public function start() {
+        active = true;
+        spawnParticle();
+    }
+
+    public function stop() {
+        active = false;
+        c = 0;
+    }
+
+    // TODO for optimization: create array containing all the particles and reuse them, instead of spawning and destroying them?
+    function spawnParticle() {
+        if (c >= count) {
+            c = 0;
+            if (!loop) {
+                active = false;
+                return;
+            }
+        }
+
+        // Set the particle's rate
+        Tween.timer(spawnRate, function () {
+            if (active) spawnParticle();
+        });
+
+        Scene.active.spawnObject(instanceObject, null, function (o: Object) {
+            var objectPos: Vec4 = new Vec4();
+            var objectRot: Quat = new Quat();
+            var objectScale: Vec4 = new Vec4();
+
+            o.visible = true;
+            meshObject.transform.buildMatrix();
+
+            var normFactor: FastFloat = 1 / 32767;
+            var scalePos: FastFloat = meshObject.data.scalePos;
+            var scalePosParticle: FastFloat = cast(o, MeshObject).data.scalePos;
+            var scaleFactor: Vec4  = new Vec4().setFrom(meshObject.transform.scale);
+            scaleFactor.mult(scalePos / (scale * scalePosParticle));
+
+            switch (emitFrom) {
+                case 0: // Vertices
+                case 1: // Faces
+                    var positions: Int16Array = meshObject.data.geom.positions.values;
+                    var ia: Uint32Array = meshObject.data.geom.indices[Std.random(meshObject.data.geom.indices.length)];
+                    var faceIndex: Int = Std.random(Std.int(ia.length / 3));
+
+                    var i0 = ia[faceIndex * 3 + 0];
+                    var i1 = ia[faceIndex * 3 + 1];
+                    var i2 = ia[faceIndex * 3 + 2];
+
+                    var v0: Vec3 = new Vec3(positions[i0 * 4], positions[i0 * 4 + 1], positions[i0 * 4 + 2]);
+                    var v1: Vec3 = new Vec3(positions[i1 * 4], positions[i1 * 4 + 1], positions[i1 * 4 + 2]);
+                    var v2: Vec3 = new Vec3(positions[i2 * 4], positions[i2 * 4 + 1], positions[i2 * 4 + 2]);
+
+                    var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
+
+                    meshObject.transform.world.decompose(objectPos, objectRot, objectScale);
+
+                    o.transform.loc.setFrom(new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor).add(objectPos));
+                    o.transform.scale.setFrom(new Vec4(o.transform.scale.x / objectScale.x, o.transform.scale.y / objectScale.y, o.transform.scale.z / objectScale.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random()));
+                case 2: // Volume
+            }
+            o.transform.buildMatrix();
+
+            var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
+            var randomY: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
+            var randomZ: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
+            var g: Vec3 = new Vec3();
+
+            var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1).applyQuat(objectRot);
+            if (rotationVelocityHair) o.transform.rot.setFrom(objectRot);
+
+            Tween.to({
+                tick: function () {
+                    g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
+                    rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
+                    o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
+                    if (rotationVelocityHair && rotationDynamic) {
+                        // FIXME: this doesn't look correctly when the object's initial rotation isn't `Quat.identity()`, it has some weird rolling along the local Y axis.
+                        var targetRot: Quat = new Quat().fromTo(new Vec4(0, -1, 0, 1), rotatedVelocity.clone().normalize());
+                        o.transform.rot.setFrom(targetRot);
+                    }
+                    o.transform.buildMatrix();
+                },
+                target: null,
+                props: null,
+                duration: lifetimeSeconds * (1 - Math.random() * lifetimeRandom),
+                done: function () {
+                    o.remove();
+                }
+            });
+
+            c++;
+        });
+    }
+
+	public function remove() {}
+
+    /**
+		Generates a random point in the triangle with vertex positions abc.
+
+		Please note that the given position vectors are changed in-place by this
+		function and can be considered garbage afterwards, so make sure to clone
+		them first if needed.
+	**/
+	public static inline function randomPointInTriangle(a: Vec3, b: Vec3, c: Vec3): Vec3 {
+		// Generate a random point in a square where (0, 0) <= (x, y) < (1, 1)
+		var x = Math.random();
+		var y = Math.random();
+
+		if (x + y > 1) {
+			// We're in the upper right triangle in the square, mirror to lower left
+			x = 1 - x;
+			y = 1 - y;
+		}
+
+		// Transform the point to the triangle abc
+		var u = b.sub(a);
+		var v = c.sub(a);
+		return a.add(u.mult(x).add(v.mult(y)));
+	}
+}
 #end

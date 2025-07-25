@@ -786,9 +786,9 @@ class Scene {
 			#end
 
 			// Attach particle systems
-			#if arm_gpu_particles
+			#if (arm_gpu_particles || arm_cpu_particles)
 			if (o.particle_refs != null) {
-				cast(object, MeshObject).render_emitter = o.render_emitter;
+				#if arm_gpu_particles cast(object, MeshObject).render_emitter = o.render_emitter; #end
 				for (ref in o.particle_refs) cast(object, MeshObject).setupParticleSystem(sceneName, ref);
 			}
 			#end
