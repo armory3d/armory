@@ -390,6 +390,7 @@ typedef TParticleData = {
 #else
 @:structInit class TParticleData {
 #end
+	public var fps: Int;
 	public var name: String;
 	public var type: Int; // 0 - Emitter, Hair
 	public var auto_start: Bool;

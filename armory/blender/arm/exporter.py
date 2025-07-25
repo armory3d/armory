@@ -2285,12 +2285,14 @@ Make sure the mesh only has tris/quads.""")
             make_renderpath.build()
 
     def export_particle_systems(self):
+        render = self.scene.render
+
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
 
         for particleRef in self.particle_system_array.items():
 
-            padd = False;
+            padd = False
 
             for obj in bpy.data.objects:
                 for mod in obj.modifiers:
@@ -2317,6 +2319,7 @@ Make sure the mesh only has tris/quads.""")
                 emit_from = 2
 
             out_particlesys = {
+                'fps': render.fps,
                 'name': particleRef[1]["structName"],
                 'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
                 'auto_start': psettings.arm_auto_start,

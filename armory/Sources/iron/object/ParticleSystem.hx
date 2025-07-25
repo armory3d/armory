@@ -323,7 +323,7 @@ class ParticleSystem {
     var r: TParticleData;
 
     // Format
-    var frameRate: Float = 24.0; // TODO
+    var frameRate: Float = 24.0;
 
     // Emission
     var count: Int = 10; // count
@@ -345,7 +345,6 @@ class ParticleSystem {
     var instanceObject: String; // instance_object
     var scale: Float = 1.0; // particle_size
     var scaleRandom: Float = 0.0; // size_random
-    var showEmitter: Bool = false;
 
     // TODO: scale over lifetime and color over lifetime
     // Field weights
@@ -371,6 +370,7 @@ class ParticleSystem {
             r = data.raw;
 			meshObject = mo;
 
+			frameRate = r.fps;
             count = r.count;
             frameStart = r.frame_start;
             frameEnd = r.frame_end;
@@ -378,27 +378,25 @@ class ParticleSystem {
             lifetimeRandom = r.lifetime_random;
             emitFrom = r.emit_from;
 
-            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]);
-            velocityRandom = r.factor_random;
+            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / 24.0);
+            velocityRandom = r.factor_random * (frameRate / 24.0);
 
             instanceObject = r.instance_object;
 
             scale = r.particle_size;
             scaleRandom = r.size_random;
-			showEmitter = r.show_instancer_for_render;
 
 
             if (Scene.active.raw.gravity != null) {
-                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]);
+                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / 24.0);
             }
-            gravityFactor = r.weight_gravity;
+            gravityFactor = r.weight_gravity * (frameRate / 24.0);
 
             autoStart = r.auto_start;
             loop = r.loop;
 
             // TODO: implement rest of the TParticleData
 
-            meshObject.visible = showEmitter;
             spawnRate = ((frameEnd - frameStart) / count) / frameRate;
             lifetimeSeconds = lifetime / frameRate;
 
