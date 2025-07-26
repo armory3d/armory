@@ -425,6 +425,8 @@ typedef TParticleData = {
 	public var instance_object: String; // Object reference
 	// Field Weights
 	public var weight_gravity: FastFloat;
+	// Textures
+	public var texture_slots: Dynamic;
 }
 
 #if js

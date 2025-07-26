@@ -313,8 +313,8 @@ class ParticleSystem {
     var gravity: Vec3 = new Vec3(0, 0, -9.8);
     var gravityFactor: FastFloat = 0.0; // weight_gravity
 
-	// TODO
 	// Textures
+	var textureSlots: Map<String, Dynamic> = [];
 
     // Armory props
     var autoStart: Bool = true; // auto_start
@@ -327,9 +327,18 @@ class ParticleSystem {
     var spawnRate: FastFloat = 0.0;
     var active: Bool = false;
     var c: Int = 0;
+	var particleScale: FastFloat = 1.0;
 	var loopAnim: TAnim;
 	var spawnAnim: TAnim;
 
+	// Tween scaling
+	var scaleElementsCount: Int = 0;
+	var scaleRampSizeFactor: FastFloat = 0;
+	var tweenScaleSizeFactor: FastFloat = 0;
+	var rampPositions: Array<FastFloat> = [];
+	var rampColors: Array<FastFloat> = [];
+
+	// FIXME: the ParticleSystem is being constructed twice
     public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
             data = b;
@@ -364,12 +373,19 @@ class ParticleSystem {
             }
             gravityFactor = r.weight_gravity * (frameRate / baseFrameRate);
 
+			for (slot in Reflect.fields(r.texture_slots)) {
+				textureSlots[slot] = Reflect.field(r.texture_slots, slot);
+			}
+
             autoStart = r.auto_start;
 			localCoords = r.local_coords;
             loop = r.loop;
 
             spawnRate = ((frameEnd - frameStart) / count) / frameRate;
             lifetimeSeconds = lifetime / frameRate;
+
+			scaleElementsCount = getRampElementsLength();
+			scaleRampSizeFactor = getRampSizeFactor();
 
             if (autoStart) start();
         });
@@ -469,10 +485,22 @@ class ParticleSystem {
 					o.transform.loc.setFrom(loc);
             }
 
+			particleScale = 1 - scaleRandom * Math.random();
 			var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
-			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(1 - scaleRandom * Math.random());
-			o.transform.scale.setFrom(sc);
-            o.transform.buildMatrix();
+			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(particleScale);
+			var randomLifetime: FastFloat = lifetimeSeconds * (1 - Math.random() * lifetimeRandom);
+
+			if (scaleElementsCount != 0) {
+				tweenScaleSizeFactor = getRampSizeFactor();
+				rampPositions = getRampPositions();
+				rampColors = getRampColors();
+				o.transform.scale.setFrom(sc.mult(rampColors[0]));
+				tweenParticleScale(o, randomLifetime);
+			} else {
+				o.transform.scale.setFrom(sc);
+			}
+			o.transform.buildMatrix();
+
 
             var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
             var randomY: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
@@ -534,7 +562,7 @@ class ParticleSystem {
                 },
                 target: null,
                 props: null,
-                duration: lifetimeSeconds * (1 - Math.random() * lifetimeRandom),
+                duration: randomLifetime,
                 done: function () {
                     o.remove();
                 }
@@ -552,6 +580,88 @@ class ParticleSystem {
 
 		targetRot.mult(randQuat);
 		object.transform.rot.setFrom(targetRot.mult(phaseQuat));
+	}
+
+	function tweenParticleScale(object: Object, lifetime: FastFloat, ?ease = null) {
+		var anims: Array<TAnim> = [];
+		var duration: FastFloat = rampPositions[0];
+
+		for (i in 0...scaleElementsCount) {
+			if (i > 0) {
+				duration = (rampPositions[i] - rampPositions[i - 1]) * lifetime;
+			}
+			if (duration <= 0) continue;
+			final scaleValue: FastFloat = particleScale * (1 - scaleRampSizeFactor) + rampColors[i] * scaleRampSizeFactor;
+
+			anims.push({
+				tick: function () {
+					object.transform.buildMatrix();
+				},
+				target: object.transform.scale,
+				props: {
+					x: scaleValue,
+					y: scaleValue,
+					z: scaleValue
+				},
+				duration: duration,
+				done: function () {
+					if (anims.length > 1) {
+						Tween.to(anims[1]);
+						anims.shift();
+					}
+				}
+			});
+		}
+
+		Tween.to(anims[0]);
+	}
+
+	function getRampSizeFactor(): FastFloat {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in textureSlots.keys()) {
+			if (textureSlots[slot].use_map_size) return textureSlots[slot].size_factor;
+		}
+		return 0;
+	}
+
+	function getRampElementsLength(): Int {
+		for (slot in textureSlots.keys()) {
+			if (textureSlots[slot].texture.use_color_ramp) {
+				return textureSlots[slot].texture.color_ramp.elements.length;
+			}
+		}
+		return 0;
+	}
+
+	function getRampPositions(): Array<FastFloat> {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in textureSlots.keys()) {
+			if (textureSlots[slot].texture.use_color_ramp) {
+				var positions: Array<FastFloat> = [];
+				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
+					positions.push(textureSlots[slot].texture.color_ramp.elements[i].position);
+				}
+				return positions;
+			}
+		}
+		return [];
+	}
+
+	function getRampColors(): Array<FastFloat> {
+		// Just using the first slot for now: 1 texture slot
+		// TODO: use all available slots ?
+		for (slot in textureSlots.keys()) {
+			if (textureSlots[slot].texture.use_color_ramp) {
+				var colors: Array<FastFloat> = [];
+				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
+					colors.push(textureSlots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white image. Using B as it can be interpreted as V with HSV
+				}
+				return colors;
+			}
+		}
+		return [];
 	}
 	#end
 
