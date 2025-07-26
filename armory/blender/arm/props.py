@@ -583,7 +583,6 @@ def update_armory_world():
         # This allows for seamless migration from earlier versions of Armory
         for rp in wrd.arm_rplist:  # TODO: deprecated
             if hasattr(rp, 'rp_gi') and rp.rp_gi != 'Off':
-            if rp.rp_gi != 'Off':
                 rp.rp_gi = 'Off'
                 rp.rp_voxels = rp.rp_gi
 
