@@ -105,11 +105,11 @@ class ParticleSystemCPU {
             scale = r.particle_size;
             scaleRandom = r.size_random;
 
-			velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / baseFrameRate);
+			velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / baseFrameRate).mult(1 / scale);
             velocityRandom = r.factor_random * (frameRate / baseFrameRate);
 
             if (Scene.active.raw.gravity != null) {
-                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / baseFrameRate);
+                gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / baseFrameRate).mult(1 / scale);
             }
             gravityFactor = r.weight_gravity * (frameRate / baseFrameRate);
 
@@ -242,9 +242,9 @@ class ParticleSystemCPU {
 			}
 			o.transform.buildMatrix();
 
-            var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
-            var randomY: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
-            var randomZ: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
+            var randomX: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+            var randomY: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+            var randomZ: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
             var g: Vec3 = new Vec3();
 
             var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
@@ -294,7 +294,7 @@ class ParticleSystemCPU {
 
             Tween.to({
                 tick: function () {
-                    g.add(gravity.clone().mult(0.5 * scale)).mult(Time.delta * gravityFactor);
+                    g.add(gravity.clone()).mult(Time.delta * gravityFactor);
                     rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
                     o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
 					if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
@@ -324,7 +324,7 @@ class ParticleSystemCPU {
 
 	function tweenParticleScale(object: Object, lifetime: FastFloat, ?ease = null) {
 		var anims: Array<TAnim> = [];
-		var duration: FastFloat = rampPositions[0];
+		var duration: FastFloat = rampPositions.length > 1 ? rampPositions[1] - rampPositions[0] : 1 - rampPositions[0];
 
 		for (i in 0...scaleElementsCount) {
 			if (i > 0) {
@@ -345,7 +345,7 @@ class ParticleSystemCPU {
 				},
 				duration: duration,
 				done: function () {
-					if (anims.length > 1) { // TODO: closely test this
+					if (anims.length > 1) {
 						Tween.to(anims[1]);
 						anims.shift();
 					}
@@ -353,7 +353,9 @@ class ParticleSystemCPU {
 			});
 		}
 
-		Tween.to(anims[0]);
+		Tween.timer(rampPositions[0], function () {
+			Tween.to(anims[0]);
+		});
 	}
 
 	function getRampSizeFactor(): FastFloat {
