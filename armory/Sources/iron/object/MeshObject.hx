@@ -11,20 +11,18 @@ import iron.data.ShaderData;
 import iron.data.SceneFormat;
 
 class MeshObject extends Object {
-
 	public var data: MeshData = null;
 	public var materials: Vector<MaterialData>;
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
-	#if (arm_gpu_particles || arm_cpu_particles)
+	#if arm_particles
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
 	public var render_emitter = true;
-	#end
 	#if arm_gpu_particles
 	public var particleOwner: MeshObject = null; // Particle object
 	public var particleChildren: Array<MeshObject> = null;
 	public var particleIndex = -1;
-	#end
+	#end #end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
@@ -80,7 +78,7 @@ class MeshObject extends Object {
 			particleChildren = null;
 		}
 		#end
-		#if (arm_gpu_particles || arm_cpu_particles)
+		#if arm_particles
 		if (particleSystems != null) {
 			for (psys in particleSystems) {
 				#if arm_cpu_particles psys.stop(); #end
@@ -117,7 +115,7 @@ class MeshObject extends Object {
 	}
 	#end
 
-	#if (arm_gpu_particles || arm_cpu_particles)
+	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
 		var psys = new ParticleSystem(sceneName, pref #if arm_cpu_particles , this #end);
@@ -268,7 +266,7 @@ class MeshObject extends Object {
 			}
 		}
 		#end
-		#if (arm_gpu_particles || arm_cpu_particles)
+		#if arm_particles
 		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
         if (particleSystems == null && cullMaterial(context)) return;
 		#else

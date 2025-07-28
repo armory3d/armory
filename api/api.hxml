@@ -36,6 +36,7 @@
 -D arm_soundcompress
 -D arm_skin
 -D arm_morph_target
+-D arm_particles
 -D arm_cpu_particles
 -D arm_gpu_particles
 -D sys_krom
