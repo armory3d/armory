@@ -16,7 +16,7 @@ import kha.FastFloat;
 import kha.arrays.Int16Array;
 import kha.arrays.Uint32Array;
 
-class CPUParticleSystem {
+class ParticleSystemCPU {
     public var data: ParticleData;
     var r: TParticleData;
 

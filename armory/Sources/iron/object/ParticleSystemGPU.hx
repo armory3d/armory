@@ -13,7 +13,7 @@ import iron.math.Quat;
 import iron.math.Vec3;
 import iron.math.Vec4;
 
-class GPUParticleSystem {
+class ParticleSystemGPU {
 	public var data: ParticleData;
 	public var speed = 1.0;
 	var currentSpeed = 0.0;
