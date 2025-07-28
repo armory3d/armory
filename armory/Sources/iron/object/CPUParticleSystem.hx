@@ -78,7 +78,7 @@ class CPUParticleSystem {
 	var rampPositions: Array<FastFloat> = [];
 	var rampColors: Array<FastFloat> = [];
 
-	// FIXME: the ParticleSystem is being constructed twice
+	// FIXME: the ParticleSystem is being constructed twice?
     public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
             data = b;
@@ -93,9 +93,6 @@ class CPUParticleSystem {
             lifetimeRandom = r.lifetime_random;
             emitFrom = r.emit_from;
 
-            velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / baseFrameRate);
-            velocityRandom = r.factor_random * (frameRate / baseFrameRate);
-
 			rotation = r.use_rotations;
 			orientationAxis = r.rotation_mode;
 			rotationRandom = r.rotation_factor_random;
@@ -107,6 +104,9 @@ class CPUParticleSystem {
 
             scale = r.particle_size;
             scaleRandom = r.size_random;
+
+			velocity = new Vec3(r.object_align_factor[0], r.object_align_factor[1], r.object_align_factor[2]).mult(frameRate / baseFrameRate);
+            velocityRandom = r.factor_random * (frameRate / baseFrameRate);
 
             if (Scene.active.raw.gravity != null) {
                 gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / baseFrameRate);
@@ -192,6 +192,7 @@ class CPUParticleSystem {
             scaleFactor.mult(scalePos / (scale * scalePosParticle));
 
 			// TODO: add all properties from Blender's UI
+			// FIXME: make more accurate with Blender's viewport
             switch (emitFrom) {
                 case 0: // Vertices
 					var pa: TVertexArray = meshObject.data.geom.positions;
@@ -241,7 +242,6 @@ class CPUParticleSystem {
 			}
 			o.transform.buildMatrix();
 
-			// FIXME: it's not c1ompletely accurate with Blender
             var randomX: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
             var randomY: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
             var randomZ: FastFloat = (Math.random() * 2 / scale - 1 / scale) * velocityRandom;
