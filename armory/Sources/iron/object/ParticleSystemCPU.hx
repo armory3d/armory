@@ -154,7 +154,10 @@ class ParticleSystemCPU {
 
 					if (autoStart) start();
 				case 1: // Hair
-					for (i in 0...count) spawnParticle();
+					// HACK: wait for a few miliseconds until owner's world transform is properly set
+					Tween.timer(0.05, function () {
+						for (i in 0...count) spawnParticle();
+					});
 				default:
 			}
         });
@@ -187,13 +190,14 @@ class ParticleSystemCPU {
     // TODO for optimization: create array containing all the particles and reuse them, instead of spawning and destroying them?
     function spawnParticle() {
         Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
+            owner.transform.buildMatrix();
+
             var objectPos: Vec4 = new Vec4();
             var objectRot: Quat = new Quat();
             var objectScale: Vec4 = new Vec4();
 			owner.transform.world.decompose(objectPos, objectRot, objectScale);
 
             o.visible = true;
-            owner.transform.buildMatrix();
 
             var normFactor: FastFloat = 1 / 32767;
             var scalePos: FastFloat = owner.data.scalePos;
@@ -247,65 +251,64 @@ class ParticleSystemCPU {
 				rampPositions = getRampPositions();
 				rampColors = getRampColors();
 				o.transform.scale.setFrom(sc.mult(rampColors[0]));
-				// If type == Emission
 				if (type == 0) tweenParticleScale(o, randomLifetime);
 			} else {
 				o.transform.scale.setFrom(sc);
 			}
 			o.transform.buildMatrix();
 
-            var randomX: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-            var randomY: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-            var randomZ: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-            var g: Vec3 = new Vec3();
-
-            var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
-			if (!localCoords) rotatedVelocity.applyQuat(objectRot);
-
-			// TODO: clean these up on refactor?
-			var randQuat: Quat;
-			var phaseQuat: Quat;
-
-			if (rotation) {
-				// Rotation phase and randomness. Wrap values between -1 and 1.
-				randQuat = new Quat().fromEuler((Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom);
-				var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
-				var phaseValue: FastFloat = phase + phaseRand;
-				while (phaseValue > 1) phaseValue -= 2;
-				while (phaseValue < -1) phaseValue += 2;
-				var dirQuat: Quat = new Quat();
-				phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
-
-				switch (orientationAxis) {
-					case 0:
-						o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
-					case 3: // Velocity/Hair
-						setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
-					case 4: // Global X
-						o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
-					case 5: // Global Y
-						o.transform.rot.fromEuler(0, 0, 0).mult(phaseQuat).mult(randQuat);
-					case 6: // Global Z
-						o.transform.rot.fromEuler(0, -Math.PI * 0.5, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
-					case 7: // Object X
-						o.transform.rot.setFrom(objectRot);
-						dirQuat.fromEuler(0, 0, -Math.PI * 0.5);
-						o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
-					case 8: // Object Y
-						o.transform.rot.setFrom(objectRot);
-						o.transform.rot.mult(phaseQuat).mult(randQuat);
-					case 9: // Object Z
-						o.transform.rot.setFrom(objectRot);
-						dirQuat.fromEuler(0, -Math.PI * 0.5, 0).mult(new Quat().fromEuler(0, 0, -Math.PI * 0.5));
-						o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
-					default:
-				}
-			} else {
-				o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
-			}
-
 			switch (type) {
 				case 0: // Emission
+					var randomX: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+					var randomY: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+					var randomZ: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+					var g: Vec3 = new Vec3();
+
+					var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
+					if (!localCoords) rotatedVelocity.applyQuat(objectRot);
+
+					// TODO: clean these up on refactor?
+					var randQuat: Quat;
+					var phaseQuat: Quat;
+
+					if (rotation) {
+						// Rotation phase and randomness. Wrap values between -1 and 1.
+						randQuat = new Quat().fromEuler((Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom);
+						var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
+						var phaseValue: FastFloat = phase + phaseRand;
+						while (phaseValue > 1) phaseValue -= 2;
+						while (phaseValue < -1) phaseValue += 2;
+						var dirQuat: Quat = new Quat();
+						phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+
+						switch (orientationAxis) {
+							case 0:
+								o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+							case 3: // Velocity/Hair
+								setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
+							case 4: // Global X
+								o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+							case 5: // Global Y
+								o.transform.rot.fromEuler(0, 0, 0).mult(phaseQuat).mult(randQuat);
+							case 6: // Global Z
+								o.transform.rot.fromEuler(0, -Math.PI * 0.5, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+							case 7: // Object X
+								o.transform.rot.setFrom(objectRot);
+								dirQuat.fromEuler(0, 0, -Math.PI * 0.5);
+								o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+							case 8: // Object Y
+								o.transform.rot.setFrom(objectRot);
+								o.transform.rot.mult(phaseQuat).mult(randQuat);
+							case 9: // Object Z
+								o.transform.rot.setFrom(objectRot);
+								dirQuat.fromEuler(0, -Math.PI * 0.5, 0).mult(new Quat().fromEuler(0, 0, -Math.PI * 0.5));
+								o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+							default:
+						}
+					} else {
+						o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+					}
+
 					Tween.to({
 						tick: function () {
 							g.add(gravity.clone()).mult(Time.delta * gravityFactor);
@@ -322,6 +325,12 @@ class ParticleSystemCPU {
 						}
 					});
 				case 1: // Hair
+					var dir: Vec4 = new Vec4().setFrom(o.transform.world.getLoc()).sub(owner.transform.world.getLoc()).normalize();
+					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+					var pitch: FastFloat = Math.asin(dir.z);
+					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+
+					o.transform.rot.setFrom(targetRot);
 					o.transform.buildMatrix();
 			}
         });
