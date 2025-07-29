@@ -18,6 +18,7 @@ import kha.arrays.Uint32Array;
 
 class ParticleSystemCPU {
     public var data: ParticleData;
+	public var speed: FastFloat = 1.0; // Not used yet. Added to go in hand with `ParticleSystemGPU`
     var r: TParticleData;
 
     // Format
@@ -62,14 +63,14 @@ class ParticleSystemCPU {
     var loop: Bool = false; // loop
 
     // Internal logic
-    var meshObject: MeshObject;
+    var owner: MeshObject;
     var lifetimeSeconds: FastFloat = 0.0;
     var spawnRate: FastFloat = 0.0;
-    var active: Bool = false;
-    var c: Int = 0;
+	var spawnFactor: Int = 1;
+    var spawnedParticles: Int = 0;
 	var particleScale: FastFloat = 1.0;
 	var loopAnim: TAnim;
-	var spawnAnim: TAnim;
+	var spawnTime: FastFloat = 0;
 
 	// Tween scaling
 	var scaleElementsCount: Int = 0;
@@ -83,7 +84,7 @@ class ParticleSystemCPU {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
             data = b;
             r = data.raw;
-			meshObject = mo;
+			owner = mo;
 
 			frameRate = r.fps;
             count = r.count;
@@ -127,82 +128,77 @@ class ParticleSystemCPU {
 			scaleElementsCount = getRampElementsLength();
 			scaleRampSizeFactor = getRampSizeFactor();
 
+			loopAnim = {
+				tick: function () {
+					spawnTime += Time.delta;
+					var expected: Int = Math.floor(spawnTime / spawnRate);
+					while (spawnedParticles < expected && spawnedParticles < count) {
+						spawnParticle();
+					}
+				},
+				target: null,
+				props: null,
+				duration: lifetimeSeconds,
+				done: function () {
+					if (loop) start();
+					else stop();
+				}
+			}
+
             if (autoStart) start();
         });
     }
 
     public function start() {
-		c = 0;
-		active = true;
-        spawnParticle();
-		if (loop) {
-			loopAnim = Tween.timer(lifetimeSeconds, function () {
-				if (spawnAnim != null) {
-					Tween.stop(spawnAnim);
-					spawnAnim = null;
-				}
-				start();
-			});
-		}
+		spawnTime = 0;
+		spawnedParticles = 0;
+		Tween.to(loopAnim);
     }
 
+	// TODO
+	public function pause() {
+
+	}
+
+	// TODO
+	public function resume() {
+
+	}
+
     public function stop() {
-        active = false;
-        c = 0;
-
-		if (loop) {
-			if (loopAnim != null) {
-				Tween.stop(loopAnim);
-				loopAnim = null;
-			}
-		}
-
-		if (spawnAnim != null) {
-			Tween.stop(spawnAnim);
-			spawnAnim = null;
-		}
+		spawnTime = 0;
+        spawnedParticles = 0;
+		Tween.stop(loopAnim);
     }
 
     // TODO for optimization: create array containing all the particles and reuse them, instead of spawning and destroying them?
     function spawnParticle() {
-		if (c >= count) {
-			c = 0;
-			active = false;
-			return;
-        }
-
-        // Set the particle's rate
-        spawnAnim = Tween.timer(spawnRate, function () {
-            if (active) spawnParticle();
-        });
-
-        Scene.active.spawnObject(instanceObject, localCoords ? meshObject : null, function (o: Object) {
+        Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
             var objectPos: Vec4 = new Vec4();
             var objectRot: Quat = new Quat();
             var objectScale: Vec4 = new Vec4();
-			meshObject.transform.world.decompose(objectPos, objectRot, objectScale);
+			owner.transform.world.decompose(objectPos, objectRot, objectScale);
 
             o.visible = true;
-            meshObject.transform.buildMatrix();
+            owner.transform.buildMatrix();
 
             var normFactor: FastFloat = 1 / 32767;
-            var scalePos: FastFloat = meshObject.data.scalePos;
+            var scalePos: FastFloat = owner.data.scalePos;
             var scalePosParticle: FastFloat = cast(o, MeshObject).data.scalePos;
-            var scaleFactor: Vec4  = new Vec4().setFrom(meshObject.transform.scale);
+            var scaleFactor: Vec4  = new Vec4().setFrom(owner.transform.scale);
             scaleFactor.mult(scalePos / (scale * scalePosParticle));
 
 			// TODO: add all properties from Blender's UI
-			// FIXME: make more accurate with Blender's viewport
             switch (emitFrom) {
                 case 0: // Vertices
-					var pa: TVertexArray = meshObject.data.geom.positions;
+					var pa: TVertexArray = owner.data.geom.positions;
 					var i: Int = Std.int(fhash(0) * (pa.values.length / pa.size));
 					var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
 					if (!localCoords) loc.add(objectPos);
 					o.transform.loc.setFrom(loc);
                 case 1: // Faces
-                    var positions: Int16Array = meshObject.data.geom.positions.values;
-                    var ia: Uint32Array = meshObject.data.geom.indices[Std.random(meshObject.data.geom.indices.length)];
+                    var positions: Int16Array = owner.data.geom.positions.values;
+                    var ia: Uint32Array = owner.data.geom.indices[Std.random(owner.data.geom.indices.length)];
                     var faceIndex: Int = Std.random(Std.int(ia.length / 3));
 
                     var i0 = ia[faceIndex * 3 + 0];
@@ -308,7 +304,7 @@ class ParticleSystemCPU {
                 }
             });
 
-            c++;
+            spawnedParticles++;
         });
     }
 
@@ -331,7 +327,7 @@ class ParticleSystemCPU {
 				duration = (rampPositions[i] - rampPositions[i - 1]) * lifetime;
 			}
 			if (duration <= 0) continue;
-			final scaleValue: FastFloat = particleScale * (1 - scaleRampSizeFactor) + rampColors[i] * scaleRampSizeFactor;
+			final scaleValue: FastFloat = scale * (particleScale * (1 - scaleRampSizeFactor) + rampColors[i] * scaleRampSizeFactor);
 
 			anims.push({
 				tick: function () {

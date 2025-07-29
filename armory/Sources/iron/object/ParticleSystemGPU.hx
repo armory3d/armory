@@ -45,13 +45,14 @@ class ParticleSystemGPU {
 	var lapTime = 0.0;
 	var m = Mat4.identity();
 
+	var owner: MeshObject;
 	var ownerLoc = new Vec4();
 	var ownerRot = new Quat();
 	var ownerScl = new Vec4();
 
 	var random = 0.0;
 
-	public function new(sceneName: String, pref: TParticleReference) {
+	public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
 		seed = pref.seed;
 		currentSpeed = speed;
 		speed = 0;
@@ -61,6 +62,7 @@ class ParticleSystemGPU {
 		Data.getParticle(sceneName, pref.particle, function(b: ParticleData) {
 			data = b;
 			r = data.raw;
+			owner = mo;
 
 			if (Scene.active.raw.gravity != null) {
 				gx = Scene.active.raw.gravity[0] * r.weight_gravity;
@@ -118,7 +120,7 @@ class ParticleSystemGPU {
 		lap = 0;
 	}
 
-	public function update(object: MeshObject, owner: MeshObject) {
+	public function update(object: MeshObject) {
 		if (!ready || object == null || speed == 0.0) return;
 		if (iron.App.pauseUpdates) return;
 
@@ -155,7 +157,7 @@ class ParticleSystemGPU {
 			end();
 		}
 
-		updateGpu(object, owner);
+		updateGpu(object);
 	}
 
 	public function getData(): Mat4 {
@@ -191,12 +193,12 @@ class ParticleSystemGPU {
 		return r.particle_size;
 	}
 
-	function updateGpu(object: MeshObject, owner: MeshObject) {
-		if (!object.data.geom.instanced) setupGeomGpu(object, owner);
+	function updateGpu(object: MeshObject) {
+		if (!object.data.geom.instanced) setupGeomGpu(object);
 		// GPU particles transform is attached to owner object
 	}
 
-	function setupGeomGpu(object: MeshObject, owner: MeshObject) {
+	function setupGeomGpu(object: MeshObject) {
 		var instancedData = new Float32Array(particles.length * 3);
 		var i = 0;
 

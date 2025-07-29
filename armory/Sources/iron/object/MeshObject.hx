@@ -118,7 +118,7 @@ class MeshObject extends Object {
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref #if arm_cpu_particles , this #end);
+		var psys = new ParticleSystem(sceneName, pref, this);
 		particleSystems.push(psys);
 	}
 	#end
@@ -262,7 +262,7 @@ class MeshObject extends Object {
 				}
 			}
 			for (i in 0...particleSystems.length) {
-				particleSystems[i].update(particleChildren[i], this);
+				particleSystems[i].update(particleChildren[i]);
 			}
 		}
 		#end
