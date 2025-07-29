@@ -2388,6 +2388,7 @@ Make sure the mesh only has tris/quads.""")
                 'instance_object': arm.utils.asset_name(psettings.instance_object),
                 # Field weights
                 'weight_gravity': psettings.effector_weights.gravity,
+                'weight_texture': psettings.effector_weights.texture,
                 # Textures
                 'texture_slots': texture_slots # For CPU particles
             }

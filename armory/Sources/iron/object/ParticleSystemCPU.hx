@@ -52,7 +52,8 @@ class ParticleSystemCPU {
 
     // Field weights
     var gravity: Vec3 = new Vec3(0, 0, -9.8);
-    var gravityFactor: FastFloat = 0.0; // weight_gravity
+    var gravityFactor: FastFloat = 1.0; // weight_gravity
+	var textureFactor: FastFloat = 1.0; // weight_texture
 
 	// Textures
 	var textureSlots: Map<String, Dynamic> = [];
@@ -113,6 +114,7 @@ class ParticleSystemCPU {
                 gravity = new Vec3(Scene.active.raw.gravity[0], Scene.active.raw.gravity[1], Scene.active.raw.gravity[2]).mult(frameRate / baseFrameRate).mult(1 / scale);
             }
             gravityFactor = r.weight_gravity * (frameRate / baseFrameRate);
+			textureFactor = r.weight_texture;
 
 			for (slot in Reflect.fields(r.texture_slots)) {
 				textureSlots[slot] = Reflect.field(r.texture_slots, slot);
@@ -358,7 +360,7 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].use_map_size) return textureSlots[slot].size_factor;
+			if (textureSlots[slot].use_map_size) return textureSlots[slot].size_factor * textureFactor;
 		}
 		return 0;
 	}
