@@ -26,6 +26,7 @@ class ParticleSystemCPU {
     var frameRate: FastFloat = 24.0;
 
     // Emission
+	var type: Int = 0; // type: 0 - Emission, 1 - Hair
     var count: Int = 10; // count
     var frameStart: FastFloat = 1; // frame_start
     var frameEnd: FastFloat = 10.0; // frame_end
@@ -88,6 +89,7 @@ class ParticleSystemCPU {
 			owner = mo;
 
 			frameRate = r.fps;
+			type = r.type;
             count = r.count;
             frameStart = r.frame_start;
             frameEnd = r.frame_end;
@@ -130,28 +132,36 @@ class ParticleSystemCPU {
 			scaleElementsCount = getRampElementsLength();
 			scaleRampSizeFactor = getRampSizeFactor();
 
-			loopAnim = {
-				tick: function () {
-					spawnTime += Time.delta;
-					var expected: Int = Math.floor(spawnTime / spawnRate);
-					while (spawnedParticles < expected && spawnedParticles < count) {
-						spawnParticle();
+			switch (type) {
+				case 0: // Emission
+					loopAnim = {
+						tick: function () {
+							spawnTime += Time.delta;
+							var expected: Int = Math.floor(spawnTime / spawnRate);
+							while (spawnedParticles < expected && spawnedParticles < count) {
+								spawnParticle();
+								spawnedParticles++;
+							}
+						},
+						target: null,
+						props: null,
+						duration: lifetimeSeconds,
+						done: function () {
+							if (loop) start();
+							else stop();
+						}
 					}
-				},
-				target: null,
-				props: null,
-				duration: lifetimeSeconds,
-				done: function () {
-					if (loop) start();
-					else stop();
-				}
-			}
 
-            if (autoStart) start();
+					if (autoStart) start();
+				case 1: // Hair
+					for (i in 0...count) spawnParticle();
+				default:
+			}
         });
     }
 
     public function start() {
+		if (type != 0) return;
 		spawnTime = 0;
 		spawnedParticles = 0;
 		Tween.to(loopAnim);
@@ -168,6 +178,7 @@ class ParticleSystemCPU {
 	}
 
     public function stop() {
+		if (type != 0) return;
 		spawnTime = 0;
         spawnedParticles = 0;
 		Tween.stop(loopAnim);
@@ -194,8 +205,9 @@ class ParticleSystemCPU {
             switch (emitFrom) {
                 case 0: // Vertices
 					var pa: TVertexArray = owner.data.geom.positions;
-					var i: Int = Std.int(fhash(0) * (pa.values.length / pa.size));
+					var i: Int = Std.int(Math.random() * (pa.values.length / pa.size));
 					var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
+
 					if (!localCoords) loc.add(objectPos);
 					o.transform.loc.setFrom(loc);
                 case 1: // Faces
@@ -213,13 +225,14 @@ class ParticleSystemCPU {
 
                     var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
 					var loc: Vec4 = new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor);
-					if (!localCoords) loc.add(objectPos);
 
+					if (!localCoords) loc.add(objectPos);
                     o.transform.loc.setFrom(loc);
                 case 2: // Volume
-					var scaleFactorVolume: Vec4 = new Vec4().setFrom(o.transform.dim);
+					var scaleFactorVolume: Vec4 = new Vec4().setFrom(owner.transform.dim);
 					scaleFactorVolume.mult(0.5 / (scale * scalePosParticle));
 					var loc: Vec4 = new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1);
+
 					if (!localCoords) loc.add(objectPos);
 					o.transform.loc.setFrom(loc);
             }
@@ -234,7 +247,8 @@ class ParticleSystemCPU {
 				rampPositions = getRampPositions();
 				rampColors = getRampColors();
 				o.transform.scale.setFrom(sc.mult(rampColors[0]));
-				tweenParticleScale(o, randomLifetime);
+				// If type == Emission
+				if (type == 0) tweenParticleScale(o, randomLifetime);
 			} else {
 				o.transform.scale.setFrom(sc);
 			}
@@ -290,23 +304,26 @@ class ParticleSystemCPU {
 				o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 			}
 
-            Tween.to({
-                tick: function () {
-                    g.add(gravity.clone()).mult(Time.delta * gravityFactor);
-                    rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
-                    o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-					if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
-                    o.transform.buildMatrix();
-                },
-                target: null,
-                props: null,
-                duration: randomLifetime,
-                done: function () {
-                    o.remove();
-                }
-            });
-
-            spawnedParticles++;
+			switch (type) {
+				case 0: // Emission
+					Tween.to({
+						tick: function () {
+							g.add(gravity.clone()).mult(Time.delta * gravityFactor);
+							rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
+							o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
+							if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
+							o.transform.buildMatrix();
+						},
+						target: null,
+						props: null,
+						duration: randomLifetime,
+						done: function () {
+							o.remove();
+						}
+					});
+				case 1: // Hair
+					o.transform.buildMatrix();
+			}
         });
     }
 
@@ -396,19 +413,12 @@ class ParticleSystemCPU {
 			if (textureSlots[slot].texture.use_color_ramp) {
 				var colors: Array<FastFloat> = [];
 				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
-					colors.push(textureSlots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white image. Using B as it can be interpreted as V with HSV
+					colors.push(textureSlots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white images. Using B as it can be interpreted as V with HSV
 				}
 				return colors;
 			}
 		}
 		return [];
-	}
-
-	function fhash(n: Int): Float {
-		var s = n + 1.0;
-		s *= 9301.0 % s;
-		s = (s * 9301.0 + 49297.0) % 233280.0;
-		return s / 233280.0;
 	}
 
 	public function remove() {}
