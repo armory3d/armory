@@ -267,7 +267,6 @@ class ParticleSystemCPU {
 					var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 					if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
-					// TODO: clean these up on refactor?
 					var randQuat: Quat;
 					var phaseQuat: Quat;
 
