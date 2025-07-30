@@ -13,7 +13,7 @@ class AddParticleToObjectNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		#if arm_particles
+		#if arm_gpu_particles
 
 		if (property0 == 'Scene Active'){
 			var objFrom: Object = inputs[1].get();

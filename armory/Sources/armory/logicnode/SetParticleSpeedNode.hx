@@ -9,7 +9,7 @@ class SetParticleSpeedNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		#if arm_particles
+		#if arm_gpu_particles
 		var object: Object = inputs[1].get();
 		var slot: Int = inputs[2].get();
 		var speed: Float = inputs[3].get();
