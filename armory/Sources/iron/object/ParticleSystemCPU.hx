@@ -134,7 +134,7 @@ class ParticleSystemCPU {
 			scaleElementsCount = getRampElementsLength();
 			scaleRampSizeFactor = getRampSizeFactor();
 
-			createPool();
+			for (i in 0...count) addToPool();
 
 			switch (type) {
 				case 0: // Emission
@@ -152,7 +152,6 @@ class ParticleSystemCPU {
 						duration: lifetimeSeconds,
 						done: function () {
 							if (loop) start();
-							else stop();
 						}
 					}
 
@@ -164,7 +163,7 @@ class ParticleSystemCPU {
 					});
 				default:
 			}
-        });
+		});
     }
 
     public function start() {
@@ -189,15 +188,14 @@ class ParticleSystemCPU {
 		spawnTime = 0;
         spawnedParticles = 0;
 		Tween.stop(loopAnim);
+		for (particle in particlePool) releaseParticle(particle);
     }
 
-	function createPool() {
-		for (i in 0...count) {
-			Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
-				o.visible = false;
-				particlePool.push(o);
-			});
-		}
+	function addToPool() {
+		Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
+			o.visible = false;
+			particlePool.push(o);
+		});
 	}
 
 	function getFreeParticle(): Object {
@@ -219,7 +217,10 @@ class ParticleSystemCPU {
 
     function spawnParticle() {
 		var o: Object = getFreeParticle();
-		if (o == null) return;
+		if (o == null) {
+			addToPool();
+			o = getFreeParticle();
+		}
 
 		owner.transform.buildMatrix();
 
@@ -351,7 +352,6 @@ class ParticleSystemCPU {
 					props: null,
 					duration: randomLifetime,
 					done: function () {
-						// o.remove();
 						releaseParticle(o);
 					}
 				});
@@ -381,7 +381,7 @@ class ParticleSystemCPU {
 
 	function tweenParticleScale(object: Object, lifetime: FastFloat, ?ease = null) {
 		var anims: Array<TAnim> = [];
-		var duration: FastFloat = rampPositions.length > 1 ? rampPositions[1] - rampPositions[0] : 1 - rampPositions[0];
+		var duration: FastFloat = rampPositions.length > 1 ? rampPositions[0] : 1 - rampPositions[0];
 
 		for (i in 0...scaleElementsCount) {
 			if (i > 0) {
@@ -463,7 +463,9 @@ class ParticleSystemCPU {
 		return [];
 	}
 
-	public function remove() {}
+	public function remove() {
+		for (particle in particlePool) particle.remove();
+	}
 
 	/**
 		Generates a random point in the triangle with vertex positions abc.
