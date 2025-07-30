@@ -325,7 +325,10 @@ class ParticleSystemCPU {
 						}
 					});
 				case 1: // Hair
-					var dir: Vec4 = new Vec4().setFrom(o.transform.world.getLoc()).sub(owner.transform.world.getLoc()).normalize();
+					var oLoc: Vec4 = localCoords ? o.transform.loc : o.transform.world.getLoc();
+					var ownerLoc: Vec4 = localCoords ? new Vec4() : owner.transform.world.getLoc();
+
+					var dir: Vec4 = new Vec4().setFrom(oLoc).sub(ownerLoc).normalize();
 					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
 					var pitch: FastFloat = Math.asin(dir.z);
 					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
