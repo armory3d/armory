@@ -41,7 +41,7 @@ class SetParticleDataNode extends LogicNode {
 				var emit_from: Int = inputs[3].get();
 				if (emit_from == 0 || emit_from == 1 || emit_from == 2) {
 					@:privateAccess psys.r.emit_from = emit_from;
-					@:privateAccess psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(@:privateAccess psys.data.raw.instance_object), iron.object.MeshObject), mo);
+					@:privateAccess psys.setupGeomGpu(mo.particleChildren != null ? mo.particleChildren[slot] : cast(iron.Scene.active.getChild(@:privateAccess psys.data.raw.instance_object), iron.object.MeshObject));
 				}
 			case 'Auto Start':
 				@:privateAccess psys.r.auto_start = inputs[3].get();
