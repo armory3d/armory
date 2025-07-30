@@ -547,6 +547,13 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_ssrefr
+		{
+			path.setTarget("gbuffer_refraction");
+			path.clearTarget(0xffffff00);
+		}
+		#end
+
 		RenderPathCreator.setTargetMeshes();
 
 		#if rp_dynres
@@ -684,7 +691,9 @@ class RenderPathDeferred {
 			}
 
 			path.setTarget("");
-			path.bindTarget("voxels", "voxels");
+			var res = iron.RenderPath.getVoxelRes();
+			path.setViewport(res, res);
+
 			#if rp_shadowmap
 			{
 				#if arm_shadowmap_atlas
@@ -694,6 +703,9 @@ class RenderPathDeferred {
 				#end
 			}
 			#end
+
+			path.bindTarget("voxels", "voxels");
+			path.drawMeshes("voxel");
 
 			var res = iron.RenderPath.getVoxelRes();
 			path.setViewport(res, res);
@@ -717,6 +729,7 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
 		// ---
 		// Deferred light
 		// ---

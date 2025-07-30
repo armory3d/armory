@@ -22,9 +22,6 @@
 #ifdef _Spot
 #include "std/light_common.glsl"
 #endif
-#ifdef _VoxelShadow
-#include "std/conetrace.glsl"
-#endif
 
 #ifdef _ShadowMap
 	#ifdef _SinglePoint

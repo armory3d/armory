@@ -600,7 +600,6 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
-
 		#if rp_shadowmap
 		{
 			#if arm_shadowmap_atlas
@@ -633,7 +632,6 @@ class Inc {
 			path.setTarget("");
 		}
 		#end
-
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
 		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
@@ -1030,7 +1028,6 @@ class Inc {
 		}
 	}
 	#end
-
 	#if (rp_voxels == "Voxel AO")
 	public static function resolveAO() {
 		var rts = path.renderTargets;
@@ -1309,7 +1306,7 @@ class ShadowMapAtlas {
 	var tileSizeFactor: Array<Float> = [];
 	#end
 	public var updateRenderTarget = false;
-	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
+	public static var shadowMapAtlases:Map<String, ShadowMapAtlas> = new Map();
 	public static var shadowMapAtlasesTransparent:Map<String, ShadowMapAtlas> = new Map(); // map a shadowmap atlas to their light type
 
 	#if arm_debug

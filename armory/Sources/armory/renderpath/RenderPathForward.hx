@@ -259,7 +259,6 @@ class RenderPathForward {
 			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			#end
 
-
 			var t = new RenderTargetRaw();
 			t.name = "singlea";
 			t.width = 0;
@@ -269,7 +268,6 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			#else
 			t.format = "R8";
-			#end
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
@@ -399,6 +397,18 @@ class RenderPathForward {
 			path.setViewport(res, res);
 
 			path.bindTarget("voxels", "voxels");
+
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
+
+			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();
 

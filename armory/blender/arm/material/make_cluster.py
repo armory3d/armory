@@ -1,8 +1,6 @@
 import bpy
 
 import arm.material.shader as shader
-import arm.material.mat_state as mat_state
-import arm.material.mat_utils as mat_utils
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -91,6 +89,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0')
+
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if is_transparent_shadows:

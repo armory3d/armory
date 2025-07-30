@@ -332,7 +332,6 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 	return sampleCol;
 }
 
-
 float traceShadow(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 dir, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
  	vec3 P = origin + dir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
 	float amount = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep, clipmaps);

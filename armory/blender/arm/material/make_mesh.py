@@ -792,7 +792,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             if '_Spot' in wrd.world_defs:
                 # Skip world matrix, already in world-space
                 frag.add_uniform('mat4 LWVPSpot[1]', link='_biasLightViewProjectionMatrixSpotArray', included=True)
-                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
                 if is_transparent_shadows:
                     frag.add_uniform('sampler2D shadowMapSpotTransparent[1]', included=True)
             else:
