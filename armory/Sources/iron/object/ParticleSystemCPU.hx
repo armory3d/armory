@@ -188,7 +188,6 @@ class ParticleSystemCPU {
 		spawnTime = 0;
         spawnedParticles = 0;
 		Tween.stop(loopAnim);
-		for (particle in particlePool) releaseParticle(particle);
     }
 
 	function addToPool() {
