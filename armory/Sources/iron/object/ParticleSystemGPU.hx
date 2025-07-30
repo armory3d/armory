@@ -63,7 +63,6 @@ class ParticleSystemGPU {
 			data = b;
 			r = data.raw;
 			owner = mo;
-			owner.visible = owner.render_emitter; // use for mesh-material batch
 
 			if (Scene.active.raw.gravity != null) {
 				gx = Scene.active.raw.gravity[0] * r.weight_gravity;

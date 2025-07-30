@@ -89,7 +89,6 @@ class ParticleSystemCPU {
             data = b;
             r = data.raw;
 			owner = mo;
-			owner.visible = owner.render_emitter; // use for mesh-material batch
 
 			frameRate = r.fps;
 			type = r.type;
