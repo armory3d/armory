@@ -1,0 +1,255 @@
+{
+	"contexts": [
+		{
+			"name": "compositor_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition",
+					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition",
+					"ifdef": ["_Disabled_CPos"]
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook",
+					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook",
+					"ifdef": ["_Disabled_CPos"]
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix",
+					"ifdef": ["_Disabled_CPos"]
+				},
+				{
+					"name": "light",
+					"link": "_lightPosition",
+					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "VP",
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "time",
+					"link": "_time",
+					"ifdef": ["_CDistort", "_CGrain"]		
+				},
+				{
+					"name": "texStep",
+					"link": "_screenSizeInv",
+					"ifdef": ["_CTexStep"]
+				},
+				{
+					"name": "dynamicScale",
+					"link": "_dynamicScale",
+					"ifdef": ["_DynRes"]
+				},
+				{
+					"name": "aspectRatio",
+					"link": "_aspectRatioF",
+					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "lensTexture",
+					"link": "$lenstexture.jpg",
+					"ifdef": ["_CLensTex"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj",
+					"ifdef": ["_CCameraProj"]
+				},
+				{
+					"name": "lutTexture",
+					"link": "$luttexture.jpg",
+					"ifdef": ["_CLUT"]
+				},
+				{
+					"name": "globalWeight",
+					"link": "_globalWeight",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalTint",
+					"link": "_globalTint",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalSaturation",
+					"link": "_globalSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalContrast",
+					"link": "_globalContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalGamma",
+					"link": "_globalGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalGain",
+					"link": "_globalGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "globalOffset",
+					"link": "_globalOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowSaturation",
+					"link": "_shadowSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowContrast",
+					"link": "_shadowContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowGamma",
+					"link": "_shadowGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowGain",
+					"link": "_shadowGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "shadowOffset",
+					"link": "_shadowOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneSaturation",
+					"link": "_midtoneSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneContrast",
+					"link": "_midtoneContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneGamma",
+					"link": "_midtoneGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneGain",
+					"link": "_midtoneGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "midtoneOffset",
+					"link": "_midtoneOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightSaturation",
+					"link": "_highlightSaturation",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightContrast",
+					"link": "_highlightContrast",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightGamma",
+					"link": "_highlightGamma",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightGain",
+					"link": "_highlightGain",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "highlightOffset",
+					"link": "_highlightOffset",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp1",
+					"link": "_PPComp1",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp2",
+					"link": "_PPComp2",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp3",
+					"link": "_PPComp3",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp4",
+					"link": "_PPComp4",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp5",
+					"link": "_PPComp5",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp6",
+					"link": "_PPComp6",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp7",
+					"link": "_PPComp7",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp8",
+					"link": "_PPComp8",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp14",
+					"link": "_PPComp14",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp15",
+					"link": "_PPComp15",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp16",
+					"link": "_PPComp16",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp18",
+					"link": "_PPComp18",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "compositor_pass.vert.glsl",
+			"fragment_shader": "compositor_pass.frag.glsl"
+		}
+	]
+}
