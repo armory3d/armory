@@ -81,7 +81,9 @@ class ParticleSystemCPU {
 	var rampPositions: Array<FastFloat> = [];
 	var rampColors: Array<FastFloat> = [];
 
-	// FIXME: the ParticleSystem is being constructed twice?
+	// Optimization
+	var particlePool: Array<Object> = [];
+
     public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
             data = b;
@@ -131,6 +133,8 @@ class ParticleSystemCPU {
 
 			scaleElementsCount = getRampElementsLength();
 			scaleRampSizeFactor = getRampSizeFactor();
+
+			createPool();
 
 			switch (type) {
 				case 0: // Emission
@@ -187,155 +191,182 @@ class ParticleSystemCPU {
 		Tween.stop(loopAnim);
     }
 
-    // TODO for optimization: create array containing all the particles and reuse them, instead of spawning and destroying them?
+	function createPool() {
+		for (i in 0...count) {
+			Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
+				o.visible = false;
+				particlePool.push(o);
+			});
+		}
+	}
+
+	function getFreeParticle(): Object {
+		for (particle in particlePool) {
+			if (!particle.visible) {
+				particle.visible = true;
+				return particle;
+			}
+		}
+		return null;
+	}
+
+	function releaseParticle(o: Object) {
+		o.visible = false;
+		o.transform.loc = new Vec4();
+		o.transform.rot = new Quat();
+		o.transform.scale = new Vec4(1, 1, 1, 1);
+	}
+
     function spawnParticle() {
-        Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
-            owner.transform.buildMatrix();
+		var o: Object = getFreeParticle();
+		if (o == null) return;
 
-            var objectPos: Vec4 = new Vec4();
-            var objectRot: Quat = new Quat();
-            var objectScale: Vec4 = new Vec4();
-			owner.transform.world.decompose(objectPos, objectRot, objectScale);
+		owner.transform.buildMatrix();
 
-            o.visible = true;
+		var objectPos: Vec4 = new Vec4();
+		var objectRot: Quat = new Quat();
+		var objectScale: Vec4 = new Vec4();
+		owner.transform.world.decompose(objectPos, objectRot, objectScale);
 
-            var normFactor: FastFloat = 1 / 32767;
-            var scalePos: FastFloat = owner.data.scalePos;
-            var scalePosParticle: FastFloat = cast(o, MeshObject).data.scalePos;
-            var scaleFactor: Vec4  = new Vec4().setFrom(owner.transform.scale);
-            scaleFactor.mult(scalePos / (scale * scalePosParticle));
+		o.visible = true;
 
-			// TODO: add all properties from Blender's UI
-            switch (emitFrom) {
-                case 0: // Vertices
-					var pa: TVertexArray = owner.data.geom.positions;
-					var i: Int = Std.int(Math.random() * (pa.values.length / pa.size));
-					var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
+		var normFactor: FastFloat = 1 / 32767;
+		var scalePos: FastFloat = owner.data.scalePos;
+		var scalePosParticle: FastFloat = cast(o, MeshObject).data.scalePos;
+		var scaleFactor: Vec4  = new Vec4().setFrom(owner.transform.scale);
+		scaleFactor.mult(scalePos / (scale * scalePosParticle));
 
-					if (!localCoords) loc.add(objectPos);
-					o.transform.loc.setFrom(loc);
-                case 1: // Faces
-                    var positions: Int16Array = owner.data.geom.positions.values;
-                    var ia: Uint32Array = owner.data.geom.indices[Std.random(owner.data.geom.indices.length)];
-                    var faceIndex: Int = Std.random(Std.int(ia.length / 3));
+		// TODO: add all properties from Blender's UI
+		switch (emitFrom) {
+			case 0: // Vertices
+				var pa: TVertexArray = owner.data.geom.positions;
+				var i: Int = Std.int(Math.random() * (pa.values.length / pa.size));
+				var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
 
-                    var i0 = ia[faceIndex * 3 + 0];
-                    var i1 = ia[faceIndex * 3 + 1];
-                    var i2 = ia[faceIndex * 3 + 2];
+				if (!localCoords) loc.add(objectPos);
+				o.transform.loc.setFrom(loc);
+			case 1: // Faces
+				var positions: Int16Array = owner.data.geom.positions.values;
+				var ia: Uint32Array = owner.data.geom.indices[Std.random(owner.data.geom.indices.length)];
+				var faceIndex: Int = Std.random(Std.int(ia.length / 3));
 
-                    var v0: Vec3 = new Vec3(positions[i0 * 4], positions[i0 * 4 + 1], positions[i0 * 4 + 2]);
-                    var v1: Vec3 = new Vec3(positions[i1 * 4], positions[i1 * 4 + 1], positions[i1 * 4 + 2]);
-                    var v2: Vec3 = new Vec3(positions[i2 * 4], positions[i2 * 4 + 1], positions[i2 * 4 + 2]);
+				var i0 = ia[faceIndex * 3 + 0];
+				var i1 = ia[faceIndex * 3 + 1];
+				var i2 = ia[faceIndex * 3 + 2];
 
-                    var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
-					var loc: Vec4 = new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor);
+				var v0: Vec3 = new Vec3(positions[i0 * 4], positions[i0 * 4 + 1], positions[i0 * 4 + 2]);
+				var v1: Vec3 = new Vec3(positions[i1 * 4], positions[i1 * 4 + 1], positions[i1 * 4 + 2]);
+				var v2: Vec3 = new Vec3(positions[i2 * 4], positions[i2 * 4 + 1], positions[i2 * 4 + 2]);
 
-					if (!localCoords) loc.add(objectPos);
-                    o.transform.loc.setFrom(loc);
-                case 2: // Volume
-					var scaleFactorVolume: Vec4 = new Vec4().setFrom(owner.transform.dim);
-					scaleFactorVolume.mult(0.5 / (scale * scalePosParticle));
-					var loc: Vec4 = new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1);
+				var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
+				var loc: Vec4 = new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor);
 
-					if (!localCoords) loc.add(objectPos);
-					o.transform.loc.setFrom(loc);
-            }
+				if (!localCoords) loc.add(objectPos);
+				o.transform.loc.setFrom(loc);
+			case 2: // Volume
+				var scaleFactorVolume: Vec4 = new Vec4().setFrom(owner.transform.dim);
+				scaleFactorVolume.mult(0.5 / (scale * scalePosParticle));
+				var loc: Vec4 = new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1);
 
-			particleScale = 1 - scaleRandom * Math.random();
-			var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
-			var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(particleScale);
-			var randomLifetime: FastFloat = lifetimeSeconds * (1 - Math.random() * lifetimeRandom);
+				if (!localCoords) loc.add(objectPos);
+				o.transform.loc.setFrom(loc);
+		}
 
-			if (scaleElementsCount != 0) {
-				tweenScaleSizeFactor = getRampSizeFactor();
-				rampPositions = getRampPositions();
-				rampColors = getRampColors();
-				o.transform.scale.setFrom(sc.mult(rampColors[0]));
-				if (type == 0) tweenParticleScale(o, randomLifetime);
-			} else {
-				o.transform.scale.setFrom(sc);
-			}
-			o.transform.buildMatrix();
+		particleScale = 1 - scaleRandom * Math.random();
+		var localFactor: Vec3 = localCoords ? new Vec3(objectScale.x, objectScale.y, objectScale.z) : new Vec3(1, 1, 1);
+		var sc: Vec4 = new Vec4(o.transform.scale.x / localFactor.x, o.transform.scale.y / localFactor.y, o.transform.scale.z / localFactor.z, 1.0).mult(scale).mult(particleScale);
+		var randomLifetime: FastFloat = lifetimeSeconds * (1 - Math.random() * lifetimeRandom);
 
-			switch (type) {
-				case 0: // Emission
-					var randomX: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-					var randomY: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-					var randomZ: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
-					var g: Vec3 = new Vec3();
+		if (scaleElementsCount != 0) {
+			tweenScaleSizeFactor = getRampSizeFactor();
+			rampPositions = getRampPositions();
+			rampColors = getRampColors();
+			o.transform.scale.setFrom(sc.mult(rampColors[0]));
+			if (type == 0) tweenParticleScale(o, randomLifetime);
+		} else {
+			o.transform.scale.setFrom(sc);
+		}
+		o.transform.buildMatrix();
 
-					var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
-					if (!localCoords) rotatedVelocity.applyQuat(objectRot);
+		switch (type) {
+			case 0: // Emission
+				var randomX: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+				var randomY: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+				var randomZ: FastFloat = (Math.random() * 2 / (scale * particleScale) - 1 / (scale * particleScale)) * velocityRandom;
+				var g: Vec3 = new Vec3();
 
-					var randQuat: Quat;
-					var phaseQuat: Quat;
+				var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
+				if (!localCoords) rotatedVelocity.applyQuat(objectRot);
 
-					if (rotation) {
-						// Rotation phase and randomness. Wrap values between -1 and 1.
-						randQuat = new Quat().fromEuler((Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom);
-						var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
-						var phaseValue: FastFloat = phase + phaseRand;
-						while (phaseValue > 1) phaseValue -= 2;
-						while (phaseValue < -1) phaseValue += 2;
-						var dirQuat: Quat = new Quat();
-						phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+				var randQuat: Quat;
+				var phaseQuat: Quat;
 
-						switch (orientationAxis) {
-							case 0:
-								o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
-							case 3: // Velocity/Hair
-								setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
-							case 4: // Global X
-								o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
-							case 5: // Global Y
-								o.transform.rot.fromEuler(0, 0, 0).mult(phaseQuat).mult(randQuat);
-							case 6: // Global Z
-								o.transform.rot.fromEuler(0, -Math.PI * 0.5, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
-							case 7: // Object X
-								o.transform.rot.setFrom(objectRot);
-								dirQuat.fromEuler(0, 0, -Math.PI * 0.5);
-								o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
-							case 8: // Object Y
-								o.transform.rot.setFrom(objectRot);
-								o.transform.rot.mult(phaseQuat).mult(randQuat);
-							case 9: // Object Z
-								o.transform.rot.setFrom(objectRot);
-								dirQuat.fromEuler(0, -Math.PI * 0.5, 0).mult(new Quat().fromEuler(0, 0, -Math.PI * 0.5));
-								o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
-							default:
-						}
-					} else {
-						o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+				if (rotation) {
+					// Rotation phase and randomness. Wrap values between -1 and 1.
+					randQuat = new Quat().fromEuler((Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom, (Math.random() * 2 - 1) * Math.PI * rotationRandom);
+					var phaseRand: FastFloat = (Math.random() * 2 - 1) * phaseRandom;
+					var phaseValue: FastFloat = phase + phaseRand;
+					while (phaseValue > 1) phaseValue -= 2;
+					while (phaseValue < -1) phaseValue += 2;
+					var dirQuat: Quat = new Quat();
+					phaseQuat = new Quat().fromEuler(0, phaseValue * Math.PI, 0);
+
+					switch (orientationAxis) {
+						case 0: // None
+							o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+						case 3: // Velocity/Hair
+							setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
+						case 4: // Global X
+							o.transform.rot.fromEuler(0, 0, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+						case 5: // Global Y
+							o.transform.rot.fromEuler(0, 0, 0).mult(phaseQuat).mult(randQuat);
+						case 6: // Global Z
+							o.transform.rot.fromEuler(0, -Math.PI * 0.5, -Math.PI * 0.5).mult(phaseQuat).mult(randQuat);
+						case 7: // Object X
+							o.transform.rot.setFrom(objectRot);
+							dirQuat.fromEuler(0, 0, -Math.PI * 0.5);
+							o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+						case 8: // Object Y
+							o.transform.rot.setFrom(objectRot);
+							o.transform.rot.mult(phaseQuat).mult(randQuat);
+						case 9: // Object Z
+							o.transform.rot.setFrom(objectRot);
+							dirQuat.fromEuler(0, -Math.PI * 0.5, 0).mult(new Quat().fromEuler(0, 0, -Math.PI * 0.5));
+							o.transform.rot.mult(dirQuat).mult(phaseQuat).mult(randQuat);
+						default:
 					}
+				} else {
+					o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
+				}
 
-					Tween.to({
-						tick: function () {
-							g.add(gravity.clone()).mult(Time.delta * gravityFactor);
-							rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
-							o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-							if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
-							o.transform.buildMatrix();
-						},
-						target: null,
-						props: null,
-						duration: randomLifetime,
-						done: function () {
-							o.remove();
-						}
-					});
-				case 1: // Hair
-					var oLoc: Vec4 = localCoords ? o.transform.loc : o.transform.world.getLoc();
-					var ownerLoc: Vec4 = localCoords ? new Vec4() : owner.transform.world.getLoc();
+				Tween.to({
+					tick: function () {
+						g.add(gravity.clone()).mult(Time.delta * gravityFactor);
+						rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
+						o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
+						if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
+						o.transform.buildMatrix();
+					},
+					target: null,
+					props: null,
+					duration: randomLifetime,
+					done: function () {
+						// o.remove();
+						releaseParticle(o);
+					}
+				});
+			case 1: // Hair
+				var oLoc: Vec4 = localCoords ? o.transform.loc : o.transform.world.getLoc();
+				var ownerLoc: Vec4 = localCoords ? new Vec4() : owner.transform.world.getLoc();
 
-					var dir: Vec4 = new Vec4().setFrom(oLoc).sub(ownerLoc).normalize();
-					var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
-					var pitch: FastFloat = Math.asin(dir.z);
-					var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
+				var dir: Vec4 = new Vec4().setFrom(oLoc).sub(ownerLoc).normalize();
+				var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
+				var pitch: FastFloat = Math.asin(dir.z);
+				var targetRot: Quat = new Quat().fromEuler(pitch, 0, yaw);
 
-					o.transform.rot.setFrom(targetRot);
-					o.transform.buildMatrix();
-			}
-        });
+				o.transform.rot.setFrom(targetRot);
+		}
+		o.transform.buildMatrix();
     }
 
 	function setVelocityHair(object: Object, velocity: Vec4, randQuat: Quat, phaseQuat: Quat) {

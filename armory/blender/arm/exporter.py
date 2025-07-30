@@ -914,12 +914,11 @@ class ArmoryExporter:
                     out_object['particle_refs'] = []
                     out_object['render_emitter'] = bobject.show_instancer_for_render
                     for i in range(num_psys):
-                        for obj in bpy.data.objects:
-                            for mod in obj.modifiers:
-                                if mod.type == 'PARTICLE_SYSTEM':
-                                    if mod.particle_system.name == bobject.particle_systems[i].name:
-                                        if mod.show_render:
-                                            self.export_particle_system_ref(bobject.particle_systems[i], out_object)
+                        for mod in bobject.modifiers:
+                            if mod.type == 'PARTICLE_SYSTEM':
+                                if mod.particle_system.name == bobject.particle_systems[i].name:
+                                    if mod.show_render:
+                                        self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
