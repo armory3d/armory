@@ -281,7 +281,7 @@ class DebugConsole extends Trait {
 					function drawObjectNameInList(object: iron.object.Object, selected: Bool) {
 						var _y = ui._y;
 						
-						if (object.parent.name == 'Root')
+						if (object.parent.name == 'Root' && object.raw == null)
 							ui.text(object.uid+'_'+object.name+' ('+iron.Scene.active.raw.world_ref+')');
 						else
 							ui.text(object.uid+'_'+object.name);
