@@ -329,7 +329,7 @@ project.addSources('Sources');
         if rpdat.arm_morph_target != 'Off':
             assets.add_khafile_def('arm_morph_target')
 
-        if rpdat.arm_particles != "Off":
+        if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
             if rpdat.arm_particles == 'GPU':
                 assets.add_khafile_def('arm_gpu_particles')
