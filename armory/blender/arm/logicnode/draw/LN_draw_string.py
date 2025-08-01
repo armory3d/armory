@@ -17,15 +17,15 @@ class DrawStringNode(ArmLogicTreeNode):
         at the anchor point.
 
     @output Out: Activated after the string has been drawn.
-    @output Height: String Height.
     @output Width: String Width.
+    @output Height: String Height.
 
     @see [`kha.graphics2.Graphics.drawString()`](http://kha.tech/api/kha/graphics2/Graphics.html#drawString).
     """
     bl_idname = 'LNDrawStringNode'
     bl_label = 'Draw String'
     arm_section = 'draw'
-    arm_version = 2
+    arm_version = 3
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'Draw')
@@ -38,11 +38,11 @@ class DrawStringNode(ArmLogicTreeNode):
         self.add_input('ArmFloatSocket', 'Angle')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        self.add_output('ArmFloatSocket', 'Height')
         self.add_output('ArmFloatSocket', 'Width')
+        self.add_output('ArmFloatSocket', 'Height')
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
-        if self.arm_version not in (0, 1):
+        if self.arm_version not in (0, 1, 2):
             raise LookupError()
             
         return NodeReplacement.Identity(self)

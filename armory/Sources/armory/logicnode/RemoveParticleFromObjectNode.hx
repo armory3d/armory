@@ -11,7 +11,7 @@ class RemoveParticleFromObjectNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		#if arm_particles
+		#if arm_gpu_particles
 		var object: Object = inputs[1].get();
 
 		if (object == null) return;

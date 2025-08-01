@@ -14,11 +14,11 @@ class GetParticleDataNode extends LogicNode {
 
 		if (object == null) return null;
 
-	#if arm_particles
+	#if arm_gpu_particles
 
 		var mo = cast(object, iron.object.MeshObject);
 
-		var psys = mo.particleSystems != null ? mo.particleSystems[slot] : 
+		var psys = mo.particleSystems != null ? mo.particleSystems[slot] :
 			mo.particleOwner != null && mo.particleOwner.particleSystems != null ? mo.particleOwner.particleSystems[slot] : null;
 
 		if (psys == null) return null;
@@ -62,7 +62,7 @@ class GetParticleDataNode extends LogicNode {
 				@:privateAccess psys.lapTime;
 			case 18:
 				@:privateAccess psys.count;
-			default: 
+			default:
 				null;
 		}
 	#end
