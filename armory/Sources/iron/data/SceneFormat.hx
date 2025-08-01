@@ -390,25 +390,43 @@ typedef TParticleData = {
 #else
 @:structInit class TParticleData {
 #end
+	// Format
+	public var fps: Int;
 	public var name: String;
 	public var type: Int; // 0 - Emitter, Hair
+	// Arm
 	public var auto_start: Bool;
 	public var is_unique: Bool;
+	public var local_coords: Bool;
 	public var loop: Bool;
+	// Emission
 	public var count: Int;
 	public var frame_start: FastFloat;
 	public var frame_end: FastFloat;
 	public var lifetime: FastFloat;
 	public var lifetime_random: FastFloat;
 	public var emit_from: Int; // 0 - Vert, 1 - Face, 2 - Volume
+	// Velocity
 	public var object_align_factor: Float32Array;
 	public var factor_random: FastFloat;
+	// Rotation
+	public var use_rotations: Bool;
+	public var rotation_mode: Int; // 0 - None, 1 - Normal, 2 - Normal-Tangent, 3 - Velocity/Hair, 4 - Global X, 5 - Global Y, 6 - Global Z, 7 - Object X, 8 - Object Y, 9 - Object Z
+	public var rotation_factor_random: Float;
+	public var phase_factor: Float;
+	public var phase_factor_random: Float;
+	public var use_dynamic_rotation: Bool;
+	// Physics
 	public var physics_type: Int; // 0 - No, 1 - Newton
+	public var mass: FastFloat;
+	// Render
 	public var particle_size: FastFloat; // Object scale
 	public var size_random: FastFloat; // Random scale
-	public var mass: FastFloat;
 	public var instance_object: String; // Object reference
+	// Field Weights
 	public var weight_gravity: FastFloat;
+	// Textures
+	public var texture_slots: Dynamic;
 }
 
 #if js

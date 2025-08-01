@@ -914,12 +914,11 @@ class ArmoryExporter:
                     out_object['particle_refs'] = []
                     out_object['render_emitter'] = bobject.show_instancer_for_render
                     for i in range(num_psys):
-                        for obj in bpy.data.objects:
-                            for mod in obj.modifiers:
-                                if mod.type == 'PARTICLE_SYSTEM':
-                                    if mod.particle_system.name == bobject.particle_systems[i].name:
-                                        if mod.show_render:
-                                            self.export_particle_system_ref(bobject.particle_systems[i], out_object)
+                        for mod in bobject.modifiers:
+                            if mod.type == 'PARTICLE_SYSTEM':
+                                if mod.particle_system.name == bobject.particle_systems[i].name:
+                                    if mod.show_render:
+                                        self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
@@ -2285,12 +2284,14 @@ Make sure the mesh only has tris/quads.""")
             make_renderpath.build()
 
     def export_particle_systems(self):
+        render = self.scene.render
+
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
 
         for particleRef in self.particle_system_array.items():
 
-            padd = False;
+            padd = False
 
             for obj in bpy.data.objects:
                 for mod in obj.modifiers:
@@ -2316,11 +2317,41 @@ Make sure the mesh only has tris/quads.""")
             elif psettings.emit_from == 'VOLUME':
                 emit_from = 2
 
+            if psettings.rotation_mode == 'NONE':
+                rotation_mode = 0
+            elif psettings.rotation_mode == 'NOR':
+                rotation_mode = 1
+            elif psettings.rotation_mode == 'NOR_TAN':
+                rotation_mode = 2
+            elif psettings.rotation_mode == 'VEL':
+                rotation_mode = 3
+            elif psettings.rotation_mode == 'GLOB_X':
+                rotation_mode = 4
+            elif psettings.rotation_mode == 'GLOB_Y':
+                rotation_mode = 5
+            elif psettings.rotation_mode == 'GLOB_Z':
+                rotation_mode = 6
+            elif psettings.rotation_mode == 'OB_X':
+                rotation_mode = 7
+            elif psettings.rotation_mode == 'OB_Y':
+                rotation_mode = 8
+            elif psettings.rotation_mode == 'OB_Z':
+                rotation_mode = 9
+
+            # For CPU particles
+            texture_slots = {}
+
+            for key, slot in psettings.texture_slots.items():
+                slot_data = self.extract_props(slot)
+                texture_slots[key] = slot_data
+
             out_particlesys = {
+                'fps': render.fps,
                 'name': particleRef[1]["structName"],
                 'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
                 'auto_start': psettings.arm_auto_start,
                 'is_unique': psettings.arm_is_unique,
+                'local_coords': psettings.arm_local_coords,
                 'loop': psettings.arm_loop,
                 # Emission
                 'count': int(psettings.count * psettings.arm_count_mult),
@@ -2340,6 +2371,13 @@ Make sure the mesh only has tris/quads.""")
                 ),
                 # 'object_factor': psettings.object_factor,
                 'factor_random': psettings.factor_random,
+                # Rotation
+                'use_rotations': psettings.use_rotations,
+                'rotation_mode': rotation_mode,
+                'rotation_factor_random': psettings.rotation_factor_random,
+                'phase_factor': psettings.phase_factor,
+                'phase_factor_random': psettings.phase_factor_random,
+                'use_dynamic_rotation': psettings.use_dynamic_rotation,
                 # Physics
                 'physics_type': 1 if psettings.physics_type == 'NEWTON' else 0,
                 'particle_size': psettings.particle_size,
@@ -2348,7 +2386,10 @@ Make sure the mesh only has tris/quads.""")
                 # Render
                 'instance_object': arm.utils.asset_name(psettings.instance_object),
                 # Field weights
-                'weight_gravity': psettings.effector_weights.gravity
+                'weight_gravity': psettings.effector_weights.gravity,
+                'weight_texture': psettings.effector_weights.texture,
+                # Textures
+                'texture_slots': texture_slots # For CPU particles
             }
 
             if psettings.instance_object not in self.object_to_arm_object_dict:
@@ -2359,6 +2400,48 @@ Make sure the mesh only has tris/quads.""")
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
 
             self.output['particle_datas'].append(out_particlesys)
+
+    # For CPU particles
+    def extract_props(self, bpy_struct, depth=0, max_depth=2):
+        result = {}
+        for prop in bpy_struct.bl_rna.properties:
+            name = prop.identifier
+            if name == "rna_type":
+                continue
+            try:
+                value = getattr(bpy_struct, name)
+
+                if name == "color_ramp" and hasattr(value, "elements"):
+                    result[name] = {
+                        "elements": [
+                            {
+                                "position": el.position,
+                                "color": {
+                                    "r": el.color[0],
+                                    "g": el.color[1],
+                                    "b": el.color[2],
+                                    "a": el.color[3]
+                                }
+                            }
+                            for el in value.elements
+                        ],
+                        "interpolation": value.interpolation,
+                        "hue_interpolation": value.hue_interpolation,
+                        "color_mode": value.color_mode
+                    }
+                elif isinstance(value, (int, float, bool, str)):
+                    result[name] = value
+                elif isinstance(value, (tuple, list)):
+                    result[name] = list(value)
+                elif hasattr(value, "bl_rna") and depth < max_depth:
+                    result[name] = self.extract_props(value, depth + 1, max_depth)
+                else:
+                    result[name] = str(value)
+
+            except Exception as e:
+                result[name] = f"<unreadable: {e}>"
+
+        return result
 
     def export_tilesheets(self):
         wrd = bpy.data.worlds['Arm']

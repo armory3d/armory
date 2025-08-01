@@ -53,7 +53,7 @@ def make(context_id, rpasses, shadowmap=False):
     if parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
-    
+
     if(con_depth).is_elem('morph'):
         make_morph_target.morph_pos(vert)
 
@@ -67,7 +67,7 @@ def make(context_id, rpasses, shadowmap=False):
         make_inst.inst_pos(con_depth, vert)
 
     rpdat = arm.utils.get_rp()
-    if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
+    if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
         make_particle.write(vert, shadowmap=shadowmap)
 
     if is_disp:

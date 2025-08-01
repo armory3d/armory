@@ -206,6 +206,7 @@ class ARM_PT_ParticlesPropsPanel(bpy.types.Panel):
 
         layout.prop(obj.settings, 'arm_auto_start')
         layout.prop(obj.settings, 'arm_is_unique')
+        layout.prop(obj.settings, 'arm_local_coords')
         layout.prop(obj.settings, 'arm_loop')
         layout.prop(obj.settings, 'arm_count_mult')
 

@@ -11,18 +11,18 @@ import iron.data.ShaderData;
 import iron.data.SceneFormat;
 
 class MeshObject extends Object {
-
 	public var data: MeshData = null;
 	public var materials: Vector<MaterialData>;
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
 	#if arm_particles
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
-	public var particleChildren: Array<MeshObject> = null;
-	public var particleOwner: MeshObject = null; // Particle object
-	public var particleIndex = -1;
 	public var render_emitter = true;
-	#end
+	#if arm_gpu_particles
+	public var particleOwner: MeshObject = null; // Particle object
+	public var particleChildren: Array<MeshObject> = null;
+	public var particleIndex = -1;
+	#end #end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
@@ -72,13 +72,18 @@ class MeshObject extends Object {
 		#if arm_batch
 		Scene.active.meshBatch.removeMesh(this);
 		#end
-		#if arm_particles
+		#if arm_gpu_particles
 		if (particleChildren != null) {
 			for (c in particleChildren) c.remove();
 			particleChildren = null;
 		}
+		#end
+		#if arm_particles
 		if (particleSystems != null) {
-			for (psys in particleSystems) psys.remove();
+			for (psys in particleSystems) {
+				#if arm_cpu_particles psys.stop(); #end
+				psys.remove();
+			}
 			particleSystems = null;
 		}
 		#end
@@ -113,7 +118,7 @@ class MeshObject extends Object {
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref);
+		var psys = new ParticleSystem(sceneName, pref, this);
 		particleSystems.push(psys);
 	}
 	#end
@@ -179,7 +184,7 @@ class MeshObject extends Object {
 			// Scale radius for skinned mesh and particle system
 			// TODO: define skin & particle bounds
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
-			#if arm_particles
+			#if arm_gpu_particles
 			// particleSystems for update, particleOwner for render
 			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
 			#end
@@ -238,7 +243,7 @@ class MeshObject extends Object {
 
 		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
 
-		#if arm_particles
+		#if arm_gpu_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
 		if (particleSystems != null && meshContext) {
 			if (particleChildren == null) {
@@ -257,13 +262,14 @@ class MeshObject extends Object {
 				}
 			}
 			for (i in 0...particleSystems.length) {
-				particleSystems[i].update(particleChildren[i], this);
+				particleSystems[i].update(particleChildren[i]);
 			}
 		}
+		#end
+		#if arm_particles
 		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
         if (particleSystems == null && cullMaterial(context)) return;
-
-        #else
+		#else
         if (cullMaterial(context)) return;
 		#end
 
