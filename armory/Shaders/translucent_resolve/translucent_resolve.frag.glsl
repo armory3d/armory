@@ -21,5 +21,6 @@ void main() {
 	}
 
 	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
+
 	fragColor = vec4(accum.rgb / clamp(f, 0.0001, 5000), revealage);
 }
