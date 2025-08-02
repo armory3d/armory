@@ -422,9 +422,11 @@ typedef TParticleData = {
 	// Render
 	public var particle_size: FastFloat; // Object scale
 	public var size_random: FastFloat; // Random scale
+	public var show_emitter: Bool;
 	public var instance_object: String; // Object reference
 	// Field Weights
 	public var weight_gravity: FastFloat;
+	public var weight_texture: FastFloat;
 	// Textures
 	public var texture_slots: Dynamic;
 }
