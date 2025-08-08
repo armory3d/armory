@@ -54,6 +54,22 @@ class App {
 		if (Scene.active == null || !Scene.active.ready) return;
 		iron.system.Time.update();
 
+		// Rebuild projection on window resize
+		if (lastw == -1) {
+			lastw = App.w();
+			lasth = App.h();
+		}
+		if (lastw != App.w() || lasth != App.h()) {
+			if (onResize != null) onResize();
+			else {
+				if (Scene.active != null && Scene.active.camera != null) {
+					Scene.active.camera.buildProjection();
+				}
+			}
+		}
+		lastw = App.w();
+		lasth = App.h();
+
 		if (pauseUpdates) return;
 
 		#if arm_debug
@@ -97,22 +113,6 @@ class App {
 		for (cb in endFrameCallbacks) cb();
 		updateTime = kha.Scheduler.realTime() - startTime;
 		#end
-
-		// Rebuild projection on window resize
-		if (lastw == -1) {
-			lastw = App.w();
-			lasth = App.h();
-		}
-		if (lastw != App.w() || lasth != App.h()) {
-			if (onResize != null) onResize();
-			else {
-				if (Scene.active != null && Scene.active.camera != null) {
-					Scene.active.camera.buildProjection();
-				}
-			}
-		}
-		lastw = App.w();
-		lasth = App.h();
 	}
 
 	static function render(frames: Array<kha.Framebuffer>) {

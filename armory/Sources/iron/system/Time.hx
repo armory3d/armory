@@ -14,7 +14,7 @@ class Time {
 		return 1 / frequency;
 	}
 
-	static var _fixedStep: Null<Float>;
+	static var _fixedStep: Null<Float> = 1 / 60;
 	public static var fixedStep(get, never): Float;
 	static function get_fixedStep(): Float {
 		return _fixedStep;
