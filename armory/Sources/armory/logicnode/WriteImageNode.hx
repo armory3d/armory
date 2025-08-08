@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.object.CameraObject;
+import kha.Color;
 
 class WriteImageNode extends LogicNode {
 
@@ -42,6 +43,34 @@ class WriteImageNode extends LogicNode {
 
 		camera.renderTarget = oldRT;
 		iron.Scene.active.camera = sceneCam;
+
+		if (inputs[9].get()){
+
+			tex = kha.Image.createRenderTarget(inputs[3].get(), inputs[4].get(),
+				kha.graphics4.TextureFormat.RGBA32,
+				kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
+
+			tex.g2.begin(true, Color.Transparent);
+
+			tex.g2.color = Color.White;
+			tex.g2.drawScaledImage(renderTarget, 0, 0, inputs[3].get(), inputs[4].get());
+
+			var scl = inputs[3].get() / iron.App.w();
+
+			if (kha.Image.renderTargetsInvertedY()){
+				tex.g2.scale(scl, -scl);
+				tex.g2.translate(0, inputs[4].get());
+			}
+			else
+				tex.g2.scale(scl, scl);
+
+			for (f in @:privateAccess iron.App.traitRenders2D){
+		    	f(tex.g2);
+		    }
+		    
+		    tex.g2.end();
+
+		}
 
 		var pixels = tex.getPixels();
 
