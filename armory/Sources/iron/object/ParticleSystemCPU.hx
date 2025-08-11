@@ -134,7 +134,9 @@ class ParticleSystemCPU {
 			scaleElementsCount = getRampElementsLength();
 			scaleRampSizeFactor = getRampSizeFactor();
 
-			for (i in 0...count) addToPool();
+			Scene.active.notifyOnInit(function () {
+				for (i in 0...count) addToPool();
+			});
 
 			switch (type) {
 				case 0: // Emission
@@ -155,10 +157,11 @@ class ParticleSystemCPU {
 						}
 					}
 
-					if (autoStart) start();
+					Scene.active.notifyOnInit(function () {
+						if (autoStart) start();
+					});
 				case 1: // Hair
-					// HACK: wait for a few miliseconds until owner's world transform is properly set
-					Tween.timer(0.05, function () {
+					Scene.active.notifyOnInit(function () {
 						for (i in 0...count) spawnParticle();
 					});
 				default:
@@ -233,15 +236,13 @@ class ParticleSystemCPU {
 		var normFactor: FastFloat = 1 / 32767;
 		var scalePos: FastFloat = owner.data.scalePos;
 		var scalePosParticle: FastFloat = cast(o, MeshObject).data.scalePos;
-		var scaleFactor: Vec4  = new Vec4().setFrom(owner.transform.scale);
-		scaleFactor.mult(scalePos / (scale * scalePosParticle));
 
 		// TODO: add all properties from Blender's UI
 		switch (emitFrom) {
 			case 0: // Vertices
 				var pa: TVertexArray = owner.data.geom.positions;
 				var i: Int = Std.int(Math.random() * (pa.values.length / pa.size));
-				var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor * scaleFactor.x, pa.values[i * pa.size + 1] * normFactor * scaleFactor.y, pa.values[i * pa.size + 2] * normFactor * scaleFactor.z, 1);
+				var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor, pa.values[i * pa.size + 1] * normFactor, pa.values[i * pa.size + 2] * normFactor, 1);
 
 				if (!localCoords) loc.add(objectPos);
 				o.transform.loc.setFrom(loc);
@@ -259,7 +260,7 @@ class ParticleSystemCPU {
 				var v2: Vec3 = new Vec3(positions[i2 * 4], positions[i2 * 4 + 1], positions[i2 * 4 + 2]);
 
 				var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
-				var loc: Vec4 = new Vec4(pos.x * scaleFactor.x, pos.y * scaleFactor.y, pos.z * scaleFactor.z, 1).mult(normFactor);
+				var loc: Vec4 = new Vec4(pos.x, pos.y, pos.z, 1).mult(normFactor);
 
 				if (!localCoords) loc.add(objectPos);
 				o.transform.loc.setFrom(loc);
@@ -281,7 +282,7 @@ class ParticleSystemCPU {
 			tweenScaleSizeFactor = getRampSizeFactor();
 			rampPositions = getRampPositions();
 			rampColors = getRampColors();
-			o.transform.scale.setFrom(sc.mult(rampColors[0]));
+			o.transform.scale.setFrom(sc.mult(rampColors[0])); // Initial scale based on the first ramp color
 			if (type == 0) tweenParticleScale(o, randomLifetime);
 		} else {
 			o.transform.scale.setFrom(sc);
@@ -380,12 +381,10 @@ class ParticleSystemCPU {
 
 	function tweenParticleScale(object: Object, lifetime: FastFloat, ?ease = null) {
 		var anims: Array<TAnim> = [];
-		var duration: FastFloat = rampPositions.length > 1 ? rampPositions[0] : 1 - rampPositions[0];
+		var duration: FastFloat = 0; // Initial duration is used in `Tween.timer`
 
-		for (i in 0...scaleElementsCount) {
-			if (i > 0) {
-				duration = (rampPositions[i] - rampPositions[i - 1]) * lifetime;
-			}
+		for (i in 1...scaleElementsCount) {
+			duration = (rampPositions[i] - rampPositions[i - 1]) * lifetime;
 			if (duration <= 0) continue;
 			final scaleValue: FastFloat = scale * (particleScale * (1 - scaleRampSizeFactor) + rampColors[i] * scaleRampSizeFactor);
 
@@ -401,15 +400,15 @@ class ParticleSystemCPU {
 				},
 				duration: duration,
 				done: function () {
-					if (anims.length > 1) {
-						Tween.to(anims[1]);
+					if (anims.length > 0) {
+						Tween.to(anims[0]);
 						anims.shift();
 					}
 				}
 			});
 		}
 
-		Tween.timer(rampPositions[0], function () {
+		Tween.timer(rampPositions[0] * lifetime, function () {
 			Tween.to(anims[0]);
 		});
 	}
