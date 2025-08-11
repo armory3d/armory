@@ -14,7 +14,7 @@ class DrawSubImageNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		RenderToTexture.ensure2DContext("DrawImageNode");
+		RenderToTexture.ensure2DContext("DrawSubImageNode");
 
 		final imgName: String = inputs[1].get();
 		final colorVec: Vec4 = inputs[2].get();
