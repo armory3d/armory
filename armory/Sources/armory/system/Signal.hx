@@ -19,8 +19,7 @@ class Signal {
 
     public function emit(...args: Any) {
         for (callback in callbacks.copy()) {
-            if (!callbacks.contains(callback)) continue;
-            Reflect.callMethod(this, callback, args);
+            if (callbacks.contains(callback)) Reflect.callMethod(null, callback, args);
         }
     }
 
