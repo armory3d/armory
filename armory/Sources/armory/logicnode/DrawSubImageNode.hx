@@ -35,7 +35,7 @@ class DrawSubImageNode extends LogicNode {
 
 		RenderToTexture.g.rotate(angle, x, y);
 
-		if (imgName != lastImgName) {
+		if (imgName != lastImgName || img == null) {
 			// Load new image
 			lastImgName = imgName;
 			iron.data.Data.getImage(imgName, (image: Image) -> {

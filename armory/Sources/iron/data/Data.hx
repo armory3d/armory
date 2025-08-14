@@ -416,7 +416,7 @@ class Data {
 		var loading = loadingBlobs.get(file); // Is already being loaded
 		if (loading != null) {
 			loading.push(done);
-			return;
+			//return;
 		}
 
 		loadingBlobs.set(file, [done]); // Start loading
@@ -452,7 +452,7 @@ class Data {
 		var loading = loadingImages.get(file);
 		if (loading != null) {
 			loading.push(done);
-			return;
+			//return;
 		}
 
 		loadingImages.set(file, [done]);
