@@ -30,12 +30,10 @@ uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(r32ui) uimage3D voxels;
-uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDFSampler;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
+uniform sampler2D shadowMapTransparent;
 uniform sampler2DShadow shadowMapSpot;
 #ifdef _ShadowMapAtlas
 uniform sampler2DShadow shadowMapPoint;
@@ -91,35 +89,26 @@ void main() {
 	int res = voxelgiResolution.x;
 	ivec3 dst = ivec3(gl_GlobalInvocationID.xyz);
 
-	vec3 P = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution;
-	P = P * 2.0 - 1.0;
-	P *= clipmaps[int(clipmapLevel * 10)];
-	P *= voxelgiResolution;
-	P += vec3(clipmaps[int(clipmapLevel * 10 + 4)], clipmaps[int(clipmapLevel * 10 + 5)], clipmaps[int(clipmapLevel * 10 + 6)]);
+	vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
+	wposition = wposition * 2.0 - 1.0;
+	wposition *= float(clipmaps[int(clipmapLevel * 10)]);
+	wposition *= voxelgiResolution.x;
+	wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
 
-	vec3 visibility;
-	vec3 lp = lightPos - P;
+	float visibility;
+	vec3 lp = lightPos -wposition;
 	vec3 l;
-	if (lightType == 0) { l = lightDir; visibility = vec3(1.0); }
-	else { l = normalize(lp); visibility = vec3(attenuate(distance(P, lightPos))); }
-
-	vec3 N = vec3(0.0);
-	N.r = float(imageLoad(voxels, dst + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-	N.g = float(imageLoad(voxels, dst + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-	N /= 2;
-	vec3 wnormal = decode_oct(N.rg * 2 - 1);
-
-	// float dotNL = max(dot(wnormal, l), 0.0);
-	// if (dotNL == 0.0) return;
+	if (lightType == 0) { l = lightDir; visibility = 1.0; }
+	else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
 
 #ifdef _ShadowMap
 	if (lightShadow == 1) {
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
-		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).rrr;
+		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
 	else if (lightShadow == 2) {
-		vec4 lightPosition = LVP * vec4(P, 1.0);
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
 		vec3 lPos = lightPosition.xyz / lightPosition.w;
 		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
@@ -140,20 +129,7 @@ void main() {
 	}
 #endif
 
-	if (lightType == 2) {
-		float spotEffect = dot(lightDir, l);
-		if (spotEffect < spotData.x) {
-			visibility *= smoothstep(spotData.y, spotData.x, spotEffect);
-		}
-	}
-
-	const vec2 pixel = gl_GlobalInvocationID.xy;
-	#ifdef _VoxelShadow
-	visibility *= traceShadow(P, wnormal, voxelsSampler, voxelsSDFSampler, lp, clipmaps, pixel);
-	#endif
-	vec3 light = visibility * lightColor;
-
-	imageAtomicAdd(voxelsLight, dst, uint(light.r * 255));
-	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(light.g * 255));
-	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(light.b * 255));
+	imageAtomicAdd(voxelsLight, dst, uint(visibility * lightColor.r * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
 }
