@@ -773,7 +773,7 @@ const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 
         focus_distance = 0.0
         fstop = 0.0
-        if len(bpy.data.cameras) > 0 and arm.utils.get_active_scene().camera.data.dof.use_dof:
+        if arm.utils.get_active_scene().camera and arm.utils.get_active_scene().camera.data.dof.use_dof:
             focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
             fstop = arm.utils.get_active_scene().camera.data.dof.aperture_fstop
             lens = arm.utils.get_active_scene().camera.data.lens
