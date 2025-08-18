@@ -74,15 +74,18 @@ class ParticleSystemCPU {
 	var loopAnim: TAnim;
 	var spawnTime: FastFloat = 0;
 
+	var randQuat: Quat;
+	var phaseQuat: Quat;
+
 	// Tween scaling
 	var scaleElementsCount: Int = 0;
 	var scaleRampSizeFactor: FastFloat = 0;
-	var tweenScaleSizeFactor: FastFloat = 0;
 	var rampPositions: Array<FastFloat> = [];
 	var rampColors: Array<FastFloat> = [];
 
 	// Optimization
 	var particlePool: Array<Object> = [];
+	var particlePhysics: Map<Object, TParticlePhysics> = [];
 
     public function new(sceneName: String, pref: TParticleReference, mo: MeshObject) {
         Data.getParticle(sceneName, pref.particle, function (b: ParticleData) {
@@ -148,6 +151,7 @@ class ParticleSystemCPU {
 								spawnParticle();
 								spawnedParticles++;
 							}
+							updateParticles();
 						},
 						target: null,
 						props: null,
@@ -191,6 +195,9 @@ class ParticleSystemCPU {
 		spawnTime = 0;
         spawnedParticles = 0;
 		Tween.stop(loopAnim);
+
+		for (particle => physics in particlePhysics) releaseParticle(particle);
+		particlePhysics.clear();
     }
 
 	function addToPool() {
@@ -279,11 +286,8 @@ class ParticleSystemCPU {
 		var randomLifetime: FastFloat = lifetimeSeconds * (1 - Math.random() * lifetimeRandom);
 
 		if (scaleElementsCount != 0) {
-			tweenScaleSizeFactor = getRampSizeFactor();
 			rampPositions = getRampPositions();
 			rampColors = getRampColors();
-			o.transform.scale.setFrom(sc.mult(rampColors[0])); // Initial scale based on the first ramp color
-			if (type == 0) tweenParticleScale(o, randomLifetime);
 		} else {
 			o.transform.scale.setFrom(sc);
 		}
@@ -298,9 +302,6 @@ class ParticleSystemCPU {
 
 				var rotatedVelocity: Vec4 = new Vec4(velocity.x + randomX, velocity.y + randomY, velocity.z + randomZ, 1);
 				if (!localCoords) rotatedVelocity.applyQuat(objectRot);
-
-				var randQuat: Quat;
-				var phaseQuat: Quat;
 
 				if (rotation) {
 					// Rotation phase and randomness. Wrap values between -1 and 1.
@@ -340,21 +341,19 @@ class ParticleSystemCPU {
 					o.transform.rotate(new Vec4(0, 0, 1, 1), -Math.PI * 0.5);
 				}
 
-				Tween.to({
-					tick: function () {
-						g.add(gravity.clone()).mult(Time.delta * gravityFactor);
-						rotatedVelocity.add(new Vec4(g.x, g.y, g.z, 1));
-						o.transform.translate(rotatedVelocity.x * Time.delta, rotatedVelocity.y * Time.delta, rotatedVelocity.z * Time.delta);
-						if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(o, rotatedVelocity, randQuat, phaseQuat);
-						o.transform.buildMatrix();
-					},
-					target: null,
-					props: null,
-					duration: randomLifetime,
-					done: function () {
-						releaseParticle(o);
-					}
-				});
+				var physics: TParticlePhysics = {
+					velocity: rotatedVelocity.clone(),
+					gravity: gravity.clone().mult(gravityFactor),
+					lifetime: randomLifetime,
+					age: 0.0,
+					hasScaleRamp: scaleElementsCount != 0,
+					baseScale: sc.clone(),
+					rampPositions: rampPositions.copy(),
+					rampColors: rampColors.copy(),
+					scaleRampSizeFactor: scaleRampSizeFactor
+				};
+
+				particlePhysics.set(o, physics);
 			case 1: // Hair
 				var oLoc: Vec4 = localCoords ? o.transform.loc : o.transform.world.getLoc();
 				var ownerLoc: Vec4 = localCoords ? new Vec4() : owner.transform.world.getLoc();
@@ -369,6 +368,55 @@ class ParticleSystemCPU {
 		o.transform.buildMatrix();
     }
 
+	function updateParticles() {
+		for (particle => physics in particlePhysics) {
+			physics.age += Time.delta;
+
+			if (physics.age >= physics.lifetime) {
+				particlePhysics.remove(particle);
+				releaseParticle(particle);
+				continue;
+			}
+
+			physics.velocity.x += physics.gravity.x * Time.delta;
+			physics.velocity.y += physics.gravity.y * Time.delta;
+			physics.velocity.z += physics.gravity.z * Time.delta;
+
+			particle.transform.translate(
+				physics.velocity.x * Time.delta,
+				physics.velocity.y * Time.delta,
+				physics.velocity.z * Time.delta
+			);
+
+			if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(particle, physics.velocity, randQuat, phaseQuat);
+
+			if (physics.hasScaleRamp && physics.rampPositions.length > 1) {
+				var normalizedAge: FastFloat = physics.age / physics.lifetime;
+				var scaleMultiplier: FastFloat = interpolateRampValue(normalizedAge, physics.rampPositions, physics.rampColors);
+				var finalScale: FastFloat = scale * (particleScale * (1 - physics.scaleRampSizeFactor) + scaleMultiplier * physics.scaleRampSizeFactor);
+				particle.transform.scale.setFrom(physics.baseScale.clone().mult(finalScale));
+			}
+
+			particle.transform.buildMatrix();
+		}
+	}
+
+	// Linear interpolation
+	function interpolateRampValue(normalizedAge: FastFloat, positions: Array<FastFloat>, colors: Array<FastFloat>): FastFloat {
+		if (positions.length == 0) return 1.0;
+		if (normalizedAge <= positions[0]) return colors[0];
+		if (normalizedAge >= positions[positions.length - 1]) return colors[colors.length - 1];
+
+		for (i in 0...(positions.length - 1)) {
+			if (normalizedAge >= positions[i] && normalizedAge <= positions[i + 1]) {
+				var t: FastFloat = (normalizedAge - positions[i]) / (positions[i + 1] - positions[i]);
+				return colors[i] + t * (colors[i + 1] - colors[i]);
+			}
+		}
+
+		return colors[colors.length - 1];
+	}
+
 	function setVelocityHair(object: Object, velocity: Vec4, randQuat: Quat, phaseQuat: Quat) {
 		var dir: Vec4 = velocity.clone().normalize();
 		var yaw: FastFloat = Math.atan2(-dir.x, dir.y);
@@ -377,40 +425,6 @@ class ParticleSystemCPU {
 
 		targetRot.mult(randQuat);
 		object.transform.rot.setFrom(targetRot.mult(phaseQuat));
-	}
-
-	function tweenParticleScale(object: Object, lifetime: FastFloat, ?ease = null) {
-		var anims: Array<TAnim> = [];
-		var duration: FastFloat = 0; // Initial duration is used in `Tween.timer`
-
-		for (i in 1...scaleElementsCount) {
-			duration = (rampPositions[i] - rampPositions[i - 1]) * lifetime;
-			if (duration <= 0) continue;
-			final scaleValue: FastFloat = scale * (particleScale * (1 - scaleRampSizeFactor) + rampColors[i] * scaleRampSizeFactor);
-
-			anims.push({
-				tick: function () {
-					object.transform.buildMatrix();
-				},
-				target: object.transform.scale,
-				props: {
-					x: scaleValue,
-					y: scaleValue,
-					z: scaleValue
-				},
-				duration: duration,
-				done: function () {
-					if (anims.length > 0) {
-						Tween.to(anims[0]);
-						anims.shift();
-					}
-				}
-			});
-		}
-
-		Tween.timer(rampPositions[0] * lifetime, function () {
-			Tween.to(anims[0]);
-		});
 	}
 
 	function getRampSizeFactor(): FastFloat {
@@ -488,5 +502,17 @@ class ParticleSystemCPU {
 		var v = c.sub(a);
 		return a.add(u.mult(x).add(v.mult(y)));
 	}
+}
+
+typedef TParticlePhysics = {
+	var velocity: Vec4;
+	var gravity: Vec3;
+	var lifetime: Float;
+	var age: Float;
+	var hasScaleRamp: Bool;
+	var baseScale: Vec4;
+	var rampPositions: Array<FastFloat>;
+	var rampColors: Array<FastFloat>;
+	var scaleRampSizeFactor: FastFloat;
 }
 #end
