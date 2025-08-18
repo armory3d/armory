@@ -573,6 +573,7 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         if mat is None:
             return
 
+        layout.prop(mat, 'arm_sorting_order')
         layout.prop(mat, 'arm_cast_shadow')
         columnb = layout.column()
         wrd = bpy.data.worlds['Arm']

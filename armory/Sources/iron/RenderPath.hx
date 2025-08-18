@@ -338,7 +338,7 @@ class RenderPath {
 			if (depthDiff != 0) return depthDiff;
 			#end
 
-			return a.materials[0].name >= b.materials[0].name ? 1 : -1;
+			return a.materials[0].shader.sortingOrder >= b.materials[0].shader.sortingOrder ? 1 : -1;
 		});
 	}
 

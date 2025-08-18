@@ -551,6 +551,7 @@ def init_properties():
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)
     bpy.types.Material.export_tangents = BoolProperty(name="Export Tangents", default=False)
+    bpy.types.Material.arm_sorting_order = IntProperty(name="Sorting Order", default=0)
     bpy.types.Material.arm_skip_context = StringProperty(name="Skip Context", default='')
     bpy.types.Material.arm_material_id = IntProperty(name="ID", default=0)
     bpy.types.NodeSocket.is_uniform = BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
