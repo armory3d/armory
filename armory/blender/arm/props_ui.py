@@ -579,11 +579,13 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb.enabled = len(wrd.arm_rplist) > 0 and arm.utils.get_rp().rp_renderer == 'Forward'
         columnb.prop(mat, 'arm_receive_shadow')
         layout.prop(mat, 'arm_ignore_irradiance')
+        layout.prop(mat, 'arm_compare_mode')
         layout.prop(mat, 'arm_two_sided')
         columnb = layout.column()
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
         layout.prop(mat, 'arm_material_id')
+        layout.prop(mat, 'arm_depth_write')
         layout.prop(mat, 'arm_depth_read')
         layout.prop(mat, 'arm_overlay')
         layout.prop(mat, 'arm_decal')

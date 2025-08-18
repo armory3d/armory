@@ -66,6 +66,9 @@ def make(context_id, rpasses):
     elif dprepass and not (rpdat.rp_depth_texture and mat.arm_depth_read):
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
+    else:
+        con['depth_write'] = mat.arm_depth_write
+        con['compare_mode'] = mat.arm_compare_mode
 
     attachment_format = 'RGBA32' if '_LDR' in wrd.world_defs else 'RGBA64'
     con['color_attachments'] = [attachment_format, attachment_format]
