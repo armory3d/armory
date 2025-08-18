@@ -437,10 +437,18 @@ class MeshObject extends Object {
 			// Find the material with the specified next pass name
 			var nextMaterial: MaterialData = null;
 			for (mat in materials) {
-				trace(mat.name);
+				// First try exact match
 				if (mat.name == nextPassName) {
 					nextMaterial = mat;
 					break;
+				}
+				// If no exact match, try to match base name for linked materials
+				if (mat.name.indexOf("_") > 0 && mat.name.substr(mat.name.length - 6) == ".blend") {
+					var baseName = mat.name.substring(0, mat.name.indexOf("_"));
+					if (baseName == nextPassName) {
+						nextMaterial = mat;
+						break;
+					}
 				}
 			}
 

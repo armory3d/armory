@@ -437,7 +437,7 @@ def init_properties():
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="Cull Mode", default='clockwise', description="Draw geometry faces")
     bpy.types.Material.arm_next_pass = StringProperty(
-        name="Next Pass", default='none', description="Next pass for the material", update=assets.invalidate_shader_cache)
+        name="Next Pass", default='', description="Next pass for the material", update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_discard = BoolProperty(name="Alpha Test", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
