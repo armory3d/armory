@@ -223,6 +223,7 @@ typedef TShaderData = {
 #end
 	public var name: String;
 	public var sortingOrder: Int;
+	public var nextPass: String;
 	public var contexts: Array<TShaderContext>;
 }
 

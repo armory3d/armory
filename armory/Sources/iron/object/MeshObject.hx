@@ -310,6 +310,10 @@ class MeshObject extends Object {
 
 		// Render mesh
 		var ldata = lod.data;
+
+		// Second pass rendering first (inverse order)
+		renderNextPass(g, context, bindParams, lod);
+
 		for (i in 0...ldata.geom.indexBuffers.length) {
 
 			var mi = ldata.geom.materialIndices[i];
@@ -410,6 +414,86 @@ class MeshObject extends Object {
 			for (l in raw.lods) {
 				if (l.object_ref == "") lods.push(null); // Empty
 				else lods.push(Scene.active.getChild(l.object_ref));
+			}
+		}
+	}
+
+	// Use nextPass property from shader data instead of hardcoded hack
+	function renderNextPass(g: Graphics, context: String, bindParams: Array<String>, lod: MeshObject) {
+		var ldata = lod.data;
+
+		// Check each geometry section for nextPass materials
+		for (i in 0...ldata.geom.indexBuffers.length) {
+			var mi = ldata.geom.materialIndices[i];
+			if (mi >= materials.length) continue;
+
+			var currentMaterial = materials[mi];
+			if (currentMaterial == null || currentMaterial.shader == null) continue;
+
+			// Get the nextPass material name from shader data
+			var nextPassName = currentMaterial.shader.nextPass;
+			if (nextPassName == null || nextPassName == "" || nextPassName == "none") continue;
+
+			// Find the material with the specified next pass name
+			var nextMaterial: MaterialData = null;
+			for (mat in materials) {
+				trace(mat.name);
+				if (mat.name == nextPassName) {
+					nextMaterial = mat;
+					break;
+				}
+			}
+
+			if (nextMaterial == null) continue; // Next pass material not found
+
+			// Get context for next material
+			var nextMaterialContext: MaterialContext = null;
+			var nextShaderContext: ShaderContext = null;
+
+			for (j in 0...nextMaterial.raw.contexts.length) {
+				if (nextMaterial.raw.contexts[j].name.substr(0, context.length) == context) {
+					nextMaterialContext = nextMaterial.contexts[j];
+					nextShaderContext = nextMaterial.shader.getContext(context);
+					break;
+				}
+			}
+
+			if (nextShaderContext == null) continue;
+
+			// Check context skip for next material
+			if (skipContext(context, nextMaterial)) continue;
+
+			var elems = nextShaderContext.raw.vertex_elements;
+
+			// Uniforms
+			if (nextShaderContext.pipeState != lastPipeline) {
+				g.setPipeline(nextShaderContext.pipeState);
+				lastPipeline = nextShaderContext.pipeState;
+			}
+			Uniforms.setContextConstants(g, nextShaderContext, bindParams);
+			Uniforms.setObjectConstants(g, nextShaderContext, this);
+			Uniforms.setMaterialConstants(g, nextShaderContext, nextMaterialContext);
+
+			// VB / IB
+			#if arm_deinterleaved
+			g.setVertexBuffers(ldata.geom.get(elems));
+			#else
+			if (ldata.geom.instancedVB != null) {
+				g.setVertexBuffers([ldata.geom.get(elems), ldata.geom.instancedVB]);
+			}
+			else {
+				g.setVertexBuffer(ldata.geom.get(elems));
+			}
+			#end
+
+			g.setIndexBuffer(ldata.geom.indexBuffers[i]);
+
+			// Draw next pass for this specific geometry section
+			if (ldata.geom.instanced) {
+				g.drawIndexedVerticesInstanced(ldata.geom.instanceCount, ldata.geom.start, ldata.geom.count);
+			}
+			else {
+				g.drawIndexedVertices(ldata.geom.start, ldata.geom.count);
 			}
 		}
 	}

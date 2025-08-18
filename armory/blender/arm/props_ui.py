@@ -489,6 +489,48 @@ class ARM_OT_NewCustomMaterial(bpy.types.Operator):
 
         return{'FINISHED'}
 
+class ARM_OT_NextPassMaterialSelector(bpy.types.Operator):
+    """Select material for next pass"""
+    bl_idname = "arm.next_pass_material_selector"
+    bl_label = "Select Next Pass Material"
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.popup_menu(self.draw_menu, title="Select Next Pass Material", icon='MATERIAL')
+        return {'FINISHED'}
+
+    def draw_menu(self, popup, context):
+        layout = popup.layout
+
+        # Add 'None' option
+        op = layout.operator("arm.set_next_pass_material", text="None")
+        op.material_name = ""
+
+        # Add materials from the current object's material slots
+        if context.object and hasattr(context.object, 'material_slots'):
+            for slot in context.object.material_slots:
+                if slot.material is not None:
+                    op = layout.operator("arm.set_next_pass_material", text=slot.material.name)
+                    op.material_name = slot.material.name
+
+class ARM_OT_SetNextPassMaterial(bpy.types.Operator):
+    """Set the next pass material"""
+    bl_idname = "arm.set_next_pass_material"
+    bl_label = "Set Next Pass Material"
+
+    material_name: StringProperty()
+
+    def execute(self, context):
+        if context.material:
+            context.material.arm_next_pass = self.material_name
+        # Redraw the UI to update the display
+        for area in context.screen.areas:
+            if area.type == 'PROPERTIES':
+                area.tag_redraw()
+        return {'FINISHED'}
+
 class ARM_PG_BindTexturesListItem(bpy.types.PropertyGroup):
     uniform_name: StringProperty(
         name='Uniform Name',
@@ -585,6 +627,12 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb = layout.column()
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
+
+        # Next Pass material selection with dynamic dropdown
+        row = layout.row(align=True)
+        row.prop(mat, 'arm_next_pass', text="Next Pass")
+        row.operator('arm.next_pass_material_selector', text='', icon='MATERIAL')
+
         layout.prop(mat, 'arm_material_id')
         layout.prop(mat, 'arm_depth_write')
         layout.prop(mat, 'arm_depth_read')
@@ -2837,6 +2885,8 @@ __REG_CLASSES = (
     InvalidateCacheButton,
     InvalidateMaterialCacheButton,
     ARM_OT_NewCustomMaterial,
+    ARM_OT_NextPassMaterialSelector,
+    ARM_OT_SetNextPassMaterial,
     ARM_PG_BindTexturesListItem,
     ARM_UL_BindTexturesList,
     ARM_OT_BindTexturesListNewItem,
