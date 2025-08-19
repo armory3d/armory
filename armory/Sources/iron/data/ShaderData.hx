@@ -22,7 +22,6 @@ using StringTools;
 class ShaderData {
 
 	public var name: String;
-	public var sortingOrder: Int;
 	public var nextPass: String;
 	public var raw: TShaderData;
 	public var contexts: Array<ShaderContext> = [];
@@ -35,8 +34,7 @@ class ShaderData {
 	public function new(raw: TShaderData, done: ShaderData->Void, overrideContext: TShaderOverride = null) {
 		this.raw = raw;
 		this.name = raw.name;
-		this.sortingOrder = raw.sortingOrder;
-		this.nextPass = raw.nextPass;
+		this.nextPass = raw.next_pass;
 
 		for (c in raw.contexts) contexts.push(null);
 		var contextsLoaded = 0;

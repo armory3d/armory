@@ -62,6 +62,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
             return
 
         col = layout.column()
+        col.prop(obj, 'arm_sorting_index')
         col.prop(obj, 'arm_export')
         if not obj.arm_export:
             return
@@ -615,7 +616,6 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         if mat is None:
             return
 
-        layout.prop(mat, 'arm_sorting_order')
         layout.prop(mat, 'arm_cast_shadow')
         columnb = layout.column()
         wrd = bpy.data.worlds['Arm']

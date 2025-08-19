@@ -335,6 +335,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
         tangdata = np.array(tangdata, dtype='<i2')
 
     # Output
+    o['sorting_index'] = bobject.arm_sorting_index
     o['vertex_arrays'] = []
     o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
     o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })

@@ -434,7 +434,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_draw_order: EnumProperty(
         items=[('Auto', 'Auto', 'Auto'),
                ('Distance', 'Distance', 'Distance'),
-               ('Shader', 'Shader', 'Shader')],
+               ('Index', 'Index', 'Index')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
     rp_depth_texture_state: EnumProperty(

@@ -336,8 +336,8 @@ project.addSources('Sources');
             elif rpdat.arm_particles == 'CPU':
                 assets.add_khafile_def('arm_cpu_particles')
 
-        if rpdat.rp_draw_order == 'Shader':
-            assets.add_khafile_def('arm_draworder_shader')
+        if rpdat.rp_draw_order == 'Index':
+            assets.add_khafile_def('arm_draworder_index')
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')

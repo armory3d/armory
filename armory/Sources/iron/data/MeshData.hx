@@ -9,6 +9,7 @@ import iron.data.SceneFormat;
 class MeshData {
 
 	public var name: String;
+	public var sortingIndex: Int;
 	public var raw: TMeshData;
 	public var format: TSceneFormat;
 	public var geom: Geometry;
@@ -23,6 +24,7 @@ class MeshData {
 	public function new(raw: TMeshData, done: MeshData->Void) {
 		this.raw = raw;
 		this.name = raw.name;
+		this.sortingIndex = raw.sorting_index;
 
 		if (raw.scale_pos != null) scalePos = raw.scale_pos;
 		if (raw.scale_tex != null) scaleTex = raw.scale_tex;
