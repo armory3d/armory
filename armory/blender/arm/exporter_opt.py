@@ -129,7 +129,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
         # Shape keys UV are exported separately, so reduce UV count by 1
         num_uv_layers -= 1
         morph_uv_index = self.get_morph_uv_index(bobject.data)
-    has_tex = self.get_export_uvs(export_mesh) or num_uv_layers > 0
+    has_tex = self.get_export_uvs(export_mesh) or num_uv_layers > 0 # FIXME: this should use an `and` instead of `or`. Workaround to completely ignore if the mesh has the `export_uvs` flag. Only checking the `uv_layers` to bypass issues with materials in linked objects.
     if self.has_baked_material(bobject, export_mesh.materials):
         has_tex = True
     has_tex1 = has_tex and num_uv_layers > 1
