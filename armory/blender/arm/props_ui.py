@@ -627,12 +627,9 @@ class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
         columnb = layout.column()
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
-
-        # Next Pass material selection with dynamic dropdown
         row = layout.row(align=True)
         row.prop(mat, 'arm_next_pass', text="Next Pass")
         row.operator('arm.next_pass_material_selector', text='', icon='MATERIAL')
-
         layout.prop(mat, 'arm_material_id')
         layout.prop(mat, 'arm_depth_write')
         layout.prop(mat, 'arm_depth_read')
