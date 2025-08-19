@@ -418,23 +418,18 @@ class MeshObject extends Object {
 		}
 	}
 
-	// Use nextPass property from shader data instead of hardcoded hack
 	function renderNextPass(g: Graphics, context: String, bindParams: Array<String>, lod: MeshObject) {
 		var ldata = lod.data;
-
-		// Check each geometry section for nextPass materials
 		for (i in 0...ldata.geom.indexBuffers.length) {
 			var mi = ldata.geom.materialIndices[i];
 			if (mi >= materials.length) continue;
 
-			var currentMaterial = materials[mi];
+			var currentMaterial: MaterialData = materials[mi];
 			if (currentMaterial == null || currentMaterial.shader == null) continue;
 
-			// Get the nextPass material name from shader data
-			var nextPassName = currentMaterial.shader.nextPass;
-			if (nextPassName == null || nextPassName == "" || nextPassName == "none") continue;
+			var nextPassName: String = currentMaterial.shader.nextPass;
+			if (nextPassName == null || nextPassName == "") continue;
 
-			// Find the material with the specified next pass name
 			var nextMaterial: MaterialData = null;
 			for (mat in materials) {
 				// First try exact match
@@ -452,9 +447,8 @@ class MeshObject extends Object {
 				}
 			}
 
-			if (nextMaterial == null) continue; // Next pass material not found
+			if (nextMaterial == null) continue;
 
-			// Get context for next material
 			var nextMaterialContext: MaterialContext = null;
 			var nextShaderContext: ShaderContext = null;
 
@@ -467,8 +461,6 @@ class MeshObject extends Object {
 			}
 
 			if (nextShaderContext == null) continue;
-
-			// Check context skip for next material
 			if (skipContext(context, nextMaterial)) continue;
 
 			var elems = nextShaderContext.raw.vertex_elements;
