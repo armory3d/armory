@@ -58,7 +58,6 @@ def make(context_id, rpasses):
         con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
         con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
         con['depth_write'] = False
-        con['compare_mode'] = 'less'
     elif particle:
         pass
     # Depth prepass was performed, exclude mat with depth read that

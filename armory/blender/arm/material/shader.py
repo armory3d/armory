@@ -24,6 +24,7 @@ class ShaderData:
         self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.sd['name'] = self.matname + '_data'
         self.sd['sortingOrder'] = material.arm_sorting_order
+        self.sd['nextPass'] = material.arm_next_pass
         self.sd['contexts'] = []
 
     def add_context(self, props) -> 'ShaderContext':
