@@ -129,7 +129,7 @@ def export_mesh_data(self, export_mesh: bpy.types.Mesh, bobject: bpy.types.Objec
         # Shape keys UV are exported separately, so reduce UV count by 1
         num_uv_layers -= 1
         morph_uv_index = self.get_morph_uv_index(bobject.data)
-    has_tex = self.get_export_uvs(export_mesh) and num_uv_layers > 0
+    has_tex = self.get_export_uvs(export_mesh) or num_uv_layers > 0
     if self.has_baked_material(bobject, export_mesh.materials):
         has_tex = True
     has_tex1 = has_tex and num_uv_layers > 1
@@ -427,7 +427,7 @@ def export_skin(self, bobject, armature, vert_list, o):
             bone_weight_array[count] = bv[0] * 32767
             bone_index_array[count] = bv[1]
             count += 1
-        
+
         if total_weight not in (0.0, 1.0):
             normalizer = 1.0 / total_weight
             for i in range(bone_count):
