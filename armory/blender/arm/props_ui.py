@@ -505,13 +505,13 @@ class ARM_OT_NextPassMaterialSelector(bpy.types.Operator):
         layout = popup.layout
 
         # Add 'None' option
-        op = layout.operator("arm.set_next_pass_material", text="None")
+        op = layout.operator("arm.set_next_pass_material", text="")
         op.material_name = ""
 
         # Add materials from the current object's material slots
         if context.object and hasattr(context.object, 'material_slots'):
             for slot in context.object.material_slots:
-                if slot.material is not None:
+                if (slot.material is not None and slot.material != context.material):
                     op = layout.operator("arm.set_next_pass_material", text=slot.material.name)
                     op.material_name = slot.material.name
 
