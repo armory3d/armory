@@ -2192,6 +2192,9 @@ Make sure the mesh only has tris/quads.""")
             elif material.arm_cull_mode != 'clockwise':
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = material.arm_cull_mode
+            if material.arm_compare_mode != 'less':
+                o['override_context'] = {}
+                o['override_context']['compare_mode'] = material.arm_compare_mode
 
             o['contexts'] = []
 
