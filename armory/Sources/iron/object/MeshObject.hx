@@ -311,7 +311,7 @@ class MeshObject extends Object {
 		// Render mesh
 		var ldata = lod.data;
 
-		// Second pass rendering first (inverse order)
+		// Next pass rendering first (inverse order)
 		renderNextPass(g, context, bindParams, lod);
 
 		for (i in 0...ldata.geom.indexBuffers.length) {
