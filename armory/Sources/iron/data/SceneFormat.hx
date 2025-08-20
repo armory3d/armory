@@ -49,6 +49,7 @@ typedef TMeshData = {
 @:structInit class TMeshData {
 #end
 	public var name: String;
+	public var sorting_index: Int;
 	public var vertex_arrays: Array<TVertexArray>;
 	public var index_arrays: Array<TIndexArray>;
 	@:optional public var dynamic_usage: Null<Bool>;
@@ -222,8 +223,7 @@ typedef TShaderData = {
 @:structInit class TShaderData {
 #end
 	public var name: String;
-	public var sortingOrder: Int;
-	public var nextPass: String;
+	public var next_pass: String;
 	public var contexts: Array<TShaderContext>;
 }
 

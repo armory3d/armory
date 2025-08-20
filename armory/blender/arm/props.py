@@ -349,6 +349,7 @@ def init_properties():
         description='Whether to use instancing to draw the children of this object. If enabled, this option defines what attributes may vary between the instances',
         update=assets.invalidate_instance_cache,
         override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_sorting_index = IntProperty(name="Sorting Index", description="Sorting index for the Render's Draw Order", default=0, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
@@ -553,7 +554,6 @@ def init_properties():
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)
     bpy.types.Material.export_tangents = BoolProperty(name="Export Tangents", default=False)
-    bpy.types.Material.arm_sorting_order = IntProperty(name="Sorting Order", default=0)
     bpy.types.Material.arm_skip_context = StringProperty(name="Skip Context", default='')
     bpy.types.Material.arm_material_id = IntProperty(name="ID", default=0)
     bpy.types.NodeSocket.is_uniform = BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)

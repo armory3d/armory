@@ -1711,6 +1711,7 @@ Make sure the mesh only has tris/quads.""")
             tangdata = np.array(tangdata, dtype='<i2')
 
         # Output
+        o['sorting_index'] = bobject.arm_sorting_index
         o['vertex_arrays'] = []
         o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
         o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
