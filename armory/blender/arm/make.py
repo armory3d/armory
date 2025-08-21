@@ -142,6 +142,7 @@ def load_external_blends():
 
                 for scn in data_to.scenes:
                     if scn is not None and scn not in appended_scenes:
+                        scn.name += "_" + filename.replace('.blend', '')
                         appended_scenes.append(scn)
 
                 log.info(f"Loaded external blend: {filename}")
