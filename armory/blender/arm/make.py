@@ -141,6 +141,18 @@ def load_external_blends():
                     data_to.scenes = list(data_from.scenes)
 
                 for scn in data_to.scenes:
+                    if scn.library and scn.library.filepath == blend_path:
+                        # Check for duplicates (excluding this scene)
+                        duplicate = any(
+                            s is not scn and s.library and s.library.filepath == blend_path
+                            for s in bpy.data.scenes
+                        )
+                        if duplicate:
+                            try:
+                                bpy.data.scenes.remove(scn, do_unlink=True)
+                            except Exception as e:
+                                log.error(f"Failed to remove duplicate scene {scn.name}: {e}")
+                            continue
                     if scn is not None and scn not in appended_scenes:
                         scn.name += "_" + filename.replace('.blend', '')
                         appended_scenes.append(scn)
