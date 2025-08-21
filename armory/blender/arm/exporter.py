@@ -2472,7 +2472,7 @@ Make sure the mesh only has tris/quads.""")
         world = self.scene.world
 
         if world is not None:
-            world_name = arm.utils.safestr(world.name)
+            world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
 
             if world_name not in self.world_array:
                 self.world_array.append(world_name)
@@ -2626,7 +2626,7 @@ Make sure the mesh only has tris/quads.""")
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
-                self.output['camera_ref'] = self.scene.camera.name
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
@@ -2650,7 +2650,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_tilesheets()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = arm.utils.safestr(self.scene.world.name)
+                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -3438,7 +3438,7 @@ Make sure the mesh only has tris/quads.""")
         if mobile_mat:
             arm_radiance = False
 
-        out_probe = {'name': world.name}
+        out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
             out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext
