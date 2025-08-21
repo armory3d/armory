@@ -1213,6 +1213,7 @@ class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
 
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts')
         layout.prop(wrd, 'arm_project_root')
+        layout.prop(wrd, 'arm_external_blends_path')
 
 class ArmVirtualInputPanel(bpy.types.Panel):
     bl_label = "Armory Virtual Input"
