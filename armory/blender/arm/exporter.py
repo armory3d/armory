@@ -1948,10 +1948,8 @@ Make sure the mesh only has tris/quads.""")
         """Exports a single collection."""
         scene_objects = self.scene.collection.all_objects
 
-        is_local_to_scene = self.scene.library and collection.name in self.scene.collection.children
-
         out_collection = {
-            'name': arm.utils.asset_name(collection) if is_local_to_scene else collection.name,
+            'name': collection.name,
             'instance_offset': list(collection.instance_offset),
             'object_refs': []
         }
@@ -1975,10 +1973,10 @@ Make sure the mesh only has tris/quads.""")
                     # otherwise Blender will not allow duplicate names
                     if asset_name in scene_objects:
                         log.warn("skipping export of the object"
-                                f" {bobject.name} (collection"
-                                f" {collection.name}) because it has the same"
-                                " export name as another object in the scene:"
-                                f" {asset_name}")
+                                 f" {bobject.name} (collection"
+                                 f" {collection.name}) because it has the same"
+                                 " export name as another object in the scene:"
+                                 f" {asset_name}")
                         continue
 
                     self.process_bobject(bobject)
