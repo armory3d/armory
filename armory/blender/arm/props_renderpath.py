@@ -436,7 +436,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_draw_order: EnumProperty(
         items=[('Auto', 'Auto', 'Auto'),
                ('Distance', 'Distance', 'Distance'),
-               ('Shader', 'Shader', 'Shader')],
+               ('Index', 'Index', 'Index')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
     rp_depth_texture_state: EnumProperty(
@@ -645,9 +645,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
     arm_particles: EnumProperty(
-        items=[('On', 'On', 'On'),
+        items=[('GPU', 'GPU', 'GPU'),
+               ('CPU', 'CPU', 'CPU'),
                ('Off', 'Off', 'Off')],
-        name='Particles', description='Enable particle simulation', default='On', update=assets.invalidate_shader_cache)
+        name='Particles', description='Enable particle simulation', default='GPU', update=assets.invalidate_shader_cache)
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)

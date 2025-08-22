@@ -13,7 +13,7 @@ class GetParticleNode extends LogicNode {
 
 		if (object == null) return null;
 
-	#if arm_particles
+	#if arm_gpu_particles
 
 		var mo = cast(object, iron.object.MeshObject);
 

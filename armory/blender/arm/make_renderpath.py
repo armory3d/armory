@@ -237,7 +237,7 @@ def build():
                 compo_depth = True
 
             focus_distance = 0.0
-            if len(bpy.data.cameras) > 0 and arm.utils.get_active_scene().camera.data.dof.use_dof:
+            if arm.utils.get_active_scene().camera and arm.utils.get_active_scene().camera.data.dof.use_dof:
                 focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
 
             if focus_distance > 0.0:

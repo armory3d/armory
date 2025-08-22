@@ -58,7 +58,6 @@ def make(context_id, rpasses):
         con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
         con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
         con['depth_write'] = False
-        con['compare_mode'] = 'less'
     elif particle:
         pass
     # Depth prepass was performed, exclude mat with depth read that
@@ -66,6 +65,9 @@ def make(context_id, rpasses):
     elif dprepass and not (rpdat.rp_depth_texture and mat.arm_depth_read):
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
+    else:
+        con['depth_write'] = mat.arm_depth_write
+        con['compare_mode'] = mat.arm_compare_mode
 
     attachment_format = 'RGBA32' if '_LDR' in wrd.world_defs else 'RGBA64'
     con['color_attachments'] = [attachment_format, attachment_format]
@@ -568,7 +570,7 @@ def make_forward(con_mesh):
             frag.write('fragColor[0].rgb = tonemapFilmic(fragColor[0].rgb);')
 
     # Particle opacity
-    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
+    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
 
 

@@ -13,7 +13,7 @@ class AddParticleToObjectNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		#if arm_particles
+		#if arm_gpu_particles
 
 		if (property0 == 'Scene Active'){
 			var objFrom: Object = inputs[1].get();
@@ -47,7 +47,7 @@ class AddParticleToObjectNode extends LogicNode {
 
 			var oslot: Int = mobjTo.particleSystems.length-1;
 			var opsys = mobjTo.particleSystems[oslot];
-			@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
+			@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot]);
 
 		} else {
 			var sceneName: String = inputs[1].get();
@@ -82,7 +82,7 @@ class AddParticleToObjectNode extends LogicNode {
 
 					var oslot: Int = mobjTo.particleSystems.length-1;
 					var opsys = mobjTo.particleSystems[oslot];
-					@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot], mobjTo);
+					@:privateAccess opsys.setupGeomGpu(mobjTo.particleChildren[oslot]);
 
 					break;
 				}
