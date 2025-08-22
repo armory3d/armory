@@ -50,20 +50,6 @@ def make(con_mesh: ShaderContext):
                 vertex_elems.append({'name': 'nor', 'data': 'short2norm'})
 
     write_wpos = False
-    if frag.contains('vVec') and not frag.contains('vec3 vVec'):
-        if tese is not None:
-            tese.add_out('vec3 eyeDir')
-            tese.add_uniform('vec3 eye', '_cameraPosition')
-            tese.write('eyeDir = eye - wposition;')
-
-        else:
-            if not vert.contains('wposition'):
-                write_wpos = True
-            vert.add_out('vec3 eyeDir')
-            vert.add_uniform('vec3 eye', '_cameraPosition')
-            vert.write('eyeDir = eye - wposition;')
-        frag.write_attrib('vec3 vVec = normalize(eyeDir);')
-
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
         export_wpos = True
@@ -72,6 +58,19 @@ def make(con_mesh: ShaderContext):
     if vert.contains('wposition'):
         write_wpos = True
 
+    if frag.contains('vVec') and not frag.contains('vec3 vVec'):
+        if tese is not None:
+            tese.add_out('vec3 eyeDir')
+            tese.add_uniform('vec3 eye', '_cameraPosition')
+            tese.write('eyeDir = eye - wposition;')
+        else:
+            if not vert.contains('wposition'):
+                write_wpos = True
+            vert.add_out('vec3 eyeDir')
+            vert.add_uniform('vec3 eye', '_cameraPosition')
+            vert.write('eyeDir = eye - wposition;')
+        frag.write_attrib('vec3 vVec = normalize(eyeDir);')
+
     if export_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
@@ -79,6 +78,9 @@ def make(con_mesh: ShaderContext):
     elif write_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
+
+    if frag.contains('dotNV') and not frag.contains('float dotNV'):
+        frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);')
 
     frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
     if frag_mpos:

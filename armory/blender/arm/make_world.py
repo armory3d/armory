@@ -199,6 +199,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
         world.world_defs += '_EnvCol'
+        assets.add_khafile_def("arm_envcol")
 
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:
@@ -213,6 +214,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
 
     # Clear background color
     if '_EnvCol' in world.world_defs:
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
         frag.write('fragColor.rgb = backgroundCol;')
 
     elif '_EnvTex' in world.world_defs and '_EnvLDR' in world.world_defs:
@@ -280,6 +282,7 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
         # Append irradiance define
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
+            assets.add_khafile_def("arm_irradiance")
 
         # Extract environment strength
         # Todo: follow/parse strength input
@@ -293,6 +296,7 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
             solid_mat = rpdat.arm_material_model == 'Solid'
             if rpdat.arm_irradiance and not solid_mat:
                 world.world_defs += '_Irr'
+                assets.add_khafile_def('arm_irradiance')
             world.arm_envtex_color = node_surface.inputs[0].default_value
             world.arm_envtex_strength = 1.0
 
