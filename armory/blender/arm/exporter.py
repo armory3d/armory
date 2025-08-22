@@ -1964,7 +1964,7 @@ Make sure the mesh only has tris/quads.""")
             if bobject.parent is None or bobject.parent.name not in collection.objects:
                 asset_name = arm.utils.asset_name(bobject)
 
-                if collection.library:
+                if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
                     # Iron differentiates objects based on their names,
                     # so errors will happen if two objects with the
@@ -2621,7 +2621,7 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                if self.scene.user_of_id(collection) or collection.library or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
                     self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
