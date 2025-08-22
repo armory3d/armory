@@ -117,7 +117,6 @@ appended_scenes = []
 def load_external_blends():
     global appended_scenes
 
-    """Load external blend files as linked data."""
     wrd = bpy.data.worlds['Arm']
     if not hasattr(wrd, 'arm_external_blends_path'):
         return
@@ -130,36 +129,26 @@ def load_external_blends():
     if not os.path.exists(abs_path):
         return
 
-    # Find all blend files in directory
-    for filename in os.listdir(abs_path):
-        if filename.endswith('.blend'):
-            blend_path = os.path.join(abs_path, filename)
+    # Walk recursively through all subdirs
+    for root, dirs, files in os.walk(abs_path):
+        for filename in files:
+            if not filename.endswith(".blend"):
+                continue
+
+            blend_path = os.path.join(root, filename)
             try:
-                # Load blend file data like linked assets
                 with bpy.data.libraries.load(blend_path, link=True) as (data_from, data_to):
-                    # Load all data types
                     data_to.scenes = list(data_from.scenes)
 
                 for scn in data_to.scenes:
-                    if scn.library and scn.library.filepath == blend_path:
-                        # Check for duplicates (excluding this scene)
-                        duplicate = any(
-                            s is not scn and s.library and s.library.filepath == blend_path
-                            for s in bpy.data.scenes
-                        )
-                        if duplicate:
-                            try:
-                                bpy.data.scenes.remove(scn, do_unlink=True)
-                            except Exception as e:
-                                log.error(f"Failed to remove duplicate scene {scn.name}: {e}")
-                            continue
                     if scn is not None and scn not in appended_scenes:
-                        scn.name += "_" + filename.replace('.blend', '')
+                        # make name unique with file name
+                        scn.name += "_" + filename.replace(".blend", "")
                         appended_scenes.append(scn)
 
-                log.info(f"Loaded external blend: {filename}")
+                log.info(f"Loaded external blend: {blend_path}")
             except Exception as e:
-                log.error(f"Failed to load external blend {filename}: {e}")
+                log.error(f"Failed to load external blend {blend_path}: {e}")
 
 def clear_external_scenes():
     global appended_scenes
