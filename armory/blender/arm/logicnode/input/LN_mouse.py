@@ -8,13 +8,19 @@ class MouseNode(ArmLogicTreeNode):
     arm_section = 'mouse'
     arm_version = 3
 
+    def update(self):
+        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+
+    def upd(self, context):
+        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+
     property0: HaxeEnumProperty(
         'property0',
         items = [('started', 'Started', 'The mouse button begins to be pressed'),
                  ('down', 'Down', 'The mouse button is pressed'),
                  ('released', 'Released', 'The mouse button stops being pressed'),
                  ('moved', 'Moved', 'Moved')],
-        name='', default='down')
+        name='', default='down', update=upd)
     property1: HaxeEnumProperty(
         'property1',
         items = [('left', 'Left', 'Left mouse button'),
@@ -22,7 +28,7 @@ class MouseNode(ArmLogicTreeNode):
                  ('right', 'Right', 'Right mouse button'),
                  ('side1', 'Side 1', 'Side 1 mouse button'),
                  ('side2', 'Side 2', 'Side 2 mouse button')],
-        name='', default='left')
+        name='', default='left', update=upd)
     property2: HaxeBoolProperty(
         'property2',
         name='Include Debug Console',
