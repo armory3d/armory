@@ -155,9 +155,7 @@ def clear_external_scenes():
     if not appended_scenes:
         return
 
-    scenes_to_remove = [scn for scn in appended_scenes if scn and scn.name in bpy.data.scenes]
-
-    for scn in scenes_to_remove:
+    for scn in appended_scenes:
         try:
             bpy.data.scenes.remove(scn, do_unlink=True)
         except Exception as e:
@@ -170,11 +168,10 @@ def clear_external_scenes():
         except Exception as e:
             log.error(f"Failed to remove library {lib.name}: {e}")
 
-    for _ in range(3):
-        try:
-            bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
-        except Exception as e:
-            log.error(f"Failed to purge orphan data: {e}")
+    try:
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+    except Exception as e:
+        log.error(f"Failed to purge orphan data: {e}")
 
     appended_scenes = []
 
