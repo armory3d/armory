@@ -17,7 +17,19 @@ class OnEventNode(ArmLogicTreeNode):
         'custom': 'Custom'
     }
 
+    def update(self):
+        if self.inputs[0].is_linked:
+            self.label = f'{self.bl_label}: {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property1} {self.inputs[0].get_default_value()}'
+
+
     def set_mode(self, context):
+        if self.inputs[0].is_linked:
+            self.label = f'{self.bl_label}: {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property1} {self.inputs[0].get_default_value()}'
+
         if self.property1 != 'custom':
             if len(self.inputs) > 1:
                 self.inputs.remove(self.inputs[0])

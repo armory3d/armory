@@ -9,10 +9,18 @@ class MouseNode(ArmLogicTreeNode):
     arm_version = 3
 
     def update(self):
-        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+        if self.property0 != 'moved':
+            self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property0}'
+
 
     def upd(self, context):
-        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+        if self.property0 != 'moved':
+            self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property0}'
+
 
     property0: HaxeEnumProperty(
         'property0',
