@@ -73,30 +73,28 @@ class DrawImageRenderNode extends LogicNode {
 
 		img = camera.renderTarget;
 
-		if (inputs[15].get()){
+		if (inputs[15].get() || kha.Image.renderTargetsInvertedY()) {
 
 			img = kha.Image.createRenderTarget(iron.App.w(), iron.App.h(),
 				kha.graphics4.TextureFormat.RGBA32,
 				kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
 
 			img.g2.begin(true, Color.Transparent);
-
 			img.g2.color = Color.White;
-			img.g2.drawImage(camera.renderTarget, 0, 0);
 
-			if (kha.Image.renderTargetsInvertedY()){
-				img.g2.scale(1, -1);
-				img.g2.translate(0, iron.App.h());
+			if (kha.Image.renderTargetsInvertedY()) {
+				img.g2.drawScaledImage(camera.renderTarget, 0, iron.App.h(), iron.App.w(), -iron.App.h());
+			} else {
+				img.g2.drawImage(camera.renderTarget, 0, 0);
 			}
-			else
-				img.g2.scale(1, 1);
 
-			for (f in @:privateAccess iron.App.traitRenders2D){
-		    	f(img.g2);
-		    }
-		    
-		    img.g2.end();
-
+			if (inputs[15].get()) {
+				for (f in @:privateAccess iron.App.traitRenders2D) {
+					f(img.g2);
+				}
+			}
+			
+			img.g2.end();
 		}
 
 		camera.renderTarget = oldRT;
