@@ -28,6 +28,13 @@ class GetImageColorNode extends LogicNode {
 			j = inputs[1].get();
 		}
 
+		trace(renderTarget.width, renderTarget.height);
+
+		if (i < 0 || j < 0) return null;
+
+		if (property0 != 'Image')
+			if (i > renderTarget.width || j > renderTarget.height) return null;
+
 		renderTarget.g2.begin(true, Color.Transparent);
 
 		renderTarget.g2.color = Color.White;
@@ -49,7 +56,10 @@ class GetImageColorNode extends LogicNode {
 			iron.data.Data.getImage(inputs[0].get(), (image: Image) -> {
 				img = image;
 			});
-			if(img != null)
+			if (img == null || i > img.width || j > img.height){
+				renderTarget.g2.end();
+				return null;
+			} else
 				renderTarget.g2.drawScaledImage(img, 0, 0, img.width, img.height);
 		}
 
