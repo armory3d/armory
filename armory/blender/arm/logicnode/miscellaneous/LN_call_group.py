@@ -17,6 +17,10 @@ class CallGroupNode(ArmLogicTreeNode):
     def arm_init(self, context):
         pass
 
+    def update(self):
+        if self.group_tree:
+            self.label = f'Group: {self.group_tree.name}'
+
     # Function to add input sockets and re-link sockets
     def update_inputs(self, tree, node, inp_sockets, in_links):
         count = 0
@@ -56,11 +60,13 @@ class CallGroupNode(ArmLogicTreeNode):
                     for link in out_links[count]:
                         tree.links.new(current_socket, link)
             count = count + 1
-    
-    def remove_tree(self):
-        self.group_tree = None
 
     def update_sockets(self, context):
+        if self.group_tree:
+            self.label = f'Group: {self.group_tree.name}'
+        else:
+            self.label = 'Call Node Group'
+
         # List to store from and to sockets of connected nodes
         from_socket_list = []
         to_socket_list = []
@@ -106,6 +112,10 @@ class CallGroupNode(ArmLogicTreeNode):
     # Prperty to store group tree pointer
     group_tree: PointerProperty(name='Group', type=bpy.types.NodeTree, update=update_sockets)
 
+    def edit_tree(self):
+        self.label = f'Group: {self.group_tree.name}'
+        bpy.ops.arm.edit_group_tree()
+
     def draw_label(self) -> str:
         if self.group_tree is not None:
             return f'Group: {self.group_tree.name}'
@@ -133,8 +143,9 @@ class CallGroupNode(ArmLogicTreeNode):
             op = row_name.operator('arm.unlink_group_tree', icon='X', text='')
             op.node_index = self.get_id_str()
         row_ops.enabled = not self.group_tree is None
-        op = row_ops.operator('arm.edit_group_tree', icon='FULLSCREEN_ENTER', text='Edit tree')
+        op = row_ops.operator('arm.node_call_func', icon='FULLSCREEN_ENTER', text='Edit tree')
         op.node_index = self.get_id_str()
+        op.callback_name = 'edit_tree'
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1, 2):

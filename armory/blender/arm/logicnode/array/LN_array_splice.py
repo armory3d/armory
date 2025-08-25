@@ -16,3 +16,9 @@ class ArraySpliceNode(ArmLogicTreeNode):
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmNodeSocketArray', 'Array')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)

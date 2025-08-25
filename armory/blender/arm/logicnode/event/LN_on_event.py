@@ -17,6 +17,17 @@ class OnEventNode(ArmLogicTreeNode):
         'custom': 'Custom'
     }
 
+    def update(self):
+        if self.property1 != 'custom':
+            if self.inputs[0].is_linked:
+                self.label = f'{self.bl_label}: {self.property1}'
+            else:
+                self.label = f'{self.bl_label}: {self.property1} {self.inputs[0].get_default_value()}'
+        elif self.inputs[1].is_linked:
+            self.label = f'{self.bl_label}: {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property1} {self.inputs[1].get_default_value()}'
+
     def set_mode(self, context):
         if self.property1 != 'custom':
             if len(self.inputs) > 1:
@@ -25,6 +36,16 @@ class OnEventNode(ArmLogicTreeNode):
             if len(self.inputs) < 2:
                 self.add_input('ArmNodeSocketAction', 'In')
                 self.inputs.move(1, 0)
+
+        if self.property1 != 'custom':
+            if self.inputs[0].is_linked:
+                self.label = f'{self.bl_label}: {self.property1}'
+            else:
+                self.label = f'{self.bl_label}: {self.property1} {self.inputs[0].get_default_value()}'
+        elif self.inputs[1].is_linked:
+            self.label = f'{self.bl_label}: {self.property1}'
+        else:
+            self.label = f'{self.bl_label}: {self.property1} {self.inputs[1].get_default_value()}'
 
     # Use a new property to preserve compatibility
     property1: HaxeEnumProperty(
@@ -52,9 +73,15 @@ class OnEventNode(ArmLogicTreeNode):
         layout.prop(self, 'property1', text='')
 
     def draw_label(self) -> str:
-        if self.inputs[0].is_linked:
-            return self.bl_label
-        return f'{self.bl_label}: {self.inputs[0].get_default_value()}'
+        if self.property1 != 'custom':
+            if self.inputs[0].is_linked:
+                return f'{self.bl_label}: {self.property1}'
+            else:
+                return f'{self.bl_label}: {self.property1} {self.inputs[0].get_default_value()}'
+        elif self.inputs[1].is_linked:
+            return f'{self.bl_label}: {self.property1}'
+        else:
+            return f'{self.bl_label}: {self.property1} {self.inputs[1].get_default_value()}'
 
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
