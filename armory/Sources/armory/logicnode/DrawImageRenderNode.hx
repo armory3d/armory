@@ -38,12 +38,10 @@ class DrawImageRenderNode extends LogicNode {
 
 		RenderToTexture.g.rotate(angle, x, y);
 
-		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
-
 		if (img != null){
 			RenderToTexture.g.color = 0xff000000;
 			RenderToTexture.g.fillRect(drawx, drawy,  width, height);
-			RenderToTexture.g.color = 0xffffffff;
+			RenderToTexture.g.color = RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
 			RenderToTexture.g.drawScaledSubImage(img, sx, sy, swidth, sheight, drawx, drawy, width, height);
 		}
 
