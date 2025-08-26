@@ -331,9 +331,13 @@ project.addSources('Sources');
 
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
+            if rpdat.arm_particles == 'GPU':
+                assets.add_khafile_def('arm_gpu_particles')
+            elif rpdat.arm_particles == 'CPU':
+                assets.add_khafile_def('arm_cpu_particles')
 
-        if rpdat.rp_draw_order == 'Shader':
-            assets.add_khafile_def('arm_draworder_shader')
+        if rpdat.rp_draw_order == 'Index':
+            assets.add_khafile_def('arm_draworder_index')
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
@@ -482,7 +486,7 @@ class Main {
             public static inline var voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;""")
 
         if rpdat.rp_bloom:
-            
+
             follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
 
             f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if follow_blender else rpdat.arm_bloom_radius};")
@@ -497,7 +501,7 @@ class Main {
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
-        
+
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -506,7 +510,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
-        
+
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -515,7 +519,7 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
-        
+
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
                 f.write("""
@@ -523,7 +527,7 @@ class Main {
             elif wrd.arm_canvas_img_scaling_quality == 'high':
                 f.write("""
         armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
-        
+
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -769,7 +773,7 @@ const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 
         focus_distance = 0.0
         fstop = 0.0
-        if len(bpy.data.cameras) > 0 and arm.utils.get_active_scene().camera.data.dof.use_dof:
+        if arm.utils.get_active_scene().camera and arm.utils.get_active_scene().camera.data.dof.use_dof:
             focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
             fstop = arm.utils.get_active_scene().camera.data.dof.aperture_fstop
             lens = arm.utils.get_active_scene().camera.data.lens

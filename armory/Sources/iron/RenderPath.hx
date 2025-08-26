@@ -331,14 +331,18 @@ class RenderPath {
 		});
 	}
 
-	public static function sortMeshesShader(meshes: Array<MeshObject>) {
+	public static function sortMeshesIndex(meshes: Array<MeshObject>) {
 		meshes.sort(function(a, b): Int {
 			#if rp_depth_texture
 			var depthDiff = boolToInt(a.depthRead) - boolToInt(b.depthRead);
 			if (depthDiff != 0) return depthDiff;
 			#end
 
-			return a.materials[0].name >= b.materials[0].name ? 1 : -1;
+			if (a.data.sortingIndex != b.data.sortingIndex) {
+				return a.data.sortingIndex > b.data.sortingIndex ? 1 : -1;
+			}
+
+			return a.data.name >= b.data.name ? 1 : -1;
 		});
 	}
 
@@ -399,7 +403,7 @@ class RenderPath {
 			#if arm_batch
 			sortMeshesDistance(Scene.active.meshBatch.nonBatched);
 			#else
-			drawOrder == DrawOrder.Shader ? sortMeshesShader(meshes) : sortMeshesDistance(meshes);
+			drawOrder == DrawOrder.Index ? sortMeshesIndex(meshes) : sortMeshesDistance(meshes);
 			#end
 			meshesSorted = true;
 		}
@@ -914,6 +918,6 @@ class CachedShaderContext {
 
 @:enum abstract DrawOrder(Int) from Int {
 	var Distance = 0; // Early-z
-	var Shader = 1; // Less state changes
+	var Index = 1; // Less state changes
 	// var Mix = 2; // Distance buckets sorted by shader
 }

@@ -349,6 +349,7 @@ def init_properties():
         description='Whether to use instancing to draw the children of this object. If enabled, this option defines what attributes may vary between the instances',
         update=assets.invalidate_instance_cache,
         override={'LIBRARY_OVERRIDABLE'})
+    bpy.types.Object.arm_sorting_index = IntProperty(name="Sorting Index", description="Sorting index for the Render's Draw Order", default=0, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True, override={'LIBRARY_OVERRIDABLE'})
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False, override={'LIBRARY_OVERRIDABLE'})
@@ -413,9 +414,22 @@ def init_properties():
     bpy.types.World.arm_nishita_density = FloatVectorProperty(name="Nishita Density", size=3, default=[1, 1, 1])
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
+    bpy.types.Material.arm_depth_write = BoolProperty(name="Write Depth", description="Allow this material to write to the depth buffer", default=True)
     bpy.types.Material.arm_depth_read = BoolProperty(name="Read Depth", description="Allow this material to read from a depth texture which is copied from the depth buffer. The meshes using this material will be drawn after all meshes that don't read from the depth texture", default=False)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", description="Renders the material, unshaded, over other shaded materials", default=False)
     bpy.types.Material.arm_decal = BoolProperty(name="Decal", default=False)
+    bpy.types.Material.arm_compare_mode = EnumProperty(
+        items=[
+            ('always', 'Always', 'Always'),
+            ('never', 'Never', 'Never'),
+            ('less', 'Less', 'Less'),
+            ('less_equal', 'Less Equal', 'Less Equal'),
+            ('greater', 'Greater', 'Greater'),
+            ('greater_equal', 'Greater Equal', 'Greater Equal'),
+            ('equal', 'Equal', 'Equal'),
+            ('not_equal', 'Not Equal', 'Not Equal'),
+        ],
+        name="Compare Mode", default='less', description="Comparison mode for the material")
     bpy.types.Material.arm_two_sided = BoolProperty(name="Two-Sided", description="Flip normal when drawing back-face", default=False)
     bpy.types.Material.arm_ignore_irradiance = BoolProperty(name="Ignore Irradiance", description="Ignore irradiance for material", default=False)
     bpy.types.Material.arm_cull_mode = EnumProperty(
@@ -423,6 +437,8 @@ def init_properties():
                ('clockwise', 'Front', 'Clockwise'),
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="Cull Mode", default='clockwise', description="Draw geometry faces")
+    bpy.types.Material.arm_next_pass = StringProperty(
+        name="Next Pass", default='', description="Next pass for the material", update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_discard = BoolProperty(name="Alpha Test", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
@@ -549,7 +565,8 @@ def init_properties():
     bpy.types.Node.arm_version = IntProperty(name="Node Version", description="The version of an instanced node", default=0)
     # Particles
     bpy.types.ParticleSettings.arm_auto_start = BoolProperty(name="Auto Start", description="Automatically start this particle system on load", default=True)
-    bpy.types.ParticleSettings.arm_is_unique = BoolProperty(name="Is Unique", description="Make this particle system look different each time it starts", default=False)
+    bpy.types.ParticleSettings.arm_is_unique = BoolProperty(name="Is Unique", description="Make this particle system look different each time it starts. Only affects GPU particles. Default behavior for CPU particles", default=False)
+    bpy.types.ParticleSettings.arm_local_coords = BoolProperty(name="Local Coords", description="Keep spawned particles parented to their emitter. Only affects CPU particles. Default behavior for GPU particles at the moment", default=False)
     bpy.types.ParticleSettings.arm_loop = BoolProperty(name="Loop", description="Loop this particle system", default=False)
     bpy.types.ParticleSettings.arm_count_mult = FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
 

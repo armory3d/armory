@@ -14,7 +14,7 @@ class Time {
 		return 1 / frequency;
 	}
 
-	static var _fixedStep: Null<Float>;
+	static var _fixedStep: Null<Float> = 1 / 60;
 	public static var fixedStep(get, never): Float;
 	static function get_fixedStep(): Float {
 		return _fixedStep;
@@ -38,11 +38,11 @@ class Time {
 	}
 
 	public static inline function time(): Float {
-		return kha.Scheduler.time();
+		return kha.Scheduler.time() * scale;
 	}
 
 	public static inline function realTime(): Float {
-		return kha.Scheduler.realTime();
+		return kha.Scheduler.realTime() * scale;
 	}
 
 	public static function update() {

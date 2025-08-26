@@ -903,7 +903,7 @@ class Scene {
 
 						if (StringTools.endsWith(ptype, "Object") && pval != "") {
 							Reflect.setProperty(traitInst, pname, Scene.active.getChild(pval));
-						} else if (ptype == "TSceneFormat" && pval != "") {
+						} else if (ptype == "TSceneFormat" && pval != "" && pval != null) {
 							Data.getSceneRaw(pval, function (r: TSceneFormat) {
 								Reflect.setProperty(traitInst, pname, r);
 							});
