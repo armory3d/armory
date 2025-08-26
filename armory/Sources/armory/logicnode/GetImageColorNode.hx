@@ -28,8 +28,6 @@ class GetImageColorNode extends LogicNode {
 			j = inputs[1].get();
 		}
 
-		trace(renderTarget.width, renderTarget.height);
-
 		if (i < 0 || j < 0) return null;
 
 		if (property0 != 'Image')
