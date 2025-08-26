@@ -247,7 +247,7 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
 
 
 def parse_particleinfo(node: bpy.types.ShaderNodeParticleInfo, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    particles_on = arm.utils.get_rp().arm_particles == 'On'
+    particles_on = arm.utils.get_rp().arm_particles == 'GPU'
 
     # Index
     if out_socket == node.outputs[0]:
