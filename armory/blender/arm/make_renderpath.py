@@ -41,7 +41,6 @@ def add_world_defs():
         wrd.world_defs += '_LDR'
 
     if arm.utils.get_active_scene().world is not None:
-        print('entre')
         if arm.utils.get_active_scene().world.arm_light_ies_texture:
             wrd.world_defs += '_LightIES'
             assets.add_embedded_data('iestexture.png')
