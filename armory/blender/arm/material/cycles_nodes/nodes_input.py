@@ -247,7 +247,7 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
 
 
 def parse_particleinfo(node: bpy.types.ShaderNodeParticleInfo, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    particles_on = arm.utils.get_rp().arm_particles == 'On'
+    particles_on = arm.utils.get_rp().arm_particles == 'GPU'
 
     # Index
     if out_socket == node.outputs[0]:
@@ -256,7 +256,8 @@ def parse_particleinfo(node: bpy.types.ShaderNodeParticleInfo, out_socket: bpy.t
 
     # TODO: Random
     if out_socket == node.outputs[1]:
-        return '0.0'
+        c.particle_info['random'] = True
+        return 'p_random' if particles_on else '0.0'
 
     # Age
     elif out_socket == node.outputs[2]:
@@ -276,7 +277,7 @@ def parse_particleinfo(node: bpy.types.ShaderNodeParticleInfo, out_socket: bpy.t
     # Size
     elif out_socket == node.outputs[5]:
         c.particle_info['size'] = True
-        return '1.0'
+        return 'p_size' if particles_on else '1.0'
 
     # Velocity
     elif out_socket == node.outputs[6]:

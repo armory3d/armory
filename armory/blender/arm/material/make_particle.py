@@ -53,6 +53,7 @@ def write(vert, particle_info=None, shadowmap=False):
 
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
+    out_random = True if particle_info != None and particle_info['random'] else False
     out_age = True if particle_info != None and particle_info['age'] else False
     out_lifetime = True if particle_info != None and particle_info['lifetime'] else False
     out_location = True if particle_info != None and particle_info['location'] else False
@@ -251,13 +252,17 @@ def write(vert, particle_info=None, shadowmap=False):
                     vert.write('wnormal = normalize(rotate_around(wnormal, r_angle));')
 
     # Particle fade
-    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
+    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
         vert.add_out('float p_fade')
         vert.write('p_fade = sin(min((p_age / 2) * 3.141592, 3.141592));')
 
     if out_index:
         vert.add_out('float p_index')
         vert.write('p_index = gl_InstanceID;')
+
+    if out_random:
+        vert.add_out('float p_random')
+        vert.write('p_random = fract(sin(gl_InstanceID) * 43758.5453);')
 
 def write_tilesheet(vert):
     # tilesx, tilesy, framerate - pd[3][0], pd[3][1], pd[3][2]
