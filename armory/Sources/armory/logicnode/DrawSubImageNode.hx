@@ -14,7 +14,7 @@ class DrawSubImageNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		RenderToTexture.ensure2DContext("DrawImageNode");
+		RenderToTexture.ensure2DContext("DrawSubImageNode");
 
 		final imgName: String = inputs[1].get();
 		final colorVec: Vec4 = inputs[2].get();
@@ -32,12 +32,10 @@ class DrawSubImageNode extends LogicNode {
 
 		final drawx = x - 0.5 * width * anchorH;
 		final drawy = y - 0.5 * height * anchorV;
-		final sdrawx = sx - 0.5 * swidth * anchorH;
-		final sdrawy = sy - 0.5 * sheight * anchorV;
 
 		RenderToTexture.g.rotate(angle, x, y);
 
-		if (imgName != lastImgName) {
+		if (imgName != lastImgName || img == null) {
 			// Load new image
 			lastImgName = imgName;
 			iron.data.Data.getImage(imgName, (image: Image) -> {
@@ -51,7 +49,7 @@ class DrawSubImageNode extends LogicNode {
 		}
 
 		RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
-		RenderToTexture.g.drawScaledSubImage(img, sdrawx, sdrawy, swidth, sheight, drawx, drawy, width, height);
+		RenderToTexture.g.drawScaledSubImage(img, sx, sy, swidth, sheight, drawx, drawy, width, height);
 		RenderToTexture.g.rotate(-angle, x, y);
 
 		runOutput(0);
