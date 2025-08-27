@@ -7,12 +7,18 @@ class KeyboardNode(ArmLogicTreeNode):
     arm_section = 'keyboard'
     arm_version = 2
 
+    def update(self):
+        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+
+    def upd(self, context):
+        self.label = f'{self.bl_label}: {self.property0} {self.property1}'
+
     property0: HaxeEnumProperty(
         'property0',
         items = [('started', 'Started', 'The keyboard button starts to be pressed'),
                  ('down', 'Down', 'The keyboard button is pressed'),
                  ('released', 'Released', 'The keyboard button stops being pressed')],
-        name='', default='down')
+        name='', default='down', update=upd)
 
     property1: HaxeEnumProperty(
         'property1',
@@ -69,7 +75,7 @@ class KeyboardNode(ArmLogicTreeNode):
                  ('right', 'right', 'right'),
                  ('left', 'left', 'left'),
                  ('down', 'down', 'down'),],
-        name='', default='space')
+        name='', default='space', update=upd)
 
     def arm_init(self, context):
         self.add_output('ArmNodeSocketAction', 'Out')
