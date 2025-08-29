@@ -431,9 +431,10 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
+            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA'
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": bobject.name if bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA' else arm.utils.asset_name(bobject)
+                "structName": bobject.name if is_local_to_linked_scene else arm.utils.asset_name(bobject)
             }
 
             if bobject.type == "ARMATURE":
@@ -864,7 +865,8 @@ class ArmoryExporter:
             # Export the object reference and material references
             objref = bobject.data
             if objref is not None:
-                objname = objref.name if objref.name in self.scene.objects and objref.name not in self.scene.collection.children and self.scene.library and objref.type != 'CAMERA' else arm.utils.asset_name(objref)
+                is_local_to_linked_scene = objref.name in self.scene.objects and objref.name not in self.scene.collection.children and self.scene.library and objref.type != 'CAMERA'
+                objname = objref.name if is_local_to_linked_scene else arm.utils.asset_name(objref)
 
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
@@ -1962,7 +1964,8 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                asset_name = bobject.name if bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA' else arm.utils.asset_name(bobject)
+                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA'
+                asset_name = bobject.name if is_local_to_linked_scene else arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
