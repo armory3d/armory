@@ -547,13 +547,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
-		{
-			path.setTarget("gbuffer_refraction");
-			path.clearTarget(0xffffff00);
-		}
-		#end
-
 		RenderPathCreator.setTargetMeshes();
 
 		#if rp_dynres
@@ -690,8 +683,8 @@ class RenderPathDeferred {
 				Inc.computeVoxelsOffsetPrev();
 			}
 
-			path.setTarget("");
 			var res = iron.RenderPath.getVoxelRes();
+			path.setTarget("");
 			path.setViewport(res, res);
 
 			#if rp_shadowmap
@@ -705,11 +698,6 @@ class RenderPathDeferred {
 			#end
 
 			path.bindTarget("voxels", "voxels");
-			path.drawMeshes("voxel");
-
-			var res = iron.RenderPath.getVoxelRes();
-			path.setViewport(res, res);
-
 			path.drawMeshes("voxel");
 
 			Inc.computeVoxelsTemporal();

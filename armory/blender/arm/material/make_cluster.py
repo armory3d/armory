@@ -93,7 +93,10 @@ def write(vert: shader.Shader, frag: shader.Shader):
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if is_transparent_shadows:
-        frag.write('\t, opacity != 1.0')
+        if parse_opacity:
+            frag.write(', true')
+        else:
+            frag.write(', false')
     if '_Spot' in wrd.world_defs:
         frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
         frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)

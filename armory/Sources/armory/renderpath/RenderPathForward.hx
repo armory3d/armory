@@ -268,6 +268,7 @@ class RenderPathForward {
 			t.format = "RGBA32";
 			#else
 			t.format = "R8";
+			#end
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 

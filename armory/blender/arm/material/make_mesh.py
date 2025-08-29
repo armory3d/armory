@@ -773,7 +773,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')
                 if is_transparent_shadows:
-                    frag.write(', false')
+                    if parse_opacity:
+                        frag.write(', true')
+                    else:
+                        frag.write(', false')
                 frag.write(');')
             if '_VoxelShadow' in wrd.world_defs:
                 frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;')
@@ -806,7 +809,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if is_shadows:
             frag.write(', 0, pointBias, receiveShadow')
         if is_transparent_shadows:
-            frag.write(', opacity != 1.0')
+            if parse_opacity:
+                frag.write(', true')
+            else:
+                frag.write(', false')
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs:
