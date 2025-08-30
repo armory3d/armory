@@ -431,10 +431,15 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA'
+            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
+            if bobject.type == 'CAMERA' and bobject.library:
+                struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
+            else:
+                struct_name = bobject.name if is_local_to_linked_scene and bobject.type != 'CAMERA' else arm.utils.asset_name(bobject)
+
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": bobject.name if is_local_to_linked_scene else arm.utils.asset_name(bobject)
+                "structName": struct_name
             }
 
             if bobject.type == "ARMATURE":
@@ -865,8 +870,7 @@ class ArmoryExporter:
             # Export the object reference and material references
             objref = bobject.data
             if objref is not None:
-                is_local_to_linked_scene = objref.name in self.scene.objects and objref.name not in self.scene.collection.children and self.scene.library and objref.type != 'CAMERA'
-                objname = objref.name if is_local_to_linked_scene else arm.utils.asset_name(objref)
+                objname = arm.utils.asset_name(objref)
 
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
@@ -1964,8 +1968,11 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library and bobject.type != 'CAMERA'
-                asset_name = bobject.name if is_local_to_linked_scene else arm.utils.asset_name(bobject)
+                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
+                if bobject.type == 'CAMERA':
+                    asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
+                else:
+                    asset_name = bobject.name if is_local_to_linked_scene and bobject.type else arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
@@ -1984,6 +1991,10 @@ Make sure the mesh only has tris/quads.""")
 
                     self.process_bobject(bobject)
                     self.export_object(bobject)
+
+                if bobject.type == 'CAMERA':
+                    self.output['camera_ref'] = asset_name
+                    self.has_spawning_camera = True
 
                 out_collection['object_refs'].append(asset_name)
 
@@ -2629,7 +2640,7 @@ Make sure the mesh only has tris/quads.""")
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
-                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name + "_" + self.scene.name if self.scene.camera.library else self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
