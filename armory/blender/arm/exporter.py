@@ -60,7 +60,7 @@ class NodeType(Enum):
         """Returns the NodeType enum member belonging to the type of
         the given blender object."""
         if bobject.type == "MESH":
-            if bobject.data.polygons:
+            if bobject.data.polygons or bobject.data.edges or bobject.data.vertices:
                 return cls.MESH
         elif bobject.type in ('FONT', 'META'):
             return cls.MESH
