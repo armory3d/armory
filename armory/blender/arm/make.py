@@ -112,10 +112,12 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-appended_scenes = []
+linked_blend_paths = []
+linked_scenes = []
 
 def load_external_blends():
-    global appended_scenes
+    global linked_scenes
+    global linked_blend_paths
 
     wrd = bpy.data.worlds['Arm']
     if not hasattr(wrd, 'arm_external_blends_path'):
@@ -140,25 +142,28 @@ def load_external_blends():
                 with bpy.data.libraries.load(blend_path, link=True) as (data_from, data_to):
                     data_to.scenes = list(data_from.scenes)
 
+                linked_blend_paths.append(blend_path)
                 for scn in data_to.scenes:
-                    if scn is not None and scn not in appended_scenes:
+                    if scn is not None and scn not in linked_scenes:
                         # make name unique with file name
                         scn.name += "_" + filename.replace(".blend", "")
                         for obj in scn.objects:
                             if obj.type != 'CAMERA':
                                 obj.name += "_" + filename
-                        appended_scenes.append(scn)
+                        linked_scenes.append(scn)
 
                 log.info(f"Loaded external blend: {blend_path}")
             except Exception as e:
                 log.error(f"Failed to load external blend {blend_path}: {e}")
 
 def clear_external_scenes():
-    global appended_scenes
-    if not appended_scenes:
+    global linked_blend_paths
+    global linked_scenes
+
+    if not linked_scenes and not linked_blend_paths:
         return
 
-    for scn in appended_scenes:
+    for scn in linked_scenes:
         try:
             bpy.data.scenes.remove(scn, do_unlink=True)
         except Exception as e:
@@ -166,7 +171,7 @@ def clear_external_scenes():
 
     for lib in list(bpy.data.libraries):
         try:
-            if lib.users == 0:
+            if lib.users == 0 or lib.filepath in linked_blend_paths:
                 bpy.data.libraries.remove(lib)
         except Exception as e:
             log.error(f"Failed to remove library {lib.name}: {e}")
@@ -176,7 +181,8 @@ def clear_external_scenes():
     except Exception as e:
         log.error(f"Failed to purge orphan data: {e}")
 
-    appended_scenes = []
+    linked_scenes = []
+    linked_blend_paths = []
 
 def export_data(fp, sdk_path):
     # Reload all libraries to retrieve updated data without needing to restart Blender
