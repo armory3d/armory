@@ -452,7 +452,7 @@ class Data {
 		var loading = loadingImages.get(file);
 		if (loading != null) {
 			loading.push(done);
-			//return;
+			return;
 		}
 
 		loadingImages.set(file, [done]);

@@ -144,6 +144,9 @@ def load_external_blends():
                     if scn is not None and scn not in appended_scenes:
                         # make name unique with file name
                         scn.name += "_" + filename.replace(".blend", "")
+                        for obj in scn.objects:
+                            if obj.type != 'CAMERA':
+                                obj.name += "_" + filename
                         appended_scenes.append(scn)
 
                 log.info(f"Loaded external blend: {blend_path}")
