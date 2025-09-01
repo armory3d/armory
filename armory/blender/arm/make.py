@@ -179,13 +179,10 @@ def clear_external_scenes():
     appended_scenes = []
 
 def export_data(fp, sdk_path):
-    # Reload all libraries to retrieve updated data without having to restart Blender
+    # Reload all libraries to retrieve updated data without needing to restart Blender
     for lib in bpy.data.libraries:
-        try:
-            lib.reload()
-            log.info(f"Reloaded: {lib.filepath}")
-        except Exception as e:
-            log.error(f"Failed to reload {lib.filepath}: {e}")
+        lib.reload()
+        log.info(f"Reloaded: {lib.filepath}")
 
     load_external_blends()
 
