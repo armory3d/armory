@@ -271,7 +271,7 @@ class DebugConsole extends Trait {
 
 			if (ui.tab(htab, "Scene")) {
 
-				if (ui.panel(Id.handle({selected: true}), "Outliner: obj.uid_obj.name")) {
+				if (ui.panel(Id.handle({selected: true}), "Outliner: [ obj.uid ] : obj.name")) {
 					ui.indent();
 					ui._y -= ui.ELEMENT_OFFSET();
 
@@ -282,9 +282,9 @@ class DebugConsole extends Trait {
 						var _y = ui._y;
 						
 						if (object.parent.name == 'Root' && object.raw == null)
-							ui.text(object.uid+'_'+object.name+' ('+iron.Scene.active.raw.world_ref+')');
+							ui.text('[ '+object.uid+' ] : '+object.name+' ( '+iron.Scene.active.raw.world_ref+' )');
 						else
-							ui.text(object.uid+'_'+object.name);
+							ui.text('[ '+object.uid+' ] : '+object.name);
 
 
 						if (object == iron.Scene.active.camera) {
