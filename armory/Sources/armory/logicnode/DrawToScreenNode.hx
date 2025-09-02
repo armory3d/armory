@@ -75,9 +75,6 @@ class DrawToScreenNode extends LogicNode {
 
 		}
 
-	}
-
-
-		
+	}	
 
 }
