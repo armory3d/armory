@@ -24,52 +24,60 @@ class DrawToScreenNode extends LogicNode {
 	var drawy: Float;
 
 	public function new(tree: LogicTree) {
-		super(tree);
-
-		tree.notifyOnRender2D(render2D);
-		
+		super(tree);	
 	}
 
 	override function run(from: Int) {
 
-		if (img == null)
-			img = kha.Image.createRenderTarget(inputs[1].get(), inputs[2].get(),
-				kha.graphics4.TextureFormat.RGBA32,
-				kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
+		if (from == 0){
+			
+			if (img == null){
+				runOutput(0);
+				return;
+			}
 
-		RenderToTexture.ensureEmptyRenderTarget("DrawToScreenNode");
-		img.g2.begin(inputs[15].get(), Color.Transparent);
-		RenderToTexture.g = img.g2;
-		runOutput(0);
-		RenderToTexture.g = null;
-		img.g2.end();
+			colorVec = inputs[4].get();
+			anchorH = inputs[5].get();
+			anchorV = inputs[6].get();
+			x = inputs[7].get();
+			y = inputs[8].get();
+			width = inputs[9].get();
+			height = inputs[10].get();
+			sx = inputs[11].get();
+			sy = inputs[12].get();
+			swidth = inputs[13].get();
+			sheight = inputs[14].get();
+			angle = inputs[15].get();
+
+			drawx = x - 0.5 * width * anchorH;
+			drawy = y - 0.5 * height * anchorV;
+			
+			RenderToTexture.g.rotate(angle, x, y);
+			RenderToTexture.g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
+			RenderToTexture.g.drawScaledSubImage(img, sx, sy, swidth, sheight, drawx, drawy, width, height);
+			RenderToTexture.g.rotate(-angle, x, y);
+
+			runOutput(0);
+
+		} else {
+
+			if (img == null)
+				img = kha.Image.createRenderTarget(inputs[2].get(), inputs[3].get(),
+					kha.graphics4.TextureFormat.RGBA32,
+					kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
+
+			RenderToTexture.ensureEmptyRenderTarget("DrawToScreenNode");
+			img.g2.begin(inputs[16].get(), Color.Transparent);
+			RenderToTexture.g = img.g2;
+			runOutput(1);
+			RenderToTexture.g = null;
+			img.g2.end();
+
+		}
 
 	}
 
-	function render2D(g:kha.graphics2.Graphics) {
 
-		if (img == null) return;
-
-		colorVec = inputs[3].get();
-		anchorH = inputs[4].get();
-		anchorV = inputs[5].get();
-		x = inputs[6].get();
-		y = inputs[7].get();
-		width = inputs[8].get();
-		height = inputs[9].get();
-		sx = inputs[10].get();
-		sy = inputs[11].get();
-		swidth = inputs[12].get();
-		sheight = inputs[13].get();
-		angle = inputs[14].get();
-
-		drawx = x - 0.5 * width * anchorH;
-		drawy = y - 0.5 * height * anchorV;
 		
-		g.rotate(angle, x, y);
-		g.color = Color.fromFloats(colorVec.x, colorVec.y, colorVec.z, colorVec.w);
-		g.drawScaledSubImage(img, sx, sy, swidth, sheight, drawx, drawy, width, height);
-		g.rotate(-angle, x, y);
-	}
 
 }
