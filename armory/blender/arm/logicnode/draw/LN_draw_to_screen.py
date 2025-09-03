@@ -4,7 +4,9 @@ from arm.logicnode.arm_nodes import *
 class DrawToScreenNode(ArmLogicTreeNode):
     """Draws a Render Target image to screen.
 
-    @input In: Activate to draw the Render Target image to screen.
+    @input Draw: Activate to draw the Render Target image to screen. The input must
+        be (indirectly) called from an `On Render2D` node.
+    @input In: Activate to get the Render Target image of the render 2d draws.
     @input Draw Width/Height: Size of the Render Target image in pixels.
     @input Image: The filename of the image.
     @input Color: The color that the image's pixels are multiplied with.
@@ -21,6 +23,7 @@ class DrawToScreenNode(ArmLogicTreeNode):
     @input Clear Image: Clear the image before drawing to it
 
     @output Out: Activated after the image has been drawn.
+    @output Draw: Input for the render 2d draws.
 
     @see [`kha.graphics2.Graphics.drawImage()`](http://kha.tech/api/kha/graphics2/Graphics.html#drawImage).
     """
@@ -30,6 +33,7 @@ class DrawToScreenNode(ArmLogicTreeNode):
     arm_version = 1
 
     def arm_init(self, context):
+        self.add_input('ArmNodeSocketAction', 'Draw')
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmIntSocket', 'Draw Width')
         self.add_input('ArmIntSocket', 'Draw Height')
@@ -48,3 +52,4 @@ class DrawToScreenNode(ArmLogicTreeNode):
         self.add_input('ArmBoolSocket', 'Clear Image')
 
         self.add_output('ArmNodeSocketAction', 'Out')
+        self.add_output('ArmNodeSocketAction', 'Draw')
