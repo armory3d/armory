@@ -1880,10 +1880,10 @@ Make sure the mesh only has tris/quads.""")
             self.depsgraph.update()
             if apply_modifiers:
                 # Force individual evaluation again after shape key changes
-                was_linked = bobject.name not in self.scene.collection.children
+                is_linked = bobject.name not in self.scene.collection.children
                 temp_collection = None
 
-                if was_linked:
+                if is_linked:
                     temp_collection = bpy.data.collections.new("temp_shape_keys_collection")
                     bpy.context.scene.collection.children.link(temp_collection)
                     temp_collection.objects.link(bobject)
@@ -1891,7 +1891,7 @@ Make sure the mesh only has tris/quads.""")
                 temp_depsgraph = bpy.context.evaluated_depsgraph_get()
                 bobject_eval = bobject.evaluated_get(temp_depsgraph)
 
-                if was_linked and temp_collection:
+                if is_linked and temp_collection:
                     temp_collection.objects.unlink(bobject)
                     bpy.context.scene.collection.children.unlink(temp_collection)
                     bpy.data.collections.remove(temp_collection)
