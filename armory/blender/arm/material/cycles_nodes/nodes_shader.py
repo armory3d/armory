@@ -196,12 +196,6 @@ if bpy.app.version < (4, 1, 0):
             c.write_normal(node.inputs[2])
             state.out_basecol = c.parse_vector_input(node.inputs[0])
             state.out_roughness = c.parse_value_input(node.inputs[1])
-            # Prevent black material when metal = 1.0 and roughness = 0.0
-            try:
-                if float(state.out_roughness) < 0.00101:
-                    state.out_roughness = '0.001'
-            except ValueError:
-                pass
             state.out_metallic = '1.0'
 else:
     def parse_bsdfglossy(node: bpy.types.ShaderNodeBsdfAnisotropic, out_socket: NodeSocket, state: ParserState) -> None:
@@ -209,12 +203,6 @@ else:
             c.write_normal(node.inputs[4])
             state.out_basecol = c.parse_vector_input(node.inputs[0])
             state.out_roughness = c.parse_value_input(node.inputs[1])
-            # Prevent black material when metal = 1.0 and roughness = 0.0
-            try:
-                if float(state.out_roughness) < 0.00101:
-                    state.out_roughness = '0.001'
-            except ValueError:
-                pass
             state.out_metallic = '1.0'
 
 

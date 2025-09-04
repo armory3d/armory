@@ -82,37 +82,28 @@ def parse_clamp(node: bpy.types.ShaderNodeClamp, out_socket: bpy.types.NodeSocke
 
 
 def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
+    # Alpha (TODO: make ColorRamp calculation vec4-based and split afterwards)
+    if out_socket == node.outputs[1]:
+        return '1.0'
 
     input_fac: bpy.types.NodeSocket = node.inputs[0]
-    alpha_out = out_socket == node.outputs[1]
+
     fac: str = c.parse_value_input(input_fac) if input_fac.is_linked else c.to_vec1(input_fac.default_value)
     interp = node.color_ramp.interpolation
     elems = node.color_ramp.elements
 
     if len(elems) == 1:
-        if alpha_out:
-            return c.to_vec1(elems[0].color[3])  # Return alpha from the color
-        else:
-            return c.to_vec3(elems[0].color)  # Return RGB
+        return c.to_vec3(elems[0].color)
 
-    name_prefix = c.node_name(node.name).upper()
-
-    if alpha_out:
-        cols_var = name_prefix + '_ALPHAS'
-    else:
-        cols_var = name_prefix + '_COLS'
+    # Write color array
+    # The last entry is included twice so that the interpolation
+    # between indices works (no out of bounds error)
+    cols_var = c.node_name(node.name).upper() + '_COLS'
 
     if state.current_pass == ParserPass.REGULAR:
-        if alpha_out:
-            cols_entries = ', '.join(f'{elem.color[3]}' for elem in elems)
-            # Add last value twice to avoid out of bounds access
-            cols_entries += f', {elems[len(elems) - 1].color[3]}'
-            state.curshader.add_const("float", cols_var, cols_entries, array_size=len(elems) + 1)
-        else:
-            # Create array of RGB values for color output
-            cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
-            cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
-            state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
+        cols_entries = ', '.join(f'vec3({elem.color[0]}, {elem.color[1]}, {elem.color[2]})' for elem in elems)
+        cols_entries += f', vec3({elems[len(elems) - 1].color[0]}, {elems[len(elems) - 1].color[1]}, {elems[len(elems) - 1].color[2]})'
+        state.curshader.add_const("vec3", cols_var, cols_entries, array_size=len(elems) + 1)
 
     fac_var = c.node_name(node.name) + '_fac' + state.get_parser_pass_suffix()
     state.curshader.write(f'float {fac_var} = {fac};')
@@ -130,22 +121,21 @@ def parse_valtorgb(node: bpy.types.ShaderNodeValToRGB, out_socket: bpy.types.Nod
 
     # Linear interpolation
     else:
-        # Write factor array - same for both color and alpha
-        facs_var = name_prefix + '_FACS'
+        # Write factor array
+        facs_var = c.node_name(node.name).upper() + '_FACS'
         if state.current_pass == ParserPass.REGULAR:
             facs_entries = ', '.join(str(elem.position) for elem in elems)
-            # Add one more entry at the rightmost position to avoid out of bounds access
+            # Add one more entry at the rightmost position so that the
+            # interpolation between indices works (no out of bounds error)
             facs_entries += ', 1.0'
             state.curshader.add_const("float", facs_var, facs_entries, array_size=len(elems) + 1)
 
-        # Calculation for interpolation position
+        # Mix color
         prev_stop_fac = f'{facs_var}[{index_var}]'
         next_stop_fac = f'{facs_var}[{index_var} + 1]'
         prev_stop_col = f'{cols_var}[{index_var}]'
         next_stop_col = f'{cols_var}[{index_var} + 1]'
         rel_pos = f'({fac_var} - {prev_stop_fac}) * (1.0 / ({next_stop_fac} - {prev_stop_fac}))'
-
-        # Use mix function for both alpha and color outputs (mix works on floats too)
         return f'mix({prev_stop_col}, {next_stop_col}, max({rel_pos}, 0.0))'
 
 if bpy.app.version > (3, 2, 0):
