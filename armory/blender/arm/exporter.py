@@ -282,8 +282,30 @@ class ArmoryExporter:
         Modifiers that are not range-restricted are ignored in this
         calculation.
         """
-        start = action.frame_range[0]
-        end = action.frame_range[1]
+        frame_range = action.frame_range
+        start = frame_range[0]
+        end = frame_range[1]
+
+        # Blender 4.0+ compatibility: Handle zero-length frame ranges
+        if start == end:
+            if action.fcurves:
+                all_keyframes = []
+                for fcurve in action.fcurves:
+                    if fcurve.keyframe_points:
+                        for keyframe in fcurve.keyframe_points:
+                            all_keyframes.append(keyframe.co[0])
+
+                if all_keyframes:
+                    start = min(all_keyframes)
+                    end = max(all_keyframes)
+                    if start == end:
+                        end = start + 1
+                else:
+                    start = 1
+                    end = 2
+            else:
+                start = 1
+                end = 2
 
         # Take FCurve modifiers into account if they have a restricted
         # frame range
@@ -503,7 +525,7 @@ class ArmoryExporter:
         fcurve_list = self.collect_bone_animation(armature, bone.name)
 
         if fcurve_list and pose_bone:
-            begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+            begin_frame, end_frame = self.calculate_anim_frame_range(action)
 
             out_track = {'target': "transform", 'frames': [], 'values': []}
             o['anim'] = {'tracks': [out_track]}
@@ -599,7 +621,7 @@ class ArmoryExporter:
 
     def write_bone_matrices(self, scene, action):
         # profile_time = time.time()
-        begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+        begin_frame, end_frame = self.calculate_anim_frame_range(action)
         if len(self.bone_tracks) > 0:
             for i in range(begin_frame, end_frame + 1):
                 scene.frame_set(i)
@@ -1103,9 +1125,10 @@ class ArmoryExporter:
                                 _o.select_set(False)
                             skelobj.select_set(True)
 
+                            start, end = self.calculate_anim_frame_range(action)
                             bake_result = bpy.ops.nla.bake(
-                                frame_start=int(action.frame_range[0]),
-                                frame_end=int(action.frame_range[1]),
+                                frame_start=start,
+                                frame_end=end,
                                 step=1,
                                 only_selected=False,
                                 visual_keying=True
