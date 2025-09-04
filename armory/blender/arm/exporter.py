@@ -324,9 +324,10 @@ class ArmoryExporter:
             bpy.context.window.scene = bobject.users_scene[0]
             bpy.context.view_layer.update()
 
-            bobject.select_set(True)
-            bpy.context.view_layer.update()
-            bobject.select_set(False)
+            if bobject.name in bpy.context.view_layer.objects:
+                bobject.select_set(True)
+                bpy.context.view_layer.update()
+                bobject.select_set(False)
 
             bpy.context.window.scene = current_scene
             bpy.context.view_layer.update()
