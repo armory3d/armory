@@ -1,7 +1,6 @@
 import bpy
 from bpy.props import *
 import re
-import os
 import multiprocessing
 
 import arm.assets as assets
