@@ -24,27 +24,62 @@ const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = radians(15.0);
 
-const float DIFFUSE_CONE_APERTURE = 0.872665f;
+#define DIFFUSE_CONE_COUNT 16
+#define DIFFUSE_CONE_APERTURE 0.57735
 
-const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
-	vec3(0.57735f, 0.57735f, 0.57735f),
-	vec3(0.57735f, -0.57735f, -0.57735f),
-	vec3(-0.57735f, 0.57735f, -0.57735f),
-	vec3(-0.57735f, -0.57735f, 0.57735f),
-	vec3(-0.903007f, -0.182696f, -0.388844f),
-	vec3(-0.903007f, 0.182696f, 0.388844f),
-	vec3(0.903007f, -0.182696f, 0.388844f),
-	vec3(0.903007f, 0.182696f, -0.388844f),
-	vec3(-0.388844f, -0.903007f, -0.182696f),
-	vec3(0.388844f, -0.903007f, 0.182696f),
-	vec3(0.388844f, 0.903007f, -0.182696f),
-	vec3(-0.388844f, 0.903007f, 0.182696f),
-	vec3(-0.182696f, -0.388844f, -0.903007f),
-	vec3(0.182696f, 0.388844f, -0.903007f),
-	vec3(-0.182696f, 0.388844f, 0.903007f),
-	vec3(0.182696f, -0.388844f, 0.903007f)
-};
+// Cosine-weighted hemispherical directions (Z-up)
+const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[16](
+    vec3( 0.000,  0.000,  1.000),
+    vec3( 0.258,  0.000,  0.966),
+    vec3(-0.258,  0.000,  0.966),
+    vec3( 0.000,  0.258,  0.966),
+    vec3( 0.000, -0.258,  0.966),
+    vec3( 0.183,  0.183,  0.966),
+    vec3( 0.183, -0.183,  0.966),
+    vec3(-0.183,  0.183,  0.966),
+    vec3(-0.183, -0.183,  0.966),
+    vec3( 0.500,  0.000,  0.866),
+    vec3(-0.500,  0.000,  0.866),
+    vec3( 0.000,  0.500,  0.866),
+    vec3( 0.000, -0.500,  0.866),
+    vec3( 0.354,  0.354,  0.866),
+    vec3( 0.354, -0.354,  0.866),
+    vec3(-0.354,  0.354,  0.866)
+);
 
+mat3 makeTangentBasis(vec3 normal) {
+    vec3 n = normalize(normal);
+
+    // Try multiple candidate vectors to avoid precision issues
+    vec3 candidates[3] = vec3[3](
+        vec3(1.0, 0.0, 0.0),
+        vec3(0.0, 1.0, 0.0),
+        vec3(0.0, 0.0, 1.0)
+    );
+
+    vec3 tangent = candidates[0];
+    float maxDot = 0.0;
+
+    // Find the candidate most orthogonal to the normal
+    for (int i = 0; i < 3; i++) {
+        float dotProd = abs(dot(n, candidates[i]));
+        if (dotProd < 0.9) { // Avoid vectors too close to normal
+            tangent = candidates[i];
+            break;
+        }
+        if (dotProd > maxDot) {
+            maxDot = dotProd;
+            tangent = candidates[i];
+        }
+    }
+
+    // Gram-Schmidt process
+    tangent = normalize(tangent - n * dot(n, tangent));
+    vec3 bitangent = cross(n, tangent);
+
+    // Ensure the basis is orthonormal
+    return mat3(tangent, bitangent, n);
+}
 
 const float BayerMatrix8[8][8] =
 {

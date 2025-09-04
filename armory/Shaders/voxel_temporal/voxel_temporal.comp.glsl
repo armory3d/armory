@@ -35,7 +35,6 @@ uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
 uniform vec2 spotData;
-uniform float envmapStrength;
 #ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
@@ -54,8 +53,8 @@ uniform layout(r8) image3D SDF;
 uniform layout(r8) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r16) image3D voxelsB;
-uniform layout(r16) image3D voxelsOut;
+uniform layout(r8) image3D voxelsB;
+uniform layout(r8) image3D voxelsOut;
 #endif
 #endif
 
@@ -75,13 +74,47 @@ void main() {
 	#endif
 	#endif
 
+	#ifdef _VoxelGI
+	vec4 aniso_colors[6];
+	#else
+	float aniso_colors[6];
+	#endif
+
+	// Move these declarations outside the loop
+	vec3 avgNormal = vec3(0.0);
+	int nor_count = 0;
+
+	// First pass: collect normals from all 6 faces
+	for (int i = 0; i < 6; i++) {
+		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
+		src.x += i * res;
+
+		#ifdef _VoxelGI
+		int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
+		if (count > 0) {
+			vec3 N = vec3(0.0);
+			N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
+			N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+			N /= count;
+			N = decode_oct(N.rg * 2.0 - 1.0);
+
+			if (any(greaterThan(abs(N), vec3(0.001)))) {
+				avgNormal += N;
+				nor_count++;
+			}
+		}
+		#endif
+	}
+
+	// Create TBN after collecting all normals
+	mat3 TBN = mat3(0.0);
+	if (nor_count > 0) {
+		avgNormal = normalize(avgNormal);
+		TBN = makeTangentBasis(avgNormal);
+	}
+
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
-		#ifdef _VoxelGI
-		vec4 aniso_colors[6];
-		#else
-		float aniso_colors[6];
-		#endif
 
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
@@ -109,13 +142,11 @@ void main() {
 				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
 				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
 				emission /= count;
-				// Retrieve encoded normal (stored in 8-bit format)
-				vec2 enc;
-				enc.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-				enc.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
-				enc /= count;
-				// Decode octahedral normal
-				vec3 wnormal = decode_oct(enc * 2.0 - 1.0);
+				vec3 N = vec3(0.0);
+				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
+				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+				N /= count;
+				N = decode_oct(N.rg * 2.0 - 1.0);
 				vec3 envl = vec3(0.0);
 				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
 				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
@@ -135,7 +166,7 @@ void main() {
 				wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
 
 				radiance = basecol;
-				vec4 trace = traceDiffuse(wposition, wnormal, voxelsSampler, clipmaps);
+				vec4 trace = traceDiffuse(wposition, N, voxelsSampler, clipmaps);
 				vec3 indirect = trace.rgb + envl.rgb * (1.0 - trace.a);
 				radiance.rgb *= light + indirect;
 				radiance.rgb += emission.rgb;
@@ -199,7 +230,7 @@ void main() {
 		}
 		else {
 			// precompute cone sampling:
-			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
+			vec3 coneDirection = TBN * DIFFUSE_CONE_DIRECTIONS[i - 6];
 			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
