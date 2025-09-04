@@ -288,6 +288,9 @@ class ArmoryExporter:
 
         # Blender 4.0+ compatibility: Handle zero-length frame ranges
         if start == end:
+            start = 1
+            end = 2
+
             if action.fcurves:
                 all_keyframes = []
                 for fcurve in action.fcurves:
@@ -300,12 +303,6 @@ class ArmoryExporter:
                     end = max(all_keyframes)
                     if start == end:
                         end = start + 1
-                else:
-                    start = 1
-                    end = 2
-            else:
-                start = 1
-                end = 2
 
         # Take FCurve modifiers into account if they have a restricted
         # frame range
@@ -339,7 +336,7 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        # HACK: In Blender 4.2.x and above, each camera must be selected to ensure its matrix is correctly assigned
+        # HACK: In Blender 4.2+, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
 
@@ -356,7 +353,7 @@ class ArmoryExporter:
 
         matrix_local = bobject.matrix_local
 
-        # HACK: Force proper matrix calculation for linked objects from linked scenes in Blender 4.2.x and above
+        # HACK: Force proper matrix calculation for linked objects from linked scenes in Blender 4.2+
         if bpy.app.version >= (4, 2, 0):
             temp_collection = None
             is_linked = bobject.name not in self.scene.collection.children and bobject.library
