@@ -51,8 +51,8 @@ class SelectNode(ArmLogicTreeNode):
     # a property in order to be saved with each individual node
     num_choices: IntProperty(default=1, min=0)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(SelectNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -124,5 +124,5 @@ class SelectNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

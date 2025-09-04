@@ -38,8 +38,8 @@ class GateNode(ArmLogicTreeNode):
         update=remove_extra_inputs)
     property1: HaxeFloatProperty('property1', name='Tolerance', description='Precision for float compare', default=0.0001)
 
-    def __init__(self):
-        super(GateNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(GateNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):

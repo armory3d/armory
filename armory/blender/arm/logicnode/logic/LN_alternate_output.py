@@ -6,9 +6,9 @@ class AlternateNode(ArmLogicTreeNode):
     bl_label = 'Alternate Output'
     arm_section = 'flow'
     arm_version = 2
-    
-    def __init__(self):
-        super(AlternateNode, self).__init__()
+
+    def __init__(self, *args, **kwargs):
+        super(AlternateNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):

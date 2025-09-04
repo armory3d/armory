@@ -6,8 +6,8 @@ bl_info = {
     "location": "Properties -> Render -> Armory Player",
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (2025, 6, 0),
-    "blender": (4, 2, 0),
+    "version": (2025, 9, 0),
+    "blender": (4, 5, 0),
     "doc_url": "https://github.com/armory3d/armory/wiki",
     "tracker_url": "https://github.com/armory3d/armory/issues"
 }

@@ -91,7 +91,7 @@ if bpy.app.version < (3, 0, 0):
                 state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
                 mat_state.emission_type = mat_state.EmissionType.SHADED
             else:
-                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION   
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
         if state.parse_opacity:
             state.out_ior = c.parse_value_input(node.inputs[14])
             state.out_opacity = c.parse_value_input(node.inputs[19])
@@ -139,7 +139,10 @@ if bpy.app.version > (4, 1, 0):
             subsurface_radius = c.parse_vector_input(node.inputs[9])
             subsurface_color = c.parse_vector_input(node.inputs[8])
             state.out_metallic = c.parse_value_input(node.inputs[1])
-            state.out_specular = c.parse_value_input(node.inputs[12])
+            if bpy.app.version >= (4, 3, 0):
+                state.out_specular = c.parse_value_input(node.inputs[13])
+            else:
+                state.out_specular = c.parse_value_input(node.inputs[12])
             state.out_roughness = c.parse_value_input(node.inputs[2])
             # Prevent black material when metal = 1.0 and roughness = 0.0
             try:
@@ -149,12 +152,16 @@ if bpy.app.version > (4, 1, 0):
                 pass
             if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
                     and (node.inputs['Emission Color'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission Color'], (0.0, 0.0, 0.0), comp_alpha=False)):
-                emission_col = c.parse_vector_input(node.inputs[26])
-                emission_strength = c.parse_value_input(node.inputs[27])
+                if bpy.app.version >= (4, 4, 0):
+                    emission_col = c.parse_vector_input(node.inputs[27])
+                    emission_strength = c.parse_value_input(node.inputs[28])
+                else:
+                    emission_col = c.parse_vector_input(node.inputs[26])
+                    emission_strength = c.parse_value_input(node.inputs[27])
                 state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
                 mat_state.emission_type = mat_state.EmissionType.SHADED
             else:
-                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION  
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
             #state.out_occlusion = state.out_roughness
             #state.out_aniso = c.parse_vector_input(node.inputs[14])
             #state.out_aniso_rot = c.parse_vector_input(node.inputs[15])
@@ -164,7 +171,7 @@ if bpy.app.version > (4, 1, 0):
             #state.out_clearcoat_rough = c.parse_vector_input(node.inputs[19])
             #state.out_ior = c.parse_value_input(node.inputs[3])
             #state.out_transmission = c.parse_vector_input(node.inputs[17])
-            #state.out_transmission_roughness = state.out_roughness 
+            #state.out_transmission_roughness = state.out_roughness
         if state.parse_opacity:
             state.out_ior = c.parse_value_input(node.inputs[3])
             state.out_opacity = c.parse_value_input(node.inputs[4])
@@ -189,6 +196,12 @@ if bpy.app.version < (4, 1, 0):
             c.write_normal(node.inputs[2])
             state.out_basecol = c.parse_vector_input(node.inputs[0])
             state.out_roughness = c.parse_value_input(node.inputs[1])
+            # Prevent black material when metal = 1.0 and roughness = 0.0
+            try:
+                if float(state.out_roughness) < 0.00101:
+                    state.out_roughness = '0.001'
+            except ValueError:
+                pass
             state.out_metallic = '1.0'
 else:
     def parse_bsdfglossy(node: bpy.types.ShaderNodeBsdfAnisotropic, out_socket: NodeSocket, state: ParserState) -> None:
@@ -196,8 +209,14 @@ else:
             c.write_normal(node.inputs[4])
             state.out_basecol = c.parse_vector_input(node.inputs[0])
             state.out_roughness = c.parse_value_input(node.inputs[1])
+            # Prevent black material when metal = 1.0 and roughness = 0.0
+            try:
+                if float(state.out_roughness) < 0.00101:
+                    state.out_roughness = '0.001'
+            except ValueError:
+                pass
             state.out_metallic = '1.0'
-            
+
 
 def parse_ambientocclusion(node: bpy.types.ShaderNodeAmbientOcclusion, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
@@ -245,7 +264,7 @@ def parse_holdout(node: bpy.types.ShaderNodeHoldout, out_socket: NodeSocket, sta
         state.out_occlusion = '0.0'
 
 
-def parse_bsdfrefraction(node: bpy.types.ShaderNodeBsdfRefraction, out_socket: NodeSocket, state: ParserState) -> None: 
+def parse_bsdfrefraction(node: bpy.types.ShaderNodeBsdfRefraction, out_socket: NodeSocket, state: ParserState) -> None:
     if state.parse_surface:
         state.out_basecol = c.parse_vector_input(node.inputs[0])
         c.write_normal(node.inputs[3])

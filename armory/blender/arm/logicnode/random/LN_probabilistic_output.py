@@ -12,7 +12,7 @@ class ProbabilisticOutputNode(ArmLogicTreeNode):
     @output output: output.
 
     """
-    
+
     bl_idname = 'LNProbabilisticOutputNode'
     bl_label = 'Probabilistic Output'
     arm_section = 'logic'
@@ -20,8 +20,8 @@ class ProbabilisticOutputNode(ArmLogicTreeNode):
 
     num_choices: IntProperty(default=0, min=0)
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(ProbabilisticOutputNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
 

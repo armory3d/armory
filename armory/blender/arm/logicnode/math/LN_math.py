@@ -102,8 +102,8 @@ class MathNode(ArmLogicTreeNode):
 
     property1: HaxeBoolProperty('property1', name='Clamp', default=False)
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(MathNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Value 0', default_value=0.0)

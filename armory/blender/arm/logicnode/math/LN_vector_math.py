@@ -119,8 +119,8 @@ class VectorMathNode(ArmLogicTreeNode):
                ('Reflect', 'Reflect', 'Reflect')],
         name='', default='Add', set=set_enum, get=get_enum)
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(VectorMathNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Value 0', default_value=[0.0, 0.0, 0.0])

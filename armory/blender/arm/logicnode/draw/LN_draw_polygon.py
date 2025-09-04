@@ -26,8 +26,8 @@ class DrawPolygonNode(ArmLogicTreeNode):
 
     num_choices: IntProperty(default=1, min=0)
 
-    def __init__(self):
-        super(DrawPolygonNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(DrawPolygonNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -68,5 +68,5 @@ class DrawPolygonNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

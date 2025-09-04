@@ -331,8 +331,27 @@ class ArmoryExporter:
             bpy.context.window.scene = current_scene
             bpy.context.view_layer.update()
 
+        matrix_local = bobject.matrix_local
+
+        # HACK: Force proper matrix calculation for linked objects from linked scenes in Blender 4.2.x and above
+        if bpy.app.version >= (4, 2, 0):
+            temp_collection = None
+            is_linked = bobject.name not in self.scene.collection.children and bobject.library
+
+            if is_linked:
+                temp_collection = bpy.data.collections.new("temp_transform_collection")
+                bpy.context.scene.collection.children.link(temp_collection)
+                temp_collection.objects.link(bobject)
+
+                bpy.context.evaluated_depsgraph_get()
+                matrix_local = bobject.matrix_local.copy()
+
+                temp_collection.objects.unlink(bobject)
+                bpy.context.scene.collection.children.unlink(temp_collection)
+                bpy.data.collections.remove(temp_collection)
+
         # Static transform
-        o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
+        o['transform'] = {'values': ArmoryExporter.write_matrix(matrix_local)}
 
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":

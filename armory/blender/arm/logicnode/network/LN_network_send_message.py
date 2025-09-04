@@ -70,9 +70,9 @@ class NetworkSendMessageNode(ArmLogicTreeNode):
         items = [('client', 'Client', 'Network client Event listener'),
                 ('host', 'Host', 'Network host Event listener'),
                 ('securehost', 'Secure Host', 'Network secure host Event listener')],
-        name='', 
+        name='',
         default='client',
-        set=set_enum, 
+        set=set_enum,
         get=get_enum)
 
 
@@ -89,8 +89,8 @@ class NetworkSendMessageNode(ArmLogicTreeNode):
         default='string')
 
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(NetworkSendMessageNode, self).__init__(*args, **kwargs)
 
 
     def arm_init(self, context):
@@ -100,7 +100,7 @@ class NetworkSendMessageNode(ArmLogicTreeNode):
         self.add_input('ArmDynamicSocket', 'Data')
 
         self.add_output('ArmNodeSocketAction', 'Out')
-        
+
 
 
     def draw_buttons(self, context, layout):

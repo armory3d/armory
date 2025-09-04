@@ -21,8 +21,8 @@ class StringMapNode(ArmLogicTreeNode):
     min_inputs = 1
     property0: HaxeIntProperty('property0', name='Number of keys', default=0)
 
-    def __init__(self):
-        super(StringMapNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(StringMapNode, self).__init__(*args, **kwargs)
         self.register_id()
 
     def arm_init(self, context):

@@ -314,17 +314,22 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
         state.dxdy_varying_input_value = True
         return 'mposition'
     elif out_socket == node.outputs[4]: # Camera
-        return 'vec3(0.0)' # 'vposition'
+        state.curshader.add_uniform('mat4 V', link='_viewMatrix')
+        if not state.frag.contains('vec3 viewPosition;'):
+            state.frag.write_init('vec3 viewPosition = (V * vec4(wposition, 1.0)).xyz;')
+        state.dxdy_varying_input_value = True
+        return 'viewPosition'
     elif out_socket == node.outputs[5]: # Window
         # TODO: Don't use gl_FragCoord here, it uses different axes on different graphics APIs
         state.frag.add_uniform('vec2 screenSize', link='_screenSize')
         state.dxdy_varying_input_value = True
         return f'vec3(gl_FragCoord.xy / screenSize, 0.0)'
     elif out_socket == node.outputs[6]: # Reflection
-        if state.context == ParserContext.WORLD:
-            state.dxdy_varying_input_value = True
-            return 'n'
-        return 'vec3(0.0)'
+        state.curshader.add_uniform('vec3 eye', link='_cameraPosition')
+        if not state.frag.contains('vec3 reflectionVector;'):
+            state.frag.write_init('vec3 reflectionVector = reflect(normalize(wposition - eye), normalize(n));')
+        state.dxdy_varying_input_value = True
+        return 'reflectionVector'
 
 
 def parse_uvmap(node: bpy.types.ShaderNodeUVMap, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
