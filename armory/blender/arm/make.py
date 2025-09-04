@@ -145,11 +145,6 @@ def load_external_blends():
                 linked_blend_paths.append(blend_path)
                 for scn in data_to.scenes:
                     if scn is not None and scn not in linked_scenes:
-                        # make name unique with file name
-                        scn.name += "_" + filename.replace(".blend", "")
-                        for obj in scn.objects:
-                            if obj.type != 'CAMERA':
-                                obj.name += "_" + filename
                         linked_scenes.append(scn)
 
                 log.info(f"Loaded external blend: {blend_path}")
@@ -264,7 +259,7 @@ def export_data(fp, sdk_path):
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
-            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
+            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
             ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
             if ArmoryExporter.export_physics:
                 physics_found = True
