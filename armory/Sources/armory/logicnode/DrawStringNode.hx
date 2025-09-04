@@ -62,7 +62,7 @@ class DrawStringNode extends LogicNode {
 
 	override function get(from: Int): Dynamic {
 
-		return from == 1 ? RenderToTexture.g.font.height(RenderToTexture.g.fontSize) : RenderToTexture.g.font.width(RenderToTexture.g.fontSize, string);
+		return from == 1 ? RenderToTexture.g.font.width(RenderToTexture.g.fontSize, string) : RenderToTexture.g.font.height(RenderToTexture.g.fontSize);
 	
 	}
 }

@@ -656,17 +656,19 @@ class RenderPathForward {
 			var framebuffer = "";
 			#end
 
-			#if ((rp_antialiasing == "Off") || (rp_antialiasing == "FXAA"))
+			RenderPathCreator.finalTarget = path.currentTarget;
+
+			var target = "";
+			#if ((rp_antialiasing == "Off") || (rp_antialiasing == "FXAA") || (!rp_render_to_texture))
 			{
-				RenderPathCreator.finalTarget = path.currentTarget;
-				path.setTarget(framebuffer);
+				target = framebuffer;
 			}
 			#else
 			{
-				path.setTarget("buf");
-				RenderPathCreator.finalTarget = path.currentTarget;
+				target = "buf";
 			}
 			#end
+			path.setTarget(target);
 
 			#if rp_compositordepth
 			{
@@ -683,6 +685,14 @@ class RenderPathForward {
 			{
 				path.bindTarget("lbuffer0", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
+			}
+			#end
+
+			#if rp_overlays
+			{
+				path.setTarget(target);
+				path.clearTarget(null, 1.0);
+				path.drawMeshes("overlay");
 			}
 			#end
 
@@ -713,13 +723,6 @@ class RenderPathForward {
 				path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 			}
 			#end
-		}
-		#end
-
-		#if rp_overlays
-		{
-			path.clearTarget(null, 1.0);
-			path.drawMeshes("overlay");
 		}
 		#end
 	}

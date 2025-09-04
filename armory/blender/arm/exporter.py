@@ -60,7 +60,7 @@ class NodeType(Enum):
         """Returns the NodeType enum member belonging to the type of
         the given blender object."""
         if bobject.type == "MESH":
-            if bobject.data.polygons:
+            if bobject.data.polygons or bobject.data.edges or bobject.data.vertices:
                 return cls.MESH
         elif bobject.type in ('FONT', 'META'):
             return cls.MESH
@@ -320,7 +320,7 @@ class ArmoryExporter:
         # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
-            
+
             bpy.context.window.scene = bobject.users_scene[0]
             bpy.context.view_layer.update()
 
@@ -431,9 +431,15 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
+            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
+            if bobject.type == 'CAMERA' and bobject.library:
+                struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
+            else:
+                struct_name = bobject.name if is_local_to_linked_scene and bobject.type != 'CAMERA' else arm.utils.asset_name(bobject)
+
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": arm.utils.asset_name(bobject)
+                "structName": struct_name
             }
 
             if bobject.type == "ARMATURE":
@@ -524,7 +530,15 @@ class ArmoryExporter:
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
-            return
+           return
+
+        for obj in bpy.data.objects:
+            if obj.name == out_object['name']:
+                for mod in obj.modifiers:
+                    if mod.type == 'PARTICLE_SYSTEM':
+                        if mod.particle_system.name == psys.name:
+                            if not mod.show_render:
+                                return
 
         self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
         pref = {
@@ -638,7 +652,10 @@ class ArmoryExporter:
                 continue
 
             for slot in bobject.material_slots:
-                if slot.material is None or slot.material.library is not None:
+                if slot.material is None:
+                    continue
+                if slot.material.library is not None:
+                    slot.material.arm_particle_flag = True
                     continue
                 if slot.material.name.endswith('_armpart'):
                     continue
@@ -819,12 +836,22 @@ class ArmoryExporter:
                     out_object['vertex_groups'].append(out_vertex_groups)
 
 
+            if len(bobject.arm_camera_list) > 0:
+                out_camera_list = []
+                for camera in bobject.arm_camera_list:
+                    if camera.arm_camera_object_ptr != None:
+                        out_camera_list.append(camera.arm_camera_object_ptr.name)
+
+                if len(out_camera_list) > 0:
+                    out_object['camera_list'] = out_camera_list
+
+
             if len(bobject.arm_propertylist) > 0:
                 out_object['properties'] = []
                 for proplist_item in bobject.arm_propertylist:
                     # Check if the property is a collection (array type).
                     if proplist_item.type_prop == 'array':
-                        # Convert the collection to a list. 
+                        # Convert the collection to a list.
                         array_type = proplist_item.array_item_type
                         collection_value = getattr(proplist_item, 'array_prop')
                         property_name = array_type + '_prop'
@@ -893,7 +920,11 @@ class ArmoryExporter:
                     out_object['particle_refs'] = []
                     out_object['render_emitter'] = bobject.show_instancer_for_render
                     for i in range(num_psys):
-                        self.export_particle_system_ref(bobject.particle_systems[i], out_object)
+                        for mod in bobject.modifiers:
+                            if mod.type == 'PARTICLE_SYSTEM':
+                                if mod.particle_system.name == bobject.particle_systems[i].name:
+                                    if mod.show_render:
+                                        self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
                 if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
@@ -1686,6 +1717,7 @@ Make sure the mesh only has tris/quads.""")
             tangdata = np.array(tangdata, dtype='<i2')
 
         # Output
+        o['sorting_index'] = bobject.arm_sorting_index
         o['vertex_arrays'] = []
         o['vertex_arrays'].append({ 'attrib': 'pos', 'values': pdata, 'data': 'short4norm' })
         o['vertex_arrays'].append({ 'attrib': 'nor', 'values': ndata, 'data': 'short2norm' })
@@ -1936,9 +1968,13 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                asset_name = arm.utils.asset_name(bobject)
+                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
+                if bobject.type == 'CAMERA':
+                    asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
+                else:
+                    asset_name = bobject.name if is_local_to_linked_scene and bobject.type else arm.utils.asset_name(bobject)
 
-                if collection.library:
+                if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
                     # Iron differentiates objects based on their names,
                     # so errors will happen if two objects with the
@@ -1955,6 +1991,10 @@ Make sure the mesh only has tris/quads.""")
 
                     self.process_bobject(bobject)
                     self.export_object(bobject)
+
+                if bobject.type == 'CAMERA':
+                    self.output['camera_ref'] = asset_name
+                    self.has_spawning_camera = True
 
                 out_collection['object_refs'].append(asset_name)
 
@@ -2167,6 +2207,9 @@ Make sure the mesh only has tris/quads.""")
             elif material.arm_cull_mode != 'clockwise':
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = material.arm_cull_mode
+            if material.arm_compare_mode != 'less':
+                o['override_context'] = {}
+                o['override_context']['compare_mode'] = material.arm_compare_mode
 
             o['contexts'] = []
 
@@ -2259,9 +2302,25 @@ Make sure the mesh only has tris/quads.""")
             make_renderpath.build()
 
     def export_particle_systems(self):
+        render = self.scene.render
+
         if len(self.particle_system_array) > 0:
             self.output['particle_datas'] = []
+
         for particleRef in self.particle_system_array.items():
+
+            padd = False
+
+            for obj in bpy.data.objects:
+                for mod in obj.modifiers:
+                    if mod.type == 'PARTICLE_SYSTEM':
+                        if mod.particle_system.settings.name == particleRef[1]["structName"]:
+                            if mod.show_render:
+                                padd = True
+
+            if not padd:
+                continue
+
             psettings = particleRef[0]
 
             if psettings is None:
@@ -2276,9 +2335,41 @@ Make sure the mesh only has tris/quads.""")
             elif psettings.emit_from == 'VOLUME':
                 emit_from = 2
 
+            if psettings.rotation_mode == 'NONE':
+                rotation_mode = 0
+            elif psettings.rotation_mode == 'NOR':
+                rotation_mode = 1
+            elif psettings.rotation_mode == 'NOR_TAN':
+                rotation_mode = 2
+            elif psettings.rotation_mode == 'VEL':
+                rotation_mode = 3
+            elif psettings.rotation_mode == 'GLOB_X':
+                rotation_mode = 4
+            elif psettings.rotation_mode == 'GLOB_Y':
+                rotation_mode = 5
+            elif psettings.rotation_mode == 'GLOB_Z':
+                rotation_mode = 6
+            elif psettings.rotation_mode == 'OB_X':
+                rotation_mode = 7
+            elif psettings.rotation_mode == 'OB_Y':
+                rotation_mode = 8
+            elif psettings.rotation_mode == 'OB_Z':
+                rotation_mode = 9
+
+            # For CPU particles
+            texture_slots = {}
+
+            for key, slot in psettings.texture_slots.items():
+                slot_data = self.extract_props(slot)
+                texture_slots[key] = slot_data
+
             out_particlesys = {
+                'fps': render.fps,
                 'name': particleRef[1]["structName"],
                 'type': 0 if psettings.type == 'EMITTER' else 1, # HAIR
+                'auto_start': psettings.arm_auto_start,
+                'is_unique': psettings.arm_is_unique,
+                'local_coords': psettings.arm_local_coords,
                 'loop': psettings.arm_loop,
                 # Emission
                 'count': int(psettings.count * psettings.arm_count_mult),
@@ -2298,6 +2389,13 @@ Make sure the mesh only has tris/quads.""")
                 ),
                 # 'object_factor': psettings.object_factor,
                 'factor_random': psettings.factor_random,
+                # Rotation
+                'use_rotations': psettings.use_rotations,
+                'rotation_mode': rotation_mode,
+                'rotation_factor_random': psettings.rotation_factor_random,
+                'phase_factor': psettings.phase_factor,
+                'phase_factor_random': psettings.phase_factor_random,
+                'use_dynamic_rotation': psettings.use_dynamic_rotation,
                 # Physics
                 'physics_type': 1 if psettings.physics_type == 'NEWTON' else 0,
                 'particle_size': psettings.particle_size,
@@ -2306,7 +2404,10 @@ Make sure the mesh only has tris/quads.""")
                 # Render
                 'instance_object': arm.utils.asset_name(psettings.instance_object),
                 # Field weights
-                'weight_gravity': psettings.effector_weights.gravity
+                'weight_gravity': psettings.effector_weights.gravity,
+                'weight_texture': psettings.effector_weights.texture,
+                # Textures
+                'texture_slots': texture_slots # For CPU particles
             }
 
             if psettings.instance_object not in self.object_to_arm_object_dict:
@@ -2317,6 +2418,48 @@ Make sure the mesh only has tris/quads.""")
             self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
 
             self.output['particle_datas'].append(out_particlesys)
+
+    # For CPU particles
+    def extract_props(self, bpy_struct, depth=0, max_depth=2):
+        result = {}
+        for prop in bpy_struct.bl_rna.properties:
+            name = prop.identifier
+            if name == "rna_type":
+                continue
+            try:
+                value = getattr(bpy_struct, name)
+
+                if name == "color_ramp" and hasattr(value, "elements"):
+                    result[name] = {
+                        "elements": [
+                            {
+                                "position": el.position,
+                                "color": {
+                                    "r": el.color[0],
+                                    "g": el.color[1],
+                                    "b": el.color[2],
+                                    "a": el.color[3]
+                                }
+                            }
+                            for el in value.elements
+                        ],
+                        "interpolation": value.interpolation,
+                        "hue_interpolation": value.hue_interpolation,
+                        "color_mode": value.color_mode
+                    }
+                elif isinstance(value, (int, float, bool, str)):
+                    result[name] = value
+                elif isinstance(value, (tuple, list)):
+                    result[name] = list(value)
+                elif hasattr(value, "bl_rna") and depth < max_depth:
+                    result[name] = self.extract_props(value, depth + 1, max_depth)
+                else:
+                    result[name] = str(value)
+
+            except Exception as e:
+                result[name] = f"<unreadable: {e}>"
+
+        return result
 
     def export_tilesheets(self):
         wrd = bpy.data.worlds['Arm']
@@ -2343,7 +2486,7 @@ Make sure the mesh only has tris/quads.""")
         world = self.scene.world
 
         if world is not None:
-            world_name = arm.utils.safestr(world.name)
+            world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
 
             if world_name not in self.world_array:
                 self.world_array.append(world_name)
@@ -2492,12 +2635,12 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                if self.scene.user_of_id(collection) or collection.library or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
                     self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
-                self.output['camera_ref'] = self.scene.camera.name
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name + "_" + self.scene.name if self.scene.camera.library else self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
@@ -2521,7 +2664,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_tilesheets()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = arm.utils.safestr(self.scene.world.name)
+                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -2795,6 +2938,7 @@ Make sure the mesh only has tris/quads.""")
             body_flags['animated'] = rb.kinematic
             body_flags['trigger'] = bobject.arm_rb_trigger
             body_flags['ccd'] = bobject.arm_rb_ccd
+            body_flags['interpolate'] = bobject.arm_rb_interpolate
             body_flags['staticObj'] = is_static
             body_flags['useDeactivation'] = rb.use_deactivation
             x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
@@ -2989,6 +3133,8 @@ Make sure the mesh only has tris/quads.""")
 
                         if trait_prop.type.endswith("Object"):
                             value = arm.utils.asset_name(trait_prop.value_object)
+                        elif trait_prop.type == "TSceneFormat":
+                            value = arm.utils.asset_name(trait_prop.value_scene)
                         else:
                             value = trait_prop.get_value()
 
@@ -3019,7 +3165,7 @@ Make sure the mesh only has tris/quads.""")
 
             rbw = self.scene.rigidbody_world
             if rbw is not None and rbw.enabled:
-                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations)]
+                out_trait['parameters'] = [str(rbw.time_scale), str(rbw.substeps_per_frame), str(rbw.solver_iterations), str(wrd.arm_physics_fixed_step)]
 
                 if phys_pkg == 'bullet' or phys_pkg == 'oimo':
                     debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0
@@ -3306,7 +3452,7 @@ Make sure the mesh only has tris/quads.""")
         if mobile_mat:
             arm_radiance = False
 
-        out_probe = {'name': world.name}
+        out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
             out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext

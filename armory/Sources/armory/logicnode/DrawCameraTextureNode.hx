@@ -3,6 +3,10 @@ package armory.logicnode;
 import iron.Scene;
 import iron.object.CameraObject;
 
+import armory.math.Helper;
+import iron.math.Vec4;
+import iron.math.Quat;
+
 import armory.renderpath.RenderPathCreator;
 
 class DrawCameraTextureNode extends LogicNode {
@@ -18,6 +22,7 @@ class DrawCameraTextureNode extends LogicNode {
 		switch (from) {
 			case 0: // Start
 				final o = inputs[3].get();
+
 				assert(Error, Std.isOfType(o, iron.object.MeshObject), "Object must be a mesh object!");
 				final mo = cast(o, iron.object.MeshObject);
 				final matSlot = inputs[4].get();
@@ -27,10 +32,17 @@ class DrawCameraTextureNode extends LogicNode {
 				final c = inputs[2].get();
 				assert(Error, Std.isOfType(c, CameraObject), "Camera must be a camera object!");
 				cam = cast(c, CameraObject);
-				rt = kha.Image.createRenderTarget(iron.App.w(), iron.App.h());
+				rt = kha.Image.createRenderTarget(iron.App.w(), iron.App.h(),
+					kha.graphics4.TextureFormat.RGBA32,
+					kha.graphics4.DepthStencilFormat.NoDepthAndStencil);
 
 				assert(Error, mo.materials[matSlot].contexts[0].textures != null, 'Object "${mo.name}" has no diffuse texture to render to');
-				mo.materials[matSlot].contexts[0].textures[0] = rt; // Override diffuse texture
+				final n = inputs[5].get();
+				for (i => node in mo.materials[matSlot].contexts[0].raw.bind_textures)
+					if (node.name == n){
+						mo.materials[matSlot].contexts[0].textures[i] = rt; // Override diffuse texture
+						break;
+					}
 
 				tree.notifyOnRender(render);
 				runOutput(0);
@@ -48,7 +60,19 @@ class DrawCameraTextureNode extends LogicNode {
 		iron.Scene.active.camera = cam;
 		cam.renderTarget = rt;
 
+		#if kha_html5
+		var q: Quat = new Quat();
+		q.fromAxisAngle(new Vec4(0, 0, 1, 1), Helper.degToRad(180));
+		cam.transform.rot.mult(q);
+		cam.transform.buildMatrix();
+		#end
+
 		cam.renderFrame(g);
+		
+		#if kha_html5
+		cam.transform.rot.mult(q);
+		cam.transform.buildMatrix();
+		#end
 
 		cam.renderTarget = oldRT;
 		iron.Scene.active.camera = sceneCam;

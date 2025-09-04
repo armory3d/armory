@@ -94,6 +94,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     parse_displacement = state.parse_displacement
     particle_info = {
         'index': False,
+        'random': False,
         'age': False,
         'lifetime': False,
         'location': False,

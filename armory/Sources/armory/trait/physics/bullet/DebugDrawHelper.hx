@@ -35,6 +35,7 @@ class DebugDrawHelper {
 
 	public function new(physicsWorld: PhysicsWorld, debugDrawMode: DebugDrawMode) {
 		this.physicsWorld = physicsWorld;
+		this.debugDrawMode = debugDrawMode;
 
 		#if arm_ui
 		iron.data.Data.getFont(Canvas.defaultFontName, function(defaultFont: kha.Font) {
@@ -45,7 +46,7 @@ class DebugDrawHelper {
 		iron.App.notifyOnRender2D(onRender);
 
 		if (debugDrawMode & DrawRayCast != 0) {
-			iron.App.notifyOnUpdate(function () {
+			iron.App.notifyOnFixedUpdate(function () {
 				rayCasts.resize(0);
 			});
 		}

@@ -398,22 +398,29 @@ class Inc {
 	public static function applyConfig() {
 		#if arm_config
 		var config = armory.data.Config.raw;
+
+		#if rp_chromatic_aberration
+		Postprocess.chromatic_aberration_uniforms[3] = config.rp_chromatic_aberration == true ? 1 : 0;
+		#end
+
 		// Resize shadow map
 		var l = path.light;
-		if (l.data.raw.type == "sun" && l.data.raw.shadowmap_size != config.rp_shadowmap_cascade) {
-			l.data.raw.shadowmap_size = config.rp_shadowmap_cascade;
-			var rt = path.renderTargets.get("shadowMap");
-			if (rt != null) {
-				rt.unload();
-				path.renderTargets.remove("shadowMap");
+		if (l != null){
+			if (l.data.raw.type == "sun" && l.data.raw.shadowmap_size != config.rp_shadowmap_cascade) {
+				l.data.raw.shadowmap_size = config.rp_shadowmap_cascade;
+				var rt = path.renderTargets.get("shadowMap");
+				if (rt != null) {
+					rt.unload();
+					path.renderTargets.remove("shadowMap");
+				}
 			}
-		}
-		else if (l.data.raw.shadowmap_size != config.rp_shadowmap_cube) {
-			l.data.raw.shadowmap_size = config.rp_shadowmap_cube;
-			var rt = path.renderTargets.get("shadowMapCube");
-			if (rt != null) {
-				rt.unload();
-				path.renderTargets.remove("shadowMapCube");
+			else if (l.data.raw.shadowmap_size != config.rp_shadowmap_cube) {
+				l.data.raw.shadowmap_size = config.rp_shadowmap_cube;
+				var rt = path.renderTargets.get("shadowMapCube");
+				if (rt != null) {
+					rt.unload();
+					path.renderTargets.remove("shadowMapCube");
+				}
 			}
 		}
 		if (superSample != config.rp_supersample) {
@@ -643,7 +650,11 @@ class Inc {
 
 	public static inline function getDisplayp(): Null<Int> {
 		#if rp_resolution_filter // Custom resolution set
+		#if rp_pp
+		return armory.renderpath.Postprocess.resolution_uniforms[0];
+		#else
 		return Main.resolutionSize;
+		#end
 		#else
 		return null;
 		#end

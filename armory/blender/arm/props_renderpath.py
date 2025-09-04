@@ -434,7 +434,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_draw_order: EnumProperty(
         items=[('Auto', 'Auto', 'Auto'),
                ('Distance', 'Distance', 'Distance'),
-               ('Shader', 'Shader', 'Shader')],
+               ('Index', 'Index', 'Index')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
     rp_depth_texture_state: EnumProperty(
@@ -444,14 +444,15 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Depth Texture', description='Whether materials can read from a depth texture', default='Auto', update=update_depth_texture_state)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
-    rp_pp: BoolProperty(name="Realtime postprocess", description="Realtime postprocess", default=False, update=update_renderpath)
+    rp_pp: BoolProperty(name="Realtime Post Process", description="Realtime Post Process", default=False, update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
-        items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
-               ('Linear', 'Linear', 'Linear'),
+        items=[('Linear', 'Linear', 'Linear'),
                ('Point', 'Closest', 'Point'),
+               ('Cubic', 'Cubic', 'Cubic'),
+               ('Anisotropic', 'Smart', 'Anisotropic'),
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model: EnumProperty(
@@ -601,6 +602,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     arm_sharpen: BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
+    arm_sharpen_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    arm_sharpen_size: FloatProperty(name="Size", default=2.5, update=assets.invalidate_shader_cache)
     arm_sharpen_strength: FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
     arm_fog: BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
     arm_fog_color: FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
@@ -639,9 +642,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
     arm_particles: EnumProperty(
-        items=[('On', 'On', 'On'),
+        items=[('GPU', 'GPU', 'GPU'),
+               ('CPU', 'CPU', 'CPU'),
                ('Off', 'Off', 'Off')],
-        name='Particles', description='Enable particle simulation', default='On', update=assets.invalidate_shader_cache)
+        name='Particles', description='Enable particle simulation', default='GPU', update=assets.invalidate_shader_cache)
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
