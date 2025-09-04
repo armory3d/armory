@@ -317,7 +317,7 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        # HACK: In Blender 4.2.x, each camera must be selected to ensure its matrix is correctly assigned
+        # HACK: In Blender 4.2.x and above, each camera must be selected to ensure its matrix is correctly assigned
         if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
             current_scene = bpy.context.window.scene
 
@@ -435,7 +435,7 @@ class ArmoryExporter:
             if bobject.type == 'CAMERA' and bobject.library:
                 struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
             else:
-                struct_name = bobject.name if is_local_to_linked_scene and bobject.type != 'CAMERA' else arm.utils.asset_name(bobject)
+                struct_name = arm.utils.asset_name(bobject)
 
             self.bobject_array[bobject] = {
                 "objectType": btype,
@@ -1830,16 +1830,55 @@ Make sure the mesh only has tris/quads.""")
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
-        bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
-        export_mesh = bobject_eval.to_mesh()
+        # Force individual evaluation for objects with same names to ensure modifiers are applied
+        if apply_modifiers:
+            # For linked objects with duplicate names, we need to force evaluation
+            # by temporarily adding the object to the current scene's collection
+            is_linked = bobject.name not in self.scene.collection.children
+            temp_collection = None
+
+            if is_linked:
+                temp_collection = bpy.data.collections.new("temp_mesh_collection")
+                bpy.context.scene.collection.children.link(temp_collection)
+                temp_collection.objects.link(bobject)
+
+            temp_depsgraph = bpy.context.evaluated_depsgraph_get()
+            bobject_eval = bobject.evaluated_get(temp_depsgraph)
+
+            if is_linked and temp_collection:
+                temp_collection.objects.unlink(bobject)
+                bpy.context.scene.collection.children.unlink(temp_collection)
+                bpy.data.collections.remove(temp_collection)
+        else:
+            bobject_eval = bobject
+
+        export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         # Export shape keys here
         if shape_keys:
             self.export_shape_keys(bobject, export_mesh, out_mesh)
             # Update dependancy after new UV layer was added
             self.depsgraph.update()
-            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
-            export_mesh = bobject_eval.to_mesh()
+            if apply_modifiers:
+                # Force individual evaluation again after shape key changes
+                was_linked = bobject.name not in self.scene.collection.children
+                temp_collection = None
+
+                if was_linked:
+                    temp_collection = bpy.data.collections.new("temp_shape_keys_collection")
+                    bpy.context.scene.collection.children.link(temp_collection)
+                    temp_collection.objects.link(bobject)
+
+                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
+                bobject_eval = bobject.evaluated_get(temp_depsgraph)
+
+                if was_linked and temp_collection:
+                    temp_collection.objects.unlink(bobject)
+                    bpy.context.scene.collection.children.unlink(temp_collection)
+                    bpy.data.collections.remove(temp_collection)
+            else:
+                bobject_eval = bobject
+            export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
@@ -1972,7 +2011,7 @@ Make sure the mesh only has tris/quads.""")
                 if bobject.type == 'CAMERA':
                     asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
                 else:
-                    asset_name = bobject.name if is_local_to_linked_scene and bobject.type else arm.utils.asset_name(bobject)
+                    asset_name = arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
@@ -2570,7 +2609,7 @@ Make sure the mesh only has tris/quads.""")
 
         self.process_skinned_meshes()
 
-        self.output['name'] = arm.utils.safestr(self.scene.name)
+        self.output['name'] = arm.utils.safestr(self.scene.name + "_" + os.path.basename(self.scene.library.filepath).replace(".blend", "") if self.scene.library else self.scene.name)
         if self.filepath.endswith('.lz4'):
             self.output['name'] += '.lz4'
         elif not bpy.data.worlds['Arm'].arm_minimize:
