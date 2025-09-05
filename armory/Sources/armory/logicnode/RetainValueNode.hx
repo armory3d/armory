@@ -1,5 +1,9 @@
 package armory.logicnode;
 
+import iron.math.Quat;
+import iron.math.Vec4;
+import iron.math.Mat4;
+
 class RetainValueNode extends LogicNode {
 
 	var value: Dynamic = null;
@@ -9,7 +13,19 @@ class RetainValueNode extends LogicNode {
 	}
 
 	override function run(from: Int) {
-		value = inputs[1].get();
+		var retainValue = inputs[1].get();
+
+		switch(Type.getClassName(Type.getClass(retainValue))){
+			case "iron.math.Vec4":
+				value = (cast retainValue: Vec4).clone();
+			case "iron.math.Mat4":
+				value = (cast retainValue: Mat4).clone();
+			case "iron.math.Quat":
+				var q: Quat = new Quat();
+				value = q.setFrom((cast retainValue: Quat));
+			default:
+				value = retainValue;
+		}
 
 		runOutput(0);
 	}
