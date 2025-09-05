@@ -40,29 +40,16 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
         arm.log.warn("Bump node not supported outside of fragment shaders")
         return 'vec3(0.0)'
 
-    # Handle Blender 4.5+ new Filter Width input (socket order changed)
-    # New order: Strength, Filter Width, Distance, Height, Normal
-    # Old order: Strength, Distance, Height, Normal
-    strength_idx = 0
-    if bpy.app.version >= (4, 5, 0):
-        distance_idx = 2
-        height_idx = 3
-        normal_idx = 4
-    else:
-        distance_idx = 1
-        height_idx = 2
-        normal_idx = 3
-
     # Parse inputs with correct indices
-    strength = c.parse_value_input(node.inputs[strength_idx])
-    distance = c.parse_value_input(node.inputs[distance_idx])
-    height = c.parse_value_input(node.inputs[height_idx])
-    normal = c.parse_vector_input(node.inputs[normal_idx])
+    strength = c.get_value_input(node, ['Strength'])
+    distance = c.get_value_input(node, ['Distance'])
+    height = c.get_value_input(node, ['Height'])
+    normal = c.get_vector_input(node, ['Normal'])
 
     state.current_pass = ParserPass.DX_SCREEN_SPACE
-    height_dx = c.parse_value_input(node.inputs[height_idx])
+    height_dx = c.get_value_input(node, ['Height'])
     state.current_pass = ParserPass.DY_SCREEN_SPACE
-    height_dy = c.parse_value_input(node.inputs[height_idx])
+    height_dy = c.get_value_input(node, ['Height'])
     state.current_pass = ParserPass.REGULAR
 
     if height_dx != height or height_dy != height:

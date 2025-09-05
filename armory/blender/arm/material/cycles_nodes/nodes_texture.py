@@ -27,24 +27,11 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
-# Get an array of socket names for compatibility across Blender versions
-def get_value_input(node, socket_names):
-    for name in socket_names:
-        if name in node.inputs:
-            try:
-                return c.parse_value_input(node.inputs[name])
-            except Exception:
-                log.warn(f'Failed to parse input "{name}" on node "{node.name}"')
-        else:
-            # FIXME: Fallback to default value if the node isn't found
-            log.warn(f'Input "{name}" not found on node "{node.name}", returning default 1.0')
-            return '1.0'
-
 def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     state.curshader.add_function(c_functions.str_tex_brick_blender)
 
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
@@ -53,23 +40,23 @@ def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.No
     squash_amount = node.squash
     squash_frequency = node.squash_frequency
 
-    col1 = c.parse_vector_input(node.inputs[1])
-    col2 = c.parse_vector_input(node.inputs[2])
-    col3 = c.parse_vector_input(node.inputs[3])
-    scale = get_value_input(node, ['Scale'])
-    mortar_size = get_value_input(node, ['Mortar Size'])
-    mortar_smooth = get_value_input(node, ['Mortar Smooth'])
-    bias = get_value_input(node, ['Bias'])
-    brick_width = get_value_input(node, ['Brick Width'])
-    row_height = get_value_input(node, ['Row Height'])
-    #res = f'tex_brick({co} * {scale}, {col1}, {col2}, {col3})'
+    col1 = c.get_vector_input(node, ['Color1'])
+    col2 = c.get_vector_input(node, ['Color2'])
+    mortar = c.get_vector_input(node, ['Mortar'])
+    scale = c.get_value_input(node, ['Scale'])
+    mortar_size = c.get_value_input(node, ['Mortar Size'])
+    mortar_smooth = c.get_value_input(node, ['Mortar Smooth'])
+    bias = c.get_value_input(node, ['Bias'])
+    brick_width = c.get_value_input(node, ['Brick Width'])
+    row_height = c.get_value_input(node, ['Row Height'])
+    #res = f'tex_brick({co} * {scale}, {col1}, {col2}, {mortar})'
 
     # Color
     if out_socket == node.outputs[0]:
-        res = f'tex_brick_blender({co}, {col1}, {col2}, {col3}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
+        res = f'tex_brick_blender({co}, {col1}, {col2}, {mortar}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
     # Fac
     else:
-        res = f'tex_brick_blender_f({co}, {col1}, {col2}, {col3}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
+        res = f'tex_brick_blender_f({co}, {col1}, {col2}, {mortar}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
 
     return res
 
@@ -78,15 +65,15 @@ def parse_tex_checker(node: bpy.types.ShaderNodeTexChecker, out_socket: bpy.type
     state.curshader.add_function(c_functions.str_tex_checker)
 
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
     # Color
-    scale = get_value_input(node, ['Scale'])
+    scale = c.get_value_input(node, ['Scale'])
     if out_socket == node.outputs[0]:
-        col1 = c.parse_vector_input(node.inputs[1])
-        col2 = c.parse_vector_input(node.inputs[2])
+        col1 = c.get_vector_input(node, ['Color1'])
+        col2 = c.get_vector_input(node, ['Color2'])
         res = f'tex_checker({co}, {col1}, {col2}, {scale})'
     # Fac
     else:
@@ -97,7 +84,7 @@ def parse_tex_checker(node: bpy.types.ShaderNodeTexChecker, out_socket: bpy.type
 
 def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
@@ -251,11 +238,11 @@ def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.No
     state.curshader.add_function(c_functions.str_tex_magic)
 
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
-    scale = get_value_input(node, ['Scale'])
+    scale = c.get_value_input(node, ['Scale'])
 
     # Color
     if out_socket == node.outputs[0]:
@@ -266,18 +253,19 @@ def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.No
 
     return res
 
+
 if bpy.app.version < (4, 1, 0):
     def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
         state.curshader.add_function(c_functions.str_tex_musgrave)
 
         if node.inputs[0].is_linked:
-            co = c.parse_vector_input(node.inputs[0])
+            co = c.get_vector_input(node, ['Vector'])
         else:
             co = 'bposition'
 
-        scale = get_value_input(node, ['Scale'])
-        detail = get_value_input(node, ['Detail'])
-        distortion = get_value_input(node, ['Distortion'])
+        scale = c.get_value_input(node, ['Scale'])
+        detail = c.get_value_input(node, ['Detail'])
+        distortion = c.get_value_input(node, ['Distortion'])
 
         res = f'tex_musgrave_f({co} * {scale} * 0.5, {detail}, {distortion})'
 
@@ -291,14 +279,14 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     c.assets_add_embedded_data('noise256.png')
     state.curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
-    scale = get_value_input(node, ['Scale'])
-    detail = get_value_input(node, ['Detail'])
-    roughness = get_value_input(node, ['Roughness'])
-    distortion = get_value_input(node, ['Distortion'])
+    scale = c.get_value_input(node, ['Scale'])
+    detail = c.get_value_input(node, ['Detail'])
+    roughness = c.get_value_input(node, ['Roughness'])
+    distortion = c.get_value_input(node, ['Distortion'])
 
     if bpy.app.version >= (4, 1, 0):
         if node.noise_type == "FBM":
@@ -569,14 +557,14 @@ def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.type
     state.curshader.add_function(c_functions.str_tex_voronoi)
 
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
     # TODO: Add Blender 4.0+ values
-    scale = get_value_input(node, ['Scale'])
-    exp = get_value_input(node, ['Exponent'])
-    randomness = get_value_input(node, ['Randomness'])
+    scale = c.get_value_input(node, ['Scale'])
+    exp = c.get_value_input(node, ['Exponent'])
+    randomness = c.get_value_input(node, ['Randomness'])
 
     # Color or Position
     if out_socket == node.outputs[1] or out_socket == node.outputs[2]:
@@ -592,14 +580,14 @@ def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.Node
     c.write_procedurals()
     state.curshader.add_function(c_functions.str_tex_wave)
     if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
     # TODO: Add Blender 4.0+ values
-    scale = get_value_input(node, ['Scale'])
-    distortion = get_value_input(node, ['Distortion'])
-    detail = get_value_input(node, ['Detail'])
-    detail_scale = get_value_input(node, ['Detail Scale'])
+    scale = c.get_value_input(node, ['Scale'])
+    distortion = c.get_value_input(node, ['Distortion'])
+    detail = c.get_value_input(node, ['Detail'])
+    detail_scale = c.get_value_input(node, ['Detail Scale'])
     if node.wave_profile == 'SIN':
         wave_profile = 0
     else:
