@@ -181,6 +181,7 @@ def parse_group_input(node: bpy.types.Node, socket: bpy.types.NodeSocket):
     state.parents.append(parent) # Return to group
     return res
 
+
 def parse_input(inp: bpy.types.NodeSocket):
     if inp.type == 'SHADER':
         return parse_shader_input(inp)
