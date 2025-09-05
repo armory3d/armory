@@ -289,7 +289,7 @@ def parse_displacement_input(inp):
 
 
 # Use an array of socket names for compatibility across Blender versions
-def get_vector_input(node, socket_names):
+def get_vector_input(node: bpy.types.Node, socket_names: Tuple[str, ...]) -> vec3str:
     for name in socket_names:
         if name in node.inputs:
             try:
@@ -428,7 +428,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
 
 
 # Use an array of socket names for compatibility across Blender versions
-def get_value_input(node, socket_names):
+def get_value_input(node: bpy.types.Node, socket_names: Tuple[str, ...]) -> floatstr:
     for name in socket_names:
         if name in node.inputs:
             try:

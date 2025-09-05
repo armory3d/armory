@@ -76,6 +76,7 @@ def parse_addshader(node: bpy.types.ShaderNodeAddShader, out_socket: NodeSocket,
         state.out_ior = '({0} * 0.5 + {1} * 0.5)'.format(ior1, ior2)
 
 
+# TODO: Refactor using c.get_*_input()
 if bpy.app.version < (3, 0, 0):
     def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
         if state.parse_surface:
