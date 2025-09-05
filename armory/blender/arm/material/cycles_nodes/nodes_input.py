@@ -314,7 +314,6 @@ def parse_texcoord(node: bpy.types.ShaderNodeTexCoord, out_socket: bpy.types.Nod
             return 'vec3(texCoord.x, texCoord.y, 0.0)'
         else:
             return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
-
     elif out_socket == node.outputs[3]: # Object
         state.dxdy_varying_input_value = True
         return 'mposition'
