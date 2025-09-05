@@ -301,6 +301,9 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
                 res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
             else:
                 res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
+
+        if node.normalize:
+            res = f'(1.0 - ({res}))'
     else:
         if out_socket == node.outputs['Color']:
             res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
