@@ -336,39 +336,29 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        # HACK: In Blender 4.2+, each camera must be selected to ensure its matrix is correctly assigned
-        if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
-            current_scene = bpy.context.window.scene
-
-            bpy.context.window.scene = bobject.users_scene[0]
-            bpy.context.view_layer.update()
-
-            if bobject.name in bpy.context.view_layer.objects:
-                bobject.select_set(True)
-                bpy.context.view_layer.update()
-                bobject.select_set(False)
-
-            bpy.context.window.scene = current_scene
-            bpy.context.view_layer.update()
-
-        matrix_local = bobject.matrix_local
-
-        # HACK: Force proper matrix calculation for linked objects from linked scenes in Blender 4.2+
         if bpy.app.version >= (4, 2, 0):
+            # HACK: For linked objects, we need to temporarily add them to the scene's collection
+            # to properly evaluate their matrix through the depsgraph
+            is_linked = bobject.name not in self.scene.collection.children
             temp_collection = None
-            is_linked = bobject.name not in self.scene.collection.children and bobject.library
 
             if is_linked:
                 temp_collection = bpy.data.collections.new("temp_transform_collection")
                 bpy.context.scene.collection.children.link(temp_collection)
                 temp_collection.objects.link(bobject)
+                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
+                evaluated_obj = bobject.evaluated_get(temp_depsgraph)
+            else:
+                evaluated_obj = bobject.evaluated_get(self.depsgraph)
 
-                bpy.context.evaluated_depsgraph_get()
-                matrix_local = bobject.matrix_local.copy()
+            matrix_local = evaluated_obj.matrix_local.copy()
 
+            if is_linked and temp_collection:
                 temp_collection.objects.unlink(bobject)
                 bpy.context.scene.collection.children.unlink(temp_collection)
                 bpy.data.collections.remove(temp_collection)
+        else:
+            matrix_local = bobject.matrix_local
 
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(matrix_local)}
@@ -1872,7 +1862,7 @@ Make sure the mesh only has tris/quads.""")
 
         # Force individual evaluation for objects with same names to ensure modifiers are applied
         if apply_modifiers:
-            # For linked objects with duplicate names, we need to force evaluation
+            # HACK: For linked objects with duplicate names, we need to force evaluation
             # by temporarily adding the object to the current scene's collection
             is_linked = bobject.name not in self.scene.collection.children
             temp_collection = None
@@ -1900,7 +1890,7 @@ Make sure the mesh only has tris/quads.""")
             # Update dependancy after new UV layer was added
             self.depsgraph.update()
             if apply_modifiers:
-                # Force individual evaluation again after shape key changes
+                # HACK: Force individual evaluation again after shape key changes
                 is_linked = bobject.name not in self.scene.collection.children
                 temp_collection = None
 
