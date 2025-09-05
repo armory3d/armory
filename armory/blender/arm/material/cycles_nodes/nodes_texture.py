@@ -27,6 +27,7 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
+
 def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     state.curshader.add_function(c_functions.str_tex_brick_blender)
 
