@@ -43,7 +43,6 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
     # Handle Blender 4.5+ new Filter Width input (socket order changed)
     # New order: Strength, Filter Width, Distance, Height, Normal
     # Old order: Strength, Distance, Height, Normal
-
     strength_idx = 0
     if bpy.app.version >= (4, 5, 0):
         distance_idx = 2
