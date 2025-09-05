@@ -1860,7 +1860,6 @@ Make sure the mesh only has tris/quads.""")
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
-        # Force individual evaluation for objects with same names to ensure modifiers are applied
         if apply_modifiers:
             # HACK: For linked objects with duplicate names, we need to force evaluation
             # by temporarily adding the object to the current scene's collection
