@@ -343,7 +343,7 @@ class ArmoryExporter:
             temp_collection = None
 
             if is_linked:
-                temp_collection = bpy.data.collections.new("temp_transform_collection")
+                temp_collection = bpy.data.collections.new("temp_collection")
                 bpy.context.scene.collection.children.link(temp_collection)
                 temp_collection.objects.link(bobject)
                 temp_depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -1868,7 +1868,7 @@ Make sure the mesh only has tris/quads.""")
             temp_collection = None
 
             if is_linked:
-                temp_collection = bpy.data.collections.new("temp_mesh_collection")
+                temp_collection = bpy.data.collections.new("temp_collection")
                 bpy.context.scene.collection.children.link(temp_collection)
                 temp_collection.objects.link(bobject)
 
@@ -1895,7 +1895,7 @@ Make sure the mesh only has tris/quads.""")
                 temp_collection = None
 
                 if is_linked:
-                    temp_collection = bpy.data.collections.new("temp_shape_keys_collection")
+                    temp_collection = bpy.data.collections.new("temp_collection")
                     bpy.context.scene.collection.children.link(temp_collection)
                     temp_collection.objects.link(bobject)
 
