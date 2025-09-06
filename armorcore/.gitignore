@@ -1,0 +1,9 @@
+.DS_Store
+build*/
+V8/libraries/win32/debug/v8_monolith.lib
+V8/libraries/win32/release/v8_monolith.lib
+Deployment/*.frag
+Deployment/*.vert
+Deployment/*.comp
+Deployment/*.txt
+Deployment/Armor*

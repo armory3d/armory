@@ -9,8 +9,8 @@ class ArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     arm_section = 'variable'
     min_inputs = 0
 
-    def __init__(self):
-        self.register_id()
+    def __init__(self, *args, **kwargs):
+        super(ArrayNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
         self.add_output('ArmNodeSocketArray', 'Array', is_var=True)
@@ -45,6 +45,5 @@ class ArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)
-        

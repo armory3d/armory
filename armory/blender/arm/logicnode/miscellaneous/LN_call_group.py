@@ -11,7 +11,8 @@ class CallGroupNode(ArmLogicTreeNode):
     arm_section = 'group'
     arm_version = 3
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(CallGroupNode, self).__init__(*args, **kwargs)
         self.register_id()
 
     def arm_init(self, context):

@@ -143,7 +143,10 @@ def init_properties():
     bpy.types.World.arm_project_version_autoinc = BoolProperty(name="Auto-increment Build Number", description="Auto-increment build number", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="org.armory3d", update=assets.invalidate_compiler_cache, set=set_project_bundle, get=get_project_bundle)
     # External Blend Files
-    bpy.types.World.arm_external_blends_path = StringProperty(name="External Blends", description="Directory containing external blend files to include in export", default="", subtype='DIR_PATH', update=assets.invalidate_compiler_cache)
+    if bpy.app.version >= (4, 5, 0):
+        bpy.types.World.arm_external_blends_path = StringProperty(name="External Blends", description="Directory containing external blend files to include in export", default="", subtype='DIR_PATH', update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
+    else:
+        bpy.types.World.arm_external_blends_path = StringProperty(name="External Blends", description="Directory containing external blend files to include in export", default="", subtype='DIR_PATH', update=assets.invalidate_compiler_cache)
     # Android Settings
     bpy.types.World.arm_project_android_sdk_min = IntProperty(name="Minimal Version SDK", description="Minimal Version Android SDK", default=23, min=14, max=30, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_project_android_sdk_target = IntProperty(name="Target Version SDK", description="Target Version Android SDK", default=26, min=26, max=30, update=assets.invalidate_compiler_cache)
@@ -189,7 +192,10 @@ def init_properties():
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
+    if bpy.app.version >= (4, 5, 0):
+        bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
+    else:
+        bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),

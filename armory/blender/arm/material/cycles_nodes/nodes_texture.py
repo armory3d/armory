@@ -31,33 +31,33 @@ else:
 def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     state.curshader.add_function(c_functions.str_tex_brick_blender)
 
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
     offset_amount = node.offset
     offset_frequency = node.offset_frequency
     squash_amount = node.squash
-    squash_frequency = node.squash_frequency        
+    squash_frequency = node.squash_frequency
 
-    col1 = c.parse_vector_input(node.inputs[1])
-    col2 = c.parse_vector_input(node.inputs[2])
-    col3 = c.parse_vector_input(node.inputs[3])
-    scale = c.parse_value_input(node.inputs[4])
-    mortar_size = c.parse_value_input(node.inputs[5])
-    mortar_smooth = c.parse_value_input(node.inputs[6])
-    bias = c.parse_value_input(node.inputs[7])
-    brick_width = c.parse_value_input(node.inputs[8])
-    row_height = c.parse_value_input(node.inputs[9])
-    #res = f'tex_brick({co} * {scale}, {col1}, {col2}, {col3})'
+    col1 = c.get_vector_input(node, ['Color1'])
+    col2 = c.get_vector_input(node, ['Color2'])
+    mortar = c.get_vector_input(node, ['Mortar'])
+    scale = c.get_value_input(node, ['Scale'])
+    mortar_size = c.get_value_input(node, ['Mortar Size'])
+    mortar_smooth = c.get_value_input(node, ['Mortar Smooth'])
+    bias = c.get_value_input(node, ['Bias'])
+    brick_width = c.get_value_input(node, ['Brick Width'])
+    row_height = c.get_value_input(node, ['Row Height'])
+    #res = f'tex_brick({co} * {scale}, {col1}, {col2}, {mortar})'
 
     # Color
-    if out_socket == node.outputs[0]:
-        res = f'tex_brick_blender({co}, {col1}, {col2}, {col3}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
+    if out_socket == node.outputs['Color']:
+        res = f'tex_brick_blender({co}, {col1}, {col2}, {mortar}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
     # Fac
     else:
-        res = f'tex_brick_blender_f({co}, {col1}, {col2}, {col3}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
+        res = f'tex_brick_blender_f({co}, {col1}, {col2}, {mortar}, {scale}, {mortar_size}, {mortar_smooth}, {bias}, {brick_width}, {row_height}, {offset_amount}, {offset_frequency}, {squash_amount}, {squash_frequency})'
 
     return res
 
@@ -65,28 +65,27 @@ def parse_tex_brick(node: bpy.types.ShaderNodeTexBrick, out_socket: bpy.types.No
 def parse_tex_checker(node: bpy.types.ShaderNodeTexChecker, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     state.curshader.add_function(c_functions.str_tex_checker)
 
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
     # Color
-    if out_socket == node.outputs[0]:
-        col1 = c.parse_vector_input(node.inputs[1])
-        col2 = c.parse_vector_input(node.inputs[2])
-        scale = c.parse_value_input(node.inputs[3])
+    scale = c.get_value_input(node, ['Scale'])
+    if out_socket == node.outputs['Color']:
+        col1 = c.get_vector_input(node, ['Color1'])
+        col2 = c.get_vector_input(node, ['Color2'])
         res = f'tex_checker({co}, {col1}, {col2}, {scale})'
     # Fac
     else:
-        scale = c.parse_value_input(node.inputs[3])
         res = 'tex_checker_f({0}, {1})'.format(co, scale)
 
     return res
 
 
 def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
@@ -107,7 +106,7 @@ def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.ty
         f = f'max(1.0 - sqrt({co}.x * {co}.x + {co}.y * {co}.y + {co}.z * {co}.z), 0.0)'
 
     # Color
-    if out_socket == node.outputs[0]:
+    if out_socket == node.outputs['Color']:
         res = f'vec3(clamp({f}, 0.0, 1.0))'
     # Fac
     else:
@@ -118,7 +117,7 @@ def parse_tex_gradient(node: bpy.types.ShaderNodeTexGradient, out_socket: bpy.ty
 
 def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     # Color or Alpha output
-    use_color_out = out_socket == node.outputs[0]
+    use_color_out = out_socket == node.outputs['Color']
 
     if state.context == ParserContext.OBJECT:
         tex_store = c.store_var_name(node)
@@ -239,15 +238,15 @@ def parse_tex_image(node: bpy.types.ShaderNodeTexImage, out_socket: bpy.types.No
 def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     state.curshader.add_function(c_functions.str_tex_magic)
 
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
-    scale = c.parse_value_input(node.inputs[1])
+    scale = c.get_value_input(node, ['Scale'])
 
     # Color
-    if out_socket == node.outputs[0]:
+    if out_socket == node.outputs['Color']:
         res = f'tex_magic({co} * {scale} * 4.0)'
     # Fac
     else:
@@ -255,21 +254,22 @@ def parse_tex_magic(node: bpy.types.ShaderNodeTexMagic, out_socket: bpy.types.No
 
     return res
 
+
 if bpy.app.version < (4, 1, 0):
     def parse_tex_musgrave(node: bpy.types.ShaderNodeTexMusgrave, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
         state.curshader.add_function(c_functions.str_tex_musgrave)
 
-        if node.inputs[0].is_linked:
-            co = c.parse_vector_input(node.inputs[0])
+        if node.inputs['Vector'].is_linked:
+            co = c.get_vector_input(node, ['Vector'])
         else:
             co = 'bposition'
-    
-        scale = c.parse_value_input(node.inputs['Scale'])
-        detail = c.parse_value_input(node.inputs[3])
-        distortion = c.parse_value_input(node.inputs[4])
 
-        res = f'tex_musgrave_f({co} * {scale} * 0.5, {detail}, {distortion})'
-    
+        scale = c.get_value_input(node, ['Scale'])
+        detail = c.get_value_input(node, ['Detail'])
+        dimension = c.get_value_input(node, ['Dimension'])
+
+        res = f'tex_musgrave_f({co} * {scale} * 0.5, {detail}, {dimension})' # FIXME: a `distortion` is applied instead of a `dimension`
+
         return res
 
 
@@ -279,28 +279,33 @@ def parse_tex_noise(node: bpy.types.ShaderNodeTexNoise, out_socket: bpy.types.No
     c.assets_add(os.path.join(arm.utils.get_sdk_path(), 'armory', 'Assets', 'noise256.png'))
     c.assets_add_embedded_data('noise256.png')
     state.curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
-    scale = c.parse_value_input(node.inputs[2])
-    detail = c.parse_value_input(node.inputs[3])
-    roughness = c.parse_value_input(node.inputs[4])
-    distortion = c.parse_value_input(node.inputs[5])
+
+    scale = c.get_value_input(node, ['Scale'])
+    detail = c.get_value_input(node, ['Detail'])
+    roughness = c.get_value_input(node, ['Roughness'])
+    distortion = c.get_value_input(node, ['Distortion'])
+
     if bpy.app.version >= (4, 1, 0):
         if node.noise_type == "FBM":
             state.curshader.add_function(c_functions.str_tex_musgrave)
-            if out_socket == node.outputs[1]:
+            if out_socket == node.outputs['Color']:
                 res = 'vec3(tex_musgrave_f({0} * {1}, {2}, {3}), tex_musgrave_f({0} * {1} + 120.0, {2}, {3}), tex_musgrave_f({0} * {1} + 168.0, {2}, {3}))'.format(co, scale, detail, distortion)
             else:
                 res = f'tex_musgrave_f({co} * {scale} * 1.0, {detail}, {distortion})'
         else:
-            if out_socket == node.outputs[1]:
+            if out_socket == node.outputs['Color']:
                 res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
             else:
                 res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
+
+        if node.normalize:
+            res = f'(1.0 - ({res}))'
     else:
-        if out_socket == node.outputs[1]:
+        if out_socket == node.outputs['Color']:
             res = 'vec3(tex_noise({0} * {1},{2},{3}), tex_noise({0} * {1} + 120.0,{2},{3}), tex_noise({0} * {1} + 168.0,{2},{3}))'.format(co, scale, detail, distortion)
         else:
             res = 'tex_noise({0} * {1},{2},{3})'.format(co, scale, detail, distortion)
@@ -311,7 +316,7 @@ def parse_tex_pointdensity(node: bpy.types.ShaderNodeTexPointDensity, out_socket
     # Pass through
 
     # Color
-    if out_socket == node.outputs[0]:
+    if out_socket == node.outputs['Color']:
         return c.to_vec3([0.0, 0.0, 0.0])
     # Density
     else:
@@ -555,17 +560,18 @@ def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.type
     c.write_procedurals()
     state.curshader.add_function(c_functions.str_tex_voronoi)
 
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
 
-    scale = c.parse_value_input(node.inputs[2])
-    exp = c.parse_value_input(node.inputs[4])
-    randomness = c.parse_value_input(node.inputs[5])
+    # TODO: Add Blender 4.0+ values
+    scale = c.get_value_input(node, ['Scale'])
+    exp = c.get_value_input(node, ['Exponent'])
+    randomness = c.get_value_input(node, ['Randomness'])
 
     # Color or Position
-    if out_socket == node.outputs[1] or out_socket == node.outputs[2]:
+    if out_socket == node.outputs['Color'] or out_socket == node.outputs['Position']:
         res = 'tex_voronoi({0}, {1}, {2}, {3}, {4}, {5})'.format(co, randomness, m, outp, scale, exp)
     # Distance
     else:
@@ -577,14 +583,15 @@ def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.type
 def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
     c.write_procedurals()
     state.curshader.add_function(c_functions.str_tex_wave)
-    if node.inputs[0].is_linked:
-        co = c.parse_vector_input(node.inputs[0])
+    if node.inputs['Vector'].is_linked:
+        co = c.get_vector_input(node, ['Vector'])
     else:
         co = 'bposition'
-    scale = c.parse_value_input(node.inputs[1])
-    distortion = c.parse_value_input(node.inputs[2])
-    detail = c.parse_value_input(node.inputs[3])
-    detail_scale = c.parse_value_input(node.inputs[4])
+    # TODO: Add Blender 4.0+ values
+    scale = c.get_value_input(node, ['Scale'])
+    distortion = c.get_value_input(node, ['Distortion'])
+    detail = c.get_value_input(node, ['Detail'])
+    detail_scale = c.get_value_input(node, ['Detail Scale'])
     if node.wave_profile == 'SIN':
         wave_profile = 0
     else:
@@ -595,7 +602,7 @@ def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.Node
         wave_type = 1
 
     # Color
-    if out_socket == node.outputs[0]:
+    if out_socket == node.outputs['Color']:
         res = 'vec3(tex_wave_f({0} * {1},{2},{3},{4},{5},{6}))'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
     # Fac
     else:

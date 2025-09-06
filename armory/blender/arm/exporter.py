@@ -282,8 +282,27 @@ class ArmoryExporter:
         Modifiers that are not range-restricted are ignored in this
         calculation.
         """
-        start = action.frame_range[0]
-        end = action.frame_range[1]
+        frame_range = action.frame_range
+        start = frame_range[0]
+        end = frame_range[1]
+
+        # Blender 4.0+ compatibility: Handle zero-length frame ranges
+        if start == end:
+            start = 1
+            end = 2
+
+            if action.fcurves:
+                all_keyframes = []
+                for fcurve in action.fcurves:
+                    if fcurve.keyframe_points:
+                        for keyframe in fcurve.keyframe_points:
+                            all_keyframes.append(keyframe.co[0])
+
+                if all_keyframes:
+                    start = min(all_keyframes)
+                    end = max(all_keyframes)
+                    if start == end:
+                        end = start + 1
 
         # Take FCurve modifiers into account if they have a restricted
         # frame range
@@ -317,22 +336,32 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        # HACK: In Blender 4.2.x and above, each camera must be selected to ensure its matrix is correctly assigned
-        if bpy.app.version >= (4, 2, 0) and bobject.type == 'CAMERA' and bobject.users_scene:
-            current_scene = bpy.context.window.scene
+        if bpy.app.version >= (4, 2, 0):
+            # HACK: For linked objects, we need to temporarily add them to the scene's collection
+            # to properly evaluate their matrix through the depsgraph
+            is_linked = bobject.name not in self.scene.collection.children
+            temp_collection = None
 
-            bpy.context.window.scene = bobject.users_scene[0]
-            bpy.context.view_layer.update()
+            if is_linked:
+                temp_collection = bpy.data.collections.new("temp_collection")
+                bpy.context.scene.collection.children.link(temp_collection)
+                temp_collection.objects.link(bobject)
+                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
+                evaluated_obj = bobject.evaluated_get(temp_depsgraph)
+            else:
+                evaluated_obj = bobject.evaluated_get(self.depsgraph)
 
-            bobject.select_set(True)
-            bpy.context.view_layer.update()
-            bobject.select_set(False)
+            matrix_local = evaluated_obj.matrix_local.copy()
 
-            bpy.context.window.scene = current_scene
-            bpy.context.view_layer.update()
+            if is_linked and temp_collection:
+                temp_collection.objects.unlink(bobject)
+                bpy.context.scene.collection.children.unlink(temp_collection)
+                bpy.data.collections.remove(temp_collection)
+        else:
+            matrix_local = bobject.matrix_local
 
         # Static transform
-        o['transform'] = {'values': ArmoryExporter.write_matrix(bobject.matrix_local)}
+        o['transform'] = {'values': ArmoryExporter.write_matrix(matrix_local)}
 
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":
@@ -483,7 +512,7 @@ class ArmoryExporter:
         fcurve_list = self.collect_bone_animation(armature, bone.name)
 
         if fcurve_list and pose_bone:
-            begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+            begin_frame, end_frame = self.calculate_anim_frame_range(action)
 
             out_track = {'target': "transform", 'frames': [], 'values': []}
             o['anim'] = {'tracks': [out_track]}
@@ -579,7 +608,7 @@ class ArmoryExporter:
 
     def write_bone_matrices(self, scene, action):
         # profile_time = time.time()
-        begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+        begin_frame, end_frame = self.calculate_anim_frame_range(action)
         if len(self.bone_tracks) > 0:
             for i in range(begin_frame, end_frame + 1):
                 scene.frame_set(i)
@@ -1083,9 +1112,10 @@ class ArmoryExporter:
                                 _o.select_set(False)
                             skelobj.select_set(True)
 
+                            start, end = self.calculate_anim_frame_range(action)
                             bake_result = bpy.ops.nla.bake(
-                                frame_start=int(action.frame_range[0]),
-                                frame_end=int(action.frame_range[1]),
+                                frame_start=start,
+                                frame_end=end,
                                 step=1,
                                 only_selected=False,
                                 visual_keying=True
@@ -1830,15 +1860,14 @@ Make sure the mesh only has tris/quads.""")
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
-        # Force individual evaluation for objects with same names to ensure modifiers are applied
         if apply_modifiers:
-            # For linked objects with duplicate names, we need to force evaluation
+            # HACK: For linked objects with duplicate names, we need to force evaluation
             # by temporarily adding the object to the current scene's collection
             is_linked = bobject.name not in self.scene.collection.children
             temp_collection = None
 
             if is_linked:
-                temp_collection = bpy.data.collections.new("temp_mesh_collection")
+                temp_collection = bpy.data.collections.new("temp_collection")
                 bpy.context.scene.collection.children.link(temp_collection)
                 temp_collection.objects.link(bobject)
 
@@ -1860,19 +1889,19 @@ Make sure the mesh only has tris/quads.""")
             # Update dependancy after new UV layer was added
             self.depsgraph.update()
             if apply_modifiers:
-                # Force individual evaluation again after shape key changes
-                was_linked = bobject.name not in self.scene.collection.children
+                # HACK: Force individual evaluation again after shape key changes
+                is_linked = bobject.name not in self.scene.collection.children
                 temp_collection = None
 
-                if was_linked:
-                    temp_collection = bpy.data.collections.new("temp_shape_keys_collection")
+                if is_linked:
+                    temp_collection = bpy.data.collections.new("temp_collection")
                     bpy.context.scene.collection.children.link(temp_collection)
                     temp_collection.objects.link(bobject)
 
                 temp_depsgraph = bpy.context.evaluated_depsgraph_get()
                 bobject_eval = bobject.evaluated_get(temp_depsgraph)
 
-                if was_linked and temp_collection:
+                if is_linked and temp_collection:
                     temp_collection.objects.unlink(bobject)
                     bpy.context.scene.collection.children.unlink(temp_collection)
                     bpy.data.collections.remove(temp_collection)
@@ -2674,7 +2703,7 @@ Make sure the mesh only has tris/quads.""")
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
 
-                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
                     self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:

@@ -9,8 +9,8 @@ class BooleanArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     arm_section = 'variable'
     min_inputs = 0
 
-    def __init__(self):
-        super(BooleanArrayNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(BooleanArrayNode, self).__init__(*args, **kwargs)
         self.register_id()
 
     def arm_init(self, context):
@@ -46,5 +46,5 @@ class BooleanArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

@@ -803,8 +803,8 @@ def check_blender_version(op: bpy.types.Operator):
     """Check whether the Blender version is supported by Armory,
     if not, report in UI.
     """
-    if bpy.app.version[0] != 3 or bpy.app.version[1] != 6:
-        op.report({'INFO'}, 'For Armory to work correctly, you need Blender 3.6 LTS.')
+    if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+        op.report({'INFO'}, 'INFO: For Armory to work correctly use a Blender LTS version.')
 
 
 def check_saved(self):

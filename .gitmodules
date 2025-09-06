@@ -1,18 +1,3 @@
 [submodule "Kha"]
 	path = Kha
 	url = https://github.com/armory3d/Kha
-[submodule "Krom"]
-	path = Krom
-	url = https://github.com/armory3d/armorcore_bin
-[submodule "nodejs"]
-	path = nodejs
-	url = https://github.com/armory3d/nodejs_bin
-[submodule "lib/armory_tools"]
-	path = lib/armory_tools
-	url = https://github.com/armory3d/armory_tools
-[submodule "lib/haxerecast"]
-	path = lib/haxerecast
-	url = https://github.com/armory3d/haxerecast
-[submodule "lib/haxebullet"]
-	path = lib/haxebullet
-	url = https://github.com/armory3d/haxebullet

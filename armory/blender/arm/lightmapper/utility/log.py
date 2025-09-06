@@ -5,7 +5,8 @@ class TLM_Logman:
 
     _log = []
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(TLM_Logman, self).__init__(*args, **kwargs)
         print("Logger started Init")
         self.append("Logger started.")
 
