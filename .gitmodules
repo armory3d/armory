@@ -10,6 +10,3 @@
 [submodule "lib/haxerecast"]
 	path = lib/haxerecast
 	url = https://github.com/armory3d/haxerecast
-[submodule "lib/haxebullet"]
-	path = lib/haxebullet
-	url = https://github.com/armory3d/haxebullet
