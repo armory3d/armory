@@ -40,11 +40,11 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
         arm.log.warn("Bump node not supported outside of fragment shaders")
         return 'vec3(0.0)'
 
-    # Parse inputs with correct indices
+    # Interpolation strength
     strength = c.get_value_input(node, ['Strength'])
-    distance = c.get_value_input(node, ['Distance'])
+    # distance = c.get_value_input(node, ['Distance'])
     height = c.get_value_input(node, ['Height'])
-    normal = c.get_vector_input(node, ['Normal'])
+    # normal = c.get_vector_input(node, ['Normal'])
 
     state.current_pass = ParserPass.DX_SCREEN_SPACE
     height_dx = c.get_value_input(node, ['Height'])
