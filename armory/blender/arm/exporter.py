@@ -830,7 +830,7 @@ class ArmoryExporter:
             else:
                 if not bobject.visible_camera:
                     out_object['visible_mesh'] = False
-                if not bobject.visible_shadow:
+                if not bobject.arm_visible_shadow:
                     out_object['visible_shadow'] = False
 
             if not bobject.arm_spawn:

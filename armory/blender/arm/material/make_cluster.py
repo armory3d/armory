@@ -1,6 +1,8 @@
 import bpy
 
 import arm.material.shader as shader
+import arm.material.mat_state as mat_state
+import arm.material.mat_utils as mat_utils
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -61,7 +63,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-
     frag.write('direct += sampleLight(')
     frag.write('    wposition,')
     frag.write('    n,')
@@ -73,7 +74,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('    roughness,')
     frag.write('    specular,')
     frag.write('    f0')
-
     if is_shadows:
         frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
     if '_Spot' in wrd.world_defs:
@@ -84,10 +84,14 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs:
-        frag.add_uniform("sampler2D voxels_shadows", top=True)
-        frag.write(', texCoord')
+        frag.write(', voxels, voxelsSDF, clipmaps, velocity')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
+    if '_SSRS' in wrd.world_defs:
+        frag.add_uniform('sampler2D gbufferD')
+        frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
+        frag.add_uniform('vec3 eye', '_cameraPosition')
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights

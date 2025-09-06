@@ -38,16 +38,15 @@ uniform layout(rgba8) image2D voxels_specular;
 
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
-uniform vec2 cameraProj;
 uniform vec3 eye;
-uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
+uniform sampler2D sveloc;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
 	vec2 uv = (pixel + 0.5) / postprocess_resolution;
 	#ifdef _InvY
-	uv.y = 1.0 - uv.y
+	uv.y = 1.0 - uv.y;
 	#endif
 
 	float depth = textureLod(gbufferD, uv, 0.0).r * 2.0 - 1.0;
@@ -55,20 +54,20 @@ void main() {
 
 	float x = uv.x * 2 - 1;
 	float y = uv.y * 2 - 1;
-	vec4 v = vec4(x, y, 1.0, 1.0);
-	v = vec4(InvVP * v);
-	v.xyz /= v.w;
-	vec3 viewRay = v.xyz - eye;
-
-	vec3 P = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	vec4 clipPos = vec4(x, y, depth, 1.0);
+    vec4 worldPos = InvVP * clipPos;
+    vec3 P = worldPos.xyz / worldPos.w;
 
 	vec4 g0 = textureLod(gbuffer0, uv, 0.0);
+
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.b, clipmaps, pixel).rgb;
+	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
+
+	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb;
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

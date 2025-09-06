@@ -289,6 +289,7 @@ def parse_bsdftransparent(node: bpy.types.ShaderNodeBsdfTransparent, out_socket:
         state.out_opacity = '(1.0 - {0}.r)'.format(c.parse_vector_input(node.inputs[0]))
         state.out_ior = '1.0'
 
+
 if bpy.app.version < (4, 1, 0):
     def parse_bsdfvelvet(node: bpy.types.ShaderNodeBsdfVelvet, out_socket: NodeSocket, state: ParserState) -> None:
         if state.parse_surface:
