@@ -4,6 +4,3 @@
 [submodule "Krom"]
 	path = Krom
 	url = https://github.com/armory3d/armorcore_bin
-[submodule "nodejs"]
-	path = nodejs
-	url = https://github.com/armory3d/nodejs_bin
