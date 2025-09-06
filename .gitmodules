@@ -7,6 +7,3 @@
 [submodule "nodejs"]
 	path = nodejs
 	url = https://github.com/armory3d/nodejs_bin
-[submodule "lib/haxerecast"]
-	path = lib/haxerecast
-	url = https://github.com/armory3d/haxerecast
