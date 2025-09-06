@@ -12,9 +12,9 @@ class WaitForNode(ArmLogicTreeNode):
     bl_label = 'Wait for All Inputs'
     arm_section = 'flow'
     arm_version = 1
-    
-    def __init__(self):
-        super(WaitForNode, self).__init__()
+
+    def __init__(self, *args, **kwargs):
+        super(WaitForNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):

@@ -10,8 +10,8 @@ class CallFunctionNode(ArmLogicTreeNode):
     arm_version = 2
     min_inputs = 3
 
-    def __init__(self):
-        super(CallFunctionNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(CallFunctionNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -38,5 +38,5 @@ class CallFunctionNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

@@ -779,9 +779,11 @@ class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
             row.operator("arm.play", icon="PLAY")
         else:
             if bpy.app.version < (3, 0, 0):
-                row.operator("arm.stop", icon="CANCEL", text="")
+                row.operator("arm.stop", icon="CANCEL")
+            elif bpy.app.version >= (3, 0, 0) and bpy.app.version < (4, 5, 0):
+                row.operator("arm.stop", icon="SEQUENCE_COLOR_01")
             else:
-                row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+                row.operator("arm.stop", icon="STRIP_COLOR_01")
         row.operator("arm.clean_menu", icon="BRUSH_DATA")
 
         col = layout.box().column()
@@ -1455,8 +1457,10 @@ class ARM_PT_TopbarPanel(bpy.types.Panel):
         row = self.layout.row(align=True)
         if state.proc_play is None and state.proc_build is None:
             row.operator("arm.play", icon="PLAY", text="")
+        elif bpy.app.version >= (3, 0, 0) and bpy.app.version < (4, 5, 0):
+                row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
         else:
-            row.operator("arm.stop", icon="SEQUENCE_COLOR_01", text="")
+            row.operator("arm.stop", icon="STRIP_COLOR_01", text="")
         row.operator("arm.clean_menu", icon="BRUSH_DATA", text="")
         row.operator("arm.open_editor", icon="DESKTOP", text="")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER", text="")

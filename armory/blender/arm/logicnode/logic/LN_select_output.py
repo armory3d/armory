@@ -15,8 +15,8 @@ class SelectOutputNode(ArmLogicTreeNode):
     arm_version = 1
     min_outputs = 2
 
-    def __init__(self):
-        super(SelectOutputNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(SelectOutputNode, self).__init__(*args, **kwargs)
         array_nodes[self.get_id_str()] = self
 
     def arm_init(self, context):

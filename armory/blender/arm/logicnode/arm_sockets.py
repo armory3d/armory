@@ -84,8 +84,8 @@ class ArmAnimActionSocket(ArmCustomSocket):
     default_value_get: PointerProperty(name='Action', type=bpy.types.Action)  # legacy version of the line after this one
     default_value_raw: PointerProperty(name='Action', type=bpy.types.Action, update=_on_update_socket)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(ArmAnimActionSocket, self).__init__(*args, **kwargs)
         if self.default_value_get is not None:
             self.default_value_raw = self.default_value_get
             self.default_value_get = None
@@ -493,8 +493,8 @@ class ArmObjectSocket(ArmCustomSocket):
     default_value_get: PointerProperty(name='Object', type=bpy.types.Object)  # legacy version of the line after this one
     default_value_raw: PointerProperty(name='Object', type=bpy.types.Object, update=_on_update_socket)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(ArmObjectSocket, self).__init__(*args, **kwargs)
         if self.default_value_get is not None:
             self.default_value_raw = self.default_value_get
             self.default_value_get = None
@@ -638,7 +638,7 @@ else:
                 'draw_color': draw_color,
             }
         )
-        return cls    
+        return cls
 
 
 

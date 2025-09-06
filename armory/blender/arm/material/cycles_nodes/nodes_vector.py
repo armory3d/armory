@@ -24,8 +24,8 @@ else:
 
 
 def parse_curvevec(node: bpy.types.ShaderNodeVectorCurve, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    fac = c.parse_value_input(node.inputs[0])
-    vec = c.parse_vector_input(node.inputs[1])
+    fac = c.get_value_input(node, ['Fac'])
+    vec = c.get_vector_input(node, ['Vector'])
     curves = node.mapping.curves
     name = c.node_name(node.name)
     # mapping.curves[0].points[0].handle_type # bezier curve
@@ -41,18 +41,16 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
         return 'vec3(0.0)'
 
     # Interpolation strength
-    strength = c.parse_value_input(node.inputs[0])
-    # Height multiplier
-    # distance = c.parse_value_input(node.inputs[1])
-    height = c.parse_value_input(node.inputs[2])
+    strength = c.get_value_input(node, ['Strength'])
+    # distance = c.get_value_input(node, ['Distance'])
+    height = c.get_value_input(node, ['Height'])
+    # normal = c.get_vector_input(node, ['Normal'])
 
     state.current_pass = ParserPass.DX_SCREEN_SPACE
-    height_dx = c.parse_value_input(node.inputs[2])
+    height_dx = c.get_value_input(node, ['Height'])
     state.current_pass = ParserPass.DY_SCREEN_SPACE
-    height_dy = c.parse_value_input(node.inputs[2])
+    height_dy = c.get_value_input(node, ['Height'])
     state.current_pass = ParserPass.REGULAR
-
-    # nor = c.parse_vector_input(node.inputs[3])
 
     if height_dx != height or height_dy != height:
         tangent = f'{c.dfdx_fine("wposition")} + n * ({height_dx} - {height})'
@@ -78,11 +76,12 @@ def parse_bump(node: bpy.types.ShaderNodeBump, out_socket: bpy.types.NodeSocket,
 
 
 def parse_mapping(node: bpy.types.ShaderNodeMapping, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
+    # TODO: Add support for "Normal" type
     # Only "Point", "Texture" and "Vector" types supported for now..
     # More information about the order of operations for this node:
     # https://docs.blender.org/manual/en/latest/render/shader_nodes/vector/mapping.html#properties
 
-    input_vector: bpy.types.NodeSocket = node.inputs[0]
+    input_vector: bpy.types.NodeSocket = node.inputs['Vector']
     input_location: bpy.types.NodeSocket = node.inputs['Location']
     input_rotation: bpy.types.NodeSocket = node.inputs['Rotation']
     input_scale: bpy.types.NodeSocket = node.inputs['Scale']
@@ -144,44 +143,48 @@ def parse_normal(node: bpy.types.ShaderNodeNormal, out_socket: bpy.types.NodeSoc
         return nor1
 
     elif out_socket == node.outputs['Dot']:
-        nor2 = c.parse_vector_input(node.inputs["Normal"])
+        nor2 = c.get_vector_input(node, ["Normal"])
         return f'dot({nor1}, {nor2})'
 
 
 def parse_normalmap(node: bpy.types.ShaderNodeNormalMap, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     if state.curshader == state.tese:
-        return c.parse_vector_input(node.inputs[1])
+        return c.get_vector_input(node, ["Normal"])
     else:
+        # TODO:
         # space = node.space
         # map = node.uv_map
         # Color
-        c.parse_normal_map_color_input(node.inputs[1], node.inputs[0])
+        c.parse_normal_map_color_input(node.inputs['Color'], node.inputs['Strength'])
         return 'n'
 
 
 def parse_vectortransform(node: bpy.types.ShaderNodeVectorTransform, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    # type = node.vector_type
+    # TODO:
+    # vector_type = node.vector_type
     # conv_from = node.convert_from
     # conv_to = node.convert_to
     # Pass through
-    return c.parse_vector_input(node.inputs[0])
+    return c.get_vector_input(node, ['Vector'])
 
 
 def parse_displacement(node: bpy.types.ShaderNodeDisplacement, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
-    height = c.parse_value_input(node.inputs[0])
-    midlevel = c.parse_value_input(node.inputs[1])
-    scale = c.parse_value_input(node.inputs[2])
-    nor = c.parse_vector_input(node.inputs[3])
+    # TODO:
+    # space = node.space
+    height = c.get_value_input(node, ['Height'])
+    midlevel = c.get_value_input(node, ['Midlevel'])
+    scale = c.get_value_input(node, ['Scale'])
+    nor = c.get_vector_input(node, ['Normal'])
     return f'(vec3({height}) * {scale})'
 
-def parse_vectorrotate(node: bpy.types.ShaderNodeVectorRotate, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
 
+def parse_vectorrotate(node: bpy.types.ShaderNodeVectorRotate, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:
     type = node.rotation_type
-    input_vector: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[0])
-    input_center: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[1])
-    input_axis: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[2])
-    input_angle: bpy.types.NodeSocket = c.parse_value_input(node.inputs[3])
-    input_rotation: bpy.types.NodeSocket = c.parse_vector_input(node.inputs[4])
+    input_vector: bpy.types.NodeSocket = c.get_vector_input(node, ['Vector'])
+    input_center: bpy.types.NodeSocket = c.get_vector_input(node, ['Center'])
+    input_axis: bpy.types.NodeSocket = c.get_vector_input(node, ['Axis'])
+    input_angle: bpy.types.NodeSocket = c.get_value_input(node, ['Angle'])
+    input_rotation: bpy.types.NodeSocket = c.get_vector_input(node, ['Rotation'])
 
     if node.invert:
         input_invert = "0"

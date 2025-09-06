@@ -81,16 +81,16 @@ class GetDateTimeNode(ArmLogicTreeNode):
                 ('seconds', 'Seconds', 'Returns the seconds of this Date (0-59 range) in the local timezone.'),
                 ('all', 'All', 'Get all of the individual separated date and time properties'),
                 ('formatted', 'Formatted', 'Format the current system date and time')],
-        name='', 
+        name='',
         default='all',
-        set=set_enum, 
+        set=set_enum,
         get=get_enum)
 
 
 
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(GetDateTimeNode, self).__init__(*args, **kwargs)
 
 
     def arm_init(self, context):
@@ -105,7 +105,7 @@ class GetDateTimeNode(ArmLogicTreeNode):
         self.add_output('ArmIntSocket', 'Hours')
         self.add_output('ArmIntSocket', 'Minutes')
         self.add_output('ArmIntSocket', 'Seconds')
-        
+
 
 
     def draw_buttons(self, context, layout):

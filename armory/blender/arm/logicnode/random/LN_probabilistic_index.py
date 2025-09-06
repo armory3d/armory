@@ -11,7 +11,7 @@ class ProbabilisticIndexNode(ArmLogicTreeNode):
     @output index: the index.
 
     """
-    
+
     bl_idname = 'LNProbabilisticIndexNode'
     bl_label = 'Probabilistic Index'
     arm_section = 'logic'
@@ -19,8 +19,8 @@ class ProbabilisticIndexNode(ArmLogicTreeNode):
 
     num_choices: IntProperty(default=0, min=0)
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(ProbabilisticIndexNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
 

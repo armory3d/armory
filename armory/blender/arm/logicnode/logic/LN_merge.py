@@ -41,8 +41,8 @@ class MergeNode(ArmLogicTreeNode):
         update=update_exec_mode,
     )
 
-    def __init__(self):
-        super(MergeNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(MergeNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -71,7 +71,7 @@ class MergeNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         if self.arm_version == 1 or self.arm_version == 2:
             newnode = node_tree.nodes.new('LNMergeNode')
             newnode.property0 = self.property0

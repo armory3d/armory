@@ -11,8 +11,8 @@ class FunctionNode(ArmLogicTreeNode):
     arm_version = 2
     min_outputs = 1
 
-    def __init__(self):
-        super(FunctionNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(FunctionNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):

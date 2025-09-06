@@ -8,8 +8,8 @@ class RandomOutputNode(ArmLogicTreeNode):
     arm_section = 'logic'
     arm_version = 1
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(RandomOutputNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
 
