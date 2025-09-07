@@ -32,7 +32,7 @@ class SetFirstPersonControllerNode extends LogicNode {
 
         if (object == null) return;
 
-        // Establecer en false/true las var de FirstPersonController.
+        // Tomar el Trait desde el objcet(FPController)
         var fpController: armory.trait.FirstPersonController = object.getTrait(armory.trait.FirstPersonController);
         if (fpController != null) {
 
@@ -59,4 +59,5 @@ class SetFirstPersonControllerNode extends LogicNode {
 
         runOutput(0);
     }
+
 }
