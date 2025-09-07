@@ -32,7 +32,7 @@ class FirstPersonController extends Trait {
 
     @prop public var canRun:Bool = true;
     @prop public var runKey:String = "shift";
-    @prop public var runVelocity:Float = 1000.0;
+    @prop public var runSpeed:Float = 1000.0;
 
     // Sistema de estamina
     @prop public var stamina:Bool = false;
@@ -222,7 +222,7 @@ class FirstPersonController extends Trait {
             var dirN = dir.normalize();
             var baseSpeed = moveSpeed;
             if (isRunning && moveForward) {
-                baseSpeed = runVelocity;
+                baseSpeed = runSpeed;
             }
             var currentSpeed = isFatigued() ? baseSpeed * fatigueSpeed : baseSpeed;
             var currentSpeed = isFatigued() ? baseSpeed * fatigueSpeed : baseSpeed;
