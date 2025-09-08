@@ -435,23 +435,6 @@ class RenderPathDeferred {
 
 			// holds colors before refractive meshes are drawn
 			var t = new RenderTargetRaw();
-			t.name = "gbuffer1_refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
-		#end
-
-		#if rp_ssrefr
-		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-
-			// holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
 			t.name = "gbuffer0_refr";
 			t.width = 0;
 			t.height = 0;
@@ -637,43 +620,6 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/ssao_pass/ssao_pass");
 
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("singlea");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
-		}
-		#elseif (rp_ssgi == "SSGI")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#if rp_gbuffer_emission
-				{
-					path.bindTarget("gbuffer_emission", "gbufferEmission");
-				}
-				#end
-				#if rp_gbuffer2
-				path.bindTarget("gbuffer2", "sveloc");
-				#end
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
-
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
@@ -1048,54 +994,27 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
+		#if (rp_ssgi == "SSGI")
 		{
-			if (armory.data.Config.raw.rp_ssrefr != false)
-			{
-				//save depth
-				path.setTarget("gbufferD1");
-				path.bindTarget("_main", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
-				//save background color
-				path.setTarget("refr");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-
-				path.setTarget("gbuffer0", ["tex", "gbuffer_refraction"]);
-
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
-
-				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
-				path.bindTarget("voxelsSDF", "voxelsSDF");
-				#end
-				#end
-
-				#if rp_ssrs
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
-				#end
-
-				path.drawMeshes("refraction");
-
-				path.setTarget("tex");
-				path.bindTarget("tex", "tex");
-				path.bindTarget("refr", "tex1");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+				path.bindTarget("tex", "tex");
+				#if rp_gbuffer2
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
 
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
 		}
 		#end

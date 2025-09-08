@@ -77,14 +77,14 @@ void main() {
 	int nor_count = 0;
 	vec3 avgNormal = vec3(0.0);
 	mat3 TBN = mat3(0.0);
+	#ifdef _VoxelGI
+	vec4 aniso_colors[6];
+	#else
+	float aniso_colors[6];
+	#endif
 
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
-		#ifdef _VoxelGI
-		vec4 aniso_colors[6];
-		#else
-		float aniso_colors[6];
-		#endif
 
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
@@ -155,10 +155,27 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
 			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 255;
 				opac /= count;
+				vec3 N = vec3(0.0);
+				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
+				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
+				N /= count;
+				N = decode_oct(N.rg * 2.0 - 1.0);
+
+				if (abs(N.x) > 0)
+					avgNormal.x += N.x;
+				if (abs(N.y) > 0)
+					avgNormal.y += N.y;
+				if (abs(N.z) > 0)
+					avgNormal.z += N.z;
+				if (i == 5)
+				{
+					avgNormal = normalize(avgNormal);
+					TBN = makeTangentBasis(avgNormal);
+				}
 			}
 			#endif
 

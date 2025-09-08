@@ -151,15 +151,15 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
 		vec3 coneDir = TBN * DIFFUSE_CONE_DIRECTIONS[i];
-		float coneAperture = coneDir.z > 0.9 ? DIFFUSE_CONE_APERTURE_NARROW : DIFFUSE_CONE_APERTURE_WIDE;
+		//float coneAperture = coneDir.z > 0.9 ? DIFFUSE_CONE_APERTURE_NARROW : DIFFUSE_CONE_APERTURE_WIDE;
 		// Scale base step size based on aperture
-		float apertureScale = coneAperture / REFERENCE_APERTURE;
-		float stepSize = 1.0 * apertureScale;
+		//float apertureScale = coneAperture / REFERENCE_APERTURE;
+		//float stepSize = 1.0 * apertureScale;
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
 		int precomputed_direction = 6 + i;
-		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, coneAperture, stepSize, clipmaps) * cosTheta;
+		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
 		sum += cosTheta;
 	}
 

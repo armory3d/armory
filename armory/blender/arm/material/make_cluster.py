@@ -1,5 +1,7 @@
 import bpy
 
+import arm.material.mat_state as mat_state
+import arm.material.mat_utils as mat_utils
 import arm.material.shader as shader
 import arm.utils
 

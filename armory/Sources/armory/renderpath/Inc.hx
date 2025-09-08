@@ -700,7 +700,7 @@ class Inc {
 						t.format = "R32UI";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 2;
+						t.depth = res * 4;
 					}
 				}
 				#else
@@ -710,12 +710,6 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-					}
-					else if (t.name == "voxelsLight") {
-						t.width = res * 6;
-						t.height = res;
-						t.depth = res * 3;
-						t.format = "R32";
 					}
 					else {
 						t.format = "R32UI";

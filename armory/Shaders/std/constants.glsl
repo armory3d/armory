@@ -25,7 +25,7 @@ const int DIFFUSE_CONE_COUNT = 16;
 const float SHADOW_CONE_APERTURE = radians(15.0);
 const float DIFFUSE_CONE_APERTURE_WIDE = radians(50.0);  // for z=0.7071 cones
 const float DIFFUSE_CONE_APERTURE_NARROW = radians(30.0); // for z≈0.935 cones
-const float REFERENCE_APERTURE = 0.872665; // 50 degrees in radians
+const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees in radians
 
 
 mat3 makeTangentBasis(vec3 n) {
