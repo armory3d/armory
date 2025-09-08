@@ -30,12 +30,10 @@ uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(r32ui) uimage3D voxels;
-uniform sampler3D voxelsSampler;
-uniform sampler3D voxelsSDFSampler;
 
 #ifdef _ShadowMap
 uniform sampler2DShadow shadowMap;
+uniform sampler2D shadowMapTransparent;
 uniform sampler2DShadow shadowMapSpot;
 #ifdef _ShadowMapAtlas
 uniform sampler2DShadow shadowMapPoint;
@@ -91,6 +89,7 @@ void main() {
 	int res = voxelgiResolution.x;
 	vec3 aniso_light[6];
 
+<<<<<<< HEAD
 	for (int i = 0; i < 6; i++) {
 		ivec3 src = ivec3(gl_GlobalInvocationID.xyz);
 		src.x += i * res;
@@ -198,4 +197,49 @@ void main() {
 
 		}
 	}
+=======
+	vec3 wposition = (gl_GlobalInvocationID.xyz + 0.5) / voxelgiResolution.x;
+	wposition = wposition * 2.0 - 1.0;
+	wposition *= float(clipmaps[int(clipmapLevel * 10)]);
+	wposition *= voxelgiResolution.x;
+	wposition += vec3(clipmaps[clipmapLevel * 10 + 4], clipmaps[clipmapLevel * 10 + 5], clipmaps[clipmapLevel * 10 + 6]);
+
+	float visibility;
+	vec3 lp = lightPos -wposition;
+	vec3 l;
+	if (lightType == 0) { l = lightDir; visibility = 1.0; }
+	else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
+
+#ifdef _ShadowMap
+	if (lightShadow == 1) {
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
+		vec3 lPos = lightPosition.xyz / lightPosition.w;
+		visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;
+	}
+	else if (lightShadow == 2) {
+		vec4 lightPosition = LVP * vec4(wposition, 1.0);
+		vec3 lPos = lightPosition.xyz / lightPosition.w;
+		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
+	}
+	else if (lightShadow == 3) {
+		#ifdef _ShadowMapAtlas
+		int faceIndex = 0;
+		const int lightIndex = index * 6;
+		const vec2 uv = sampleCube(-l, faceIndex);
+		vec4 pointLightTile = pointLightDataArray[lightIndex + faceIndex]; // x: tile X offset, y: tile Y offset, z: tile size relative to atlas
+		vec2 uvtiled = pointLightTile.z * uv + pointLightTile.xy;
+		#ifdef _FlipY
+		uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
+		#endif
+		visibility *= texture(shadowMapPoint, vec3(uvtiled, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		#else
+		visibility *= texture(shadowMapPoint, vec4(-l, lpToDepth(lp, lightProj) - shadowsBias)).r;
+		#endif
+	}
+#endif
+
+	imageAtomicAdd(voxelsLight, dst, uint(visibility * lightColor.r * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x), uint(visibility * lightColor.g * 255));
+	imageAtomicAdd(voxelsLight, dst + ivec3(0, 0, voxelgiResolution.x * 2), uint(visibility * lightColor.b * 255));
+>>>>>>> patch_1_3
 }

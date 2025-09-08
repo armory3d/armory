@@ -64,9 +64,9 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelgi_resolution = '32'
-        rpdat.arm_voxelgi_size = 0.25
-        rpdat.rp_voxels = 'Voxel AO'
+        rpdat.rp_voxelgi_resolution = '64'
+        rpdat.arm_voxelgi_size = 0.125
+        rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -151,7 +151,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTAO'
+        rpdat.rp_ssgi = 'SSGI'
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
@@ -329,6 +329,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_shadowmap_atlas: BoolProperty(name="Shadow Map Atlasing", description="Group shadow maps of lights of the same type in the same texture", default=False, update=update_renderpath)
     rp_shadowmap_atlas_single_map: BoolProperty(name="Shadow Map Atlas single map", description="Use a single texture for all different light types.", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod: BoolProperty(name="Shadow Map Atlas LOD (Experimental)", description="When enabled, the size of the shadow map will be determined on runtime based on the distance of the light to the camera", default=False, update=update_renderpath)
+    rp_shadowmap_transparent: BoolProperty(name="Transparent shadows", description="Enable shadows for transparent objects", default=False, update=update_renderpath)
     rp_shadowmap_atlas_lod_subdivisions: EnumProperty(
         items=[('2', '2', '2'),
                ('3', '3', '3'),
@@ -390,7 +391,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-               ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
+               ('SSGI', 'SSGI', 'Screen space global illumination'),
+               # ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                # ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
@@ -484,14 +486,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')
+               #('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
-        items=[('16', '16', '16'),
-               ('32', '32', '32'),
-               ('64', '64', '64'),
+        items=[('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
                ],
@@ -507,7 +507,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         	   ('1', '1', '1'),
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
-    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3, update=assets.invalidate_compiled_data)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=6, update=assets.invalidate_compiled_data)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
@@ -529,11 +529,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_shad: FloatProperty(name="Shadows", description="", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_env: FloatProperty(name="Environment", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
@@ -545,14 +545,16 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_water_refract: FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
     arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
+    arm_ssgi_radius: FloatProperty(name="Radius", default=8.0, update=assets.invalidate_shader_cache)
     arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
+    arm_ssgi_samples: IntProperty(name="Samples", default=32, update=assets.invalidate_shader_cache)
+    """
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
         name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
+    """
     arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
     arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8, update=assets.invalidate_shader_cache)
     arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)
@@ -571,11 +573,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         update=assets.invalidate_shader_cache
     )
     arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssr_ray_step: FloatProperty(name="Step", default=0.03, update=assets.invalidate_shader_cache)
+    arm_ssr_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
