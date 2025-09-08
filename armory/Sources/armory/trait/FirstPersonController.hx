@@ -165,20 +165,22 @@ class FirstPersonController extends Trait {
                     isRunning = true;
                     staminaValue -= staDecreasePerSec * deltaTime;
                     if (staminaValue < 0.0) staminaValue = 0.0;
-                    timeSinceStop = 0.0;
-                    fatigueTimer += deltaTime;
-                    fatigueCooldown = 0.0;
                 } else {
                     isRunning = false;
                 }
             } else {
                 isRunning = true;
-                timeSinceStop = 0.0;
-                fatigueTimer += deltaTime;
-                fatigueCooldown = 0.0;
             }
         } else {
             isRunning = false;
+        }
+
+        // (temporizadores aparte)
+        if (isRunning) {
+            timeSinceStop = 0.0;
+            fatigueTimer += deltaTime;
+            fatigueCooldown = 0.0;
+        } else {
             timeSinceStop += deltaTime;
             fatigueCooldown += deltaTime;
         }
@@ -189,7 +191,7 @@ class FirstPersonController extends Trait {
    			 canJump = false;
 		}
 
-        // Activar fatiga después de correr continuamente durante cierto umbral
+        // Activar fatiga despues de correr continuamente durante cierto umbral
         if (enableFatigue && fatigueTimer >= fatigueThreshold) {
             isFatigueActive = true;
         }
@@ -200,7 +202,7 @@ class FirstPersonController extends Trait {
             fatigueTimer = 0.0;
         }
 
-        // Recuperar estamina si no está corriendo
+        // Recuperar estamina si no esta corriendo
         if (stamina && !isRunning && staminaValue < staminaBase && !isFatigued()) {
             if (timeSinceStop >= staRecoverTime) {
                 staminaValue += staRecoverPerSec * deltaTime;
@@ -208,7 +210,7 @@ class FirstPersonController extends Trait {
             }
         }
 
-        // Movimiento
+        // Movimiento ejes (local)
         dir.set(0, 0, 0);
         if (moveForward) dir.add(object.transform.look());
         if (moveBackward) dir.add(object.transform.look().mult(-1));
@@ -224,7 +226,6 @@ class FirstPersonController extends Trait {
             if (isRunning && moveForward) {
                 baseSpeed = runSpeed;
             }
-
             var currentSpeed = isFatigued() ? baseSpeed * fatigueSpeed : baseSpeed;
             dirN.mult(currentSpeed * deltaTime);
             body.activate();
