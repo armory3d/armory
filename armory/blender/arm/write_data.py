@@ -331,9 +331,13 @@ project.addSources('Sources');
 
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
+            if rpdat.arm_particles == 'GPU':
+                assets.add_khafile_def('arm_gpu_particles')
+            elif rpdat.arm_particles == 'CPU':
+                assets.add_khafile_def('arm_cpu_particles')
 
-        if rpdat.rp_draw_order == 'Shader':
-            assets.add_khafile_def('arm_draworder_shader')
+        if rpdat.rp_draw_order == 'Index':
+            assets.add_khafile_def('arm_draworder_index')
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
@@ -441,6 +445,7 @@ def write_config(resx, resy):
         'rp_ssr': rpdat.rp_ssr != 'Off',
         'rp_ss_refraction': rpdat.rp_ss_refraction != 'Off',
         'rp_bloom': rpdat.rp_bloom != 'Off',
+        'rp_chromatic_aberration': rpdat.rp_chromatic_aberration != 'Off',
         'rp_motionblur': rpdat.rp_motionblur != 'Off',
         'rp_gi': rpdat.rp_voxels != "Off",
         'rp_dynres': rpdat.rp_dynres
@@ -481,7 +486,10 @@ class Main {
             public static inline var voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 100) / 100) + """;""")
 
         if rpdat.rp_bloom:
-            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if rpdat.arm_bloom_follow_blender else rpdat.arm_bloom_radius};")
+
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
+
+            f.write(f"public static var bloomRadius = {bpy.context.scene.eevee.bloom_radius if follow_blender else rpdat.arm_bloom_radius};")
 
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
@@ -493,7 +501,7 @@ class Main {
         if rpdat.arm_skin != 'Off':
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
-        
+
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
@@ -502,7 +510,7 @@ class Main {
             if rpdat.arm_shadowmap_bounds != 1.0:
                 f.write("""
             iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
-        
+
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
@@ -511,7 +519,7 @@ class Main {
             f.write("""
         armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
         armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
-        
+
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
                 f.write("""
@@ -519,7 +527,7 @@ class Main {
             elif wrd.arm_canvas_img_scaling_quality == 'high':
                 f.write("""
         armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
-        
+
         f.write("""
         armory.system.Starter.main(
             '""" + arm.utils.safestr(scene_name) + scene_ext + """',
@@ -649,7 +657,8 @@ const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100)
 """)
 
         if rpdat.rp_bloom:
-            follow_blender = rpdat.arm_bloom_follow_blender
+
+            follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
             eevee_settings = bpy.context.scene.eevee
 
             threshold = eevee_settings.bloom_threshold if follow_blender else rpdat.arm_bloom_threshold
@@ -726,11 +735,13 @@ const vec3 compoLetterboxColor = vec3(""" + str(round(rpdat.arm_letterbox_color[
         if rpdat.arm_sharpen:
             f.write(
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
+const float compoSharpenSize = """ + str(round(rpdat.arm_sharpen_size * 100) / 100) + """;
+const vec3 compoSharpenColor = vec3(""" + str(round(rpdat.arm_sharpen_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_sharpen_color[2] * 100) / 100) + """);
 """)
 
-        if bpy.data.scenes[0].view_settings.exposure != 0.0:
+        if arm.utils.get_active_scene().view_settings.exposure != 0.0:
             f.write(
-"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].view_settings.exposure * 100) / 100) + """;
+"""const float compoExposureStrength = """ + str(round(arm.utils.get_active_scene().view_settings.exposure * 100) / 100) + """;
 """)
 
         if rpdat.arm_fog:
@@ -762,16 +773,17 @@ const int compoChromaticSamples = {rpdat.arm_chromatic_aberration_samples};
 
         focus_distance = 0.0
         fstop = 0.0
-        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
-            focus_distance = bpy.data.cameras[0].dof.focus_distance
-            fstop = bpy.data.cameras[0].dof.aperture_fstop
+        if arm.utils.get_active_scene().camera and arm.utils.get_active_scene().camera.data.dof.use_dof:
+            focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
+            fstop = arm.utils.get_active_scene().camera.data.dof.aperture_fstop
+            lens = arm.utils.get_active_scene().camera.data.lens
 
         if focus_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(focus_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
-const float compoDOFLength = 160.0;
-""") # str(round(bpy.data.cameras[0].lens * 100) / 100)
+const float compoDOFLength = """ + str(round(lens * 100) / 100) +""";
+""") #160.0;
 
         if rpdat.rp_voxels != 'Off':
             f.write("""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """);

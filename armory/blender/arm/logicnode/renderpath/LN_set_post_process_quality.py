@@ -4,12 +4,13 @@ class RpConfigNode(ArmLogicTreeNode):
     """Sets the post process quality."""
     bl_idname = 'LNRpConfigNode'
     bl_label = 'Set Post Process Quality'
-    arm_version = 1
+    arm_version = 2
     property0: HaxeEnumProperty(
         'property0',
         items = [('SSGI', 'SSGI', 'SSGI'),
                  ('SSR', 'SSR', 'SSR'),
                  ('Bloom', 'Bloom', 'Bloom'),
+                 ('CA', 'CA', 'CA'),
                  ('GI', 'GI', 'GI'),
                  ('Motion Blur', 'Motion Blur', 'Motion Blur')
                  ],
@@ -23,3 +24,10 @@ class RpConfigNode(ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+
+    def get_replacement_node(self, node_tree: bpy.types.NodeTree):
+        if self.arm_version not in (0, 1):
+            raise LookupError()
+            
+        return NodeReplacement.Identity(self)
+

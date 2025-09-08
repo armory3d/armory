@@ -15,7 +15,7 @@ class CompareNode(ArmLogicTreeNode):
     property0: HaxeEnumProperty(
         'property0',
         items = [('Equal', 'Equal', 'Equal'),
-                 ('Not Equal', 'Not Equal', 'Not Equal'),        
+                 ('Not Equal', 'Not Equal', 'Not Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
                  ('Greater Equal', 'Greater Equal', 'Greater Equal'),
@@ -29,8 +29,8 @@ class CompareNode(ArmLogicTreeNode):
     min_inputs = 2
     property1: HaxeFloatProperty('property1', name='Tolerance', description='Precision for float compare', default=0.0001)
 
-    def __init__(self):
-        super(CompareNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(CompareNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -55,7 +55,7 @@ class CompareNode(ArmLogicTreeNode):
             op.node_index = str(id(self))
             if len(self.inputs) == self.min_inputs:
                 column.enabled = False
-            
+
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()

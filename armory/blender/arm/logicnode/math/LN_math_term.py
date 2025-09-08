@@ -11,13 +11,13 @@ class MathTermNode(ArmLogicTreeNode):
 
     property0: HaxeBoolProperty('property0', name='Resolve params', description='Resolve input param values/subterms for output term/transformations', default=False)
 
-    def __init__(self):
-        super(MathTermNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(MathTermNode, self).__init__(*args, **kwargs)
         self.register_id()
 
 
     def arm_init(self, context):
-        
+
         # OUTPUTS:
         self.add_output('ArmDynamicSocket', 'Math Term')
         self.add_output('ArmDynamicSocket', 'Simplifyed')
@@ -25,16 +25,16 @@ class MathTermNode(ArmLogicTreeNode):
         self.add_output('ArmFloatSocket', 'Result')
         self.add_output('ArmStringSocket', 'Error')
         self.add_output('ArmIntSocket', 'ErrorPos')
-        
+
         # INPUTS:
-        
+
         # HOW to setup a Tooltip here and how to put it above the param-add/remove-buttons into layout ?
         self.add_input('ArmStringSocket', 'Math Term', default_value='a+b')
-        
+
         # two default parameters at start
         self.add_input('ArmStringSocket', 'Param 0', default_value='a')
         self.add_input('ArmDynamicSocket', 'Value / Term 0')
-        
+
         self.add_input('ArmStringSocket', 'Param 1', default_value='b')
         self.add_input('ArmDynamicSocket', 'Value / Term 1')
 

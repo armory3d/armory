@@ -5,8 +5,6 @@ class WriteFileNode(ArmLogicTreeNode):
     """Writes the given string content to the given file. If the file
     already exists, the existing content of the file is overwritten.
 
-    > **This node is currently only implemented on Krom**
-
     @input File: the name of the file, relative to `Krom.getFilesLocation()`
     @input Content: the content to write to the file.
 

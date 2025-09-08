@@ -28,7 +28,11 @@ class ViewportDraw:
         w = 400
         h = 200
 
-        self.shader = gpu.shader.from_builtin('2D_IMAGE')
+        if bpy.app.version[0] == 3:
+            self.shader = gpu.shader.from_builtin('2D_IMAGE')
+        else:
+            self.shader = gpu.shader.from_builtin('IMAGE')
+            
         self.batch = batch_for_shader(
             self.shader, 'TRI_FAN',
             {

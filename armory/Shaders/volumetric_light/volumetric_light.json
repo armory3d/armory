@@ -140,6 +140,16 @@
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
 					"ifndef": ["_ShadowMapAtlas"],
 					"ifdef": ["_Spot", "_ShadowMap"]
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11",
+					"ifdef": ["_CPostprocess"]
+				},
+				{
+					"name": "PPComp17",
+					"link": "_PPComp17",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],

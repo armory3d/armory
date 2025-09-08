@@ -134,8 +134,8 @@ class AddPhysicsConstraintNode(ArmLogicTreeNode):
                  ('Generic Spring', 'Generic Spring', 'Generic Spring')],
         name='Type', default='Fixed', set=set_enum, get=get_enum)
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(AddPhysicsConstraintNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')

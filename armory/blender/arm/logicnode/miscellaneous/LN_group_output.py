@@ -13,7 +13,8 @@ class GroupOutputsNode(ArmLogicTreeNode):
     arm_section = 'group'
     arm_version = 3
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(GroupOutputsNode, self).__init__(*args, **kwargs)
         self.register_id()
 
     # Active socket selected
@@ -145,7 +146,7 @@ class GroupOutputsNode(ArmLogicTreeNode):
         if self.active_input > len(self.inputs) - 1:
             self.active_input = self.active_input - 1
 
-    # Function to add a socket at certain index and 
+    # Function to add a socket at certain index and
     # handle the same in the related call group nodes
     def add_socket_ext(self):
         index = self.active_input + 1
@@ -154,7 +155,7 @@ class GroupOutputsNode(ArmLogicTreeNode):
         for node in call_group_nodes:
             node.insert_output('ArmAnySocket', index, '')
 
-    # Function to remove a socket at certain index and 
+    # Function to remove a socket at certain index and
     # handle the same in the related call group nodes
     def remove_socket_ext(self):
         self.inputs.remove(self.inputs[self.active_input])

@@ -34,7 +34,7 @@ class Shader_Node_Types:
     normal = "ShaderNodeNormalMap"
     ao = "ShaderNodeAmbientOcclusion"
     uv = "ShaderNodeUVMap"
-    mix = "ShaderNodeMixRGB"
+    mix = "ShaderNodeMix"
 
 def select_object(self,obj):
     C = bpy.context

@@ -10,7 +10,7 @@ class SetCameraStartEndNode(ArmLogicTreeNode):
     
     def remove_extra_inputs(self, context):
         while len(self.inputs) > 2:
-                self.inputs.remove(self.inputs[-1])
+            self.inputs.remove(self.inputs[-1])
         if self.property0 == 'Start':
             self.add_input('ArmFloatSocket', 'Start')
         if self.property0 == 'End':

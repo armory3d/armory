@@ -48,8 +48,8 @@ class PhysicsConstraintNode(ArmLogicTreeNode):
         update=update_spring
     )
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
+    def __init__(self, *args, **kwargs):
+        super(PhysicsConstraintNode, self).__init__(*args, **kwargs)
 
     def arm_init(self, context):
         self.add_input('ArmFloatSocket', 'Lower limit')

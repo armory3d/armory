@@ -94,6 +94,7 @@ def parse_material_output(node: bpy.types.Node, custom_particle_node: bpy.types.
     parse_displacement = state.parse_displacement
     particle_info = {
         'index': False,
+        'random': False,
         'age': False,
         'lifetime': False,
         'location': False,
@@ -260,7 +261,7 @@ def parse_shader(node: bpy.types.Node, socket: bpy.types.NodeSocket) -> Tuple[st
                     mat_state.emission_type = mat_state.EmissionType.SHADED
             if state.parse_opacity:
                 state.out_opacity = parse_value_input(node.inputs[1])
-                state.out_ior = 1.450;
+                state.out_ior = 1.450
         else:
             return parse_group(node, socket)
 
@@ -285,6 +286,20 @@ def parse_displacement_input(inp):
         return parse_vector_input(inp)
     else:
         return None
+
+
+# Use an array of socket names for compatibility across Blender versions
+def get_vector_input(node: bpy.types.Node, socket_names: Tuple[str, ...]) -> vec3str:
+    for name in socket_names:
+        if name in node.inputs:
+            try:
+                return parse_vector_input(node.inputs[name])
+            except Exception:
+                log.warn(f'Failed to parse input "{name}" on node "{node.name}"')
+        else:
+            # FIXME: Fallback to default value if the node isn't found
+            log.warn(f'Input "{name}" not found on node "{node.name}", returning default None')
+            return None
 
 
 def parse_vector_input(inp: bpy.types.NodeSocket) -> vec3str:
@@ -410,6 +425,20 @@ def parse_normal_map_color_input(inp, strength_input=None):
         frag.write('n = normalize(TBN * n);')
         state.con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
+
+
+# Use an array of socket names for compatibility across Blender versions
+def get_value_input(node: bpy.types.Node, socket_names: Tuple[str, ...]) -> floatstr:
+    for name in socket_names:
+        if name in node.inputs:
+            try:
+                return parse_value_input(node.inputs[name])
+            except Exception:
+                log.warn(f'Failed to parse input "{name}" on node "{node.name}"')
+        else:
+            # FIXME: Fallback to default value if the node isn't found
+            log.warn(f'Input "{name}" not found on node "{node.name}", returning default 1.0')
+            return '1.0'
 
 
 def parse_value_input(inp: bpy.types.NodeSocket) -> floatstr:

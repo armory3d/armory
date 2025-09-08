@@ -7,8 +7,8 @@ class ConcatenateStringNode(ArmLogicTreeNode):
     arm_version = 2
     min_inputs = 1
 
-    def __init__(self):
-        super(ConcatenateStringNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(ConcatenateStringNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
@@ -30,5 +30,5 @@ class ConcatenateStringNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

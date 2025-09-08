@@ -94,34 +94,34 @@ class Tween {
 
 				// Way too much Reflect trickery..
 				var ps = Reflect.fields(a.props);
-				for (i in 0...ps.length) {
-					var p = ps[i];
+				for (j in 0...ps.length) {
+					var p = ps[j];
 					var k = a._time / a.duration;
 					if (k > 1) k = 1;
 
-					if (a._comps[i] == 1) {
-						var fromVal: Float = a._x[i];
+					if (a._comps[j] == 1) {
+						var fromVal: Float = a._x[j];
 						var toVal: Float = Reflect.getProperty(a.props, p);
 						var val: Float = fromVal + (toVal - fromVal) * eases[a.ease](k);
 						Reflect.setProperty(a.target, p, val);
 					}
-					else { // _comps[i] == 4
+					else { // _comps[j] == 4
 						var obj = Reflect.getProperty(a.props, p);
 						var toX: Float = Reflect.getProperty(obj, "x");
 						var toY: Float = Reflect.getProperty(obj, "y");
 						var toZ: Float = Reflect.getProperty(obj, "z");
 						var toW: Float = Reflect.getProperty(obj, "w");
-						if (a._normalize[i]) {
-							var qdot = (a._x[i] * toX) + (a._y[i] * toY) + (a._z[i] * toZ) + (a._w[i] * toW);
+						if (a._normalize[j]) {
+							var qdot = (a._x[j] * toX) + (a._y[j] * toY) + (a._z[j] * toZ) + (a._w[j] * toW);
 							if (qdot < 0.0) {
 								toX = -toX; toY = -toY; toZ = -toZ; toW = -toW;
 							}
 						}
-						var x: Float = a._x[i] + (toX - a._x[i]) * eases[a.ease](k);
-						var y: Float = a._y[i] + (toY - a._y[i]) * eases[a.ease](k);
-						var z: Float = a._z[i] + (toZ - a._z[i]) * eases[a.ease](k);
-						var w: Float = a._w[i] + (toW - a._w[i]) * eases[a.ease](k);
-						if (a._normalize[i]) {
+						var x: Float = a._x[j] + (toX - a._x[j]) * eases[a.ease](k);
+						var y: Float = a._y[j] + (toY - a._y[j]) * eases[a.ease](k);
+						var z: Float = a._z[j] + (toZ - a._z[j]) * eases[a.ease](k);
+						var w: Float = a._w[j] + (toW - a._w[j]) * eases[a.ease](k);
+						if (a._normalize[j]) {
 							var l = Math.sqrt(x * x + y * y + z * z + w * w);
 							if (l > 0.0) {
 								l = 1.0 / l;

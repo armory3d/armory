@@ -12,6 +12,7 @@ class App {
 	static var traitInits: Array<Void->Void> = [];
 	static var traitUpdates: Array<Void->Void> = [];
 	static var traitLateUpdates: Array<Void->Void> = [];
+	static var traitFixedUpdates: Array<Void->Void> = [];
 	static var traitRenders: Array<kha.graphics4.Graphics->Void> = [];
 	static var traitRenders2D: Array<kha.graphics2.Graphics->Void> = [];
 	public static var framebuffer: kha.Framebuffer;
@@ -23,6 +24,8 @@ class App {
 	public static var renderPathTime: Float;
 	public static var endFrameCallbacks: Array<Void->Void> = [];
 	#end
+	static var last = 0.0;
+	static var time = 0.0;
 	static var lastw = -1;
 	static var lasth = -1;
 	public static var onResize: Void->Void = null;
@@ -34,13 +37,14 @@ class App {
 	function new(done: Void->Void) {
 		done();
 		kha.System.notifyOnFrames(render);
-		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.delta);
+		kha.Scheduler.addTimeTask(update, 0, iron.system.Time.step);
 	}
 
 	public static function reset() {
 		traitInits = [];
 		traitUpdates = [];
 		traitLateUpdates = [];
+		traitFixedUpdates = [];
 		traitRenders = [];
 		traitRenders2D = [];
 		if (onResets != null) for (f in onResets) f();
@@ -48,6 +52,24 @@ class App {
 
 	static function update() {
 		if (Scene.active == null || !Scene.active.ready) return;
+		iron.system.Time.update();
+
+		// Rebuild projection on window resize
+		if (lastw == -1) {
+			lastw = App.w();
+			lasth = App.h();
+		}
+		if (lastw != App.w() || lasth != App.h()) {
+			if (onResize != null) onResize();
+			else {
+				if (Scene.active != null && Scene.active.camera != null) {
+					Scene.active.camera.buildProjection();
+				}
+			}
+		}
+		lastw = App.w();
+		lasth = App.h();
+
 		if (pauseUpdates) return;
 
 		#if arm_debug
@@ -55,6 +77,13 @@ class App {
 		#end
 
 		Scene.active.updateFrame();
+
+		time += iron.system.Time.delta;
+
+		while (time >= iron.system.Time.fixedStep) {
+			for (f in traitFixedUpdates) f();
+			time -= iron.system.Time.fixedStep;
+		}
 
 		var i = 0;
 		var l = traitUpdates.length;
@@ -84,29 +113,13 @@ class App {
 		for (cb in endFrameCallbacks) cb();
 		updateTime = kha.Scheduler.realTime() - startTime;
 		#end
-
-		// Rebuild projection on window resize
-		if (lastw == -1) {
-			lastw = App.w();
-			lasth = App.h();
-		}
-		if (lastw != App.w() || lasth != App.h()) {
-			if (onResize != null) onResize();
-			else {
-				if (Scene.active != null && Scene.active.camera != null) {
-					Scene.active.camera.buildProjection();
-				}
-			}
-		}
-		lastw = App.w();
-		lasth = App.h();
 	}
 
 	static function render(frames: Array<kha.Framebuffer>) {
 		var frame = frames[0];
 		framebuffer = frame;
 
-		iron.system.Time.update();
+		iron.system.Time.render();
 
 		if (Scene.active == null || !Scene.active.ready) {
 			render2D(frame);
@@ -170,6 +183,14 @@ class App {
 
 	public static function removeLateUpdate(f: Void->Void) {
 		traitLateUpdates.remove(f);
+	}
+
+	public static function notifyOnFixedUpdate(f: Void->Void) {
+		traitFixedUpdates.push(f);
+	}
+
+	public static function removeFixedUpdate(f: Void->Void) {
+		traitFixedUpdates.remove(f);
 	}
 
 	public static function notifyOnRender(f: kha.graphics4.Graphics->Void) {

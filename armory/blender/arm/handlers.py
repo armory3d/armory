@@ -87,6 +87,7 @@ def on_operator_post(operator_id: str) -> None:
             target_obj.arm_rb_trigger = source_obj.arm_rb_trigger
             target_obj.arm_rb_deactivation_time = source_obj.arm_rb_deactivation_time
             target_obj.arm_rb_ccd = source_obj.arm_rb_ccd
+            target_obj.arm_rb_interpolate = source_obj.arm_rb_interpolate
             target_obj.arm_rb_collision_filter_mask = source_obj.arm_rb_collision_filter_mask
 
     elif operator_id == "NODE_OT_new_node_tree":

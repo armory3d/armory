@@ -47,11 +47,20 @@ def build():
 
     with write_probes.setup_envmap_render():
 
-        for scene in bpy.data.scenes:
-            world = scene.world
+        #for scene in bpy.data.scenes:
+        for world in bpy.data.worlds:
+            #world = scene.world
 
-            # Only export worlds from enabled scenes and only once per world
-            if scene.arm_export and world is not None and world not in worlds:
+            assigned = False;
+            for scene in bpy.data.scenes:
+                if scene.arm_export and scene.world is not None:
+                    if scene.world.name == world.name:
+                        assigned = True;
+                        break;
+
+            #if scene.arm_export and world is not None and world not in worlds:
+            # Only export worlds from enabled scenes and with fake users
+            if (world.use_fake_user and world.name != 'Arm') or assigned:
                 worlds.append(world)
 
                 world.arm_envtex_name = ''
@@ -60,7 +69,7 @@ def build():
                 if rpdat.arm_irradiance:
                     # Plain background color
                     if '_EnvCol' in world.world_defs:
-                        world_name = arm.utils.safestr(world.name)
+                        world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
                         # Irradiance json file name
                         world.arm_envtex_name = world_name
                         world.arm_envtex_irr_name = world_name
@@ -90,7 +99,7 @@ def build():
 def create_world_shaders(world: bpy.types.World):
     """Creates fragment and vertex shaders for the given world."""
     global shader_datas
-    world_name = arm.utils.safestr(world.name)
+    world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
     pass_name = 'World_' + world_name
 
     shader_props = {
@@ -151,7 +160,7 @@ def create_world_shaders(world: bpy.types.World):
 
 def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: ShaderContext):
     """Generates the shader code for the given world."""
-    world_name = arm.utils.safestr(world.name)
+    world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
     world.world_defs = ''
     rpdat = arm.utils.get_rp()
     wrd = bpy.data.worlds['Arm']
@@ -166,7 +175,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         frag.write('fragColor.rgb = backgroundCol;')
         return
 
-    parser_state = ParserState(ParserContext.WORLD, world.name, world)
+    parser_state = ParserState(ParserContext.WORLD, arm.utils.asset_name(world) if world.library else world.name, world)
     parser_state.con = con
     parser_state.curshader = frag
     parser_state.frag = frag

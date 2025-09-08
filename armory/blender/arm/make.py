@@ -112,7 +112,81 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
+linked_blend_paths = []
+linked_scenes = []
+
+def load_external_blends():
+    global linked_scenes
+    global linked_blend_paths
+
+    wrd = bpy.data.worlds['Arm']
+    if not hasattr(wrd, 'arm_external_blends_path'):
+        return
+
+    external_path = getattr(wrd, 'arm_external_blends_path', '')
+    if not external_path or not external_path.strip():
+        return
+
+    abs_path = bpy.path.abspath(external_path.strip())
+    if not os.path.exists(abs_path):
+        return
+
+    # Walk recursively through all subdirs
+    for root, dirs, files in os.walk(abs_path):
+        for filename in files:
+            if not filename.endswith(".blend"):
+                continue
+
+            blend_path = os.path.join(root, filename)
+            try:
+                with bpy.data.libraries.load(blend_path, link=True) as (data_from, data_to):
+                    data_to.scenes = list(data_from.scenes)
+
+                linked_blend_paths.append(blend_path)
+                for scn in data_to.scenes:
+                    if scn is not None and scn not in linked_scenes:
+                        linked_scenes.append(scn)
+
+                log.info(f"Loaded external blend: {blend_path}")
+            except Exception as e:
+                log.error(f"Failed to load external blend {blend_path}: {e}")
+
+def clear_external_scenes():
+    global linked_blend_paths
+    global linked_scenes
+
+    if not linked_scenes and not linked_blend_paths:
+        return
+
+    for scn in linked_scenes:
+        try:
+            bpy.data.scenes.remove(scn, do_unlink=True)
+        except Exception as e:
+            log.error(f"Failed to remove scene {scn.name}: {e}")
+
+    for lib in list(bpy.data.libraries):
+        try:
+            if lib.users == 0 or lib.filepath in linked_blend_paths:
+                bpy.data.libraries.remove(lib)
+        except Exception as e:
+            log.error(f"Failed to remove library {lib.name}: {e}")
+
+    try:
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+    except Exception as e:
+        log.error(f"Failed to purge orphan data: {e}")
+
+    linked_scenes = []
+    linked_blend_paths = []
+
 def export_data(fp, sdk_path):
+    # Reload all libraries to retrieve updated data without needing to restart Blender
+    for lib in bpy.data.libraries:
+        lib.reload()
+        log.info(f"Reloaded: {lib.filepath}")
+
+    load_external_blends()
+
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
@@ -185,7 +259,7 @@ def export_data(fp, sdk_path):
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
-            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
+            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
             ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
             if ArmoryExporter.export_physics:
                 physics_found = True
@@ -318,6 +392,8 @@ def export_data(fp, sdk_path):
         state.last_resx = resx
         state.last_resy = resy
         state.last_scene = scene_name
+
+    clear_external_scenes()
 
 def compile(assets_only=False):
     wrd = bpy.data.worlds['Arm']

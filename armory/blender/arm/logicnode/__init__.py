@@ -41,6 +41,7 @@ def init_categories():
     arm_nodes.add_category('Trait', icon='NODETREE', section="data")
     arm_nodes.add_category('Network', icon='WORLD', section="data")
 
+    arm_nodes.add_category('Particle', icon='PARTICLE_DATA', section="motion")
     arm_nodes.add_category('Animation', icon='SEQUENCE', section="motion")
     arm_nodes.add_category('Navmesh', icon='UV_VERTEXSEL', section="motion")
     arm_nodes.add_category('Transform', icon='TRANSFORM_ORIGINS', section="motion")
