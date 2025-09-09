@@ -898,7 +898,7 @@ class Uniforms {
 					m = helpMat;
 				}
 				#end
-				#if arm_particles
+				#if arm_gpu_particles
 				case "_particleData": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
@@ -1109,6 +1109,26 @@ class Uniforms {
 				case "_texUnpack": {
 					f = texUnpack != null ? texUnpack : 1.0;
 				}
+				#if arm_gpu_particles
+				case "_particleSizeRandom": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						f = mo.particleOwner.particleSystems[mo.particleIndex].getSizeRandom();
+					}
+				}
+				case "_particleRandom": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						f = mo.particleOwner.particleSystems[mo.particleIndex].getRandom();
+					}
+				}
+				case "_particleSize": {
+					var mo = cast(object, MeshObject);
+					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
+						f = mo.particleOwner.particleSystems[mo.particleIndex].getSize();
+					}
+				}
+				#end
 			}
 
 			if (f == null && externalFloatLinks != null) {

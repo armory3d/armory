@@ -8,8 +8,8 @@ class SequenceNode(ArmLogicTreeNode):
     arm_version = 2
     min_outputs = 0
 
-    def __init__(self):
-        super(SequenceNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(SequenceNode, self).__init__(*args, **kwargs)
         array_nodes[self.get_id_str()] = self
 
     def arm_init(self, context):
@@ -30,5 +30,5 @@ class SequenceNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 1):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

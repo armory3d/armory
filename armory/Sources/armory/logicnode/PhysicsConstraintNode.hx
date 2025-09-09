@@ -1,7 +1,7 @@
 package armory.logicnode;
 
 #if arm_physics
-import armory.trait.physics.bullet.PhysicsConstraint.ConstraintAxis;
+import armory.trait.physics.PhysicsConstraint.ConstraintAxis;
 #end
 
 class PhysicsConstraintNode extends LogicNode {

@@ -25,16 +25,16 @@ class MathExpressionNode(ArmLogicTreeNode):
     property1: HaxeIntProperty('property1', name='Number of Params', default=2)
     property2: HaxeStringProperty('property2', name='', description='Math Expression: +, -, *, /, ^, %, (, ), log(a, b), ln(a), abs(a), max(a,b), min(a,b), sin(a), cos(a), tan(a), cot(a), asin(a), acos(a), atan(a), atan2(a,b), pi(), e()', set=set_exp, get=get_exp)
 
-    def __init__(self):
-        super(MathExpressionNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(MathExpressionNode, self).__init__(*args, **kwargs)
         self.register_id()
 
 
     def arm_init(self, context):
-        
+
         # OUTPUTS:
         self.add_output('ArmFloatSocket', 'Result')
-        
+
         # two default parameters at start
         self.add_input('ArmFloatSocket', self.get_variable_name(0), default_value=0.0)
         self.add_input('ArmFloatSocket', self.get_variable_name(1), default_value=0.0)

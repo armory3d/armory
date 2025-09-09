@@ -419,7 +419,7 @@ def fetch_script_props(filename: str):
 
         # Property type is annotated
         if p_type is not None:
-            if p_type.startswith("iron.object."):
+            if p_type.startswith("iron.object.") or p_type == "iron.data.SceneFormat.TSceneFormat":
                 p_type = p_type[12:]
             elif p_type.startswith("iron.math."):
                 p_type = p_type[10:]
@@ -497,7 +497,7 @@ def get_type_default_value(prop_type: str):
     if prop_type == "Float":
         return 0.0
     if prop_type == "String" or prop_type in (
-            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject", "TSceneFormat"):
         return ""
     if prop_type == "Bool":
         return False
@@ -803,8 +803,8 @@ def check_blender_version(op: bpy.types.Operator):
     """Check whether the Blender version is supported by Armory,
     if not, report in UI.
     """
-    if bpy.app.version[0] != 3 or bpy.app.version[1] != 6:
-        op.report({'INFO'}, 'For Armory to work correctly, you need Blender 3.6 LTS.')
+    if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+        op.report({'INFO'}, 'INFO: For Armory to work correctly use a Blender LTS version.')
 
 
 def check_saved(self):

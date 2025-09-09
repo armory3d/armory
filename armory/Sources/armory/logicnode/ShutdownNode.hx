@@ -8,5 +8,6 @@ class ShutdownNode extends LogicNode {
 
 	override function run(from: Int) {
 		kha.System.stop();
+        runOutput(0);
 	}
 }

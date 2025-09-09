@@ -13,16 +13,16 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
     arm_version = 3
     min_inputs = 2
 
-    def __init__(self):
-        array_nodes[str(id(self))] = self
-    
+    def __init__(self, *args, **kwargs):
+        super(CallHaxeStaticNode, self).__init__(*args, **kwargs)
+
     def arm_init(self, context):
         self.add_input('ArmNodeSocketAction', 'In')
         self.add_input('ArmStringSocket', 'Function')
 
         self.add_output('ArmNodeSocketAction', 'Out')
         self.add_output('ArmDynamicSocket', 'Result')
-    
+
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)
         op = row.operator('arm.node_add_input', text='Add Arg', icon='PLUS', emboss=True)
@@ -35,11 +35,11 @@ class CallHaxeStaticNode(ArmLogicTreeNode):
         op.node_index = str(id(self))
         if len(self.inputs) == self.min_inputs:
             column.enabled = False
-        
+
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         if self.arm_version == 1 or self.arm_version == 2:
             return NodeReplacement(
                 'LNCallHaxeStaticNode', self.arm_version, 'LNCallHaxeStaticNode', 2,

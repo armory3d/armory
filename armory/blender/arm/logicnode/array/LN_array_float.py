@@ -9,8 +9,8 @@ class FloatArrayNode(ArmLogicVariableNodeMixin, ArmLogicTreeNode):
     arm_section = 'variable'
     min_inputs = 0
 
-    def __init__(self):
-        super(FloatArrayNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(FloatArrayNode, self).__init__(*args, **kwargs)
         self.register_id()
 
     def arm_init(self, context):

@@ -10,8 +10,8 @@ class SwitchNode(ArmLogicTreeNode):
     arm_version = 4
     min_inputs = 2
 
-    def __init__(self):
-        super(SwitchNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(SwitchNode, self).__init__(*args, **kwargs)
         array_nodes[self.get_id_str()] = self
 
     def arm_init(self, context):
@@ -39,5 +39,5 @@ class SwitchNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 3):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

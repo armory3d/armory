@@ -12,8 +12,8 @@ class ArrayAddNode(ArmLogicTreeNode):
     arm_version = 5
     min_inputs = 6
 
-    def __init__(self):
-        super(ArrayAddNode, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(ArrayAddNode, self).__init__(*args, **kwargs)
         array_nodes[self.get_id_str()] = self
 
     def arm_init(self, context):
@@ -42,5 +42,5 @@ class ArrayAddNode(ArmLogicTreeNode):
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 4):
             raise LookupError()
-            
+
         return NodeReplacement.Identity(self)

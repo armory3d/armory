@@ -11,18 +11,20 @@ import iron.data.ShaderData;
 import iron.data.SceneFormat;
 
 class MeshObject extends Object {
-
 	public var data: MeshData = null;
 	public var materials: Vector<MaterialData>;
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
 	#if arm_particles
 	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
-	public var particleChildren: Array<MeshObject> = null;
+	public var render_emitter = true;
+	#if arm_gpu_particles
 	public var particleOwner: MeshObject = null; // Particle object
+	public var particleChildren: Array<MeshObject> = null;
 	public var particleIndex = -1;
-	#end
+	#end #end
 	public var cameraDistance: Float;
+	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
 	public var frustumCulling = true;
 	public var activeTilesheet: Tilesheet = null;
@@ -70,13 +72,18 @@ class MeshObject extends Object {
 		#if arm_batch
 		Scene.active.meshBatch.removeMesh(this);
 		#end
-		#if arm_particles
+		#if arm_gpu_particles
 		if (particleChildren != null) {
 			for (c in particleChildren) c.remove();
 			particleChildren = null;
 		}
+		#end
+		#if arm_particles
 		if (particleSystems != null) {
-			for (psys in particleSystems) psys.remove();
+			for (psys in particleSystems) {
+				#if arm_cpu_particles psys.stop(); #end
+				psys.remove();
+			}
 			particleSystems = null;
 		}
 		#end
@@ -111,7 +118,7 @@ class MeshObject extends Object {
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref);
+		var psys = new ParticleSystem(sceneName, pref, this);
 		particleSystems.push(psys);
 	}
 	#end
@@ -177,7 +184,7 @@ class MeshObject extends Object {
 			// Scale radius for skinned mesh and particle system
 			// TODO: define skin & particle bounds
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
-			#if arm_particles
+			#if arm_gpu_particles
 			// particleSystems for update, particleOwner for render
 			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
 			#end
@@ -234,7 +241,9 @@ class MeshObject extends Object {
 		if (cullMesh(context, Scene.active.camera, RenderPath.active.light)) return;
 		var meshContext = raw != null ? context == "mesh" : false;
 
-		#if arm_particles
+		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
+
+		#if arm_gpu_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
 		if (particleSystems != null && meshContext) {
 			if (particleChildren == null) {
@@ -244,6 +253,7 @@ class MeshObject extends Object {
 					Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
 						if (o != null) {
 							var c: MeshObject = cast o;
+							c.cameraList = this.cameraList;
 							particleChildren.push(c);
 							c.particleOwner = this;
 							c.particleIndex = particleChildren.length - 1;
@@ -252,13 +262,16 @@ class MeshObject extends Object {
 				}
 			}
 			for (i in 0...particleSystems.length) {
-				particleSystems[i].update(particleChildren[i], this);
+				particleSystems[i].update(particleChildren[i]);
 			}
 		}
-		if (particleSystems != null && particleSystems.length > 0 && !raw.render_emitter) return;
 		#end
-
-		if (cullMaterial(context)) return;
+		#if arm_particles
+		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
+        if (particleSystems == null && cullMaterial(context)) return;
+		#else
+        if (cullMaterial(context)) return;
+		#end
 
 		// Get lod
 		var mats = materials;
@@ -297,6 +310,10 @@ class MeshObject extends Object {
 
 		// Render mesh
 		var ldata = lod.data;
+
+		// Next pass rendering first (inverse order)
+		renderNextPass(g, context, bindParams, lod);
+
 		for (i in 0...ldata.geom.indexBuffers.length) {
 
 			var mi = ldata.geom.materialIndices[i];
@@ -397,6 +414,86 @@ class MeshObject extends Object {
 			for (l in raw.lods) {
 				if (l.object_ref == "") lods.push(null); // Empty
 				else lods.push(Scene.active.getChild(l.object_ref));
+			}
+		}
+	}
+
+	function renderNextPass(g: Graphics, context: String, bindParams: Array<String>, lod: MeshObject) {
+		var ldata = lod.data;
+		for (i in 0...ldata.geom.indexBuffers.length) {
+			var mi = ldata.geom.materialIndices[i];
+			if (mi >= materials.length) continue;
+
+			var currentMaterial: MaterialData = materials[mi];
+			if (currentMaterial == null || currentMaterial.shader == null) continue;
+
+			var nextPassName: String = currentMaterial.shader.nextPass;
+			if (nextPassName == null || nextPassName == "") continue;
+
+			var nextMaterial: MaterialData = null;
+			for (mat in materials) {
+				// First try exact match
+				if (mat.name == nextPassName) {
+					nextMaterial = mat;
+					break;
+				}
+				// If no exact match, try to match base name for linked materials
+				if (mat.name.indexOf("_") > 0 && mat.name.substr(mat.name.length - 6) == ".blend") {
+					var baseName = mat.name.substring(0, mat.name.indexOf("_"));
+					if (baseName == nextPassName) {
+						nextMaterial = mat;
+						break;
+					}
+				}
+			}
+
+			if (nextMaterial == null) continue;
+
+			var nextMaterialContext: MaterialContext = null;
+			var nextShaderContext: ShaderContext = null;
+
+			for (j in 0...nextMaterial.raw.contexts.length) {
+				if (nextMaterial.raw.contexts[j].name.substr(0, context.length) == context) {
+					nextMaterialContext = nextMaterial.contexts[j];
+					nextShaderContext = nextMaterial.shader.getContext(context);
+					break;
+				}
+			}
+
+			if (nextShaderContext == null) continue;
+			if (skipContext(context, nextMaterial)) continue;
+
+			var elems = nextShaderContext.raw.vertex_elements;
+
+			// Uniforms
+			if (nextShaderContext.pipeState != lastPipeline) {
+				g.setPipeline(nextShaderContext.pipeState);
+				lastPipeline = nextShaderContext.pipeState;
+			}
+			Uniforms.setContextConstants(g, nextShaderContext, bindParams);
+			Uniforms.setObjectConstants(g, nextShaderContext, this);
+			Uniforms.setMaterialConstants(g, nextShaderContext, nextMaterialContext);
+
+			// VB / IB
+			#if arm_deinterleaved
+			g.setVertexBuffers(ldata.geom.get(elems));
+			#else
+			if (ldata.geom.instancedVB != null) {
+				g.setVertexBuffers([ldata.geom.get(elems), ldata.geom.instancedVB]);
+			}
+			else {
+				g.setVertexBuffer(ldata.geom.get(elems));
+			}
+			#end
+
+			g.setIndexBuffer(ldata.geom.indexBuffers[i]);
+
+			// Draw next pass for this specific geometry section
+			if (ldata.geom.instanced) {
+				g.drawIndexedVerticesInstanced(ldata.geom.instanceCount, ldata.geom.start, ldata.geom.count);
+			}
+			else {
+				g.drawIndexedVertices(ldata.geom.start, ldata.geom.count);
 			}
 		}
 	}

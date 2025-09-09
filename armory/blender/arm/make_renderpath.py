@@ -40,13 +40,14 @@ def add_world_defs():
     if rpdat.rp_hdr == False:
         wrd.world_defs += '_LDR'
 
-    if wrd.arm_light_ies_texture != '':
-        wrd.world_defs += '_LightIES'
-        assets.add_embedded_data('iestexture.png')
+    if arm.utils.get_active_scene().world is not None:
+        if arm.utils.get_active_scene().world.arm_light_ies_texture:
+            wrd.world_defs += '_LightIES'
+            assets.add_embedded_data('iestexture.png')
 
-    if wrd.arm_light_clouds_texture != '':
-        wrd.world_defs += '_LightClouds'
-        assets.add_embedded_data('cloudstexture.png')
+        if arm.utils.get_active_scene().world.arm_light_clouds_texture:
+            wrd.world_defs += '_LightClouds'
+            assets.add_embedded_data('cloudstexture.png')
 
     if rpdat.rp_renderer == 'Deferred':
         assets.add_khafile_def('arm_deferred')
@@ -229,15 +230,15 @@ def build():
                 wrd.compo_defs += '_CGrain'
             if rpdat.arm_sharpen:
                 wrd.compo_defs += '_CSharpen'
-            if bpy.data.scenes[0].view_settings.exposure != 0.0:
+            if arm.utils.get_active_scene().view_settings.exposure != 0.0:
                 wrd.compo_defs += '_CExposure'
             if rpdat.arm_fog:
                 wrd.compo_defs += '_CFog'
                 compo_depth = True
 
             focus_distance = 0.0
-            if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
-                focus_distance = bpy.data.cameras[0].dof.focus_distance
+            if arm.utils.get_active_scene().camera and arm.utils.get_active_scene().camera.data.dof.use_dof:
+                focus_distance = arm.utils.get_active_scene().camera.data.dof.focus_distance
 
             if focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'

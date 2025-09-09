@@ -21,8 +21,8 @@ class CaseIndexNode(ArmLogicTreeNode):
 
     num_choices: IntProperty(default=0, min=0)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(CaseIndexNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):

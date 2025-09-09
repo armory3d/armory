@@ -1,12 +1,13 @@
 package armory.trait.physics.bullet;
 
 #if arm_bullet
-
+import armory.math.Helper;
+import iron.data.MeshData;
 import iron.math.Vec4;
 import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
-import iron.data.MeshData;
+import iron.system.Time;
 
 /**
    RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
@@ -76,6 +77,14 @@ class RigidBody extends iron.Trait {
 	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
 	static var usersCache = new Map<MeshData, Int>();
 
+	// Interpolation
+	var interpolate: Bool = false;
+	var time: Float = 0.0;
+	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
+	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
+	var currentRot: bullet.Bt.Quaternion = new bullet.Bt.Quaternion(0, 0, 0, 1);
+	var prevRot: bullet.Bt.Quaternion = new bullet.Bt.Quaternion(0, 0, 0, 1);
+
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
 						params: RigidBodyParams = null, flags: RigidBodyFlags = null) {
 		super();
@@ -85,7 +94,7 @@ class RigidBody extends iron.Trait {
 			vec1 = new bullet.Bt.Vector3(0, 0, 0);
 			vec2 = new bullet.Bt.Vector3(0, 0, 0);
 			vec3 = new bullet.Bt.Vector3(0, 0, 0);
-			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 0);
+			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 1);
 			trans1 = new bullet.Bt.Transform();
 			trans2 = new bullet.Bt.Transform();
 		}
@@ -117,6 +126,7 @@ class RigidBody extends iron.Trait {
 			animated: false,
 			trigger: false,
 			ccd: false,
+			interpolate: false,
 			staticObj: false,
 			useDeactivation: true
 		};
@@ -131,6 +141,7 @@ class RigidBody extends iron.Trait {
 		this.animated = flags.animated;
 		this.trigger = flags.trigger;
 		this.ccd = flags.ccd;
+		this.interpolate = flags.interpolate;
 		this.staticObj = flags.staticObj;
 		this.useDeactivation = flags.useDeactivation;
 
@@ -153,6 +164,7 @@ class RigidBody extends iron.Trait {
 		if (!Std.isOfType(object, MeshObject)) return; // No mesh data
 
 		transform = object.transform;
+		transform.buildMatrix();
 		physics = armory.trait.physics.PhysicsWorld.active;
 
 		if (shape == Shape.Box) {
@@ -244,6 +256,9 @@ class RigidBody extends iron.Trait {
 		quat1.setValue(quat.x, quat.y, quat.z, quat.w);
 		trans1.setRotation(quat1);
 
+		currentPos.setValue(vec1.x(), vec1.y(), vec1.z());
+		currentRot.setValue(quat.x, quat.y, quat.z, quat.w);
+
 		var centerOfMassOffset = trans2;
 		centerOfMassOffset.setIdentity();
 		motionState = new bullet.Bt.DefaultMotionState(trans1, centerOfMassOffset);
@@ -307,6 +322,7 @@ class RigidBody extends iron.Trait {
 
 		physics.addRigidBody(this);
 		notifyOnRemove(removeFromWorld);
+		if (!animated) notifyOnUpdate(update);
 
 		if (onReady != null) onReady();
 
@@ -317,25 +333,70 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
+	function update() {
+		if (interpolate) {
+			time += Time.delta;
+
+			while (time >= Time.fixedStep) {
+				time -= Time.fixedStep;
+			}
+
+			var t: Float = time / Time.fixedStep;
+			t = Helper.clamp(t, 0, 1);
+
+			var tx: Float = prevPos.x() * (1.0 - t) + currentPos.x() * t;
+			var ty: Float = prevPos.y() * (1.0 - t) + currentPos.y() * t;
+			var tz: Float = prevPos.z() * (1.0 - t) + currentPos.z() * t;
+
+			var tRot: bullet.Bt.Quaternion = nlerp(prevRot, currentRot, t);
+
+			transform.loc.set(tx, ty, tz, 1.0);
+			transform.rot.set(tRot.x(), tRot.y(), tRot.z(), tRot.w());
+		} else {
+			transform.loc.set(currentPos.x(), currentPos.y(), currentPos.z(), 1.0);
+			transform.rot.set(currentRot.x(), currentRot.y(), currentRot.z(), currentRot.w());
+		}
+
+		if (object.parent != null) {
+			var ptransform = object.parent.transform;
+			transform.loc.x -= ptransform.worldx();
+			transform.loc.y -= ptransform.worldy();
+			transform.loc.z -= ptransform.worldz();
+		}
+
+		transform.buildMatrix();
+	}
+
+	function nlerp(q1: bullet.Bt.Quaternion, q2: bullet.Bt.Quaternion, t: Float): bullet.Bt.Quaternion {
+		var dot = q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z() + q1.w() * q2.w();
+		var _q2 = dot < 0 ? new bullet.Bt.Quaternion(-q2.x(), -q2.y(), -q2.z(), -q2.w()) : q2;
+
+		var x = q1.x() * (1.0 - t) + _q2.x() * t;
+		var y = q1.y() * (1.0 - t) + _q2.y() * t;
+		var z = q1.z() * (1.0 - t) + _q2.z() * t;
+		var w = q1.w() * (1.0 - t) + _q2.w() * t;
+
+		var len = Math.sqrt(x * x + y * y + z * z + w * w);
+		return new bullet.Bt.Quaternion(x / len, y / len, z / len, w / len);
+	}
+
 	function physicsUpdate() {
 		if (!ready) return;
+
 		if (animated) {
 			syncTransform();
-		}
-		else {
+		} else {
+			if (interpolate) {
+				prevPos.setValue(currentPos.x(), currentPos.y(), currentPos.z());
+				prevRot.setValue(currentRot.x(), currentRot.y(), currentRot.z(), currentRot.w());
+			}
+
 			var trans = body.getWorldTransform();
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
 
-			transform.loc.set(p.x(), p.y(), p.z());
-			transform.rot.set(q.x(), q.y(), q.z(), q.w());
-			if (object.parent != null) {
-				var ptransform = object.parent.transform;
-				transform.loc.x -= ptransform.worldx();
-				transform.loc.y -= ptransform.worldy();
-				transform.loc.z -= ptransform.worldz();
-			}
-			transform.buildMatrix();
+			currentPos.setValue(p.x(), p.y(), p.z());
+			currentRot.setValue(q.x(), q.y(), q.z(), q.w());
 
 			#if hl
 			p.delete();
@@ -688,6 +749,7 @@ typedef RigidBodyFlags = {
 	var animated: Bool;
 	var trigger: Bool;
 	var ccd: Bool;
+	var interpolate: Bool;
 	var staticObj: Bool;
 	var useDeactivation: Bool;
 }

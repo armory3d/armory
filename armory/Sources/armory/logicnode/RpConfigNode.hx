@@ -20,11 +20,14 @@ class RpConfigNode extends LogicNode {
 			on ? armory.data.Config.raw.rp_ssrefr = true : armory.data.Config.raw.rp_ssrefr = false;
         case "Bloom":
 			on ? armory.data.Config.raw.rp_bloom = true : armory.data.Config.raw.rp_bloom = false;
+		case "CA":
+			on ? armory.data.Config.raw.rp_chromatic_aberration = true : armory.data.Config.raw.rp_chromatic_aberration = false;
         case "GI":
 			on ? armory.data.Config.raw.rp_gi = true : armory.data.Config.raw.rp_gi = false;
 		case "Motion Blur":
 			on ? armory.data.Config.raw.rp_motionblur = true : armory.data.Config.raw.rp_motionblur = false;
 		}
+
 		armory.renderpath.RenderPathCreator.applyConfig();
         armory.data.Config.save();
 		runOutput(0);

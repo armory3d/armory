@@ -117,7 +117,8 @@ class TerrainStream {
 			vertex_arrays: [pos, nor, tex],
 			index_arrays: [ind],
 			scale_pos: scalePos,
-			scale_tex: 1.0
+			scale_tex: 1.0,
+			sorting_index: 0
 		};
 
 		new MeshData(rawmeshData, function(data: MeshData) {

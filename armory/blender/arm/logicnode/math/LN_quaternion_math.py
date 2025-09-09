@@ -15,7 +15,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
         if len(self.inputs) > socket_number:
             if len(self.inputs[socket_number].links) == 1:
                 source_socket = self.inputs[socket_number].links[0].from_socket
-            else:    
+            else:
                 source_socket = None
             if (
                 self.inputs[socket_number].bl_idname == newclass \
@@ -25,15 +25,15 @@ class QuaternionMathNode(ArmLogicTreeNode):
             self.inputs.remove(self.inputs[socket_number])
         else:
             source_socket = None
-        
-            
+
+
         self.inputs.new(newclass, newname)
         if default_value != None:
             self.inputs[-1].default_value_raw = default_value
         self.inputs.move(len(self.inputs)-1, socket_number)
         if source_socket is not None:
             self.id_data.links.new(source_socket, self.inputs[socket_number])
-        
+
     def ensure_output_socket(self, socket_number, newclass, newname):
         sink_sockets = []
         while len(self.outputs) < socket_number:
@@ -114,7 +114,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
         self['property0'] = value
         self['property0_proxy'] = value
 
-        
+
     # this property swaperoo is kinda janky-looking, but necessary.
     # Read more on LN_rotate_object.py
     property0: HaxeEnumProperty(
@@ -148,14 +148,14 @@ class QuaternionMathNode(ArmLogicTreeNode):
                  ('Normalize', 'Normalize', 'Normalize')],
         name='', default='Add', set=set_enum, get=get_enum)
 
-    
-    def __init__(self):
-        super(QuaternionMathNode, self).__init__()
+
+    def __init__(self, *args, **kwargs):
+        super(QuaternionMathNode, self).__init__(*args, **kwargs)
         array_nodes[str(id(self))] = self
 
     def arm_init(self, context):
         self.add_input('ArmVectorSocket', 'Quaternion 0 XYZ', default_value=[0.0, 0.0, 0.0])
-        self.add_input('ArmFloatSocket', 'Quaternion 0 W', default_value=1)        
+        self.add_input('ArmFloatSocket', 'Quaternion 0 W', default_value=1)
         self.add_input('ArmVectorSocket', 'Quaternion 1 XYZ', default_value=[0.0, 0.0, 0.0])
         self.add_input('ArmFloatSocket', 'Quaternion 1 W', default_value=1)
         self.add_output('ArmVectorSocket', 'Result XYZ', default_value=[0.0, 0.0, 0.0])
@@ -188,11 +188,11 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 op.min_inputs = 2
             if len(self.inputs) == 4:
                 column.enabled = False
-        
+
     def get_replacement_node(self, node_tree: bpy.types.NodeTree):
         if self.arm_version not in (0, 2):
             raise LookupError()
-            
+
         if self.arm_version == 1 or self.arm_version == 2:
             ret=[]
             if self.property0 == 'GetEuler':
@@ -201,7 +201,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 newself.property0='EulerAngles'
                 newself.property2='XZY'
                 newself.property1='Rad'
-            
+
                 for link in self.inputs[0].links:  # 0 or 1
                     node_tree.links.new(link.from_socket, newself.inputs[0])
             elif self.property0 == 'FromEuler':
@@ -228,7 +228,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 ret.append(newself)
                 newself.property0='AxisAngle'
                 newself.property1='Rad'
-            
+
                 for link in self.inputs[0].links:  # 0 or 1
                     node_tree.links.new(link.from_socket, newself.inputs[0])
             elif self.property0 == 'FromAxisAngle':
@@ -253,7 +253,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 newself = node_tree.nodes.new('LNRotationMathNode')
                 ret.append(newself)
                 newself.property0 = self.property0
-                
+
                 for in1, in2 in zip(self.inputs, newself.inputs):
                     if in2.bl_idname == 'ArmRotationSocket':
                         in2.default_value_raw = Rotation.convert_to_quaternion(
@@ -269,7 +269,7 @@ class QuaternionMathNode(ArmLogicTreeNode):
                 newself = node_tree.nodes.new('LNQuaternionMathNode')
                 ret.append(newself)
                 newself.property0 = self.property0
-            
+
                 # convert the inputs… this is going to be hard lmao.
                 i_in_1 = 0
                 i_in_2 = 0
