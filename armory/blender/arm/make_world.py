@@ -213,6 +213,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
 
     # Clear background color
     if '_EnvCol' in world.world_defs:
+        frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
         frag.write('fragColor.rgb = backgroundCol;')
 
     elif '_EnvTex' in world.world_defs and '_EnvLDR' in world.world_defs:

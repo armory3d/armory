@@ -7,6 +7,10 @@
 			"cull_mode": "none",
 			"links": [
 				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
 					"name": "P",
 					"link": "_projectionMatrix"
 				},
@@ -15,16 +19,29 @@
 					"link": "_viewMatrix3"
 				},
 				{
-					"name": "invP",
-					"link": "_inverseProjectionMatrix"
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
 				},
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"name": "PPComp12",
+					"link": "_PPComp12",
+					"ifdef": ["_CPostprocess"]
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "../include/pass_viewray2.vert.glsl",
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
 			"fragment_shader": "ssgi_pass.frag.glsl"
 		}
 	]

@@ -22,7 +22,7 @@ THE SOFTWARE.
 #ifndef _CONETRACE_GLSL_
 #define _CONETRACE_GLSL_
 
-#include "std/voxels_constants.glsl"
+#include "std/constants.glsl"
 
 // References
 // https://github.com/Friduric/voxel-cone-tracing
@@ -93,7 +93,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -199,7 +199,7 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -270,7 +270,7 @@ float traceConeShadow(const sampler3D voxels, const sampler3D voxelsSDF, const v
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
