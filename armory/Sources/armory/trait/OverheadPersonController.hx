@@ -18,8 +18,8 @@ class OverheadPersonController extends Trait {
     // Nota: Dejo establecido que el eje (+Y) sera considerada la "cara" del personaje // I established that the axis (+Y) will be considered the "face" of the character. 
     // Camara
     @prop public var cameraFollow:CameraObject;
-    @prop public var smoothTrack:Bool = true;
-    @prop public var smoothSpeed:Float = 5.0;
+    @prop public var smoothTrack:Bool = false;
+    @prop public var smoothSpeed:Float = 20.0;
     
     @prop public var enableJump:Bool = true;
     @prop public var jumpForce:Float = 22.0;
