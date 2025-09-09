@@ -15,11 +15,12 @@ class OverheadPersonController extends Trait {
     public function new() { super(); }
     #else
     
-    // Nota: Dejo establecido que el eje (+Y) sera considerada la "cara" del personaje // I established that the axis (+Y) will be considered the "face" of the character. 
+    // Nota: Dejo establecido que el eje (+Y) sera considerada la "cara" del personaje 
+	// I established that the axis (+Y) will be considered the "face" of the character. 
     // Camara
     @prop public var cameraFollow:CameraObject;
     @prop public var smoothTrack:Bool = false;
-    @prop public var smoothSpeed:Float = 20.0;
+    @prop public var smoothSpeed:Float = 5.0;
     
     @prop public var enableJump:Bool = true;
     @prop public var jumpForce:Float = 22.0;
@@ -49,7 +50,7 @@ class OverheadPersonController extends Trait {
     // Variables privadas
     var body:RigidBody;
 
-    // var de la camara
+    // var de la camara (camera vars)
     var initialCameraLoc:Vec4;
     var initialOffset:Vec4;
     var currentPos:Vec4;
@@ -73,17 +74,18 @@ class OverheadPersonController extends Trait {
         iron.Scene.active.notifyOnInit(init);
     }
 
-    // Ajustes para la camara y la rotaicon del "jugador"...
-
+    // Ajustes para la camara y la rotaicon del "jugador" 
+	// Settings for the camera and the "player" rotation
     function init() {
         body = object.getTrait(RigidBody);
 
         if (cameraFollow == null) {
-            trace("[OverheadCameraController] a camera was not assigned to 'cameraFollow'."); // Alertar al usuario en caso de no asignar una camara.
+			// Alertar al usuario en caso de no asignar una camara. // Alert the user if a camera is not assigned
+            trace("[OverheadCameraController] a camera was not assigned to 'cameraFollow'."); 
         } else {
-            // Guardar la posicion inicial de la camara
+            // Guardar la posicion inicial de la camara // Save the initial position of the camera
             initialCameraLoc = cameraFollow.transform.loc.clone();
-            // Calcular el offset relativo al jugador
+            // Calcular el offset relativo al jugador // Calculate the offset relative to the player
             initialOffset = initialCameraLoc.sub(object.transform.loc);
             currentPos = initialCameraLoc.clone();
         }
@@ -105,26 +107,29 @@ class OverheadPersonController extends Trait {
         var screenW = System.windowWidth();
         var screenH = System.windowHeight();
 
-        // Posicion relativa del mouse respecto al centro de la pantalla
+        // Posicion relativa del mouse respecto al centro de la pantalla 
+		// Relative position of the mouse with respect to the center of the screen
         var mouseXRel = mouse.x - screenW / 2;
         var mouseYRel = mouse.y - screenH / 2;
-
-        // Angulo 360° usando atan2 (invertido para corregir direccion)
+		
+        // Angulo 360° usando atan2 (invertido para corregir direccion) // 360° angle using atan2 (inverted to correct direction) 
         var angleZ = -Math.atan2(mouseXRel, -mouseYRel);
         object.transform.setRotation(object.transform.rot.x, object.transform.rot.y, angleZ);
 
         body.syncTransform();
 
-        // Camara siguiendo al jugador (manteniendo offset inicial)
+        // Camara siguiendo al jugador (manteniendo offset inicial) // Camera following the player (maintaining initial offset)
         if (cameraFollow != null) {
             var playerPos = object.transform.loc;
             var targetPos = new Vec4(
                 playerPos.x + initialOffset.x,
                 playerPos.y + initialOffset.y,
                 playerPos.z + initialOffset.z,
-                1 // w 1 (posicion absoluta) 
+                1 // w 1 (posicion absoluta)
+				// used w=1 to indicate that the camera position is an absolute point in the world...
             );
-
+			// Mover la camara a 'targetPos' de forma gradual o instantanea si 'smoothTrack' es false
+			// Moves the camera to 'targetPos' gradually or instantly if 'smoothTrack' is false
             if (smoothTrack) {
                 var delta = targetPos.sub(currentPos);
                 var moveStep = delta.mult(smoothSpeed * iron.system.Time.delta);
@@ -159,14 +164,15 @@ class OverheadPersonController extends Trait {
         if (Math.abs(vel.z) < 0.1) isGrounded = true;
         #end
 
-        // Dejo establecido el salto para tener en cuenta la (enableFatigue) si es que es false/true....
+        // Dejo establecido el salto para tener en cuenta (isFatigued)
+		// I set the jump to take into account the (isFatigued) 
         if (isGrounded && !isFatigued()) {
             canJump = true;
         }
-        // Saltar con estamina
+        // Saltar con estamina // Jump with stamina
         if (enableJump && kb.started(jumpKey) && canJump) {
             var jumpPower = jumpForce;
-            // Disminuir el salto al 50% si la (stamina) esta por debajo o en el 20%.
+            // Disminuir el salto al 50% si la (stamina) esta por debajo o en el 20%. // Decrease jump to 50% if stamina is below or at 20%
             if (stamina) {
                 if (staminaValue <= 0) {
                     jumpPower = 0;
@@ -185,7 +191,7 @@ class OverheadPersonController extends Trait {
             }
         }
 
-        // Control de estamina y correr
+        // Control de estamina y correr // Control of stamina and running 
         if (canRun && kb.down(runKey) && isMoving) {
             if (stamina) {
                 if (staminaValue > 0.0) {
@@ -202,7 +208,7 @@ class OverheadPersonController extends Trait {
             isRunning = false;
         }
 
-        // (temporizadores aparte)
+        // (temporizadores aparte) (fatigue system timers)
         if (isRunning) {
             timeSinceStop = 0.0;
             fatigueTimer += deltaTime;
@@ -212,24 +218,25 @@ class OverheadPersonController extends Trait {
             fatigueCooldown += deltaTime;
         }
 
-        // Evitar correr y saltar al estar fatigado...
+        // Evitar correr y saltar al estar fatigado // Avoid running and jumping when fatigued
         if (isFatigued()) {
              isRunning = false;
              canJump = false;
         }
 
-        // Activar fatiga despues de correr continuamente durante cierto umbral
+        // Activar fatiga despues de correr continuamente durante cierto umbral 
+		// Activate fatigue after running continuously for a certain threshold
         if (enableFatigue && fatigueTimer >= fatigueThreshold) {
             isFatigueActive = true;
         }
 
-        // Eliminar la fatiga despues de recuperarse
+        // Eliminar la fatiga despues de recuperarse // Eliminate fatigue after recovery (fatRecoveryThreshold)
         if (enableFatigue && isFatigueActive && fatigueCooldown >= fatRecoveryThreshold) {
             isFatigueActive = false;
             fatigueTimer = 0.0;
         }
 
-        // Recuperar estamina si no esta corriendo
+        // Recuperar estamina si no esta corriendo // Recover stamina if you re not running ()
         if (stamina && !isRunning && staminaValue < staminaBase && !isFatigued()) {
             if (timeSinceStop >= staRecoverTime) {
                 staminaValue += staRecoverPerSec * deltaTime;
@@ -237,7 +244,7 @@ class OverheadPersonController extends Trait {
             }
         }
 
-        // Movimiento en ejes globales
+        // Movimiento en ejes globales // Movement on global axies
         dir.set(0,0,0);
         if (moveForward)  dir.add(new Vec4(0, 1, 0, 0));
         if (moveBackward) dir.add(new Vec4(0,-1, 0, 0));
@@ -246,7 +253,7 @@ class OverheadPersonController extends Trait {
 
         var btvec = body.getLinearVelocity();
         body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
-
+		// Movement speed control (final) (run and fatigued when are true/false) 
         if (dir.length() > 0) {
             var dirN = dir.normalize();
             var baseSpeed = moveSpeed;
@@ -266,3 +273,4 @@ class OverheadPersonController extends Trait {
 
 
 // Stamina and fatigue system.....
+
