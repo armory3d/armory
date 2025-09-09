@@ -23,44 +23,63 @@ THE SOFTWARE.
 const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = radians(15.0);
-const float DIFFUSE_CONE_APERTURE_WIDE = radians(50.0);  // for z=0.7071 cones
-const float DIFFUSE_CONE_APERTURE_NARROW = radians(30.0); // for z≈0.935 cones
-const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees in radians
 
+#define DIFFUSE_CONE_COUNT 16
+#define DIFFUSE_CONE_APERTURE 0.57735
 
-mat3 makeTangentBasis(vec3 n) {
-    vec3 t, b;
-    if (n.z < -0.9999999) {
-        t = vec3(0.0, -1.0, 0.0);
-        b = vec3(-1.0, 0.0, 0.0);
-    } else {
-        float a = 1.0 / (1.0 + n.z);
-        float b_ = -n.x * n.y * a;
-        t = vec3(1.0 - n.x * n.x * a, b_, -n.x);
-        b = vec3(b_, 1.0 - n.y * n.y * a, -n.y);
-    }
-    return mat3(t, b, n);
-}
-
-// 16 optimized cone directions for hemisphere sampling (Z-up, normalized)
-const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
-    vec3(0.707107, 0.000000, 0.707107),  // Front
-    vec3(-0.707107, 0.000000, 0.707107), // Back
-    vec3(0.000000, 0.707107, 0.707107),  // Right
-    vec3(0.000000, -0.707107, 0.707107), // Left
-    vec3(0.500000, 0.500000, 0.707107),  // Front-right
-    vec3(-0.500000, 0.500000, 0.707107), // Back-right
-    vec3(0.500000, -0.500000, 0.707107), // Front-left
-    vec3(-0.500000, -0.500000, 0.707107),// Back-left
-    vec3(0.353553, 0.000000, 0.935414),  // Narrow front
-    vec3(-0.353553, 0.000000, 0.935414), // Narrow back
-    vec3(0.000000, 0.353553, 0.935414),  // Narrow right
-    vec3(0.000000, -0.353553, 0.935414), // Narrow left
-    vec3(0.270598, 0.270598, 0.923880),  // Narrow front-right
-    vec3(-0.270598, 0.270598, 0.923880), // Narrow back-right
-    vec3(0.270598, -0.270598, 0.923880), // Narrow front-left
-    vec3(-0.270598, -0.270598, 0.923880) // Narrow back-left
+// Cosine-weighted hemispherical directions (Z-up)
+const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[16](
+    vec3( 0.000,  0.000,  1.000),
+    vec3( 0.258,  0.000,  0.966),
+    vec3(-0.258,  0.000,  0.966),
+    vec3( 0.000,  0.258,  0.966),
+    vec3( 0.000, -0.258,  0.966),
+    vec3( 0.183,  0.183,  0.966),
+    vec3( 0.183, -0.183,  0.966),
+    vec3(-0.183,  0.183,  0.966),
+    vec3(-0.183, -0.183,  0.966),
+    vec3( 0.500,  0.000,  0.866),
+    vec3(-0.500,  0.000,  0.866),
+    vec3( 0.000,  0.500,  0.866),
+    vec3( 0.000, -0.500,  0.866),
+    vec3( 0.354,  0.354,  0.866),
+    vec3( 0.354, -0.354,  0.866),
+    vec3(-0.354,  0.354,  0.866)
 );
+
+mat3 makeTangentBasis(vec3 normal) {
+    vec3 n = normalize(normal);
+
+    // Try multiple candidate vectors to avoid precision issues
+    vec3 candidates[3] = vec3[3](
+        vec3(1.0, 0.0, 0.0),
+        vec3(0.0, 1.0, 0.0),
+        vec3(0.0, 0.0, 1.0)
+    );
+
+    vec3 tangent = candidates[0];
+    float maxDot = 0.0;
+
+    // Find the candidate most orthogonal to the normal
+    for (int i = 0; i < 3; i++) {
+        float dotProd = abs(dot(n, candidates[i]));
+        if (dotProd < 0.9) { // Avoid vectors too close to normal
+            tangent = candidates[i];
+            break;
+        }
+        if (dotProd > maxDot) {
+            maxDot = dotProd;
+            tangent = candidates[i];
+        }
+    }
+
+    // Gram-Schmidt process
+    tangent = normalize(tangent - n * dot(n, tangent));
+    vec3 bitangent = cross(n, tangent);
+
+    // Ensure the basis is orthonormal
+    return mat3(tangent, bitangent, n);
+}
 
 const float BayerMatrix8[8][8] =
 {
