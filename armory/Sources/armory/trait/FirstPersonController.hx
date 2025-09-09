@@ -85,12 +85,13 @@ class FirstPersonController extends Trait {
     }
 
     var zVec = Vec4.zAxis();
-
+    // Control de la rotacion del jugador y la camara con el mouse..
+    // Control player and camera rotation with the mouse.
     function preUpdate() {
         if (Input.occupied || body == null) return;
         var mouse = Input.getMouse();
         var kb = Input.getKeyboard();
-
+        // Blooquear/Desbloquear cursor // lock/unlock cursor
         if (mouse.started() && !mouse.locked)
             mouse.lock();
         else if (kb.started("escape") && mouse.locked)
@@ -112,7 +113,7 @@ class FirstPersonController extends Trait {
     function isFatigued():Bool {
         return enableFatigue && isFatigueActive;
     }
-
+    // Comprobar si el jugador esta moviendose y si esta en el suelo // Check if the player is moving and if he is on the ground...
     function update() {
         if (body == null) return;
         var deltaTime:Float = iron.system.Time.delta;
@@ -132,14 +133,15 @@ class FirstPersonController extends Trait {
         }
         #end
 
-        // Dejo establecido el salto para tener en cuenta la (enableFatigue) si es que es false/true....
+        // Dejo establecido el salto para tener en cuenta (isFatigued)
+        // I set the jump to take into account the (isFatigued) 
 		if (isGrounded && !isFatigued()) {
 		    canJump = true;
 		}
-        // Saltar con estamina
+        // Saltar con estamina // Jump with stamina
         if (enableJump && kb.started(jumpKey) && canJump) {
             var jumpPower = jumpForce;
-            // Disminuir el salto al 50% si la (stamina) esta por debajo o en el 20%.
+            // Disminuir el salto al 50% si la (stamina) esta por debajo o en el 20%. // Decrease jump to 50% if stamina is below or at 20%
             if (stamina) {
                 if (staminaValue <= 0) {
                     jumpPower = 0;
@@ -151,14 +153,14 @@ class FirstPersonController extends Trait {
                 if (staminaValue < 0.0) staminaValue = 0.0;
                 timeSinceStop = 0.0;
             }
-
+            
             if (jumpPower > 0) {
                 body.applyImpulse(new Vec4(0, 0, jumpPower));
                 if (!allowAirJump) canJump = false;
             }
         }
 
-        // Control de estamina y correr
+        // Control de estamina y correr // Control of stamina and running
         if (canRun && kb.down(runKey) && isMoving) {
             if (stamina) {
                 if (staminaValue > 0.0) {
@@ -175,7 +177,7 @@ class FirstPersonController extends Trait {
             isRunning = false;
         }
 
-        // (temporizadores aparte)
+        // (temporizadores aparte) (fatigue system timers)
         if (isRunning) {
             timeSinceStop = 0.0;
             fatigueTimer += deltaTime;
@@ -185,24 +187,25 @@ class FirstPersonController extends Trait {
             fatigueCooldown += deltaTime;
         }
 
-        // Evitar correr y saltar al estar fatigado...
+        // Evitar correr y saltar al estar fatigado // Avoid running and jumping when fatigued
         if (isFatigued()) {
    			 isRunning = false;
    			 canJump = false;
 		}
 
-        // Activar fatiga despues de correr continuamente durante cierto umbral
+        // Activar fatiga despues de correr continuamente durante cierto umbral 
+        // Activate fatigue after running continuously for a certain threshold
         if (enableFatigue && fatigueTimer >= fatigueThreshold) {
             isFatigueActive = true;
         }
 
-        // Eliminar la fatiga despues de recuperarse
+        // Eliminar la fatiga despues de recuperarse // Eliminate fatigue after recovery (fatRecoveryThreshold)
         if (enableFatigue && isFatigueActive && fatigueCooldown >= fatRecoveryThreshold) {
             isFatigueActive = false;
             fatigueTimer = 0.0;
         }
 
-        // Recuperar estamina si no esta corriendo
+        // Recuperar estamina si no esta corriendo // Recover stamina if you re not running ()
         if (stamina && !isRunning && staminaValue < staminaBase && !isFatigued()) {
             if (timeSinceStop >= staRecoverTime) {
                 staminaValue += staRecoverPerSec * deltaTime;
@@ -210,7 +213,7 @@ class FirstPersonController extends Trait {
             }
         }
 
-        // Movimiento ejes (local)
+        // Movimiento en ejes locales // Movement on local axies
         dir.set(0, 0, 0);
         if (moveForward) dir.add(object.transform.look());
         if (moveBackward) dir.add(object.transform.look().mult(-1));
@@ -219,7 +222,7 @@ class FirstPersonController extends Trait {
 
         var btvec = body.getLinearVelocity();
         body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
-
+        // Movement speed control (final) (run and fatigued when are true/false)
         if (isMoving) {
             var dirN = dir.normalize();
             var baseSpeed = moveSpeed;
