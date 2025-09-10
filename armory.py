@@ -510,29 +510,15 @@ def apply_unix_permissions(sdk):
             os.path.join(sdk, "lib/armory_tools/cmft/cmft-linux64"),
             os.path.join(sdk, "Krom/Krom"),
             # NodeJS
-            os.path.join(sdk, "nodejs/node-linux32"),
             os.path.join(sdk, "nodejs/node-linux64"),
-            os.path.join(sdk, "nodejs/node-linuxarm"),
             # Kha tools x64
             os.path.join(sdk, "Kha/Tools/linux_x64/haxe"),
             os.path.join(sdk, "Kha/Tools/linux_x64/lame"),
             os.path.join(sdk, "Kha/Tools/linux_x64/oggenc"),
-            # Kha tools arm64
-            os.path.join(sdk, "Kha/Tools/linux_arm64/haxe"),
-            os.path.join(sdk, "Kha/Tools/linux_arm64/lame"),
-            os.path.join(sdk, "Kha/Tools/linux_arm64/oggenc"),
             # Kinc tools x64
             os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/kmake"),
             os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/kraffiti"),
             os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/krafix"),
-            # Kinc tools arm
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm/kmake"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm/kraffiti"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm/krafix"),
-            # Kinc tools arm64
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm64/kmake"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm64/kraffiti"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_arm64/krafix"),
         ]
         for path in paths:
             os.chmod(path, 0o777)
