@@ -92,7 +92,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
-	vec3 reflected = reflect(viewPos, viewNormal);
+	vec3 reflected = reflect(normalize(viewPos), viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

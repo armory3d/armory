@@ -69,7 +69,7 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
         col.prop(obj, 'arm_spawn')
         col.prop(obj, 'arm_mobile')
         col.prop(obj, 'arm_animation_enabled')
-        col.prop(obj, 'arm_lighting')
+        col.prop(obj, 'arm_visible_shadow')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
@@ -1644,6 +1644,7 @@ class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_shadowmap_cube')
         layout.prop(rpdat, 'rp_shadowmap_cascade')
         layout.prop(rpdat, 'rp_shadowmap_cascades')
+        layout.prop(rpdat, 'rp_shadowmap_transparent')
         col = layout.column()
         col2 = col.column()
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'
@@ -1775,8 +1776,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col3.enabled = rpdat.rp_voxels == 'Voxel AO'
         col.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col2.prop(rpdat, 'arm_voxelgi_refract', text='Refraction')
-        col.prop(rpdat, 'arm_voxelgi_clipmap_count')
-        #col.prop(rpdat, 'arm_voxelgi_cones')
+        col.prop(rpdat, 'arm_voxelgi_clipmap_count', text="Clipmap Count")
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'arm_voxelgi_size')
         #col.prop(rpdat, 'rp_voxelgi_resolution_z')
@@ -1789,12 +1789,11 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col2.prop(rpdat, 'arm_voxelgi_refr')
         col.prop(rpdat, 'arm_voxelgi_shad')
+        #col.prop(rpdat, 'arm_voxelgi_env')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
-        col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
-        #col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
     bl_label = "World"
@@ -1882,10 +1881,10 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         sub = col.column()
         sub.enabled = rpdat.rp_ssgi != 'Off'
         sub.prop(rpdat, 'arm_ssgi_half_res')
-        sub.prop(rpdat, 'arm_ssgi_rays')
+        #sub.prop(rpdat, 'arm_ssgi_rays')
         sub.prop(rpdat, 'arm_ssgi_radius')
         sub.prop(rpdat, 'arm_ssgi_strength')
-        sub.prop(rpdat, 'arm_ssgi_max_steps')
+        sub.prop(rpdat, 'arm_ssgi_samples')
         layout.separator()
 
         row = layout.row()
