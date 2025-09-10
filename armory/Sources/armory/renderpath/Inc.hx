@@ -679,6 +679,7 @@ class Inc {
 			t.height = 0;
 			t.displayp = getDisplayp();
 			t.format = "RGBA32";
+			t.mipmaps = true;
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
@@ -686,6 +687,7 @@ class Inc {
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
+				t.mipmaps = false;
 			}
 			else {
 				#if (rp_voxels == "Voxel AO")
@@ -695,12 +697,14 @@ class Inc {
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
 						t.format = "R8";
+						t.mipmaps = true;
 					}
 					else {
 						t.format = "R32UI";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 4;
+						t.depth = res * 2;
+						t.mipmaps = false;
 					}
 				}
 				#else
@@ -710,19 +714,20 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
+						t.mipmaps = true;
 					}
 					else {
 						t.format = "R32UI";
 						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 16;
+						t.mipmaps = false;
 					}
 				}
 				#end
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end

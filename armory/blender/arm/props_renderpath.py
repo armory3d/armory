@@ -486,8 +486,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')
+               #('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(

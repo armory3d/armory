@@ -74,9 +74,6 @@ void main() {
 	#endif
 	#endif
 
-	int nor_count = 0;
-	vec3 avgNormal = vec3(0.0);
-	mat3 TBN = mat3(0.0);
 	#ifdef _VoxelGI
 	vec4 aniso_colors[6];
 	#else
@@ -102,43 +99,30 @@ void main() {
 			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
 			if (count > 0) {
 				vec4 basecol = vec4(0.0);
-				basecol.r = float(imageLoad(voxels, src)) / 255;
-				basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-				basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-				basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 255;
+				basecol.r = float(imageLoad(voxels, src)) / 1024;
+				basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
+				basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
+				basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 1024;
 				basecol /= count;
 				vec3 emission = vec3(0.0);
-				emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 255;
-				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 255;
-				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 255;
+				emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 1024;
+				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 1024;
+				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 1024;
 				emission /= count;
 				vec3 N = vec3(0.0);
-				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 255;
-				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 255;
+				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 1024;
+				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 1024;
 				N /= count;
 				N = decode_oct(N.rg * 2.0 - 1.0);
-
-				if (abs(N.x) > 0)
-					avgNormal.x += N.x;
-				if (abs(N.y) > 0)
-					avgNormal.y += N.y;
-				if (abs(N.z) > 0)
-					avgNormal.z += N.z;
-				if (i == 5)
-				{
-					avgNormal = normalize(avgNormal);
-					TBN = makeTangentBasis(avgNormal);
-				}
-
 				vec3 envl = vec3(0.0);
-				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 255;
-				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 255;
-				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 255;
+				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 1024;
+				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 1024;
+				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 1024;
 				envl /= count;
 				vec3 light = vec3(0.0);
-				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 255;
-				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 255;
-				light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 255;
+				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 1024;
+				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 1024;
+				light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 1024;
 				light /= count;
 
 				//clipmap to world
@@ -155,27 +139,10 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
 			if (count > 0) {
-				opac = float(imageLoad(voxels, src)) / 255;
+				opac = float(imageLoad(voxels, src)) / 1024;
 				opac /= count;
-				vec3 N = vec3(0.0);
-				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 255;
-				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 255;
-				N /= count;
-				N = decode_oct(N.rg * 2.0 - 1.0);
-
-				if (abs(N.x) > 0)
-					avgNormal.x += N.x;
-				if (abs(N.y) > 0)
-					avgNormal.y += N.y;
-				if (abs(N.z) > 0)
-					avgNormal.z += N.z;
-				if (i == 5)
-				{
-					avgNormal = normalize(avgNormal);
-					TBN = makeTangentBasis(avgNormal);
-				}
 			}
 			#endif
 
@@ -230,7 +197,7 @@ void main() {
 		}
 		else {
 			// precompute cone sampling:
-			vec3 coneDirection = TBN * DIFFUSE_CONE_DIRECTIONS[i - 6];
+			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
 			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
