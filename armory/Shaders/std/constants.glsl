@@ -27,24 +27,31 @@ const float SHADOW_CONE_APERTURE = radians(15.0);
 #define DIFFUSE_CONE_COUNT 16
 const float DIFFUSE_CONE_APERTURE = 0.872665f;
 
-const vec3 DIFFUSE_CONE_DIRECTIONS[16] = {
-	vec3(0.57735f, 0.57735f, 0.57735f),
-	vec3(0.57735f, -0.57735f, -0.57735f),
-	vec3(-0.57735f, 0.57735f, -0.57735f),
-	vec3(-0.57735f, -0.57735f, 0.57735f),
-	vec3(-0.903007f, -0.182696f, -0.388844f),
-	vec3(-0.903007f, 0.182696f, 0.388844f),
-	vec3(0.903007f, -0.182696f, 0.388844f),
-	vec3(0.903007f, 0.182696f, -0.388844f),
-	vec3(-0.388844f, -0.903007f, -0.182696f),
-	vec3(0.388844f, -0.903007f, 0.182696f),
-	vec3(0.388844f, 0.903007f, -0.182696f),
-	vec3(-0.388844f, 0.903007f, 0.182696f),
-	vec3(-0.182696f, -0.388844f, -0.903007f),
-	vec3(0.182696f, 0.388844f, -0.903007f),
-	vec3(-0.182696f, 0.388844f, 0.903007f),
-	vec3(0.182696f, -0.388844f, 0.903007f)
-};
+const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
+    normalize(vec3( 0.382683,  0.0,  0.923880)),
+    normalize(vec3(-0.382683,  0.0,  0.923880)),
+    normalize(vec3( 0.0,  0.382683,  0.923880)),
+    normalize(vec3( 0.0, -0.382683,  0.923880)),
+    normalize(vec3( 0.270598,  0.270598,  0.923880)),
+    normalize(vec3(-0.270598,  0.270598,  0.923880)),
+    normalize(vec3( 0.270598, -0.270598,  0.923880)),
+    normalize(vec3(-0.270598, -0.270598,  0.923880)),
+    normalize(vec3( 0.707107,  0.0,  0.707107)),
+    normalize(vec3(-0.707107,  0.0,  0.707107)),
+    normalize(vec3( 0.0,  0.707107,  0.707107)),
+    normalize(vec3( 0.0, -0.707107,  0.707107)),
+    normalize(vec3( 0.5,  0.5,  0.707107)),
+    normalize(vec3(-0.5,  0.5,  0.707107)),
+    normalize(vec3( 0.5, -0.5,  0.707107)),
+    normalize(vec3(-0.5, -0.5,  0.707107))
+);
+
+mat3 makeTangentBasis(vec3 N) {
+    vec3 helper = abs(N.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 T = normalize(cross(helper, N));
+    vec3 B = cross(N, T);
+    return mat3(T, B, N);
+}
 
 const float BayerMatrix8[8][8] =
 {

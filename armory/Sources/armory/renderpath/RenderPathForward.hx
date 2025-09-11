@@ -492,6 +492,7 @@ class RenderPathForward {
 					path.setTarget("gbufferD1");
 					path.bindTarget("_main", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
+
 					//save background color
 					path.setTarget("refr");
 					path.bindTarget("lbuffer0", "tex");
@@ -567,50 +568,6 @@ class RenderPathForward {
 					path.bindTarget(targetb, "tex");
 					path.bindTarget("lbuffer1", "gbuffer0");
 					path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
-				}
-			}
-			#end
-
-			#if rp_ssrefr
-			{
-				if (armory.data.Config.raw.rp_ssrefr != false)
-				{
-					path.setTarget("gbufferD1");
-					path.bindTarget("_main", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("refr");
-					path.bindTarget("lbuffer0", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
-
-					#if rp_shadowmap
-					{
-						#if arm_shadowmap_atlas
-						Inc.bindShadowMapAtlas();
-						#else
-						Inc.bindShadowMap();
-						#end
-					}
-					#end
-
-					#if (rp_voxels != "Off")
-					path.bindTarget("voxelsOut", "voxels");
-					path.bindTarget("voxelsSDF", "voxelsSDF");
-					#end
-
-					path.drawMeshes("refraction");
-
-					path.setTarget("lbuffer0");
-					path.bindTarget("lbuffer0", "tex");
-					path.bindTarget("refr", "tex1");
-					path.bindTarget("_main", "gbufferD");
-					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer1", "gbuffer0");
-					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
-					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				}
 			}
 			#end
