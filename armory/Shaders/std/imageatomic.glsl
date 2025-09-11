@@ -4,22 +4,23 @@
 // https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 
 
+// Converts a normalized vec4 (0..1) to a packed uint RGBA8
 uint convVec4ToRGBA8(vec4 val) {
-	vec4 col = vec4(val) * 255;
-	return (uint(col.w) & 0x000000FF) << 24U
-		 | (uint(col.z) & 0x000000FF) << 16U
-		 | (uint(col.y) & 0x000000FF) << 8U
-		 | (uint(col.x) & 0x000000FF);
+    uvec4 col = uvec4(clamp(val * 255.0, 0.0, 255.0));
+    return (col.w << 24U) | (col.z << 16U) | (col.y << 8U) | col.x;
 }
 
+// Converts a packed uint RGBA8 to normalized vec4 (0..1)
 vec4 convRGBA8ToVec4(uint val) {
-	uvec4 col = uvec4(
-		float((val & 0x000000FF)),
-		float((val & 0x0000FF00) >> 8U),
-		float((val & 0x00FF0000) >> 16U),
-		float((val & 0xFF000000) >> 24U));
-	return vec4(col) / 255;
+    uvec4 col = uvec4(
+        val & 0xFFU,
+        (val >> 8U) & 0xFFU,
+        (val >> 16U) & 0xFFU,
+        (val >> 24U) & 0xFFU
+    );
+    return vec4(col) / 255.0;
 }
+
 
 // uint encUnsignedNibble(uint m, uint n) {
 // 	return (m & 0xFEFEFEFE)
