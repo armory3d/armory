@@ -710,7 +710,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('float svisibility = 0.0;')
+        frag.write('float svisibility = 1.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = max(dot(n, sunDir), 0);')
         frag.write('float sdotNH = max(dot(n, sh), 0);')
