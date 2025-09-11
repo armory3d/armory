@@ -145,13 +145,13 @@ void main() {
 			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
 			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 1024;
+				opac /= count;
 				vec3 N = vec3(0.0);
 				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
 				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x* 2))) / 1024;
 				N /= count;
 				N = decode_oct(N.rg * 2.0 - 1.0);
 				avgNormal += N;
-				opac /= count;
 			}
 			#endif
 
