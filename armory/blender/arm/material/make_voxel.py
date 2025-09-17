@@ -447,7 +447,7 @@ def make_gi(context_id):
         frag.write('    specular,')
         frag.write('    f0')
         if is_shadows:
-            frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
+            frag.write('\t, li, lightsArray[li * 3 + 2].x, receiveShadow') # bias
         if is_transparent_shadows:
             frag.write('\t, opacity != 1.0')
         if '_Spot' in wrd.world_defs:
