@@ -433,17 +433,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			// holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0_refr";
-			t.width = 0;
-			t.height = 0;
-			t.depth_buffer = "main";
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-
 			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
