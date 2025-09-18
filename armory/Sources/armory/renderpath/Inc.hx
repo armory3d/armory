@@ -87,6 +87,24 @@ class Inc {
 	static var voxel_cc4:kha.compute.ConstantLocation;
 	static var voxel_cd4:kha.compute.ConstantLocation;
 	#end
+	#if arm_voxelgi_shadows
+	static var voxel_sh5:kha.compute.Shader = null;
+	static var voxel_ta5:kha.compute.TextureUnit;
+	static var voxel_tb5:kha.compute.TextureUnit;
+	static var voxel_tc5:kha.compute.TextureUnit;
+	static var voxel_td5:kha.compute.TextureUnit;
+	static var voxel_te5:kha.compute.TextureUnit;
+	static var voxel_tf5:kha.compute.TextureUnit;
+	static var voxel_ca5:kha.compute.ConstantLocation;
+	static var voxel_cb5:kha.compute.ConstantLocation;
+	static var voxel_cc5:kha.compute.ConstantLocation;
+	static var voxel_cd5:kha.compute.ConstantLocation;
+	static var voxel_ce5:kha.compute.ConstantLocation;
+	static var voxel_cf5:kha.compute.ConstantLocation;
+	static var voxel_cg5:kha.compute.ConstantLocation;
+	static var voxel_ch5:kha.compute.ConstantLocation;
+	static var voxel_ci5:kha.compute.ConstantLocation;
+	#end
 	#end //rp_voxels
 
 	public static function init(_path: RenderPath) {
@@ -674,11 +692,11 @@ class Inc {
 		var res = iron.RenderPath.getVoxelRes();
 		var resZ =  iron.RenderPath.getVoxelResZ();
 
-		if (t.name == "voxels_diffuse" || t.name == "voxels_specular" || t.name == "voxels_ao") {
+		if (t.name == "voxels_diffuse" || t.name == "voxels_specular" || t.name == "voxels_ao" || t.name == "voxels_shadows") {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = "RGBA32";
+			t.format = t.name == "voxels_shadows" ? "R8" : "RGBA32";
 			t.mipmaps = true;
 		}
 		else {
@@ -906,6 +924,27 @@ class Inc {
 	 		voxel_cb4 = voxel_sh4.getConstantLocation("InvVP");
 	 		voxel_cc4 = voxel_sh4.getConstantLocation("eye");
 	 		voxel_cd4 = voxel_sh4.getConstantLocation("postprocess_resolution");
+		}
+		#end
+		#if arm_voxelgi_shadows
+		if (voxel_sh5 == null)
+		{
+			voxel_sh5 = path.getComputeShader("voxel_resolve_shadows");
+			voxel_ta5 = voxel_sh5.getTextureUnit("voxels");
+			voxel_tb5 = voxel_sh5.getTextureUnit("gbufferD");
+			voxel_tc5 = voxel_sh5.getTextureUnit("gbuffer0");
+			voxel_td5 = voxel_sh5.getTextureUnit("gbuffer2");
+			voxel_te5 = voxel_sh5.getTextureUnit("voxelsSDF");
+			voxel_tf5 = voxel_sh5.getTextureUnit("voxels_shadows");
+			voxel_ca5 = voxel_sh5.getConstantLocation("clipmaps");
+			voxel_cb5 = voxel_sh5.getConstantLocation("InvVP");
+			voxel_cc5 = voxel_sh5.getConstantLocation("cameraProj");
+			voxel_cd5 = voxel_sh5.getConstantLocation("eye");
+			voxel_ce5 = voxel_sh5.getConstantLocation("eyeLook");
+			voxel_cf5 = voxel_sh5.getConstantLocation("postprocess_resolution");
+			voxel_cg5 = voxel_sh5.getConstantLocation("sunDir");
+			voxel_ch5 = voxel_sh5.getConstantLocation("lPos");
+			voxel_ci5 = voxel_sh5.getConstantLocation("lightType");
 		}
 		#end
 	}
@@ -1289,6 +1328,108 @@ class Inc {
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
 	}
 	#end // GI
+	#if arm_voxelgi_shadows
+	public static function resolveShadows() {
+		var rts = path.renderTargets;
+	 	var res = iron.RenderPath.getVoxelRes();
+	 	var camera = iron.Scene.active.camera;
+	 	var clipmaps = iron.RenderPath.clipmaps;
+	 	var clipmap = clipmaps[iron.RenderPath.clipmapLevel];
+		var lights = iron.Scene.active.lights;
+
+	 	for (i in 0...lights.length) {
+	 		var l = lights[i];
+	 		if (!l.visible) continue;
+	 		path.light = l;
+
+			kha.compute.Compute.setShader(voxel_sh5);
+
+	 		kha.compute.Compute.setSampledTexture(voxel_ta5, rts.get("voxelsOut").image);
+			kha.compute.Compute.setSampledTexture(voxel_tb5, rts.get("half").image);
+			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("gbuffer0").image);
+			kha.compute.Compute.setSampledTexture(voxel_td5, rts.get("gbuffer2").image);
+			kha.compute.Compute.setSampledTexture(voxel_te5, rts.get("voxelsSDF").image);
+			kha.compute.Compute.setTexture(voxel_tf5, rts.get("voxels_shadows").image, kha.compute.Access.Write);
+
+			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
+			for (i in 0...Main.voxelgiClipmapCount) {
+				fa[i * 10] = clipmaps[i].voxelSize;
+				fa[i * 10 + 1] = clipmaps[i].extents.x;
+				fa[i * 10 + 2] = clipmaps[i].extents.y;
+				fa[i * 10 + 3] = clipmaps[i].extents.z;
+				fa[i * 10 + 4] = clipmaps[i].center.x;
+				fa[i * 10 + 5] = clipmaps[i].center.y;
+				fa[i * 10 + 6] = clipmaps[i].center.z;
+				fa[i * 10 + 7] = clipmaps[i].offset_prev.x;
+				fa[i * 10 + 8] = clipmaps[i].offset_prev.y;
+				fa[i * 10 + 9] = clipmaps[i].offset_prev.z;
+			}
+
+			kha.compute.Compute.setFloats(voxel_ca5, fa);
+
+			#if arm_centerworld
+			m.setFrom(vmat(camera.V));
+			#else
+			m.setFrom(camera.V);
+			#end
+			m.multmat(camera.P);
+			m.getInverse(m);
+
+			kha.compute.Compute.setMatrix(voxel_cb5, m.self);
+
+			var near = camera.data.raw.near_plane;
+			var far = camera.data.raw.far_plane;
+			var v = new iron.math.Vec2();
+			v.x = far / (far - near);
+			v.y = (-far * near) / (far - near);
+
+			kha.compute.Compute.setFloat2(voxel_cc5, v.x, v.y);
+
+
+			kha.compute.Compute.setFloat3(voxel_cd5, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+			var eyeLook = camera.lookWorld().normalize();
+			kha.compute.Compute.setFloat3(voxel_ce5, eyeLook.x, eyeLook.y, eyeLook.z);
+
+			var width = iron.App.w();
+			var height = iron.App.h();
+			var dp = getDisplayp();
+			if (dp != null) { // 1080p/..
+				if (width > height) {
+					width = Std.int(width * (dp / height));
+					height = dp;
+				}
+				else {
+					height = Std.int(height * (dp / width));
+					width = dp;
+				}
+			}
+			kha.compute.Compute.setFloat2(voxel_cf5, width, height);
+
+
+	 		//sundir
+	 		// lightType
+	 		var lightType = iron.data.LightData.typeToInt(l.data.raw.type);
+			trace(lightType);
+	 		if (lightType == 0) {
+				var sun = iron.RenderPath.active.sun;
+				var sunDir = sun.look().normalize();
+				kha.compute.Compute.setFloat3(voxel_cg5, sunDir.x, sunDir.y, sunDir.z);
+	 		}
+	 		else if  (lightType == 2) {
+	 			var point = iron.RenderPath.active.sun;
+				var spotDir = point.look().normalize();
+				kha.compute.Compute.setFloat3(voxel_cg5, spotDir.x, spotDir.y, spotDir.z);
+	 		}
+	 		else
+				kha.compute.Compute.setFloat3(voxel_ch5, l.transform.worldx(), l.transform.worldy(), l.transform.worldz());
+
+
+	 		kha.compute.Compute.setInt(voxel_ci5, lightType);
+
+			kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
+		}
+	}
+	#end
 	#end // Voxels
 }
 

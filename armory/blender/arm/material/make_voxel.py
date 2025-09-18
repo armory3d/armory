@@ -368,7 +368,7 @@ def make_gi(context_id):
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
                 if is_transparent_shadows:
                     frag.add_uniform('samplerCube shadowMapPointTransparent[1]', included=True)
-        frag.write('direct += sampleLight(')
+        frag.write('direct += sampleLightVoxels(')
         frag.write('  P, N, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write(', 0, pointBias, receiveShadow')
