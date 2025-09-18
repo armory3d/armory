@@ -7,9 +7,6 @@
 #ifdef _ShadowMap
 #include "std/shadows.glsl"
 #endif
-#ifdef _VoxelShadow
-//!uniform sampler2D voxels_shadows;
-#endif
 #ifdef _LTC
 #include "std/ltc.glsl"
 #endif
@@ -21,6 +18,11 @@
 #endif
 #ifdef _Spot
 #include "std/light_common.glsl"
+#endif
+
+#ifdef _VoxelShadow
+#include "std/conetrace.glsl"
+uniform sampler2D voxels_shadows;
 #endif
 
 #ifdef _ShadowMap
@@ -109,18 +111,15 @@ uniform sampler2D sltcMag;
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
-	const vec3 albedo, const float rough, const float spec, const vec3 f0
+	const vec3 albedo, const float rough, const float spec, const vec3 f0, bool transparent
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
-	#ifdef _ShadowMapTransparent
-		, bool transparent
-	#endif
 	#endif
 	#ifdef _Spot
 		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelShadow
-		, vec2 texCoord
+		, vec2 texCoord, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount], vec2 velocity
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
@@ -166,7 +165,21 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _VoxelShadow
-	//direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	vec3 lightDir = l;
+	#ifdef _Spot
+	if (isSpot)
+		lightDir = spotDir;
+	else
+		lightDir = l;
+	#endif
+	#ifdef _Deferred
+	if (transparent)
+		direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+	else
+		direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	#else
+	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+	#endif
 	#endif
 
 	#ifdef _LTC
@@ -400,12 +413,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 #ifdef _VoxelGI
 vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
-	const vec3 albedo, const float rough, const float spec, const vec3 f0
+	const vec3 albedo, const float rough, const float spec, const vec3 f0, bool transparent
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow
-	#ifdef _ShadowMapTransparent
-		, bool transparent
-	#endif
 	#endif
 	#ifdef _Spot
 		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right

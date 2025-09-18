@@ -35,7 +35,10 @@ uniform sampler2D voxels_ao;
 #endif
 #endif
 #ifdef _VoxelShadow
-uniform sampler2D voxels_shadows;
+//!uniform sampler2D voxels_shadows;
+uniform sampler3D dum;
+uniform sampler3D my;
+uniform float clipmaps[10 * voxelgiClipmapCount];
 #endif
 
 uniform float envmapStrength;
@@ -497,18 +500,15 @@ void main() {
 #ifdef _SinglePoint
 
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0, false
 		#ifdef _ShadowMap
 			, 0, pointBias, true
-		#ifdef _ShadowMapTransparent
-			, false
-		#endif
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-			, texCoord
+			, texCoord, dum, my, clipmaps, vec2(0.0)
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -552,13 +552,11 @@ void main() {
 			albedo,
 			roughness,
 			occspec.y,
-			f0
+			f0,
+			false
 			#ifdef _ShadowMap
 				// light index, shadow bias, cast_shadows
 				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
-			#ifdef _ShadowMapTransparent
-				, false
-			#endif
 			#endif
 			#ifdef _Spot
 			, lightsArray[li * 3 + 2].y != 0.0
@@ -569,7 +567,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, texCoord
+			, texCoord, dum, my, clipmaps, vec2(0.0)
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x

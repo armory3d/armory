@@ -1416,7 +1416,7 @@ class Inc {
 				kha.compute.Compute.setFloat3(voxel_cg5, sunDir.x, sunDir.y, sunDir.z);
 	 		}
 	 		else if  (lightType == 2) {
-	 			var point = iron.RenderPath.active.sun;
+	 			var point = iron.RenderPath.active.point;
 				var spotDir = point.look().normalize();
 				kha.compute.Compute.setFloat3(voxel_cg5, spotDir.x, spotDir.y, spotDir.z);
 	 		}

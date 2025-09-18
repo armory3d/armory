@@ -369,11 +369,9 @@ def make_gi(context_id):
                 if is_transparent_shadows:
                     frag.add_uniform('samplerCube shadowMapPointTransparent[1]', included=True)
         frag.write('direct += sampleLightVoxels(')
-        frag.write('  P, N, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
+        frag.write('  P, N, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, opacity != 1.0')
         if is_shadows:
             frag.write(', 0, pointBias, receiveShadow')
-        if is_transparent_shadows:
-            frag.write(', opacity != 1.0')
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         frag.write(');')
@@ -445,11 +443,10 @@ def make_gi(context_id):
         frag.write('    albedo,')
         frag.write('    roughness,')
         frag.write('    specular,')
-        frag.write('    f0')
+        frag.write('    f0, ')
+        frag.write('    opacity != 1.0')
         if is_shadows:
             frag.write('\t, li, lightsArray[li * 3 + 2].x, receiveShadow') # bias
-        if is_transparent_shadows:
-            frag.write('\t, opacity != 1.0')
         if '_Spot' in wrd.world_defs:
             frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
             frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
