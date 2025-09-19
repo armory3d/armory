@@ -26,9 +26,10 @@ float getDeltaDepth(vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
 
 float traceShadowSS(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
 	dir *= ssrsRayStep;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < ssrsMaxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 1.0;
+		float delta = getDeltaDepth(hitCoord, gbufferD, invVP, eye);
+		if (delta > ssrsThickness) return 1.0;
 	}
 	return 0.0;
 }

@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 const int DIFFUSE_CONE_COUNT = 16;
 
-const float SHADOW_CONE_APERTURE = radians(15.0);
+const float SHADOW_CONE_APERTURE = 0.2;
 
 #define DIFFUSE_CONE_COUNT 16
 const float DIFFUSE_CONE_APERTURE = 0.872665f;

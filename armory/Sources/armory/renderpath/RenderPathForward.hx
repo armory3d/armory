@@ -142,17 +142,19 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "DEPTH24";
+				t.format = "R32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
-				//holds colors before refractive meshes are drawn
+				// holds background color
 				var t = new RenderTargetRaw();
 				t.name = "refr";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = Inc.getHdrFormat();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
 			}
 			#end
 
