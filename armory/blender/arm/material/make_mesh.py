@@ -780,8 +780,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write(');')
             frag.write('}') # receiveShadow
         if '_VoxelShadow' in wrd.world_defs:
-            if '_Voxel GI' in wrd.world_defs:
-                frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).rgb) * voxelgiShad;')
+            if '_VoxelGI' in wrd.world_defs:
+                frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;')
             else:
                 frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;')
             frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')

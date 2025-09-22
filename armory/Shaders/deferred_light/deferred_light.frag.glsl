@@ -446,7 +446,7 @@ void main() {
 	#ifdef _VoxelGI
 	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
 	#else
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	svisibility *= 1.0 - textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
 	#endif
 
