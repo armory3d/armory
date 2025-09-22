@@ -251,7 +251,10 @@ class ParticleSystemCPU {
 				var i: Int = Std.int(Math.random() * (pa.values.length / pa.size));
 				var loc: Vec4 = new Vec4(pa.values[i * pa.size] * normFactor, pa.values[i * pa.size + 1] * normFactor, pa.values[i * pa.size + 2] * normFactor, 1);
 
-				if (!localCoords) loc.add(objectPos);
+				if (!localCoords) {
+					loc.applyQuat(objectRot);
+					loc.add(objectPos);
+				}
 				o.transform.loc.setFrom(loc);
 			case 1: // Faces
 				var positions: Int16Array = owner.data.geom.positions.values;
@@ -269,14 +272,20 @@ class ParticleSystemCPU {
 				var pos: Vec3 = randomPointInTriangle(v0, v1, v2);
 				var loc: Vec4 = new Vec4(pos.x, pos.y, pos.z, 1).mult(normFactor);
 
-				if (!localCoords) loc.add(objectPos);
+				if (!localCoords) {
+					loc.applyQuat(objectRot);
+					loc.add(objectPos);
+				}
 				o.transform.loc.setFrom(loc);
 			case 2: // Volume
 				var scaleFactorVolume: Vec4 = new Vec4().setFrom(owner.transform.dim);
 				scaleFactorVolume.mult(0.5);
 				var loc: Vec4 = new Vec4((Math.random() * 2.0 - 1.0) * scaleFactorVolume.x, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.y, (Math.random() * 2.0 - 1.0) * scaleFactorVolume.z, 1);
 
-				if (!localCoords) loc.add(objectPos);
+				if (!localCoords) {
+					loc.applyQuat(objectRot);
+					loc.add(objectPos);
+				}
 				o.transform.loc.setFrom(loc);
 		}
 
