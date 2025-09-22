@@ -1409,7 +1409,6 @@ class Inc {
 	 		//sundir
 	 		// lightType
 	 		var lightType = iron.data.LightData.typeToInt(l.data.raw.type);
-			trace(lightType);
 	 		if (lightType == 0) {
 				var sun = iron.RenderPath.active.sun;
 				var sunDir = sun.look().normalize();

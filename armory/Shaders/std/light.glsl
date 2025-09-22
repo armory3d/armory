@@ -174,11 +174,23 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _Deferred
 	if (transparent)
+		#ifdef _VoxelGI
+		direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb) * voxelgiShad;
+		#else
 		direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+		#endif
 	else
+		#ifdef _VoxelGI
+		direct *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
+		#else
 		direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+		#endif
+	#else
+	#ifdef _VoxelGI
+	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb) * voxelgiShad;
 	#else
 	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+	#endif
 	#endif
 	#endif
 
