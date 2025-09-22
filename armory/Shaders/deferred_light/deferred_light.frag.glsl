@@ -443,7 +443,11 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
+	#ifdef _VoxelGI
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
+	#else
 	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	#endif
 	#endif
 
 	#ifdef _SSRS

@@ -696,7 +696,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = t.name == "voxels_shadows" ? "R8" : "RGBA32";
+			t.format = t.name == "voxels_shadows" ? #if (rp_voxels == "Voxel AO") "R8" #else "RGBA32" #end : "RGBA32";
 			t.mipmaps = true;
 		}
 		else {
