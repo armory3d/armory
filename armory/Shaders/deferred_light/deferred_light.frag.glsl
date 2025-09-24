@@ -512,7 +512,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-			, texCoord, dum, my, clipmaps
+			, dum, my, clipmaps
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -520,7 +520,7 @@ void main() {
 		#ifdef _SSRS
 		, gbufferD, invVP, eye
 		#endif
-		, -g2.rg
+		, -g2.rg, texCoord
 	);
 
 	#ifdef _Spot
@@ -572,7 +572,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, texCoord, dum, my, clipmaps
+			, dum, my, clipmaps
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
@@ -580,7 +580,7 @@ void main() {
 			#ifdef _SSRS
 			, gbufferD, invVP, eye
 			#endif
-			, -g2.rg
+			, -g2.rg, texCoord
 		);
 	}
 #endif // _Clusters

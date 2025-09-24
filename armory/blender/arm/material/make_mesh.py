@@ -614,7 +614,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
     sh.write('eyeDir = eye - wposition;')
-    if '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSRS' in wrd.world_defs:
         if '_gbuffer2' in wrd.world_defs:
             if '_Veloc' in wrd.world_defs:
                 if tese is None:
@@ -818,14 +818,16 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs:
-            frag.write(', vec2(0.0), voxels, voxelsSDF, clipmaps, velocity')
+            frag.write(', voxels, voxelsSDF, clipmaps, velocity')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
             frag.add_uniform('sampler2D gbufferD')
+            frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.write(', gbufferD, invVP, eye')
+            frag.write(', gbufferD, gbuffer0, invVP, eye')
+        frag.write(', velocity, posa')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:
