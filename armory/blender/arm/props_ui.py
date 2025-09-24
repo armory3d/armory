@@ -1278,6 +1278,7 @@ class ArmoryStopButton(bpy.types.Operator):
         elif state.proc_build != None:
             state.proc_build.terminate()
             state.proc_build = None
+        make.clear_external_scenes()
 
         arm.write_probes.check_last_cmft_time()
 
