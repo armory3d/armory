@@ -443,14 +443,18 @@ void main() {
 	#endif
 
 	#ifdef _VoxelShadow
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	#ifdef _VoxelGI
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
+	#else
+	svisibility *= 1.0 - textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	#endif
 	#endif
 
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
+	svisibility *= traceShadowSS(sunDir, p, gbufferD, gbuffer0, invVP, eye, -g2.rg, texCoord);
 	#endif
 
 	#ifdef _LightClouds
@@ -508,14 +512,15 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-			, texCoord, dum, my, clipmaps, vec2(0.0)
+			, dum, my, clipmaps
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
 		#ifdef _SSRS
-		, gbufferD, invVP, eye
+		, gbufferD, gbuffer0, invVP, eye
 		#endif
+		, -g2.rg, texCoord
 	);
 
 	#ifdef _Spot
@@ -567,14 +572,15 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, texCoord, dum, my, clipmaps, vec2(0.0)
+			, dum, my, clipmaps
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
 			#endif
 			#ifdef _SSRS
-			, gbufferD, invVP, eye
+			, gbufferD, gbuffer0, invVP, eye
 			#endif
+			, -g2.rg, texCoord
 		);
 	}
 #endif // _Clusters

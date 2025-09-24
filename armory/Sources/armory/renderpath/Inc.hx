@@ -696,7 +696,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			t.format = t.name == "voxels_shadows" ? "R8" : "RGBA32";
+			t.format = t.name == "voxels_shadows" ? #if (rp_voxels == "Voxel AO") "R8" #else "RGBA32" #end : "RGBA32";
 			t.mipmaps = true;
 		}
 		else {
@@ -1409,7 +1409,6 @@ class Inc {
 	 		//sundir
 	 		// lightType
 	 		var lightType = iron.data.LightData.typeToInt(l.data.raw.type);
-			trace(lightType);
 	 		if (lightType == 0) {
 				var sun = iron.RenderPath.active.sun;
 				var sunDir = sun.look().normalize();

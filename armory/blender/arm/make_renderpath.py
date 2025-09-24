@@ -458,7 +458,7 @@ def build():
     if ignoreIrr:
         wrd.world_defs += '_IgnoreIrr'
 
-    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSGI' in wrd.world_defs
+    gbuffer2 = '_Veloc' in wrd.world_defs or '_IgnoreIrr' in wrd.world_defs or '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSGI' in wrd.world_defs or '_SSRS' in wrd.world_defs
 
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')

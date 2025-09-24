@@ -119,14 +119,15 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelShadow
-		, vec2 texCoord, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount], vec2 velocity
+		, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount]
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
 	#endif
 	#ifdef _SSRS
-		, sampler2D gbufferD, mat4 invVP, vec3 eye
+		, sampler2D gbufferD, sampler2D gbuffer0, mat4 invVP, vec3 eye
 	#endif
+		, vec2 velocity, vec2 texCoord
 	) {
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
@@ -161,7 +162,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _SSRS
-	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	direct *= traceShadowSS(l, p, gbufferD, gbuffer0, invVP, eye, velocity, texCoord);
 	#endif
 
 	#ifdef _VoxelShadow
@@ -174,11 +175,23 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _Deferred
 	if (transparent)
+		#ifdef _VoxelGI
+		direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;
+		#else
 		direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+		#endif
 	else
-		direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+		#ifdef _VoxelGI
+		direct *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
+		#else
+		direct *= 1.0 - textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+		#endif
+	#else
+	#ifdef _VoxelGI
+	direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;
 	#else
 	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+	#endif
 	#endif
 	#endif
 

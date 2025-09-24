@@ -403,6 +403,7 @@ typedef TParticleData = {
 	public var loop: Bool;
 	// Emission
 	public var count: Int;
+	// public var hair_length: FastFloat; TODO
 	public var frame_start: FastFloat;
 	public var frame_end: FastFloat;
 	public var lifetime: FastFloat;

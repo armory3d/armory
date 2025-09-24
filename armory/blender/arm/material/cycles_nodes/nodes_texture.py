@@ -555,6 +555,9 @@ def parse_tex_voronoi(node: bpy.types.ShaderNodeTexVoronoi, out_socket: bpy.type
         m = 2
     elif node.distance == 'MINKOWSKI':
         m = 3
+    # TODO: Add node.distance == 'MANHATHAN'
+    #       Add node.feature
+    #       Add node.voronoi_dimensions
 
     c.write_procedurals()
     state.curshader.add_function(c_functions.str_tex_voronoi)
@@ -591,6 +594,8 @@ def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.Node
     distortion = c.get_value_input(node, ['Distortion'])
     detail = c.get_value_input(node, ['Detail'])
     detail_scale = c.get_value_input(node, ['Detail Scale'])
+    phase_offset = c.get_value_input(node, ['Phase Offset'])
+
     if node.wave_profile == 'SIN':
         wave_profile = 0
     else:
@@ -602,9 +607,9 @@ def parse_tex_wave(node: bpy.types.ShaderNodeTexWave, out_socket: bpy.types.Node
 
     # Color
     if out_socket == node.outputs['Color']:
-        res = 'vec3(tex_wave_f({0} * {1},{2},{3},{4},{5},{6}))'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
+        res = 'vec3(tex_wave_f({0} * {1},{2},{3},{4},{5},{6},{7}))'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale, phase_offset)
     # Fac
     else:
-        res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale)
+        res = 'tex_wave_f({0} * {1},{2},{3},{4},{5},{6},{7})'.format(co, scale, wave_type, wave_profile, distortion, detail, detail_scale, phase_offset)
 
     return res

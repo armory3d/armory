@@ -10,8 +10,8 @@ float noise(const vec3 x) {
 
 	vec3 i = floor(x);
 	vec3 f = fract(x);
- 
-	// For performance, compute the base input to a 1D hash from the integer part of the argument and the 
+
+	// For performance, compute the base input to a 1D hash from the integer part of the argument and the
 	// incremental change to the 1D based on the 3D -> 1D wrapping
     float n = dot(i, step);
 
@@ -46,7 +46,7 @@ float fractal_noise(const vec3 p, const float o)
     return (1.0 - rmd) * sum + rmd * sum2;
   }
   else {
-    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1); 
+    sum *= float(pow(2, n)) / float(pow(2, n + 1) - 1);
     return sum;
   }
 }
@@ -282,14 +282,14 @@ float tex_magic_f(const vec3 p) {
 str_tex_brick = """
 vec3 tex_brick(vec3 p, const vec3 c1, const vec3 c2, const vec3 c3) {
     p /= vec3(0.9, 0.49, 0.49) / 2;
-    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;
     p = fract(p);
     vec3 b = step(p, vec3(0.95, 0.9, 0.9));
     return mix(c3, c1, b.x * b.y * b.z);
 }
 float tex_brick_f(vec3 p) {
     p /= vec3(0.9, 0.49, 0.49) / 2;
-    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;
     p = fract(p);
     vec3 b = step(p, vec3(0.95, 0.9, 0.9));
     return mix(1.0, 0.0, b.x * b.y * b.z);
@@ -421,11 +421,12 @@ float tex_brick_blender_f(vec3 co,
 """
 
 str_tex_wave = """
-float tex_wave_f(const vec3 p, const int type, const int profile, const float dist, const float detail, const float detail_scale) {
+float tex_wave_f(const vec3 p, const int type, const int profile, const float dist, const float detail, const float detail_scale, const float phase_offset) {
     float n;
     if(type == 0) n = (p.x + p.y + p.z) * 9.5;
     else n = length(p) * 13.0;
     if(dist != 0.0) n += dist * fractal_noise(p * detail_scale, detail) * 2.0 - 1.0;
+    n += phase_offset;
     if(profile == 0) { return 0.5 + 0.5 * sin(n - PI); }
     else {
         n /= 2.0 * PI;
