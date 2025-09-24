@@ -518,7 +518,7 @@ void main() {
 		, occspec.x
 		#endif
 		#ifdef _SSRS
-		, gbufferD, invVP, eye
+		, gbufferD, gbuffer0, invVP, eye
 		#endif
 		, -g2.rg, texCoord
 	);
@@ -578,7 +578,7 @@ void main() {
 			, occspec.x
 			#endif
 			#ifdef _SSRS
-			, gbufferD, invVP, eye
+			, gbufferD, gbuffer0, invVP, eye
 			#endif
 			, -g2.rg, texCoord
 		);

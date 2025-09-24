@@ -2,7 +2,6 @@
 #define _SSRS_GLSL_
 
 #include "std/gbuffer.glsl"
-#include "std/constants.glsl"
 
 uniform mat4 VP;
 const int   ssrsBinarySteps = 7;  // refinement steps
