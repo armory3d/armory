@@ -198,7 +198,8 @@ def make_deferred(con_mesh, rpasses):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or 'translucent' or 'refraction' in rpasses
+
+    parse_opacity = arm_discard or 'translucent' in rpasses or 'refraction' in rpasses
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -818,7 +819,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
         if '_VoxelShadow' in wrd.world_defs:
-            frag.write(', voxels, voxelsSDF, clipmaps')
+            frag.write(', voxels, voxelsSDF, clipmaps, velocity, posa')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
@@ -826,8 +827,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.write(', gbufferD, gbuffer0, invVP, eye')
-        frag.write(', velocity, posa')
+            frag.write(', gbufferD, invVP, eye')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:

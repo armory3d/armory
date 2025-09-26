@@ -636,7 +636,8 @@ class Inc {
 		#end
 
 		#if rp_ssrs
-		path.bindTarget("_main", "gbufferD");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("gbufferD", "gbufferD");
 		#end
 
 		path.drawMeshes("translucent");

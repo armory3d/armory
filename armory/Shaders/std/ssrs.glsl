@@ -5,7 +5,7 @@
 
 uniform mat4 VP;
 const int   ssrsBinarySteps = 7;  // refinement steps
-const float ssrsJitter = 0.125;      // per-pixel randomization scale
+const float ssrsJitter = 0.01;      // per-pixel randomization scale
 
 // Projects world position to screen space
 vec2 getProjectedCoord(vec3 hitCoord) {
@@ -64,8 +64,13 @@ vec2 hammersley2D(uint i, uint N) {
 
 // Raytrace screen-space shadow
 float trace(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye, vec2 rand) {
-	vec3 start = hitCoord + normalize(dir) * rand.x * ssrsRayStep;
-	vec3 stepDir = normalize(dir) * ssrsRayStep;
+	vec3 dirN = normalize(dir);
+
+    // Apply jitter correctly
+    float jitterOffset = (rand.x * 2.0 - 1.0) * ssrsJitter;
+    vec3 start = hitCoord + dirN * (ssrsRayStep + jitterOffset);
+    float stepSize = ssrsRayStep * (hitCoord.z * 0.1 + 1.0);
+	vec3 stepDir = dirN * stepSize;
 
     vec3 prev = start;
     for (int i = 0; i < ssrsMaxSteps; i++) {
@@ -85,7 +90,7 @@ float trace(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye, v
     return 1.0; // no hit → unshadowed
 }
 
-float traceShadowSS(vec3 dir, vec3 hitCoord, sampler2D gbufferD, sampler2D gbuffer0, mat4 invVP, vec3 eye, vec2 rand, vec2 texCoord) {
+float traceShadowSS(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
     float shadowSum = 0.0;
 
     for (uint i = 0u; i < uint(ssrsSamples); i++) {

@@ -26,7 +26,7 @@ def make(context_id):
     frag = con_refract.frag
     tese = con_refract.tese
     frag.add_include('std/gbuffer.glsl')
-    frag.add_out('vec4 fragColor[3]')
+    frag.add_out('vec4 fragColor[5]')
 
     rpdat = arm.utils.get_rp()
 

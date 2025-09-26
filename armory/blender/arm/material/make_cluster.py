@@ -105,7 +105,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs:
-        frag.write(', voxels, voxelsSDF, clipmaps')
+        frag.write(', voxels, voxelsSDF, clipmaps, velocity, posa')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     if '_SSRS' in wrd.world_defs:
@@ -113,8 +113,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.add_uniform('sampler2D gbuffer0')
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
-        frag.write(', gbufferD, gbuffer0, invVP, eye')
-    frag.write(', velocity, posa')
+        frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
     frag.write('}') # for numLights

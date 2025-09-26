@@ -111,6 +111,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         elif rp == 'depth':
             con = make_depth.make(rp, rpasses)
 
+        elif rp == 'depthtex':
+            con = make_depth.make(rp, rpasses, depthtex=True)
+
         elif rp == 'voxel':
             con = make_voxel.make(rp)
 

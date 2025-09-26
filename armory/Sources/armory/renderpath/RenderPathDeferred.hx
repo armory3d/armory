@@ -100,6 +100,17 @@ class RenderPathDeferred {
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 
+		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
+		var t = new RenderTargetRaw();
+		t.name = "gbufferD";
+		t.width = 0;
+		t.height = 0;
+		t.displayp = Inc.getDisplayp();
+		t.format = "R32";
+		t.scale = Inc.getSuperSampling();
+		path.createRenderTarget(t);
+		#end
+
 		var t = new RenderTargetRaw();
 		t.name = "tex";
 		t.width = 0;
@@ -571,6 +582,11 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
+		path.setTarget("gbufferD");
+		path.drawMeshes("depthtex");
+		#end
+
 		#if rp_decals
 		{
 			#if (!kha_opengl)
@@ -902,7 +918,7 @@ class RenderPathDeferred {
 
 				#if rp_ssrs
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbufferD", "gbufferD");
 				#end
 
 				path.drawMeshes("refraction");

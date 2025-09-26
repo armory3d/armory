@@ -419,8 +419,6 @@ class RenderPathForward {
 		}
 		#end
 
-		RenderPathCreator.setTargetMeshes();
-
 		#if (rp_background == "Clear")
 		{
 			path.clearTarget(-1, 1.0);
@@ -437,6 +435,8 @@ class RenderPathForward {
 			path.clearTarget(0xffffff00);
 		}
 		#end
+
+		RenderPathCreator.setTargetMeshes();
 
 		#if rp_depthprepass
 		{

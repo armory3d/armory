@@ -29,7 +29,7 @@ else:
     arm.enable_reload(__name__)
 
 
-def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
+def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, depthtex=False):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
@@ -54,7 +54,21 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             'color_writes_alpha': [True]
         })
     else:
-        con_depth = mat_state.data.add_context({
+        if depthtex:
+            con_depth = mat_state.data.add_context({
+            'name': context_id,
+            'vertex_elements': vs,
+            'depth_write': True,
+            'depth_read': False,
+            'compare_mode': 'less',
+            'cull_mode': 'clockwise',
+            'color_writes_red': [True],
+            'color_writes_green': [True],
+            'color_writes_blue': [True],
+            'color_writes_alpha': [True]
+        })
+        else:
+            con_depth = mat_state.data.add_context({
             'name': context_id,
             'vertex_elements': vs,
             'depth_write': True,
@@ -137,7 +151,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 vert.add_out('vec3 vcolor')
                 vert.write_attrib('vcolor = col.rgb;')
             vert.write('wposition += wnormal * disp;')
-            if shadowmap:
+            if shadowmap or shadowmap_transparent:
                 vert.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
                 vert.write('gl_Position = LVP * vec4(wposition, 1.0);')
             else:
@@ -184,7 +198,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
                 tese.write_pre = False
 
-            if shadowmap:
+            if shadowmap or shadowmap_transparent:
                 tese.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
                 tese.write('wposition += wnormal * disp;')
                 tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
@@ -234,16 +248,19 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if shadowmap_transparent:
+    if shadowmap_transparent or depthtex:
         frag.add_out('vec4 fragColor')
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
         frag.write('float depth = (wvpposition.z / wvpposition.w) * 0.5 + 0.5;')
-        frag.write('vec3 color = basecol;')
-        frag.write('color *= 1.0 - opacity;')
-        frag.write('fragColor = vec4(color, depth);')
+        if depthtex:
+            frag.write('fragColor = vec4(depth);')
+        elif shadowmap_transparent:
+            frag.write('vec3 color = basecol;')
+            frag.write('color *= 1.0 - opacity;')
+            frag.write('fragColor = vec4(color, depth);')
 
-    if parse_opacity and not shadowmap_transparent:
+    if parse_opacity and not shadowmap_transparent and not depthtex:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:
