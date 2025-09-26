@@ -900,6 +900,11 @@ class RenderPathDeferred {
 				}
 				#end
 
+				#if rp_ssrs
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("_main", "gbufferD");
+				#end
+
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
