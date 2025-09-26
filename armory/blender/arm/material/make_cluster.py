@@ -105,7 +105,7 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
     if '_VoxelShadow' in wrd.world_defs:
-        frag.write(', voxels, voxelsSDF, clipmaps, velocity')
+        frag.write(', voxels, voxelsSDF, clipmaps')
     if '_MicroShadowing' in wrd.world_defs and not is_mobile:
         frag.write('\t, occlusion')
     if '_SSRS' in wrd.world_defs:

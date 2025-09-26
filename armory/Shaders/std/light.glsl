@@ -168,8 +168,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelShadow
 	vec3 lightDir = l;
 	#ifdef _Spot
-	if (isSpot)
+	if (isSpot) {
+		#ifndef _ShadowMap
+		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+		#endif
 		lightDir = spotDir;
+	}
 	else
 		lightDir = l;
 	#endif
