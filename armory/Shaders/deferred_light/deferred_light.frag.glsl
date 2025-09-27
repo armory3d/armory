@@ -12,9 +12,6 @@
 #include "std/sss.glsl"
 #endif
 #ifdef _SSRS
-#if defined(_SSRefraction) || defined(_Transluc)
-uniform sampler2D gbufferD1;
-#endif
 #include "std/ssrs.glsl"
 #endif
 
@@ -74,6 +71,9 @@ uniform vec2 lightPlane;
 #ifdef _SSRS
 //!uniform mat4 VP;
 uniform mat4 invVP;
+#if defined(_SSRefraction) || defined(_Transluc)
+uniform sampler2D gbufferD1;
+#endif
 #endif
 
 #ifdef _LightIES
@@ -247,6 +247,12 @@ void main() {
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
+	#ifdef _SSRS
+	#if defined(_SSRefraction) || defined(_Transluc)
+	float depth1 = textureLod(gbufferD1, texCoord, 0.0).r * 2.0 - 1.0;
+	vec3 p1 = getPos(eye, eyeLook, normalize(viewRay), depth1, cameraProj);
+	#endif
+	#endif
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
@@ -457,9 +463,8 @@ void main() {
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-
 	#if defined(_SSRefraction) || defined(_Transluc)
-	svisibility *= traceShadowSS(sunDir, p, gbufferD1, invVP, eye);
+	svisibility *= traceShadowSS(sunDir, p1, gbufferD1, invVP, eye);
 	#else
 	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
 	#endif
@@ -527,7 +532,7 @@ void main() {
 		#endif
 		#ifdef _SSRS
 		#if defined(_SSRefraction) || defined(_Transluc)
-		, gbufferD1
+		, gbufferD1, p1
 		#else
 		, gbufferD
 		#endif
@@ -591,7 +596,7 @@ void main() {
 			#endif
 			#ifdef _SSRS
 			#if defined(_SSRefraction) || defined(_Transluc)
-			, gbufferD1
+			, gbufferD1, p1
 			#else
 			, gbufferD
 			#endif
