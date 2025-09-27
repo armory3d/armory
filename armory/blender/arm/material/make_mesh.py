@@ -826,7 +826,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform('sampler2D gbufferD')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
-            frag.write(', gbufferD, invVP, eye')
+            frag.write(', gbufferD, wposition, invVP, eye')
         frag.write(');')
 
     if '_Clusters' in wrd.world_defs:

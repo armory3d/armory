@@ -5,33 +5,38 @@
 
 
 uint packRGBA8(vec4 color) {
-    uvec4 rgba = uvec4(clamp(color, 0.0, 1.0) * 255.0 + 0.5);
-    return (rgba.r & 0xFFu) |
-           ((rgba.g & 0xFFu) << 8) |
-           ((rgba.b & 0xFFu) << 16) |
-           ((rgba.a & 0xFFu) << 24);
+    uvec4 rgba = uvec4(round(clamp(color, 0.0, 1.0) * 255.0));
+    return (rgba.r) |
+           (rgba.g << 8) |
+           (rgba.b << 16) |
+           (rgba.a << 24);
 }
 
 vec4 unpackRGBA8(uint packed) {
-    return vec4( float( packed        & 0xFFu),
-                 float((packed >> 8)  & 0xFFu),
-                 float((packed >> 16) & 0xFFu),
-                 float((packed >> 24) & 0xFFu) ) / 255.0;
+    return vec4(
+        float( packed        & 0xFFu),
+        float((packed >> 8)  & 0xFFu),
+        float((packed >> 16) & 0xFFu),
+        float((packed >> 24) & 0xFFu)
+    ) / 255.0;
 }
 
 uint packNormalRGB8(vec3 n) {
-    // map [-1,1] → [0,255]
-    uvec3 enc = uvec3(clamp((n * 0.5 + 0.5) * 255.0 + 0.5, 0.0, 255.0));
-    return (enc.r & 0xFFu) |
-           ((enc.g & 0xFFu) << 8) |
-           ((enc.b & 0xFFu) << 16);
+    uvec3 enc = uvec3(round(clamp(n * 0.5 + 0.5, 0.0, 1.0) * 255.0));
+    return (enc.r) |
+           (enc.g << 8) |
+           (enc.b << 16);
 }
 
 vec3 unpackNormalRGB8(uint packed) {
-    return vec3(float( packed        & 0xFFu),
-                float((packed >> 8)  & 0xFFu),
-                float((packed >> 16) & 0xFFu)) / 255.0 * 2.0 - 1.0;
+    vec3 n = vec3(
+        float( packed        & 0xFFu),
+        float((packed >> 8)  & 0xFFu),
+        float((packed >> 16) & 0xFFu)
+    ) / 255.0 * 2.0 - 1.0;
+    return normalize(n); // ✅ ensures stable lighting
 }
+
 
 // uint encUnsignedNibble(uint m, uint n) {
 // 	return (m & 0xFEFEFEFE)

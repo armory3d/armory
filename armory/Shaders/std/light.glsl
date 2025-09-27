@@ -125,7 +125,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, float occ
 	#endif
 	#ifdef _SSRS
-		, sampler2D gbufferD, mat4 invVP, vec3 eye
+		, sampler2D gbufferD
+	#if defined(_SSRefraction) || defined(_Transluc)
+		, vec3 p1
+	#endif
+		, mat4 invVP, vec3 eye
 	#endif
 	) {
 	vec3 ld = lp - p;
@@ -161,7 +165,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _SSRS
+	#if defined(_SSRefraction) || defined(_Transluc)
+	direct *= traceShadowSS(l, p1, gbufferD, invVP, eye);
+	#else
 	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	#endif
 	#endif
 
 	#ifdef _VoxelShadow

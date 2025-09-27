@@ -97,7 +97,7 @@ class RenderPathDeferred {
 
 		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
 		var t = new RenderTargetRaw();
-		t.name = "gbufferD";
+		t.name = "ssrs_depth";
 		t.width = 0;
 		t.height = 0;
 		t.displayp = Inc.getDisplayp();
@@ -544,7 +544,7 @@ class RenderPathDeferred {
 		#end
 
 		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
-		path.setTarget("gbufferD"); // Only clear gbuffer0
+		path.setTarget("ssrs_depth"); // Only clear gbuffer0
 		#if (rp_background == "Clear")
 		{
 			path.clearTarget(-1, 1.0);
@@ -591,7 +591,7 @@ class RenderPathDeferred {
 		#end
 
 		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
-		path.setTarget("gbufferD");
+		path.setTarget("ssrs_depth");
 		path.drawMeshes("depth");
 		#end
 
@@ -724,7 +724,7 @@ class RenderPathDeferred {
 		path.bindTarget("gbuffer1", "gbuffer1");
 
 		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
-		path.bindTarget("gbufferD", "gbufferD1");
+		path.bindTarget("ssrs_depth", "gbufferD1");
 		#end
 
 		#if rp_gbuffer2
@@ -929,7 +929,7 @@ class RenderPathDeferred {
 				#end
 
 				#if rp_ssrs
-				path.bindTarget("gbufferD", "gbufferD");
+				path.bindTarget("ssrs_depth", "gbufferD");
 				#end
 
 				path.drawMeshes("refraction");

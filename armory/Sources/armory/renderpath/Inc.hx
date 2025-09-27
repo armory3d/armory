@@ -636,7 +636,7 @@ class Inc {
 		#end
 
 		#if rp_ssrs
-		path.bindTarget("gbufferD", "gbufferD");
+		path.bindTarget("ssrs_depth", "gbufferD");
 		#end
 
 		path.drawMeshes("translucent");
@@ -728,7 +728,7 @@ class Inc {
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "RGBA32";
+						t.format = "RGBA64";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
@@ -738,7 +738,7 @@ class Inc {
 						t.format = "R32UI";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 6;
+						t.depth = res * 16;
 						t.mipmaps = false;
 					}
 				}
