@@ -18,7 +18,7 @@ else:
 
 
 def make(context_id):
-    con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
 
@@ -26,7 +26,7 @@ def make(context_id):
     frag = con_refract.frag
     tese = con_refract.tese
     frag.add_include('std/gbuffer.glsl')
-    frag.add_out('vec4 fragColor[5]')
+    frag.add_out('vec4 fragColor[3]')
 
     rpdat = arm.utils.get_rp()
 

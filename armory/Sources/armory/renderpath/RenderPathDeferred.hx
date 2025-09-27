@@ -15,11 +15,6 @@ class RenderPathDeferred {
 	static var bloomUpsampler: Upsampler;
 	#end
 
-	#if (rp_ssgi == "SSGI")
-	static var ssgitex = "singleb";
-	static var ssgitexb = "singleb";
-	#end
-
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -106,8 +101,8 @@ class RenderPathDeferred {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = Inc.getDisplayp();
-		t.format = "R32";
-		t.scale = Inc.getSuperSampling();
+		t.format = "DEPTH16";
+		t.scale = Inc.getSuperSampling() * 0.5;
 		path.createRenderTarget(t);
 		#end
 
@@ -548,6 +543,19 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
+		path.setTarget("gbufferD"); // Only clear gbuffer0
+		#if (rp_background == "Clear")
+		{
+			path.clearTarget(-1, 1.0);
+		}
+		#else
+		{
+			path.clearTarget(null, 1.0);
+		}
+		#end
+		#end
+
 		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			path.setTarget("gbuffer_refraction");
@@ -584,7 +592,7 @@ class RenderPathDeferred {
 
 		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
 		path.setTarget("gbufferD");
-		path.drawMeshes("depthtex");
+		path.drawMeshes("depth");
 		#end
 
 		#if rp_decals
@@ -714,6 +722,10 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
+
+		#if (rp_ssrs && (rp_ssrefr || rp_translucency))
+		path.bindTarget("gbufferD", "gbufferD1");
+		#end
 
 		#if rp_gbuffer2
 		{
@@ -917,7 +929,6 @@ class RenderPathDeferred {
 				#end
 
 				#if rp_ssrs
-				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbufferD", "gbufferD");
 				#end
 

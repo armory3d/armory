@@ -351,6 +351,7 @@ def build():
         assets.add_khafile_def('rp_overlays')
 
     if rpdat.rp_translucency:
+        wrd.world_defs += '_Transluc'
         assets.add_khafile_def('rp_translucency')
         assets.add_shader_pass('translucent_resolve')
 

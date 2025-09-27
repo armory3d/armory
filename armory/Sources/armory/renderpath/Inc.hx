@@ -636,7 +636,6 @@ class Inc {
 		#end
 
 		#if rp_ssrs
-		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbufferD", "gbufferD");
 		#end
 

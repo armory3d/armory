@@ -824,7 +824,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
             frag.add_uniform('sampler2D gbufferD')
-            frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.write(', gbufferD, invVP, eye')

@@ -109,10 +109,10 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             con = make_decal.make(rp)
 
         elif rp == 'depth':
-            con = make_depth.make(rp, rpasses)
-
-        elif rp == 'depthtex':
-            con = make_depth.make(rp, rpasses, depthtex=True)
+            if rpdat.arm_ssrs and (rpdat.rp_ss_refraction or rpdat.rp_translucency):
+                con = make_depth.make(rp, rpasses, discard_opac=False)
+            else:
+                con = make_depth.make(rp, rpasses)
 
         elif rp == 'voxel':
             con = make_voxel.make(rp)

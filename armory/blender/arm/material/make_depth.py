@@ -29,7 +29,7 @@ else:
     arm.enable_reload(__name__)
 
 
-def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, depthtex=False):
+def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, discard_opac=True):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
@@ -54,21 +54,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, dept
             'color_writes_alpha': [True]
         })
     else:
-        if depthtex:
-            con_depth = mat_state.data.add_context({
-            'name': context_id,
-            'vertex_elements': vs,
-            'depth_write': True,
-            'depth_read': False,
-            'compare_mode': 'less',
-            'cull_mode': 'clockwise',
-            'color_writes_red': [True],
-            'color_writes_green': [True],
-            'color_writes_blue': [True],
-            'color_writes_alpha': [True]
-        })
-        else:
-            con_depth = mat_state.data.add_context({
+        con_depth = mat_state.data.add_context({
             'name': context_id,
             'vertex_elements': vs,
             'depth_write': True,
@@ -210,7 +196,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, dept
     else:
         frag.ins = vert.outs
         billboard = mat_state.material.arm_billboard
-        if shadowmap:
+        if shadowmap or shadowmap_transparent:
             if billboard == 'spherical':
                 vert.add_uniform('mat4 LWVP', '_lightWorldViewProjectionMatrixSphere')
             elif billboard == 'cylindrical':
@@ -248,19 +234,16 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, dept
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col.rgb;')
 
-    if shadowmap_transparent or depthtex:
+    if shadowmap_transparent:
         frag.add_out('vec4 fragColor')
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
         frag.write('float depth = (wvpposition.z / wvpposition.w) * 0.5 + 0.5;')
-        if depthtex:
-            frag.write('fragColor = vec4(depth);')
-        elif shadowmap_transparent:
-            frag.write('vec3 color = basecol;')
-            frag.write('color *= 1.0 - opacity;')
-            frag.write('fragColor = vec4(color, depth);')
+        frag.write('vec3 color = basecol;')
+        frag.write('color *= 1.0 - opacity;')
+        frag.write('fragColor = vec4(color, depth);')
 
-    if parse_opacity and not shadowmap_transparent and not depthtex:
+    if parse_opacity and not shadowmap_transparent and discard_opac:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:

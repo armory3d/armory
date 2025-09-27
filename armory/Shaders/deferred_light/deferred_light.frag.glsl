@@ -12,6 +12,9 @@
 #include "std/sss.glsl"
 #endif
 #ifdef _SSRS
+#if defined(_SSRefraction) || defined(_Transluc)
+uniform sampler2D gbufferD1;
+#endif
 #include "std/ssrs.glsl"
 #endif
 
@@ -454,7 +457,12 @@ void main() {
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+
+	#if defined(_SSRefraction) || defined(_Transluc)
+	svisibility *= traceShadowSS(sunDir, p, gbufferD1, invVP, eye);
+	#else
 	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
+	#endif
 	#endif
 
 	#ifdef _LightClouds
@@ -518,7 +526,12 @@ void main() {
 		, occspec.x
 		#endif
 		#ifdef _SSRS
-		, gbufferD, invVP, eye
+		#if defined(_SSRefraction) || defined(_Transluc)
+		, gbufferD1
+		#else
+		, gbufferD
+		#endif
+		, invVP, eye
 		#endif
 	);
 
@@ -577,7 +590,12 @@ void main() {
 			, occspec.x
 			#endif
 			#ifdef _SSRS
-			, gbufferD, invVP, eye
+			#if defined(_SSRefraction) || defined(_Transluc)
+			, gbufferD1
+			#else
+			, gbufferD
+			#endif
+			, invVP, eye
 			#endif
 		);
 	}
