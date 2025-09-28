@@ -44,8 +44,8 @@ uniform mat4 LVP;
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba16f) image3D voxelsB;
-uniform layout(rgba16f) image3D voxelsOut;
+uniform layout(rgba8) image3D voxelsB;
+uniform layout(rgba8) image3D voxelsOut;
 uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
@@ -80,8 +80,6 @@ void main() {
 	float aniso_colors[6];
 	#endif
 
-	vec3 avgNormal = vec3(0.0);
-
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
 
@@ -98,34 +96,17 @@ void main() {
 
 		if (i < 6) {
 			#ifdef _VoxelGI
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 15)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5)));
 			if (count > 0) {
-				vec4 basecol = vec4(0.0);
-				basecol.r = float(imageLoad(voxels, src)) / 1024;
-				basecol.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
-				basecol.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2))) / 1024;
-				basecol.a = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3))) / 1024;
+				vec4 basecol = convRGBA8ToVec4(imageLoad(voxels, src).r);
 				basecol /= count;
-				vec3 emission = vec3(0.0);
-				emission.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4))) / 1024;
-				emission.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 5))) / 1024;
-				emission.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 6))) / 1024;
+				vec3 emission = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)).r).rgb;
 				emission /= count;
-				vec3 N = vec3(0.0);
-				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 7))) / 1024;
-				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 8))) / 1024;
+				vec3 N = decNor(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r).rgb;
 				N /= count;
-				N = decode_oct(N.rg * 2.0 - 1.0);
-				avgNormal += N;
-				vec3 envl = vec3(0.0);
-				envl.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 9))) / 1024;
-				envl.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 10))) / 1024;
-				envl.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 11))) / 1024;
+				vec3 envl = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)).r).rgb;
 				envl /= count;
-				vec3 light = vec3(0.0);
-				light.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 12))) / 1024;
-				light.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 13))) / 1024;
-				light.b = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 14))) / 1024;
+				vec3 light = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4)).r).rgb;
 				light /= count;
 
 				//clipmap to world
@@ -142,16 +123,10 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
 			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 1024;
 				opac /= count;
-				vec3 N = vec3(0.0);
-				N.r = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x))) / 1024;
-				N.g = float(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x* 2))) / 1024;
-				N /= count;
-				N = decode_oct(N.rg * 2.0 - 1.0);
-				avgNormal += N;
 			}
 			#endif
 
@@ -205,12 +180,7 @@ void main() {
 			#endif
 		}
 		else {
-			mat3 TBN;
-			if (length(avgNormal) > 0)
-				TBN = makeTangentBasis(normalize(avgNormal));
-			else
-				TBN = makeTangentBasis(vec3(0.0, 1.0, 0.0));
-			vec3 coneDirection = TBN * DIFFUSE_CONE_DIRECTIONS[i - 6];
+			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
 			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,

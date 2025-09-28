@@ -148,9 +148,8 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sum = 0.0;
 	vec4 amount = vec4(0.0);
-	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
-		vec3 coneDir = TBN * DIFFUSE_CONE_DIRECTIONS[i];
+		vec3 coneDir = DIFFUSE_CONE_DIRECTIONS[i];
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
@@ -245,9 +244,8 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sum = 0.0;
 	float amount = 0.0;
-	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; i++) {
-		vec3 coneDir = TBN * DIFFUSE_CONE_DIRECTIONS[i];
+		vec3 coneDir = DIFFUSE_CONE_DIRECTIONS[i];
 		int precomputed_direction = 6 + i;
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)

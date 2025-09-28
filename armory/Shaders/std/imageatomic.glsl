@@ -4,54 +4,38 @@
 // https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 
 
-uint packRGBA8(vec4 color) {
-    uvec4 rgba = uvec4(round(clamp(color, 0.0, 1.0) * 255.0));
-    return (rgba.r) |
-           (rgba.g << 8) |
-           (rgba.b << 16) |
-           (rgba.a << 24);
+// Converts a normalized vec4 (0..1) to a packed uint RGBA8
+uint convVec4ToRGBA8(vec4 val) {
+    uvec4 col = uvec4(clamp(val * 255.0, 0.0, 255.0));
+    return (col.w << 24U) | (col.z << 16U) | (col.y << 8U) | col.x;
 }
 
-vec4 unpackRGBA8(uint packed) {
-    return vec4(
-        float( packed        & 0xFFu),
-        float((packed >> 8)  & 0xFFu),
-        float((packed >> 16) & 0xFFu),
-        float((packed >> 24) & 0xFFu)
-    ) / 255.0;
-}
-
-uint packNormalRGB8(vec3 n) {
-    uvec3 enc = uvec3(round(clamp(n * 0.5 + 0.5, 0.0, 1.0) * 255.0));
-    return (enc.r) |
-           (enc.g << 8) |
-           (enc.b << 16);
-}
-
-vec3 unpackNormalRGB8(uint packed) {
-    vec3 n = vec3(
-        float( packed        & 0xFFu),
-        float((packed >> 8)  & 0xFFu),
-        float((packed >> 16) & 0xFFu)
-    ) / 255.0 * 2.0 - 1.0;
-    return normalize(n); // ✅ ensures stable lighting
+// Converts a packed uint RGBA8 to normalized vec4 (0..1)
+vec4 convRGBA8ToVec4(uint val) {
+    uvec4 col = uvec4(
+        val & 0xFFU,
+        (val >> 8U) & 0xFFU,
+        (val >> 16U) & 0xFFU,
+        (val >> 24U) & 0xFFU
+    );
+    return vec4(col) / 255.0;
 }
 
 
-// uint encUnsignedNibble(uint m, uint n) {
-// 	return (m & 0xFEFEFEFE)
-// 		| (n & 0x00000001)
-// 		| (n & 0x00000002) << 7U
-// 		| (n & 0x00000004) << 14U
-// 		| (n & 0x00000008) << 21U;
-// }
+uint encUnsignedNibble(uint m, uint n) {
+	return (m & 0xFEFEFEFE)
+		| (n & 0x00000001)
+		| (n & 0x00000002) << 7U
+		| (n & 0x00000004) << 14U
+		| (n & 0x00000008) << 21U;
+}
 
-// uint decUnsignedNibble(uint m) {
-// 	return (m & 0x00000001)
-// 		| (m & 0x00000100) >> 7U
-// 		| (m & 0x00010000) >> 14U
-// 		| (m & 0x01000000) >> 21U;
-// }
+uint decUnsignedNibble(uint m) {
+	return (m & 0x00000001)
+		| (m & 0x00000100) >> 7U
+		| (m & 0x00010000) >> 14U
+		| (m & 0x01000000) >> 21U;
+}
 
 // void imageAtomicRGBA8Avg(layout(r32ui) uimage3D img, ivec3 coords, vec4 val) {
 // 	// LSBs are used for the sample counter of the moving average.

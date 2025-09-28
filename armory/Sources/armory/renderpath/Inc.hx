@@ -718,27 +718,27 @@ class Inc {
 						t.mipmaps = true;
 					}
 					else {
-						t.format = "R32UI";
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 4;
+						t.depth = res * 2;
 						t.mipmaps = false;
 					}
 				}
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "RGBA64";
+						t.format = "RGBA32";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-						t.mipmaps = true;
+						t.mipmaps = false;
 					}
 					else {
-						t.format = "R32UI";
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 16;
+						t.depth = res * 6;
 						t.mipmaps = false;
 					}
 				}
