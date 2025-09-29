@@ -6,7 +6,7 @@
 
 // Converts a normalized vec4 (0..1) to a packed uint RGBA8
 uint convVec4ToRGBA8(vec4 val) {
-    uvec4 col = uvec4(clamp(val * 255.0, 0.0, 255.0));
+	uvec4 col = uvec4(clamp(val * 255.0 + 0.5, 0.0, 255.0));
     return (col.w << 24U) | (col.z << 16U) | (col.y << 8U) | col.x;
 }
 
@@ -37,6 +37,30 @@ uint decUnsignedNibble(uint m) {
 		| (m & 0x01000000) >> 21U;
 }
 
+// Pack RGBA8 (m) with 4-bit count (n in 0..15) into a single uint.
+// Packing scheme: clear the LSB of each byte in m, then store each bit of n
+// into that LSB position: bit0->byte0.LSB, bit1->byte1.LSB, bit2->byte2.LSB, bit3->byte3.LSB
+uint packColorWithCount(uint m, uint n) {
+    // clear LSB of each byte
+    uint base = m & 0xFEFEFEFEu;
+    uint b0 = (n & 0x1u);            // goes to bit 0
+    uint b1 = (n & 0x2u) << 7u;      // 0x2 << 7 -> 0x100 (bit 8)
+    uint b2 = (n & 0x4u) << 14u;     // -> bit 16
+    uint b3 = (n & 0x8u) << 21u;     // -> bit 24
+    return base | b0 | b1 | b2 | b3;
+}
+
+// Unpack the 4-bit count from the packed representation
+uint unpackCount(uint m) {
+    return (m & 0x1u) | ((m >> 7u) & 0x2u) | ((m >> 14u) & 0x4u) | ((m >> 21u) & 0x8u);
+}
+
+// Extract pure RGBA8 bytes (with LSBs zeroed) from the packed uint so convRGBA8ToVec4 works.
+uint extractColorBytes(uint m) {
+    return m & 0xFEFEFEFEu;
+}
+
+const int PACK_RETRY_LIMIT = 8;
 // void imageAtomicRGBA8Avg(layout(r32ui) uimage3D img, ivec3 coords, vec4 val) {
 // 	// LSBs are used for the sample counter of the moving average.
 // 	val *= 255.0;
