@@ -647,6 +647,31 @@ class RenderPathDeferred {
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
 		}
+		#elseif (rp_ssgi == "SSGI")
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#if rp_gbuffer2
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
+				#if rp_gbuffer_emission
+				path.bindTarget("gbuffer_emission", "gbufferEmission");
+				#end
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
+		}
 		#end
 
 		// Voxels
@@ -1018,31 +1043,6 @@ class RenderPathDeferred {
 		#if (rp_translucency && !rp_ssrefr)
 		{
 			Inc.drawTranslucency("tex");
-		}
-		#end
-
-		#if (rp_ssgi == "SSGI")
-		{
-			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("singlea");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("tex", "tex");
-				#if rp_gbuffer2
-				path.bindTarget("gbuffer2", "sveloc");
-				#end
-
-				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
-				path.setTarget("singleb");
-				path.bindTarget("singlea", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
-
-				path.setTarget("tex");
-				path.bindTarget("singleb", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
-			}
 		}
 		#end
 

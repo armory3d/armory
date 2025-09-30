@@ -721,7 +721,7 @@ class Inc {
 						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 2;
+						t.depth = res * 4;
 						t.mipmaps = false;
 					}
 				}

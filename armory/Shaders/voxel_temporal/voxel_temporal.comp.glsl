@@ -80,6 +80,8 @@ void main() {
 	float aniso_colors[6];
 	#endif
 
+	vec3 avgNormal = vec3(0.0);
+
 	for (int i = 0; i < 6 + DIFFUSE_CONE_COUNT; i++)
 	{
 
@@ -104,6 +106,7 @@ void main() {
 				emission /= count;
 				vec3 N = decNor(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r).rgb;
 				N /= count;
+				avgNormal += N;
 				vec3 envl = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)).r).rgb;
 				envl /= count;
 				vec3 light = convRGBA8ToVec4(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 4)).r).rgb;
@@ -123,9 +126,15 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
 			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 1024;
+				vec3 N = vec3(0.0);
+				N.r = imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)).r / 1024;
+				N.g = imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 2)).r / 1024;
+				N /= count;
+				N = decode_oct(N.rg * 2.0 - 1.0);
+				avgNormal += N;
 				opac /= count;
 			}
 			#endif
@@ -180,7 +189,8 @@ void main() {
 			#endif
 		}
 		else {
-			vec3 coneDirection = DIFFUSE_CONE_DIRECTIONS[i - 6];
+			mat3 TBN = makeTangentBasis(normalize(avgNormal));
+			vec3 coneDirection = TBN * DIFFUSE_CONE_DIRECTIONS[i - 6];
 			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,
