@@ -151,7 +151,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSGI'
+        rpdat.rp_ssgi = 'Off'
         rpdat.arm_ssrs = False
         rpdat.arm_micro_shadowing = True
         rpdat.rp_ssr = True
@@ -390,8 +390,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
-               ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-               ('SSGI', 'SSGI', 'Screen space global illumination'),
+               ('SSAO', 'SSAO', 'Screen space ambient occlusion')
+               # ('SSGI', 'SSGI', 'Screen space global illumination'),
                # ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
                # ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
