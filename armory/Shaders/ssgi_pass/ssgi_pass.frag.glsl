@@ -1,107 +1,708 @@
 #version 450
 
 #include "compiled.inc"
-#include "std/math.glsl"
 #include "std/gbuffer.glsl"
+#include "std/brdf.glsl"
+#include "std/math.glsl"
+#ifdef _Clusters
+#include "std/clusters.glsl"
+#endif
+#ifdef _ShadowMap
+#include "std/shadows.glsl"
+#endif
+#ifdef _LTC
+#include "std/ltc.glsl"
+#endif
+#ifdef _LightIES
+#include "std/ies.glsl"
+#endif
+#ifdef _Spot
+#include "std/light_common.glsl"
+#endif
+#include "std/constants.glsl"
 
+uniform sampler2D gbuffer0;
+uniform sampler2D gbuffer1;
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0; // Normal
-// #ifdef _RTGI
-// uniform sampler2D gbuffer1; // Basecol
-// #endif
-uniform mat4 P;
-uniform mat3 V3;
-
+#ifdef _EmissionShaded
+uniform sampler2D gbufferEmission;
+#endif
+uniform sampler2D sveloc;
 uniform vec2 cameraProj;
+uniform vec3 eye;
+uniform vec3 eyeLook;
+uniform vec2 screenSize;
+uniform mat4 invVP;
 
-const float angleMix = 0.5f;
-#ifdef _SSGICone9
-const float strength = 2.0 * (1.0 / ssgiStrength);
-#else
-const float strength = 2.0 * (1.0 / ssgiStrength) * 1.8;
+in vec2 texCoord;
+in vec3 viewRay;
+out vec3 fragColor;
+
+float metallic;
+uint matid;
+
+#ifdef _SMSizeUniform
+//!uniform vec2 smSizeUniform;
 #endif
 
-in vec3 viewRay;
-in vec2 texCoord;
-out float fragColor;
-
-vec3 hitCoord;
-vec2 coord;
-float depth;
-// #ifdef _RTGI
-// vec3 col = vec3(0.0);
-// #endif
-vec3 vpos;
-
-vec2 getProjectedCoord(vec3 hitCoord) {
-	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
-	projectedCoord.xy /= projectedCoord.w;
-	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	#ifdef _InvY
-	projectedCoord.y = 1.0 - projectedCoord.y;
+#ifdef _Clusters
+uniform vec4 lightsArray[maxLights * 3];
+	#ifdef _Spot
+	uniform vec4 lightsArraySpot[maxLights * 2];
 	#endif
-	return projectedCoord.xy;
-}
+uniform sampler2D clustersData;
+uniform vec2 cameraPlane;
+#endif
 
-float getDeltaDepth(vec3 hitCoord) {
-	coord = getProjectedCoord(hitCoord);
-	depth = textureLod(gbufferD, coord, 0.0).r * 2.0 - 1.0;
-	vec3 p = getPosView(viewRay, depth, cameraProj);
-	return p.z - hitCoord.z;
-}
+#ifdef _SinglePoint // Fast path for single light
+uniform vec3 pointPos;
+uniform vec3 pointCol;
+	#ifdef _ShadowMap
+	uniform float pointBias;
+	#endif
+	#ifdef _Spot
+	uniform vec3 spotDir;
+	uniform vec3 spotRight;
+	uniform vec4 spotData;
+	#endif
+#endif
 
-void rayCast(vec3 dir) {
-	hitCoord = vpos;
-	dir *= ssgiRayStep * 2;
-	float dist = 0.15;
-	for (int i = 0; i < ssgiMaxSteps; i++) {
-		hitCoord += dir;
-		float delta = getDeltaDepth(hitCoord);
-		if (delta > 0.0 && delta < 0.2) {
-			dist = distance(vpos, hitCoord);
-			break;
+#ifdef _CPostprocess
+    uniform vec3 PPComp12;
+#endif
+
+#ifdef _ShadowMap
+	#ifdef _SinglePoint
+		#ifdef _Spot
+			#ifndef _LTC
+				uniform sampler2DShadow shadowMapSpot[1];
+				#ifdef _ShadowMapTransparent
+				uniform sampler2D shadowMapSpotTransparent[1];
+				#endif
+				uniform mat4 LWVPSpot[1];
+			#endif
+		#else
+			uniform samplerCubeShadow shadowMapPoint[1];
+			#ifdef _ShadowMapTransparent
+			uniform samplerCube shadowMapPointTransparent[1];
+			#endif
+			uniform vec2 lightProj;
+		#endif
+	#endif
+	#ifdef _Clusters
+		#ifdef _SingleAtlas
+		uniform sampler2DShadow shadowMapAtlas;
+		#ifdef _ShadowMapTransparent
+		uniform sampler2D shadowMapAtlasTransparent;
+		#endif
+		#endif
+		uniform vec2 lightProj;
+		#ifdef _ShadowMapAtlas
+		#ifndef _SingleAtlas
+		uniform sampler2DShadow shadowMapAtlasPoint;
+		#ifdef _ShadowMapTransparent
+		uniform sampler2D shadowMapAtlasPointTransparent;
+		#endif
+		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
+		#else
+		uniform samplerCubeShadow shadowMapPoint[4];
+		#ifdef _ShadowMapTransparent
+		uniform samplerCube shadowMapPointTransparent[4];
+		#endif
+		#endif
+		#endif
+		#ifdef _Spot
+			#ifdef _ShadowMapAtlas
+			#ifndef _SingleAtlas
+			uniform sampler2DShadow shadowMapAtlasSpot;
+			#ifdef _ShadowMapTransparent
+			uniform sampler2D shadowMapAtlasSpotTransparent;
+			#endif
+			#endif
+			#else
+			uniform sampler2DShadow shadowMapSpot[4];
+			#ifdef _ShadowMapTransparent
+			uniform sampler2D shadowMapSpotTransparent[4];
+			#endif
+			#endif
+			uniform mat4 LWVPSpotArray[maxLightsCluster];
+		#endif
+	#endif
+#endif
+
+#ifdef _LTC
+uniform vec3 lightArea0;
+uniform vec3 lightArea1;
+uniform vec3 lightArea2;
+uniform vec3 lightArea3;
+uniform sampler2D sltcMat;
+uniform sampler2D sltcMag;
+#ifdef _ShadowMap
+#ifndef _Spot
+	#ifdef _SinglePoint
+		uniform sampler2DShadow shadowMapSpot[1];
+		#ifdef _ShadowMapTransparent
+		uniform sampler2D shadowMapSpotTransparent[1];
+		#endif
+		uniform mat4 LWVPSpot[1];
+	#endif
+	#ifdef _Clusters
+		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+		uniform mat4 LWVPSpotArray[maxLightsCluster];
+	#endif
+#endif
+#endif
+#endif
+
+#ifdef _Sun
+uniform vec3 sunDir;
+uniform vec3 sunCol;
+	#ifdef _ShadowMap
+	#ifdef _ShadowMapAtlas
+	#ifndef _SingleAtlas
+	uniform sampler2DShadow shadowMapAtlasSun;
+	#ifdef _ShadowMapTransparent
+	uniform sampler2D shadowMapAtlasSunTransparent;
+	#endif
+	#endif
+	#else
+	uniform sampler2DShadow shadowMap;
+	#ifdef _ShadowMapTransparent
+	uniform sampler2D shadowMapTransparent;
+	#endif
+	#endif
+	uniform float shadowsBias;
+	#ifdef _CSM
+	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+	#else
+	uniform mat4 LWVP;
+	#endif
+	#endif // _ShadowMap
+#endif
+
+vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
+	#ifdef _ShadowMap
+		, int index, float bias, bool receiveShadow, bool transparent
+	#endif
+	#ifdef _Spot
+		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
+	#endif
+	) {
+
+	vec3 ld = lp - p;
+	vec3 l = normalize(ld);
+
+	vec3 visibility = lightCol;
+	visibility *= attenuate(distance(p, lp));
+
+	#ifdef _LTC
+	#ifdef _ShadowMap
+		if (receiveShadow) {
+			#ifdef _SinglePoint
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
+			visibility *= shadowTest(shadowMapSpot[0],
+								#ifdef _ShadowMapTransparent
+								shadowMapSpotTransparent[0],
+								#endif
+								lPos.xyz / lPos.w, bias
+								#ifdef _ShadowMapTransparent
+								, transparent
+								#endif
+								);
+			#endif
+			#ifdef _Clusters
+			vec4 lPos = LWVPSpot[index] * vec4(p + n * bias * 10, 1.0);
+			if (index == 0) visibility *= shadowTest(shadowMapSpot[0],
+												#ifdef _ShadowMapTransparent
+												shadowMapSpotTransparent[0],
+												#endif
+												lPos.xyz / lPos.w, bias
+												#ifdef _ShadowMapTransparent
+												, transparent
+												#endif
+												);
+			else if (index == 1) visibility *= shadowTest(shadowMapSpot[1],
+													#ifdef _ShadowMapTransparent
+													shadowMapSpotTransparent[1],
+													#endif
+													lPos.xyz / lPos.w, bias
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+			else if (index == 2) visibility *= shadowTest(shadowMapSpot[2],
+													#ifdef _ShadowMapTransparent
+													shadowMapSpotTransparent[2],
+													#endif
+													lPos.xyz / lPos.w, bias
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+			else if (index == 3) visibility *= shadowTest(shadowMapSpot[3],
+													#ifdef _ShadowMapTransparent
+													shadowMapSpotTransparent[3],
+													#endif
+													lPos.xyz / lPos.w, bias
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+			#endif
 		}
+	#endif
+	return visibility;
+	#endif
+
+	#ifdef _Spot
+	if (isSpot) {
+		visibility *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
+
+		#ifdef _ShadowMap
+			if (receiveShadow) {
+				#ifdef _SinglePoint
+				vec4 lPos = LWVPSpotArray[0] * vec4(p + n * bias * 10, 1.0);
+				visibility *= shadowTest(shadowMapSpot[0],
+									#ifdef _ShadowMapTransparent
+									shadowMapSpotTransparent[0],
+									#endif
+									lPos.xyz / lPos.w, bias
+									#ifdef _ShadowMapTransparent
+									, transparent
+									#endif
+									);
+				#endif
+				#ifdef _Clusters
+					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
+					#ifdef _ShadowMapAtlas
+						visibility *= shadowTest(
+											#ifdef _ShadowMapTransparent
+											#ifndef _SingleAtlas
+											shadowMapAtlasSpot, shadowMapAtlasSpotTransparent
+											#else
+											shadowMapAtlas, shadowMapAtlasTransparent
+											#endif
+											#else
+											#ifndef _SingleAtlas
+											shadowMapAtlasSpot
+											#else
+											shadowMapAtlas
+											#endif
+											#endif
+											, lPos.xyz / lPos.w, bias
+											#ifdef _ShadowMapTransparent
+											, transparent
+											#endif
+											);
+					#else
+							 if (index == 0) visibility *= shadowTest(shadowMapSpot[0],
+																#ifdef _ShadowMapTransparent
+																shadowMapSpotTransparent[0],
+																#endif
+																lPos.xyz / lPos.w, bias
+																#ifdef _ShadowMapTransparent
+																, transparent
+																#endif
+																);
+						else if (index == 1) visibility *= shadowTest(shadowMapSpot[1],
+																#ifdef _ShadowMapTransparent
+																shadowMapSpotTransparent[1],
+																#endif
+																lPos.xyz / lPos.w, bias
+																#ifdef _ShadowMapTransparent
+																, transparent
+																#endif
+																);
+						else if (index == 2) visibility *= shadowTest(shadowMapSpot[2],
+																#ifdef _ShadowMapTransparent
+																shadowMapSpotTransparent[2],
+																#endif
+																lPos.xyz / lPos.w, bias
+																#ifdef _ShadowMapTransparent
+																, transparent
+																#endif
+																);
+						else if (index == 3) visibility *= shadowTest(shadowMapSpot[3],
+																#ifdef _ShadowMapTransparent
+																shadowMapSpotTransparent[3],
+																#endif
+																lPos.xyz / lPos.w, bias
+																#ifdef _ShadowMapTransparent
+																, transparent
+																#endif
+																);
+					#endif
+				#endif
+			}
+		#endif
+		return visibility;
 	}
-	fragColor += dist;
-	// #ifdef _RTGI
-	// col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
-	// #endif
+	#endif
+
+	#ifdef _LightIES
+	visibility *= iesAttenuation(-l);
+	#endif
+
+	#ifdef _ShadowMap
+		if (receiveShadow) {
+			#ifdef _SinglePoint
+			#ifndef _Spot
+			visibility *= PCFCube(shadowMapPoint[0],
+							#ifdef _ShadowMapTransparent
+							shadowMapPointTransparent[0],
+							#endif
+							ld, -l, bias, lightProj, n
+							#ifdef _ShadowMapTransparent
+							, transparent
+							#endif
+							);
+			#endif
+			#endif
+			#ifdef _Clusters
+				#ifdef _ShadowMapAtlas
+				visibility *= PCFFakeCube(
+									#ifdef _ShadowMapTransparent
+									#ifndef _SingleAtlas
+									shadowMapAtlasPoint, shadowMapAtlasPointTransparent
+									#else
+									shadowMapAtlas, shadowMapAtlasTransparent
+									#endif
+									#else
+									#ifndef _SingleAtlas
+									shadowMapAtlasPoint
+									#else
+									shadowMapAtlas
+									#endif
+									#endif
+									, ld, -l, bias, lightProj, n, index
+									#ifdef _ShadowMapTransparent
+									, transparent
+									#endif
+									);
+				#else
+					 if (index == 0) visibility *= PCFCube(shadowMapPoint[0],
+													#ifdef _ShadowMapTransparent
+													shadowMapPointTransparent[0],
+													#endif
+													ld, -l, bias, lightProj, n
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+				else if (index == 1) visibility *= PCFCube(shadowMapPoint[1],
+													#ifdef _ShadowMapTransparent
+													shadowMapPointTransparent[1],
+													#endif
+													ld, -l, bias, lightProj, n
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+				else if (index == 2) visibility *= PCFCube(shadowMapPoint[2],
+													#ifdef _ShadowMapTransparent
+													shadowMapPointTransparent[2],
+													#endif
+													ld, -l, bias, lightProj, n
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+				else if (index == 3) visibility *= PCFCube(shadowMapPoint[3],
+													#ifdef _ShadowMapTransparent
+													shadowMapPointTransparent[3],
+													#endif
+													ld, -l, bias, lightProj, n
+													#ifdef _ShadowMapTransparent
+													, transparent
+													#endif
+													);
+				#endif
+			#endif
+		}
+	#endif
+
+	return visibility;
 }
 
-vec3 tangent(const vec3 n) {
-	vec3 t1 = cross(n, vec3(0, 0, 1));
-	vec3 t2 = cross(n, vec3(0, 1, 0));
-	if (length(t1) > length(t2)) return normalize(t1);
-	else return normalize(t2);
+vec3 getVisibility(vec3 p, vec3 n, float depth, vec2 uv) {
+		vec3 visibility = vec3(0.0);
+#ifdef _Sun
+	#ifdef _ShadowMap
+		#ifdef _CSM
+			visibility = shadowTestCascade(
+											#ifdef _ShadowMapAtlas
+												#ifdef _ShadowMapTransparent
+												#ifndef _SingleAtlas
+												shadowMapAtlasSun, shadowMapAtlasSunTransparent
+												#else
+												shadowMapAtlas, shadowMapAtlasTransparent
+												#endif
+												#else
+												#ifndef _SingleAtlas
+												shadowMapAtlasSun
+												#else
+												shadowMapAtlas
+												#endif
+												#endif
+											#else
+											#ifdef _ShadowMapTransparent
+											shadowMap, shadowMapTransparent
+											#else
+											shadowMap
+											#endif
+											#endif
+											, eye, p + n * shadowsBias * 10, shadowsBias
+											#ifdef _ShadowMapTransparent
+											, false
+											#endif
+											);
+		#else
+			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
+			if (lPos.w > 0.0) {
+				visibility = shadowTest(
+										#ifdef _ShadowMapAtlas
+											#ifdef _ShadowMapTransparent
+											#ifndef _SingleAtlas
+											shadowMapAtlasSun, shadowMapAtlasSunTransparent
+											#else
+											shadowMapAtlas, shadowMapAtlasTransparent
+											#endif
+											#else
+											#ifndef _SingleAtlas
+											shadowMapAtlasSun
+											#else
+											shadowMapAtlas
+											#endif
+											#endif
+										#else
+										#ifdef _ShadowMapTransparent
+										shadowMap, shadowMapTransparent
+										#else
+										shadowMap
+										#endif
+										#endif
+										, lPos.xyz / lPos.w, shadowsBias
+										#ifdef _ShadowMapTransparent
+										, false
+										#endif
+										);
+			}
+		#endif
+	#endif
+#endif
+
+#ifdef _SinglePoint
+	visibility += sampleLight(
+		p, n, pointPos, pointCol
+		#ifdef _ShadowMap
+			, 0, pointBias, true, false
+		#endif
+		#ifdef _Spot
+		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
+		#endif
+	);
+#endif
+
+#ifdef _Clusters
+	float viewz = linearize(depth, cameraProj);
+	int clusterI = getClusterI(uv, viewz, cameraPlane);
+	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
+
+	#ifdef HLSL
+	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	#endif
+
+	#ifdef _Spot
+	int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);
+	int numPoints = numLights - numSpots;
+	#endif
+
+	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
+		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
+		visibility += sampleLight(
+			p,
+			n,
+			lightsArray[li * 3].xyz, // lp
+			lightsArray[li * 3 + 1].xyz // lightCol
+			#ifdef _ShadowMap
+				// light index, shadow bias, cast_shadows
+				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0, false
+			#endif
+			#ifdef _Spot
+			, lightsArray[li * 3 + 2].y != 0.0
+			, lightsArray[li * 3 + 2].y // spot size (cutoff)
+			, lightsArraySpot[li * 2].w // spot blend (exponent)
+			, lightsArraySpot[li * 2].xyz // spotDir
+			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
+			, lightsArraySpot[li * 2 + 1].xyz // right
+			#endif
+		);
+	}
+#endif // _Clusters
+	return visibility;
 }
+
+vec3 getWorldPos(vec2 uv, float depth) {
+    vec4 pos = invVP * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    return pos.xyz / pos.w;
+}
+
+vec3 getNormal(vec2 uv) {
+    vec4 g0 = textureLod(gbuffer0, uv, 0.0);
+    vec2 enc = g0.rg;
+    vec3 n;
+    n.z = 1.0 - abs(enc.x) - abs(enc.y);
+    n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    return normalize(n);
+}
+
+vec3 calculateLight(vec2 uv, vec3 pos, vec3 normal, float depth) {
+    // Simplified visibility - replace with your full visibility function if needed
+    vec3 sampleColor = textureLod(gbuffer1, uv, 0.0).rgb * getVisibility(pos, normal, depth, uv);
+
+	#ifdef _EmissionShadeless
+		if (matid == 1) { // pure emissive material, color stored in basecol
+			sampleColor += textureLod(gbuffer1, uv, 0.0).rgb;
+		}
+	#endif
+	#ifdef _EmissionShaded
+		#ifdef _EmissionShadeless
+		else {
+		#endif
+			vec3 sampleEmission = textureLod(gbufferEmission, uv, 0.0).rgb;
+			sampleColor += sampleEmission; // Emission should be added visibilityly
+		#ifdef _EmissionShadeless
+		}
+		#endif
+	#endif
+
+	return sampleColor;
+}
+
+// Improved sampling parameters
+const float GOLDEN_ANGLE = 2.39996323;
+const float MAX_DEPTH_DIFFERENCE = 0.9; // More conservative depth threshold
+const float SAMPLE_BIAS = 0.01; // Small offset to avoid self-occlusion
+// threshold that scales with screen-space radius (samples further away can be looser)
+// tune: DEPTH_SCALE (0.2) and MIN_DEPTH_THRESHOLD (0.02) are reasonable starting points
+float DEPTH_SCALE = 0.1;
+float MIN_DEPTH_THRESHOLD = 0.01;
 
 void main() {
-	fragColor = 0;
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+    float depth = textureLod(gbufferD, texCoord, 0.0).r;
+    if (depth >= 1.0) {
+        fragColor = vec3(0.0);
+        return;
+    }
 
-	vec2 enc = g0.rg;
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
+	unpackFloatInt16(g0.a, metallic, matid);
+
+	vec2 velocity = -textureLod(sveloc, texCoord, 0.0).rg;
+
 	vec3 n;
-	n.z = 1.0 - abs(enc.x) - abs(enc.y);
-	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(V3 * n);
+	n.z = 1.0 - abs(g0.x) - abs(g0.y);
+	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
+	n = normalize(n);
 
-	vpos = getPosView(viewRay, d, cameraProj);
+    vec3 pos = getWorldPos(texCoord, depth);
+    vec3 normal = getNormal(texCoord);
+    vec3 centerColor = textureLod(gbuffer1, texCoord, 0.0).rgb;
 
-	rayCast(n);
-	vec3 o1 = normalize(tangent(n));
-	vec3 o2 = (cross(o1, n));
-	vec3 c1 = 0.5f * (o1 + o2);
-	vec3 c2 = 0.5f * (o1 - o2);
-	rayCast(mix(n, o1, angleMix));
-	rayCast(mix(n, o2, angleMix));
-	rayCast(mix(n, -c1, angleMix));
-	rayCast(mix(n, -c2, angleMix));
+    float radius = ssaoRadius;
 
-	#ifdef _SSGICone9
-	rayCast(mix(n, -o1, angleMix));
-	rayCast(mix(n, -o2, angleMix));
-	rayCast(mix(n, c1, angleMix));
-	rayCast(mix(n, c2, angleMix));
+    vec3 gi = vec3(0.0);
+    float totalWeight = 0.0;
+    float angle = fract(sin(dot(texCoord, vec2(12.9898, 78.233))) * 100.0);
+
+	for (int i = 0; i < ssgiSamples; i++) {
+		// quasi-random spiral sample (r already scaled by radius)
+		float r = sqrt((float(i) + 0.5) / float(ssgiSamples)) * radius;
+		float a = (float(i) * GOLDEN_ANGLE) + angle;
+
+		vec2 dir2 = vec2(cos(a), sin(a));
+
+		float centerViewZ = linearize(depth, cameraProj);      // center (view-space z)
+		float blurStrength = mix(1.0, 2.5, clamp(centerViewZ / 50.0, 0.0, 1.0));
+
+		vec2 offset = dir2 * r * radius * blurStrength;
+
+		// Jitter using Bayer matrix and velocity for temporal stability (keep your indexing but clamp properly)
+		// make sure bayer indices are in range and cast safe
+		ivec2 bIdx = ivec2(int(mod(gl_FragCoord.x + floor(velocity.x), 8.0)),
+						int(mod(gl_FragCoord.y + floor(velocity.y), 8.0)));
+		float jitter = BayerMatrix8[bIdx.x][bIdx.y]; // keep the Bayer lookup shape you have
+		vec2 sampleUV = clamp(texCoord + (offset * (jitter - 0.5)) / screenSize, vec2(0.001), vec2(0.999));
+
+		float sampleDepth = textureLod(gbufferD, sampleUV, 0.0).r;
+		if (sampleDepth >= 1.0) continue;
+
+		// reconstruct world position and normal
+		vec3 samplePos = getWorldPos(sampleUV, sampleDepth);
+		vec3 sampleNormal = getNormal(sampleUV);
+
+		// push sample away from surface slightly to reduce self-occlusion
+		samplePos += sampleNormal * SAMPLE_BIAS;
+
+		// world-space distance
+		vec3 dir = pos - samplePos;
+		float dist = length(dir);
+
+		// --- DEPTH / VIEW-Z based test (robust) ---
+		float sampleViewZ = linearize(sampleDepth, cameraProj); // sample (view-space z)
+		float dz = abs(centerViewZ - sampleViewZ);
+
+		float depthThreshold = max(MIN_DEPTH_THRESHOLD, DEPTH_SCALE * r);
+
+		// soft depth weight: 1.0 when close, 0.0 when beyond threshold*2 (smooth)
+		float depthWeight = 1.0 - smoothstep(depthThreshold, depthThreshold * 2.0, dz);
+
+		// optional hard early-out to skip very distant surfaces (saves cost)
+		if (dz > depthThreshold * 4.0) continue;
+
+		// --- NORMAL / ORIENTATION weight ---
+		float Ndot = max(dot(sampleNormal, n), 0.0);
+
+		// --- DISTANCE falloff weight ---
+		// distance falloff: smaller influence for far samples
+		float distWeight = 1.0 / (1.0 + dist); // tune denominator
+
+		// compute sample lighting color and apply combined weight
+		vec3 sampleColor = calculateLight(sampleUV, samplePos, sampleNormal, sampleDepth);
+
+		// final weight combines geometry, depth and normal agreement
+		float weight = depthWeight * distWeight * Ndot;
+
+		// optionally ignore extremely small weights
+		if (weight <= 1e-4) continue;
+
+		gi += sampleColor * weight;
+		totalWeight += weight;
+	}
+
+    // Normalize and apply intensity
+    if (totalWeight > 0.0) {
+        gi /= totalWeight;
+        #ifdef _CPostprocess
+            gi *= PPComp12.x;
+        #else
+            gi *= ssaoStrength;
+        #endif
+    }
+
+	#ifdef _EmissionShadeless
+		if (matid == 1) { // pure emissive material, color stored in basecol
+			gi += textureLod(gbuffer1, texCoord, 0.0).rgb;
+		}
 	#endif
+	#ifdef _EmissionShaded
+		#ifdef _EmissionShadeless
+		else {
+		#endif
+			gi += textureLod(gbufferEmission, texCoord, 0.0).rgb;
+		#ifdef _EmissionShadeless
+		}
+		#endif
+	#endif
+	fragColor = gi / (gi + vec3(1.0)); // Reinhard tone mapping
 }

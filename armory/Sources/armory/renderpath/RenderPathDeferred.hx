@@ -660,6 +660,15 @@ class RenderPathDeferred {
 				#if rp_gbuffer_emission
 				path.bindTarget("gbuffer_emission", "gbufferEmission");
 				#end
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 				path.setTarget("singleb");
 				path.bindTarget("singlea", "tex");
