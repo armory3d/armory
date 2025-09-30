@@ -46,15 +46,15 @@ uniform layout(r32ui) uimage3D voxels;
 uniform layout(r32ui) uimage3D voxelsLight;
 uniform layout(rgba16f) image3D voxelsB;
 uniform layout(rgba16f) image3D voxelsOut;
-uniform layout(r8) image3D SDF;
+uniform layout(r16f) image3D SDF;
 #else
 #ifdef _VoxelAOvar
 #ifdef _VoxelShadow
-uniform layout(r8) image3D SDF;
+uniform layout(r16f) image3D SDF;
 #endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r16) image3D voxelsB;
-uniform layout(r16) image3D voxelsOut;
+uniform layout(r16f) image3D voxelsB;
+uniform layout(r16f) image3D voxelsOut;
 #endif
 #endif
 
@@ -207,10 +207,10 @@ void main() {
 		else {
 			mat3 TBN;
 			if (length(avgNormal) > 0)
-				TBN = makeTangentBasis(normalize(avgNormal));
+				TBN = makeTangentBasis(avgNormal);
 			else
-				TBN = makeTangentBasis(vec3(0.0, 1.0, 0.0));
-			vec3 coneDirection = TBN * DIFFUSE_CONE_DIRECTIONS[i - 6];
+				TBN = makeTangentBasis(vec3(0.0, 0.0, 1.0));
+			vec3 coneDirection = normalize(TBN * DIFFUSE_CONE_DIRECTIONS[i - 6]);
 			vec3 aniso_direction = -coneDirection;
 			uvec3 face_offsets = uvec3(
 				aniso_direction.x > 0 ? 0 : 1,

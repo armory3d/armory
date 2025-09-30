@@ -25,7 +25,7 @@ const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
 );
 
 mat3 makeTangentBasis(vec3 N) {
-    vec3 helper = abs(N.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 helper = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     vec3 T = normalize(cross(helper, N));
     vec3 B = cross(N, T);
     return mat3(T, B, N);

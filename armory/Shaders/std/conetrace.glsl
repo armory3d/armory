@@ -150,7 +150,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 	vec4 amount = vec4(0.0);
 	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
-		vec3 coneDir = TBN * DIFFUSE_CONE_DIRECTIONS[i];
+		vec3 coneDir = normalize(TBN * DIFFUSE_CONE_DIRECTIONS[i]);
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
@@ -247,7 +247,7 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 	float amount = 0.0;
 	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; i++) {
-		vec3 coneDir = TBN * DIFFUSE_CONE_DIRECTIONS[i];
+		vec3 coneDir = normalize(TBN * DIFFUSE_CONE_DIRECTIONS[i]);
 		int precomputed_direction = 6 + i;
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
