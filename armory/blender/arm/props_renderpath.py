@@ -142,7 +142,7 @@ def update_preset(self, context):
         rpdat.rp_stereo = False
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '32'
-        rpdat.arm_voxelgi_size = 0.25
+        rpdat.arm_voxelgi_size = 0.125
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
@@ -532,7 +532,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_shad: FloatProperty(name="Shadows", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_env: FloatProperty(name="Environment", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
+    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.125, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
