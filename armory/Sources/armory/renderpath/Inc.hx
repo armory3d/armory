@@ -715,7 +715,7 @@ class Inc {
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
 						t.format = "A16";
-						t.mipmaps = true;
+						t.mipmaps = false;
 					}
 					else {
 						t.format = "A32";
@@ -732,7 +732,7 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-						t.mipmaps = true;
+						t.mipmaps = false;
 					}
 					else {
 						t.format = "A32";
@@ -1026,35 +1026,38 @@ class Inc {
 	#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
 	public static function computeVoxelsSDF() {
 		var rts = path.renderTargets;
-	 	var res = iron.RenderPath.getVoxelRes();
-	 	var clipmaps = iron.RenderPath.clipmaps;
-	 	var clipmap = clipmaps[iron.RenderPath.clipmapLevel];
+		var res = iron.RenderPath.getVoxelRes();
+		var clipmaps = iron.RenderPath.clipmaps;
 
+		var finalTarget = "voxelsSDF";
 		var read_sdf = "voxelsSDF";
 		var write_sdf = "voxelsSDFtmp";
 
-	 	var passcount = Std.int(Math.ceil(Math.log(res) / Math.log(2.0)));
+		var passcount = Std.int(Math.ceil(Math.log(res) / Math.log(2.0)));
 
-	 	for (i in 0...passcount) {
+		for (i in 0...passcount) {
+			// 🔑 On the *last* pass, force write target to voxelsSDF
+			if (i == passcount - 1) {
+				write_sdf = finalTarget;
+			}
+
 			kha.compute.Compute.setShader(voxel_sh2);
-
 			kha.compute.Compute.setTexture(voxel_ta2, rts.get(read_sdf).image, kha.compute.Access.Read);
 			kha.compute.Compute.setTexture(voxel_tb2, rts.get(write_sdf).image, kha.compute.Access.Write);
 
 			var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
-			for (i in 0...Main.voxelgiClipmapCount) {
-				fa[i * 10] = clipmaps[i].voxelSize;
-				fa[i * 10 + 1] = clipmaps[i].extents.x;
-				fa[i * 10 + 2] = clipmaps[i].extents.y;
-				fa[i * 10 + 3] = clipmaps[i].extents.z;
-				fa[i * 10 + 4] = clipmaps[i].center.x;
-				fa[i * 10 + 5] = clipmaps[i].center.y;
-				fa[i * 10 + 6] = clipmaps[i].center.z;
-				fa[i * 10 + 7] = clipmaps[i].offset_prev.x;
-				fa[i * 10 + 8] = clipmaps[i].offset_prev.y;
-				fa[i * 10 + 9] = clipmaps[i].offset_prev.z;
+			for (j in 0...Main.voxelgiClipmapCount) {
+				fa[j * 10]     = clipmaps[j].voxelSize;
+				fa[j * 10 + 1] = clipmaps[j].extents.x;
+				fa[j * 10 + 2] = clipmaps[j].extents.y;
+				fa[j * 10 + 3] = clipmaps[j].extents.z;
+				fa[j * 10 + 4] = clipmaps[j].center.x;
+				fa[j * 10 + 5] = clipmaps[j].center.y;
+				fa[j * 10 + 6] = clipmaps[j].center.z;
+				fa[j * 10 + 7] = clipmaps[j].offset_prev.x;
+				fa[j * 10 + 8] = clipmaps[j].offset_prev.y;
+				fa[j * 10 + 9] = clipmaps[j].offset_prev.z;
 			}
-
 			kha.compute.Compute.setFloats(voxel_ca2, fa);
 
 			kha.compute.Compute.setInt(voxel_cb2, iron.RenderPath.clipmapLevel);
@@ -1064,10 +1067,11 @@ class Inc {
 
 			kha.compute.Compute.compute(Std.int(res / 8), Std.int(res / 8), Std.int(res / 8));
 
-			if (i < passcount - 1)
-			{
-				read_sdf = read_sdf == "voxelsSDF" ? "voxelsSDFtmp" : "voxelsSDF";
-				write_sdf = write_sdf == "voxelsSDF" ? "voxelsSDFtmp" : "voxelsSDF";
+			if (i < passcount - 1) {
+				// swap for next iteration
+				var tmp = read_sdf;
+				read_sdf = write_sdf;
+				write_sdf = tmp;
 			}
 		}
 	}
