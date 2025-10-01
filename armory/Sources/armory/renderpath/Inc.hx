@@ -1029,18 +1029,12 @@ class Inc {
 		var res = iron.RenderPath.getVoxelRes();
 		var clipmaps = iron.RenderPath.clipmaps;
 
-		var finalTarget = "voxelsSDF";
 		var read_sdf = "voxelsSDF";
 		var write_sdf = "voxelsSDFtmp";
 
 		var passcount = Std.int(Math.ceil(Math.log(res) / Math.log(2.0)));
 
 		for (i in 0...passcount) {
-			// 🔑 On the *last* pass, force write target to voxelsSDF
-			if (i == passcount - 1) {
-				write_sdf = finalTarget;
-			}
-
 			kha.compute.Compute.setShader(voxel_sh2);
 			kha.compute.Compute.setTexture(voxel_ta2, rts.get(read_sdf).image, kha.compute.Access.Read);
 			kha.compute.Compute.setTexture(voxel_tb2, rts.get(write_sdf).image, kha.compute.Access.Write);
