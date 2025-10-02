@@ -92,7 +92,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -197,7 +197,7 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+	vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -286,7 +286,7 @@ traceConeShadow(
     float voxelSize0 = float(clipmaps[0]) * 2.0;
     float dist = voxelSize0;
     float step_dist = dist;
-    vec3 start_pos = origin + n * voxelSize0 * voxelgiOffset;
+    vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
     int clipmap_index0 = 0;
 
     vec3 aniso_direction = -dir;
