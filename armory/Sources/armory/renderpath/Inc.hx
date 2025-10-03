@@ -721,7 +721,7 @@ class Inc {
 						t.format = "A32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 4;
+						t.depth = res * 2;
 						t.mipmaps = false;
 					}
 				}

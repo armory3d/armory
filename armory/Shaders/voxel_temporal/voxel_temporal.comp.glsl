@@ -139,7 +139,7 @@ void main() {
 				radiance.rgb += emission.rgb;
 			}
 			#else
-			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x * 3)));
+			int count = int(imageLoad(voxels, src + ivec3(0, 0, voxelgiResolution.x)));
 			if (count > 0) {
 				opac = float(imageLoad(voxels, src)) / 1024;
 				opac /= count;

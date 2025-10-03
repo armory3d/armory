@@ -66,7 +66,6 @@ def update_preset(self, context):
         rpdat.rp_stereo = False
         rpdat.rp_voxelgi_resolution = '32'
         rpdat.arm_voxelgi_size = 0.25
-        rpdat.arm_voxelgi_offset = 4.0
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
@@ -144,7 +143,6 @@ def update_preset(self, context):
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_size = 0.125
-        rpdat.arm_voxelgi_offset = 2.0
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
@@ -488,8 +486,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')
+               #('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
