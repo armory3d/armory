@@ -5,30 +5,23 @@ const float SHADOW_CONE_APERTURE = 0.2;
 const float DIFFUSE_CONE_APERTURE = 0.872665f;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
-    normalize(vec3( 0.382683,  0.0,  0.923880)),
-    normalize(vec3(-0.382683,  0.0,  0.923880)),
-    normalize(vec3( 0.0,  0.382683,  0.923880)),
-    normalize(vec3( 0.0, -0.382683,  0.923880)),
-    normalize(vec3( 0.270598,  0.270598,  0.923880)),
-    normalize(vec3(-0.270598,  0.270598,  0.923880)),
-    normalize(vec3( 0.270598, -0.270598,  0.923880)),
-    normalize(vec3(-0.270598, -0.270598,  0.923880)),
-    normalize(vec3( 0.707107,  0.0,  0.707107)),
-    normalize(vec3(-0.707107,  0.0,  0.707107)),
-    normalize(vec3( 0.0,  0.707107,  0.707107)),
-    normalize(vec3( 0.0, -0.707107,  0.707107)),
-    normalize(vec3( 0.5,  0.5,  0.707107)),
-    normalize(vec3(-0.5,  0.5,  0.707107)),
-    normalize(vec3( 0.5, -0.5,  0.707107)),
-    normalize(vec3(-0.5, -0.5,  0.707107))
+    vec3( 0.0000,  0.0000,  1.0000),
+    vec3( 0.8944,  0.0000,  0.4472),
+    vec3(-0.8944,  0.0000,  0.4472),
+    vec3( 0.0000,  0.8944,  0.4472),
+    vec3( 0.0000, -0.8944,  0.4472),
+    vec3( 0.5774,  0.5774,  0.5774),
+    vec3(-0.5774,  0.5774,  0.5774),
+    vec3( 0.5774, -0.5774,  0.5774),
+    vec3(-0.5774, -0.5774,  0.5774),
+    vec3( 0.7071,  0.7071,  0.0000),
+    vec3(-0.7071,  0.7071,  0.0000),
+    vec3( 0.7071, -0.7071,  0.0000),
+    vec3(-0.7071, -0.7071,  0.0000),
+    vec3( 0.0000,  0.7071, -0.7071),
+    vec3( 0.7071,  0.0000, -0.7071),
+    vec3(-0.7071,  0.0000, -0.7071)
 );
-
-mat3 makeTangentBasis(vec3 N) {
-    vec3 helper = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 T = normalize(cross(helper, N));
-    vec3 B = cross(N, T);
-    return mat3(T, B, N);
-}
 
 /*
 Copyright (c) 2024 Turánszki János

@@ -92,7 +92,6 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -111,9 +110,10 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
         float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
-		vec3 p0 = start_pos + dir * dist;
+		float voxelSize = float(clipmaps[int(clipmap_index * 10)]);
+		vec3 p0 = (origin + n * voxelSize) + dir * dist;
 
-        samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
+        samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (voxelSize * voxelgiResolution);
 		samplePos = samplePos * 0.5 + 0.5;
 
 		if (any(notEqual(samplePos, clamp(samplePos, 0.0, 1.0)))) {
@@ -148,9 +148,8 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sum = 0.0;
 	vec4 amount = vec4(0.0);
-	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
-		vec3 coneDir = normalize(TBN * DIFFUSE_CONE_DIRECTIONS[i]);
+		vec3 coneDir = DIFFUSE_CONE_DIRECTIONS[i];
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
@@ -197,7 +196,6 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 	float dist = voxelSize0;
 	float step_dist = dist;
 	vec3 samplePos;
-	vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
 	int clipmap_index0 = 0;
 
 	vec3 aniso_direction = -dir;
@@ -216,7 +214,8 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
 		float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
-		vec3 p0 = start_pos + dir * dist;
+		float voxelSize = float(clipmaps[int(clipmap_index * 10)]);
+		vec3 p0 = (origin + n * voxelSize) + dir * dist;
 
         samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution.x);
 		samplePos = samplePos * 0.5 + 0.5;
@@ -245,9 +244,8 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
 	float sum = 0.0;
 	float amount = 0.0;
-	mat3 TBN = makeTangentBasis(normal);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; i++) {
-		vec3 coneDir = normalize(TBN * DIFFUSE_CONE_DIRECTIONS[i]);
+		vec3 coneDir = DIFFUSE_CONE_DIRECTIONS[i];
 		int precomputed_direction = 6 + i;
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
@@ -286,7 +284,6 @@ traceConeShadow(
     float voxelSize0 = float(clipmaps[0]) * 2.0;
     float dist = voxelSize0;
     float step_dist = dist;
-    vec3 start_pos = origin + n * voxelSize0 + n * voxelgiOffset;
     int clipmap_index0 = 0;
 
     vec3 aniso_direction = -dir;
@@ -309,7 +306,8 @@ traceConeShadow(
         float lod = clamp(log2(diam / voxelSize0), clipmap_index0, voxelgiClipmapCount - 1);
         float clipmap_index = floor(lod);
         float clipmap_blend = fract(lod);
-        vec3 p0 = start_pos + dir * dist;
+		float voxelSize = float(clipmaps[int(clipmap_index * 10)]);
+		vec3 p0 = (origin + n * voxelSize) + dir * dist;
 
         vec3 samplePos = (p0 - vec3(
             clipmaps[int(clipmap_index * 10 + 4)],
