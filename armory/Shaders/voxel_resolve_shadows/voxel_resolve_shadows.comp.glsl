@@ -85,9 +85,9 @@ void main() {
 
 	#ifdef _VoxelGI
 	vec3 shadow = traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg).rgb;
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow, 1.0));
 	#else
 	float shadow = 1.0 - traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg);
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow));
 	#endif
-
-	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow, 1.0));
 }

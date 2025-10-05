@@ -446,7 +446,7 @@ void main() {
 	#ifdef _VoxelGI
 	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
 	#else
-	svisibility *= 1.0 - textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
 	#endif
 
@@ -512,7 +512,7 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
 		#ifdef _VoxelShadow
-			, dum, my, clipmaps
+			, dum, my, clipmaps, -g2.rg, texCoord
 		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
@@ -571,7 +571,7 @@ void main() {
 			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
-			, dum, my, clipmaps
+			, dum, my, clipmaps, -g2.rg, texCoord
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x

@@ -337,11 +337,9 @@ traceConeShadow(
         #ifdef _VoxelGI
         float absorb = mipSample.a;
         transmittance *= (1.0 - absorb) + mipSample.rgb * absorb;
-        if (all(lessThan(transmittance, vec3(0.01)))) break; // early out if fully absorbed
         #else
         float a = 1.0 - alpha;
         alpha += a * mipSample;
-        if (alpha >= 1.0) break; // fully blocked
         #endif
 
         // === Step size from SDF ===

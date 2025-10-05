@@ -714,7 +714,7 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-						t.format = "A16";
+						t.format = "R8";
 						t.mipmaps = false;
 					}
 					else {
