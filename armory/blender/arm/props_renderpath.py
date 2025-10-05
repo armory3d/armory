@@ -591,9 +591,9 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssrs_samples: IntProperty(name="Samples", default=4, update=assets.invalidate_shader_cache)
-    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
-    arm_ssrs_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
-    arm_ssrs_thickness: FloatProperty(name="Thickness", default=0.05, update=assets.invalidate_shader_cache)
+    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
+    arm_ssrs_max_steps: IntProperty(name="Max Steps", default=16, update=assets.invalidate_shader_cache)
+    arm_ssrs_thickness: FloatProperty(name="Thickness", default=0.01, update=assets.invalidate_shader_cache)
     arm_chromatic_aberration_type: EnumProperty(
         items=[('Simple', 'Simple', 'Simple'),
                ('Spectral', 'Spectral', 'Spectral'),
