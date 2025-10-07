@@ -3,6 +3,8 @@
 
 #include "std/gbuffer.glsl"
 
+const int maxSteps = int(ceil(1.0 / ssrsRayStep) * ssrsSearchDist);
+
 uniform mat4 VP;
 
 float traceShadowSS(
@@ -21,7 +23,7 @@ float traceShadowSS(
 
     float shadow = 1.0;
 
-    for (int i = 0; i < ssrsMaxSteps; ++i)
+    for (int i = 0; i < maxSteps; ++i)
     {
         // Advance the ray in world space
         rayPos += rayDir * ssrsRayStep;

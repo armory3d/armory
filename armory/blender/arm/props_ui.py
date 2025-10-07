@@ -1920,7 +1920,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.enabled = rpdat.arm_ssrs
         #col.prop(rpdat, 'arm_ssrs_samples')
         col.prop(rpdat, 'arm_ssrs_ray_step')
-        col.prop(rpdat, 'arm_ssrs_max_steps')
+        col.prop(rpdat, 'arm_ssrs_search_dist')
         col.prop(rpdat, 'arm_ssrs_thickness')
         layout.separator()
 

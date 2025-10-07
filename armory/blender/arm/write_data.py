@@ -695,7 +695,7 @@ const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter
             f.write(
 """const float ssrsSamples = """ + str(round(rpdat.arm_ssrs_samples * 100) / 100) + """;
 const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
-const float ssrsMaxSteps = """ + str(round(rpdat.arm_ssrs_max_steps * 100) / 100) + """;
+const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist * 100) / 100) + """;
 const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness * 100) / 100) + """;
 """)
 
