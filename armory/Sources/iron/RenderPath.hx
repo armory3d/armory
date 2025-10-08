@@ -347,7 +347,7 @@ class RenderPath {
 	}
 
 	public function drawMeshes(context: String) {
-		var isShadows = context == "shadowmap";
+		var isShadows = (context == "shadowmap" || context == "shadowmap_transparent");
 		if (isShadows) {
 			// Disabled shadow casting for this light
 			if (light == null || !light.data.raw.cast_shadow || !light.visible || light.data.raw.strength == 0) return;

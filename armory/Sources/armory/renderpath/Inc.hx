@@ -419,32 +419,38 @@ class Inc {
 			if (!l.visible || l.data.raw.type != "sun") continue;
 			var n = "shadowMap";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapTransparent";
 			path.bindTarget(n, n);
+			#end
 			break;
 		}
 		for (i in 0...pointIndex) {
 			var n = "shadowMapPoint[" + i + "]";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapPointTransparent[" + i + "]";
 			path.bindTarget(n, n);
+			#end
 		}
 		for (i in 0...spotIndex) {
 			var n = "shadowMapSpot[" + i + "]";
 			path.bindTarget(n, n);
+			#if rp_shadowmap_transparent
 			var n = "shadowMapSpotTransparent[" + i + "]";
 			path.bindTarget(n, n);
+			#end
 		}
 	}
 
 	static function shadowMapName(light: LightObject, transparent: Bool): String {
 		switch (light.data.raw.type) {
 			case "sun":
-				return transparent ? "shadowMapTransparent" : "shadowMap";
+				return #if rp_shadowmap_transparent transparent ? "shadowMapTransparent" :#end "shadowMap";
 			case "point":
-				return transparent ? "shadowMapPointTransparent[" + pointIndex + "]" : "shadowMapPoint[" + pointIndex + "]";
+				return #if rp_shadowmap_transparent transparent ? "shadowMapPointTransparent[" + pointIndex + "]" :#end "shadowMapPoint[" + pointIndex + "]";
 			default:
-				return transparent ? "shadowMapSpotTransparent[" + spotIndex + "]" : "shadowMapSpot[" + spotIndex + "]";
+				return #if rp_shadowmap_transparent transparent ? "shadowMapSpotTransparent[" + spotIndex + "]" :#end "shadowMapSpot[" + spotIndex + "]";
 		}
 	}
 

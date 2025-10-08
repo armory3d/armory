@@ -581,7 +581,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
     arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=1.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
@@ -592,7 +592,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssrs_samples: IntProperty(name="Samples", default=4, update=assets.invalidate_shader_cache)
     arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
-    arm_ssrs_search_dist: IntProperty(name="Search", default=1, update=assets.invalidate_shader_cache)
+    arm_ssrs_search_dist: FloatProperty(name="Search", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssrs_thickness: FloatProperty(name="Thickness", default=0.01, update=assets.invalidate_shader_cache)
     arm_chromatic_aberration_type: EnumProperty(
         items=[('Simple', 'Simple', 'Simple'),

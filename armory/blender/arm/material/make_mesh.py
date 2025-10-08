@@ -750,7 +750,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('eye, wposition + n * shadowsBias * 10, shadowsBias')
                 if is_transparent_shadows:
-                    frag.write(', false')
+                    if parse_opacity:
+                        frag.write(', true')
+                    else:
+                        frag.write(', false')
                 frag.write(');')
             else:
                 if tese is not None:

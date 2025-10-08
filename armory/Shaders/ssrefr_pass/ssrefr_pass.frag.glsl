@@ -74,10 +74,11 @@ void main() {
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 0.0 || d == 1.0 || opac == 1.0 || ior == 1.0) {
+    if (d == 0.0) {
         fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
         return;
     }
+
 	vec2 enc = g0.rg;
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
@@ -89,14 +90,26 @@ void main() {
     vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
-    vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
+	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
+
     vec4 coords = rayCast(dir);
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	float viewDot = clamp(dot(normalize(viewPos), viewNormal), 0.0, 1.0);
+	float fresnel = pow(1.0 - viewDot, 3.0) * 0.9 + 0.1; // bias to keep some refraction at grazing angles
+
+	// Distance attenuation (so rays that travel far contribute less)
+	float dist = length(viewPos - hitCoord);
+	float distFalloff = exp(-dist); // tweak 4.0 as needed, higher = shorter falloff
+
+	// Edge fade (smoothstep for stability)
+	float screenEdgeFactor = smoothstep(0.1, 0.6, 1.0 - (deltaCoords.x + deltaCoords.y));
+
+	// Combine terms safely
 	float refractivity = 1.0 - roughness;
-	float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * \
-						clamp(-refracted.z, 0.0, 1.0) * clamp((length(viewPos - hitCoord)), 0.0, 1.0) * coords.w;
-	intensity = clamp(intensity, 0.0, 1.0);
+	float intensity = refractivity * fresnel * screenEdgeFactor * coords.w;
+
+	// Clamp and slightly bias to avoid hard cutoff
+	intensity = clamp(intensity, 0.0, 0.95);
 
     vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol *= intensity;
