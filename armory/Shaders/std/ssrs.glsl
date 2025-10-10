@@ -2,105 +2,68 @@
 #define _SSRS_GLSL_
 
 #include "std/gbuffer.glsl"
+#include "std/constants.glsl"
 
-uniform mat4 VP;
-const int   ssrsBinarySteps = 7;  // refinement steps
-const float ssrsJitter = 0.01;      // per-pixel randomization scale
 const int maxSteps = int(ceil(1.0 / ssrsRayStep) * ssrsSearchDist);
 
-// Projects world position to screen space
-vec2 getProjectedCoord(vec3 hitCoord) {
-    vec4 projectedCoord = VP * vec4(hitCoord, 1.0);
-    projectedCoord.xy /= projectedCoord.w;
-    projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-#if defined(HLSL) || defined(METAL)
-    projectedCoord.y = 1.0 - projectedCoord.y;
-#endif
-    return projectedCoord.xy;
-}
+uniform mat4 VP;
 
-// Compute delta depth (positive means ray behind geometry)
-float getDeltaDepth(vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
-    vec2 texCoord = getProjectedCoord(hitCoord);
-    if (texCoord.x < 0.0 || texCoord.x > 1.0 ||
-        texCoord.y < 0.0 || texCoord.y > 1.0) return 1e9; // offscreen
+float traceShadowSS(
+    vec3 dir,                 // Light direction (world space)
+    vec3 hitCoord,            // World-space hit position
+    sampler2D gbufferD,       // Depth buffer
+    mat4 invVP,               // Inverse view-projection matrix
+    vec3 eye,                // Camera position (world space)
+	vec2 velocity
+)
+{
+    // Normalize the ray direction (light direction)
+    vec3 rayDir = normalize(dir);
 
-    float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-    vec3 wpos = getPos2(invVP, depth, texCoord);
+	vec4 pos = VP * vec4(hitCoord, 1.0);
+	pos.xyz /= pos.w;
+	vec2 uv = pos.xy * 0.5 + 0.5;
+	float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+	float depth = textureLod(gbufferD, uv, 0).r;
+	vec3 rayPos = hitCoord + rayDir * jitter * ssrsRayStep * 2.0;
+    ;
 
-    float d1 = length(eye - wpos);
-    float d2 = length(eye - hitCoord);
-    return d1 - d2;
-}
+    float shadow = 1.0;
 
-// Binary search refinement around last step
-vec3 refineHit(vec3 prev, vec3 curr, sampler2D gbufferD, mat4 invVP, vec3 eye) {
-    vec3 a = prev, b = curr;
-    for (int i = 0; i < ssrsBinarySteps; i++) {
-        vec3 mid = 0.5 * (a + b);
-        float delta = getDeltaDepth(mid, gbufferD, invVP, eye);
-        if (delta > 0.0) {
-            b = mid; // behind
-        } else {
-            a = mid; // in front
+    for (int i = 0; i < maxSteps; ++i)
+    {
+        // Advance the ray in world space
+        rayPos += rayDir * ssrsRayStep;
+
+        // Project to clip space
+        vec4 clip = VP * vec4(rayPos, 1.0);
+        if (clip.w <= 0.0) break;
+
+        // Convert to NDC → UV
+        vec3 ndc = clip.xyz / clip.w;
+        uv = ndc.xy * 0.5 + 0.5;
+
+        // Stop if off-screen
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+            break;
+
+        // Sample the scene depth
+        float sceneDepth = texture(gbufferD, uv).r;
+        // Reconstruct scene position from depth
+        vec4 scenePosH = invVP * vec4(ndc.xy, sceneDepth * 2.0 - 1.0, 1.0);
+        vec3 scenePos = scenePosH.xyz / scenePosH.w;
+
+        // Distance along the ray
+        float dist = length(scenePos - rayPos);
+
+        // If the ray hits a surface close to scene depth, mark as occluded
+        if (dist < ssrsThickness)
+        {
+            shadow = 0.0;
+            break;
         }
     }
-    return 0.5 * (a + b);
-}
-
-// Radical inverse with base 2 (bit-reversal)
-float radicalInverse_VdC(uint bits) {
-    bits = (bits << 16u) | (bits >> 16u);
-    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-    return float(bits) * 2.3283064365386963e-10; // / 2^32
-}
-
-// Hammersley sequence in 2D
-vec2 hammersley2D(uint i, uint N) {
-    return vec2(float(i) / float(N), radicalInverse_VdC(i));
-}
-
-// Raytrace screen-space shadow
-float trace(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye, vec2 rand) {
-	vec3 dirN = normalize(dir);
-
-    // Apply jitter correctly
-    float jitterOffset = (rand.x * 2.0 - 1.0) * ssrsJitter;
-    vec3 start = hitCoord + dirN * (ssrsRayStep + jitterOffset);
-    float stepSize = ssrsRayStep * (hitCoord.z * 0.1 + 1.0);
-	vec3 stepDir = dirN * stepSize;
-
-    vec3 prev = start;
-    for (int i = 0; i < maxSteps; i++) {
-        vec3 curr = prev + stepDir;
-        float delta = getDeltaDepth(curr, gbufferD, invVP, eye);
-
-        if (delta > -ssrsThickness && delta < ssrsThickness) {
-            // Refine intersection
-            vec3 hit = refineHit(prev, curr, gbufferD, invVP, eye);
-            // Found occluder → shadowed
-            return 0.0;
-        }
-
-        prev = curr;
-    }
-
-    return 1.0; // no hit → unshadowed
-}
-
-float traceShadowSS(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
-    float shadowSum = 0.0;
-
-    for (uint i = 0u; i < uint(ssrsSamples); i++) {
-		vec2 sampleRand = hammersley2D(uint(i), uint(ssrsSamples));
-		shadowSum += trace(dir, hitCoord, gbufferD, invVP, eye, sampleRand);
-	}
-
-    shadowSum /= float(ssrsSamples);
-    return shadowSum;
+    return shadow;
 }
 
 #endif
