@@ -114,6 +114,11 @@
 					"ifdef": ["_SSRS"]
 				},
 				{
+					"name": "V3",
+					"link": "_viewMatrix3",
+					"ifdef": ["_SSRS"]
+				},
+				{
 					"name": "dirInv",
 					"link": "_vec2xInv"
 				},
