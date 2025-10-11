@@ -70,6 +70,7 @@ uniform vec2 lightPlane;
 
 #ifdef _SSRS
 //!uniform mat4 VP;
+//!uniform int frame;
 uniform mat4 invVP;
 #endif
 
