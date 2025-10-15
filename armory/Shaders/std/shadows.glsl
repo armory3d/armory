@@ -402,7 +402,7 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap,
 											#ifdef _ShadowMapTransparent
 											shadowMapTransparent,
 											#endif
-											lPos.xy, lPos.z - shadowsBias, smSize
+											lPos2.xy, lPos2.z - shadowsBias, smSize
 											#ifdef _ShadowMapTransparent
 											, transparent
 											#endif

@@ -693,8 +693,9 @@ const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter
 
         if rpdat.arm_ssrs:
             f.write(
-"""const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
-const float ssrsMaxSteps = """ + str(round(rpdat.arm_ssrs_max_steps * 100) / 100) + """;
+"""const float ssrsSamples = """ + str(round(rpdat.arm_ssrs_samples * 100) / 100) + """;
+const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
+const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist * 100) / 100) + """;
 const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness * 100) / 100) + """;
 """)
 
@@ -792,6 +793,7 @@ const int voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
+const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
 const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;

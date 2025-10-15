@@ -35,8 +35,11 @@ uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer2;
+#ifdef _VoxelGI
+uniform layout(rgba8) image2D voxels_shadows;
+#else
 uniform layout(r8) image2D voxels_shadows;
-
+#endif
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
 uniform vec2 cameraProj;
@@ -80,7 +83,11 @@ void main() {
 	else
 		lightDir = normalize(lPos - P); // point
 
-	float occ = 1.0 - traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg);
-
-	imageStore(voxels_shadows, ivec2(pixel), vec4(occ));
+	#ifdef _VoxelGI
+	vec3 shadow = traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg).rgb;
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow, 1.0));
+	#else
+	float shadow = 1.0 - traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg);
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow));
+	#endif
 }

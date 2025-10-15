@@ -64,8 +64,8 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxelgi_resolution = '64'
-        rpdat.arm_voxelgi_size = 0.125
+        rpdat.rp_voxelgi_resolution = '32'
+        rpdat.arm_voxelgi_size = 0.25
         rpdat.rp_voxels = 'Voxel GI'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
@@ -141,8 +141,8 @@ def update_preset(self, context):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_voxels = 'Voxel GI'
-        rpdat.rp_voxelgi_resolution = '32'
-        rpdat.arm_voxelgi_size = 0.25
+        rpdat.rp_voxelgi_resolution = '64'
+        rpdat.arm_voxelgi_size = 0.125
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
@@ -532,8 +532,9 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_shad: FloatProperty(name="Shadows", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_env: FloatProperty(name="Environment", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
+    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.125, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_offset: FloatProperty(name="Offset", description="Offset Multiplier", default=2.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
     arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
@@ -580,7 +581,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
     arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.1, update=assets.invalidate_shader_cache)
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=1.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
@@ -589,9 +590,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_shadowmap_bounds: FloatProperty(name="Cascade Bounds", description="Multiply cascade bounds to capture bigger area", default=1.0, update=assets.invalidate_compiled_data)
     arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
+    arm_ssrs_samples: IntProperty(name="Samples", default=4, update=assets.invalidate_shader_cache)
     arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
-    arm_ssrs_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
-    arm_ssrs_thickness: FloatProperty(name="Thickness", default=0.1, update=assets.invalidate_shader_cache)
+    arm_ssrs_search_dist: FloatProperty(name="Search", default=1.0, update=assets.invalidate_shader_cache)
+    arm_ssrs_thickness: FloatProperty(name="Thickness", default=0.01, update=assets.invalidate_shader_cache)
     arm_chromatic_aberration_type: EnumProperty(
         items=[('Simple', 'Simple', 'Simple'),
                ('Spectral', 'Spectral', 'Spectral'),

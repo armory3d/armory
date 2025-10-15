@@ -119,7 +119,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
 	#ifdef _VoxelShadow
-		, vec2 texCoord, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount], vec2 velocity
+		, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount], vec2 velocity, vec2 texCoord
 	#endif
 	#ifdef _MicroShadowing
 		, float occ
@@ -174,11 +174,23 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _Deferred
 	if (transparent)
-		direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+		#ifdef _VoxelGI
+		direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;
+		#else
+		direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r * voxelgiShad;
+		#endif
 	else
+		#ifdef _VoxelGI
+		direct *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
+		#else
 		direct *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+		#endif
 	#else
-	direct *= (1.0 - traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;
+	#ifdef _VoxelGI
+	direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;
+	#else
+	direct *= traceShadow(p, n, voxels, voxelsSDF, lightDir, clipmaps, gl_FragCoord.xy, velocity).r * voxelgiShad;
+	#endif
 	#endif
 	#endif
 

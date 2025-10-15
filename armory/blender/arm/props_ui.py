@@ -1793,6 +1793,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
         col.prop(rpdat, 'arm_voxelgi_step')
+        #col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_range')
 
 class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
@@ -1917,8 +1918,9 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssrs')
         col = col.column()
         col.enabled = rpdat.arm_ssrs
+        col.prop(rpdat, 'arm_ssrs_samples')
         col.prop(rpdat, 'arm_ssrs_ray_step')
-        col.prop(rpdat, 'arm_ssrs_max_steps')
+        col.prop(rpdat, 'arm_ssrs_search_dist')
         col.prop(rpdat, 'arm_ssrs_thickness')
         layout.separator()
 

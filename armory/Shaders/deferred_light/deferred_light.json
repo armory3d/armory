@@ -114,6 +114,15 @@
 					"ifdef": ["_SSRS"]
 				},
 				{
+					"name": "frame",
+					"link": "_frame",
+					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "dirInv",
+					"link": "_vec2xInv"
+				},
+				{
 					"name": "texClouds",
 					"link": "$cloudstexture.png",
 					"ifdef": ["_LightClouds"]

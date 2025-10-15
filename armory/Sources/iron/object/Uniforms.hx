@@ -733,6 +733,9 @@ class Uniforms {
 					var w = Scene.active.world;
 					i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1; // Include basecolor and exclude 2 scaled mips
 				}
+				case "_frame": {
+					i = RenderPath.active.frame; trace(i);
+				}
 				default:
 					return false;
 			}
