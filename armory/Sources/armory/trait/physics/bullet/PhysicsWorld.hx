@@ -184,6 +184,12 @@ class PhysicsWorld extends Trait {
 		rbMap.set(body.id, body);
 	}
 
+	public function updateRigidBody(body: RigidBody) {
+		if (world != null) world.removeRigidBody(body.body);
+		rbMap.remove(body.id);
+		addRigidBody(body);
+	}
+
 	public function addPhysicsConstraint(constraint: PhysicsConstraint) {
 		world.addConstraint(constraint.con, constraint.disableCollisions);
 		conMap.set(constraint.id, constraint);
