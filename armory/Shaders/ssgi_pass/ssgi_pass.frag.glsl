@@ -585,7 +585,7 @@ const float MAX_DEPTH_DIFFERENCE = 0.9; // More conservative depth threshold
 const float SAMPLE_BIAS = 0.01; // Small offset to avoid self-occlusion
 // threshold that scales with screen-space radius (samples further away can be looser)
 // tune: DEPTH_SCALE (0.2) and MIN_DEPTH_THRESHOLD (0.02) are reasonable starting points
-float DEPTH_SCALE = 0.1;
+float DEPTH_SCALE = 1.0;
 float MIN_DEPTH_THRESHOLD = 0.01;
 
 void main() {
@@ -616,68 +616,48 @@ void main() {
     float angle = fract(sin(dot(texCoord, vec2(12.9898, 78.233))) * 100.0);
 
 	for (int i = 0; i < ssgiSamples; i++) {
-		// quasi-random spiral sample (r already scaled by radius)
-		float r = sqrt((float(i) + 0.5) / float(ssgiSamples)) * radius;
-		float a = (float(i) * GOLDEN_ANGLE) + angle;
+		float r = sqrt((float(i) + 0.5) / float(ssgiSamples));
+		float a = float(i) * GOLDEN_ANGLE + angle;
 
 		vec2 dir2 = vec2(cos(a), sin(a));
 
-		float centerViewZ = linearize(depth, cameraProj);      // center (view-space z)
-		float blurStrength = mix(1.0, 2.5, clamp(centerViewZ / 50.0, 0.0, 1.0));
+		// Convert SSAO radius from pixels to UV-space (works for any resolution)
+		float pixelRadius = (radius / min(screenSize.x, screenSize.y));
+		vec2 offset = dir2 * r * pixelRadius;
 
-		vec2 offset = dir2 * r * radius * blurStrength;
-
-		// Jitter using Bayer matrix and velocity for temporal stability (keep your indexing but clamp properly)
-		// make sure bayer indices are in range and cast safe
-		ivec2 bIdx = ivec2(int(mod(gl_FragCoord.x + floor(velocity.x), 8.0)),
-						int(mod(gl_FragCoord.y + floor(velocity.y), 8.0)));
-		float jitter = BayerMatrix8[bIdx.x][bIdx.y]; // keep the Bayer lookup shape you have
-		vec2 sampleUV = clamp(texCoord + (offset * (jitter - 0.5)) / screenSize, vec2(0.001), vec2(0.999));
+		// Bayer jitter (keep small)
+		ivec2 bIdx = ivec2(int(mod(gl_FragCoord.x, 8.0)), int(mod(gl_FragCoord.y, 8.0)));
+		float jitter = BayerMatrix8[bIdx.x][bIdx.y];
+		vec2 sampleUV = clamp(texCoord + offset * (0.5 + jitter * 0.5), 0.001, 0.999);
 
 		float sampleDepth = textureLod(gbufferD, sampleUV, 0.0).r;
 		if (sampleDepth >= 1.0) continue;
 
-		// reconstruct world position and normal
 		vec3 samplePos = getWorldPos(sampleUV, sampleDepth);
 		vec3 sampleNormal = getNormal(sampleUV);
 
-		// push sample away from surface slightly to reduce self-occlusion
-		samplePos += sampleNormal * SAMPLE_BIAS;
+		// Bias scaled to view distance
+		float sampleDistance = length(pos - samplePos);
+		samplePos += sampleNormal * SAMPLE_BIAS * sampleDistance;
 
-		// world-space distance
-		vec3 dir = pos - samplePos;
-		float dist = length(dir);
-
-		// --- DEPTH / VIEW-Z based test (robust) ---
-		float sampleViewZ = linearize(sampleDepth, cameraProj); // sample (view-space z)
+		float centerViewZ = linearize(depth, cameraProj);
+		float sampleViewZ = linearize(sampleDepth, cameraProj);
 		float dz = abs(centerViewZ - sampleViewZ);
 
-		float depthThreshold = max(MIN_DEPTH_THRESHOLD, DEPTH_SCALE * r);
-
-		// soft depth weight: 1.0 when close, 0.0 when beyond threshold*2 (smooth)
+		float depthThreshold = max(MIN_DEPTH_THRESHOLD, DEPTH_SCALE * sampleDistance);
 		float depthWeight = 1.0 - smoothstep(depthThreshold, depthThreshold * 2.0, dz);
-
-		// optional hard early-out to skip very distant surfaces (saves cost)
 		if (dz > depthThreshold * 4.0) continue;
 
-		// --- NORMAL / ORIENTATION weight ---
 		float Ndot = max(dot(sampleNormal, n), 0.0);
+		float distWeight = 1.0 / (1.0 + sampleDistance);
 
-		// --- DISTANCE falloff weight ---
-		// distance falloff: smaller influence for far samples
-		float distWeight = 1.0 / (1.0 + dist); // tune denominator
-
-		// compute sample lighting color and apply combined weight
 		vec3 sampleColor = calculateLight(sampleUV, samplePos, sampleNormal, sampleDepth);
-
-		// final weight combines geometry, depth and normal agreement
 		float weight = depthWeight * distWeight * Ndot;
 
-		// optionally ignore extremely small weights
-		if (weight <= 1e-4) continue;
-
-		gi += sampleColor * weight;
-		totalWeight += weight;
+		if (weight > 1e-4) {
+			gi += sampleColor * weight;
+			totalWeight += weight;
+		}
 	}
 
     // Normalize and apply intensity
