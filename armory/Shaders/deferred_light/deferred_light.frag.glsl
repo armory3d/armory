@@ -120,53 +120,53 @@ uniform vec2 cameraPlane;
 #ifdef _SinglePoint
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[1];
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	//!uniform sampler2D shadowMapSpotTransparent[1];
 	#endif
 	//!uniform mat4 LWVPSpot[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	//!uniform samplerCube shadowMapPointTransparent[1];
 	#endif
 	//!uniform vec2 lightProj;
 	#endif
 #endif
 #ifdef _Clusters
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		uniform sampler2D shadowMapAtlasTransparent;
 		#endif
 		#endif
 	#endif
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		//!uniform sampler2D shadowMapAtlasPointTransparent;
 		#endif
 		#endif
 		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 	#else
 		//!uniform samplerCubeShadow shadowMapPoint[4];
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		//!uniform samplerCube shadowMapPointTransparent[4];
 		#endif
 	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasSpot;
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		//!uniform sampler2D shadowMapAtlasSpotTransparent;
 		#endif
 		#endif
 		#else
 		//!uniform sampler2DShadow shadowMapSpot[4];
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		//!uniform sampler2D shadowMapSpotTransparent[4];
 		#endif
 		#endif
@@ -179,16 +179,16 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	uniform sampler2D shadowMapAtlasSunTransparent;
 	#endif
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	uniform sampler2D shadowMapTransparent;
 	#endif
 	#endif
@@ -383,8 +383,8 @@ void main() {
 	#ifdef _ShadowMap
 		#ifdef _CSM
 			svisibility = shadowTestCascade(
-											#ifdef _ShadowMapAtlas
-												#ifdef _ShadowMapTransparent
+											#ifdef _AtlasShadowMap
+												#ifdef _TransparentShadowMap
 												#ifndef _SingleAtlas
 												shadowMapAtlasSun, shadowMapAtlasSunTransparent
 												#else
@@ -398,14 +398,14 @@ void main() {
 												#endif
 												#endif
 											#else
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											shadowMap, shadowMapTransparent
 											#else
 											shadowMap
 											#endif
 											#endif
 											, eye, p + n * shadowsBias * 10, shadowsBias
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											, false
 											#endif
 											);
@@ -413,8 +413,8 @@ void main() {
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 			if (lPos.w > 0.0) {
 				svisibility = shadowTest(
-										#ifdef _ShadowMapAtlas
-											#ifdef _ShadowMapTransparent
+										#ifdef _AtlasShadowMap
+											#ifdef _TransparentShadowMap
 											#ifndef _SingleAtlas
 											shadowMapAtlasSun, shadowMapAtlasSunTransparent
 											#else
@@ -428,14 +428,14 @@ void main() {
 											#endif
 											#endif
 										#else
-										#ifdef _ShadowMapTransparent
+										#ifdef _TransparentShadowMap
 										shadowMap, shadowMapTransparent
 										#else
 										shadowMap
 										#endif
 										#endif
 										, lPos.xyz / lPos.w, shadowsBias
-										#ifdef _ShadowMapTransparent
+										#ifdef _TransparentShadowMap
 										, false
 										#endif
 										);
@@ -487,7 +487,7 @@ void main() {
 		#endif
 		fragColor.rgb += fragColor.rgb * SSSSTransmittance(
 			LWVP, p, n, sunDir, lightPlane.y,
-			#ifdef _ShadowMapAtlas
+			#ifdef _AtlasShadowMap
 				#ifndef _SingleAtlas
 				shadowMapAtlasSun
 				#else

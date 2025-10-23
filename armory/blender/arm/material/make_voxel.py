@@ -291,9 +291,9 @@ def make_gi(context_id):
     frag.write('envl *= envmapStrength * occlusion;')
 
     frag.add_include('std/light.glsl')
-    is_shadows = '_ShadowMap' in wrd.world_defs
-    is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+    is_shadows = '_VoxelsShadowMap' in wrd.world_defs
+    is_transparent_shadows = '_TransparentShadowMap' in wrd.world_defs
+    is_shadows_atlas = '_AtlasShadowMap' in wrd.world_defs
     is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
     shadowmap_sun_tr = 'shadowMapTransparent'

@@ -76,14 +76,14 @@ uniform vec3 pointCol;
 		#ifdef _Spot
 			#ifndef _LTC
 				uniform sampler2DShadow shadowMapSpot[1];
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				uniform sampler2D shadowMapSpotTransparent[1];
 				#endif
 				uniform mat4 LWVPSpot[1];
 			#endif
 		#else
 			uniform samplerCubeShadow shadowMapPoint[1];
-			#ifdef _ShadowMapTransparent
+			#ifdef _TransparentShadowMap
 			uniform samplerCube shadowMapPointTransparent[1];
 			#endif
 			uniform vec2 lightProj;
@@ -92,36 +92,36 @@ uniform vec3 pointCol;
 	#ifdef _Clusters
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		uniform sampler2D shadowMapAtlasTransparent;
 		#endif
 		#endif
 		uniform vec2 lightProj;
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlasPoint;
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		uniform sampler2D shadowMapAtlasPointTransparent;
 		#endif
 		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 		#else
 		uniform samplerCubeShadow shadowMapPoint[4];
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		uniform samplerCube shadowMapPointTransparent[4];
 		#endif
 		#endif
 		#endif
 		#ifdef _Spot
-			#ifdef _ShadowMapAtlas
+			#ifdef _AtlasShadowMap
 			#ifndef _SingleAtlas
 			uniform sampler2DShadow shadowMapAtlasSpot;
-			#ifdef _ShadowMapTransparent
+			#ifdef _TransparentShadowMap
 			uniform sampler2D shadowMapAtlasSpotTransparent;
 			#endif
 			#endif
 			#else
 			uniform sampler2DShadow shadowMapSpot[4];
-			#ifdef _ShadowMapTransparent
+			#ifdef _TransparentShadowMap
 			uniform sampler2D shadowMapSpotTransparent[4];
 			#endif
 			#endif
@@ -141,7 +141,7 @@ uniform sampler2D sltcMag;
 #ifndef _Spot
 	#ifdef _SinglePoint
 		uniform sampler2DShadow shadowMapSpot[1];
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		uniform sampler2D shadowMapSpotTransparent[1];
 		#endif
 		uniform mat4 LWVPSpot[1];
@@ -158,16 +158,16 @@ uniform sampler2D sltcMag;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	uniform sampler2D shadowMapAtlasSunTransparent;
 	#endif
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	uniform sampler2D shadowMapTransparent;
 	#endif
 	#endif
@@ -201,11 +201,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 			#ifdef _SinglePoint
 			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 			visibility *= shadowTest(shadowMapSpot[0],
-								#ifdef _ShadowMapTransparent
+								#ifdef _TransparentShadowMap
 								shadowMapSpotTransparent[0],
 								#endif
 								lPos.xyz / lPos.w, bias
-								#ifdef _ShadowMapTransparent
+								#ifdef _TransparentShadowMap
 								, transparent
 								#endif
 								);
@@ -213,38 +213,38 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 			#ifdef _Clusters
 			vec4 lPos = LWVPSpot[index] * vec4(p + n * bias * 10, 1.0);
 			if (index == 0) visibility *= shadowTest(shadowMapSpot[0],
-												#ifdef _ShadowMapTransparent
+												#ifdef _TransparentShadowMap
 												shadowMapSpotTransparent[0],
 												#endif
 												lPos.xyz / lPos.w, bias
-												#ifdef _ShadowMapTransparent
+												#ifdef _TransparentShadowMap
 												, transparent
 												#endif
 												);
 			else if (index == 1) visibility *= shadowTest(shadowMapSpot[1],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapSpotTransparent[1],
 													#endif
 													lPos.xyz / lPos.w, bias
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
 			else if (index == 2) visibility *= shadowTest(shadowMapSpot[2],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapSpotTransparent[2],
 													#endif
 													lPos.xyz / lPos.w, bias
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
 			else if (index == 3) visibility *= shadowTest(shadowMapSpot[3],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapSpotTransparent[3],
 													#endif
 													lPos.xyz / lPos.w, bias
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
@@ -263,20 +263,20 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 				#ifdef _SinglePoint
 				vec4 lPos = LWVPSpotArray[0] * vec4(p + n * bias * 10, 1.0);
 				visibility *= shadowTest(shadowMapSpot[0],
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									shadowMapSpotTransparent[0],
 									#endif
 									lPos.xyz / lPos.w, bias
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									, transparent
 									#endif
 									);
 				#endif
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
-					#ifdef _ShadowMapAtlas
+					#ifdef _AtlasShadowMap
 						visibility *= shadowTest(
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											#ifndef _SingleAtlas
 											shadowMapAtlasSpot, shadowMapAtlasSpotTransparent
 											#else
@@ -290,44 +290,44 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 											#endif
 											#endif
 											, lPos.xyz / lPos.w, bias
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											, transparent
 											#endif
 											);
 					#else
 							 if (index == 0) visibility *= shadowTest(shadowMapSpot[0],
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																shadowMapSpotTransparent[0],
 																#endif
 																lPos.xyz / lPos.w, bias
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																, transparent
 																#endif
 																);
 						else if (index == 1) visibility *= shadowTest(shadowMapSpot[1],
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																shadowMapSpotTransparent[1],
 																#endif
 																lPos.xyz / lPos.w, bias
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																, transparent
 																#endif
 																);
 						else if (index == 2) visibility *= shadowTest(shadowMapSpot[2],
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																shadowMapSpotTransparent[2],
 																#endif
 																lPos.xyz / lPos.w, bias
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																, transparent
 																#endif
 																);
 						else if (index == 3) visibility *= shadowTest(shadowMapSpot[3],
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																shadowMapSpotTransparent[3],
 																#endif
 																lPos.xyz / lPos.w, bias
-																#ifdef _ShadowMapTransparent
+																#ifdef _TransparentShadowMap
 																, transparent
 																#endif
 																);
@@ -348,20 +348,20 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 			#ifdef _SinglePoint
 			#ifndef _Spot
 			visibility *= PCFCube(shadowMapPoint[0],
-							#ifdef _ShadowMapTransparent
+							#ifdef _TransparentShadowMap
 							shadowMapPointTransparent[0],
 							#endif
 							ld, -l, bias, lightProj, n
-							#ifdef _ShadowMapTransparent
+							#ifdef _TransparentShadowMap
 							, transparent
 							#endif
 							);
 			#endif
 			#endif
 			#ifdef _Clusters
-				#ifdef _ShadowMapAtlas
+				#ifdef _AtlasShadowMap
 				visibility *= PCFFakeCube(
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									#ifndef _SingleAtlas
 									shadowMapAtlasPoint, shadowMapAtlasPointTransparent
 									#else
@@ -375,44 +375,44 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 									#endif
 									#endif
 									, ld, -l, bias, lightProj, n, index
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									, transparent
 									#endif
 									);
 				#else
 					 if (index == 0) visibility *= PCFCube(shadowMapPoint[0],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapPointTransparent[0],
 													#endif
 													ld, -l, bias, lightProj, n
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
 				else if (index == 1) visibility *= PCFCube(shadowMapPoint[1],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapPointTransparent[1],
 													#endif
 													ld, -l, bias, lightProj, n
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
 				else if (index == 2) visibility *= PCFCube(shadowMapPoint[2],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapPointTransparent[2],
 													#endif
 													ld, -l, bias, lightProj, n
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
 				else if (index == 3) visibility *= PCFCube(shadowMapPoint[3],
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													shadowMapPointTransparent[3],
 													#endif
 													ld, -l, bias, lightProj, n
-													#ifdef _ShadowMapTransparent
+													#ifdef _TransparentShadowMap
 													, transparent
 													#endif
 													);
@@ -430,8 +430,8 @@ vec3 getVisibility(vec3 p, vec3 n, float depth, vec2 uv) {
 	#ifdef _ShadowMap
 		#ifdef _CSM
 			visibility = shadowTestCascade(
-											#ifdef _ShadowMapAtlas
-												#ifdef _ShadowMapTransparent
+											#ifdef _AtlasShadowMap
+												#ifdef _TransparentShadowMap
 												#ifndef _SingleAtlas
 												shadowMapAtlasSun, shadowMapAtlasSunTransparent
 												#else
@@ -445,14 +445,14 @@ vec3 getVisibility(vec3 p, vec3 n, float depth, vec2 uv) {
 												#endif
 												#endif
 											#else
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											shadowMap, shadowMapTransparent
 											#else
 											shadowMap
 											#endif
 											#endif
 											, eye, p + n * shadowsBias * 10, shadowsBias
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											, false
 											#endif
 											);
@@ -460,8 +460,8 @@ vec3 getVisibility(vec3 p, vec3 n, float depth, vec2 uv) {
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 			if (lPos.w > 0.0) {
 				visibility = shadowTest(
-										#ifdef _ShadowMapAtlas
-											#ifdef _ShadowMapTransparent
+										#ifdef _AtlasShadowMap
+											#ifdef _TransparentShadowMap
 											#ifndef _SingleAtlas
 											shadowMapAtlasSun, shadowMapAtlasSunTransparent
 											#else
@@ -475,14 +475,14 @@ vec3 getVisibility(vec3 p, vec3 n, float depth, vec2 uv) {
 											#endif
 											#endif
 										#else
-										#ifdef _ShadowMapTransparent
+										#ifdef _TransparentShadowMap
 										shadowMap, shadowMapTransparent
 										#else
 										shadowMap
 										#endif
 										#endif
 										, lPos.xyz / lPos.w, shadowsBias
-										#ifdef _ShadowMapTransparent
+										#ifdef _TransparentShadowMap
 										, false
 										#endif
 										);

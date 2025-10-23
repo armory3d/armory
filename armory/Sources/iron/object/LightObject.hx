@@ -12,7 +12,7 @@ class LightObject extends Object {
 
 	public var data: LightData;
 
-	#if rp_shadowmap
+	#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 	#if arm_shadowmap_atlas
 	public var tileNotifyOnRemove: Void -> Void;
 	public var lightInAtlas = false;
@@ -68,7 +68,7 @@ class LightObject extends Object {
 	public var frustumPlanes: Array<FrustumPlane> = null;
 	static var m = Mat4.identity();
 	static var eye = new Vec4();
-	#if rp_shadowmap
+	#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 	static var corners: Array<Vec4> = null;
 	#end
 
@@ -81,7 +81,7 @@ class LightObject extends Object {
 		var fov = data.raw.fov;
 
 		if (type == "sun") {
-			#if rp_shadowmap
+			#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 			if (corners == null) {
 				corners = [];
 				for (i in 0...8) corners.push(new Vec4());
@@ -110,7 +110,7 @@ class LightObject extends Object {
 		if (rp.light == this) { rp.light = null; }
 		if (rp.point == this) { rp.point = null; }
 		else if (rp.sun == this) { rp.sun = null; }
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		#if arm_shadowmap_atlas
 		if (tileNotifyOnRemove != null) {
 			tileNotifyOnRemove();
@@ -124,7 +124,7 @@ class LightObject extends Object {
 	public function buildMatrix(camera: CameraObject) {
 		transform.buildMatrix();
 		if (data.raw.type == "sun") { // Cover camera frustum
-			#if (rp_shadowmap && !arm_csm) // Otherwise set cascades on mesh draw
+			#if ((rp_shadowmap || arm_voxelgi_shadowmaps) && !arm_csm) // Otherwise set cascades on mesh draw
 			setCascade(camera, 0);
 			#else
 			V.getInverse(transform.world);
@@ -137,7 +137,7 @@ class LightObject extends Object {
 		}
 	}
 
-	#if rp_shadowmap
+	#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 
 	static inline function setCorners() {
 		corners[0].set(-1.0, -1.0, 1.0);

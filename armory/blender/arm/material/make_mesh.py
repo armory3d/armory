@@ -360,7 +360,7 @@ def make_forward_mobile(con_mesh):
         return
 
     is_shadows = '_ShadowMap' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+    is_shadows_atlas = '_AtlasShadowMap' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
     if is_shadows_atlas:
         is_single_atlas = '_SingleAtlas' in wrd.world_defs
@@ -649,8 +649,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
-    is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+    is_transparent_shadows = '_TransparentShadowMap' in wrd.world_defs
+    is_shadows_atlas = '_AtlasShadowMap' in wrd.world_defs
     is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
     shadowmap_sun_tr = 'shadowMapTransparent'

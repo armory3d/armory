@@ -155,30 +155,30 @@
 				{
 					"name": "pointLightDataArray",
 					"link": "_pointLightsAtlasArray",
-					"ifdef": ["_Clusters", "_ShadowMap", "_ShadowMapAtlas"]
+					"ifdef": ["_Clusters", "_ShadowMap", "_AtlasShadowMap"]
 				},
 				{
 					"name": "LWVPSpot[0]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot0",
-					"ifndef": ["_ShadowMapAtlas"],
+					"ifndef": ["_AtlasShadowMap"],
 					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
 					"name": "LWVPSpot[1]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot1",
-					"ifndef": ["_ShadowMapAtlas"],
+					"ifndef": ["_AtlasShadowMap"],
 					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
 					"name": "LWVPSpot[2]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot2",
-					"ifndef": ["_ShadowMapAtlas"],
+					"ifndef": ["_AtlasShadowMap"],
 					"ifdef": ["_LTC", "_ShadowMap"]
 				},
 				{
 					"name": "LWVPSpot[3]",
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
-					"ifndef": ["_ShadowMapAtlas"],
+					"ifndef": ["_AtlasShadowMap"],
 					"ifdef": ["_LTC", "_ShadowMap"]
 				}
 			],

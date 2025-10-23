@@ -19,8 +19,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
     parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
     is_mobile = rpdat.arm_material_model == 'Mobile'
     is_shadows = '_ShadowMap' in wrd.world_defs
-    is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
-    is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
+    is_transparent_shadows = '_TransparentShadowMap' in wrd.world_defs
+    is_shadows_atlas = '_AtlasShadowMap' in wrd.world_defs
     is_single_atlas = '_SingleAtlas' in wrd.world_defs
 
     frag.add_include_front('std/clusters.glsl')

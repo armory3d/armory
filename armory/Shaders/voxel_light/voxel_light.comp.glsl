@@ -20,7 +20,7 @@ uniform int lightShadow;
 uniform vec2 lightProj;
 uniform float shadowsBias;
 uniform mat4 LVP;
-#ifdef _ShadowMapAtlas
+#ifdef _AtlasShadowMap
 uniform int index;
 uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 #endif
@@ -35,14 +35,14 @@ uniform layout(r32ui) uimage3D voxelsLight;
 uniform sampler2DShadow shadowMap;
 uniform sampler2D shadowMapTransparent;
 uniform sampler2DShadow shadowMapSpot;
-#ifdef _ShadowMapAtlas
+#ifdef _AtlasShadowMap
 uniform sampler2DShadow shadowMapPoint;
 #else
 uniform samplerCubeShadow shadowMapPoint;
 #endif
 #endif
 
-#ifdef _ShadowMapAtlas
+#ifdef _AtlasShadowMap
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec20.pdf // p:168
 // https://www.gamedev.net/forums/topic/687535-implementing-a-cube-map-lookup-function/5337472/
 vec2 sampleCube(vec3 dir, out int faceIndex) {
@@ -129,7 +129,7 @@ void main() {
 			visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 		}
 		else if (lightShadow == 3) {
-			#ifdef _ShadowMapAtlas
+			#ifdef _AtlasShadowMap
 			int faceIndex = 0;
 			const int lightIndex = index * 6;
 			const vec2 uv = sampleCube(-l, faceIndex);
@@ -222,7 +222,7 @@ void main() {
 		visibility *= texture(shadowMapSpot, vec3(lPos.xy, lPos.z - shadowsBias)).r;
 	}
 	else if (lightShadow == 3) {
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 		int faceIndex = 0;
 		const int lightIndex = index * 6;
 		const vec2 uv = sampleCube(-l, faceIndex);

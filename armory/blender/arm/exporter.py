@@ -1972,7 +1972,7 @@ Make sure the mesh only has tris/quads.""")
             'strength': light_ref.energy,
             'shadows_bias': light_ref.arm_shadows_bias * 0.0001
         }
-        if rpdat.rp_shadows:
+        if rpdat.rp_shadows or rpdat.arm_voxelgi_shadowmaps:
             if objtype == 'POINT':
                 out_light['shadowmap_size'] = int(rpdat.rp_shadowmap_cube)
             else:

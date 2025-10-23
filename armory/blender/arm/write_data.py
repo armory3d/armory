@@ -502,7 +502,7 @@ class Main {
             f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
 
-        if rpdat.rp_shadows:
+        if rpdat.rp_shadows or rpdat.arm_voxelgi_shadowmaps:
             if rpdat.rp_shadowmap_cascades != '1':
                 f.write("""
             iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
@@ -583,7 +583,7 @@ add_compiledglsl = ''
 def write_compiledglsl(defs, make_variants):
     rpdat = arm.utils.get_rp()
     wrd = bpy.data.worlds['Arm']
-    shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
+    shadowmap_size = arm.utils.get_cascade_size(rpdat) if (rpdat.rp_shadows or rpdat.arm_voxelgi_shadowmaps) else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_

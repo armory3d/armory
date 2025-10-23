@@ -50,7 +50,7 @@ uniform vec2 cameraPlane;
 
 #ifdef _Sun
 	#ifdef _ShadowMap
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
 	#else
@@ -120,7 +120,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	lPos = LWVP * vec4(curPos, 1.0);
 	lPos.xyz /= lPos.w;
 	visibility = texture(
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 			#ifndef _SingleAtlas
 			shadowMapAtlasSun
 			#else

@@ -503,6 +503,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_voxelgi_refract: BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    arm_voxelgi_shadowmaps: BoolProperty(name="Shadowmap", description="Use Shadowmaps", default=True, update=update_renderpath)
     arm_voxelgi_bounces: EnumProperty(
         items=[
         	   ('1', '1', '1'),

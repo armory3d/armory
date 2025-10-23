@@ -15,11 +15,6 @@ class RenderPathDeferred {
 	static var bloomUpsampler: Upsampler;
 	#end
 
-	#if (rp_ssgi == "SSGI")
-	static var ssgitex = "singleb";
-	static var ssgitexb = "singleb";
-	#end
-
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -595,7 +590,7 @@ class RenderPathDeferred {
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
 		#end
 
-		#if (rp_shadowmap)
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		// atlasing is exclusive for now
 		#if arm_shadowmap_atlas
 		Inc.drawShadowMapAtlas();
@@ -679,7 +674,7 @@ class RenderPathDeferred {
 			path.setTarget("");
 			path.setViewport(res, res);
 
-			#if rp_shadowmap
+			#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 			{
 				#if arm_shadowmap_atlas
 				Inc.bindShadowMapAtlas();
@@ -770,7 +765,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		{
 			#if arm_shadowmap_atlas
 			Inc.bindShadowMapAtlas();
@@ -915,7 +910,7 @@ class RenderPathDeferred {
 				path.bindTarget("voxelsSDF", "voxelsSDF");
 				#end
 
-				#if rp_shadowmap
+				#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 				{
 					#if arm_shadowmap_atlas
 					Inc.bindShadowMapAtlas();

@@ -358,10 +358,10 @@ class RenderPathForward {
 	}
 
 	public static function commands() {
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		{
 			#if arm_shadowmap_atlas
-			Inc.drawShadowMapAtlas();
+			Inc.drawAtlasShadowMap();
 			#else
 			Inc.drawShadowMap();
 			#end
@@ -399,10 +399,10 @@ class RenderPathForward {
 
 			path.bindTarget("voxels", "voxels");
 
-			#if rp_shadowmap
+			#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 			{
 				#if arm_shadowmap_atlas
-				Inc.bindShadowMapAtlas();
+				Inc.bindAtlasShadowMap();
 				#else
 				Inc.bindShadowMap();
 				#end
@@ -446,10 +446,10 @@ class RenderPathForward {
 
 		RenderPathCreator.setTargetMeshes();
 
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		{
 			#if arm_shadowmap_atlas
-			Inc.bindShadowMapAtlas();
+			Inc.bindAtlasShadowMap();
 			#else
 			Inc.bindShadowMap();
 			#end
@@ -502,10 +502,10 @@ class RenderPathForward {
 
 					path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
 
-					#if rp_shadowmap
+					#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 					{
 						#if arm_shadowmap_atlas
-						Inc.bindShadowMapAtlas();
+						Inc.bindAtlasShadowMap();
 						#else
 						Inc.bindShadowMap();
 						#end
@@ -585,7 +585,7 @@ class RenderPathForward {
 				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
 				#if arm_shadowmap_atlas
-				Inc.bindShadowMapAtlas();
+				Inc.bindAtlasShadowMap();
 				#else
 				Inc.bindShadowMap();
 				#end

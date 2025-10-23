@@ -54,17 +54,20 @@ def add_world_defs():
         wrd.world_defs += '_Deferred'
 
     # Shadows
-    if rpdat.rp_shadows:
-        wrd.world_defs += '_ShadowMap'
+    if rpdat.rp_shadows or rpdat.arm_voxelgi_shadowmaps:
+        if rpdat.rp_shadows:
+            wrd.world_defs += '_ShadowMap'
+        if rpdat.arm_voxelgi_shadowmaps:
+            wrd.world_defs += '_VoxelsShadowMap'
         if rpdat.rp_shadowmap_cascades != '1':
             wrd.world_defs += '_CSM'
             assets.add_khafile_def('arm_csm')
-        if rpdat.rp_shadowmap_transparent:
-            wrd.world_defs += '_ShadowMapTransparent'
-            assets.add_khafile_def('rp_shadowmap_transparent')
+        #if rpdat.rp_shadowmap_transparent:
+        wrd.world_defs += '_TransparentShadowMap'
+        assets.add_khafile_def('rp_shadowmap_transparent')
         if rpdat.rp_shadowmap_atlas:
             assets.add_khafile_def('arm_shadowmap_atlas')
-            wrd.world_defs += '_ShadowMapAtlas'
+            wrd.world_defs += '_AtlasShadowMap'
             if rpdat.rp_shadowmap_atlas_single_map:
                 assets.add_khafile_def('arm_shadowmap_atlas_single_map')
                 wrd.world_defs += '_SingleAtlas'
@@ -187,8 +190,11 @@ def build():
     if rpdat.rp_depthprepass:
         assets.add_khafile_def('rp_depthprepass')
 
-    if rpdat.rp_shadows:
-        assets.add_khafile_def('rp_shadowmap')
+    if rpdat.rp_shadows or rpdat.arm_voxelgi_shadowmaps:
+        if rpdat.rp_shadows:
+            assets.add_khafile_def('rp_shadowmap')
+        if rpdat.arm_voxelgi_shadowmaps:
+            assets.add_khafile_def('arm_voxelgi_shadowmaps')
         assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(arm.utils.get_cascade_size(rpdat)))
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 

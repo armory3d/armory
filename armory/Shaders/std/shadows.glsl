@@ -14,15 +14,15 @@ uniform vec4 casData[shadowmapCascades * 4 + 4];
 uniform vec2 smSizeUniform;
 #endif
 
-#ifdef _ShadowMap
+#if defined(_ShadowMap) || defined(_VoxelsShadowMap)
 	#ifdef _Clusters
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 			uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 		#endif
 	#endif
 #endif
 
-#ifdef _ShadowMapAtlas
+#ifdef _AtlasShadowMap
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec20.pdf // p:168
 // https://www.gamedev.net/forums/topic/687535-implementing-a-cube-map-lookup-function/5337472/
 vec2 sampleCube(vec3 dir, out int faceIndex) {
@@ -59,11 +59,11 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 #endif
 
 vec3 PCF(sampler2DShadow shadowMap,
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		sampler2D shadowMapTransparent,
 		#endif
 		const vec2 uv, const float compare, const vec2 smSize
-		#ifdef _ShadowMapTransparent
+		#ifdef _TransparentShadowMap
 		, const bool transparent
 		#endif
 		) {
@@ -79,7 +79,7 @@ vec3 PCF(sampler2DShadow shadowMap,
 	result.x += texture(shadowMap, vec3(uv + (vec2(1.0, 1.0) / smSize), compare));
 	result = result.xxx / 9.0;
 
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uv);
 		if (shadowmap_transparent.a < compare)
@@ -98,11 +98,11 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 }
 
 vec3 PCFCube(samplerCubeShadow shadowMapCube,
-			#ifdef _ShadowMapTransparent
+			#ifdef _TransparentShadowMap
 			samplerCube shadowMapCubeTransparent,
 			#endif
 			const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n
-			#ifdef _ShadowMapTransparent
+			#ifdef _TransparentShadowMap
 			, const bool transparent
 			#endif
 			) {
@@ -124,7 +124,7 @@ vec3 PCFCube(samplerCubeShadow shadowMapCube,
 	result.x += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
 	result = result.xxx / 9.0;
 
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapCubeTransparent, ml);
 		if (shadowmap_transparent.a < compare)
@@ -135,7 +135,7 @@ vec3 PCFCube(samplerCubeShadow shadowMapCube,
 	return result;
 }
 
-#ifdef _ShadowMapAtlas
+#ifdef _AtlasShadowMap
 // transform "out-of-bounds" coordinates to the correct face/coordinate system
 // https://www.khronos.org/opengl/wiki/File:CubeMapAxes.png
 vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
@@ -230,11 +230,11 @@ vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
 }
 
 vec3 PCFFakeCube(sampler2DShadow shadowMap,
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				sampler2D shadowMapTransparent,
 				#endif
 				const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				, const bool transparent
 				#endif
 				) {
@@ -281,7 +281,7 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap,
 	uvtiled.y = 1.0 - uvtiled.y; // invert Y coordinates for direct3d coordinate system
 	#endif
 
-	#ifdef _ShadowMapTransparent
+	#ifdef _TransparentShadowMap
 	if (transparent == false) {
 		vec4 shadowmap_transparent = texture(shadowMapTransparent, uvtiled);
 		if (shadowmap_transparent.a < compare)
@@ -294,11 +294,11 @@ vec3 PCFFakeCube(sampler2DShadow shadowMap,
 #endif
 
 vec3 shadowTest(sampler2DShadow shadowMap,
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				sampler2D shadowMapTransparent,
 				#endif
 				const vec3 lPos, const float shadowsBias
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				, const bool transparent
 				#endif
 				) {
@@ -309,11 +309,11 @@ vec3 shadowTest(sampler2DShadow shadowMap,
 	#endif
 	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return vec3(1.0);
 	return PCF(shadowMap,
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				shadowMapTransparent,
 				#endif
 				lPos.xy, lPos.z - shadowsBias, smSize
-				#ifdef _ShadowMapTransparent
+				#ifdef _TransparentShadowMap
 				, transparent
 				#endif
 				);
@@ -349,11 +349,11 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 }
 
 vec3 shadowTestCascade(sampler2DShadow shadowMap,
-					   #ifdef _ShadowMapTransparent
+					   #ifdef _TransparentShadowMap
 					   sampler2D shadowMapTransparent,
 					   #endif
 					   const vec3 eye, const vec3 p, const float shadowsBias
-					   #ifdef _ShadowMapTransparent
+					   #ifdef _TransparentShadowMap
 					   , const bool transparent
 					   #endif
 					   ) {
@@ -372,11 +372,11 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap,
 
 	vec3 visibility = vec3(1.0);
 	if (lPos.w > 0.0) visibility = PCF(shadowMap,
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									shadowMapTransparent,
 									#endif
 									lPos.xy, lPos.z - shadowsBias, smSize
-									#ifdef _ShadowMapTransparent
+									#ifdef _TransparentShadowMap
 									, transparent
 									#endif
 									);
@@ -399,11 +399,11 @@ vec3 shadowTestCascade(sampler2DShadow shadowMap,
 		lPos2.xyz /= lPos2.w;
 		vec3 visibility2 = vec3(1.0);
 		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap,
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											shadowMapTransparent,
 											#endif
 											lPos2.xy, lPos2.z - shadowsBias, smSize
-											#ifdef _ShadowMapTransparent
+											#ifdef _TransparentShadowMap
 											, transparent
 											#endif
 											);

@@ -200,7 +200,7 @@ class Inc {
 	}
 
 	public static function drawShadowMapAtlas() {
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		#if rp_probes
 		// Share shadow map with probe
 		if (lastFrame == RenderPath.active.frame)
@@ -490,7 +490,7 @@ class Inc {
 	}
 
 	public static function drawShadowMap() {
-		#if (rp_shadowmap)
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 
 		#if rp_probes
 		// Share shadow map with probe
@@ -624,7 +624,7 @@ class Inc {
 		path.setTarget("revealage");
 		path.clearTarget(0xffffffff);
 		path.setTarget("accum", ["revealage"]);
-		#if rp_shadowmap
+		#if (rp_shadowmap || arm_voxelgi_shadowmaps)
 		{
 			#if arm_shadowmap_atlas
 			bindShadowMapAtlas();
