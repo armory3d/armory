@@ -4,8 +4,12 @@
 
 [submodule "libdragon"]
 	path = libdragon
-	url = https://github.com/DragonMinded/libdragon/tree/preview
+	url = https://github.com/DragonMinded/libdragon
+	branch = preview
 
 [submodule "Tiny3D"]
 	path = tiny3d
 	url = https://github.com/HailToDodongo/tiny3d
+[submodule "tiny3d"]
+	path = tiny3d
+	url = https://github.com/HailToDodongo/tiny3d.git
