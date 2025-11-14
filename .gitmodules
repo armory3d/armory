@@ -2,3 +2,11 @@
 	path = Kha
 	url = https://github.com/armory3d/Kha
 
+[submodule "lib/libdragon"]
+	path = lib/libdragon
+	url = https://github.com/DragonMinded/libdragon.git
+	branch = preview
+
+[submodule "lib/tiny3d"]
+	path = lib/tiny3d
+	url = https://github.com/HailToDodongo/tiny3d.git
