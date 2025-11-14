@@ -206,6 +206,44 @@ def update_preset(self, context):
         rpdat.arm_irradiance = False
         rpdat.arm_radiance = False
         rpdat.rp_pp = False
+    elif self.rp_preset == 'Fast64':
+        rpdat.rp_renderer = 'Forward' # TODO: use 'Fast64' when implemented
+        rpdat.rp_depthprepass = False
+        rpdat.arm_material_model = 'Mobile' # TODO: use 'Fast64' when implemented
+        rpdat.rp_shadows = True
+        rpdat.rp_shadowmap_cube = '256'
+        rpdat.rp_shadowmap_cascade = '512'
+        rpdat.rp_shadowmap_cascades = '1'
+        rpdat.rp_translucency_state = 'Off'
+        rpdat.rp_overlays_state = 'Off'
+        rpdat.rp_decals_state = 'Off'
+        rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_depth_texture_state = 'Off'
+        rpdat.rp_draw_order = 'Auto'
+        rpdat.rp_hdr = False
+        rpdat.rp_background = 'Clear'
+        rpdat.rp_stereo = False
+        rpdat.rp_voxels = 'Off'
+        rpdat.rp_render_to_texture = False
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'Off'
+        rpdat.rp_compositornodes = False
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'Off'
+        rpdat.arm_ssrs = False
+        rpdat.arm_micro_shadowing = False
+        rpdat.rp_ssr = False
+        rpdat.rp_bloom = False
+        rpdat.arm_bloom_quality = 'low'
+        rpdat.arm_bloom_anti_flicker = False
+        rpdat.rp_autoexposure = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Linear'
+        rpdat.arm_irradiance = False
+        rpdat.arm_radiance = False
+        rpdat.rp_pp = False
     update_renderpath(self, context)
 
 def update_renderpath(self, context):

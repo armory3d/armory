@@ -409,6 +409,7 @@ def init_properties():
                ('Mobile', 'Mobile', 'Mobile'),
                ('Max', 'Max', 'Max'),
                ('2D/Baked', '2D/Baked', '2D/Baked'),
+               ('Fast64', 'Fast64', 'Fast64'),
                ],
         name="Preset", description="Render path preset", default='Desktop')
     bpy.types.World.arm_envtex_name = StringProperty(name="Environment Texture", default='')

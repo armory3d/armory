@@ -51,12 +51,12 @@ def build():
         for world in bpy.data.worlds:
             #world = scene.world
 
-            assigned = False;
+            assigned = False
             for scene in bpy.data.scenes:
                 if scene.arm_export and scene.world is not None:
                     if scene.world.name == world.name:
-                        assigned = True;
-                        break;
+                        assigned = True
+                        break
 
             #if scene.arm_export and world is not None and world not in worlds:
             # Only export worlds from enabled scenes and with fake users

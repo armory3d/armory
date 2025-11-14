@@ -412,6 +412,9 @@ def compile(assets_only=False):
                 for s in item.arm_project_khamake.split(' '):
                     cmd.append(s)
         state.proc_build = run_proc(cmd, build_done)
+    elif state.target == "n64":
+        # TODO: implement exporter
+        pass
     else:
         target_name = state.target
         kha_target_name = arm.utils.get_kha_target(target_name)

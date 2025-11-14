@@ -1026,6 +1026,8 @@ def target_to_gapi(arm_project_target: str) -> str:
         return 'arm_gapi_ios'
     elif arm_project_target == 'node':
         return 'arm_gapi_html5'
+    elif arm_project_target == 'n64':
+        return 'arm_gapi_n64'
     else: # html5, custom
         return 'arm_gapi_' + arm_project_target
 
