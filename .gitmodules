@@ -1,3 +1,11 @@
 [submodule "Kha"]
 	path = Kha
 	url = https://github.com/armory3d/Kha
+
+[submodule "libdragon"]
+	path = libdragon
+	url = https://github.com/DragonMinded/libdragon/tree/preview
+
+[submodule "Tiny3D"]
+	path = tiny3d
+	url = https://github.com/HailToDodongo/tiny3d
