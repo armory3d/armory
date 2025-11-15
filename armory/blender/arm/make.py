@@ -417,7 +417,7 @@ def compile(assets_only=False):
         os.makedirs(arm.utils.build_dir() + '/n64/assets', exist_ok=True)
         os.makedirs(arm.utils.build_dir() + '/n64/src', exist_ok=True)
 
-        model_output_path = os.path.join(arm.utils.build_dir(), 'n64', 'assets', 'objects.glb') # TODO: Export each model with their proper name
+        model_output_path = os.path.join(arm.utils.build_dir(), 'n64', 'assets', 'scene.glb') # TODO: Export each model with their proper name
         bpy.ops.export_scene.gltf(
             filepath=model_output_path,
             export_format='GLB',
@@ -522,7 +522,7 @@ int main(void)
     T3DVec3 lightDirVec = {{{{-1.0f, 1.0f, 1.0f}}}};
     t3d_vec3_norm(&lightDirVec);
 
-    T3DModel *model = t3d_model_load("rom:/objects.t3dm");
+    T3DModel *model = t3d_model_load("rom:/scene.t3dm");
     T3DVec3 modelPos = {{{{0.0f, 0.0f, 0.0f}}}};
     float modelScale = 1.0f;
 
@@ -533,7 +533,6 @@ int main(void)
     {{
         joypad_poll();
         inputs = joypad_get_inputs(JOYPAD_PORT_1);
-
 
         if (inputs.btn.a)
         {{
