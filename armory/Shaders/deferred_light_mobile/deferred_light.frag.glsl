@@ -56,12 +56,12 @@ uniform vec2 cameraPlane;
 	#endif
 #endif
 #ifdef _Clusters
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 		#ifdef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlas;
 		#endif
 	#endif
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
@@ -71,7 +71,7 @@ uniform vec2 cameraPlane;
 	#endif
 	//!uniform vec2 lightProj;
 	#ifdef _Spot
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		//!uniform sampler2DShadow shadowMapAtlasSpot;
 		#endif
@@ -87,7 +87,7 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
-	#ifdef _ShadowMapAtlas
+	#ifdef _AtlasShadowMap
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
 	#endif
@@ -195,7 +195,7 @@ void main() {
 	#ifdef _ShadowMap
 		#ifdef _CSM
 			svisibility = shadowTestCascade(
-				#ifdef _ShadowMapAtlas
+				#ifdef _AtlasShadowMap
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
 					#else
@@ -209,7 +209,7 @@ void main() {
 		#else
 			vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 			if (lPos.w > 0.0) svisibility = shadowTest(
-				#ifdef _ShadowMapAtlas
+				#ifdef _AtlasShadowMap
 					#ifndef _SingleAtlas
 					shadowMapAtlasSun
 					#else

@@ -56,8 +56,11 @@ def get_rpasses(material):
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
 
-    if material.arm_cast_shadow and rpdat.rp_shadows and ('mesh' in ar):
-        ar.append('shadowmap')
+    if material.arm_cast_shadow and (rpdat.rp_shadows  or rpdat.arm_voxelgi_shadowmaps) and ('mesh' in ar):
+        if 'translucent' in ar or 'refraction' in ar:
+            ar.append('shadowmap_transparent')
+        else:
+            ar.append('shadowmap')
 
     return ar
 

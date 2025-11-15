@@ -181,11 +181,19 @@ class Uniforms {
 						// Multiple voxel volumes, always set params
 						g.setImageTexture(context.textureUnits[j], rt.image); // image2D/3D
 						if (rt.raw.name.startsWith("voxels_")) {
-							g.setTextureParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
+							g.setTextureParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.LinearMipFilter);
+						}
+						else if (rt.raw.name.startsWith("voxelsSDF"))
+						{
+							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.PointFilter, TextureFilter.PointFilter, MipMapFilter.NoMipFilter);
+						}
+						else if (rt.raw.name.startsWith("voxelsOut"))
+						{
+							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.LinearMipFilter);
 						}
 						else if (rt.raw.name.startsWith("voxels"))
 						{
-							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
+							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.PointFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
 						}
 						else
 						{
@@ -724,6 +732,9 @@ class Uniforms {
 				case "_envmapNumMipmaps": {
 					var w = Scene.active.world;
 					i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1; // Include basecolor and exclude 2 scaled mips
+				}
+				case "_frame": {
+					i = RenderPath.active.frame;
 				}
 				default:
 					return false;

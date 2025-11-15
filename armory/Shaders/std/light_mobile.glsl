@@ -25,7 +25,7 @@
 		//!uniform sampler2DShadow shadowMapAtlas;
 		#endif
 		uniform vec2 lightProj;
-		#ifdef _ShadowMapAtlas
+		#ifdef _AtlasShadowMap
 		#ifndef _SingleAtlas
 		uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
@@ -33,7 +33,7 @@
 		uniform samplerCubeShadow shadowMapPoint[4];
 		#endif
 		#ifdef _Spot
-			#ifdef _ShadowMapAtlas
+			#ifdef _AtlasShadowMap
 			#ifndef _SingleAtlas
 			uniform sampler2DShadow shadowMapAtlasSpot;
 			#endif
@@ -79,7 +79,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				#endif
 				#ifdef _Clusters
 					vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
-					#ifdef _ShadowMapAtlas
+					#ifdef _AtlasShadowMap
 						direct *= shadowTest(
 							#ifndef _SingleAtlas
 							shadowMapAtlasSpot
@@ -110,7 +110,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			#endif
 			#endif
 			#ifdef _Clusters
-				#ifdef _ShadowMapAtlas
+				#ifdef _AtlasShadowMap
 				direct *= PCFFakeCube(
 					#ifndef _SingleAtlas
 					shadowMapAtlasPoint
