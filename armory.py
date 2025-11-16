@@ -147,6 +147,24 @@ class ArmoryAddonPreferences(AddonPreferences):
         self.skip_update = True
         self.html5_copy_path = bpy.path.reduce_dirs([bpy.path.abspath(self.html5_copy_path)])[0]
 
+    def n64_toolchain_path_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.n64_toolchain_path = bpy.path.reduce_dirs([bpy.path.abspath(self.n64_toolchain_path)])[0]
+
+    def msys2_bash_executable_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.msys2_bash_executable = bpy.path.reduce_dirs([bpy.path.abspath(self.msys2_bash_executable)])[0]
+
+    def mingw64_path_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.mingw64_path = bpy.path.reduce_dirs([bpy.path.abspath(self.mingw64_path)])[0]
+
     sdk_path: StringProperty(name="SDK Path", subtype="FILE_PATH", update=sdk_path_update, default="")
     update_submodules: BoolProperty(
         name="Update Submodules", default=True, description=(
@@ -286,6 +304,11 @@ class ArmoryAddonPreferences(AddonPreferences):
     link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", set=set_link_web_server, get=get_link_web_server)
     html5_server_port: IntProperty(name="Web Server Port", description="The port number of the local web server", default=8040, min=1024, max=65535)
     html5_server_log: BoolProperty(name="Enable Http Log", description="Enable logging of http requests to local web server", default=True)
+    # Nintendo 64 Settings
+    n64_toolchain_path: StringProperty(name="N64 Toolchain Path", description="Path to the N64 Toolchain installation directory", default="", subtype="FILE_PATH", update=n64_toolchain_path_update)
+    msys2_bash_executable: StringProperty(name="MSYS2 Bash Executable", description="Path to the MSYS2 Bash executable", default="", subtype="FILE_PATH", update=msys2_bash_executable_update)
+    mingw64_path: StringProperty(name="MinGW64 Path", description="Path to the MinGW64 directory", default="", subtype="FILE_PATH", update=mingw64_path_update)
+    open_n64_rom_directory: BoolProperty(name="Open Nintendo 64 ROM Directory", description="Open the Nintendo 64 ROM directory after successfully build", default=False)
 
     # Developer options
     profile_exporter: BoolProperty(
@@ -421,6 +444,13 @@ class ArmoryAddonPreferences(AddonPreferences):
                 box.prop(self, "link_web_server")
                 box.prop(self, "html5_server_port")
                 box.prop(self, "html5_server_log")
+
+                box = box_main.column()
+                box.label(text="Nintendo 64 Settings")
+                box.prop(self, "n64_toolchain_path")
+                box.prop(self, "msys2_bash_executable")
+                box.prop(self, "mingw64_path")
+                box.prop(self, "open_n64_rom_directory")
 
             elif self.tabs == "debugconsole":
                 box.label(text="Debug Console")

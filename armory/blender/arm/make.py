@@ -417,7 +417,9 @@ def compile(assets_only=False):
         os.makedirs(arm.utils.build_dir() + '/n64/assets', exist_ok=True)
         os.makedirs(arm.utils.build_dir() + '/n64/src', exist_ok=True)
 
-        model_output_path = os.path.join(arm.utils.build_dir(), 'n64', 'assets', 'scene.glb') # TODO: Export each model with their proper name
+        # TODO: Export different scenes
+        model_name = bpy.context.scene.name
+        model_output_path = os.path.join(arm.utils.build_dir(), 'n64', 'assets', f'{model_name}.glb')
         bpy.ops.export_scene.gltf(
             filepath=model_output_path,
             export_format='GLB',
@@ -485,6 +487,29 @@ build_lib:
         with open(make_file_path, 'w', encoding='utf-8') as f:
             f.write(make_file_content)
 
+        scene = bpy.context.scene
+        camera = scene.camera
+        light = None
+
+        for obj in scene.objects:
+            if obj.type == 'LIGHT':
+                light = obj
+                break
+
+        cam_loc = (0, 0, 0)
+        cam_dir = (0, 0, 0)
+        cam_fov = 50.0
+        light_dir = (0, 0, 0)
+
+        if camera:
+            cam_loc = camera.location
+            rot_matrix = camera.rotation_euler.to_matrix()
+            cam_dir = rot_matrix.col[2]
+            cam_fov = camera.data.lens
+        if light:
+            rot_matrix = light.rotation_euler.to_matrix()
+            light_dir = rot_matrix.col[2]
+
         main_file_content = f'''#include <stdio.h>
 #include <libdragon.h>
 #include <t3d/t3d.h>
@@ -513,18 +538,18 @@ int main(void)
     t3d_mat4_identity(&modelMat);
     T3DMat4FP* modelMatFP = malloc_uncached(sizeof(T3DMat4FP));
 
-    const T3DVec3 camPos = {{{{0.0f, 80.0f, 140.0f}}}};
-    const T3DVec3 camTarget = {{{{0, 0, 0}}}};
+    const T3DVec3 camPos = {{{{{cam_loc[0]}f, {cam_loc[2]}f, {-cam_loc[1]}f}}}};
+    const T3DVec3 camTarget = {{{{{cam_loc[0] - cam_dir[0]}f, {cam_loc[2] - cam_dir[2]}f, {-(cam_loc[1] - cam_dir[1])}f}}}};
 
     uint8_t colorAmbient[4] = {{80, 80, 100, 0xff}};
     uint8_t colorDir[4] = {{0xEE, 0xAA, 0xAA, 0xFF}};
 
-    T3DVec3 lightDirVec = {{{{-1.0f, 1.0f, 1.0f}}}};
+    T3DVec3 lightDirVec = {{{{{light_dir[0]}f, {light_dir[2]}f, {-light_dir[1]}f}}}};
     t3d_vec3_norm(&lightDirVec);
 
-    T3DModel *model = t3d_model_load("rom:/scene.t3dm");
+    T3DModel *model = t3d_model_load("rom:/{model_name}.t3dm");
     T3DVec3 modelPos = {{{{0.0f, 0.0f, 0.0f}}}};
-    float modelScale = 1.0f;
+    float modelScale = 0.025f;
 
     float rotAngle = 0.0f;
     rspq_block_t *dplDraw = NULL;
@@ -542,7 +567,7 @@ int main(void)
         modelPos.x += inputs.stick_x * 0.05f;
         modelPos.z -= inputs.stick_y * 0.05f;
 
-        t3d_viewport_set_projection(&viewport, T3D_DEG_TO_RAD(85.0f), 10.0f, 150.0f);
+        t3d_viewport_set_projection(&viewport, T3D_DEG_TO_RAD({cam_fov}), 10.0f, 150.0f);
         t3d_viewport_look_at(&viewport, &camPos, &camTarget, &(T3DVec3){{{{0, 1, 0}}}});
 
         t3d_mat4_from_srt_euler(&modelMat,
@@ -587,6 +612,29 @@ int main(void)
         main_file_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'main.c')
         with open(main_file_path, 'w', encoding='utf-8') as f:
             f.write(main_file_content)
+
+        msys2_executable = arm.utils.get_msys2_bash_executable()
+        if len(msys2_executable) > 0:
+            info = subprocess.run(
+                [
+                    rf'{msys2_executable}',
+                    '--login',
+                    '-c',
+                    (
+                        f'export N64_INST="{arm.utils.get_n64_toolchain_path()}"; '
+                        f'export PATH="{arm.utils.get_n64_toolchain_path()}:{arm.utils.get_mingw64_path()}:$PATH"; '
+                        f'cd "{os.path.abspath(arm.utils.build_dir())}/n64" && make'
+                    )
+                ],
+                capture_output=True,
+                text=True
+            )
+            log.info(info.stdout)
+            if info.stderr.strip():
+                log.error(info.stderr)
+
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
     else:
         target_name = state.target
         kha_target_name = arm.utils.get_kha_target(target_name)

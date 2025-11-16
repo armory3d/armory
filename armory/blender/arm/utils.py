@@ -1138,6 +1138,25 @@ def get_link_web_server():
     addon_prefs = get_arm_preferences()
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
 
+def get_n64_toolchain_path():
+    if os.getenv('N64_INST') == None:
+        addon_prefs = get_arm_preferences()
+        return '' if not hasattr(addon_prefs, 'n64_toolchain_path') else addon_prefs.n64_toolchain_path.replace('C:', '/c').replace('\\', '/')
+    else:
+        return os.getenv('N64_INST')
+
+def get_msys2_bash_executable():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'msys2_bash_executable') else addon_prefs.msys2_bash_executable
+
+def get_mingw64_path():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'mingw64_path') else addon_prefs.mingw64_path.replace('C:', '/c').replace('\\', '/')
+
+def get_open_n64_rom_directory():
+    addon_prefs = get_arm_preferences()
+    return False if not hasattr(addon_prefs, 'open_n64_rom_directory') else addon_prefs.open_n64_rom_directory
+
 
 def get_file_arm_version_tuple() -> tuple[int]:
     wrd = bpy.data.worlds['Arm']
