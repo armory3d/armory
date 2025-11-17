@@ -621,17 +621,16 @@ int main(void)
                     '--login',
                     '-c',
                     (
+                        f'export MSYSTEM=MINGW64; '
                         f'export N64_INST="{arm.utils.get_n64_toolchain_path()}"; '
                         f'export PATH="{arm.utils.get_n64_toolchain_path()}:{arm.utils.get_mingw64_path()}:$PATH"; '
                         f'cd "{os.path.abspath(arm.utils.build_dir())}/n64" && make'
                     )
                 ],
-                capture_output=True,
+                stdout=None,
+                stderr=None,
                 text=True
             )
-            log.info(info.stdout)
-            if info.stderr.strip():
-                log.error(info.stderr)
 
             if arm.utils.get_open_n64_rom_directory():
                 arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))

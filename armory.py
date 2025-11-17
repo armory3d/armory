@@ -452,6 +452,8 @@ class ArmoryAddonPreferences(AddonPreferences):
                 box.prop(self, "mingw64_path")
                 box.prop(self, "open_n64_rom_directory")
 
+                box.operator("arm_addon.build_libdragon", icon="FILE_REFRESH")
+
             elif self.tabs == "debugconsole":
                 box.label(text="Debug Console")
                 box.prop(self, "debug_console_auto")
@@ -833,6 +835,59 @@ class ArmAddonHelpButton(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class ArmAddonBuildLibdragonButton(bpy.types.Operator):
+    """Build libdragon for Nintendo 64"""
+    bl_idname = "arm_addon.build_libdragon"
+    bl_label = "Build libdragon"
+    bl_description = "Build libdragon for Nintendo 64 development"
+
+    def execute(self, context):
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
+            self.report({"ERROR"}, "Configure Armory SDK path first")
+            return {"CANCELLED"}
+
+        preferences = context.preferences
+        addon_prefs = preferences.addons["armory"].preferences
+
+        if addon_prefs.msys2_bash_executable == "":
+            self.report({"ERROR"}, "Configure MSYS2 Bash executable path first")
+            return {"CANCELLED"}
+
+        libdragon_path = os.path.abspath(os.path.join(sdk_path, "lib", "libdragon")).replace("\\", "/")
+        msys2_executable = addon_prefs.msys2_bash_executable
+        n64_toolchain_path = os.path.abspath(addon_prefs.n64_toolchain_path).replace("\\", "/")
+        mingw64_path = os.path.abspath(addon_prefs.mingw64_path).replace("\\", "/")
+
+        print('Building libdragon for Nintendo 64, check console for details.')
+
+        # Build environment variables
+        env = os.environ.copy()
+        env['MSYSTEM'] = 'MINGW64'
+        env['N64_INST'] = n64_toolchain_path
+        env['PATH'] = f"{n64_toolchain_path}:{mingw64_path}:{env.get('PATH', '')}"
+
+        info = subprocess.run(
+            [
+                rf'{msys2_executable}',
+                '--login',
+                '-c',
+                f'cd "{libdragon_path}" && ./build.sh'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True,
+            env=env
+        )
+
+        if info.returncode != 0:
+            self.report({"ERROR"}, "Failed building libdragon, check console for details.")
+        else:
+            self.report({'INFO'}, 'libdragon build completed.')
+
+        return {"FINISHED"}
+
+
 def update_armory_py(sdk_path: str, force_relink=False):
     """Ensure that armory.py is up to date by copying it from the
     current SDK path (if 'use_armory_py_symlink' is true, a symlink is
@@ -947,6 +1002,7 @@ def register():
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
     bpy.utils.register_class(ArmAddonHelpButton)
+    bpy.utils.register_class(ArmAddonBuildLibdragonButton)
     bpy.app.handlers.load_post.append(on_load_post)
 
     # Hack to avoid _RestrictContext
@@ -961,6 +1017,7 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
     bpy.utils.unregister_class(ArmAddonHelpButton)
+    bpy.utils.unregister_class(ArmAddonBuildLibdragonButton)
     bpy.app.handlers.load_post.remove(on_load_post)
 
 
