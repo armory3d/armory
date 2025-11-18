@@ -453,6 +453,7 @@ class ArmoryAddonPreferences(AddonPreferences):
                 box.prop(self, "open_n64_rom_directory")
                 box.label(text="Libraries:")
                 row = box.row(align=True)
+                row.operator("arm_addon.install_libdragon_dependencies", icon="IMPORT")
                 row.operator("arm_addon.build_libdragon", icon="MOD_BUILD")
                 row.operator("arm_addon.build_tiny3d", icon="MOD_BUILD")
 
@@ -837,6 +838,51 @@ class ArmAddonHelpButton(bpy.types.Operator):
         return {"FINISHED"}
 
 
+#TODO: refactor common code between the two build buttons
+class ArmAddonInstallLibdragonDependenciesButton(bpy.types.Operator):
+    """Install libdragon dependencies via pacman"""
+    bl_idname = "arm_addon.install_libdragon_dependencies"
+    bl_label = "Install Dependencies"
+    bl_description = "Install libdragon dependencies (base-devel, mingw-w64-x86_64-gcc, mingw-w64-x86_64-make, git)"
+
+    def execute(self, context):
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
+            self.report({"ERROR"}, "Configure Armory SDK path first")
+            return {"CANCELLED"}
+
+        prefs = ArmoryAddonPreferences.get_prefs()
+        msys2_exe = prefs.msys2_bash_executable
+        libdragon_path = os.path.abspath(os.path.join(sdk_path, "lib", "libdragon")).replace("\\", "/")
+
+        if not msys2_exe or not os.path.exists(msys2_exe):
+            self.report({'ERROR'}, 'MSYS2 Bash executable not configured in preferences')
+            return {'FINISHED'}
+
+        env = os.environ.copy()
+        env['MSYSTEM'] = 'MINGW64'
+
+        result = subprocess.run(
+            [
+                rf'{msys2_exe}',
+                '--login',
+                '-c',
+                f'cd "{libdragon_path}" && pacman -S --noconfirm base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-make git'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True,
+            env=env
+        )
+
+        if result.returncode == 0:
+            self.report({'INFO'}, 'libdragon dependencies installed successfully.')
+        else:
+            self.report({'WARNING'}, 'libdragon dependencies installation completed with errors. Check console for details.')
+
+        return {'FINISHED'}
+
+
 class ArmAddonBuildLibdragonButton(bpy.types.Operator):
     """Build libdragon for Nintendo 64"""
     bl_idname = "arm_addon.build_libdragon"
@@ -869,7 +915,7 @@ class ArmAddonBuildLibdragonButton(bpy.types.Operator):
         env['N64_INST'] = n64_toolchain_path
         env['PATH'] = f"{n64_toolchain_path}:{mingw64_path}:{env.get('PATH', '')}"
 
-        info = subprocess.run(
+        result = subprocess.run(
             [
                 rf'{msys2_executable}',
                 '--login',
@@ -882,7 +928,7 @@ class ArmAddonBuildLibdragonButton(bpy.types.Operator):
             env=env
         )
 
-        if info.returncode != 0:
+        if result.returncode != 0:
             self.report({"ERROR"}, "Failed building libdragon, check console for details.")
         else:
             self.report({'INFO'}, 'libdragon build completed.')
@@ -922,7 +968,7 @@ class ArmAddonBuildTiny3dButton(bpy.types.Operator):
         env['N64_INST'] = n64_toolchain_path
         env['PATH'] = f"{n64_toolchain_path}:{mingw64_path}:{env.get('PATH', '')}"
 
-        info = subprocess.run(
+        result = subprocess.run(
             [
                 rf'{msys2_executable}',
                 '--login',
@@ -935,7 +981,7 @@ class ArmAddonBuildTiny3dButton(bpy.types.Operator):
             env=env
         )
 
-        if info.returncode != 0:
+        if result.returncode != 0:
             self.report({"ERROR"}, "Failed building Tiny3D, check console for details.")
         else:
             self.report({'INFO'}, 'Tiny3D build completed.')
@@ -1057,6 +1103,7 @@ def register():
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
     bpy.utils.register_class(ArmAddonHelpButton)
+    bpy.utils.register_class(ArmAddonInstallLibdragonDependenciesButton)
     bpy.utils.register_class(ArmAddonBuildLibdragonButton)
     bpy.utils.register_class(ArmAddonBuildTiny3dButton)
     bpy.app.handlers.load_post.append(on_load_post)
@@ -1073,6 +1120,7 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
     bpy.utils.unregister_class(ArmAddonHelpButton)
+    bpy.utils.unregister_class(ArmAddonInstallLibdragonDependenciesButton)
     bpy.utils.unregister_class(ArmAddonBuildLibdragonButton)
     bpy.utils.unregister_class(ArmAddonBuildTiny3dButton)
     bpy.app.handlers.load_post.remove(on_load_post)
