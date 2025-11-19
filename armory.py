@@ -867,7 +867,7 @@ class ArmAddonInstallLibdragonDependenciesButton(bpy.types.Operator):
                 rf'{msys2_exe}',
                 '--login',
                 '-c',
-                f'cd "{libdragon_path}" && pacman -S --noconfirm base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-make git'
+                f'pacman -S --needed --noconfirm base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-make git'
             ],
             stdout=None,
             stderr=None,
