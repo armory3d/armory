@@ -1,0 +1,59 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmodel.h>
+
+#include "../types.h"
+#include "../src/models.h"
+
+void scene_level_01_init(Scene *scene)
+{{
+    // World
+
+    scene->world.clear_color[0] = 16;
+    scene->world.clear_color[1] = 16;
+    scene->world.clear_color[2] = 32;
+    scene->world.clear_color[3] = 0xFF;
+
+    scene->world.ambient_color[0] = 64;
+    scene->world.ambient_color[1] = 64;
+    scene->world.ambient_color[2] = 64;
+    scene->world.ambient_color[3] = 0xFF;
+
+    // Camera
+    scene->camera.pos = (T3DVec3){{10.0f, 11.5f, 15.0f}};
+    scene->camera.target = (T3DVec3){{0.0f, 0.0f, 0.0f}};
+    scene->camera.fov = 60.0f;
+    scene->camera.near_plane = 10.0f;
+    scene->camera.far_plane = 150.0f;
+
+    // One directional light
+    static ArmLight lights[1];
+    scene->lights = lights;
+    scene->light_count = 1;
+
+    lights[0].color[0] = 255;
+    lights[0].color[1] = 255;
+    lights[0].color[2] = 255;
+    lights[0].color[3] = 0xFF;
+    lights[0].dir = (T3DVec3){{0.0f, -1.0f, 0.0f}};
+
+    // One object (a model that must exist in ROM)
+    static ArmObject objects[1];
+    scene->objects = objects;
+    scene->object_count = 1;
+
+    objects[0].pos[0] = 0.0f;
+    objects[0].pos[1] = 0.0f;
+    objects[0].pos[2] = 0.0f;
+
+    objects[0].rot[0] = 0.0f;
+    objects[0].rot[1] = 0.0f;
+    objects[0].rot[2] = 0.0f;
+
+    objects[0].scale[0] = 0.02f;
+    objects[0].scale[1] = 0.02f;
+    objects[0].scale[2] = 0.02f;
+
+    objects[0].model = models_get(MODEL_SCENE_1);
+    objects[0].modelMat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);
+}}

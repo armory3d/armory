@@ -1157,6 +1157,9 @@ def get_open_n64_rom_directory():
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'open_n64_rom_directory') else addon_prefs.open_n64_rom_directory
 
+def get_n64_deployment_path():
+    return os.path.join(arm.utils.get_sdk_path(), 'armorcore', 'Deployment', 'n64')
+
 
 def get_file_arm_version_tuple() -> tuple[int]:
     wrd = bpy.data.worlds['Arm']

@@ -1,0 +1,42 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmath.h>
+
+#include "../types.h"
+#include "engine.h"
+#include "renderer.h"
+#include "scenes.h"
+
+static float get_time_s(void)
+{{
+    return (float)((double)get_ticks_ms() / 1000.0);
+}}
+
+int main(void)
+{{
+    engine_init();
+    scenes_init_all();
+
+    T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
+
+    SceneId current = {initial_scene_id};
+	float last_switch_time = get_time_s();
+    const float SWITCH_INTERVAL = 5.0f;
+
+    while (1) {{
+		float now = get_time_s();
+        if ((now - last_switch_time) >= SWITCH_INTERVAL) {{
+            current = (SceneId)(((int)current + 1) % SCENE_COUNT);
+            last_switch_time = now;
+        }}
+
+        Scene *scene = scene_get(current);
+
+        renderer_begin_frame(&viewport, scene);
+        renderer_update_objects(scene);
+        renderer_draw_scene(&viewport, scene);
+    }}
+
+    engine_shutdown();
+    return 0;
+}}

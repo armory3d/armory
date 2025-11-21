@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import math
 import bpy
@@ -12,7 +13,7 @@ def to_uint8(value):
 class N64Exporter:
     def __init__(self, scene):
         self.scene = scene
-        self.data = {}
+        self.scene_data = {}
         self.exported_meshes = {}
 
 
@@ -26,6 +27,7 @@ class N64Exporter:
         build_dir = arm.utils.build_dir()
         os.makedirs(f'{build_dir}/n64', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/assets', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/scenes', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src', exist_ok=True)
 
 
@@ -35,45 +37,49 @@ class N64Exporter:
 
         self.exported_meshes = {}
 
-        for obj in self.scene.objects:
-            if obj.type != 'MESH':
+        for scene in bpy.data.scenes:
+            if scene.name.startswith('fast64'):
                 continue
 
-            mesh = obj.data
-            if mesh in self.exported_meshes:
-                continue
+            for obj in scene.objects:
+                if obj.type != 'MESH':
+                    continue
 
-            mesh_name = mesh.name.replace(" ", "_").lower()
-            model_output_path = os.path.join(assets_dir, f'{mesh_name}.gltf')
+                mesh = obj.data
+                if mesh in self.exported_meshes:
+                    continue
 
-            orig_loc = obj.location.copy()
-            orig_rot = obj.rotation_euler.copy()
-            orig_scale = obj.scale.copy()
+                mesh_name = mesh.name.replace(" ", "_").lower()
+                model_output_path = os.path.join(assets_dir, f'{mesh_name}.gltf')
 
-            obj.location = (0.0, 0.0, 0.0)
-            obj.rotation_euler = (0.0, 0.0, 0.0)
-            obj.scale = (1.0, 1.0, 1.0)
+                orig_loc = obj.location.copy()
+                orig_rot = obj.rotation_euler.copy()
+                orig_scale = obj.scale.copy()
 
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
+                obj.location = (0.0, 0.0, 0.0)
+                obj.rotation_euler = (0.0, 0.0, 0.0)
+                obj.scale = (1.0, 1.0, 1.0)
 
-            bpy.ops.export_scene.gltf(
-                filepath=model_output_path,
-                export_format='GLTF_SEPARATE',
-                export_extras=True,
-                use_selection=True
-            )
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select_set(True)
 
-            obj.location = orig_loc
-            obj.rotation_euler = orig_rot
-            obj.scale = orig_scale
+                bpy.ops.export_scene.gltf(
+                    filepath=model_output_path,
+                    export_format='GLTF_SEPARATE',
+                    export_extras=True,
+                    use_selection=True
+                )
 
-            bpy.context.view_layer.update()
-            self.exported_meshes[mesh] = mesh_name
+                obj.location = orig_loc
+                obj.rotation_euler = orig_rot
+                obj.scale = orig_scale
+
+                bpy.context.view_layer.update()
+                self.exported_meshes[mesh] = mesh_name
 
 
-    def build_scene_data(self):
-        self.data = {
+    def build_scene_data(self, scene):
+        self.scene_data[arm.utils.safesrc(scene.name)] = {
             "world": {
                 "clear_color": self.get_clear_color(),
                 "ambient_color": list(self.scene.fast64.renderSettings.ambientColor)
@@ -83,7 +89,7 @@ class N64Exporter:
             "objects": []
         }
 
-        for obj in self.scene.objects:
+        for obj in scene.objects:
             if obj.type == 'CAMERA':
                 cam_pos = (obj.location[0], obj.location[2], -obj.location[1])
                 cam_dir = obj.rotation_euler.to_matrix().col[2]
@@ -91,7 +97,7 @@ class N64Exporter:
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
-                self.data["cameras"].append({
+                self.scene_data["cameras"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "pos": list(cam_pos),
                     "target": list(cam_target),
@@ -103,7 +109,7 @@ class N64Exporter:
                 light_dir = obj.rotation_euler.to_matrix().col[2]
                 dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
 
-                self.data["lights"].append({
+                self.scene_data["lights"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "color": list(obj.data.color),
                     "dir": list(dir_vec)
@@ -117,7 +123,7 @@ class N64Exporter:
                 obj_rot = (-e.x, -e.z, e.y)
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
-                self.data["objects"].append({
+                self.scene_data["objects"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "mesh": "rom:/" + mesh_name + ".t3dm",
                     "pos": list(obj_pos),
@@ -126,268 +132,191 @@ class N64Exporter:
                 })
 
 
-    def create_make_file(self):
+    def write_makefile(self):
         wrd = bpy.data.worlds['Arm']
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'Makefile.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'Makefile')
 
-        sdk_path = arm.utils.get_sdk_path()
-        # libdragon_path = os.path.join(sdk_path, 'lib', 'libdragon').replace('\\', '/')
-        tiny3d_path = os.path.join(sdk_path, 'lib', 'tiny3d').replace('\\', '/')
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
 
-        make_file_content = f'''BUILD_DIR=build
+        scene_lines = []
+        for scene in bpy.data.scenes:
+            if scene.name.startswith('fast64'):
+                continue
+            scene_name = arm.utils.safesrc(scene.name).lower()
+            scene_lines.append(f'    src/scenes/{scene_name}.c')
+        scene_files = ' \ \n'.join(scene_lines)
 
-T3D_INST={tiny3d_path}
+        output = tmpl_content.format(
+            tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
+            game_title=arm.utils.safestr(wrd.arm_project_name),
+            scene_files=scene_files
+        )
 
-include $(N64_INST)/include/n64.mk
-include $(T3D_INST)/t3d.mk
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
-GAME_TITLE := {arm.utils.safestr(wrd.arm_project_name)}
-ROM_NAME := {arm.utils.safestr(wrd.arm_project_name)}
 
-N64_CFLAGS += -std=gnu2x
+    def copy_src(self, name, path=''):
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
 
-src = src/main.c
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        shutil.copyfile(tmpl_path, out_path)
 
-assets_png = $(wildcard assets/*.png)
-assets_gltf = $(wildcard assets/*.gltf)
-assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \\
-			  $(addprefix filesystem/,$(notdir $(assets_ttf:%.ttf=%.font64))) \\
-			  $(addprefix filesystem/,$(notdir $(assets_gltf:%.gltf=%.t3dm)))
 
-all: $(ROM_NAME).z64
+    def write_types(self):
+        self.copy_src('types.h')
 
-filesystem/%.sprite: assets/%.png
-	@mkdir -p $(dir $@)
-	@echo "    [SPRITE] $@"
-	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o filesystem "$<"
 
-filesystem/%.t3dm: assets/%.gltf
-	@mkdir -p $(dir $@)
-	@echo "    [T3D-MODEL] $@"
-	$(T3D_GLTF_TO_3D) "$<" $@
-	$(N64_BINDIR)/mkasset -c 2 -o filesystem $@
+    def write_engine(self):
+        self.copy_src('engine.c', 'src')
+        self.copy_src('engine.h', 'src')
 
-$(BUILD_DIR)/$(ROM_NAME).dfs: $(assets_conv)
-$(BUILD_DIR)/$(ROM_NAME).elf: $(src:%.c=$(BUILD_DIR)/%.o)
 
-$(ROM_NAME).z64: N64_ROM_TITLE=$(GAME_TITLE)
-$(ROM_NAME).z64: $(BUILD_DIR)/$(ROM_NAME).dfs
+    def write_main(self):
+        wrd = bpy.data.worlds['Arm']
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'main.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'main.c')
 
-clean:
-	rm -rf $(BUILD_DIR) *.z64
-	rm -rf filesystem
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
 
-build_lib:
-	rm -rf $(BUILD_DIR) *.z64
-	make -C $(T3D_INST)
-	make all
+        output = tmpl_content.format(
+            initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name.upper())}'
+        )
 
--include $(wildcard $(BUILD_DIR)/*.d)
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
-.PHONY: all clean
-'''
-        make_file_path = os.path.join(arm.utils.build_dir(), 'n64', 'Makefile')
-        with open(make_file_path, 'w', encoding='utf-8') as f:
-            f.write(make_file_content)
 
-    def create_main_c(self):
-        camera_pos = self.data["cameras"][0]["pos"]
-        camera_target = self.data["cameras"][0]["target"]
-        camera_fov = self.data["cameras"][0]["fov"]
-        camera_near = self.data["cameras"][0]["near"]
-        camera_far = self.data["cameras"][0]["far"]
+    def write_models(self):
+        self.write_models_c()
+        self.write_models_h()
 
-        world_clear_color = self.data["world"]["clear_color"]
-        cr = to_uint8(world_clear_color[0])
-        cg = to_uint8(world_clear_color[1])
-        cb = to_uint8(world_clear_color[2])
-        world_ambient_color = self.data["world"]["ambient_color"]
-        ar = to_uint8(world_ambient_color[0])
-        ag = to_uint8(world_ambient_color[1])
-        ab = to_uint8(world_ambient_color[2])
 
-        light_count = len(self.data["lights"])
-        object_count = len(self.data["objects"])
+    def write_models_c(self):
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'models.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'models.c')
 
-        main_file_content = f'''#include <stdio.h>
-#include <libdragon.h>
-#include <t3d/t3d.h>
-#include <t3d/t3dmath.h>
-#include <t3d/t3dmodel.h>
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
 
-#define FB_COUNT 3
-'''
-        if object_count > 0:
-            main_file_content += f'''#define OBJECT_COUNT {object_count}
-'''
-        if light_count > 0:
-            main_file_content += f'''#define LIGHT_COUNT {light_count}
-'''
-        main_file_content += f'''
-static int frameIdx = 0;
+        lines = []
+        for model_name in self.exported_meshes.values():
+            lines.append(f'    "rom:/{model_name}.t3dm"')
+        mesh_paths = ',\n'.join(lines)
 
-'''
-        if object_count > 0:
-            main_file_content += f'''typedef struct {{
-    float pos[3];
-    float rot[3];
-    float scale[3];
-    T3DModel *model;
-    T3DMat4FP *modelMat;
-}} ArmObject;
+        output = tmpl_content.format(
+            mesh_paths=mesh_paths,
+            model_count=len(self.exported_meshes)
+        )
 
-ArmObject arm_object_create(const char *mesh, float pos[3], float rot[3], float scale[3]) {{
-    ArmObject armObject = (ArmObject){{
-        .pos = {{pos[0], pos[1], pos[2]}},
-        .rot = {{rot[0], rot[1], rot[2]}},
-        .scale = {{scale[0], scale[1], scale[2]}},
-        .model = t3d_model_load(mesh),
-        .modelMat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT)
-    }};
-    return armObject;
-}}
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
-void arm_object_update(ArmObject *armObject) {{
-    t3d_mat4fp_from_srt_euler(
-        &armObject->modelMat[frameIdx],
-        armObject->scale,
-        armObject->rot,
-        armObject->pos
-    );
-}}
-'''
-        if light_count > 0:
-            main_file_content += f'''
-typedef struct {{
-    uint8_t color[4];
-    T3DVec3 dir;
-}} ArmLight;
 
-ArmLight arm_light_create(uint8_t color[4], float dir[3]) {{
-    ArmLight armLight = {{
-        .color = {{color[0], color[1], color[2], color[3]}},
-        .dir = {{{{dir[0], dir[1], dir[2]}}}}
-    }};
-    return armLight;
-}}
-'''
+    def write_models_h(self):
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'models.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'models.h')
 
-        main_file_content += f'''
-int main(void)
-{{
-    debug_init_isviewer();
-    debug_init_usblog();
-    asset_init_compression(2);
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
 
-    dfs_init(DFS_DEFAULT_LOCATION);
+        lines = []
+        for i, model_name in enumerate(self.exported_meshes.values()):
+            lines.append(f'    MODEL_{model_name.upper()} = {i},')
+        model_enum_entries = '\n'.join(lines)
 
-    display_init(RESOLUTION_320x240, DEPTH_16_BPP, FB_COUNT, GAMMA_NONE, FILTERS_RESAMPLE_ANTIALIAS);
+        output = tmpl_content.format(
+            model_enum_entries=model_enum_entries,
+            model_count=len(self.exported_meshes)
+        )
 
-    rdpq_init();
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
-    t3d_init((T3DInitParams){{}});
-    T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
-    rdpq_text_register_font(FONT_BUILTIN_DEBUG_MONO, rdpq_font_load_builtin(FONT_BUILTIN_DEBUG_MONO));
 
-    T3DVec3 camPos = {{{{{camera_pos[0]}f, {camera_pos[1]}f, {camera_pos[2]}f}}}};
-    T3DVec3 camTarget = {{{{{camera_target[0]}f, {camera_target[1]}f, {camera_target[2]}f}}}};
+    def write_renderer(self):
+        self.copy_src('renderer.c', 'src')
+        self.copy_src('renderer.h', 'src')
 
-    uint8_t colorClear[4] = {{{cr}, {cg}, {cb}, 0xFF}};
-    uint8_t colorAmbient[4] = {{{ar}, {ag}, {ab}, 0xFF}};
-'''
-        if object_count > 0:
-            main_file_content += f'''
-    ArmObject armObjects[OBJECT_COUNT];
-'''
-            for i in range(object_count):
-                mesh = self.data["objects"][i]["mesh"]
-                pos = self.data["objects"][i]["pos"]
-                rot = self.data["objects"][i]["rot"]
-                scale = self.data["objects"][i]["scale"]
-                main_file_content += f'''    armObjects[{i}] = arm_object_create("{mesh}", (float[3]){{{pos[0]}f, {pos[1]}f, {pos[2]}f}}, (float[3]){{{rot[0]}f, {rot[1]}f, {rot[2]}f}}, (float[3]){{{scale[0]}f, {scale[1]}f, {scale[2]}f}});
-'''
-        if light_count > 0:
-            main_file_content += f'''
-    ArmLight armLights[LIGHT_COUNT];
-'''
-            for i in range(light_count):
-                color = self.data["lights"][i]["color"]
-                r = to_uint8(color[0])
-                g = to_uint8(color[1])
-                b = to_uint8(color[2])
-                dir = self.data["lights"][i]["dir"]
-                main_file_content += f'''    armLights[{i}] = arm_light_create((uint8_t[4]){{{r}, {g}, {b}, 0xFF}}, (float[3]){{{dir[0]}f, {dir[1]}f, {dir[2]}f}});
-'''
 
-        main_file_content += f'''
-    rspq_block_t *dplDraw = NULL;
+    def write_scenes(self):
+        self.write_scenes_c()
+        self.write_scenes_h()
 
-    while(1)
-    {{
-        frameIdx = (frameIdx + 1) % FB_COUNT;
+        for scene in bpy.data.scenes:
+            if scene.name.startswith('fast64'):
+                continue
+            self.build_scene_data(scene)
+            self.write_scene_c(scene)
 
-        t3d_viewport_set_projection(&viewport, T3D_DEG_TO_RAD({camera_fov}), {camera_near}f, {camera_far}f);
-        t3d_viewport_look_at(&viewport, &camPos, &camTarget, &(T3DVec3){{{{0, 1, 0}}}});
-'''
-        if object_count > 0:
-            main_file_content += f'''
-        for (int i = 0; i < OBJECT_COUNT; i++)
-        {{
-            arm_object_update(&armObjects[i]);
-        }}
-'''
-        main_file_content += f'''
-        rdpq_attach(display_get(), display_get_zbuf());
-        t3d_frame_start();
-        t3d_viewport_attach(&viewport);
 
-        t3d_screen_clear_color(RGBA32(colorClear[0], colorClear[1], colorClear[2], colorClear[3]));
-        t3d_screen_clear_depth();
-        t3d_light_set_ambient(colorAmbient);
-'''
-        if light_count > 0:
-            main_file_content += f'''
-        t3d_light_set_count(LIGHT_COUNT);
+    def write_scene_c(self, scene):
+        pass
 
-        for (int i = 0; i < LIGHT_COUNT; i++)
-        {{
-            t3d_light_set_directional(i, armLights[i].color, &armLights[i].dir);
-        }}
-'''
 
-        main_file_content += f'''
-        if (!dplDraw)
-        {{
-            rspq_block_begin();'''
+    def write_scenes_c(self):
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes.c')
 
-        if object_count > 0:
-            main_file_content += f'''
-            for (int i = 0; i < OBJECT_COUNT; i++)
-            {{
-                t3d_matrix_push(&armObjects[i].modelMat[frameIdx]);
-                t3d_model_draw(armObjects[i].model);
-                t3d_matrix_pop(1);
-            }}
-'''
-        main_file_content += f'''
-            dplDraw = rspq_block_end();
-        }}
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
 
-        rspq_block_run(dplDraw);
+        declatarion_lines = []
+        init_lines = []
+        init_switch_cases_lines = []
 
-        rdpq_sync_pipe();
-        rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS   : %.2f", display_get_fps());
+        for scene in bpy.data.scenes:
+            if scene.name.startswith('fast64'):
+                continue
+            scene_name = arm.utils.safesrc(scene.name).lower()
+            declatarion_lines.append(f'void scene_{scene_name}_init(Scene *scene);')
+            init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
+            init_switch_cases_lines.append(f'       case SCENE_{scene_name.upper()}:\n'
+                                            f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
+                                            f'            break;')
 
-        rdpq_detach_show();
-    }}
+        scene_declarations = '\n'.join(declatarion_lines)
+        scene_inits = '\n'.join(init_lines)
+        scene_init_switch_cases = '\n'.join(init_switch_cases_lines)
 
-    t3d_destroy();
-    return 0;
-}}
-'''
+        output = tmpl_content.format(
+            scene_declarations=scene_declarations,
+            scene_inits=scene_inits,
+            scene_init_switch_cases=scene_init_switch_cases
+        )
 
-        main_file_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'main.c')
-        with open(main_file_path, 'w', encoding='utf-8') as f:
-            f.write(main_file_content)
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+
+    def write_scenes_h(self):
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        lines = []
+        scene_count = 0
+        for i, scene in enumerate(bpy.data.scenes):
+            if scene.name.startswith('fast64'):
+                continue
+            scene_name = arm.utils.safesrc(scene.name).upper()
+            lines.append(f'    SCENE_{scene_name} = {i},')
+            scene_count += 1
+        scene_enum_entries = '\n'.join(lines)
+
+        output = tmpl_content.format(
+            scene_enum_entries=scene_enum_entries,
+            scene_count=scene_count
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def run_make(self):
@@ -411,16 +340,16 @@ int main(void)
             )
 
 
-    def get_clear_color(self):
-        if self.scene.world is None:
+    def get_clear_color(self, scene):
+        if scene.world is None:
             return [0.051, 0.051, 0.051, 1.0]
 
-        if self.scene.world.node_tree is None:
-            c = self.scene.world.color
+        if scene.world.node_tree is None:
+            c = scene.world.color
             return [c[0], c[1], c[2], 1.0]
 
-        if 'Background' in self.scene.world.node_tree.nodes:
-            background_node = self.scene.world.node_tree.nodes['Background']
+        if 'Background' in scene.world.node_tree.nodes:
+            background_node = scene.world.node_tree.nodes['Background']
             col = background_node.inputs[0].default_value
             strength = background_node.inputs[1].default_value
             ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
@@ -435,7 +364,11 @@ int main(void)
     def execute(self):
         self.make_directories()
         self.export_meshes()
-        self.build_scene_data()
-        self.create_make_file()
-        self.create_main_c()
+        self.write_makefile()
+        self.write_types()
+        self.write_engine()
+        self.write_main()
+        self.write_models()
+        self.write_renderer()
+        self.write_scenes()
         self.run_make()

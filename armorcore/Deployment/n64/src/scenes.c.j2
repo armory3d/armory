@@ -1,0 +1,77 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmodel.h>
+
+#include "../types.h"
+#include "scenes.h"
+
+{scene_declarations}
+
+static Scene g_scenes[SCENE_COUNT];
+
+void scenes_init_all(void)
+{{
+    for (int i = 0; i < SCENE_COUNT; ++i) {{
+        scene_clear((SceneId)i);
+    }}
+
+{scene_inits}
+}}
+
+void scene_init(SceneId id)
+{{
+    if (id < 0 || id >= SCENE_COUNT) {{
+        return;
+    }}
+
+    scene_clear(id);
+
+    switch (id) {{
+{scene_init_switch_cases}
+		default:
+			break;
+    }}
+}}
+
+void scene_clear(SceneId id)
+{{
+    if (id < 0 || id >= SCENE_COUNT) {{
+        return;
+    }}
+
+    Scene *s = &g_scenes[id];
+
+    if (s->objects && s->object_count > 0) {{
+        for (int i = 0; i < s->object_count; ++i) {{
+            if (s->objects[i].modelMat) {{
+                free_uncached(s->objects[i].modelMat);
+                s->objects[i].modelMat = NULL;
+            }}
+            s->objects[i].model = NULL;
+        }}
+    }}
+
+    s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
+    s->world.clear_color[3] = 0xFF;
+    s->world.ambient_color[0] = s->world.ambient_color[1] = s->world.ambient_color[2] = 0;
+    s->world.ambient_color[3] = 0xFF;
+
+    s->camera.pos = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
+    s->camera.target = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
+    s->camera.fov = 60.0f;
+    s->camera.near_plane = 10.0f;
+    s->camera.far_plane = 150.0f;
+
+    s->objects = NULL;
+    s->object_count = 0;
+    s->lights = NULL;
+    s->light_count = 0;
+}}
+
+Scene *scene_get(SceneId id)
+{{
+    if (id < 0 || id >= SCENE_COUNT) {{
+        return NULL;
+    }}
+    return &g_scenes[id];
+}}
