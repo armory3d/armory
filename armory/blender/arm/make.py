@@ -416,8 +416,7 @@ def compile(assets_only=False):
                     cmd.append(s)
         state.proc_build = run_proc(cmd, build_done)
     elif state.target == "n64":
-        scene = bpy.context.scene
-        N64Exporter.export_scene(scene)
+        N64Exporter.export()
         if arm.utils.get_open_n64_rom_directory():
             arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
     else:

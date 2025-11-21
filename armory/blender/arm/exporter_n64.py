@@ -10,16 +10,36 @@ def to_uint8(value):
     return int(max(0, min(1, value)) * 255)
 
 
+def get_clear_color(scene):
+    if scene.world is None:
+        return [0.051, 0.051, 0.051, 1.0]
+
+    if scene.world.node_tree is None:
+        c = scene.world.color
+        return [c[0], c[1], c[2], 1.0]
+
+    if 'Background' in scene.world.node_tree.nodes:
+        background_node = scene.world.node_tree.nodes['Background']
+        col = background_node.inputs[0].default_value
+        strength = background_node.inputs[1].default_value
+        ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+        ar[0] = max(min(ar[0], 1.0), 0.0)
+        ar[1] = max(min(ar[1], 1.0), 0.0)
+        ar[2] = max(min(ar[2], 1.0), 0.0)
+        ar[3] = max(min(ar[3], 1.0), 0.0)
+        return ar
+    return [0.051, 0.051, 0.051, 1.0]
+
+
 class N64Exporter:
-    def __init__(self, scene):
-        self.scene = scene
+    def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
 
 
     @classmethod
-    def export_scene(cls, scene):
-        exporter = cls(scene)
+    def export(cls):
+        exporter = cls()
         exporter.execute()
 
 
@@ -93,7 +113,7 @@ class N64Exporter:
         scene_name = arm.utils.safesrc(scene.name)
         self.scene_data[scene_name] = {
             "world": {
-                "clear_color": self.get_clear_color(scene),
+                "clear_color": get_clear_color(scene),
                 "ambient_color": list(scene.fast64.renderSettings.ambientColor)
             },
             "cameras": [],
@@ -417,27 +437,6 @@ class N64Exporter:
                 stderr=None,
                 text=True
             )
-
-
-    def get_clear_color(self, scene):
-        if scene.world is None:
-            return [0.051, 0.051, 0.051, 1.0]
-
-        if scene.world.node_tree is None:
-            c = scene.world.color
-            return [c[0], c[1], c[2], 1.0]
-
-        if 'Background' in scene.world.node_tree.nodes:
-            background_node = scene.world.node_tree.nodes['Background']
-            col = background_node.inputs[0].default_value
-            strength = background_node.inputs[1].default_value
-            ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-            ar[0] = max(min(ar[0], 1.0), 0.0)
-            ar[1] = max(min(ar[1], 1.0), 0.0)
-            ar[2] = max(min(ar[2], 1.0), 0.0)
-            ar[3] = max(min(ar[3], 1.0), 0.0)
-            return ar
-        return [0.051, 0.051, 0.051, 1.0]
 
 
     def execute(self):

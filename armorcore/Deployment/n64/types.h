@@ -16,7 +16,7 @@ typedef struct {
     float rot[3];
     float scale[3];
     T3DModel *model;
-    T3DMat4FP *modelMat; // array [FB_COUNT]
+    T3DMat4FP *modelMat;
 } ArmObject;
 
 typedef struct {
