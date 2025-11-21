@@ -68,6 +68,7 @@ class N64Exporter:
             obj.rotation_euler = orig_rot
             obj.scale = orig_scale
 
+            bpy.context.view_layer.update()
             self.exported_meshes[mesh] = mesh_name
 
 
@@ -110,8 +111,10 @@ class N64Exporter:
             elif obj.type == 'MESH':
                 mesh = obj.data
                 mesh_name = self.exported_meshes[mesh]
+
                 obj_pos = (obj.location[0], obj.location[2], -obj.location[1])
-                obj_rot = (-obj.rotation_euler[0], -obj.rotation_euler[2], obj.rotation_euler[1])
+                e = obj.matrix_world.to_quaternion().to_euler('YZX')
+                obj_rot = (-e.x, -e.z, e.y)
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
                 self.data["objects"].append({
