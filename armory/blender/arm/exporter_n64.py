@@ -6,8 +6,12 @@ import bpy
 import arm.utils
 
 
-def to_uint8(value):
-    return int(max(0, min(1, value)) * 255)
+def copy_src(name, path=''):
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    shutil.copyfile(tmpl_path, out_path)
 
 
 def get_clear_color(scene):
@@ -29,6 +33,10 @@ def get_clear_color(scene):
         ar[3] = max(min(ar[3], 1.0), 0.0)
         return ar
     return [0.051, 0.051, 0.051, 1.0]
+
+
+def to_uint8(value):
+    return int(max(0, min(1, value)) * 255)
 
 
 class N64Exporter:
@@ -190,21 +198,13 @@ class N64Exporter:
             f.write(output)
 
 
-    def copy_src(self, name, path=''):
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
-
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        shutil.copyfile(tmpl_path, out_path)
-
-
     def write_types(self):
-        self.copy_src('types.h')
+        copy_src('types.h')
 
 
     def write_engine(self):
-        self.copy_src('engine.c', 'src')
-        self.copy_src('engine.h', 'src')
+        copy_src('engine.c', 'src')
+        copy_src('engine.h', 'src')
 
 
     def write_main(self):
@@ -271,8 +271,8 @@ class N64Exporter:
 
 
     def write_renderer(self):
-        self.copy_src('renderer.c', 'src')
-        self.copy_src('renderer.h', 'src')
+        copy_src('renderer.c', 'src')
+        copy_src('renderer.h', 'src')
 
 
     def write_scenes(self):
