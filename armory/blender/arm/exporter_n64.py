@@ -10,15 +10,14 @@ def to_uint8(value):
 
 
 class N64Exporter:
-    data = {}
-
     def __init__(self, scene):
         self.scene = scene
+        self.data = {}
+        self.exported_meshes = {}
 
 
     @classmethod
     def export_scene(cls, scene):
-        """Export N64 scene - main entry point matching exporter.py pattern"""
         exporter = cls(scene)
         exporter.execute()
 
@@ -34,24 +33,46 @@ class N64Exporter:
         build_dir = arm.utils.build_dir()
         assets_dir = f'{build_dir}/n64/assets'
 
+        self.exported_meshes = {}
+
         for obj in self.scene.objects:
-            if obj.type == 'MESH':
-                model_name = obj.name.replace(" ", "_").lower()
-                model_output_path = os.path.join(assets_dir, f'{model_name}.gltf')
+            if obj.type != 'MESH':
+                continue
 
-                bpy.ops.object.select_all(action='DESELECT')
-                obj.select_set(True)
+            mesh = obj.data
+            if mesh in self.exported_meshes:
+                continue
 
-                bpy.ops.export_scene.gltf(
-                    filepath=model_output_path,
-                    export_format='GLTF_SEPARATE',
-                    export_extras=True,
-                    use_selection=True
-                )
+            mesh_name = mesh.name.replace(" ", "_").lower()
+            model_output_path = os.path.join(assets_dir, f'{mesh_name}.gltf')
+
+            orig_loc = obj.location.copy()
+            orig_rot = obj.rotation_euler.copy()
+            orig_scale = obj.scale.copy()
+
+            obj.location = (0.0, 0.0, 0.0)
+            obj.rotation_euler = (0.0, 0.0, 0.0)
+            obj.scale = (1.0, 1.0, 1.0)
+
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+
+            bpy.ops.export_scene.gltf(
+                filepath=model_output_path,
+                export_format='GLTF_SEPARATE',
+                export_extras=True,
+                use_selection=True
+            )
+
+            obj.location = orig_loc
+            obj.rotation_euler = orig_rot
+            obj.scale = orig_scale
+
+            self.exported_meshes[mesh] = mesh_name
 
 
     def build_scene_data(self):
-        N64Exporter.data = {
+        self.data = {
             "world": {
                 "clear_color": self.get_clear_color(),
                 "ambient_color": list(self.scene.fast64.renderSettings.ambientColor)
@@ -69,7 +90,7 @@ class N64Exporter:
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
-                N64Exporter.data["cameras"].append({
+                self.data["cameras"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "pos": list(cam_pos),
                     "target": list(cam_target),
@@ -81,19 +102,21 @@ class N64Exporter:
                 light_dir = obj.rotation_euler.to_matrix().col[2]
                 dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
 
-                N64Exporter.data["lights"].append({
+                self.data["lights"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "color": list(obj.data.color),
                     "dir": list(dir_vec)
                 })
             elif obj.type == 'MESH':
-                obj_pos = (obj.location[0] * 0.02, obj.location[2] * 0.02, -obj.location[1] * 0.02)
-                obj_rot = (0.0, 0.0, 0.0)
-                obj_scale = (obj.scale[0] * 0.02, obj.scale[1] * 0.02, obj.scale[2] * 0.02)
+                mesh = obj.data
+                mesh_name = self.exported_meshes[mesh]
+                obj_pos = (obj.location[0], obj.location[2], -obj.location[1])
+                obj_rot = (-obj.rotation_euler[0], -obj.rotation_euler[2], obj.rotation_euler[1])
+                obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
-                N64Exporter.data["objects"].append({
+                self.data["objects"].append({
                     "name": obj.name.replace(" ", "_").lower(),
-                    "mesh": "rom:/" + obj.name.replace(" ", "_").lower() + ".t3dm",
+                    "mesh": "rom:/" + mesh_name + ".t3dm",
                     "pos": list(obj_pos),
                     "rot": list(obj_rot),
                     "scale": list(obj_scale)
@@ -104,7 +127,7 @@ class N64Exporter:
         wrd = bpy.data.worlds['Arm']
 
         sdk_path = arm.utils.get_sdk_path()
-        libdragon_path = os.path.join(sdk_path, 'lib', 'libdragon').replace('\\', '/')
+        # libdragon_path = os.path.join(sdk_path, 'lib', 'libdragon').replace('\\', '/')
         tiny3d_path = os.path.join(sdk_path, 'lib', 'tiny3d').replace('\\', '/')
 
         make_file_content = f'''BUILD_DIR=build
@@ -164,25 +187,23 @@ build_lib:
             f.write(make_file_content)
 
     def create_main_c(self):
-        data = N64Exporter.data
+        camera_pos = self.data["cameras"][0]["pos"]
+        camera_target = self.data["cameras"][0]["target"]
+        camera_fov = self.data["cameras"][0]["fov"]
+        camera_near = self.data["cameras"][0]["near"]
+        camera_far = self.data["cameras"][0]["far"]
 
-        camera_pos = data["cameras"][0]["pos"]
-        camera_target = data["cameras"][0]["target"]
-        camera_fov = data["cameras"][0]["fov"]
-        camera_near = data["cameras"][0]["near"]
-        camera_far = data["cameras"][0]["far"]
-
-        world_clear_color = data["world"]["clear_color"]
+        world_clear_color = self.data["world"]["clear_color"]
         cr = to_uint8(world_clear_color[0])
         cg = to_uint8(world_clear_color[1])
         cb = to_uint8(world_clear_color[2])
-        world_ambient_color = data["world"]["ambient_color"]
+        world_ambient_color = self.data["world"]["ambient_color"]
         ar = to_uint8(world_ambient_color[0])
         ag = to_uint8(world_ambient_color[1])
         ab = to_uint8(world_ambient_color[2])
 
-        light_count = len(data["lights"])
-        object_count = len(data["objects"])
+        light_count = len(self.data["lights"])
+        object_count = len(self.data["objects"])
 
         main_file_content = f'''#include <stdio.h>
 #include <libdragon.h>
@@ -275,10 +296,10 @@ int main(void)
     ArmObject armObjects[OBJECT_COUNT];
 '''
             for i in range(object_count):
-                mesh = data["objects"][i]["mesh"]
-                pos = data["objects"][i]["pos"]
-                rot = data["objects"][i]["rot"]
-                scale = data["objects"][i]["scale"]
+                mesh = self.data["objects"][i]["mesh"]
+                pos = self.data["objects"][i]["pos"]
+                rot = self.data["objects"][i]["rot"]
+                scale = self.data["objects"][i]["scale"]
                 main_file_content += f'''    armObjects[{i}] = arm_object_create("{mesh}", (float[3]){{{pos[0]}f, {pos[1]}f, {pos[2]}f}}, (float[3]){{{rot[0]}f, {rot[1]}f, {rot[2]}f}}, (float[3]){{{scale[0]}f, {scale[1]}f, {scale[2]}f}});
 '''
         if light_count > 0:
@@ -286,11 +307,11 @@ int main(void)
     ArmLight armLights[LIGHT_COUNT];
 '''
             for i in range(light_count):
-                color = data["lights"][i]["color"]
+                color = self.data["lights"][i]["color"]
                 r = to_uint8(color[0])
                 g = to_uint8(color[1])
                 b = to_uint8(color[2])
-                dir = data["lights"][i]["dir"]
+                dir = self.data["lights"][i]["dir"]
                 main_file_content += f'''    armLights[{i}] = arm_light_create((uint8_t[4]){{{r}, {g}, {b}, 0xFF}}, (float[3]){{{dir[0]}f, {dir[1]}f, {dir[2]}f}});
 '''
 
