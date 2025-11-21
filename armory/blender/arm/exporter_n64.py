@@ -354,9 +354,9 @@ class N64Exporter:
             scene_name = arm.utils.safesrc(scene.name).lower()
             declatarion_lines.append(f'void scene_{scene_name}_init(ArmScene *scene);')
             init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
-            init_switch_cases_lines.append(f'       case SCENE_{scene_name.upper()}:\n'
-                                            f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
-                                            f'            break;')
+            init_switch_cases_lines.append(f'        case SCENE_{scene_name.upper()}:\n'
+                                           f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
+                                           f'            break;')
 
         scene_declarations = '\n'.join(declatarion_lines)
         scene_inits = '\n'.join(init_lines)

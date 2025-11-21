@@ -41,8 +41,6 @@ void renderer_update_objects(ArmScene *scene)
 
 void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 {
-    (void)viewport;
-
     rdpq_attach(display_get(), display_get_zbuf());
     t3d_frame_start();
     t3d_viewport_attach(viewport);
@@ -54,7 +52,6 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         scene->world.clearColor[3]
     ));
     t3d_screen_clear_depth();
-
     t3d_light_set_ambient(scene->world.ambientColor);
 
     t3d_light_set_count(scene->lightCount);
@@ -72,8 +69,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 
     rdpq_sync_pipe();
 	// TODO: set to `renderer.c.j2` and enable/disable FPS debug via Blender
-    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220,
-        "FPS   : %.2f", display_get_fps());
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS   : %.2f", display_get_fps());
 
     rdpq_detach_show();
 }
