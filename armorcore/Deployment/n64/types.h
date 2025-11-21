@@ -28,23 +28,23 @@ typedef struct {
     T3DVec3 pos;
     T3DVec3 target;
     float fov;
-    float near_plane;
-    float far_plane;
+    float near;
+    float far;
 } ArmCamera;
 
 typedef struct {
-    uint8_t clear_color[4];
-    uint8_t ambient_color[4];
+    uint8_t clearColor[4];
+    uint8_t ambientColor[4];
 } ArmWorld;
 
 typedef struct {
     ArmWorld world;
     ArmCamera camera;
 
-    int object_count;
+    int objectCount;
     ArmObject *objects;
 
-    int light_count;
+    int lightCount;
     ArmLight *lights;
 } Scene;
 

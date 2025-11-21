@@ -41,6 +41,9 @@ class N64Exporter:
             if scene.name.startswith('fast64'):
                 continue
 
+            main_scene = bpy.context.scene
+            main_view_layer = bpy.context.view_layer
+
             for obj in scene.objects:
                 if obj.type != 'MESH':
                     continue
@@ -60,6 +63,11 @@ class N64Exporter:
                 obj.rotation_euler = (0.0, 0.0, 0.0)
                 obj.scale = (1.0, 1.0, 1.0)
 
+                bpy.context.window.scene = scene
+                bpy.context.window.view_layer = scene.view_layers[0]
+                bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+                bpy.context.view_layer.update()
+
                 bpy.ops.object.select_all(action='DESELECT')
                 obj.select_set(True)
 
@@ -77,12 +85,16 @@ class N64Exporter:
                 bpy.context.view_layer.update()
                 self.exported_meshes[mesh] = mesh_name
 
+            bpy.context.window.scene = main_scene
+            bpy.context.window.view_layer = main_view_layer
+
 
     def build_scene_data(self, scene):
-        self.scene_data[arm.utils.safesrc(scene.name)] = {
+        scene_name = arm.utils.safesrc(scene.name)
+        self.scene_data[scene_name] = {
             "world": {
-                "clear_color": self.get_clear_color(),
-                "ambient_color": list(self.scene.fast64.renderSettings.ambientColor)
+                "clear_color": self.get_clear_color(scene),
+                "ambient_color": list(scene.fast64.renderSettings.ambientColor)
             },
             "cameras": [],
             "lights": [],
@@ -97,7 +109,7 @@ class N64Exporter:
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
-                self.scene_data["cameras"].append({
+                self.scene_data[scene_name]["cameras"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "pos": list(cam_pos),
                     "target": list(cam_target),
@@ -109,7 +121,7 @@ class N64Exporter:
                 light_dir = obj.rotation_euler.to_matrix().col[2]
                 dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
 
-                self.scene_data["lights"].append({
+                self.scene_data[scene_name]["lights"].append({
                     "name": obj.name.replace(" ", "_").lower(),
                     "color": list(obj.data.color),
                     "dir": list(dir_vec)
@@ -123,9 +135,9 @@ class N64Exporter:
                 obj_rot = (-e.x, -e.z, e.y)
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
-                self.scene_data["objects"].append({
+                self.scene_data[scene_name]["objects"].append({
                     "name": obj.name.replace(" ", "_").lower(),
-                    "mesh": "rom:/" + mesh_name + ".t3dm",
+                    "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj_pos),
                     "rot": list(obj_rot),
                     "scale": list(obj_scale)
@@ -145,8 +157,8 @@ class N64Exporter:
             if scene.name.startswith('fast64'):
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
-            scene_lines.append(f'    src/scenes/{scene_name}.c')
-        scene_files = ' \ \n'.join(scene_lines)
+            scene_lines.append(f'    scenes/{scene_name}.c')
+        scene_files = '\\\n'.join(scene_lines)
 
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
@@ -255,7 +267,74 @@ class N64Exporter:
 
 
     def write_scene_c(self, scene):
-        pass
+        clear_color = self.scene_data[scene.name]['world']['clear_color']
+        cr = to_uint8(clear_color[0])
+        cg = to_uint8(clear_color[1])
+        cb = to_uint8(clear_color[2])
+        ambient_color = self.scene_data[scene.name]['world']['ambient_color']
+        ar = to_uint8(ambient_color[0])
+        ag = to_uint8(ambient_color[1])
+        ab = to_uint8(ambient_color[2])
+
+        cam_pos = self.scene_data[scene.name]['cameras'][0]['pos']
+        cam_target = self.scene_data[scene.name]['cameras'][0]['target']
+        cam_fov = self.scene_data[scene.name]['cameras'][0]['fov']
+        cam_near = self.scene_data[scene.name]['cameras'][0]['near']
+        cam_far = self.scene_data[scene.name]['cameras'][0]['far']
+
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene_.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene.name).lower()}.c')
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        light_block_lines = []
+        for i, light in enumerate(self.scene_data[scene.name]['lights']):
+            light_block_lines.append(f'    lights[{i}].color[0] = {to_uint8(light["color"][0])};')
+            light_block_lines.append(f'    lights[{i}].color[1] = {to_uint8(light["color"][1])};')
+            light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
+            light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
+        lights_block = '\n'.join(light_block_lines)
+
+        object_block_lines = []
+        for i, object in enumerate(self.scene_data[scene.name]['objects']):
+            object_block_lines.append(f'    objects[{i}].pos[0] = {object["pos"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].pos[1] = { object["pos"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].pos[2] = {object["pos"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].rot[0] = {object["rot"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].rot[1] = {object["rot"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].rot[2] = {object["rot"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].scale[0] = {object["scale"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].scale[1] = {object["scale"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].scale[2] = {object["scale"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].model = models_get({object["mesh"]});')
+            object_block_lines.append(f'    objects[{i}].modelMat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+        objects_block = '\n'.join(object_block_lines)
+
+        output = tmpl_content.format(
+            scene_name=arm.utils.safesrc(scene.name).lower(),
+            cr=cr,
+            cg=cg,
+            cb=cb,
+            ar=ar,
+            ag=ag,
+            ab=ab,
+            cam_pos_x=cam_pos[0],
+            cam_pos_y=cam_pos[1],
+            cam_pos_z=cam_pos[2],
+            cam_target_x=cam_target[0],
+            cam_target_y=cam_target[1],
+            cam_target_z=cam_target[2],
+            cam_fov=cam_fov,
+            cam_near=cam_near,
+            cam_far=cam_far,
+            light_count=len(self.scene_data[scene.name]['lights']),
+            lights_block=lights_block,
+            object_count=len(self.scene_data[scene.name]['objects']),
+            objects_block=objects_block
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def write_scenes_c(self):

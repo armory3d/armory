@@ -14,8 +14,8 @@ void renderer_begin_frame(T3DViewport *viewport, Scene *scene)
     t3d_viewport_set_projection(
         viewport,
         T3D_DEG_TO_RAD(scene->camera.fov),
-        scene->camera.near_plane,
-        scene->camera.far_plane
+        scene->camera.near,
+        scene->camera.far
     );
 
 	t3d_viewport_look_at(
@@ -28,7 +28,7 @@ void renderer_begin_frame(T3DViewport *viewport, Scene *scene)
 
 void renderer_update_objects(Scene *scene)
 {
-    for (int i = 0; i < scene->object_count; i++) {
+    for (int i = 0; i < scene->objectCount; i++) {
         ArmObject *obj = &scene->objects[i];
         t3d_mat4fp_from_srt_euler(
             &obj->modelMat[frameIdx],
@@ -48,22 +48,22 @@ void renderer_draw_scene(T3DViewport *viewport, Scene *scene)
     t3d_viewport_attach(viewport);
 
     t3d_screen_clear_color(RGBA32(
-        scene->world.clear_color[0],
-        scene->world.clear_color[1],
-        scene->world.clear_color[2],
-        scene->world.clear_color[3]
+        scene->world.clearColor[0],
+        scene->world.clearColor[1],
+        scene->world.clearColor[2],
+        scene->world.clearColor[3]
     ));
     t3d_screen_clear_depth();
 
-    t3d_light_set_ambient(scene->world.ambient_color);
+    t3d_light_set_ambient(scene->world.ambientColor);
 
-    t3d_light_set_count(scene->light_count);
-    for (int i = 0; i < scene->light_count; i++) {
+    t3d_light_set_count(scene->lightCount);
+    for (int i = 0; i < scene->lightCount; i++) {
         ArmLight *l = &scene->lights[i];
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
-    for (int i = 0; i < scene->object_count; i++) {
+    for (int i = 0; i < scene->objectCount; i++) {
         ArmObject *obj = &scene->objects[i];
         t3d_matrix_push(&obj->modelMat[frameIdx]);
         t3d_model_draw(obj->model);
