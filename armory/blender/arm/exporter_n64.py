@@ -282,7 +282,7 @@ class N64Exporter:
         cam_near = self.scene_data[scene.name]['cameras'][0]['near']
         cam_far = self.scene_data[scene.name]['cameras'][0]['far']
 
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene_.c.j2')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene.c.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene.name).lower()}.c')
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
