@@ -7,7 +7,7 @@
 
 static int frameIdx = 0;
 
-void renderer_begin_frame(T3DViewport *viewport, Scene *scene)
+void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 {
     frameIdx = (frameIdx + 1) % FB_COUNT;
 
@@ -26,7 +26,7 @@ void renderer_begin_frame(T3DViewport *viewport, Scene *scene)
 	);
 }
 
-void renderer_update_objects(Scene *scene)
+void renderer_update_objects(ArmScene *scene)
 {
     for (int i = 0; i < scene->objectCount; i++) {
         ArmObject *obj = &scene->objects[i];
@@ -39,7 +39,7 @@ void renderer_update_objects(Scene *scene)
     }
 }
 
-void renderer_draw_scene(T3DViewport *viewport, Scene *scene)
+void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 {
     (void)viewport;
 

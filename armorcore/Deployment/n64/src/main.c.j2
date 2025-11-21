@@ -30,7 +30,7 @@ int main(void)
             last_switch_time = now;
         }}
 
-        Scene *scene = scene_get(current);
+        ArmScene *scene = scene_get(current);
 
         renderer_begin_frame(&viewport, scene);
         renderer_update_objects(scene);

@@ -46,7 +46,7 @@ typedef struct {
 
     int lightCount;
     ArmLight *lights;
-} Scene;
+} ArmScene;
 
 #ifdef __cplusplus
 }

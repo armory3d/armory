@@ -65,7 +65,7 @@ class N64Exporter:
 
                 bpy.context.window.scene = scene
                 bpy.context.window.view_layer = scene.view_layers[0]
-                bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+                bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1) # HACK: force delay to properly export meshes from other scenes
                 bpy.context.view_layer.update()
 
                 bpy.ops.object.select_all(action='DESELECT')
@@ -352,7 +352,7 @@ class N64Exporter:
             if scene.name.startswith('fast64'):
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
-            declatarion_lines.append(f'void scene_{scene_name}_init(Scene *scene);')
+            declatarion_lines.append(f'void scene_{scene_name}_init(ArmScene *scene);')
             init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
             init_switch_cases_lines.append(f'       case SCENE_{scene_name.upper()}:\n'
                                             f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'

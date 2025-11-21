@@ -7,7 +7,7 @@
 
 {scene_declarations}
 
-static Scene g_scenes[SCENE_COUNT];
+static ArmScene g_scenes[SCENE_COUNT];
 
 void scenes_init_all(void)
 {{
@@ -39,7 +39,7 @@ void scene_clear(SceneId id)
         return;
     }}
 
-    Scene *s = &g_scenes[id];
+    ArmScene *s = &g_scenes[id];
 
     if (s->objects && s->objectCount > 0) {{
         for (int i = 0; i < s->objectCount; ++i) {{
@@ -68,7 +68,7 @@ void scene_clear(SceneId id)
     s->lightCount = 0;
 }}
 
-Scene *scene_get(SceneId id)
+ArmScene *scene_get(SceneId id)
 {{
     if (id < 0 || id >= SCENE_COUNT) {{
         return NULL;
