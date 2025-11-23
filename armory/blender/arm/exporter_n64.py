@@ -51,6 +51,10 @@ class N64Exporter:
         exporter.execute()
 
 
+    def convert_materials_to_f3d(self):
+        bpy.ops.scene.f3d_convert_to_bsdf(direction='F3D', converter_type='All', backup=False, put_alpha_into_color=False, use_recommended=True, lights_for_colors=False, default_to_fog=False, set_rendermode_without_fog=False)
+
+
     def make_directories(self):
         build_dir = arm.utils.build_dir()
         os.makedirs(f'{build_dir}/n64', exist_ok=True)
@@ -439,7 +443,14 @@ class N64Exporter:
             )
 
 
+    def reset_materials_to_bsdf(self):
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+        bpy.ops.scene.f3d_convert_to_bsdf(direction='BSDF', converter_type='All', backup=False, put_alpha_into_color=False, use_recommended=True, lights_for_colors=False, default_to_fog=False, set_rendermode_without_fog=False)
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+
+
     def execute(self):
+        self.convert_materials_to_f3d()
         self.make_directories()
         self.export_meshes()
         self.write_makefile()
@@ -449,4 +460,5 @@ class N64Exporter:
         self.write_models()
         self.write_renderer()
         self.write_scenes()
+        self.reset_materials_to_bsdf()
         self.run_make()
