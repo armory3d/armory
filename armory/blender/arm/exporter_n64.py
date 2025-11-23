@@ -80,7 +80,7 @@ class N64Exporter:
                 if mesh in self.exported_meshes:
                     continue
 
-                mesh_name = mesh.name.replace(" ", "_").lower()
+                mesh_name = arm.utils.safesrc(mesh.name)
                 model_output_path = os.path.join(assets_dir, f'{mesh_name}.gltf')
 
                 orig_loc = obj.location.copy()
@@ -138,7 +138,7 @@ class N64Exporter:
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
                 self.scene_data[scene_name]["cameras"].append({
-                    "name": obj.name.replace(" ", "_").lower(),
+                    "name": arm.utils.safesrc(obj.name),
                     "pos": list(cam_pos),
                     "target": list(cam_target),
                     "fov": cam_fov,
@@ -150,7 +150,7 @@ class N64Exporter:
                 dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
 
                 self.scene_data[scene_name]["lights"].append({
-                    "name": obj.name.replace(" ", "_").lower(),
+                    "name": arm.utils.safesrc(obj.name),
                     "color": list(obj.data.color),
                     "dir": list(dir_vec)
                 })
@@ -164,7 +164,7 @@ class N64Exporter:
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
                 self.scene_data[scene_name]["objects"].append({
-                    "name": obj.name.replace(" ", "_").lower(),
+                    "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj_pos),
                     "rot": list(obj_rot),
