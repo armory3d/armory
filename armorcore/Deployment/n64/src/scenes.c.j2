@@ -4,6 +4,7 @@
 
 #include "../types.h"
 #include "scenes.h"
+#include "objects.h"
 
 {scene_declarations}
 
@@ -31,6 +32,38 @@ void scene_init(SceneId id)
 		default:
 			break;
     }}
+}}
+
+void scene_{scene_name}_on_ready(SceneId id)
+{{
+	switch (id) {{
+{scene_on_ready_switch_cases}
+		default:
+			break;
+	}}
+}}
+
+void scene_{scene_name}_on_update(SceneId id, float dt)
+{{
+    ArmScene *s = scene_get(id);
+	for (int i = 0; i < s->objectCount; ++i) {{
+		object_on_update(&s->objects[i], dt);
+	}}
+
+    switch (id) {{
+{scene_on_update_switch_cases}
+        default:
+            break;
+    }}
+}}
+
+void scene_{scene_name}_on_remove(SceneId id)
+{{
+	switch (id) {{
+{scene_on_remove_switch_cases}
+		default:
+			break;
+	}}
 }}
 
 void scene_clear(SceneId id)

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <t3d/t3dmath.h>
 #include <t3d/t3dmodel.h>
+#include "objects.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,6 +16,7 @@ typedef struct {
     float pos[3];
     float rot[3];
     float scale[3];
+	ArmTraitId trait;
     T3DModel *model;
     T3DMat4FP *modelMat;
 } ArmObject;

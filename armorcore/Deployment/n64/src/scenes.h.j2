@@ -12,7 +12,11 @@ typedef enum SceneId {{
 }} SceneId;
 
 void scenes_init_all(void);
+
 void scene_init(SceneId id);
+void scene_on_ready(SceneId id);
+void scene_on_update(SceneId id, float dt);
+void scene_on_remove(SceneId id);
 void scene_clear(SceneId id);
 
 ArmScene *scene_get(SceneId id);
