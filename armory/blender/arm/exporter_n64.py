@@ -203,7 +203,22 @@ class N64Exporter:
 
 
     def write_types(self):
-        copy_src('types.h')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'types.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'types.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        # lines = []
+        # trait_enum_entries = ''
+
+        output = tmpl_content.format(
+            max_traits='4',
+            trait_enum_entries='TRAIT_NONE = 0'
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def write_engine(self):
@@ -423,19 +438,15 @@ class N64Exporter:
             f.write(output)
 
 
+    def write_cameras(self):
+        pass
+
+
+    def write_lights(self):
+        pass
+
+
     def write_objects(self):
-        pass
-
-
-    def write_object_c(self):
-            pass
-
-
-    def write_objects_c(self):
-        pass
-
-
-    def write_objects_h(self):
         pass
 
 
@@ -467,15 +478,22 @@ class N64Exporter:
 
     def execute(self):
         self.convert_materials_to_f3d()
+
         self.make_directories()
         self.export_meshes()
+
         self.write_makefile()
         self.write_types()
         self.write_engine()
         self.write_main()
         self.write_models()
         self.write_renderer()
+
         self.write_scenes()
+        self.write_cameras()
+        self.write_lights()
         self.write_objects()
+
         self.reset_materials_to_bsdf()
+
         self.run_make()

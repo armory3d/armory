@@ -8,15 +8,15 @@
 void scene_{scene_name}_init(ArmScene *scene)
 {{
     // World
-    scene->world.clearColor[0] = {cr};
-    scene->world.clearColor[1] = {cg};
-    scene->world.clearColor[2] = {cb};
-    scene->world.clearColor[3] = 0xFF;
+    scene->world.clear_color[0] = {cr};
+    scene->world.clear_color[1] = {cg};
+    scene->world.clear_color[2] = {cb};
+    scene->world.clear_color[3] = 0xFF;
 
-    scene->world.ambientColor[0] = {ar};
-    scene->world.ambientColor[1] = {ag};
-    scene->world.ambientColor[2] = {ab};
-    scene->world.ambientColor[3] = 0xFF;
+    scene->world.ambient_color[0] = {ar};
+    scene->world.ambient_color[1] = {ag};
+    scene->world.ambient_color[2] = {ab};
+    scene->world.ambient_color[3] = 0xFF;
 
     // Camera
     scene->camera.pos = (T3DVec3){{{{{cam_pos_x}f, {cam_pos_y}f, {cam_pos_z}f}}}};
@@ -28,14 +28,14 @@ void scene_{scene_name}_init(ArmScene *scene)
     // Lights
     static ArmLight lights[{light_count}];
     scene->lights = lights;
-    scene->lightCount = {light_count};
+    scene->light_count = {light_count};
 
 {lights_block}
 
     // Objects
     static ArmObject objects[{object_count}];
     scene->objects = objects;
-    scene->objectCount = {object_count};
+    scene->object_count = {object_count};
 
 {objects_block}
 }}

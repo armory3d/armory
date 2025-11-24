@@ -19,9 +19,9 @@ int main(void)
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
-    SceneId current = {initial_scene_id};
-	scene_init(current);
-	scene_on_ready(current);
+    SceneId current_scene = {initial_scene_id};
+	scene_init(current_scene);
+	scene_on_ready(current_scene);
 
 	float last = get_time_s();
     const float SWITCH_INTERVAL = 5.0f;
@@ -31,12 +31,12 @@ int main(void)
 		float dt = now - last;
 
         if ((now - last) >= SWITCH_INTERVAL) {{
-            current = (SceneId)(((int)current + 1) % SCENE_COUNT);
+            current_scene = (SceneId)(((int)current_scene + 1) % SCENE_COUNT);
         }}
 
-		scene_on_update(current, dt);
+		scene_on_update(current_scene, dt);
 
-        ArmScene *scene = sceneGet(current);
+        ArmScene *scene = scene_get(current_scene);
 
         renderer_begin_frame(&viewport, scene);
         renderer_update_objects(scene);

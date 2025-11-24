@@ -42,11 +42,11 @@ void scene_on_ready(SceneId id)
 		camera_on_ready(&s->cameras[i]);
 	}}
 
-	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; ++i) {{
 		light_on_ready(&s->lights[i]);
 	}}
 
-	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; ++i) {{
 		object_on_ready(&s->objects[i]);
 	}}
 }}
@@ -59,11 +59,11 @@ void scene_on_update(SceneId id, float dt)
 		camera_on_update(&s->cameras[i], dt);
 	}}
 
-	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; ++i) {{
 		light_on_update(&s->lights[i], dt);
 	}}
 
-	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; ++i) {{
 		object_on_update(&s->objects[i], dt);
 	}}
 }}
@@ -74,12 +74,12 @@ void scene_on_remove(SceneId id)
 		camera_on_remove(&s->cameras[i]);
 	}}
 
-	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; ++i) {{
 		light_on_remove(&s->lights[i]);
 	}}
 
 	ArmScene *s = &g_scenes[id];
-	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; ++i) {{
 		object_on_remove(&s->objects[i]);
 	}}
 }}
@@ -92,18 +92,18 @@ void scene_clear(SceneId id)
 
     ArmScene *s = &g_scenes[id];
 
-	for (uint16_t i = 0; i < s->objectCount; ++i) {{
-		if (s->objects[i].modelMat) {{
-			free_uncached(s->objects[i].modelMat);
-			s->objects[i].modelMat = NULL;
+	for (uint16_t i = 0; i < s->object_count; ++i) {{
+		if (s->objects[i].model_mat) {{
+			free_uncached(s->objects[i].model_mat);
+			s->objects[i].model_mat = NULL;
 		}}
 		s->objects[i].model = NULL;
 	}}
 
-    s->world.clearColor[0] = s->world.clearColor[1] = s->world.clearColor[2] = 0;
-    s->world.clearColor[3] = 0xFF;
-    s->world.ambientColor[0] = s->world.ambientColor[1] = s->world.ambientColor[2] = 0;
-    s->world.ambientColor[3] = 0xFF;
+    s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
+    s->world.clear_color[3] = 0xFF;
+    s->world.ambient_color[0] = s->world.ambient_color[1] = s->world.ambient_color[2] = 0;
+    s->world.ambient_color[3] = 0xFF;
 
     s->camera.pos = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
     s->camera.target = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
@@ -112,12 +112,12 @@ void scene_clear(SceneId id)
     s->camera.far = 150.0f;
 
     s->objects = NULL;
-    s->objectCount = 0;
+    s->object_count = 0;
     s->lights = NULL;
-    s->lightCount = 0;
+    s->light_count = 0;
 }}
 
-ArmScene *sceneGet(SceneId id)
+ArmScene *scene_get(SceneId id)
 {{
     if (id < 0 || id >= SCENE_COUNT) {{
         return NULL;

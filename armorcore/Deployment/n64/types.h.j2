@@ -22,9 +22,9 @@ typedef struct {{
     float scale[3];
 
 	T3DModel *model;
-    T3DMat4FP *modelMat;
+    T3DMat4FP *model_mat;
 
-	uint8_t traitCount;
+	uint8_t trait_count;
 	ArmTraitId traits[MAX_TRAITS];
 }} ArmObject;
 
@@ -32,7 +32,7 @@ typedef struct {{
     uint8_t color[4];
     T3DVec3 dir;
 
-	uint8_t traitCount;
+	uint8_t trait_count;
 	ArmTraitId traits[MAX_TRAITS];
 }} ArmLight;
 
@@ -43,26 +43,28 @@ typedef struct {{
     float near;
     float far;
 
-	uint8_t traitCount;
+	uint8_t trait_count;
 	ArmTraitId traits[MAX_TRAITS];
 }} ArmCamera;
 
 typedef struct {{
-    uint8_t clearColor[4];
-    uint8_t ambientColor[4];
+    uint8_t clear_color[4];
+    uint8_t ambient_color[4];
 }} ArmWorld;
 
 typedef struct {{
     ArmWorld world;
+
+	uint8_t camera_count;
     ArmCamera camera;
 
-    uint16_t objectCount;
-    ArmObject *objects;
-
-    uint8_t lightCount;
+    uint8_t light_count;
     ArmLight *lights;
 
-	uint8_t traitCount;
+    uint16_t object_count;
+    ArmObject *objects;
+
+	uint8_t trait_count;
 	ArmTraitId traits[MAX_TRAITS];
 }} ArmScene;
 
