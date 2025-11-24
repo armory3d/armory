@@ -2,10 +2,12 @@
 
 void camera_on_ready(ArmCamera *camera)
 {{
-	switch (camera->trait) {{
+	for (uint8_t i = 0; i < camera->trait_count; ++i) {{
+		switch (camera->traits[i]) {{
 {camera_on_ready_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}
 
@@ -22,9 +24,11 @@ void camera_on_update(ArmCamera *camera, float dt)
 
 void camera_on_remove(ArmCamera *camera)
 {{
-	switch (camera->trait) {{
+	for (uint8_t i = 0; i < camera->trait_count; ++i) {{
+		switch (camera->traits[i]) {{
 {camera_on_remove_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}

@@ -2,10 +2,12 @@
 
 void object_on_ready(ArmObject *obj)
 {{
-	switch (obj->trait) {{
+	for (uint8_t i = 0; i < obj->trait_count; ++i) {{
+		switch (obj->traits[i]) {{
 {object_on_ready_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}
 
@@ -22,9 +24,11 @@ void object_on_update(ArmObject *obj, float dt)
 
 void object_on_remove(ArmObject *obj)
 {{
-	switch (obj->trait) {{
+	for (uint8_t i = 0; i < obj->trait_count; ++i) {{
+		switch (obj->traits[i]) {{
 {object_on_remove_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}

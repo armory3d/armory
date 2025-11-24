@@ -2,10 +2,12 @@
 
 void light_on_ready(ArmLight *light)
 {{
-	switch (light->trait) {{
+	for (uint8_t i = 0; i < light->trait_count; ++i) {{
+		switch (light->traits[i]) {{
 {light_on_ready_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}
 
@@ -22,9 +24,11 @@ void light_on_update(ArmLight *light, float dt)
 
 void light_on_remove(ArmLight *light)
 {{
-	switch (light->trait) {{
+	for (uint8_t i = 0; i < light->trait_count; ++i) {{
+		switch (light->traits[i]) {{
 {light_on_remove_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}
