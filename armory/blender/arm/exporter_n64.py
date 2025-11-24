@@ -70,13 +70,16 @@ class N64Exporter:
         self.exported_meshes = {}
 
         for scene in bpy.data.scenes:
-            if scene.name.startswith('fast64'):
+            if scene.library:
                 continue
 
             main_scene = bpy.context.scene
             main_view_layer = bpy.context.view_layer
 
             for obj in scene.objects:
+                bpy.ops.object.select_all(action='DESELECT')
+                bpy.context.view_layer.update()
+
                 if obj.type != 'MESH':
                     continue
 
@@ -97,10 +100,10 @@ class N64Exporter:
 
                 bpy.context.window.scene = scene
                 bpy.context.window.view_layer = scene.view_layers[0]
+
                 bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1) # HACK: force delay to properly export meshes from other scenes
                 bpy.context.view_layer.update()
 
-                bpy.ops.object.select_all(action='DESELECT')
                 obj.select_set(True)
 
                 bpy.ops.export_scene.gltf(
@@ -122,7 +125,8 @@ class N64Exporter:
 
 
     def build_scene_data(self, scene):
-        scene_name = arm.utils.safesrc(scene.name)
+        scene_name = arm.utils.safesrc(scene.name).lower()
+
         self.scene_data[scene_name] = {
             "world": {
                 "clear_color": get_clear_color(scene),
@@ -186,7 +190,7 @@ class N64Exporter:
 
         scene_lines = []
         for scene in bpy.data.scenes:
-            if scene.name.startswith('fast64'):
+            if scene.library:
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
             scene_lines.append(f'    scenes/{scene_name}.c')
@@ -235,7 +239,7 @@ class N64Exporter:
             tmpl_content = f.read()
 
         output = tmpl_content.format(
-            initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name.upper())}'
+            initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name).upper()}'
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -299,29 +303,31 @@ class N64Exporter:
         self.write_scenes_h()
 
         for scene in bpy.data.scenes:
-            if scene.name.startswith('fast64'):
+            if scene.library:
                 continue
             self.build_scene_data(scene)
             self.write_scene_c(scene)
 
 
     def write_scene_c(self, scene):
-        clear_color = self.scene_data[scene.name]['world']['clear_color']
+        scene_name = arm.utils.safesrc(scene.name).lower()
+
+        clear_color = self.scene_data[scene_name]['world']['clear_color']
         cr = to_uint8(clear_color[0])
         cg = to_uint8(clear_color[1])
         cb = to_uint8(clear_color[2])
-        ambient_color = self.scene_data[scene.name]['world']['ambient_color']
+        ambient_color = self.scene_data[scene_name]['world']['ambient_color']
         ar = to_uint8(ambient_color[0])
         ag = to_uint8(ambient_color[1])
         ab = to_uint8(ambient_color[2])
 
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene.name).lower()}.c')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene_name).lower()}.c')
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
         camera_block_lines = []
-        for i, camera in enumerate(self.scene_data[scene.name]['cameras']):
+        for i, camera in enumerate(self.scene_data[scene_name]['cameras']):
             camera_block_lines.append(f'    cameras[{i}].pos = (T3DVec3){{{{{camera["pos"][0]:.6f}f, {camera["pos"][1]:.6f}f, {camera["pos"][2]:.6f}f}}}};')
             camera_block_lines.append(f'    cameras[{i}].target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
             camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
@@ -332,7 +338,7 @@ class N64Exporter:
         cameras_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
-        for i, light in enumerate(self.scene_data[scene.name]['lights']):
+        for i, light in enumerate(self.scene_data[scene_name]['lights']):
             light_block_lines.append(f'    lights[{i}].color[0] = {to_uint8(light["color"][0])};')
             light_block_lines.append(f'    lights[{i}].color[1] = {to_uint8(light["color"][1])};')
             light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
@@ -342,7 +348,7 @@ class N64Exporter:
         lights_block = '\n'.join(light_block_lines)
 
         object_block_lines = []
-        for i, object in enumerate(self.scene_data[scene.name]['objects']):
+        for i, object in enumerate(self.scene_data[scene_name]['objects']):
             object_block_lines.append(f'    objects[{i}].pos[0] = {object["pos"][0]:.6f}f;')
             object_block_lines.append(f'    objects[{i}].pos[1] = { object["pos"][1]:.6f}f;')
             object_block_lines.append(f'    objects[{i}].pos[2] = {object["pos"][2]:.6f}f;')
@@ -359,18 +365,18 @@ class N64Exporter:
         objects_block = '\n'.join(object_block_lines)
 
         output = tmpl_content.format(
-            scene_name=arm.utils.safesrc(scene.name).lower(),
+            scene_name=scene_name,
             cr=cr,
             cg=cg,
             cb=cb,
             ar=ar,
             ag=ag,
             ab=ab,
-            camera_count=len(self.scene_data[scene.name]['cameras']),
+            camera_count=len(self.scene_data[scene_name]['cameras']),
             cameras_block=cameras_block,
-            light_count=len(self.scene_data[scene.name]['lights']),
+            light_count=len(self.scene_data[scene_name]['lights']),
             lights_block=lights_block,
-            object_count=len(self.scene_data[scene.name]['objects']),
+            object_count=len(self.scene_data[scene_name]['objects']),
             objects_block=objects_block
         )
 
@@ -390,7 +396,7 @@ class N64Exporter:
         init_switch_cases_lines = []
 
         for scene in bpy.data.scenes:
-            if scene.name.startswith('fast64'):
+            if scene.library:
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
             init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
@@ -420,11 +426,11 @@ class N64Exporter:
         enum_lines = []
         declaration_lines = []
         scene_count = 0
-        for i, scene in enumerate(bpy.data.scenes):
-            if scene.name.startswith('fast64'):
+        for scene in bpy.data.scenes:
+            if scene.library:
                 continue
-            scene_name = arm.utils.safesrc(scene.name)
-            enum_lines.append(f'    SCENE_{scene_name.upper()} = {i},')
+            scene_name = arm.utils.safesrc(scene.name).lower()
+            enum_lines.append(f'    SCENE_{scene_name.upper()} = {scene_count},')
             declaration_lines.append(f'void scene_{scene_name.lower()}_init(ArmScene *scene);')
             scene_count += 1
         scene_enum_entries = '\n'.join(enum_lines)

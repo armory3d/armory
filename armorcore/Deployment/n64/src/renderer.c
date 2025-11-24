@@ -72,6 +72,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     rdpq_sync_pipe();
 	// TODO: set to `renderer.c.j2` and enable/disable FPS debug via Blender
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS   : %.2f", display_get_fps());
+	rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 10, "objects: %u", scene->object_count);
 
     rdpq_detach_show();
 }

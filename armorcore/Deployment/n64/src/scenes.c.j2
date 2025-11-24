@@ -10,15 +10,6 @@
 
 static ArmScene g_scenes[SCENE_COUNT];
 
-void scenes_init_all(void)
-{{
-    for (uint8_t i = 0; i < SCENE_COUNT; ++i) {{
-        scene_clear((SceneId)i);
-    }}
-
-{scene_inits}
-}}
-
 void scene_init(SceneId id)
 {{
     if (id < 0 || id >= SCENE_COUNT) {{
@@ -38,15 +29,15 @@ void scene_on_ready(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];
 
-	for (uint8_t i = 0; i < s->camera_count; ++i) {{
+	for (uint8_t i = 0; i < s->camera_count; i++) {{
 		camera_on_ready(&s->cameras[i]);
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; i++) {{
 		light_on_ready(&s->lights[i]);
 	}}
 
-	for (uint16_t i = 0; i < s->object_count; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; i++) {{
 		object_on_ready(&s->objects[i]);
 	}}
 }}
@@ -55,15 +46,15 @@ void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
-	for (uint8_t i = 0; i < s->camera_count; ++i) {{
+	for (uint8_t i = 0; i < s->camera_count; i++) {{
 		camera_on_update(&s->cameras[i], dt);
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; i++) {{
 		light_on_update(&s->lights[i], dt);
 	}}
 
-	for (uint16_t i = 0; i < s->object_count; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; i++) {{
 		object_on_update(&s->objects[i], dt);
 	}}
 }}
@@ -72,14 +63,14 @@ void scene_on_remove(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];
 
-	for (uint8_t i = 0; i < s->camera_count; ++i) {{
+	for (uint8_t i = 0; i < s->camera_count; i++) {{
 		camera_on_remove(&s->cameras[i]);
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; ++i) {{
+	for (uint8_t i = 0; i < s->light_count; i++) {{
 		light_on_remove(&s->lights[i]);
 	}}
-	for (uint16_t i = 0; i < s->object_count; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; i++) {{
 		object_on_remove(&s->objects[i]);
 	}}
 }}
@@ -92,7 +83,7 @@ void scene_clear(SceneId id)
 
     ArmScene *s = &g_scenes[id];
 
-	for (uint16_t i = 0; i < s->object_count; ++i) {{
+	for (uint16_t i = 0; i < s->object_count; i++) {{
 		if (s->objects[i].model_mat) {{
 			free_uncached(s->objects[i].model_mat);
 			s->objects[i].model_mat = NULL;

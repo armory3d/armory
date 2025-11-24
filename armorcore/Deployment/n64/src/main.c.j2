@@ -15,7 +15,6 @@ static float get_time_s(void)
 int main(void)
 {{
     engine_init();
-    scenes_init_all(); // May not be needed
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
@@ -23,19 +22,19 @@ int main(void)
 	scene_init(current_scene);
 	scene_on_ready(current_scene);
 
-	float last = get_time_s();
+	float last_switch_time = get_time_s();
     const float SWITCH_INTERVAL = 5.0f;
 
     while (1) {{
 		float now = get_time_s();
-		float dt = now - last;
-
-        if ((now - last) >= SWITCH_INTERVAL) {{
-            current_scene = (SceneId)(((int)current_scene + 1) % SCENE_COUNT);
-			last = now;
+        if ((now - last_switch_time) >= SWITCH_INTERVAL) {{
+			SceneId next_scene = (SceneId)(((int)current_scene + 1) % SCENE_COUNT);
+			scene_on_remove(current_scene);
+			scene_init(next_scene);
+			scene_on_ready(next_scene);
+			current_scene = next_scene;
+			last_switch_time = now;
         }}
-
-		scene_on_update(current_scene, dt);
 
         ArmScene *scene = scene_get(current_scene);
 

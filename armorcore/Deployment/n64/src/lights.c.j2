@@ -2,7 +2,7 @@
 
 void light_on_ready(ArmLight *light)
 {{
-	for (uint8_t i = 0; i < light->trait_count; ++i) {{
+	for (uint8_t i = 0; i < light->trait_count; i++) {{
 		switch (light->traits[i]) {{
 {light_on_ready_switch_cases}
 			default:
@@ -13,7 +13,7 @@ void light_on_ready(ArmLight *light)
 
 void light_on_update(ArmLight *light, float dt)
 {{
-	for (uint8_t i = 0; i < light->trait_count; ++i) {{
+	for (uint8_t i = 0; i < light->trait_count; i++) {{
 		switch (light->traits[i]) {{
 {light_on_update_switch_cases}
 			default:
@@ -24,7 +24,7 @@ void light_on_update(ArmLight *light, float dt)
 
 void light_on_remove(ArmLight *light)
 {{
-	for (uint8_t i = 0; i < light->trait_count; ++i) {{
+	for (uint8_t i = 0; i < light->trait_count; i++) {{
 		switch (light->traits[i]) {{
 {light_on_remove_switch_cases}
 			default:
