@@ -6,42 +6,48 @@
 #include "objects.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" {{
 #endif
 
 #define FB_COUNT 3
-#define MAX_TRAITS 4
+#define MAX_TRAITS {max_traits}
 
-typedef struct {
+typedef enum {{
+{traits_enum_entries}
+}} ArmTraitId;
+
+typedef struct {{
 	uint8_t id;
     float pos[3];
     float rot[3];
     float scale[3];
+
+	T3DModel *model;
+    T3DMat4FP *modelMat;
+
 	uint8_t traitCount;
 	ArmTraitId traits[MAX_TRAITS];
-    T3DModel *model;
-    T3DMat4FP *modelMat;
-} ArmObject;
+}} ArmObject;
 
-typedef struct {
+typedef struct {{
     uint8_t color[4];
     T3DVec3 dir;
-} ArmLight;
+}} ArmLight;
 
-typedef struct {
+typedef struct {{
     T3DVec3 pos;
     T3DVec3 target;
     float fov;
     float near;
     float far;
-} ArmCamera;
+}} ArmCamera;
 
-typedef struct {
+typedef struct {{
     uint8_t clearColor[4];
     uint8_t ambientColor[4];
-} ArmWorld;
+}} ArmWorld;
 
-typedef struct {
+typedef struct {{
     ArmWorld world;
     ArmCamera camera;
 
@@ -50,8 +56,11 @@ typedef struct {
 
     uint8_t lightCount;
     ArmLight *lights;
-} ArmScene;
+
+	uint8_t traitCount;
+	ArmTraitId traits[MAX_TRAITS];
+}} ArmScene;
 
 #ifdef __cplusplus
-}
+}}
 #endif

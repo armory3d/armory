@@ -34,35 +34,29 @@ void scene_init(SceneId id)
     }}
 }}
 
-void scene_{scene_name}_on_ready(SceneId id)
+void scene_on_ready(SceneId id)
 {{
-	switch (id) {{
-{scene_on_ready_switch_cases}
-		default:
-			break;
+	ArmScene *s = &g_scenes[id];
+
+	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+		object_on_ready(&s->objects[i]);
 	}}
 }}
 
-void scene_{scene_name}_on_update(SceneId id, float dt)
+void scene_on_update(SceneId id, float dt)
 {{
-    ArmScene *s = scene_get(id);
+	ArmScene *s = &g_scenes[id];
+
 	for (uint16_t i = 0; i < s->objectCount; ++i) {{
 		object_on_update(&s->objects[i], dt);
 	}}
-
-    switch (id) {{
-{scene_on_update_switch_cases}
-        default:
-            break;
-    }}
 }}
 
-void scene_{scene_name}_on_remove(SceneId id)
+void scene_on_remove(SceneId id)
 {{
-	switch (id) {{
-{scene_on_remove_switch_cases}
-		default:
-			break;
+	ArmScene *s = &g_scenes[id];
+	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+		object_on_remove(&s->objects[i]);
 	}}
 }}
 
@@ -74,15 +68,13 @@ void scene_clear(SceneId id)
 
     ArmScene *s = &g_scenes[id];
 
-    if (s->objects && s->objectCount > 0) {{
-        for (uint16_t i = 0; i < s->objectCount; ++i) {{
-            if (s->objects[i].modelMat) {{
-                free_uncached(s->objects[i].modelMat);
-                s->objects[i].modelMat = NULL;
-            }}
-            s->objects[i].model = NULL;
-        }}
-    }}
+	for (uint16_t i = 0; i < s->objectCount; ++i) {{
+		if (s->objects[i].modelMat) {{
+			free_uncached(s->objects[i].modelMat);
+			s->objects[i].modelMat = NULL;
+		}}
+		s->objects[i].model = NULL;
+	}}
 
     s->world.clearColor[0] = s->world.clearColor[1] = s->world.clearColor[2] = 0;
     s->world.clearColor[3] = 0xFF;
@@ -101,7 +93,7 @@ void scene_clear(SceneId id)
     s->lightCount = 0;
 }}
 
-ArmScene *scene_get(SceneId id)
+ArmScene *sceneGet(SceneId id)
 {{
     if (id < 0 || id >= SCENE_COUNT) {{
         return NULL;

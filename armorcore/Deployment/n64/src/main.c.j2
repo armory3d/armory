@@ -36,7 +36,7 @@ int main(void)
 
 		scene_on_update(current, dt);
 
-        ArmScene *scene = scene_get(current);
+        ArmScene *scene = sceneGet(current);
 
         renderer_begin_frame(&viewport, scene);
         renderer_update_objects(scene);

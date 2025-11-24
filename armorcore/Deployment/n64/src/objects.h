@@ -3,18 +3,13 @@
 #include "../types.h"
 
 #ifdef __cplusplus
-extern "C" {{
+extern "C" {
 #endif
-
-typedef enum {{
-{object_traits_enum_entries}
-}} ArmTraitId;
 
 void object_on_ready(ArmObject *obj);
 void object_on_update(ArmObject *obj, float dt);
 void object_on_remove(ArmObject *obj);
 
 #ifdef __cplusplus
-}}
+}
 #endif
-
