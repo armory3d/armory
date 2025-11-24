@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <t3d/t3dmath.h>
 #include <t3d/t3dmodel.h>
-#include "objects.h"
 
 #ifdef __cplusplus
 extern "C" {{
@@ -32,6 +31,9 @@ typedef struct {{
 typedef struct {{
     uint8_t color[4];
     T3DVec3 dir;
+
+	uint8_t traitCount;
+	ArmTraitId traits[MAX_TRAITS];
 }} ArmLight;
 
 typedef struct {{
@@ -40,6 +42,9 @@ typedef struct {{
     float fov;
     float near;
     float far;
+
+	uint8_t traitCount;
+	ArmTraitId traits[MAX_TRAITS];
 }} ArmCamera;
 
 typedef struct {{

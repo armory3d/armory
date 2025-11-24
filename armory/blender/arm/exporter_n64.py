@@ -368,7 +368,7 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        declatarion_lines = []
+
         init_lines = []
         init_switch_cases_lines = []
 
@@ -376,18 +376,15 @@ class N64Exporter:
             if scene.name.startswith('fast64'):
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
-            declatarion_lines.append(f'void scene_{scene_name}_init(ArmScene *scene);')
             init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
             init_switch_cases_lines.append(f'        case SCENE_{scene_name.upper()}:\n'
                                            f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
                                            f'            break;')
 
-        scene_declarations = '\n'.join(declatarion_lines)
         scene_inits = '\n'.join(init_lines)
         scene_init_switch_cases = '\n'.join(init_switch_cases_lines)
 
         output = tmpl_content.format(
-            scene_declarations=scene_declarations,
             scene_inits=scene_inits,
             scene_init_switch_cases=scene_init_switch_cases
         )
@@ -403,18 +400,22 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        lines = []
+        enum_lines = []
+        declaration_lines = []
         scene_count = 0
         for i, scene in enumerate(bpy.data.scenes):
             if scene.name.startswith('fast64'):
                 continue
             scene_name = arm.utils.safesrc(scene.name).upper()
-            lines.append(f'    SCENE_{scene_name} = {i},')
+            enum_lines.append(f'    SCENE_{scene_name} = {i},')
+            declaration_lines.append(f'void scene_{scene_name}_init(ArmScene *scene);')
             scene_count += 1
-        scene_enum_entries = '\n'.join(lines)
+        scene_enum_entries = '\n'.join(enum_lines)
+        scene_declarations = '\n'.join(declaration_lines)
 
         output = tmpl_content.format(
             scene_enum_entries=scene_enum_entries,
+            scene_declarations=scene_declarations,
             scene_count=scene_count
         )
 

@@ -4,9 +4,9 @@
 
 #include "../types.h"
 #include "scenes.h"
+#include "cameras.h"
+#include "lights.h"
 #include "objects.h"
-
-{scene_declarations}
 
 static ArmScene g_scenes[SCENE_COUNT];
 
@@ -38,6 +38,14 @@ void scene_on_ready(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];
 
+	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+		camera_on_ready(&s->cameras[i]);
+	}}
+
+	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+		light_on_ready(&s->lights[i]);
+	}}
+
 	for (uint16_t i = 0; i < s->objectCount; ++i) {{
 		object_on_ready(&s->objects[i]);
 	}}
@@ -47,6 +55,14 @@ void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
+	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+		camera_on_update(&s->cameras[i], dt);
+	}}
+
+	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+		light_on_update(&s->lights[i], dt);
+	}}
+
 	for (uint16_t i = 0; i < s->objectCount; ++i) {{
 		object_on_update(&s->objects[i], dt);
 	}}
@@ -54,6 +70,14 @@ void scene_on_update(SceneId id, float dt)
 
 void scene_on_remove(SceneId id)
 {{
+	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+		camera_on_remove(&s->cameras[i]);
+	}}
+
+	for (uint8_t i = 0; i < s->lightCount; ++i) {{
+		light_on_remove(&s->lights[i]);
+	}}
+
 	ArmScene *s = &g_scenes[id];
 	for (uint16_t i = 0; i < s->objectCount; ++i) {{
 		object_on_remove(&s->objects[i]);

@@ -1,0 +1,30 @@
+#include "lights.h"
+
+void light_on_ready(ArmLight *light)
+{{
+	switch (light->trait) {{
+{light_on_ready_switch_cases}
+		default:
+			break;
+	}}
+}}
+
+void light_on_update(ArmLight *light, float dt)
+{{
+	for (uint8_t i = 0; i < light->traitCount; ++i) {{
+		switch (light->traits[i]) {{
+{light_on_update_switch_cases}
+			default:
+				break;
+		}}
+	}}
+}}
+
+void light_on_remove(ArmLight *light)
+{{
+	switch (light->trait) {{
+{light_on_remove_switch_cases}
+		default:
+			break;
+	}}
+}}
