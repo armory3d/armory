@@ -35,6 +35,13 @@ def get_clear_color(scene):
     return [0.051, 0.051, 0.051, 1.0]
 
 
+def delesect_from_all_viewlayers():
+    for scene in bpy.data.scenes:
+        for view_layer in scene.view_layers:
+            for obj in scene.objects:
+                obj.select_set(False, view_layer=view_layer)
+
+
 def to_uint8(value):
     return int(max(0, min(1, value)) * 255)
 
@@ -68,6 +75,7 @@ class N64Exporter:
         assets_dir = f'{build_dir}/n64/assets'
 
         self.exported_meshes = {}
+        delesect_from_all_viewlayers()
 
         for scene in bpy.data.scenes:
             if scene.library:
@@ -110,7 +118,8 @@ class N64Exporter:
                     filepath=model_output_path,
                     export_format='GLTF_SEPARATE',
                     export_extras=True,
-                    use_selection=True
+                    use_selection=True,
+                    export_yup=True
                 )
 
                 obj.location = orig_loc

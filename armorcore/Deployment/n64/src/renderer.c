@@ -56,8 +56,8 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         scene->world.clear_color[3]
     ));
     t3d_screen_clear_depth();
-    t3d_light_set_ambient(scene->world.ambient_color);
 
+    t3d_light_set_ambient(scene->world.ambient_color);
     t3d_light_set_count(scene->light_count);
     for (uint8_t i = 0; i < scene->light_count; i++) {
         ArmLight *l = &scene->lights[i];
