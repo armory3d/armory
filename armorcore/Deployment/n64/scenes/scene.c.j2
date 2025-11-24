@@ -18,12 +18,13 @@ void scene_{scene_name}_init(ArmScene *scene)
     scene->world.ambient_color[2] = {ab};
     scene->world.ambient_color[3] = 0xFF;
 
-    // Camera
-    scene->camera.pos = (T3DVec3){{{{{cam_pos_x}f, {cam_pos_y}f, {cam_pos_z}f}}}};
-    scene->camera.target = (T3DVec3){{{{{cam_target_x}f, {cam_target_y}f, {cam_target_z}f}}}};
-    scene->camera.fov = {cam_fov}f;
-    scene->camera.near = {cam_near}f;
-    scene->camera.far = {cam_far}f;
+    // Cameras
+    static ArmCamera cameras[{camera_count}];
+    scene->cameras = cameras;
+    scene->camera_count = {camera_count};
+    scene->active_camera_id = 0;
+
+{cameras_block}
 
     // Lights
     static ArmLight lights[{light_count}];

@@ -9,19 +9,21 @@ static int frameIdx = 0;
 
 void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 {
+    ArmCamera *cam = &scene->cameras[scene->active_camera_id];
+
     frameIdx = (frameIdx + 1) % FB_COUNT;
 
     t3d_viewport_set_projection(
         viewport,
-        T3D_DEG_TO_RAD(scene->camera.fov),
-        scene->camera.near,
-        scene->camera.far
+        T3D_DEG_TO_RAD(cam->fov),
+        cam->near,
+        cam->far
     );
 
 	t3d_viewport_look_at(
 		viewport,
-		&scene->camera.pos,
-		&scene->camera.target,
+        &cam->pos,
+        &cam->target,
 		&(T3DVec3){{0.0f, 1.0f, 0.0f}}
 	);
 }

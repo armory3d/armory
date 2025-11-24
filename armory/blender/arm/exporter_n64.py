@@ -315,16 +315,19 @@ class N64Exporter:
         ag = to_uint8(ambient_color[1])
         ab = to_uint8(ambient_color[2])
 
-        cam_pos = self.scene_data[scene.name]['cameras'][0]['pos']
-        cam_target = self.scene_data[scene.name]['cameras'][0]['target']
-        cam_fov = self.scene_data[scene.name]['cameras'][0]['fov']
-        cam_near = self.scene_data[scene.name]['cameras'][0]['near']
-        cam_far = self.scene_data[scene.name]['cameras'][0]['far']
-
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene.c.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene.name).lower()}.c')
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
+
+        camera_block_lines = []
+        for i, camera in enumerate(self.scene_data[scene.name]['cameras']):
+            camera_block_lines.append(f'    cameras[{i}].pos = (T3DVec3){{{{{camera["pos"][0]:.6f}f, {camera["pos"][1]:.6f}f, {camera["pos"][2]:.6f}f}}}};')
+            camera_block_lines.append(f'    cameras[{i}].target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
+            camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
+            camera_block_lines.append(f'    cameras[{i}].near = {camera["near"]:.6f}f;')
+            camera_block_lines.append(f'    cameras[{i}].far = {camera["far"]:.6f}f;')
+        camera_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
         for i, light in enumerate(self.scene_data[scene.name]['lights']):
@@ -357,15 +360,8 @@ class N64Exporter:
             ar=ar,
             ag=ag,
             ab=ab,
-            cam_pos_x=cam_pos[0],
-            cam_pos_y=cam_pos[1],
-            cam_pos_z=cam_pos[2],
-            cam_target_x=cam_target[0],
-            cam_target_y=cam_target[1],
-            cam_target_z=cam_target[2],
-            cam_fov=cam_fov,
-            cam_near=cam_near,
-            cam_far=cam_far,
+            camera_count=len(self.scene_data[scene.name]['cameras']),
+            camera_block=camera_block,
             light_count=len(self.scene_data[scene.name]['lights']),
             lights_block=lights_block,
             object_count=len(self.scene_data[scene.name]['objects']),

@@ -38,7 +38,7 @@ void scene_on_ready(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];
 
-	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+	for (uint8_t i = 0; i < s->camera_count; ++i) {{
 		camera_on_ready(&s->cameras[i]);
 	}}
 
@@ -55,7 +55,7 @@ void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
-	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+	for (uint8_t i = 0; i < s->camera_count; ++i) {{
 		camera_on_update(&s->cameras[i], dt);
 	}}
 
@@ -70,15 +70,15 @@ void scene_on_update(SceneId id, float dt)
 
 void scene_on_remove(SceneId id)
 {{
-	for (uint8_t i = 0; i < s->cameraCount; ++i) {{
+	ArmScene *s = &g_scenes[id];
+
+	for (uint8_t i = 0; i < s->camera_count; ++i) {{
 		camera_on_remove(&s->cameras[i]);
 	}}
 
 	for (uint8_t i = 0; i < s->light_count; ++i) {{
 		light_on_remove(&s->lights[i]);
 	}}
-
-	ArmScene *s = &g_scenes[id];
 	for (uint16_t i = 0; i < s->object_count; ++i) {{
 		object_on_remove(&s->objects[i]);
 	}}
@@ -100,21 +100,19 @@ void scene_clear(SceneId id)
 		s->objects[i].model = NULL;
 	}}
 
-    s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
-    s->world.clear_color[3] = 0xFF;
-    s->world.ambient_color[0] = s->world.ambient_color[1] = s->world.ambient_color[2] = 0;
-    s->world.ambient_color[3] = 0xFF;
+	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
+	s->world.clear_color[3] = 0xFF;
+	s->world.ambient_color[0] = s->world.ambient_color[1] = s->world.ambient_color[2] = 0;
+	s->world.ambient_color[3] = 0xFF;
 
-    s->camera.pos = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
-    s->camera.target = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};
-    s->camera.fov = 60.0f;
-    s->camera.near = 10.0f;
-    s->camera.far = 150.0f;
+	s->cameras = NULL;
+	s->camera_count = 0;
+	s->active_camera_id = 0;
 
-    s->objects = NULL;
-    s->object_count = 0;
-    s->lights = NULL;
-    s->light_count = 0;
+	s->lights = NULL;
+	s->light_count = 0;
+	s->objects = NULL;
+	s->object_count = 0;
 }}
 
 ArmScene *scene_get(SceneId id)

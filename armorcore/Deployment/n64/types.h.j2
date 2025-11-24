@@ -55,8 +55,9 @@ typedef struct {{
 typedef struct {{
     ArmWorld world;
 
-	uint8_t camera_count;
-    ArmCamera camera;
+    uint8_t camera_count;
+    ArmCamera *cameras;
+    uint8_t active_camera_id;
 
     uint8_t light_count;
     ArmLight *lights;
