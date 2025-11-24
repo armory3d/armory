@@ -10,14 +10,14 @@ static const char *MODEL_PATHS[MODEL_COUNT] = {{
 
 typedef struct {{
     T3DModel *model;
-    int loaded;
+    uint8_t loaded;
 }} ModelEntry;
 
 static ModelEntry g_models[MODEL_COUNT];
 
 void models_init(void)
 {{
-    for (int i = 0; i < MODEL_COUNT; ++i) {{
+    for (uint8_t i = 0; i < MODEL_COUNT; ++i) {{
         g_models[i].model = NULL;
         g_models[i].loaded = 0;
     }}
@@ -25,7 +25,7 @@ void models_init(void)
 
 void models_shutdown(void)
 {{
-    for (int i = 0; i < MODEL_COUNT; ++i) {{
+    for (uint8_t i = 0; i < MODEL_COUNT; ++i) {{
         if (g_models[i].loaded && g_models[i].model) {{
             t3d_model_free(g_models[i].model);
             g_models[i].model = NULL;

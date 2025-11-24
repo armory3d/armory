@@ -10,13 +10,15 @@ extern "C" {
 #endif
 
 #define FB_COUNT 3
+#define MAX_TRAITS 4
 
 typedef struct {
-	int id;
+	uint8_t id;
     float pos[3];
     float rot[3];
     float scale[3];
-	ArmTraitId trait;
+	uint8_t traitCount;
+	ArmTraitId traits[MAX_TRAITS];
     T3DModel *model;
     T3DMat4FP *modelMat;
 } ArmObject;
@@ -43,10 +45,10 @@ typedef struct {
     ArmWorld world;
     ArmCamera camera;
 
-    int objectCount;
+    uint16_t objectCount;
     ArmObject *objects;
 
-    int lightCount;
+    uint8_t lightCount;
     ArmLight *lights;
 } ArmScene;
 

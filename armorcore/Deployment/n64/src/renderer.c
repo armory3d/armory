@@ -28,7 +28,7 @@ void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 
 void renderer_update_objects(ArmScene *scene)
 {
-    for (int i = 0; i < scene->objectCount; i++) {
+    for (uint16_t i = 0; i < scene->objectCount; i++) {
         ArmObject *obj = &scene->objects[i];
         t3d_mat4fp_from_srt_euler(
             &obj->modelMat[frameIdx],
@@ -55,12 +55,12 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     t3d_light_set_ambient(scene->world.ambientColor);
 
     t3d_light_set_count(scene->lightCount);
-    for (int i = 0; i < scene->lightCount; i++) {
+    for (uint8_t i = 0; i < scene->lightCount; i++) {
         ArmLight *l = &scene->lights[i];
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
-    for (int i = 0; i < scene->objectCount; i++) {
+    for (uint16_t i = 0; i < scene->objectCount; i++) {
         ArmObject *obj = &scene->objects[i];
         t3d_matrix_push(&obj->modelMat[frameIdx]);
         t3d_model_draw(obj->model);

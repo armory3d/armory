@@ -11,10 +11,12 @@ void object_on_ready(ArmObject *obj)
 
 void object_on_update(ArmObject *obj, float dt)
 {{
-	switch (obj->trait) {{
+	for (uint8_t i = 0; i < obj->traitCount; ++i) {{
+		switch (obj->traits[i]) {{
 {object_on_update_switch_cases}
-		default:
-			break;
+			default:
+				break;
+		}}
 	}}
 }}
 

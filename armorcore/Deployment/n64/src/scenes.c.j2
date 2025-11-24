@@ -12,7 +12,7 @@ static ArmScene g_scenes[SCENE_COUNT];
 
 void scenes_init_all(void)
 {{
-    for (int i = 0; i < SCENE_COUNT; ++i) {{
+    for (uint8_t i = 0; i < SCENE_COUNT; ++i) {{
         scene_clear((SceneId)i);
     }}
 
@@ -46,7 +46,7 @@ void scene_{scene_name}_on_ready(SceneId id)
 void scene_{scene_name}_on_update(SceneId id, float dt)
 {{
     ArmScene *s = scene_get(id);
-	for (int i = 0; i < s->objectCount; ++i) {{
+	for (uint16_t i = 0; i < s->objectCount; ++i) {{
 		object_on_update(&s->objects[i], dt);
 	}}
 
@@ -75,7 +75,7 @@ void scene_clear(SceneId id)
     ArmScene *s = &g_scenes[id];
 
     if (s->objects && s->objectCount > 0) {{
-        for (int i = 0; i < s->objectCount; ++i) {{
+        for (uint16_t i = 0; i < s->objectCount; ++i) {{
             if (s->objects[i].modelMat) {{
                 free_uncached(s->objects[i].modelMat);
                 s->objects[i].modelMat = NULL;
