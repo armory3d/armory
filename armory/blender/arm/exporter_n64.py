@@ -422,6 +422,22 @@ class N64Exporter:
             f.write(output)
 
 
+    def write_objects(self):
+        pass
+
+
+    def write_object_c(self):
+            pass
+
+
+    def write_objects_c(self):
+        pass
+
+
+    def write_objects_h(self):
+        pass
+
+
     def run_make(self):
         msys2_executable = arm.utils.get_msys2_bash_executable()
         if len(msys2_executable) > 0:
@@ -459,5 +475,6 @@ class N64Exporter:
         self.write_models()
         self.write_renderer()
         self.write_scenes()
+        self.write_objects()
         self.reset_materials_to_bsdf()
         self.run_make()
