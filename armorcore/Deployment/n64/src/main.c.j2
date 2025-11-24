@@ -39,7 +39,6 @@ int main(void)
         ArmScene *scene = scene_get(current_scene);
 
         renderer_begin_frame(&viewport, scene);
-        renderer_update_objects(scene);
         renderer_draw_scene(&viewport, scene);
     }}
 

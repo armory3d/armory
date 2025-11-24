@@ -11,8 +11,6 @@ void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 {
     ArmCamera *cam = &scene->cameras[scene->active_camera_id];
 
-    frameIdx = (frameIdx + 1) % FB_COUNT;
-
     t3d_viewport_set_projection(
         viewport,
         T3D_DEG_TO_RAD(cam->fov),
@@ -43,6 +41,10 @@ void renderer_update_objects(ArmScene *scene)
 
 void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 {
+    frameIdx = (frameIdx + 1) % FB_COUNT;
+    renderer_update_objects(scene);
+
+    // ======== Draw (3D) ======== //
     rdpq_attach(display_get(), display_get_zbuf());
     t3d_frame_start();
     t3d_viewport_attach(viewport);
@@ -62,13 +64,15 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
+    t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
-        t3d_matrix_push(&obj->model_mat[frameIdx]);
-        t3d_model_draw(obj->model);
-        t3d_matrix_pop(1);
+        t3d_matrix_set(&obj->model_mat[frameIdx], true);
+        rspq_block_run(obj->dpl);
     }
+    t3d_matrix_pop(1);
 
+    // ======== Draw (2D) ======== //
     rdpq_sync_pipe();
 	// TODO: set to `renderer.c.j2` and enable/disable FPS debug via Blender
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS   : %.2f", display_get_fps());

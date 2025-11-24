@@ -88,7 +88,7 @@ void scene_clear(SceneId id)
 			free_uncached(s->objects[i].model_mat);
 			s->objects[i].model_mat = NULL;
 		}}
-		s->objects[i].model = NULL;
+		s->objects[i].dpl = NULL;
 	}}
 
 	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;

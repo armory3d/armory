@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <rspq.h>
 #include <t3d/t3dmath.h>
 #include <t3d/t3dmodel.h>
 
@@ -16,12 +17,11 @@ typedef enum {{
 }} ArmTraitId;
 
 typedef struct {{
-	uint8_t id;
     float pos[3];
     float rot[3];
     float scale[3];
 
-	T3DModel *model;
+    rspq_block_t *dpl;
     T3DMat4FP *model_mat;
 
 	uint8_t trait_count;

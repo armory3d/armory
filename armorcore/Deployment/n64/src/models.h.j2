@@ -1,6 +1,7 @@
 #pragma once
 
 #include <t3d/t3dmodel.h>
+#include <rspq.h>
 
 #ifdef __cplusplus
 extern "C" {{
@@ -15,6 +16,7 @@ void models_init(void);
 void models_shutdown(void);
 
 T3DModel *models_get(ModelId id);
+rspq_block_t *models_get_dpl(ModelId id);
 
 #ifdef __cplusplus
 }}
