@@ -2,7 +2,7 @@
 #include <t3d/t3d.h>
 #include <t3d/t3dmodel.h>
 
-#include "../types.h"
+#include "types.h"
 #include "models.h"
 
 void engine_init(void)

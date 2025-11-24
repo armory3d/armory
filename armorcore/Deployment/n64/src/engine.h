@@ -4,7 +4,7 @@
 #include <t3d/t3d.h>
 #include <t3d/t3dmodel.h>
 
-#include "../types.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {

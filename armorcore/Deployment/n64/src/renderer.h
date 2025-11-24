@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../types.h"
+#include "types.h"
 #include <t3d/t3d.h>
 
 #ifdef __cplusplus

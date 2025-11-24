@@ -327,7 +327,9 @@ class N64Exporter:
             camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].near = {camera["near"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].far = {camera["far"]:.6f}f;')
-        camera_block = '\n'.join(camera_block_lines)
+            camera_block_lines.append(f'    cameras[{i}].trait_count = 1;')
+            camera_block_lines.append(f'    cameras[{i}].traits[0] = TRAIT_NONE;')
+        cameras_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
         for i, light in enumerate(self.scene_data[scene.name]['lights']):
@@ -335,6 +337,8 @@ class N64Exporter:
             light_block_lines.append(f'    lights[{i}].color[1] = {to_uint8(light["color"][1])};')
             light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
             light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
+            light_block_lines.append(f'    lights[{i}].trait_count = 1;')
+            light_block_lines.append(f'    lights[{i}].traits[0] = TRAIT_NONE;')
         lights_block = '\n'.join(light_block_lines)
 
         object_block_lines = []
@@ -349,7 +353,9 @@ class N64Exporter:
             object_block_lines.append(f'    objects[{i}].scale[1] = {object["scale"][1]:.6f}f;')
             object_block_lines.append(f'    objects[{i}].scale[2] = {object["scale"][2]:.6f}f;')
             object_block_lines.append(f'    objects[{i}].model = models_get({object["mesh"]});')
-            object_block_lines.append(f'    objects[{i}].modelMat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+            object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+            object_block_lines.append(f'    objects[{i}].trait_count = 1;')
+            object_block_lines.append(f'    objects[{i}].traits[0] = TRAIT_NONE;')
         objects_block = '\n'.join(object_block_lines)
 
         output = tmpl_content.format(
@@ -361,7 +367,7 @@ class N64Exporter:
             ag=ag,
             ab=ab,
             camera_count=len(self.scene_data[scene.name]['cameras']),
-            camera_block=camera_block,
+            cameras_block=cameras_block,
             light_count=len(self.scene_data[scene.name]['lights']),
             lights_block=lights_block,
             object_count=len(self.scene_data[scene.name]['objects']),
@@ -417,9 +423,9 @@ class N64Exporter:
         for i, scene in enumerate(bpy.data.scenes):
             if scene.name.startswith('fast64'):
                 continue
-            scene_name = arm.utils.safesrc(scene.name).upper()
-            enum_lines.append(f'    SCENE_{scene_name} = {i},')
-            declaration_lines.append(f'void scene_{scene_name}_init(ArmScene *scene);')
+            scene_name = arm.utils.safesrc(scene.name)
+            enum_lines.append(f'    SCENE_{scene_name.upper()} = {i},')
+            declaration_lines.append(f'void scene_{scene_name.lower()}_init(ArmScene *scene);')
             scene_count += 1
         scene_enum_entries = '\n'.join(enum_lines)
         scene_declarations = '\n'.join(declaration_lines)
@@ -435,15 +441,57 @@ class N64Exporter:
 
 
     def write_cameras(self):
-        pass
+        copy_src('cameras.h', 'src')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'cameras.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'cameras.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        output = tmpl_content.format(
+            camera_on_ready_switch_cases='',
+            camera_on_update_switch_cases='',
+            camera_on_remove_switch_cases=''
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def write_lights(self):
-        pass
+        copy_src('lights.h', 'src')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'lights.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'lights.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        output = tmpl_content.format(
+            light_on_ready_switch_cases='',
+            light_on_update_switch_cases='',
+            light_on_remove_switch_cases=''
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def write_objects(self):
-        pass
+        copy_src('objects.h', 'src')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'objects.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'objects.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        output = tmpl_content.format(
+            object_on_ready_switch_cases='',
+            object_on_update_switch_cases='',
+            object_on_remove_switch_cases=''
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 
     def run_make(self):

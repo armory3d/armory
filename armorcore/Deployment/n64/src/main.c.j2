@@ -2,7 +2,7 @@
 #include <t3d/t3d.h>
 #include <t3d/t3dmath.h>
 
-#include "../types.h"
+#include "types.h"
 #include "engine.h"
 #include "renderer.h"
 #include "scenes.h"
@@ -32,6 +32,7 @@ int main(void)
 
         if ((now - last) >= SWITCH_INTERVAL) {{
             current_scene = (SceneId)(((int)current_scene + 1) % SCENE_COUNT);
+			last = now;
         }}
 
 		scene_on_update(current_scene, dt);
@@ -41,8 +42,6 @@ int main(void)
         renderer_begin_frame(&viewport, scene);
         renderer_update_objects(scene);
         renderer_draw_scene(&viewport, scene);
-
-		last = now;
     }}
 
     engine_shutdown();
