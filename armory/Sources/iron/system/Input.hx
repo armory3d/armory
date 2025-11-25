@@ -1,10 +1,15 @@
 package iron.system;
 
+#if arm_target_n64
+import iron.n64.N64Bridge;
+#else
 import kha.input.KeyCode;
+#end
 
 class Input {
 
 	public static var occupied = false;
+	#if !arm_target_n64
 	static var mouse: Mouse = null;
 	static var pen: Pen = null;
 	static var keyboard: Keyboard = null;
@@ -85,6 +90,21 @@ class Input {
 		// Reset mouse delta on foreground
 		kha.System.notifyOnApplicationState(function() { getMouse().reset(); }, null, null, null, null);
 	}
+	#else
+	public static function reset() {
+		occupied = false;
+	}
+
+	public static function endFrame() {}
+
+	public static inline function getKeyboard():N64KeyboardStub {
+		return new N64KeyboardStub();
+	}
+
+	public static inline function getGamepad(i = 0):N64GamepadStub {
+		return new N64GamepadStub();
+	}
+	#end
 }
 
 class VirtualButton {
@@ -780,3 +800,37 @@ class Sensor {
 		this.z = z;
 	}
 }
+
+#if arm_target_n64
+class N64KeyboardStub {
+	public function new() {}
+
+	public inline function started(key: String): Bool {
+		return N64Bridge.input.started(key);
+	}
+
+	public inline function down(key: String): Bool {
+		return N64Bridge.input.down(key);
+	}
+
+	public inline function released(key: String): Bool {
+		return N64Bridge.input.released(key);
+	}
+}
+
+class N64GamepadStub {
+	public var leftStick: N64Stick = new N64Stick();
+	public var rightStick: N64Stick = new N64Stick();
+	public var connected: Bool = true;
+
+	public function new() {}
+}
+
+class N64Stick {
+	public var x(get, never): Float;
+	public var y(get, never): Float;
+	public var moved: Bool = false;
+	inline function get_x(): Float { return N64Bridge.input.getStickX(); }
+	inline function get_y(): Float { return N64Bridge.input.getStickY(); }
+}
+#end
