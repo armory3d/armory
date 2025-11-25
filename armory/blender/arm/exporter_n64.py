@@ -188,7 +188,8 @@ class N64Exporter:
                     "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj_pos),
                     "rot": list(obj_rot),
-                    "scale": list(obj_scale)
+                    "scale": list(obj_scale),
+                    "visible": not obj.hide_render
                 })
 
 
@@ -372,6 +373,7 @@ class N64Exporter:
             object_block_lines.append(f'    models_get({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+            object_block_lines.append(f'    objects[{i}].visible = {str(object["visible"]).lower()};')
             object_block_lines.append(f'    objects[{i}].trait_count = 0;')
         objects_block = '\n'.join(object_block_lines)
 

@@ -8,6 +8,7 @@ class N64Bridge {
     public static var input: N64Input = new N64Input();
     public static var transform: N64Transform = new N64Transform();
     public static var scene: N64Scene = new N64Scene();
+    public static var object: N64Object = new N64Object();
 }
 
 class N64Input {
@@ -28,5 +29,10 @@ class N64Transform {
 class N64Scene {
     public inline function setActive(name: String): Void {}
     public inline function getName(scene: Scene): String { return ""; }
+}
+
+class N64Object {
+	public inline function getVisible(object: Object): Bool { return false; }
+	public inline function setVisible(object: Object, visible: Bool): Void {}
 }
 #end

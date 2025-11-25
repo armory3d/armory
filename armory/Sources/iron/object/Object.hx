@@ -20,7 +20,9 @@ class Object {
 	public var lods: Array<Object> = null;
 
 	public var animation: Animation = null;
+	#if !arm_target_n64
 	public var visible = true; // Skip render, keep updating
+	#end
 	public var visibleMesh = true;
 	public var visibleShadow = true;
 	public var culled = false; // Object was culled last frame
@@ -29,6 +31,20 @@ class Object {
 	public var vertex_groups: Map<String, Array<Vec4>> = null;
 	public var properties: Map<String, Dynamic> = null;
 	var isEmpty = false;
+
+	#if arm_target_n64
+	@:isVar public var visible(get, set): Bool = true;
+
+	function get_visible(): Bool {
+		N64Bridge.object.getVisible(this);
+		return visible;
+	}
+
+	function set_visible(value: Bool): Bool {
+		N64Bridge.object.setVisible(this, value);
+		return this.visible = value;
+	}
+	#end
 
 	public function new() {
 		uid = uidCounter++;

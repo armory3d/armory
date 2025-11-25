@@ -73,6 +73,9 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
+        if (!obj->visible) {
+            continue;
+        }
         t3d_matrix_set(&obj->model_mat[frameIdx], true);
         rspq_block_run(obj->dpl);
     }
