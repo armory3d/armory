@@ -64,3 +64,28 @@ rspq_block_t *models_get_dpl(ModelId id)
 {{
     return g_models[id].dpl;
 }}
+
+// TODO: Implement reference counting to track which scenes use which models.
+//       Currently models are cached forever. To properly unload:
+//       1. Track model usage per scene (e.g., ref count or bitmask)
+//       2. Only free when no scene references the model
+//       3. Call this from scene_clear() for models only used by that scene
+void models_unload(ModelId id)
+{{
+    if (id < 0 || id >= MODEL_COUNT) {{
+        return;
+    }}
+
+    ModelEntry *e = &g_models[id];
+    if (e->loaded) {{
+        if (e->model) {{
+            t3d_model_free(e->model);
+            e->model = NULL;
+        }}
+        if (e->dpl) {{
+            rspq_block_free(e->dpl);
+            e->dpl = NULL;
+        }}
+        e->loaded = 0;
+    }}
+}}

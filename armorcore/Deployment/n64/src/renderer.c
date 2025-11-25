@@ -67,6 +67,9 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
+    // TODO: Frustum culling - skip objects outside camera view
+    // TODO: Sectors/portals - for indoor environments, only render visible rooms
+    // These optimizations are essential for larger N64 games
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
