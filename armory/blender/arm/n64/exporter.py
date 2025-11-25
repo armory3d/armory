@@ -15,27 +15,6 @@ class N64Exporter:
         self.exported_meshes = {}
         self.trait_list = {}
 
-        # trait_list = {
-        #     "TraitName" : {
-        #         "on_ready": [
-        #             {
-        #                 "action": { }
-        #             }
-        #         ],
-        #         "on_update": [
-        #             {
-        #                 "condition": { "type": "button", "button": "a", "state": "started" },
-        #                 "action": { "type": "scene_switch", "target": "Level_02" }
-        #             }
-        #         ],
-        #         "on_remove": [
-        #             {
-        #                 "action": { }
-        #             }
-        #         ]
-        #     }
-        # }
-
 
     @classmethod
     def export(cls):
