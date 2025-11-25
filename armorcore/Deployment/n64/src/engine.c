@@ -4,6 +4,7 @@
 
 #include "types.h"
 #include "models.h"
+#include "input.h"
 
 void engine_init(void)
 {
@@ -20,6 +21,7 @@ void engine_init(void)
     t3d_init((T3DInitParams){});
     rdpq_text_register_font(FONT_BUILTIN_DEBUG_MONO, rdpq_font_load_builtin(FONT_BUILTIN_DEBUG_MONO));
 
+    input_init();
     models_init();
 }
 
