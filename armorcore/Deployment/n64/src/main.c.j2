@@ -32,9 +32,9 @@ int main(void)
 
         input_poll();
 
+        ArmScene *scene = scene_get(current_scene);
         scene_on_update(current_scene, dt);
 
-        ArmScene *scene = scene_get(current_scene);
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
     }}
