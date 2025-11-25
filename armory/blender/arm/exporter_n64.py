@@ -388,7 +388,9 @@ class N64Exporter:
             light_count=len(self.scene_data[scene_name]['lights']),
             lights_block=lights_block,
             object_count=len(self.scene_data[scene_name]['objects']),
-            objects_block=objects_block
+            objects_block=objects_block,
+            scene_trait_count=0,
+            scene_traits_block=''
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
