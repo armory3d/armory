@@ -19,7 +19,6 @@ import bpy
 
 from arm import assets
 from arm.exporter import ArmoryExporter
-from arm.n64.exporter import N64Exporter
 import arm.lib.make_datas
 import arm.lib.server
 import arm.live_patch as live_patch
@@ -415,10 +414,6 @@ def compile(assets_only=False):
                 for s in item.arm_project_khamake.split(' '):
                     cmd.append(s)
         state.proc_build = run_proc(cmd, build_done)
-    elif state.target == "n64":
-        N64Exporter.export()
-        if arm.utils.get_open_n64_rom_directory():
-            arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
     else:
         target_name = state.target
         kha_target_name = arm.utils.get_kha_target(target_name)
@@ -632,9 +627,13 @@ def build_done():
 
 def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
-    if wrd.arm_runtime == 'Krom':
-        return 'krom'
-    return 'html5'
+    match wrd.arm_runtime:
+        case 'Krom':
+            return 'krom'
+        case 'Browser':
+            return 'html5'
+        case 'Ares':
+            return 'n64'
 
 def get_khajs_path(target):
     if target == 'krom':

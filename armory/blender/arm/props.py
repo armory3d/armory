@@ -325,7 +325,8 @@ def init_properties():
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
-               ('Browser', 'Browser', 'Browser')],
+               ('Browser', 'Browser', 'Browser'),
+               ('Ares', 'Ares', 'Ares')],
         name="Runtime", description="Runtime to use when launching the game", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=assets.invalidate_compiler_cache)

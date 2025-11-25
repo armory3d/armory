@@ -16,9 +16,21 @@ class N64Exporter:
 
 
     @classmethod
-    def export(cls):
+    def build_project(cls):
         exporter = cls()
-        exporter.execute()
+        exporter.project()
+
+
+    @classmethod
+    def publish_project(cls):
+        exporter = cls()
+        exporter.publish()
+
+
+    @classmethod
+    def play_project(cls):
+        exporter = cls()
+        exporter.play()
 
 
     def convert_materials_to_f3d(self):
@@ -465,7 +477,7 @@ class N64Exporter:
         bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
 
-    def execute(self):
+    def build(self):
         self.convert_materials_to_f3d()
 
         self.make_directories()
@@ -486,4 +498,15 @@ class N64Exporter:
 
         self.reset_materials_to_bsdf()
 
+
+    def publish(self):
+        self.build()
         self.run_make()
+
+        if arm.utils.get_open_n64_rom_directory():
+            arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+
+
+    def play(self):
+        self.publish()
+        # TODO: play the built ROM in Ares emulator

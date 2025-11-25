@@ -12,6 +12,7 @@ from arm.lightmapper.panels import scene
 import arm.api
 import arm.assets as assets
 from arm.exporter import ArmoryExporter
+from arm.n64.exporter import N64Exporter
 import arm.log as log
 import arm.logicnode.replacement
 import arm.make as make
@@ -1356,25 +1357,30 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_rp == '':
-            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
-        if item.arm_project_scene == None:
-            item.arm_project_scene = context.scene
-        # Assume unique rp names
-        rplist_index = wrd.arm_rplist_index
-        for i in range(0, len(wrd.arm_rplist)):
-            if wrd.arm_rplist[i].name == item.arm_project_rp:
-                wrd.arm_rplist_index = i
-                break
+        if item.arm_project_target == 'n64':
+            N64Exporter.publish_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        else:
+            if item.arm_project_rp == '':
+                item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+            if item.arm_project_scene == None:
+                item.arm_project_scene = context.scene
+            # Assume unique rp names
+            rplist_index = wrd.arm_rplist_index
+            for i in range(0, len(wrd.arm_rplist)):
+                if wrd.arm_rplist[i].name == item.arm_project_rp:
+                    wrd.arm_rplist_index = i
+                    break
 
-        make.clean()
-        assets.invalidate_enabled = False
-        if wrd.arm_clear_on_compile:
-            os.system("cls")
-        make.build(item.arm_project_target, is_publish=True, is_export=True)
-        make.compile()
-        wrd.arm_rplist_index = rplist_index
-        assets.invalidate_enabled = True
+            make.clean()
+            assets.invalidate_enabled = False
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
+            make.build(item.arm_project_target, is_publish=True, is_export=True)
+            make.compile()
+            wrd.arm_rplist_index = rplist_index
+            assets.invalidate_enabled = True
         return{'FINISHED'}
 
 class ArmoryOpenProjectFolderButton(bpy.types.Operator):
