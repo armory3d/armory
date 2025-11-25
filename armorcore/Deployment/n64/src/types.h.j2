@@ -12,11 +12,18 @@ extern "C" {{
 #define FB_COUNT 3
 #define MAX_TRAITS {max_traits}
 
-typedef enum {{
-{trait_enum_entries}
-}} ArmTraitId;
+typedef void (*ArmTraitReadyFn)(void *entity);
+typedef void (*ArmTraitUpdateFn)(void *entity, float dt);
+typedef void (*ArmTraitRemoveFn)(void *entity);
 
 typedef struct {{
+    ArmTraitReadyFn on_ready;
+    ArmTraitUpdateFn on_update;
+    ArmTraitRemoveFn on_remove;
+    void *data;
+}} ArmTrait;
+
+typedef struct ArmObject {{
     float pos[3];
     float rot[3];
     float scale[3];
@@ -24,27 +31,27 @@ typedef struct {{
     rspq_block_t *dpl;
     T3DMat4FP *model_mat;
 
-	uint8_t trait_count;
-	ArmTraitId traits[MAX_TRAITS];
+    uint8_t trait_count;
+    ArmTrait traits[MAX_TRAITS];
 }} ArmObject;
 
-typedef struct {{
+typedef struct ArmLight {{
     uint8_t color[4];
     T3DVec3 dir;
 
-	uint8_t trait_count;
-	ArmTraitId traits[MAX_TRAITS];
+    uint8_t trait_count;
+    ArmTrait traits[MAX_TRAITS];
 }} ArmLight;
 
-typedef struct {{
+typedef struct ArmCamera {{
     T3DVec3 pos;
     T3DVec3 target;
     float fov;
     float near;
     float far;
 
-	uint8_t trait_count;
-	ArmTraitId traits[MAX_TRAITS];
+    uint8_t trait_count;
+    ArmTrait traits[MAX_TRAITS];
 }} ArmCamera;
 
 typedef struct {{
@@ -52,7 +59,7 @@ typedef struct {{
     uint8_t ambient_color[4];
 }} ArmWorld;
 
-typedef struct {{
+typedef struct ArmScene {{
     ArmWorld world;
 
     uint8_t camera_count;
@@ -65,8 +72,8 @@ typedef struct {{
     uint16_t object_count;
     ArmObject *objects;
 
-	uint8_t trait_count;
-	ArmTraitId traits[MAX_TRAITS];
+    uint8_t trait_count;
+    ArmTrait traits[MAX_TRAITS];
 }} ArmScene;
 
 #ifdef __cplusplus

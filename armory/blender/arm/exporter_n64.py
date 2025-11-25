@@ -225,12 +225,8 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        # lines = []
-        # trait_enum_entries = ''
-
         output = tmpl_content.format(
-            max_traits='4',
-            trait_enum_entries='TRAIT_NONE = 0'
+            max_traits='4'
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -350,8 +346,7 @@ class N64Exporter:
             camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].near = {camera["near"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].far = {camera["far"]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].trait_count = 1;')
-            camera_block_lines.append(f'    cameras[{i}].traits[0] = TRAIT_NONE;')
+            camera_block_lines.append(f'    cameras[{i}].trait_count = 0;')
         cameras_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
@@ -360,8 +355,7 @@ class N64Exporter:
             light_block_lines.append(f'    lights[{i}].color[1] = {to_uint8(light["color"][1])};')
             light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
             light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
-            light_block_lines.append(f'    lights[{i}].trait_count = 1;')
-            light_block_lines.append(f'    lights[{i}].traits[0] = TRAIT_NONE;')
+            light_block_lines.append(f'    lights[{i}].trait_count = 0;')
         lights_block = '\n'.join(light_block_lines)
 
         object_block_lines = []
@@ -378,8 +372,7 @@ class N64Exporter:
             object_block_lines.append(f'    models_get({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
-            object_block_lines.append(f'    objects[{i}].trait_count = 1;')
-            object_block_lines.append(f'    objects[{i}].traits[0] = TRAIT_NONE;')
+            object_block_lines.append(f'    objects[{i}].trait_count = 0;')
         objects_block = '\n'.join(object_block_lines)
 
         output = tmpl_content.format(
@@ -466,56 +459,17 @@ class N64Exporter:
 
     def write_cameras(self):
         copy_src('cameras.h', 'src')
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'cameras.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'cameras.c')
-
-        with open(tmpl_path, 'r', encoding='utf-8') as f:
-            tmpl_content = f.read()
-
-        output = tmpl_content.format(
-            camera_on_ready_switch_cases='',
-            camera_on_update_switch_cases='',
-            camera_on_remove_switch_cases=''
-        )
-
-        with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(output)
+        copy_src('cameras.c', 'src')
 
 
     def write_lights(self):
         copy_src('lights.h', 'src')
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'lights.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'lights.c')
-
-        with open(tmpl_path, 'r', encoding='utf-8') as f:
-            tmpl_content = f.read()
-
-        output = tmpl_content.format(
-            light_on_ready_switch_cases='',
-            light_on_update_switch_cases='',
-            light_on_remove_switch_cases=''
-        )
-
-        with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(output)
+        copy_src('lights.c', 'src')
 
 
     def write_objects(self):
         copy_src('objects.h', 'src')
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'objects.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'objects.c')
-
-        with open(tmpl_path, 'r', encoding='utf-8') as f:
-            tmpl_content = f.read()
-
-        output = tmpl_content.format(
-            object_on_ready_switch_cases='',
-            object_on_update_switch_cases='',
-            object_on_remove_switch_cases=''
-        )
-
-        with open(out_path, 'w', encoding='utf-8') as f:
-            f.write(output)
+        copy_src('objects.c', 'src')
 
 
     def run_make(self):
