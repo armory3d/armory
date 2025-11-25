@@ -14,11 +14,32 @@ class N64Exporter:
         self.exported_meshes = {}
         self.trait_list = {}
 
+        # trait_list = {
+        #     "TraitName" : {
+        #         "on_ready": [
+        #             {
+        #                 "action": { }
+        #             }
+        #         ],
+        #         "on_update": [
+        #             {
+        #                 "condition": { "type": "button", "button": "a", "state": "started" },
+        #                 "action": { "type": "scene_switch", "target": "Level_02" }
+        #             }
+        #         ],
+        #         "on_remove": [
+        #             {
+        #                 "action": { }
+        #             }
+        #         ]
+        #     }
+        # }
+
 
     @classmethod
     def build_project(cls):
         exporter = cls()
-        exporter.project()
+        exporter.build()
 
 
     @classmethod
@@ -502,9 +523,6 @@ class N64Exporter:
     def publish(self):
         self.build()
         self.run_make()
-
-        if arm.utils.get_open_n64_rom_directory():
-            arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
 
 
     def play(self):

@@ -1260,11 +1260,18 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         arm.utils.check_default_props()
 
-        assets.invalidate_enabled = False
-        if wrd.arm_clear_on_compile:
-            os.system("cls")
-        make.play()
-        assets.invalidate_enabled = True
+        wrd = bpy.data.worlds['Arm']
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_target == 'n64':
+            # TODO: add 'Ares' emulator in path and open it up with the generated ROM
+            # needs to check if `path_to_ares_executable` is valid
+            N64Exporter.play_project()
+        else:
+            assets.invalidate_enabled = False
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
+            make.play()
+            assets.invalidate_enabled = True
         return{'FINISHED'}
 
 class ArmoryStopButton(bpy.types.Operator):
@@ -1310,24 +1317,29 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_rp == '':
-            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
-        if item.arm_project_scene == None:
-            item.arm_project_scene = context.scene
-        # Assume unique rp names
-        rplist_index = wrd.arm_rplist_index
-        for i in range(0, len(wrd.arm_rplist)):
-            if wrd.arm_rplist[i].name == item.arm_project_rp:
-                wrd.arm_rplist_index = i
-                break
-        assets.invalidate_shader_cache(None, None)
-        assets.invalidate_enabled = False
-        if wrd.arm_clear_on_compile:
-            os.system("cls")
-        make.build(item.arm_project_target, is_export=True)
-        make.compile()
-        wrd.arm_rplist_index = rplist_index
-        assets.invalidate_enabled = True
+        if item.arm_project_target == 'n64':
+            N64Exporter.build_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        else:
+            if item.arm_project_rp == '':
+                item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+            if item.arm_project_scene == None:
+                item.arm_project_scene = context.scene
+            # Assume unique rp names
+            rplist_index = wrd.arm_rplist_index
+            for i in range(0, len(wrd.arm_rplist)):
+                if wrd.arm_rplist[i].name == item.arm_project_rp:
+                    wrd.arm_rplist_index = i
+                    break
+            assets.invalidate_shader_cache(None, None)
+            assets.invalidate_enabled = False
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
+            make.build(item.arm_project_target, is_export=True)
+            make.compile()
+            wrd.arm_rplist_index = rplist_index
+            assets.invalidate_enabled = True
         return{'FINISHED'}
 
 class ArmoryPublishProjectButton(bpy.types.Operator):
