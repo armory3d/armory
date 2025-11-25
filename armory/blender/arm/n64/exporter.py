@@ -4,7 +4,6 @@ import math
 import bpy
 import arm.utils
 
-from arm.n64.trait_parser import parse_trait, print_trait
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
 from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
 
