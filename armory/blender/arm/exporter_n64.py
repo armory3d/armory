@@ -165,6 +165,9 @@ class N64Exporter:
             elif obj.type == 'LIGHT': #TODO: support multiple light types [Point and Sun]
                 light_dir = obj.rotation_euler.to_matrix().col[2]
                 dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
+                length = math.sqrt(dir_vec[0]**2 + dir_vec[1]**2 + dir_vec[2]**2)
+                if length > 0:
+                    dir_vec = (dir_vec[0]/length, dir_vec[1]/length, dir_vec[2]/length)
 
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),

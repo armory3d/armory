@@ -57,6 +57,8 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     ));
     t3d_screen_clear_depth();
 
+    t3d_state_set_drawflags(T3D_FLAG_DEPTH | T3D_FLAG_CULL_BACK);
+
     t3d_light_set_ambient(scene->world.ambient_color);
     t3d_light_set_count(scene->light_count);
     for (uint8_t i = 0; i < scene->light_count; i++) {
