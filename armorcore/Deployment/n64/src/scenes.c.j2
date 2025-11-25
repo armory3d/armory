@@ -9,20 +9,21 @@
 #include "objects.h"
 
 static ArmScene g_scenes[SCENE_COUNT];
+static SceneId g_pending_scene = SCENE_COUNT;  // SCENE_COUNT = no pending
 
 void scene_init(SceneId id)
 {{
-    if (id < 0 || id >= SCENE_COUNT) {{
+    if (id >= SCENE_COUNT) {{
         return;
     }}
-
-    scene_clear(id);
 
     switch (id) {{
 {scene_init_switch_cases}
 		default:
 			break;
     }}
+
+	scene_on_ready(id);
 }}
 
 void scene_on_ready(SceneId id)
@@ -107,6 +108,7 @@ void scene_on_remove(SceneId id)
 			light_on_remove(&s->lights[i]);
 		}}
 	}}
+
 	for (uint16_t i = 0; i < s->object_count; i++) {{
 		if (s->objects[i].trait_count > 0) {{
 			object_on_remove(&s->objects[i]);
@@ -116,11 +118,15 @@ void scene_on_remove(SceneId id)
 
 void scene_clear(SceneId id)
 {{
-    if (id < 0 || id >= SCENE_COUNT) {{
+    if (id >= SCENE_COUNT) {{
         return;
     }}
 
     ArmScene *s = &g_scenes[id];
+
+    if (s->objects != NULL) {{
+        scene_on_remove(id);
+    }}
 
 	for (uint16_t i = 0; i < s->object_count; i++) {{
 		if (s->objects[i].model_mat) {{
@@ -147,8 +153,23 @@ void scene_clear(SceneId id)
 
 ArmScene *scene_get(SceneId id)
 {{
-    if (id < 0 || id >= SCENE_COUNT) {{
+    if (id >= SCENE_COUNT) {{
         return NULL;
     }}
     return &g_scenes[id];
+}}
+
+SceneId scene_get_pending(void)
+{{
+    return g_pending_scene;
+}}
+
+void scene_switch_to(SceneId id)
+{{
+    g_pending_scene = id;
+}}
+
+void scene_clear_pending(void)
+{{
+    g_pending_scene = SCENE_COUNT;
 }}

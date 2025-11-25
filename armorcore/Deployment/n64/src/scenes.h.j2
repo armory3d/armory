@@ -19,6 +19,11 @@ void scene_on_update(SceneId id, float dt);
 void scene_on_remove(SceneId id);
 void scene_clear(SceneId id);
 
+// Scene switching
+void scene_switch_to(SceneId id);
+SceneId scene_get_pending(void);
+void scene_clear_pending(void);
+
 ArmScene *scene_get(SceneId id);
 
 #ifdef __cplusplus

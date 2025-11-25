@@ -21,7 +21,6 @@ int main(void)
 
     SceneId current_scene = {initial_scene_id};
 	scene_init(current_scene);
-	scene_on_ready(current_scene);
 
 	float last_time = get_time_s();
 
@@ -34,6 +33,16 @@ int main(void)
 
         ArmScene *scene = scene_get(current_scene);
         scene_on_update(current_scene, dt);
+
+        // Handle deferred scene switch
+        SceneId pending = scene_get_pending();
+        if (pending < SCENE_COUNT) {{
+            scene_clear_pending();
+            scene_clear(current_scene);
+            current_scene = pending;
+            scene_init(current_scene);
+            scene = scene_get(current_scene);
+        }}
 
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
