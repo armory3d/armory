@@ -19,7 +19,7 @@ import bpy
 
 from arm import assets
 from arm.exporter import ArmoryExporter
-from arm.exporter_n64 import N64Exporter
+from arm.n64.exporter import N64Exporter
 import arm.lib.make_datas
 import arm.lib.server
 import arm.live_patch as live_patch
@@ -36,8 +36,8 @@ if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
-    arm.exporter_n64 = arm.reload_module(arm.exporter_n64)
-    from arm.exporter_n64 import N64Exporter
+    arm.n64.exporter = arm.reload_module(arm.n64.exporter)
+    from arm.n64.exporter import N64Exporter
     arm.lib.make_datas = arm.reload_module(arm.lib.make_datas)
     arm.lib.server = arm.reload_module(arm.lib.server)
     live_patch = arm.reload_module(live_patch)
