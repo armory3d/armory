@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 import math
 import bpy
@@ -7,46 +6,7 @@ import arm.utils
 
 from arm.n64.trait_parser import parse_trait, print_trait
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
-
-
-def copy_src(name, path=''):
-    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
-    out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
-
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    shutil.copyfile(tmpl_path, out_path)
-
-
-def get_clear_color(scene):
-    if scene.world is None:
-        return [0.051, 0.051, 0.051, 1.0]
-
-    if scene.world.node_tree is None:
-        c = scene.world.color
-        return [c[0], c[1], c[2], 1.0]
-
-    if 'Background' in scene.world.node_tree.nodes:
-        background_node = scene.world.node_tree.nodes['Background']
-        col = background_node.inputs[0].default_value
-        strength = background_node.inputs[1].default_value
-        ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-        ar[0] = max(min(ar[0], 1.0), 0.0)
-        ar[1] = max(min(ar[1], 1.0), 0.0)
-        ar[2] = max(min(ar[2], 1.0), 0.0)
-        ar[3] = max(min(ar[3], 1.0), 0.0)
-        return ar
-    return [0.051, 0.051, 0.051, 1.0]
-
-
-def delesect_from_all_viewlayers():
-    for scene in bpy.data.scenes:
-        for view_layer in scene.view_layers:
-            for obj in scene.objects:
-                obj.select_set(False, view_layer=view_layer)
-
-
-def to_uint8(value):
-    return int(max(0, min(1, value)) * 255)
+from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
 
 
 class N64Exporter:
@@ -100,7 +60,7 @@ class N64Exporter:
         assets_dir = f'{build_dir}/n64/assets'
 
         self.exported_meshes = {}
-        delesect_from_all_viewlayers()
+        deselect_from_all_viewlayers()
 
         for scene in bpy.data.scenes:
             if scene.library:
