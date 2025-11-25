@@ -180,12 +180,11 @@ class Transform {
 	public function translate(x: kha.FastFloat, y: kha.FastFloat, z: kha.FastFloat) {
 		#if arm_target_n64
 		N64Bridge.transform.translate(object, x, y, z);
-		#else
+		#end
 		loc.x += x;
 		loc.y += y;
 		loc.z += z;
 		buildMatrix();
-		#end
 	}
 
 	/**
@@ -226,11 +225,10 @@ class Transform {
 	public function rotate(axis: Vec4, f: kha.FastFloat) {
 		#if arm_target_n64
 		N64Bridge.transform.rotate(object, axis.x * f, axis.y * f, axis.z * f);
-		#else
+		#end
 		q.fromAxisAngle(axis, f);
 		rot.multquats(q, rot);
 		buildMatrix();
-		#end
 	}
 
 	/**
@@ -242,10 +240,9 @@ class Transform {
 	public function move(axis: Vec4, f = 1.0) {
 		#if arm_target_n64
 		N64Bridge.transform.translate(object, axis.x * f, axis.y * f, axis.z * f);
-		#else
+		#end
 		loc.addf(axis.x * f, axis.y * f, axis.z * f);
 		buildMatrix();
-		#end
 	}
 
 	/**
@@ -257,13 +254,12 @@ class Transform {
 	public function setRotation(x: kha.FastFloat, y: kha.FastFloat, z: kha.FastFloat) {
 		#if arm_target_n64
 		N64Bridge.transform.setRotation(object, x, y, z);
-		#else
+		#end
 		rot.fromEuler(x, y, z);
 		_eulerX = x;
 		_eulerY = y;
 		_eulerZ = z;
 		dirty = true;
-		#end
 	}
 
 	function computeRadius() {

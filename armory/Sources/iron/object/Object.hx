@@ -3,6 +3,9 @@ package iron.object;
 import iron.Trait;
 import iron.data.SceneFormat;
 import iron.math.Vec4;
+#if arm_target_n64
+import iron.n64.N64Bridge;
+#end
 
 class Object {
 	static var uidCounter = 0;

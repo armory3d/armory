@@ -12,9 +12,9 @@ class N64Bridge {
 }
 
 class N64Input {
-    public inline function started(key: String): Bool { return false; }
-    public inline function down(key: String): Bool { return false; }
-    public inline function released(key: String): Bool { return false; }
+    public inline function started(button: String): Bool { return false; }
+    public inline function down(button: String): Bool { return false; }
+    public inline function released(button: String): Bool { return false; }
     public inline function getStickX(): Float { return 0.0; }
     public inline function getStickY(): Float { return 0.0; }
 }

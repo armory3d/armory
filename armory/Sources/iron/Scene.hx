@@ -28,7 +28,6 @@ import iron.data.SceneStream;
 import iron.data.MeshBatch;
 import iron.system.Time;
 using StringTools;
-
 #if arm_target_n64
 import iron.n64.N64Bridge;
 #end
@@ -200,7 +199,7 @@ class Scene {
 	public static function setActive(sceneName: String, done: Object->Void = null) {
 		#if arm_target_n64
 		N64Bridge.scene.setActive(sceneName);
-		#else
+		#end
 		if (!framePassed) return;
 		framePassed = false;
 
@@ -231,7 +230,6 @@ class Scene {
 				#end
 			});
 		});
-		#end
 	}
 
 	public function updateFrame() {
