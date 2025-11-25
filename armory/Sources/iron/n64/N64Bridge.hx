@@ -1,6 +1,9 @@
 #if arm_target_n64
 package iron.n64;
 
+import iron.Scene;
+import iron.object.Object;
+
 class N64Bridge {
     public static var input: N64Input = new N64Input();
     public static var transform: N64Transform = new N64Transform();
@@ -16,14 +19,14 @@ class N64Input {
 }
 
 class N64Transform {
-    public inline function translate(object: iron.object.Object, x: Float, y: Float, z: Float): Void {}
-    public inline function rotate(object: iron.object.Object, x: Float, y: Float, z: Float): Void {}
-    public inline function setPosition(object: iron.object.Object, x: Float, y: Float, z: Float): Void {}
-    public inline function setRotation(object: iron.object.Object, x: Float, y: Float, z: Float): Void {}
+    public inline function translate(object: Object, x: Float, y: Float, z: Float): Void {}
+    public inline function rotate(object: Object, x: Float, y: Float, z: Float): Void {}
+    public inline function setPosition(object: Object, x: Float, y: Float, z: Float): Void {}
+    public inline function setRotation(object: Object, x: Float, y: Float, z: Float): Void {}
 }
 
 class N64Scene {
-    public inline function switchTo(name: String): Void {}
-    public inline function getCurrentName(): String { return ""; }
+    public inline function setActive(name: String): Void {}
+    public inline function getName(scene: Scene): String { return ""; }
 }
 #end
