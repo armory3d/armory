@@ -4,6 +4,7 @@
 #include <t3d/t3dmodel.h>
 
 #include "types.h"
+#include "input.h"
 
 static int frameIdx = 0;
 
@@ -77,8 +78,18 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     // ======== Draw (2D) ======== //
     rdpq_sync_pipe();
 	// TODO: set to `renderer.c.j2` and enable/disable FPS debug via Blender
-    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS   : %.2f", display_get_fps());
-	rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 10, "objects: %u", scene->object_count);
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS: %.2f", display_get_fps());
+
+    // Input debug
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 10, "Stick: %.2f, %.2f", input_stick_x(), input_stick_y());
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 20,
+        "A:%d B:%d Z:%d Start:%d",
+        input_down(N64_BTN_A), input_down(N64_BTN_B), input_down(N64_BTN_Z), input_down(N64_BTN_START));
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 30,
+        "D: %d%d%d%d  C: %d%d%d%d",
+        input_down(N64_BTN_DUP), input_down(N64_BTN_DDOWN), input_down(N64_BTN_DLEFT), input_down(N64_BTN_DRIGHT),
+        input_down(N64_BTN_CUP), input_down(N64_BTN_CDOWN), input_down(N64_BTN_CLEFT), input_down(N64_BTN_CRIGHT));
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 40, "L:%d R:%d", input_down(N64_BTN_L), input_down(N64_BTN_R));
 
     rdpq_detach_show();
 }

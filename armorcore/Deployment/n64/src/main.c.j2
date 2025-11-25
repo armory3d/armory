@@ -6,6 +6,7 @@
 #include "engine.h"
 #include "renderer.h"
 #include "scenes.h"
+#include "input.h"
 
 static float get_time_s(void)
 {{
@@ -22,22 +23,18 @@ int main(void)
 	scene_init(current_scene);
 	scene_on_ready(current_scene);
 
-	float last_switch_time = get_time_s();
-    const float SWITCH_INTERVAL = 5.0f;
+	float last_time = get_time_s();
 
-    while (1) {{
-		float now = get_time_s();
-        if ((now - last_switch_time) >= SWITCH_INTERVAL) {{
-			SceneId next_scene = (SceneId)(((int)current_scene + 1) % SCENE_COUNT);
-			scene_on_remove(current_scene);
-			scene_init(next_scene);
-			scene_on_ready(next_scene);
-			current_scene = next_scene;
-			last_switch_time = now;
-        }}
+    for (;;) {{
+        float now = get_time_s();
+        float dt = now - last_time;
+        last_time = now;
+
+        input_poll();
+
+        scene_on_update(current_scene, dt);
 
         ArmScene *scene = scene_get(current_scene);
-
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
     }}

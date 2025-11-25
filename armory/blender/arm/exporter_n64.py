@@ -237,6 +237,11 @@ class N64Exporter:
             f.write(output)
 
 
+    def write_input(self):
+        copy_src('input.c', 'src')
+        copy_src('input.h', 'src')
+
+
     def write_engine(self):
         copy_src('engine.c', 'src')
         copy_src('engine.h', 'src')
@@ -547,6 +552,7 @@ class N64Exporter:
 
         self.write_makefile()
         self.write_types()
+        self.write_input()
         self.write_engine()
         self.write_main()
         self.write_models()
