@@ -639,8 +639,21 @@ class Keyboard extends VirtualInput {
 }
 
 class GamepadStick {
+	#if arm_target_n64
+	@:isVar public var x(get, default): Float;
+	inline function get_x(): Float {
+		N64Bridge.input.getStickX(this);
+		return x;
+	}
+	@:isVar public var y(get, default): Float;
+	inline function get_y(): Float {
+		N64Bridge.input.getStickY(this);
+		return y;
+	}
+	#else
 	public var x = 0.0;
 	public var y = 0.0;
+	#end
 	public var lastX = 0.0;
 	public var lastY = 0.0;
 	public var moved = false;

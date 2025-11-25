@@ -3,6 +3,7 @@ package iron.n64;
 
 import iron.Scene;
 import iron.object.Object;
+import iron.system.Input;
 
 class N64Bridge {
     public static var input: N64Input = new N64Input();
@@ -15,8 +16,8 @@ class N64Input {
     public inline function started(button: String): Bool { return false; }
     public inline function down(button: String): Bool { return false; }
     public inline function released(button: String): Bool { return false; }
-    public inline function getStickX(): Float { return 0.0; }
-    public inline function getStickY(): Float { return 0.0; }
+    public inline function getStickX(stick: GamepadStick): Float { return 0.0; }
+    public inline function getStickY(stick: GamepadStick): Float { return 0.0; }
 }
 
 class N64Transform {

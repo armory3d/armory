@@ -38,12 +38,12 @@ class Object {
 	#if arm_target_n64
 	@:isVar public var visible(get, set): Bool = true;
 
-	function get_visible(): Bool {
+	inline function get_visible(): Bool {
 		N64Bridge.object.getVisible(this);
 		return visible;
 	}
 
-	function set_visible(value: Bool): Bool {
+	inline function set_visible(value: Bool): Bool {
 		N64Bridge.object.setVisible(this, value);
 		return this.visible = value;
 	}
