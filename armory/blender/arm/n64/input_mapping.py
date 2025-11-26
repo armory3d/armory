@@ -27,12 +27,39 @@ GAMEPAD_TO_N64_MAP = {
     'down': 'N64_BTN_DDOWN',
     'left': 'N64_BTN_DLEFT',
     'right': 'N64_BTN_DRIGHT',
-    # Unmapped (no N64 equivalent): l3, r3, home, touchpad
+    # Unmapped (no N64 equivalent): home, touchpad
 }
 
-# Input state mapping: Armory method name → N64 function
+# Input state mapping: Armory/Iron method name → N64 C function name
 INPUT_STATE_MAP = {
     'started': 'input_started',
     'down': 'input_down',
     'released': 'input_released',
 }
+
+# Analog stick mapping: Armory method → N64 C function
+STICK_MAP = {
+    'getStickX': 'input_stick_x',
+    'getStickY': 'input_stick_y',
+}
+
+# Scene method mapping: Armory method → N64 C function
+SCENE_METHOD_MAP = {
+    'setActive': 'scene_switch_to',
+}
+
+def get_n64_button(armory_button: str) -> str:
+    """Convert Armory button name to N64 button enum."""
+    return GAMEPAD_TO_N64_MAP.get(armory_button.lower(), 'N64_BTN_A')
+
+def get_n64_input_func(armory_method: str) -> str:
+    """Convert Armory input method to N64 C function name."""
+    return INPUT_STATE_MAP.get(armory_method, 'input_down')
+
+def get_n64_stick_func(armory_method: str) -> str:
+    """Convert Armory stick method to N64 C function name."""
+    return STICK_MAP.get(armory_method, 'input_stick_x')
+
+def get_n64_scene_func(armory_method: str) -> str:
+    """Convert Armory scene method to N64 C function name."""
+    return SCENE_METHOD_MAP.get(armory_method, 'scene_switch_to')

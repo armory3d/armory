@@ -742,21 +742,21 @@ class Gamepad extends VirtualInput {
 
 	public function down(button: String): Float {
 		#if arm_target_n64
-		return N64Bridge.input.down(button);
+		N64Bridge.input.down(button);
 		#end
 		return buttonsDown[buttonIndex(button)];
 	}
 
 	public function started(button: String): Bool {
 		#if arm_target_n64
-		return N64Bridge.input.started(button);
+		N64Bridge.input.started(button);
 		#end
 		return buttonsStarted[buttonIndex(button)];
 	}
 
 	public function released(button: String): Bool {
 		#if arm_target_n64
-		return N64Bridge.input.released(button);
+		N64Bridge.input.released(button);
 		#end
 		return buttonsReleased[buttonIndex(button)];
 	}

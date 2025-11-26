@@ -133,6 +133,9 @@ project.addSources('Sources');
         if state.target.startswith('krom'):
             assets.add_khafile_def('js-es=6')
 
+        if state.is_n64:
+            assets.add_khafile_def('arm_target_n64')
+
         if export_physics:
             assets.add_khafile_def('arm_physics')
             if wrd.arm_physics_engine == 'Bullet':

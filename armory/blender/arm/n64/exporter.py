@@ -2,11 +2,22 @@ import os
 import subprocess
 import math
 import bpy
+
+import arm
 import arm.utils
 import arm.log as log
 
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
+from arm.n64 import bridge_scanner
 from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
+
+if arm.is_reload(__name__):
+    arm.utils = arm.reload_module(arm.utils)
+    log = arm.reload_module(log)
+    bridge_scanner = arm.reload_module(bridge_scanner)
+    trait_generator = arm.reload_module(trait_generator)
+else:
+    arm.enable_reload(__name__)
 
 
 class N64Exporter:
@@ -511,11 +522,27 @@ class N64Exporter:
 
 
     def build(self):
+        # Step 1: Scan krom.js for N64Bridge markers
+        log.info('Scanning krom.js for N64Bridge markers...')
+        self.trait_list = bridge_scanner.scan_and_build()
+
+        if self.trait_list.get('error'):
+            log.warn(f"Bridge scanner warning: {self.trait_list['error']}")
+            log.info('Proceeding with empty trait_list')
+        else:
+            log.info(f"Input methods used: {self.trait_list.get('input_methods', [])}")
+            log.info(f"Transform methods used: {self.trait_list.get('transform_methods', [])}")
+            log.info(f"Scene methods used: {self.trait_list.get('scene_methods', [])}")
+            log.info(f"Object methods used: {self.trait_list.get('object_methods', [])}")
+
+        # Step 2: Convert materials for N64
         self.convert_materials_to_f3d()
 
+        # Step 3: Export assets
         self.make_directories()
         self.export_meshes()
 
+        # Step 4: Generate C code
         self.write_makefile()
         self.write_types()
         self.write_input()
