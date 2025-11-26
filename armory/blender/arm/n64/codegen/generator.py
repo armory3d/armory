@@ -19,7 +19,7 @@ try:
         ExprStmt, Assignment, IfStmt, WhileStmt, ReturnStmt, Stmt,
         TraitFunction, TraitMember, TraitAST
     )
-    from arm.n64.config import get_config, get_input_state_func
+    from arm.n64.config import get_config
     from arm.n64.utils import is_supported_member, get_n64_type
     HAS_ARM = True
 except ImportError:
@@ -37,7 +37,7 @@ except ImportError:
         ExprStmt, Assignment, IfStmt, WhileStmt, ReturnStmt, Stmt,
         TraitFunction, TraitMember, TraitAST
     )
-    from config import get_config, get_input_state_func
+    from config import get_config
     from utils.traits import is_supported_member, get_n64_type
 
 if HAS_ARM:
@@ -146,109 +146,89 @@ class ExpressionGenerator:
         return f'({op.op}{operand})'
 
     def _gen_call(self, call: Call) -> str:
-        """Generate code for API calls."""
+        """Generate code for API calls using config-driven templates."""
         target = call.target.lower()
         method = call.method.lower()
 
-        # Time.delta() -> dt (parameter)
-        if target == 'time' and method == 'delta':
-            self.ctx.has_dt = True
-            return 'dt'
+        # Look up in codegen config
+        config = get_config()
+        api_def = config.get_codegen_api(target, method)
 
-        # Gamepad input calls
-        if target == 'gamepad':
-            return self._gen_gamepad_call(call)
-
-        # Transform calls
-        if target == 'transform':
-            return self._gen_transform_call(call)
-
-        # Scene calls
-        if target == 'scene':
-            return self._gen_scene_call(call)
+        if api_def:
+            return self._apply_codegen_template(call, api_def)
 
         log.warn(f'Unknown call: {call.target}.{call.method}')
         return f'/* unknown: {call!r} */'
 
-    def _gen_gamepad_call(self, call: Call) -> str:
-        """Generate gamepad input check.
+    def _apply_codegen_template(self, call: Call, api_def) -> str:
+        """Apply a codegen template from config.
 
-        Note: The button value is already mapped by the parser (via config.loader),
-        so we just use it directly here.
+        Templates use placeholders like {x}, {y}, {z}, {button}, {scene_id}.
+        Special handling for variants (1_arg vs 3_arg) and member access.
         """
-        method = call.method.lower()
+        # Apply context flags from config
+        if api_def.flags.get('needs_obj'):
+            self.ctx.needs_obj = True
+        if api_def.flags.get('needs_data'):
+            self.ctx.needs_data = True
+        if api_def.flags.get('has_dt'):
+            self.ctx.has_dt = True
 
-        # Get button from first argument - already mapped by parser
-        n64_button = 'N64_BTN_A'  # default
-        if call.args:
-            arg = call.args[0]
-            if isinstance(arg, Literal) and arg.type == 'string':
-                n64_button = arg.value
+        # Check for variants based on argument count or type
+        output_template = api_def.output
 
-        # Get the N64 input function name
-        n64_func = get_input_state_func(method)
-
-        return f'{n64_func}({n64_button})'
-
-    def _gen_transform_call(self, call: Call) -> str:
-        """Generate transform operation call."""
-        self.ctx.needs_obj = True
-        method = call.method.lower()
-
-        if method == 'rotate':
-            # Args should be (x, y, z) rotation amounts
-            if len(call.args) >= 3:
-                x = self.generate(call.args[0])
-                y = self.generate(call.args[1])
-                z = self.generate(call.args[2])
-                return f'it_rotate(&obj->transform, {x}, {y}, {z})'
-            elif len(call.args) == 1:
-                # Single angle - assume Y axis
-                angle = self.generate(call.args[0])
-                return f'it_rotate(&obj->transform, 0.0f, {angle}, 0.0f)'
-
-        elif method == 'translate':
-            if len(call.args) >= 3:
-                x = self.generate(call.args[0])
-                y = self.generate(call.args[1])
-                z = self.generate(call.args[2])
-                return f'it_translate(&obj->transform, {x}, {y}, {z})'
-            elif len(call.args) == 1:
-                # Single value - assume Z axis (forward)
-                dist = self.generate(call.args[0])
-                return f'it_translate(&obj->transform, 0.0f, 0.0f, {dist})'
-
-        elif method == 'move':
-            # move is similar to translate
-            if len(call.args) >= 3:
-                x = self.generate(call.args[0])
-                y = self.generate(call.args[1])
-                z = self.generate(call.args[2])
-                return f'it_translate(&obj->transform, {x}, {y}, {z})'
-
-        log.warn(f'Unknown transform method: {method}')
-        return f'/* unknown transform: {call!r} */'
-
-    def _gen_scene_call(self, call: Call) -> str:
-        """Generate scene management call."""
-        method = call.method.lower()
-
-        if method == 'setactive':
-            # Get scene name from argument
-            if call.args:
-                arg = call.args[0]
-                if isinstance(arg, Literal) and arg.type == 'string':
-                    # Direct scene name
-                    scene_name = arg.value
-                    scene_id = f'SCENE_{safesrc(scene_name).upper()}'
-                    return f'scene_switch_to({scene_id})'
-                elif isinstance(arg, MemberAccess):
-                    # Scene from member variable
+        if api_def.variants:
+            # Check for member_access variant (e.g., scene.setactive with MemberAccess arg)
+            if 'member_access' in api_def.variants and call.args:
+                if isinstance(call.args[0], MemberAccess):
+                    output_template = api_def.variants['member_access']
                     self.ctx.needs_data = True
-                    return f'scene_switch_to(tdata->target_scene)'
 
-        log.warn(f'Unknown scene method: {method}')
-        return f'/* unknown scene: {call!r} */'
+            # Check for argument count variants
+            arg_count = len(call.args)
+            variant_key = f'{arg_count}_arg'
+            if variant_key in api_def.variants:
+                output_template = api_def.variants[variant_key]
+
+        # Build substitution dict from arguments
+        subs = self._build_substitutions(call, api_def)
+
+        # Apply template substitutions
+        result = output_template
+        for key, value in subs.items():
+            result = result.replace(f'{{{key}}}', value)
+
+        return result
+
+    def _build_substitutions(self, call: Call, api_def) -> dict:
+        """Build substitution dict for template placeholders."""
+        subs = {}
+        args_spec = api_def.args
+
+        for i, arg in enumerate(call.args):
+            # Check if args_spec defines a name for this position
+            if i < len(args_spec):
+                arg_name = args_spec[i]
+            else:
+                arg_name = f'arg{i}'
+
+            # Special handling based on argument type
+            if isinstance(arg, Literal):
+                if arg.type == 'string':
+                    # For button mappings, the value is already the N64 constant
+                    subs[arg_name] = arg.value
+                    # Also add scene_id for scene calls
+                    if arg_name == 'scene':
+                        scene_name = arg.value
+                        subs['scene_id'] = f'SCENE_{safesrc(scene_name).upper()}'
+                else:
+                    subs[arg_name] = self.generate(arg)
+            elif isinstance(arg, MemberAccess):
+                subs[arg_name] = self.generate(arg)
+            else:
+                subs[arg_name] = self.generate(arg)
+
+        return subs
 
     def _gen_vec3(self, vec: Vec3) -> str:
         x = self.generate(vec.x)

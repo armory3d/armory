@@ -15,6 +15,7 @@ from .loader import (
     get_supported_types,
     ApiConfig,
     ApiDefinition,
+    CodegenApiDef,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     'get_supported_types',
     'ApiConfig',
     'ApiDefinition',
+    'CodegenApiDef',
 ]

@@ -1,0 +1,58 @@
+{
+  "_comment": "Code generation mappings for N64 C output. Maps AST Call nodes to C code.",
+
+  "apis": {
+    "time.delta": {
+      "output": "dt",
+      "args": [],
+      "flags": {"has_dt": true}
+    },
+
+    "gamepad.down": {
+      "output": "input_down({button})",
+      "args": ["button"],
+      "flags": {}
+    },
+    "gamepad.started": {
+      "output": "input_started({button})",
+      "args": ["button"],
+      "flags": {}
+    },
+    "gamepad.released": {
+      "output": "input_released({button})",
+      "args": ["button"],
+      "flags": {}
+    },
+
+    "transform.rotate": {
+      "output": "it_rotate(&obj->transform, {x}, {y}, {z})",
+      "args": ["x", "y", "z"],
+      "flags": {"needs_obj": true},
+      "variants": {
+        "1_arg": "it_rotate(&obj->transform, 0.0f, {x}, 0.0f)"
+      }
+    },
+    "transform.translate": {
+      "output": "it_translate(&obj->transform, {x}, {y}, {z})",
+      "args": ["x", "y", "z"],
+      "flags": {"needs_obj": true},
+      "variants": {
+        "1_arg": "it_translate(&obj->transform, 0.0f, 0.0f, {x})"
+      }
+    },
+    "transform.move": {
+      "output": "it_translate(&obj->transform, {x}, {y}, {z})",
+      "args": ["x", "y", "z"],
+      "flags": {"needs_obj": true}
+    },
+
+    "scene.setactive": {
+      "output": "scene_switch_to({scene_id})",
+      "args": ["scene"],
+      "flags": {},
+      "variants": {
+        "member_access": "scene_switch_to(tdata->target_scene)"
+      }
+    }
+  }
+}
