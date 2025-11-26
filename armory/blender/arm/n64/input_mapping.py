@@ -47,19 +47,3 @@ STICK_MAP = {
 SCENE_METHOD_MAP = {
     'setActive': 'scene_switch_to',
 }
-
-def get_n64_button(armory_button: str) -> str:
-    """Convert Armory button name to N64 button enum."""
-    return GAMEPAD_TO_N64_MAP.get(armory_button.lower(), 'N64_BTN_A')
-
-def get_n64_input_func(armory_method: str) -> str:
-    """Convert Armory input method to N64 C function name."""
-    return INPUT_STATE_MAP.get(armory_method, 'input_down')
-
-def get_n64_stick_func(armory_method: str) -> str:
-    """Convert Armory stick method to N64 C function name."""
-    return STICK_MAP.get(armory_method, 'input_stick_x')
-
-def get_n64_scene_func(armory_method: str) -> str:
-    """Convert Armory scene method to N64 C function name."""
-    return SCENE_METHOD_MAP.get(armory_method, 'scene_switch_to')
