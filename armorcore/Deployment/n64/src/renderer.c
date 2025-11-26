@@ -31,12 +31,16 @@ void renderer_update_objects(ArmScene *scene)
 {
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
+        if (obj->transform.dirty == 0) {
+            continue;
+        }
         t3d_mat4fp_from_srt_euler(
             &obj->model_mat[frameIdx],
             obj->transform.scale,
             obj->transform.rot,
             obj->transform.loc
         );
+        obj->transform.dirty--;
     }
 }
 

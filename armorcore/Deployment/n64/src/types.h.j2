@@ -29,6 +29,7 @@ typedef struct {{
     float loc[3];   // Location/position
     float rot[3];   // Rotation (euler angles in radians)
     float scale[3]; // Scale
+    uint8_t dirty;  // Counts down frames needing matrix update (for triple buffering)
 }} ArmTransform;
 
 typedef struct ArmObject {{
