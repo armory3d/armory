@@ -1334,7 +1334,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             state.is_n64 = True
             if not wrd.arm_cache_build:
                 bpy.ops.arm.clean_project()
-        make.build('krom' if item.arm_project_target == 'n64' else item.arm_project_target, is_export=True)
+        make.build('windows-hl' if item.arm_project_target == 'n64' else item.arm_project_target, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -1386,7 +1386,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
             state.is_n64 = True
             if not wrd.arm_cache_build:
                 bpy.ops.arm.clean_project()
-        make.build('krom' if item.arm_project_target == 'n64' else item.arm_project_target, is_publish=True, is_export=True)
+        make.build('windows-hl' if item.arm_project_target == 'n64' else item.arm_project_target, is_publish=True, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True

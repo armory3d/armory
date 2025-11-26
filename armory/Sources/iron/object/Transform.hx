@@ -3,9 +3,6 @@ package iron.object;
 import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.math.Quat;
-#if arm_target_n64
-import iron.n64.N64Bridge;
-#end
 
 class Transform {
 	/**
@@ -178,9 +175,6 @@ class Transform {
 		@param	z Amount to move on the local z axis.
 	**/
 	public function translate(x: kha.FastFloat, y: kha.FastFloat, z: kha.FastFloat) {
-		#if arm_target_n64
-		N64Bridge.transform.translate(object, x, y, z);
-		#end
 		loc.x += x;
 		loc.y += y;
 		loc.z += z;
@@ -223,9 +217,6 @@ class Transform {
 		@param	f The magnitude of the rotation in radians.
 	**/
 	public function rotate(axis: Vec4, f: kha.FastFloat) {
-		#if arm_target_n64
-		N64Bridge.transform.rotate(object, axis.x * f, axis.y * f, axis.z * f);
-		#end
 		q.fromAxisAngle(axis, f);
 		rot.multquats(q, rot);
 		buildMatrix();
@@ -238,9 +229,6 @@ class Transform {
 	  			vector, then this is the distance to move.
 	**/
 	public function move(axis: Vec4, f = 1.0) {
-		#if arm_target_n64
-		N64Bridge.transform.translate(object, axis.x * f, axis.y * f, axis.z * f);
-		#end
 		loc.addf(axis.x * f, axis.y * f, axis.z * f);
 		buildMatrix();
 	}
@@ -252,9 +240,6 @@ class Transform {
 		@param	z Set the z axis rotation in radians.
 	**/
 	public function setRotation(x: kha.FastFloat, y: kha.FastFloat, z: kha.FastFloat) {
-		#if arm_target_n64
-		N64Bridge.transform.setRotation(object, x, y, z);
-		#end
 		rot.fromEuler(x, y, z);
 		_eulerX = x;
 		_eulerY = y;

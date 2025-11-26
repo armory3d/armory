@@ -634,7 +634,7 @@ def runtime_to_target():
         case 'Browser':
             return 'html5'
         case 'Ares':
-            return 'krom'  # N64 uses Krom build to generate JS, then N64Exporter processes it
+            return 'windows-hl'  # N64 uses HashLink C build for trait generation
 
 def get_khajs_path(target):
     if target == 'krom':
