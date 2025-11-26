@@ -284,26 +284,45 @@ def find_member_numeric_assignments(code: str) -> Dict[str, float]:
     Find numeric assignments to struct members.
 
     HLC generates patterns like:
-        r0->speed = 2.0;
+        r0->speed = 2.0;         (direct assignment)
     OR:
-        this->speed = 5.0;
+        r1 = 5.;                 (indirect assignment via local var)
+        r0->speed = r1;
 
     Returns:
         {'speed': 2.0, ...}
     """
     members = {}
 
-    # Pattern: varname->member = number;
-    # Match integers and floats (including scientific notation)
-    numeric_pattern = re.compile(r'\w+->(\w+)\s*=\s*(-?[\d.]+(?:e[+-]?\d+)?)\s*;', re.IGNORECASE)
+    # First, find all local variable numeric assignments: r1 = 5.;
+    local_values = {}
+    local_pattern = re.compile(r'(\w+)\s*=\s*(-?[\d.]+(?:e[+-]?\d+)?)\s*;', re.IGNORECASE)
+    for match in local_pattern.finditer(code):
+        var_name = match.group(1)
+        try:
+            value = float(match.group(2))
+            local_values[var_name] = value
+        except ValueError:
+            pass
 
-    for match in numeric_pattern.finditer(code):
+    # Pattern 1: Direct assignment - varname->member = number;
+    direct_pattern = re.compile(r'\w+->(\w+)\s*=\s*(-?[\d.]+(?:e[+-]?\d+)?)\s*;', re.IGNORECASE)
+    for match in direct_pattern.finditer(code):
         member_name = match.group(1)
         try:
             value = float(match.group(2))
             members[member_name] = value
         except ValueError:
             pass
+
+    # Pattern 2: Indirect assignment via local var - varname->member = localvar;
+    indirect_pattern = re.compile(r'\w+->(\w+)\s*=\s*(\w+)\s*;')
+    for match in indirect_pattern.finditer(code):
+        member_name = match.group(1)
+        local_var = match.group(2)
+        # Check if local_var was assigned a numeric value
+        if local_var in local_values:
+            members[member_name] = local_values[local_var]
 
     return members
 

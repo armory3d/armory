@@ -27,6 +27,7 @@ class N64Exporter:
         self.exported_meshes = {}
         self.trait_list = {}
         self.all_traits = set()  # Collect all unique trait class names across all scenes
+        self.trait_data_instances = []  # Centralized trait data: [(var_name, type, init_str), ...]
 
 
     @classmethod
@@ -48,7 +49,27 @@ class N64Exporter:
 
 
     def convert_materials_to_f3d(self):
-        bpy.ops.scene.f3d_convert_to_bsdf(direction='F3D', converter_type='All', backup=False, put_alpha_into_color=False, use_recommended=True, lights_for_colors=False, default_to_fog=False, set_rendermode_without_fog=False)
+        """Convert materials to F3D format. Requires Fast64 addon."""
+        try:
+            # Check if F3D addon is available
+            if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
+                log.warn('Fast64 addon not found - skipping F3D material conversion')
+                return False
+
+            bpy.ops.scene.f3d_convert_to_bsdf(
+                direction='F3D',
+                converter_type='All',
+                backup=False,
+                put_alpha_into_color=False,
+                use_recommended=True,
+                lights_for_colors=False,
+                default_to_fog=False,
+                set_rendermode_without_fog=False
+            )
+            return True
+        except Exception as e:
+            log.warn(f'F3D material conversion failed: {e}')
+            return False
 
 
     def make_directories(self):
@@ -57,6 +78,157 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/assets', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/scenes', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src', exist_ok=True)
+
+
+    def get_next_scene(self, current_scene_name: str) -> str:
+        """
+        Get the next scene in sequence for scene switching.
+
+        For Level_01, returns Level_02.
+        For the last scene, wraps to the first scene.
+        """
+        if not hasattr(self, 'blender_scenes') or not self.blender_scenes:
+            return current_scene_name
+
+        current_idx = self.scene_index.get(current_scene_name, 0)
+        next_idx = (current_idx + 1) % len(self.blender_scenes)
+        return self.blender_scenes[next_idx]
+
+
+    def get_trait_info(self, trait_class: str) -> dict:
+        """Get HLC trait info for a specific trait class."""
+        if not hasattr(self, 'trait_list') or not self.trait_list:
+            return {}
+        traits_data = self.trait_list.get('traits', {})
+        return traits_data.get(trait_class, {})
+
+
+    # Types/prefixes to skip (Iron runtime internals, not user data)
+    SKIP_TYPE_PREFIXES = (
+        'iron__',       # Iron runtime types
+        'kha__',        # Kha framework types
+        'armory__',     # Armory internal types
+        'hl_',          # HashLink runtime types
+        'vdynamic',     # HL dynamic types
+        'varray',       # HL array types
+    )
+
+    SKIP_MEMBER_NAMES = (
+        'object',       # Reference to parent object
+        'transform',    # Reference to transform
+        'gamepad',      # Input device reference
+        'keyboard',     # Input device reference
+        'mouse',        # Input device reference
+        'name',         # Trait name - not needed at runtime
+    )
+
+    # Only these primitive types are supported for N64 trait data
+    # Note: String is excluded - too complex for static C struct initialization
+    SUPPORTED_TYPES = ('double', 'float', 'int', 'bool')
+
+
+    def _is_supported_member(self, member_name: str, member_type: str) -> bool:
+        """Check if a member should be included in trait data struct."""
+        # Skip internal members by name
+        if member_name.startswith('_') or member_name.startswith('$'):
+            return False
+        if member_name in self.SKIP_MEMBER_NAMES:
+            return False
+        # Skip Iron/Kha/internal types
+        if any(member_type.startswith(prefix) for prefix in self.SKIP_TYPE_PREFIXES):
+            return False
+        # Only include supported primitive types
+        if member_type not in self.SUPPORTED_TYPES:
+            return False
+        return True
+
+
+    def trait_needs_data(self, trait_class: str) -> bool:
+        """Check if a trait needs per-instance data based on HLC analysis."""
+        trait_info = self.get_trait_info(trait_class)
+        # Need data if: has scene calls OR has supported member variables
+        if trait_info.get('scene_calls'):
+            return True
+        members = trait_info.get('members', {})
+        # Check if any members are supported primitives
+        for name, typ in members.items():
+            if self._is_supported_member(name, typ):
+                return True
+        return False
+
+
+    def get_trait_members(self, trait_class: str) -> dict:
+        """Get all user-defined members for a trait (name -> type), filtered to supported types."""
+        trait_info = self.get_trait_info(trait_class)
+        members = trait_info.get('members', {})
+        # Filter to only supported members
+        return {k: v for k, v in members.items() if self._is_supported_member(k, v)}
+
+
+    def get_trait_member_values(self, trait_class: str) -> dict:
+        """Get all member initial values for a trait (name -> value)."""
+        trait_info = self.get_trait_info(trait_class)
+        return trait_info.get('member_values', {})
+
+
+    def trait_has_scene_switching(self, trait_class: str) -> bool:
+        """Check if a trait uses scene switching."""
+        trait_info = self.get_trait_info(trait_class)
+        return bool(trait_info.get('scene_calls'))
+
+
+    def build_trait_initializer(self, trait_class: str, next_scene_enum: str, instance_props: dict = None) -> str:
+        """
+        Build the C initializer string for a trait's data struct.
+
+        Args:
+            trait_class: The trait class name
+            next_scene_enum: Scene enum for scene switching traits
+            instance_props: Per-instance property values from Blender (overrides HLC defaults)
+
+        Uses per-instance values from Blender when available, falls back to HLC defaults.
+        """
+        init_fields = []
+        instance_props = instance_props or {}
+
+        # Add scene target if trait uses scene switching
+        if self.trait_has_scene_switching(trait_class):
+            init_fields.append(f'.target_scene = {next_scene_enum}')
+
+        # Get HLC defaults and struct members
+        hlc_defaults = self.get_trait_member_values(trait_class)
+        members = self.get_trait_members(trait_class)
+
+        log.info(f"  build_trait_initializer for {trait_class}:")
+        log.info(f"    members (filtered): {members}")
+        log.info(f"    hlc_defaults: {hlc_defaults}")
+        log.info(f"    instance_props (from Blender): {instance_props}")
+
+        for member_name, member_type in members.items():
+            # Skip String types - they require special handling (string literals)
+            if member_type == 'String':
+                continue
+
+            # Priority: instance_props (Blender) > hlc_defaults (Haxe code)
+            if member_name in instance_props:
+                value = instance_props[member_name]
+                log.info(f"    -> Using Blender value: {member_name} = {value}")
+            elif member_name in hlc_defaults:
+                value = hlc_defaults[member_name]
+                log.info(f"    -> Using HLC default: {member_name} = {value}")
+            else:
+                log.info(f"    -> {member_name} has no value, skipping")
+                continue
+
+            # Format value based on type
+            if member_type in ('double', 'float'):
+                init_fields.append(f'.{member_name} = {value}f')
+            elif member_type == 'bool':
+                init_fields.append(f'.{member_name} = {str(bool(value)).lower()}')
+            elif member_type == 'int':
+                init_fields.append(f'.{member_name} = {int(value)}')
+
+        return ', '.join(init_fields)
 
 
     def export_meshes(self):
@@ -125,14 +297,27 @@ class N64Exporter:
     def build_scene_data(self, scene):
         scene_name = arm.utils.safesrc(scene.name).lower()
 
-        # Extract scene-level traits
+        # Extract scene-level traits with per-instance property values
         scene_traits = []
         if hasattr(scene, 'arm_traitlist'):
             for trait in scene.arm_traitlist:
                 if trait.enabled_prop and trait.class_name_prop:
+                    # Extract per-instance property values from Blender
+                    props = {}
+                    if hasattr(trait, 'arm_traitpropslist'):
+                        for prop in trait.arm_traitpropslist:
+                            if prop.type == 'Float':
+                                props[prop.name] = prop.value_float
+                            elif prop.type == 'Int':
+                                props[prop.name] = prop.value_int
+                            elif prop.type == 'Bool':
+                                props[prop.name] = prop.value_bool
+                            elif prop.type == 'String':
+                                props[prop.name] = prop.value_string
                     scene_traits.append({
                         "class_name": trait.class_name_prop,
-                        "type": trait.type_prop
+                        "type": trait.type_prop,
+                        "props": props  # Per-instance property values
                     })
 
         self.scene_data[scene_name] = {
@@ -183,14 +368,27 @@ class N64Exporter:
                 obj_rot = (-e.x, -e.z, e.y)
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
-                # Extract traits from object
+                # Extract traits from object with their per-instance property values
                 obj_traits = []
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
+                            # Extract per-instance property values from Blender
+                            props = {}
+                            if hasattr(trait, 'arm_traitpropslist'):
+                                for prop in trait.arm_traitpropslist:
+                                    if prop.type == 'Float':
+                                        props[prop.name] = prop.value_float
+                                    elif prop.type == 'Int':
+                                        props[prop.name] = prop.value_int
+                                    elif prop.type == 'Bool':
+                                        props[prop.name] = prop.value_bool
+                                    elif prop.type == 'String':
+                                        props[prop.name] = prop.value_string
                             obj_traits.append({
                                 "class_name": trait.class_name_prop,
-                                "type": trait.type_prop
+                                "type": trait.type_prop,
+                                "props": props  # Per-instance property values
                             })
 
                 self.scene_data[scene_name]["objects"].append({
@@ -237,9 +435,7 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        output = tmpl_content.format(
-            max_traits='4'
-        )
+        output = tmpl_content.format()
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
@@ -251,7 +447,7 @@ class N64Exporter:
 
 
     def write_traits(self):
-        trait_generator.write_traits_files(self.all_traits, self.trait_list)
+        trait_generator.write_traits_files(self.all_traits, self.trait_list, self.trait_data_instances)
 
 
     def write_engine(self):
@@ -357,12 +553,15 @@ class N64Exporter:
 
         camera_block_lines = []
         for i, camera in enumerate(self.scene_data[scene_name]['cameras']):
-            camera_block_lines.append(f'    cameras[{i}].pos = (T3DVec3){{{{{camera["pos"][0]:.6f}f, {camera["pos"][1]:.6f}f, {camera["pos"][2]:.6f}f}}}};')
+            camera_block_lines.append(f'    cameras[{i}].transform.loc[0] = {camera["pos"][0]:.6f}f;')
+            camera_block_lines.append(f'    cameras[{i}].transform.loc[1] = {camera["pos"][1]:.6f}f;')
+            camera_block_lines.append(f'    cameras[{i}].transform.loc[2] = {camera["pos"][2]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
             camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].near = {camera["near"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].far = {camera["far"]:.6f}f;')
             camera_block_lines.append(f'    cameras[{i}].trait_count = 0;')
+            camera_block_lines.append(f'    cameras[{i}].traits = NULL;')
         cameras_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
@@ -372,19 +571,25 @@ class N64Exporter:
             light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
             light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
             light_block_lines.append(f'    lights[{i}].trait_count = 0;')
+            light_block_lines.append(f'    lights[{i}].traits = NULL;')
         lights_block = '\n'.join(light_block_lines)
+
+        # Calculate next scene for this scene's traits
+        next_scene = self.get_next_scene(scene_name)
+        next_scene_enum = f'SCENE_{next_scene.upper()}'
 
         object_block_lines = []
         for i, object in enumerate(self.scene_data[scene_name]['objects']):
-            object_block_lines.append(f'    objects[{i}].pos[0] = {object["pos"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].pos[1] = { object["pos"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].pos[2] = {object["pos"][2]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].rot[0] = {object["rot"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].rot[1] = {object["rot"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].rot[2] = {object["rot"][2]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].scale[0] = {object["scale"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].scale[1] = {object["scale"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].scale[2] = {object["scale"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.loc[0] = {object["pos"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.loc[1] = { object["pos"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.loc[2] = {object["pos"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.rot[0] = {object["rot"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.rot[1] = {object["rot"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.rot[2] = {object["rot"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.scale[0] = {object["scale"][0]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.scale[1] = {object["scale"][1]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.scale[2] = {object["scale"][2]:.6f}f;')
+            object_block_lines.append(f'    objects[{i}].transform.dirty = FB_COUNT;')
             object_block_lines.append(f'    models_get({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
@@ -393,12 +598,26 @@ class N64Exporter:
             # Trait assignments
             traits = object.get("traits", [])
             object_block_lines.append(f'    objects[{i}].trait_count = {len(traits)};')
-            for t_idx, trait in enumerate(traits):
-                trait_func_name = arm.utils.safesrc(trait["class_name"]).lower()
-                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
-                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
-                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
-                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
+            if len(traits) > 0:
+                object_block_lines.append(f'    objects[{i}].traits = malloc(sizeof(ArmTrait) * {len(traits)});')
+                for t_idx, trait in enumerate(traits):
+                    trait_class = trait["class_name"]
+                    trait_func_name = arm.utils.safesrc(trait_class).lower()
+                    instance_props = trait.get("props", {})  # Per-instance values from Blender
+                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
+                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
+
+                    # Generate trait data if needed (uses Blender values with HLC defaults as fallback)
+                    if self.trait_needs_data(trait_class):
+                        data_var = f'td_{scene_name}_o{i}_t{t_idx}'
+                        init_str = self.build_trait_initializer(trait_class, next_scene_enum, instance_props)
+                        self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
+                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{data_var};')
+                    else:
+                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
+            else:
+                object_block_lines.append(f'    objects[{i}].traits = NULL;')
         objects_block = '\n'.join(object_block_lines)
 
         # Object traits
@@ -412,12 +631,26 @@ class N64Exporter:
         # Generate scene trait assignments
         scene_traits = self.scene_data[scene_name].get('traits', [])
         scene_traits_block_lines = []
-        for t_idx, trait in enumerate(scene_traits):
-            trait_func_name = arm.utils.safesrc(trait["class_name"]).lower()
-            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
-            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
-            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
-            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
+        if len(scene_traits) > 0:
+            scene_traits_block_lines.append(f'    scene->traits = malloc(sizeof(ArmTrait) * {len(scene_traits)});')
+            for t_idx, trait in enumerate(scene_traits):
+                trait_class = trait["class_name"]
+                trait_func_name = arm.utils.safesrc(trait_class).lower()
+                instance_props = trait.get("props", {})  # Per-instance values from Blender
+                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
+                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
+
+                # Generate trait data for scene traits if needed (uses Blender values with HLC defaults as fallback)
+                if self.trait_needs_data(trait_class):
+                    data_var = f'td_{scene_name}_s_t{t_idx}'
+                    init_str = self.build_trait_initializer(trait_class, next_scene_enum, instance_props)
+                    self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
+                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{data_var};')
+                else:
+                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
+        else:
+            scene_traits_block_lines.append(f'    scene->traits = NULL;')
         scene_traits_block = '\n'.join(scene_traits_block_lines)
 
         output = tmpl_content.format(
@@ -504,19 +737,9 @@ class N64Exporter:
             f.write(output)
 
 
-    def write_cameras(self):
-        copy_src('cameras.h', 'src')
-        copy_src('cameras.c', 'src')
-
-
-    def write_lights(self):
-        copy_src('lights.h', 'src')
-        copy_src('lights.c', 'src')
-
-
-    def write_objects(self):
-        copy_src('objects.h', 'src')
-        copy_src('objects.c', 'src')
+    def write_iron(self):
+        copy_src('iron/transform.h', 'src')
+        copy_src('iron/transform.c', 'src')
 
 
     def run_make(self):
@@ -552,11 +775,40 @@ class N64Exporter:
 
 
     def reset_materials_to_bsdf(self):
-        bpy.ops.scene.f3d_convert_to_bsdf(direction='BSDF', converter_type='All', backup=False, put_alpha_into_color=False, use_recommended=True, lights_for_colors=False, default_to_fog=False, set_rendermode_without_fog=False)
-        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+        """Reset materials back to BSDF format. Requires Fast64 addon."""
+        try:
+            if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
+                return False
+
+            bpy.ops.scene.f3d_convert_to_bsdf(
+                direction='BSDF',
+                converter_type='All',
+                backup=False,
+                put_alpha_into_color=False,
+                use_recommended=True,
+                lights_for_colors=False,
+                default_to_fog=False,
+                set_rendermode_without_fog=False
+            )
+            bpy.ops.outliner.orphans_purge(
+                do_local_ids=True,
+                do_linked_ids=True,
+                do_recursive=True
+            )
+            return True
+        except Exception as e:
+            log.warn(f'BSDF material reset failed: {e}')
+            return False
 
 
     def build(self):
+        # Get list of valid Blender scene names first (in order)
+        self.blender_scenes = [arm.utils.safesrc(s.name).lower() for s in bpy.data.scenes if not s.library]
+        log.info(f"Blender scenes: {self.blender_scenes}")
+
+        # Create scene index map for determining "next scene"
+        self.scene_index = {name: idx for idx, name in enumerate(self.blender_scenes)}
+
         # Step 1: Scan HashLink C output for trait definitions and Iron API calls
         log.info('Scanning HashLink C build for traits...')
         self.trait_list = hlc_scanner.scan_and_summarize()
@@ -569,7 +821,18 @@ class N64Exporter:
             if self.trait_list.get('has_transform'):
                 log.info("Transform operations detected")
             if self.trait_list.get('has_scene'):
-                log.info("Scene operations detected")
+                scene_names = self.trait_list.get('scene_names', [])
+                log.info(f"Scene names detected (from HLC): {scene_names}")
+
+                # Validate detected scene names against Blender scenes
+                invalid_scenes = [s for s in scene_names if s not in self.blender_scenes and s != 'unknown']
+                if invalid_scenes:
+                    log.warn(f"Invalid scene names detected: {invalid_scenes}")
+                    log.warn(f"Valid scene names are: {self.blender_scenes}")
+                    log.warn("Scene switching may use wrong scene IDs. Check your Haxe trait code.")
+
+                    # Store valid scene names for trait generator to use as fallback
+                    self.trait_list['valid_scene_names'] = self.blender_scenes
 
         # Step 2: Convert materials for N64
         self.convert_materials_to_f3d()
@@ -589,9 +852,7 @@ class N64Exporter:
 
         self.write_scenes()
         self.write_traits()  # Generate after scenes so all_traits is populated
-        self.write_cameras()
-        self.write_lights()
-        self.write_objects()
+        self.write_iron()
 
         self.reset_materials_to_bsdf()
 
