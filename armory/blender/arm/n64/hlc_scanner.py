@@ -47,6 +47,7 @@ class TraitInfo:
     header_file: str    # Path to .h file
     source_file: str    # Path to .c file
     struct_members: Dict[str, str]  # {member_name: type}
+    member_values: Dict[str, float]  # {member_name: initial_value} for numeric members
     functions: List[TraitFunction]
     iron_calls: List[Dict]  # All Iron API calls
 
@@ -209,6 +210,11 @@ def find_iron_calls(code: str) -> List[Dict]:
                 button_var = match.group(2) if len(match.groups()) >= 2 else None
                 call_info['button_var'] = button_var
 
+            # For scene calls, capture the scene name variable
+            if call_type == 'scene_setActive':
+                scene_var = match.group(1) if len(match.groups()) >= 1 else None
+                call_info['scene_var'] = scene_var
+
             calls.append(call_info)
 
     return calls
@@ -234,6 +240,74 @@ def find_string_constants(code: str) -> Dict[str, str]:
     return constants
 
 
+def find_member_string_assignments(code: str) -> Dict[str, str]:
+    """
+    Find string assignments to struct members.
+
+    HLC generates patterns like:
+        r3 = (String)s$Level_02;
+        r0->nextLevel = r3;
+    OR:
+        this->nextLevel = (String)s$Level_02;
+
+    Returns:
+        {'nextLevel': 'Level_02', ...}
+    """
+    members = {}
+
+    # First find all string constants
+    string_consts = find_string_constants(code)
+
+    # Pattern 1: varname->member = register;
+    # where register was assigned a string constant
+    member_assign = re.compile(r'\w+->(\w+)\s*=\s*(\w+)\s*;')
+
+    for match in member_assign.finditer(code):
+        member_name = match.group(1)
+        value_var = match.group(2)
+        if value_var in string_consts:
+            members[member_name] = string_consts[value_var]
+
+    # Pattern 2: Direct assignment: varname->member = (String)s$value;
+    direct_pattern = re.compile(r'\w+->(\w+)\s*=\s*\(String\)s\$(\w+)\s*;')
+
+    for match in direct_pattern.finditer(code):
+        member_name = match.group(1)
+        string_value = match.group(2)
+        members[member_name] = string_value
+
+    return members
+
+
+def find_member_numeric_assignments(code: str) -> Dict[str, float]:
+    """
+    Find numeric assignments to struct members.
+
+    HLC generates patterns like:
+        r0->speed = 2.0;
+    OR:
+        this->speed = 5.0;
+
+    Returns:
+        {'speed': 2.0, ...}
+    """
+    members = {}
+
+    # Pattern: varname->member = number;
+    # Match integers and floats (including scientific notation)
+    numeric_pattern = re.compile(r'\w+->(\w+)\s*=\s*(-?[\d.]+(?:e[+-]?\d+)?)\s*;', re.IGNORECASE)
+
+    for match in numeric_pattern.finditer(code):
+        member_name = match.group(1)
+        try:
+            value = float(match.group(2))
+            members[member_name] = value
+        except ValueError:
+            pass
+
+    return members
+
+
 def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict]]:
     """
     Parse a trait .c file to extract lifecycle functions and Iron API calls.
@@ -254,11 +328,18 @@ def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict
     # Pattern: iron_Trait_notifyOnXxx(..., func_name, ...)
     lifecycle_map = {}  # func_name -> lifecycle
 
-    # Find closure allocations that link function names to notify calls
+    # Method 1: Find direct notifyOn calls with function pointer
+    # Pattern: iron_Trait_notifyOnUpdate(something, arm_Rotator_new__$2);
+    direct_notify = re.compile(r'iron_Trait_notifyOn(\w+)\s*\([^,]+,\s*(\w+)\s*\)')
+    for match in direct_notify.finditer(content):
+        lifecycle = match.group(1).lower()
+        func_name = match.group(2)
+        if func_name.startswith('arm_'):
+            lifecycle_map[func_name] = lifecycle
+
+    # Method 2: Find closure allocations that link function names to notify calls
     # Pattern: r3 = hl_alloc_closure_ptr(&t$..., arm_Rotator_new__$2, r0);
     # Then: iron_Trait_notifyOnUpdate(..., r3);
-
-    # Simpler approach: find all notifyOn* calls and the function referenced before them
     notify_pattern = re.compile(
         r'(\w+)\s*=\s*hl_alloc_closure_ptr\s*\([^,]+,\s*(\w+)\s*,[^)]+\)\s*;'
         r'[^;]*iron_Trait_notifyOn(\w+)\s*\([^,]+,\s*\1\s*\)',
@@ -270,7 +351,7 @@ def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict
         lifecycle = match.group(3).lower()
         lifecycle_map[func_name] = lifecycle
 
-    # Also check for static closures
+    # Method 3: Also check for static closures
     static_notify_pattern = re.compile(
         r'static\s+vclosure\s+(\w+)\s*=\s*\{[^,]+,\s*(\w+)\s*,[^}]+\}\s*;'
         r'[^;]*iron_Trait_notifyOn(\w+)\s*\([^,]+,\s*&\1\s*\)',
@@ -282,9 +363,25 @@ def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict
         lifecycle = match.group(3).lower()
         lifecycle_map[func_name] = lifecycle
 
-    # Find all functions that belong to this trait
+    # First pass: collect all member string assignments from all functions
+    # This helps resolve member variables used in scene calls
+    all_member_strings = {}
+    all_member_numerics = {}
     func_pattern = re.compile(rf'void\s+(arm_{base_name}_new(?:__\$\d+)?)\s*\(')
 
+    for match in func_pattern.finditer(content):
+        func_name = match.group(1)
+        body = extract_function_body(content, func_name)
+        if body:
+            member_strings = find_member_string_assignments(body)
+            all_member_strings.update(member_strings)
+            member_numerics = find_member_numeric_assignments(body)
+            all_member_numerics.update(member_numerics)
+
+    log.info(f"    Member string assignments: {all_member_strings}")
+    log.info(f"    Member numeric assignments: {all_member_numerics}")
+
+    # Second pass: parse functions with full context
     for match in func_pattern.finditer(content):
         func_name = match.group(1)
         body = extract_function_body(content, func_name)
@@ -292,17 +389,54 @@ def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict
         if body is None:
             continue
 
-        # Get lifecycle from our map, or 'constructor' for the main new function
-        lifecycle = lifecycle_map.get(func_name, 'constructor' if func_name == f'arm_{base_name}_new' else 'unknown')
+        # Get lifecycle from our map
+        lifecycle = lifecycle_map.get(func_name)
+
+        # Fallback: infer lifecycle from function name or content
+        if lifecycle is None:
+            if func_name == f'arm_{base_name}_new':
+                lifecycle = 'constructor'
+            elif 'iron_system_Time_get_delta' in body:
+                # Functions using delta time are update functions
+                lifecycle = 'update'
+            elif any(pattern.search(body) for pattern in IRON_CALL_PATTERNS.values()):
+                # Functions with Iron API calls (input, transform, scene) are likely update
+                lifecycle = 'update'
+            else:
+                lifecycle = 'init'  # Default to init for functions without API calls
 
         # Find Iron API calls in this function
         calls = find_iron_calls(body)
 
-        # Resolve string constants
+        # Resolve string constants (local variables)
         string_consts = find_string_constants(body)
         for call in calls:
+            # Resolve button names for input calls
             if 'button_var' in call and call['button_var'] in string_consts:
                 call['button'] = string_consts[call['button_var']]
+            # Resolve scene names for scene calls
+            if 'scene_var' in call:
+                scene_var = call['scene_var']
+                # First try local string constants
+                if scene_var in string_consts:
+                    call['scene_name'] = string_consts[scene_var]
+                else:
+                    # Check if the scene variable is a member access (r0->member)
+                    # Look for patterns like: r5 = r0->nextLevel;
+                    member_access = re.search(rf'{scene_var}\s*=\s*\w+->(\w+)\s*;', body)
+                    if member_access:
+                        member_name = member_access.group(1)
+                        if member_name in all_member_strings:
+                            call['scene_name'] = all_member_strings[member_name]
+                            log.info(f"      Resolved scene via member '{member_name}': {call['scene_name']}")
+
+                    # Last resort: look for any Level_* or Scene_* string constant in the function
+                    if 'scene_name' not in call:
+                        scene_pattern = re.compile(r'\(String\)s\$(Level_\d+|Scene_\w+)', re.IGNORECASE)
+                        scene_match = scene_pattern.search(body)
+                        if scene_match:
+                            call['scene_name'] = scene_match.group(1)
+                            log.info(f"      Resolved scene from string constant: {call['scene_name']}")
 
         func_info = TraitFunction(
             name=func_name,
@@ -313,7 +447,7 @@ def parse_trait_source(source_path: str) -> Tuple[List[TraitFunction], List[Dict
         functions.append(func_info)
         all_calls.extend(calls)
 
-    return functions, all_calls
+    return functions, all_calls, all_member_numerics
 
 
 def parse_trait(header_path: str, source_path: str) -> TraitInfo:
@@ -329,8 +463,8 @@ def parse_trait(header_path: str, source_path: str) -> TraitInfo:
 
     struct_members = parse_struct_members(header_content, c_name)
 
-    # Parse source for functions and Iron calls
-    functions, iron_calls = parse_trait_source(source_path)
+    # Parse source for functions, Iron calls, and member values
+    functions, iron_calls, member_values = parse_trait_source(source_path)
 
     return TraitInfo(
         name=trait_name,
@@ -338,6 +472,7 @@ def parse_trait(header_path: str, source_path: str) -> TraitInfo:
         header_file=header_path,
         source_file=source_path,
         struct_members=struct_members,
+        member_values=member_values,
         functions=functions,
         iron_calls=iron_calls
     )
@@ -369,6 +504,8 @@ def scan_hlc_build(hlc_path: Optional[str] = None) -> Dict[str, TraitInfo]:
 
             log.info(f"  Trait '{trait.name}':")
             log.info(f"    Members: {list(trait.struct_members.keys())}")
+            if trait.member_values:
+                log.info(f"    Member values: {trait.member_values}")
             log.info(f"    Functions: {len(trait.functions)}")
             log.info(f"    Iron calls: {len(trait.iron_calls)}")
 
@@ -402,6 +539,7 @@ def scan_and_summarize() -> Dict:
     for name, trait in traits.items():
         trait_summary = {
             'members': trait.struct_members,
+            'member_values': trait.member_values,  # Include numeric member values like speed
             'functions': {},
             'input_calls': [],
             'transform_calls': [],
@@ -432,18 +570,23 @@ def scan_and_summarize() -> Dict:
                     summary['has_transform'] = True
 
                 elif call['type'] == 'scene_setActive':
+                    scene_name = call.get('scene_name', 'unknown')
                     trait_summary['scene_calls'].append({
                         'method': 'setActive',
+                        'scene_name': scene_name,
                         'lifecycle': func.lifecycle,
                     })
                     summary['has_scene'] = True
+                    summary.setdefault('scene_names', set()).add(scene_name)
 
                 elif call['type'] == 'time_delta':
                     summary['has_time'] = True
 
         summary['traits'][name] = trait_summary
 
-    # Convert set to list for JSON serialization
+    # Convert sets to lists for JSON serialization
     summary['input_buttons'] = list(summary['input_buttons'])
+    if 'scene_names' in summary:
+        summary['scene_names'] = list(summary['scene_names'])
 
     return summary
