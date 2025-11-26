@@ -1262,6 +1262,8 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_runtime == 'Ares':
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
             if wrd.arm_clear_on_compile:
                 os.system("cls")
             N64Exporter.play_project()
@@ -1317,6 +1319,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_target == 'n64':
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
             if wrd.arm_clear_on_compile:
                 os.system("cls")
             N64Exporter.build_project()
@@ -1371,6 +1375,8 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_target == 'n64':
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
             if wrd.arm_clear_on_compile:
                 os.system("cls")
             N64Exporter.publish_project()
