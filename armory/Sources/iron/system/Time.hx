@@ -38,11 +38,11 @@ class Time {
 	}
 
 	public static inline function time(): Float {
-		return kha.Scheduler.time() * scale;
+		return kha.Scheduler.time();
 	}
 
 	public static inline function realTime(): Float {
-		return kha.Scheduler.realTime() * scale;
+		return kha.Scheduler.realTime();
 	}
 
 	public static function update() {

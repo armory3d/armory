@@ -278,7 +278,7 @@ class RigidBody extends iron.Trait {
 		bodyColl.setRollingFriction(angularFriction);
 		bodyColl.setRestitution(restitution);
 
-		if ( useDeactivation) {
+		if (useDeactivation) {
 			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
 		}
 		else {
@@ -585,6 +585,18 @@ class RigidBody extends iron.Trait {
 		else body.setCenterOfMassTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
+	}
+
+	public function setGroup(group: Int) {
+		if (this.group == group) return;
+		this.group = group;
+		physics.updateRigidBody(this);
+	}
+
+	public function setMask(mask: Int) {
+		if (this.mask == mask) return;
+		this.mask = mask;
+		physics.updateRigidBody(this);
 	}
 
 	// Continuous collision detection
