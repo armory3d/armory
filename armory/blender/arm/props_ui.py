@@ -1261,10 +1261,9 @@ class ArmoryPlayButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         wrd = bpy.data.worlds['Arm']
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_target == 'n64':
-            # TODO: add 'Ares' emulator in path and open it up with the generated ROM
-            # needs to check if `path_to_ares_executable` is valid
+        if wrd.arm_runtime == 'Ares':
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
             N64Exporter.play_project()
         else:
             assets.invalidate_enabled = False
@@ -1318,6 +1317,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_target == 'n64':
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
             N64Exporter.build_project()
             if arm.utils.get_open_n64_rom_directory():
                 arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
@@ -1370,6 +1371,8 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_target == 'n64':
+            if wrd.arm_clear_on_compile:
+                os.system("cls")
             N64Exporter.publish_project()
             if arm.utils.get_open_n64_rom_directory():
                 arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))

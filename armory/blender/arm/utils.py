@@ -1155,6 +1155,10 @@ def get_mingw64_path():
     addon_prefs = get_arm_preferences()
     return '' if not hasattr(addon_prefs, 'mingw64_path') else addon_prefs.mingw64_path.replace('C:', '/c').replace('\\', '/')
 
+def get_ares_emulator_executable():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'ares_emulator_executable') else addon_prefs.ares_emulator_executable
+
 def get_open_n64_rom_directory():
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'open_n64_rom_directory') else addon_prefs.open_n64_rom_directory

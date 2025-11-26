@@ -3,6 +3,7 @@ import subprocess
 import math
 import bpy
 import arm.utils
+import arm.log as log
 
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
 from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
@@ -475,22 +476,33 @@ class N64Exporter:
     def run_make(self):
         msys2_executable = arm.utils.get_msys2_bash_executable()
         if len(msys2_executable) > 0:
-            subprocess.run(
-                [
-                    rf'{msys2_executable}',
-                    '--login',
-                    '-c',
-                    (
-                        f'export MSYSTEM=MINGW64; '
-                        f'export N64_INST="{arm.utils.get_n64_toolchain_path()}"; '
-                        f'export PATH="{arm.utils.get_n64_toolchain_path()}:{arm.utils.get_mingw64_path()}:$PATH"; '
-                        f'cd "{os.path.abspath(arm.utils.build_dir())}/n64" && make'
-                    )
-                ],
-                stdout=None,
-                stderr=None,
-                text=True
-            )
+            try:
+                proc = subprocess.run(
+                    [
+                        rf'{msys2_executable}',
+                        '--login',
+                        '-c',
+                        (
+                            f'export MSYSTEM=MINGW64; '
+                            f'export N64_INST="{arm.utils.get_n64_toolchain_path()}"; '
+                            f'export PATH="{arm.utils.get_n64_toolchain_path()}:{arm.utils.get_mingw64_path()}:$PATH"; '
+                            f'cd "{os.path.abspath(arm.utils.build_dir())}/n64" && make'
+                        )
+                    ],
+                    stdout=None,
+                    stderr=None,
+                    text=True
+                )
+            except Exception as e:
+                log.error(f'Error running make: {e}')
+                return False
+            if proc.returncode != 0:
+                log.error(f'Make process failed with exit code {proc.returncode}.')
+                return False
+        else:
+            log.error('MSYS2 Bash executable path is not set in Armory preferences.')
+            return False
+        return True
 
 
     def reset_materials_to_bsdf(self):
@@ -522,9 +534,28 @@ class N64Exporter:
 
     def publish(self):
         self.build()
-        self.run_make()
+        return self.run_make()
 
 
     def play(self):
-        self.publish()
-        # TODO: play the built ROM in Ares emulator
+        if not self.publish():
+            return
+
+        ares_emulator_executable = arm.utils.get_ares_emulator_executable()
+
+        if not ares_emulator_executable:
+            log.error('Ares emulator executable path is not set in Armory preferences.')
+            return
+
+        wrd = bpy.data.worlds['Arm']
+        rom_path = os.path.join(arm.utils.build_dir(), 'n64', f'{arm.utils.safestr(wrd.arm_project_name)}.z64')
+
+        subprocess.Popen(
+            [
+                rf'{ares_emulator_executable}',
+                rf'{rom_path}'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True
+        )

@@ -165,6 +165,12 @@ class ArmoryAddonPreferences(AddonPreferences):
         self.skip_update = True
         self.mingw64_path = bpy.path.reduce_dirs([bpy.path.abspath(self.mingw64_path)])[0]
 
+    def ares_emulator_executable_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.ares_emulator_executable = bpy.path.reduce_dirs([bpy.path.abspath(self.ares_emulator_executable)])[0]
+
     sdk_path: StringProperty(name="SDK Path", subtype="FILE_PATH", update=sdk_path_update, default="")
     update_submodules: BoolProperty(
         name="Update Submodules", default=True, description=(
@@ -309,6 +315,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     msys2_bash_executable: StringProperty(name="MSYS2 Bash Executable", description="Path to the MSYS2 Bash executable", default="", subtype="FILE_PATH", update=msys2_bash_executable_update)
     mingw64_path: StringProperty(name="MinGW64 Path", description="Path to the MinGW64 directory", default="", subtype="FILE_PATH", update=mingw64_path_update)
     open_n64_rom_directory: BoolProperty(name="Open Nintendo 64 ROM Directory", description="Open the Nintendo 64 ROM directory after successfully build", default=False)
+    ares_emulator_executable: StringProperty(name="Ares Emulator Executable", description="Path to the Ares Emulator executable", default="", subtype="FILE_PATH", update=ares_emulator_executable_update)
 
     # Developer options
     profile_exporter: BoolProperty(
@@ -450,6 +457,7 @@ class ArmoryAddonPreferences(AddonPreferences):
                 box.prop(self, "n64_toolchain_path")
                 box.prop(self, "msys2_bash_executable")
                 box.prop(self, "mingw64_path")
+                box.prop(self, "ares_emulator_executable")
                 box.prop(self, "open_n64_rom_directory")
                 box.label(text="Libraries:")
                 row = box.row(align=True)
