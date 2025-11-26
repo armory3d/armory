@@ -7,19 +7,16 @@ import arm
 import arm.utils
 import arm.log as log
 
-from arm.n64 import hlc_scanner
-from arm.n64 import trait_generator
-from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
-from arm.n64.trait_utils import (
-    is_supported_member, filter_trait_members, extract_blender_trait_props,
-    SUPPORTED_TYPES, HLC_TYPE_MAP
+from arm.n64.codegen import generator as code_generator
+from arm.n64.utils import (
+    copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8,
+    is_supported_member, filter_trait_members, extract_blender_trait_props
 )
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     log = arm.reload_module(log)
-    hlc_scanner = arm.reload_module(hlc_scanner)
-    trait_generator = arm.reload_module(trait_generator)
+    code_generator = arm.reload_module(code_generator)
 else:
     arm.enable_reload(__name__)
 
@@ -28,7 +25,8 @@ class N64Exporter:
     def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
-        self.trait_list = {}
+        self.trait_info = {}        # Trait metadata from HLC parsing
+        self.trait_asts = {}        # Parsed TraitAST objects
         self.all_traits = set()
         self.trait_data_instances = []
 
@@ -120,9 +118,9 @@ class N64Exporter:
 
     def get_trait_info(self, trait_class: str) -> dict:
         """Get HLC trait info for a specific trait class."""
-        if not hasattr(self, 'trait_list') or not self.trait_list:
+        if not hasattr(self, 'trait_info') or not self.trait_info:
             return {}
-        traits_data = self.trait_list.get('traits', {})
+        traits_data = self.trait_info.get('traits', {})
         return traits_data.get(trait_class, {})
 
 
@@ -392,7 +390,7 @@ class N64Exporter:
 
 
     def write_traits(self):
-        trait_generator.write_traits_files(self.all_traits, self.trait_list, self.trait_data_instances)
+        code_generator.write_traits_files(self.all_traits, self.trait_asts, self.trait_data_instances)
 
 
     def write_engine(self):
@@ -750,30 +748,28 @@ class N64Exporter:
         # Create scene index map for determining "next scene"
         self.scene_index = {name: idx for idx, name in enumerate(self.blender_scenes)}
 
-        # Step 1: Scan HashLink C output for trait definitions and Iron API calls
-        log.info('Scanning HashLink C build for traits...')
-        self.trait_list = hlc_scanner.scan_and_summarize()
+        # Step 1: Parse HashLink C output using AST-based parser
+        log.info('Parsing HashLink C build for traits (AST-based)...')
+        self.trait_asts, self.trait_info = code_generator.scan_and_summarize()
 
-        if not self.trait_list.get('traits'):
+        if not self.trait_info.get('traits'):
             log.warn("No traits found in HLC build. Make sure to compile for HL/C target first.")
         else:
-            log.info(f"Found traits: {list(self.trait_list['traits'].keys())}")
-            log.info(f"Input buttons used: {self.trait_list.get('input_buttons', [])}")
-            if self.trait_list.get('has_transform'):
+            log.info(f"Found traits: {list(self.trait_info['traits'].keys())}")
+            log.info(f"Input buttons used: {self.trait_info.get('input_buttons', [])}")
+            if self.trait_info.get('has_transform'):
                 log.info("Transform operations detected")
-            if self.trait_list.get('has_scene'):
-                scene_names = self.trait_list.get('scene_names', [])
+            if self.trait_info.get('has_scene'):
+                scene_names = self.trait_info.get('scene_names', [])
                 log.info(f"Scene names detected (from HLC): {scene_names}")
 
                 # Validate detected scene names against Blender scenes
-                invalid_scenes = [s for s in scene_names if s not in self.blender_scenes and s != 'unknown']
+                literal_scenes = [s for s in scene_names if not s.startswith('member:')]
+                invalid_scenes = [s for s in literal_scenes if s not in self.blender_scenes and s != 'unknown']
                 if invalid_scenes:
                     log.warn(f"Invalid scene names detected: {invalid_scenes}")
                     log.warn(f"Valid scene names are: {self.blender_scenes}")
                     log.warn("Scene switching may use wrong scene IDs. Check your Haxe trait code.")
-
-                    # Store valid scene names for trait generator to use as fallback
-                    self.trait_list['valid_scene_names'] = self.blender_scenes
 
         # Step 2: Convert materials for N64
         self.convert_materials_to_f3d()

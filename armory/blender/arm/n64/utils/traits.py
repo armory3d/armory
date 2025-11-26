@@ -2,49 +2,42 @@
 N64 Trait Utilities
 
 Shared utilities for trait data extraction and filtering.
-Used by both exporter.py and trait_generator.py.
+Used by exporter.py and code_generator.py.
+
+All filter lists and type maps are loaded from api_mappings.json via config.loader.
 """
 
-# Types/prefixes to skip (Iron runtime internals, not user data)
-SKIP_TYPE_PREFIXES = (
-    'iron__',
-    'kha__',
-    'armory__',
-    'hl_',
-    'vdynamic',
-    'varray',
-)
+# Lazy-loaded config reference
+_config = None
 
-SKIP_MEMBER_NAMES = (
-    'object',
-    'transform',
-    'gamepad',
-    'keyboard',
-    'mouse',
-    'name',
-)
 
-# Only primitive types supported for N64 trait data
-SUPPORTED_TYPES = ('double', 'float', 'int', 'bool')
+def _get_config():
+    """Get config, loading lazily to avoid circular imports."""
+    global _config
+    if _config is None:
+        try:
+            from ..config import get_config
+        except ImportError:
+            from config import get_config
+        _config = get_config()
+    return _config
 
-# Map HLC C types to N64 C types
-HLC_TYPE_MAP = {
-    'double': 'float',
-    'float': 'float',
-    'int': 'int32_t',
-    'bool': 'bool',
-}
 
+# =============================================================================
+# Utility Functions
+# =============================================================================
 
 def is_supported_member(member_name: str, member_type: str) -> bool:
     """Check if a trait member should be included in the data struct."""
+    config = _get_config()
+
     if member_name.startswith('_') or member_name.startswith('$'):
         return False
-    if member_name in SKIP_MEMBER_NAMES:
+    if config.should_skip_member(member_name):
         return False
-    if any(member_type.startswith(prefix) for prefix in SKIP_TYPE_PREFIXES):
+    if config.should_skip_type(member_type):
         return False
-    if member_type not in SUPPORTED_TYPES:
+    if not config.is_supported_type(member_type):
         return False
     return True
 
@@ -52,6 +45,11 @@ def is_supported_member(member_name: str, member_type: str) -> bool:
 def filter_trait_members(members: dict) -> dict:
     """Filter trait members to only supported primitives."""
     return {k: v for k, v in members.items() if is_supported_member(k, v)}
+
+
+def get_n64_type(hlc_type: str) -> str:
+    """Map HLC type to N64 C type."""
+    return _get_config().map_type('hlc_to_n64', hlc_type)
 
 
 def extract_blender_trait_props(trait) -> dict:

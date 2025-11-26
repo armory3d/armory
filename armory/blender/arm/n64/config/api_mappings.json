@@ -1,0 +1,77 @@
+{
+  "apis": {
+    "time_delta": {
+      "hlc_pattern": "iron_system_Time_get_delta\\s*\\(\\s*\\)",
+      "target": "time",
+      "method": "delta",
+      "output": "dt",
+      "args": [],
+      "flags": {"needs_dt": true}
+    },
+    "gamepad_down": {
+      "hlc_pattern": "iron_system_Gamepad_down\\s*\\(\\s*(?P<gamepad>\\w+)\\s*,\\s*(?P<button>\\w+)\\s*\\)",
+      "target": "gamepad",
+      "method": "down",
+      "output": "input_down({button})",
+      "args": [{"name": "button", "type": "button_map", "source": "group"}]
+    },
+    "gamepad_started": {
+      "hlc_pattern": "iron_system_Gamepad_started\\s*\\(\\s*(?P<gamepad>\\w+)\\s*,\\s*(?P<button>\\w+)\\s*\\)",
+      "target": "gamepad",
+      "method": "started",
+      "output": "input_started({button})",
+      "args": [{"name": "button", "type": "button_map", "source": "group"}]
+    },
+    "gamepad_released": {
+      "hlc_pattern": "iron_system_Gamepad_released\\s*\\(\\s*(?P<gamepad>\\w+)\\s*,\\s*(?P<button>\\w+)\\s*\\)",
+      "target": "gamepad",
+      "method": "released",
+      "output": "input_released({button})",
+      "args": [{"name": "button", "type": "button_map", "source": "group"}]
+    },
+    "transform_rotate": {
+      "hlc_pattern": "iron_object_Transform_rotate\\s*\\(\\s*(?P<transform>\\w+)\\s*,\\s*(?P<vec>\\w+)\\s*,\\s*(?P<angle>\\w+)\\s*\\)",
+      "target": "transform",
+      "method": "rotate",
+      "handler": "custom",
+      "flags": {"needs_obj": true}
+    },
+    "transform_translate": {
+      "hlc_pattern": "iron_object_Transform_translate\\s*\\(\\s*(?P<transform>\\w+)\\s*,\\s*(?P<vec>\\w+)\\s*\\)",
+      "target": "transform",
+      "method": "translate",
+      "handler": "custom",
+      "flags": {"needs_obj": true}
+    },
+    "scene_setActive": {
+      "hlc_pattern": "iron_Scene_setActive\\s*\\(\\s*(?P<scene>\\w+)\\s*,",
+      "target": "scene",
+      "method": "setactive",
+      "handler": "custom"
+    },
+    "vec4_new": {
+      "hlc_pattern": "iron_math_Vec4_new\\s*\\(\\s*(?P<vec>\\w+)\\s*,\\s*(?P<x>\\w+)\\s*,\\s*(?P<y>\\w+)\\s*,\\s*(?P<z>\\w+)\\s*,\\s*(?P<w>\\w+)\\s*\\)",
+      "target": "internal",
+      "method": "vec4_new",
+      "handler": "custom"
+    }
+  },
+  "value_maps": {
+    "scene_method_map": {
+      "setActive": "scene_switch_to"
+    }
+  },
+  "type_maps": {
+    "hlc_to_n64": {
+      "double": "float",
+      "float": "float",
+      "int": "int32_t",
+      "bool": "bool"
+    }
+  },
+  "filters": {
+    "skip_type_prefixes": ["iron__", "kha__", "armory__", "hl_", "vdynamic", "varray"],
+    "skip_member_names": ["object", "transform", "gamepad", "keyboard", "mouse", "name"],
+    "supported_types": ["double", "float", "int", "bool"]
+  }
+}

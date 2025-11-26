@@ -1,3 +1,9 @@
+"""
+Blender Utilities
+
+Helper functions for interacting with Blender and the build system.
+"""
+
 import os
 import shutil
 import arm.utils

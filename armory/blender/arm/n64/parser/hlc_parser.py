@@ -12,19 +12,21 @@ from dataclasses import dataclass, field
 
 # Handle both standalone and Blender module imports
 try:
-    from .hlc_ast import (
+    from .ast import (
         Literal, MemberAccess, Variable, BinaryOp, UnaryOp, Call, Vec3, Cast,
         ExprStmt, Assignment, IfStmt, ReturnStmt,
         TraitMember, TraitFunction, TraitAST,
         Expr, Stmt, literal_from_value
     )
+    from ..config import get_config, get_skip_member_names, get_skip_type_prefixes
 except ImportError:
-    from hlc_ast import (
+    from ast import (
         Literal, MemberAccess, Variable, BinaryOp, UnaryOp, Call, Vec3, Cast,
         ExprStmt, Assignment, IfStmt, ReturnStmt,
         TraitMember, TraitFunction, TraitAST,
         Expr, Stmt, literal_from_value
     )
+    from config import get_config, get_skip_member_names, get_skip_type_prefixes
 
 # Try to import arm modules (only available in Blender context)
 try:
@@ -130,17 +132,7 @@ IF_NOT_GOTO_PATTERN = re.compile(
     r'if\s*\(\s*!\s*(\w+)\s*\)\s*goto\s+(label\$[\w]+)\s*;'
 )
 
-# Function call patterns
-IRON_PATTERNS = {
-    'gamepad_down': re.compile(r'iron_system_Gamepad_down\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)'),
-    'gamepad_started': re.compile(r'iron_system_Gamepad_started\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)'),
-    'gamepad_released': re.compile(r'iron_system_Gamepad_released\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)'),
-    'time_delta': re.compile(r'iron_system_Time_get_delta\s*\(\s*\)'),
-    'transform_rotate': re.compile(r'iron_object_Transform_rotate\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)'),
-    'transform_translate': re.compile(r'iron_object_Transform_translate\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)'),
-    'scene_setActive': re.compile(r'iron_Scene_setActive\s*\(\s*(\w+)\s*,'),
-    'vec4_new': re.compile(r'iron_math_Vec4_new\s*\(\s*(\w+)\s*,\s*([^)]+)\)'),
-}
+# NOTE: IRON_PATTERNS moved to api_mappings.json - loaded via config.loader
 
 # Binary operators
 BINARY_OP_PATTERN = re.compile(
@@ -279,13 +271,12 @@ class FunctionParser:
         return func
 
     def _collect_constants(self, body: str):
-        """Collect string constants and Vec4 values from the function body."""
-        # Find string constants: r4 = (String)s$x;
-        for match in re.finditer(r'(\w+)\s*=\s*\(String\)s\$(\w+)\s*;', body):
-            var = match.group(1)
-            value = match.group(2)
-            self.string_consts[var] = value
+        """Collect Vec4 values from the function body.
 
+        Note: String constants are collected inline during _parse_statements
+        to handle register reuse correctly (when the same register is assigned
+        different string values at different points).
+        """
         # Find Vec4 constructions and their component values
         # Pattern: Vec4_new(r8, &r10, &r12, &r14, r16)
         # Preceded by: r10 = (float)r9; where r9 = 0 or 1
@@ -334,6 +325,9 @@ class FunctionParser:
         statements: List[Stmt] = []
         lines = body.split('\n')
 
+        # Pattern to detect string constant assignments: r4 = (String)s$a;
+        string_const_pattern = re.compile(r'(\w+)\s*=\s*\(String\)s\$(\w+)\s*;')
+
         i = 0
         while i < len(lines):
             line = lines[i].strip()
@@ -341,6 +335,15 @@ class FunctionParser:
 
             if not line or line.startswith('//'):
                 continue
+
+            # Update string constants inline BEFORE parsing statements
+            # This ensures each API call sees the correct value that was assigned before it
+            str_match = string_const_pattern.match(line)
+            if str_match:
+                var = str_match.group(1)
+                value = str_match.group(2)
+                self.string_consts[var] = value
+                continue  # This line is just a constant assignment, skip it
 
             # Skip variable declarations
             if self._is_var_declaration(line):
@@ -504,6 +507,12 @@ class FunctionParser:
 
             # Only emit assignment if it's to a member (not a temp register)
             if isinstance(target, MemberAccess):
+                # Skip system members that shouldn't be in user code
+                if target.member in get_skip_member_names():
+                    return None
+                # Skip if value is an unresolved HLC register (r0, r1, etc.)
+                if isinstance(value, Variable) and re.match(r'^r\d+$', value.name):
+                    return None
                 return Assignment(target, value)
 
             return None
@@ -536,35 +545,71 @@ class FunctionParser:
         return self.expr_parser.parse(value_str)
 
     def _try_parse_call(self, expr_str: str) -> Optional[Call]:
-        """Try to parse an expression as an Iron API call."""
+        """Try to parse an expression as an Iron API call using config-driven patterns."""
+        config = get_config()
 
-        # Gamepad input calls
-        for method in ['down', 'started', 'released']:
-            pattern = IRON_PATTERNS.get(f'gamepad_{method}')
-            if pattern:
-                match = pattern.search(expr_str)
-                if match:
-                    button_var = match.group(2)
-                    button = self.string_consts.get(button_var, button_var)
-                    return Call('gamepad', method, [Literal(button, 'string')])
+        # Try to match against all configured API patterns
+        result = config.find_matching_api(expr_str)
+        if not result:
+            return None
+
+        api, match = result
+        groups = match.groupdict()
+
+        # Handle custom handlers (complex logic that can't be templated)
+        if api.handler == 'custom':
+            return self._handle_custom_api(api, groups)
+
+        # Handle template-based APIs (simple pattern → output mapping)
+        return self._handle_template_api(api, groups, config)
+
+    def _handle_template_api(self, api, groups: dict, config) -> Optional[Call]:
+        """Handle APIs that use simple template substitution."""
+        target = api.target
+        method = api.method
+
+        # Build arguments based on API arg specs
+        args = []
+        for arg_spec in api.args:
+            arg_name = arg_spec.get('name')
+            arg_type = arg_spec.get('type')
+
+            # Get raw value from regex group
+            raw_value = groups.get(arg_name, '')
+
+            # Resolve string constants
+            if raw_value in self.string_consts:
+                raw_value = self.string_consts[raw_value]
+
+            # Apply value mapping if specified
+            if arg_type and arg_type.endswith('_map'):
+                mapped_value = config.map_value(arg_type, raw_value.lower(), raw_value)
+                args.append(Literal(mapped_value, 'string'))
+            else:
+                args.append(Literal(raw_value, 'string'))
+
+        return Call(target, method, args)
+
+    def _handle_custom_api(self, api, groups: dict) -> Optional[Call]:
+        """Handle APIs that need custom logic."""
 
         # Time.delta
-        if IRON_PATTERNS['time_delta'].search(expr_str):
+        if api.target == 'time' and api.method == 'delta':
             return Call('Time', 'delta', [])
 
-        # Transform.rotate
-        match = IRON_PATTERNS['transform_rotate'].search(expr_str)
-        if match:
-            vec_var = match.group(2)
-            angle_var = match.group(3)
+        # Transform.rotate - needs Vec4 axis + angle handling
+        if api.target == 'transform' and api.method == 'rotate':
+            vec_var = groups.get('vec', '')
+            angle_var = groups.get('angle', '')
 
-            # Get Vec3 components
-            vec3 = self.vec4_values.get(vec_var, Vec3(Literal(0, 'float'), Literal(0, 'float'), Literal(0, 'float')))
+            # Get Vec3 components from tracked Vec4 values
+            vec3 = self.vec4_values.get(vec_var, Vec3(
+                Literal(0, 'float'), Literal(0, 'float'), Literal(0, 'float')
+            ))
             angle = self.expr_parser.resolve_value(angle_var)
 
             # Transform.rotate in Iron uses a Vec4 axis and angle
             # We convert to our it_rotate(x, y, z) format
-            # The angle is multiplied by the axis component
             args = [
                 self._multiply_if_nonzero(vec3.x, angle),
                 self._multiply_if_nonzero(vec3.y, angle),
@@ -572,12 +617,19 @@ class FunctionParser:
             ]
             return Call('transform', 'rotate', args)
 
-        # Scene.setActive
-        match = IRON_PATTERNS['scene_setActive'].search(expr_str)
-        if match:
-            scene_var = match.group(1)
+        # Transform.translate - needs Vec4 handling
+        if api.target == 'transform' and api.method == 'translate':
+            vec_var = groups.get('vec', '')
+            vec3 = self.vec4_values.get(vec_var, Vec3(
+                Literal(0, 'float'), Literal(0, 'float'), Literal(0, 'float')
+            ))
+            return Call('transform', 'translate', [vec3.x, vec3.y, vec3.z])
 
-            # First check if register has been reassigned (takes precedence over initial string value)
+        # Scene.setActive - needs scene name resolution
+        if api.target == 'scene' and api.method == 'setactive':
+            scene_var = groups.get('scene', '')
+
+            # First check if register has been reassigned
             if scene_var.startswith('r') and self.registers.get(scene_var):
                 scene_expr = self.registers.get(scene_var)
                 return Call('Scene', 'setActive', [scene_expr])
@@ -590,6 +642,11 @@ class FunctionParser:
             # Fall back to resolving as an expression
             scene_expr = self.expr_parser.resolve_value(scene_var)
             return Call('Scene', 'setActive', [scene_expr])
+
+        # Vec4.new - internal tracking only
+        if api.target == 'internal' and api.method == 'vec4_new':
+            # This is handled separately in _collect_constants
+            return None
 
         return None
 
@@ -669,6 +726,12 @@ class TraitParser:
             if member_name.startswith('$') or member_name.startswith('_'):
                 continue
             if member_type in ('hl_type', 'vdynamic', 'varray'):
+                continue
+            # Skip system members (gamepad, keyboard, etc.)
+            if member_name in get_skip_member_names():
+                continue
+            # Skip Iron/Kha/Armory internal types
+            if any(member_type.startswith(prefix) for prefix in get_skip_type_prefixes()):
                 continue
 
             members.append(TraitMember(member_name, member_type))

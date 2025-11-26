@@ -1,0 +1,41 @@
+{
+  "button_map": {
+    "_comment": "Maps Armory/Iron gamepad button names to N64 button enums",
+    "cross": "N64_BTN_A",
+    "a": "N64_BTN_A",
+    "square": "N64_BTN_B",
+    "x": "N64_BTN_B",
+    "circle": "N64_BTN_CRIGHT",
+    "b": "N64_BTN_CRIGHT",
+    "triangle": "N64_BTN_CLEFT",
+    "y": "N64_BTN_CLEFT",
+    "r1": "N64_BTN_CDOWN",
+    "r3": "N64_BTN_CUP",
+    "l3": "N64_BTN_CUP",
+    "r2": "N64_BTN_R",
+    "l1": "N64_BTN_Z",
+    "l2": "N64_BTN_L",
+    "l": "N64_BTN_L",
+    "r": "N64_BTN_R",
+    "zl": "N64_BTN_Z",
+    "zr": "N64_BTN_Z",
+    "options": "N64_BTN_START",
+    "share": "N64_BTN_START",
+    "start": "N64_BTN_START",
+    "up": "N64_BTN_DUP",
+    "down": "N64_BTN_DDOWN",
+    "left": "N64_BTN_DLEFT",
+    "right": "N64_BTN_DRIGHT"
+  },
+  "input_state_map": {
+    "_comment": "Maps Armory input methods to N64 input functions",
+    "started": "input_started",
+    "down": "input_down",
+    "released": "input_released"
+  },
+  "stick_map": {
+    "_comment": "Maps Armory stick methods to N64 stick functions",
+    "getStickX": "input_stick_x",
+    "getStickY": "input_stick_y"
+  }
+}

@@ -14,13 +14,13 @@ try:
     import arm
     import arm.utils
     import arm.log as log
-    from arm.n64.hlc_ast import (
+    from arm.n64.parser import (
         Literal, MemberAccess, Variable, BinaryOp, UnaryOp, Call, Vec3, Cast, Expr,
         ExprStmt, Assignment, IfStmt, WhileStmt, ReturnStmt, Stmt,
         TraitFunction, TraitMember, TraitAST
     )
-    from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP, SCENE_METHOD_MAP
-    from arm.n64.trait_utils import is_supported_member, HLC_TYPE_MAP
+    from arm.n64.config import get_config, get_input_state_func
+    from arm.n64.utils import is_supported_member, get_n64_type
     HAS_ARM = True
 except ImportError:
     HAS_ARM = False
@@ -32,13 +32,13 @@ except ImportError:
         def info(msg): print(f'INFO: {msg}')
     log = LogStub()
     # Import from local modules when arm is not available
-    from hlc_ast import (
+    from parser.ast import (
         Literal, MemberAccess, Variable, BinaryOp, UnaryOp, Call, Vec3, Cast, Expr,
         ExprStmt, Assignment, IfStmt, WhileStmt, ReturnStmt, Stmt,
         TraitFunction, TraitMember, TraitAST
     )
-    from input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP, SCENE_METHOD_MAP
-    from trait_utils import is_supported_member, HLC_TYPE_MAP
+    from config import get_config, get_input_state_func
+    from utils.traits import is_supported_member, get_n64_type
 
 if HAS_ARM:
     if arm.is_reload(__name__):
@@ -46,7 +46,6 @@ if HAS_ARM:
         log = arm.reload_module(log)
     else:
         arm.enable_reload(__name__)
-
 
 def safesrc(name: str) -> str:
     """Make a string safe for use as a C identifier."""
@@ -131,6 +130,10 @@ class ExpressionGenerator:
             return f'obj->{ma.member}'
 
     def _gen_variable(self, var: Variable) -> str:
+        # Warn if this looks like an unresolved HLC register
+        if re.match(r'^r\d+$', var.name):
+            log.warn(f'Unresolved HLC register in generated code: {var.name}')
+            return f'/* unresolved: {var.name} */ 0'
         return var.name
 
     def _gen_binary_op(self, op: BinaryOp) -> str:
@@ -168,18 +171,22 @@ class ExpressionGenerator:
         return f'/* unknown: {call!r} */'
 
     def _gen_gamepad_call(self, call: Call) -> str:
-        """Generate gamepad input check."""
+        """Generate gamepad input check.
+
+        Note: The button value is already mapped by the parser (via config.loader),
+        so we just use it directly here.
+        """
         method = call.method.lower()
 
-        # Get button from first argument
-        button = 'a'  # default
+        # Get button from first argument - already mapped by parser
+        n64_button = 'N64_BTN_A'  # default
         if call.args:
             arg = call.args[0]
             if isinstance(arg, Literal) and arg.type == 'string':
-                button = arg.value
+                n64_button = arg.value
 
-        n64_button = GAMEPAD_TO_N64_MAP.get(button.lower(), 'N64_BTN_A')
-        n64_func = INPUT_STATE_MAP.get(method, 'input_down')
+        # Get the N64 input function name
+        n64_func = get_input_state_func(method)
 
         return f'{n64_func}({n64_button})'
 
@@ -396,7 +403,7 @@ class TraitCodeGenerator:
         # Add supported member variables
         for member in self.ast.members:
             if is_supported_member(member.name, member.type):
-                c_type = HLC_TYPE_MAP.get(member.type, 'float')
+                c_type = get_n64_type(member.type)
                 fields.append(f'    {c_type} {member.name};')
 
         if not fields:
@@ -550,3 +557,302 @@ def generate_all_traits_from_ast(
         all_impls.append(impl)
 
     return '\n'.join(all_decls), '\n'.join(all_structs), '\n'.join(all_impls)
+
+
+# =============================================================================
+# HLC Build Integration
+# =============================================================================
+
+def get_hlc_build_path() -> str:
+    """Get the path to HashLink C build output."""
+    if HAS_ARM:
+        build_dir = arm.utils.build_dir()
+    else:
+        build_dir = '.'
+
+    import os
+    possible_paths = [
+        os.path.join(build_dir, 'windows-hl-build'),
+        os.path.join(build_dir, 'linux-hl-build'),
+        os.path.join(build_dir, 'osx-hl-build'),
+    ]
+
+    for path in possible_paths:
+        if os.path.isdir(path):
+            return path
+
+    return possible_paths[0]
+
+
+def find_trait_files(hlc_path: str) -> List[Tuple[str, str]]:
+    """
+    Find all trait C/H file pairs in the arm/ directory.
+
+    Returns:
+        List of (header_path, source_path) tuples
+    """
+    import os
+    arm_dir = os.path.join(hlc_path, 'arm')
+    if not os.path.isdir(arm_dir):
+        return []
+
+    trait_files = []
+
+    for filename in os.listdir(arm_dir):
+        if filename.endswith('.c'):
+            base = filename[:-2]
+            source = os.path.join(arm_dir, filename)
+            header = os.path.join(arm_dir, f'{base}.h')
+            if os.path.exists(header):
+                trait_files.append((header, source))
+
+    return trait_files
+
+
+def parse_all_traits() -> Dict[str, TraitAST]:
+    """
+    Parse all traits from the HLC build directory.
+
+    Returns:
+        Dictionary mapping trait name to TraitAST
+    """
+    # Import parser here to avoid circular imports
+    if HAS_ARM:
+        from arm.n64.parser import TraitParser
+    else:
+        from parser.hlc_parser import TraitParser
+
+    hlc_path = get_hlc_build_path()
+    trait_files = find_trait_files(hlc_path)
+
+    parser = TraitParser()
+    traits = {}
+
+    for header_path, source_path in trait_files:
+        try:
+            ast = parser.parse_trait(header_path, source_path)
+            if ast.functions:  # Only include traits with actual code
+                traits[ast.name] = ast
+        except Exception as e:
+            log.warn(f'Failed to parse trait {source_path}: {e}')
+
+    return traits
+
+
+def ast_to_summary(traits: Dict[str, TraitAST]) -> Dict:
+    """
+    Convert parsed trait ASTs to a summary dictionary.
+
+    Extracts metadata about traits for use by the exporter:
+    - Member names and types
+    - Input buttons used
+    - Transform/scene operations
+    """
+    summary = {
+        'traits': {},
+        'input_buttons': set(),
+        'has_transform': False,
+        'has_scene': False,
+        'has_time': False,
+        'scene_names': set(),
+    }
+
+    for name, ast in traits.items():
+        trait_summary = {
+            'members': {m.name: m.type for m in ast.members},
+            'member_values': {m.name: m.default_value for m in ast.members if m.default_value is not None},
+            'functions': {},
+            'input_calls': [],
+            'transform_calls': [],
+            'scene_calls': [],
+        }
+
+        for func in ast.functions:
+            # Analyze statements to extract call info
+            _analyze_statements(func.statements, trait_summary, summary, func.lifecycle)
+
+            trait_summary['functions'][func.lifecycle] = {
+                'name': func.name,
+            }
+
+        summary['traits'][name] = trait_summary
+
+    # Convert sets to lists
+    summary['input_buttons'] = list(summary['input_buttons'])
+    summary['scene_names'] = list(summary['scene_names'])
+
+    return summary
+
+
+def _analyze_statements(statements: List[Stmt], trait_summary: Dict, summary: Dict, lifecycle: str):
+    """Recursively analyze statements to extract API call info."""
+    for stmt in statements:
+        if isinstance(stmt, ExprStmt):
+            _analyze_expr(stmt.expr, trait_summary, summary, lifecycle)
+        elif isinstance(stmt, IfStmt):
+            _analyze_expr(stmt.condition, trait_summary, summary, lifecycle)
+            _analyze_statements(stmt.then_body, trait_summary, summary, lifecycle)
+            if stmt.else_body:
+                _analyze_statements(stmt.else_body, trait_summary, summary, lifecycle)
+        elif isinstance(stmt, Assignment):
+            _analyze_expr(stmt.value, trait_summary, summary, lifecycle)
+
+
+def _analyze_expr(expr: Expr, trait_summary: Dict, summary: Dict, lifecycle: str):
+    """Analyze an expression for API calls."""
+    if isinstance(expr, Call):
+        target = expr.target.lower()
+        method = expr.method.lower()
+
+        if target == 'gamepad':
+            button = 'a'  # default
+            if expr.args and isinstance(expr.args[0], Literal):
+                button = expr.args[0].value
+            trait_summary['input_calls'].append({
+                'method': method,
+                'button': button,
+                'lifecycle': lifecycle,
+            })
+            summary['input_buttons'].add(button)
+
+        elif target == 'transform':
+            trait_summary['transform_calls'].append({
+                'method': method,
+                'lifecycle': lifecycle,
+            })
+            summary['has_transform'] = True
+
+        elif target == 'scene':
+            scene_name = 'unknown'
+            if expr.args:
+                arg = expr.args[0]
+                if isinstance(arg, Literal) and arg.type == 'string':
+                    scene_name = arg.value
+                elif isinstance(arg, MemberAccess):
+                    scene_name = f'member:{arg.member}'  # Mark as member-based
+            trait_summary['scene_calls'].append({
+                'method': method,
+                'scene_name': scene_name,
+                'lifecycle': lifecycle,
+            })
+            summary['has_scene'] = True
+            summary['scene_names'].add(scene_name)
+
+        elif target == 'time' and method == 'delta':
+            summary['has_time'] = True
+
+        # Analyze nested expressions in call args
+        for arg in expr.args:
+            _analyze_expr(arg, trait_summary, summary, lifecycle)
+
+    elif isinstance(expr, BinaryOp):
+        _analyze_expr(expr.left, trait_summary, summary, lifecycle)
+        _analyze_expr(expr.right, trait_summary, summary, lifecycle)
+
+    elif isinstance(expr, UnaryOp):
+        _analyze_expr(expr.operand, trait_summary, summary, lifecycle)
+
+
+def scan_and_summarize() -> Tuple[Dict[str, TraitAST], Dict]:
+    """
+    Scan HLC build and return both parsed ASTs and summary.
+
+    Returns:
+        Tuple of (trait_asts dict, trait_info summary dict)
+    """
+    traits = parse_all_traits()
+    summary = ast_to_summary(traits)
+    return traits, summary
+
+
+def write_traits_files(
+    trait_classes: Set[str],
+    trait_asts: Dict[str, TraitAST],
+    trait_data_instances: List[Tuple[str, str, str]] = None
+):
+    """
+    Write traits.h and traits.c files using AST-based code generation.
+
+    Args:
+        trait_classes: Set of trait class names to generate
+        trait_asts: Dictionary of trait name -> TraitAST
+        trait_data_instances: List of (var_name, type_name, init_str) tuples
+    """
+    import os
+
+    if trait_data_instances is None:
+        trait_data_instances = []
+
+    # Filter to only requested traits
+    asts_to_generate = [trait_asts[name] for name in trait_classes if name in trait_asts]
+
+    # Also generate scaffolds for traits not in AST
+    scaffold_traits = trait_classes - set(trait_asts.keys())
+
+    # Generate code from ASTs
+    declarations, data_structs, implementations = generate_all_traits_from_ast(asts_to_generate)
+
+    # Generate scaffolds for traits without HLC data
+    for trait_class in sorted(scaffold_traits):
+        func_name = safesrc(trait_class).lower()
+        declarations += f'\nvoid {func_name}_on_ready(void *entity, void *data);'
+        declarations += f'\nvoid {func_name}_on_update(void *entity, float dt, void *data);'
+        declarations += f'\nvoid {func_name}_on_remove(void *entity, void *data);'
+
+        implementations += f'\n// Trait: {trait_class} (scaffold - no HLC data)\n'
+        implementations += f'void {func_name}_on_ready(void *entity, void *data) {{\n'
+        implementations += '    (void)entity;\n    (void)data;\n}\n\n'
+        implementations += f'void {func_name}_on_update(void *entity, float dt, void *data) {{\n'
+        implementations += '    (void)entity;\n    (void)dt;\n    (void)data;\n}\n\n'
+        implementations += f'void {func_name}_on_remove(void *entity, void *data) {{\n'
+        implementations += '    (void)entity;\n    (void)data;\n}\n'
+
+    # Generate trait data instances
+    data_definitions = []
+    data_externs = []
+    for var_name, type_name, init_str in trait_data_instances:
+        data_definitions.append(f'{type_name} {var_name} = {{ {init_str} }};')
+        data_externs.append(f'extern {type_name} {var_name};')
+
+    data_definitions_str = '\n'.join(data_definitions)
+    data_externs_str = '\n'.join(data_externs)
+
+    if not HAS_ARM:
+        log.info(f'Would write traits.h and traits.c')
+        log.info(f'Declarations:\n{declarations}')
+        log.info(f'Data structs:\n{data_structs}')
+        log.info(f'Implementations:\n{implementations}')
+        return
+
+    # Write traits.h
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'traits.h.j2')
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'traits.h')
+    with open(tmpl_path, 'r', encoding='utf-8') as f:
+        tmpl_content = f.read()
+    output = tmpl_content.format(
+        trait_data_structs=data_structs,
+        trait_declarations=declarations,
+        trait_data_externs=data_externs_str
+    )
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(output)
+
+    # Write traits.c
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'traits.c.j2')
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'traits.c')
+    with open(tmpl_path, 'r', encoding='utf-8') as f:
+        tmpl_content = f.read()
+    output = tmpl_content.format(
+        trait_implementations=implementations,
+        trait_data_definitions=data_definitions_str
+    )
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(output)
+
+    # Log what was generated
+    if asts_to_generate:
+        log.info(f'Generated traits from AST: {", ".join(sorted(a.name for a in asts_to_generate))}')
+    if scaffold_traits:
+        log.info(f'Generated trait scaffolds: {", ".join(sorted(scaffold_traits))}')
+    if trait_data_instances:
+        log.info(f'Generated {len(trait_data_instances)} trait data instances')
