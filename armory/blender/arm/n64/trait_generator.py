@@ -11,6 +11,9 @@ import arm
 import arm.utils
 import arm.log as log
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP, SCENE_METHOD_MAP
+from arm.n64.trait_utils import (
+    is_supported_member, filter_trait_members, HLC_TYPE_MAP
+)
 
 
 if arm.is_reload(__name__):
@@ -27,35 +30,6 @@ def generate_trait_declaration(func_name: str) -> List[str]:
         f'void {func_name}_on_update(void *entity, float dt, void *data);',
         f'void {func_name}_on_remove(void *entity, void *data);',
     ]
-
-
-# Map HLC C types to N64 C types (only these types are supported)
-# Note: String is excluded - too complex for static C struct initialization
-HLC_TYPE_MAP = {
-    'double': 'float',      # N64 prefers float
-    'float': 'float',
-    'int': 'int32_t',
-    'bool': 'bool',
-}
-
-# Types/prefixes to skip (Iron runtime internals, not user data)
-SKIP_TYPE_PREFIXES = (
-    'iron__',       # Iron runtime types
-    'kha__',        # Kha framework types
-    'armory__',     # Armory internal types
-    'hl_',          # HashLink runtime types
-    'vdynamic',     # HL dynamic types
-    'varray',       # HL array types
-)
-
-SKIP_MEMBER_NAMES = (
-    'object',       # Reference to parent object
-    'transform',    # Reference to transform
-    'gamepad',      # Input device reference
-    'keyboard',     # Input device reference
-    'mouse',        # Input device reference
-    'name',         # Trait name - not needed at runtime
-)
 
 
 def generate_trait_data_struct(func_name: str, trait_class: str, trait_info: Dict = None) -> str:
@@ -80,21 +54,8 @@ def generate_trait_data_struct(func_name: str, trait_class: str, trait_info: Dic
         fields.append('    SceneId target_scene;')
 
     # Add member variables from the trait (only supported primitive types)
-    for member_name, hlc_type in members.items():
-        # Skip internal/runtime members by name
-        if member_name.startswith('_') or member_name.startswith('$'):
-            continue
-        if member_name in SKIP_MEMBER_NAMES:
-            continue
-
-        # Skip Iron/Kha/internal types - only include primitives we can map
-        if any(hlc_type.startswith(prefix) for prefix in SKIP_TYPE_PREFIXES):
-            continue
-
-        # Only include types we have a mapping for (primitives)
-        if hlc_type not in HLC_TYPE_MAP:
-            continue
-
+    filtered_members = filter_trait_members(members)
+    for member_name, hlc_type in filtered_members.items():
         c_type = HLC_TYPE_MAP[hlc_type]
         fields.append(f'    {c_type} {member_name};')
 
@@ -122,9 +83,8 @@ def generate_trait_implementation(func_name: str, trait_class: str, trait_info: 
     if trait_info:
         scene_calls = trait_info.get('scene_calls', [])
         members = trait_info.get('members', {})
-        needs_data = bool(scene_calls) or 'speed' in members
-
-    # Generate on_ready
+        filtered = filter_trait_members(members)
+        needs_data = bool(scene_calls) or bool(filtered)    # Generate on_ready
     lines.append(f'void {func_name}_on_ready(void *entity, void *data) {{')
     lines.append('    (void)entity;')
     lines.append('    (void)data;')
@@ -158,18 +118,7 @@ def generate_trait_implementation(func_name: str, trait_class: str, trait_info: 
 
         # Get supported user-defined trait members (primitives only)
         members = trait_info.get('members', {})
-        for name, typ in members.items():
-            # Skip internal members by name
-            if name.startswith('_') or name.startswith('$'):
-                continue
-            if name in SKIP_MEMBER_NAMES:
-                continue
-            # Skip non-primitive types
-            if any(typ.startswith(prefix) for prefix in SKIP_TYPE_PREFIXES):
-                continue
-            if typ not in HLC_TYPE_MAP:
-                continue
-            user_members[name] = typ
+        user_members = filter_trait_members(members)
 
     # Determine if this trait needs data struct access
     needs_data_access = has_scene or bool(user_members)

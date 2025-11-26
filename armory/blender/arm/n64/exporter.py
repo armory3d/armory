@@ -7,10 +7,13 @@ import arm
 import arm.utils
 import arm.log as log
 
-from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
 from arm.n64 import hlc_scanner
 from arm.n64 import trait_generator
 from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
+from arm.n64.trait_utils import (
+    is_supported_member, filter_trait_members, extract_blender_trait_props,
+    SUPPORTED_TYPES, HLC_TYPE_MAP
+)
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
@@ -26,8 +29,8 @@ class N64Exporter:
         self.scene_data = {}
         self.exported_meshes = {}
         self.trait_list = {}
-        self.all_traits = set()  # Collect all unique trait class names across all scenes
-        self.trait_data_instances = []  # Centralized trait data: [(var_name, type, init_str), ...]
+        self.all_traits = set()
+        self.trait_data_instances = []
 
 
     @classmethod
@@ -103,66 +106,20 @@ class N64Exporter:
         return traits_data.get(trait_class, {})
 
 
-    # Types/prefixes to skip (Iron runtime internals, not user data)
-    SKIP_TYPE_PREFIXES = (
-        'iron__',       # Iron runtime types
-        'kha__',        # Kha framework types
-        'armory__',     # Armory internal types
-        'hl_',          # HashLink runtime types
-        'vdynamic',     # HL dynamic types
-        'varray',       # HL array types
-    )
-
-    SKIP_MEMBER_NAMES = (
-        'object',       # Reference to parent object
-        'transform',    # Reference to transform
-        'gamepad',      # Input device reference
-        'keyboard',     # Input device reference
-        'mouse',        # Input device reference
-        'name',         # Trait name - not needed at runtime
-    )
-
-    # Only these primitive types are supported for N64 trait data
-    # Note: String is excluded - too complex for static C struct initialization
-    SUPPORTED_TYPES = ('double', 'float', 'int', 'bool')
-
-
-    def _is_supported_member(self, member_name: str, member_type: str) -> bool:
-        """Check if a member should be included in trait data struct."""
-        # Skip internal members by name
-        if member_name.startswith('_') or member_name.startswith('$'):
-            return False
-        if member_name in self.SKIP_MEMBER_NAMES:
-            return False
-        # Skip Iron/Kha/internal types
-        if any(member_type.startswith(prefix) for prefix in self.SKIP_TYPE_PREFIXES):
-            return False
-        # Only include supported primitive types
-        if member_type not in self.SUPPORTED_TYPES:
-            return False
-        return True
-
-
     def trait_needs_data(self, trait_class: str) -> bool:
         """Check if a trait needs per-instance data based on HLC analysis."""
         trait_info = self.get_trait_info(trait_class)
-        # Need data if: has scene calls OR has supported member variables
         if trait_info.get('scene_calls'):
             return True
         members = trait_info.get('members', {})
-        # Check if any members are supported primitives
-        for name, typ in members.items():
-            if self._is_supported_member(name, typ):
-                return True
-        return False
+        return bool(filter_trait_members(members))
 
 
     def get_trait_members(self, trait_class: str) -> dict:
         """Get all user-defined members for a trait (name -> type), filtered to supported types."""
         trait_info = self.get_trait_info(trait_class)
         members = trait_info.get('members', {})
-        # Filter to only supported members
-        return {k: v for k, v in members.items() if self._is_supported_member(k, v)}
+        return filter_trait_members(members)
 
 
     def get_trait_member_values(self, trait_class: str) -> dict:
@@ -199,25 +156,13 @@ class N64Exporter:
         hlc_defaults = self.get_trait_member_values(trait_class)
         members = self.get_trait_members(trait_class)
 
-        log.info(f"  build_trait_initializer for {trait_class}:")
-        log.info(f"    members (filtered): {members}")
-        log.info(f"    hlc_defaults: {hlc_defaults}")
-        log.info(f"    instance_props (from Blender): {instance_props}")
-
         for member_name, member_type in members.items():
-            # Skip String types - they require special handling (string literals)
-            if member_type == 'String':
-                continue
-
             # Priority: instance_props (Blender) > hlc_defaults (Haxe code)
             if member_name in instance_props:
                 value = instance_props[member_name]
-                log.info(f"    -> Using Blender value: {member_name} = {value}")
             elif member_name in hlc_defaults:
                 value = hlc_defaults[member_name]
-                log.info(f"    -> Using HLC default: {member_name} = {value}")
             else:
-                log.info(f"    -> {member_name} has no value, skipping")
                 continue
 
             # Format value based on type
@@ -302,22 +247,11 @@ class N64Exporter:
         if hasattr(scene, 'arm_traitlist'):
             for trait in scene.arm_traitlist:
                 if trait.enabled_prop and trait.class_name_prop:
-                    # Extract per-instance property values from Blender
-                    props = {}
-                    if hasattr(trait, 'arm_traitpropslist'):
-                        for prop in trait.arm_traitpropslist:
-                            if prop.type == 'Float':
-                                props[prop.name] = prop.value_float
-                            elif prop.type == 'Int':
-                                props[prop.name] = prop.value_int
-                            elif prop.type == 'Bool':
-                                props[prop.name] = prop.value_bool
-                            elif prop.type == 'String':
-                                props[prop.name] = prop.value_string
+                    props = extract_blender_trait_props(trait)
                     scene_traits.append({
                         "class_name": trait.class_name_prop,
                         "type": trait.type_prop,
-                        "props": props  # Per-instance property values
+                        "props": props
                     })
 
         self.scene_data[scene_name] = {
@@ -373,22 +307,11 @@ class N64Exporter:
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
-                            # Extract per-instance property values from Blender
-                            props = {}
-                            if hasattr(trait, 'arm_traitpropslist'):
-                                for prop in trait.arm_traitpropslist:
-                                    if prop.type == 'Float':
-                                        props[prop.name] = prop.value_float
-                                    elif prop.type == 'Int':
-                                        props[prop.name] = prop.value_int
-                                    elif prop.type == 'Bool':
-                                        props[prop.name] = prop.value_bool
-                                    elif prop.type == 'String':
-                                        props[prop.name] = prop.value_string
+                            props = extract_blender_trait_props(trait)
                             obj_traits.append({
                                 "class_name": trait.class_name_prop,
                                 "type": trait.type_prop,
-                                "props": props  # Per-instance property values
+                                "props": props
                             })
 
                 self.scene_data[scene_name]["objects"].append({
