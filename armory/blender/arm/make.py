@@ -19,6 +19,7 @@ import bpy
 
 from arm import assets
 from arm.exporter import ArmoryExporter
+from arm.n64.exporter import N64Exporter
 import arm.lib.make_datas
 import arm.lib.server
 import arm.live_patch as live_patch
@@ -633,7 +634,7 @@ def runtime_to_target():
         case 'Browser':
             return 'html5'
         case 'Ares':
-            return 'n64'
+            return 'krom'  # N64 uses Krom build to generate JS, then N64Exporter processes it
 
 def get_khajs_path(target):
     if target == 'krom':
@@ -680,6 +681,21 @@ def play():
 def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
+
+    # N64 target: Krom build complete, now run N64 exporter
+    if state.is_n64:
+        state.is_n64 = False  # Reset flag
+        if state.is_play:
+            N64Exporter.play_project()
+        elif state.is_publish:
+            N64Exporter.publish_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        else:
+            N64Exporter.build_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        return
 
     if state.is_play:
         cmd = []

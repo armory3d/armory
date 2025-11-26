@@ -188,11 +188,15 @@ def get_gapi():
     wrd = bpy.data.worlds['Arm']
     if state.is_export:
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        # N64 uses Krom build with standard graphics API, not tiny3d
+        if item.arm_project_target == 'n64':
+            return 'direct3d11' if get_os() == 'win' else 'opengl'
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
         return 'webgl'
+    # N64/Ares uses Krom build with standard graphics API
     if wrd.arm_runtime == 'Ares':
-        return 'tiny3d'
+        return 'direct3d11' if get_os() == 'win' else 'opengl'
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
 
