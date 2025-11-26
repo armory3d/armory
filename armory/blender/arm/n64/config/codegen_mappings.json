@@ -27,10 +27,7 @@
     "transform.rotate": {
       "output": "it_rotate(&obj->transform, {x}, {y}, {z})",
       "args": ["x", "y", "z"],
-      "flags": {"needs_obj": true},
-      "variants": {
-        "1_arg": "it_rotate(&obj->transform, 0.0f, {x}, 0.0f)"
-      }
+      "flags": {"needs_obj": true}
     },
     "transform.translate": {
       "output": "it_translate(&obj->transform, {x}, {y}, {z})",

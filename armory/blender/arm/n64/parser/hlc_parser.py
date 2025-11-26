@@ -608,13 +608,31 @@ class FunctionParser:
             ))
             angle = self.expr_parser.resolve_value(angle_var)
 
-            # Transform.rotate in Iron uses a Vec4 axis and angle
-            # We convert to our it_rotate(x, y, z) format
-            args = [
-                self._multiply_if_nonzero(vec3.x, angle),
-                self._multiply_if_nonzero(vec3.y, angle),
-                self._multiply_if_nonzero(vec3.z, angle),
-            ]
+            # Transform.rotate in Iron uses a Vec4 to specify which axis to rotate around
+            # Only one axis should be non-zero (x, y, or z rotation)
+            # We detect which axis and generate rotation for just that axis
+            # NOTE: Coordinate system conversion from Blender (Z-up) to N64 (Y-up)
+
+            # Determine which axis is set (should be exactly one)
+            x_val = vec3.x.value if isinstance(vec3.x, Literal) else None
+            y_val = vec3.y.value if isinstance(vec3.y, Literal) else None
+            z_val = vec3.z.value if isinstance(vec3.z, Literal) else None
+
+            zero = Literal(0.0, 'float')
+
+            if z_val and z_val != 0:
+                # Blender Z (up) -> N64 Y (up)
+                args = [zero, angle, zero]
+            elif y_val and y_val != 0:
+                # Blender Y (forward) -> N64 Z (forward)
+                args = [zero, zero, angle]
+            elif x_val and x_val != 0:
+                # X stays X
+                args = [angle, zero, zero]
+            else:
+                # Default to Y rotation (world up in N64)
+                args = [zero, angle, zero]
+
             return Call('transform', 'rotate', args)
 
         # Transform.translate - needs Vec4 handling
@@ -623,7 +641,8 @@ class FunctionParser:
             vec3 = self.vec4_values.get(vec_var, Vec3(
                 Literal(0, 'float'), Literal(0, 'float'), Literal(0, 'float')
             ))
-            return Call('transform', 'translate', [vec3.x, vec3.y, vec3.z])
+            # Coordinate system conversion: swap Y and Z
+            return Call('transform', 'translate', [vec3.x, vec3.z, vec3.y])
 
         # Scene.setActive - needs scene name resolution
         if api.target == 'scene' and api.method == 'setactive':
