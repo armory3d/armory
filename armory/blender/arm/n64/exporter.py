@@ -401,7 +401,6 @@ class N64Exporter:
                 object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
         objects_block = '\n'.join(object_block_lines)
 
-        # Collect unique trait class names for this scene and add to global set
         # Object traits
         for obj in self.scene_data[scene_name]['objects']:
             for trait in obj.get('traits', []):
