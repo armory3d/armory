@@ -77,8 +77,12 @@ class N64Exporter:
         build_dir = arm.utils.build_dir()
         os.makedirs(f'{build_dir}/n64', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/assets', exist_ok=True)
-        os.makedirs(f'{build_dir}/n64/scenes', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/data', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/iron', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/iron/object', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/iron/system', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/scenes', exist_ok=True)
 
 
     def get_target_scene(self, trait_class: str, current_scene_name: str) -> str:
@@ -358,7 +362,7 @@ class N64Exporter:
             if scene.library:
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
-            scene_lines.append(f'    scenes/{scene_name}.c')
+            scene_lines.append(f'    src/scenes/{scene_name}.c')
         scene_files = '\\\n'.join(scene_lines)
 
         output = tmpl_content.format(
@@ -385,8 +389,8 @@ class N64Exporter:
 
 
     def write_input(self):
-        copy_src('input.c', 'src')
-        copy_src('input.h', 'src')
+        copy_src('iron/system/input.c', 'src')
+        copy_src('iron/system/input.h', 'src')
 
 
     def write_traits(self):
@@ -420,8 +424,8 @@ class N64Exporter:
 
 
     def write_models_c(self):
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'models.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'models.c')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'models.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'models.c')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -441,8 +445,8 @@ class N64Exporter:
 
 
     def write_models_h(self):
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'models.h.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'models.h')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'models.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'models.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -489,8 +493,8 @@ class N64Exporter:
         ag = to_uint8(ambient_color[1])
         ab = to_uint8(ambient_color[2])
 
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'scenes', 'scene.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'scenes', f'{arm.utils.safesrc(scene_name).lower()}.c')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes', 'scene.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes', f'{arm.utils.safesrc(scene_name).lower()}.c')
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
@@ -615,8 +619,8 @@ class N64Exporter:
 
 
     def write_scenes_c(self):
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes.c')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'scenes.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'scenes.c')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -647,8 +651,8 @@ class N64Exporter:
 
 
     def write_scenes_h(self):
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes.h.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes.h')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'scenes.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'scenes.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -677,8 +681,8 @@ class N64Exporter:
 
 
     def write_iron(self):
-        copy_src('iron/transform.h', 'src')
-        copy_src('iron/transform.c', 'src')
+        copy_src('iron/object/transform.h', 'src')
+        copy_src('iron/object/transform.c', 'src')
 
 
     def run_make(self):

@@ -4,7 +4,7 @@
 #include <t3d/t3dmodel.h>
 
 #include "types.h"
-#include "input.h"
+#include "iron/system/input.h"
 
 static int frameIdx = 0;
 

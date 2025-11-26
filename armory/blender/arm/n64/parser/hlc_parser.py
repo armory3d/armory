@@ -610,8 +610,15 @@ class FunctionParser:
 
             # Transform.rotate in Iron uses a Vec4 to specify which axis to rotate around
             # Only one axis should be non-zero (x, y, or z rotation)
-            # We detect which axis and generate rotation for just that axis
-            # NOTE: Coordinate system conversion from Blender (Z-up) to N64 (Y-up)
+            #
+            # Coordinate conversion from Blender to N64 (from exporter.py):
+            #   obj_rot = (-e.x, -e.z, e.y)
+            # So: N64_X = -Blender_X, N64_Y = -Blender_Z, N64_Z = +Blender_Y
+            #
+            # For rotation axes:
+            #   Blender Z (up)      -> N64 Y, negated angle
+            #   Blender Y (forward) -> N64 Z, positive angle
+            #   Blender X (right)   -> N64 X, negated angle
 
             # Determine which axis is set (should be exactly one)
             x_val = vec3.x.value if isinstance(vec3.x, Literal) else None
@@ -619,19 +626,20 @@ class FunctionParser:
             z_val = vec3.z.value if isinstance(vec3.z, Literal) else None
 
             zero = Literal(0.0, 'float')
+            neg_angle = UnaryOp('-', angle)
 
             if z_val and z_val != 0:
-                # Blender Z (up) -> N64 Y (up)
-                args = [zero, angle, zero]
+                # Blender Z (up) -> N64 Y, negate angle
+                args = [zero, neg_angle, zero]
             elif y_val and y_val != 0:
-                # Blender Y (forward) -> N64 Z (forward)
+                # Blender Y (forward) -> N64 Z, positive angle
                 args = [zero, zero, angle]
             elif x_val and x_val != 0:
-                # X stays X
-                args = [angle, zero, zero]
+                # Blender X -> N64 X, negate angle
+                args = [neg_angle, zero, zero]
             else:
                 # Default to Y rotation (world up in N64)
-                args = [zero, angle, zero]
+                args = [zero, neg_angle, zero]
 
             return Call('transform', 'rotate', args)
 

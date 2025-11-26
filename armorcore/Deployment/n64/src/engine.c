@@ -3,8 +3,8 @@
 #include <t3d/t3dmodel.h>
 
 #include "types.h"
-#include "models.h"
-#include "input.h"
+#include "data/models.h"
+#include "iron/system/input.h"
 
 void engine_init(void)
 {

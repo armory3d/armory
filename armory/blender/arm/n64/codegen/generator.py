@@ -805,8 +805,8 @@ def write_traits_files(
         return
 
     # Write traits.h
-    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'traits.h.j2')
-    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'traits.h')
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'traits.h.j2')
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.h')
     with open(tmpl_path, 'r', encoding='utf-8') as f:
         tmpl_content = f.read()
     output = tmpl_content.format(
@@ -818,8 +818,8 @@ def write_traits_files(
         f.write(output)
 
     # Write traits.c
-    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'traits.c.j2')
-    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'traits.c')
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'traits.c.j2')
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.c')
     with open(tmpl_path, 'r', encoding='utf-8') as f:
         tmpl_content = f.read()
     output = tmpl_content.format(

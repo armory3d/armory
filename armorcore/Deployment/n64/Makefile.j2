@@ -12,13 +12,13 @@ N64_CFLAGS += -std=gnu2x
 
 src = \
     src/main.c \
-	src/models.c \
+	src/data/models.c \
     src/engine.c \
     src/renderer.c \
-    src/scenes.c \
-	src/iron/transform.c \
-	src/input.c \
-	src/traits.c \
+    src/data/scenes.c \
+	src/iron/object/transform.c \
+	src/iron/system/input.c \
+	src/data/traits.c \
 {scene_files}
 
 assets_png = $(wildcard assets/*.png)
