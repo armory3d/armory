@@ -11,7 +11,6 @@ extern "C" {{
 #endif
 
 #define FB_COUNT 3
-#define MAX_TRAITS {max_traits}
 
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
@@ -41,7 +40,7 @@ typedef struct ArmObject {{
     bool visible;
 
     uint8_t trait_count;
-    ArmTrait traits[MAX_TRAITS];
+    ArmTrait *traits;
 }} ArmObject;
 
 typedef struct ArmLight {{
@@ -51,7 +50,7 @@ typedef struct ArmLight {{
     T3DVec3 dir;  // Computed from transform.rot
 
     uint8_t trait_count;
-    ArmTrait traits[MAX_TRAITS];
+    ArmTrait *traits;
 }} ArmLight;
 
 typedef struct ArmCamera {{
@@ -63,7 +62,7 @@ typedef struct ArmCamera {{
     float far;
 
     uint8_t trait_count;
-    ArmTrait traits[MAX_TRAITS];
+    ArmTrait *traits;
 }} ArmCamera;
 
 typedef struct {{
@@ -85,7 +84,7 @@ typedef struct ArmScene {{
     ArmObject *objects;
 
     uint8_t trait_count;
-    ArmTrait traits[MAX_TRAITS];
+    ArmTrait *traits;
 }} ArmScene;
 
 #ifdef __cplusplus
