@@ -21,7 +21,7 @@ void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 
 	t3d_viewport_look_at(
 		viewport,
-        &cam->pos,
+        (T3DVec3*)&cam->transform.loc,
         &cam->target,
 		&(T3DVec3){{0.0f, 1.0f, 0.0f}}
 	);
@@ -33,9 +33,9 @@ void renderer_update_objects(ArmScene *scene)
         ArmObject *obj = &scene->objects[i];
         t3d_mat4fp_from_srt_euler(
             &obj->model_mat[frameIdx],
-            obj->scale,
-            obj->rot,
-            obj->pos
+            obj->transform.scale,
+            obj->transform.rot,
+            obj->transform.loc
         );
     }
 }

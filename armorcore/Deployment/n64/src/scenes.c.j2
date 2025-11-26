@@ -4,9 +4,6 @@
 
 #include "types.h"
 #include "scenes.h"
-#include "cameras.h"
-#include "lights.h"
-#include "objects.h"
 
 static ArmScene g_scenes[SCENE_COUNT];
 static SceneId g_pending_scene = SCENE_COUNT;  // SCENE_COUNT = no pending
@@ -33,25 +30,40 @@ void scene_on_ready(SceneId id)
 	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_ready) {{
-			s->traits[i].on_ready(s);
+			s->traits[i].on_ready(s, s->traits[i].data);
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->camera_count; i++) {{
-		if (s->cameras[i].trait_count > 0) {{
-			camera_on_ready(&s->cameras[i]);
+	// Camera traits
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_ready) {{
+					s->cameras[i].traits[t].on_ready(&s->cameras[i], s->cameras[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; i++) {{
-		if (s->lights[i].trait_count > 0) {{
-			light_on_ready(&s->lights[i]);
+	// Light traits
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_ready) {{
+					s->lights[i].traits[t].on_ready(&s->lights[i], s->lights[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint16_t i = 0; i < s->object_count; i++) {{
-		if (s->objects[i].trait_count > 0) {{
-			object_on_ready(&s->objects[i]);
+	// Object traits
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_ready) {{
+					s->objects[i].traits[t].on_ready(&s->objects[i], s->objects[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 }}
@@ -63,25 +75,40 @@ void scene_on_update(SceneId id, float dt)
 	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_update) {{
-			s->traits[i].on_update(s, dt);
+			s->traits[i].on_update(s, dt, s->traits[i].data);
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->camera_count; i++) {{
-		if (s->cameras[i].trait_count > 0) {{
-			camera_on_update(&s->cameras[i], dt);
+	// Camera traits
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_update) {{
+					s->cameras[i].traits[t].on_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; i++) {{
-		if (s->lights[i].trait_count > 0) {{
-			light_on_update(&s->lights[i], dt);
+	// Light traits
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_update) {{
+					s->lights[i].traits[t].on_update(&s->lights[i], dt, s->lights[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint16_t i = 0; i < s->object_count; i++) {{
-		if (s->objects[i].trait_count > 0) {{
-			object_on_update(&s->objects[i], dt);
+	// Object traits
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_update) {{
+					s->objects[i].traits[t].on_update(&s->objects[i], dt, s->objects[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 }}
@@ -93,25 +120,40 @@ void scene_on_remove(SceneId id)
 	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_remove) {{
-			s->traits[i].on_remove(s);
+			s->traits[i].on_remove(s, s->traits[i].data);
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->camera_count; i++) {{
-		if (s->cameras[i].trait_count > 0) {{
-			camera_on_remove(&s->cameras[i]);
+	// Camera traits
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_remove) {{
+					s->cameras[i].traits[t].on_remove(&s->cameras[i], s->cameras[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint8_t i = 0; i < s->light_count; i++) {{
-		if (s->lights[i].trait_count > 0) {{
-			light_on_remove(&s->lights[i]);
+	// Light traits
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_remove) {{
+					s->lights[i].traits[t].on_remove(&s->lights[i], s->lights[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 
-	for (uint16_t i = 0; i < s->object_count; i++) {{
-		if (s->objects[i].trait_count > 0) {{
-			object_on_remove(&s->objects[i]);
+	// Object traits
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_remove) {{
+					s->objects[i].traits[t].on_remove(&s->objects[i], s->objects[i].traits[t].data);
+				}}
+			}}
 		}}
 	}}
 }}
@@ -126,14 +168,14 @@ void scene_clear(SceneId id)
 
     if (s->objects != NULL) {{
         scene_on_remove(id);
-    }}
 
-	for (uint16_t i = 0; i < s->object_count; i++) {{
-		if (s->objects[i].model_mat) {{
-			free_uncached(s->objects[i].model_mat);
-			s->objects[i].model_mat = NULL;
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].model_mat) {{
+				free_uncached(s->objects[i].model_mat);
+				s->objects[i].model_mat = NULL;
+			}}
+			s->objects[i].dpl = NULL;
 		}}
-		s->objects[i].dpl = NULL;
 	}}
 
 	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;

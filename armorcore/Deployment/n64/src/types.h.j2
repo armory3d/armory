@@ -13,9 +13,9 @@ extern "C" {{
 #define FB_COUNT 3
 #define MAX_TRAITS {max_traits}
 
-typedef void (*ArmTraitReadyFn)(void *entity);
-typedef void (*ArmTraitUpdateFn)(void *entity, float dt);
-typedef void (*ArmTraitRemoveFn)(void *entity);
+typedef void (*ArmTraitReadyFn)(void *entity, void *data);
+typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
+typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
 
 typedef struct {{
     ArmTraitReadyFn on_ready;
@@ -24,10 +24,15 @@ typedef struct {{
     void *data;
 }} ArmTrait;
 
+// Unified transform - matches Iron's Transform class
+typedef struct {{
+    float loc[3];   // Location/position
+    float rot[3];   // Rotation (euler angles in radians)
+    float scale[3]; // Scale
+}} ArmTransform;
+
 typedef struct ArmObject {{
-    float pos[3];
-    float rot[3];
-    float scale[3];
+    ArmTransform transform;
 
     rspq_block_t *dpl;
     T3DMat4FP *model_mat;
@@ -39,16 +44,19 @@ typedef struct ArmObject {{
 }} ArmObject;
 
 typedef struct ArmLight {{
+    ArmTransform transform;
+
     uint8_t color[4];
-    T3DVec3 dir;
+    T3DVec3 dir;  // Computed from transform.rot
 
     uint8_t trait_count;
     ArmTrait traits[MAX_TRAITS];
 }} ArmLight;
 
 typedef struct ArmCamera {{
-    T3DVec3 pos;
-    T3DVec3 target;
+    ArmTransform transform;
+
+    T3DVec3 target;  // Look-at target (can be computed from transform)
     float fov;
     float near;
     float far;
