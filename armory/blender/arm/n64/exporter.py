@@ -83,13 +83,33 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/src', exist_ok=True)
 
 
-    def get_next_scene(self, current_scene_name: str) -> str:
+    def get_target_scene(self, trait_class: str, current_scene_name: str) -> str:
         """
-        Get the next scene in sequence for scene switching.
+        Get the target scene for a trait's scene switching.
 
-        For Level_01, returns Level_02.
-        For the last scene, wraps to the first scene.
+        Uses the scene name extracted from HLC (what the Haxe code specifies).
+        Falls back to next sequential scene if HLC scene is unknown/invalid.
         """
+        trait_info = self.get_trait_info(trait_class)
+        scene_calls = trait_info.get('scene_calls', [])
+
+        if scene_calls:
+            # Use the first scene call's target (most traits only have one)
+            hlc_scene = scene_calls[0].get('scene_name', 'unknown')
+
+            # Normalize to lowercase for comparison
+            hlc_scene_lower = hlc_scene.lower()
+
+            # Check if it's a valid scene
+            if hlc_scene_lower in self.blender_scenes:
+                return hlc_scene_lower
+
+            # Check without "level_" or "scene_" prefix
+            for scene in self.blender_scenes:
+                if scene == hlc_scene_lower or scene.endswith(hlc_scene_lower):
+                    return scene
+
+        # Fallback: next sequential scene
         if not hasattr(self, 'blender_scenes') or not self.blender_scenes:
             return current_scene_name
 
@@ -134,13 +154,13 @@ class N64Exporter:
         return bool(trait_info.get('scene_calls'))
 
 
-    def build_trait_initializer(self, trait_class: str, next_scene_enum: str, instance_props: dict = None) -> str:
+    def build_trait_initializer(self, trait_class: str, current_scene: str, instance_props: dict = None) -> str:
         """
         Build the C initializer string for a trait's data struct.
 
         Args:
             trait_class: The trait class name
-            next_scene_enum: Scene enum for scene switching traits
+            current_scene: Current scene name (for fallback scene calculation)
             instance_props: Per-instance property values from Blender (overrides HLC defaults)
 
         Uses per-instance values from Blender when available, falls back to HLC defaults.
@@ -150,7 +170,9 @@ class N64Exporter:
 
         # Add scene target if trait uses scene switching
         if self.trait_has_scene_switching(trait_class):
-            init_fields.append(f'.target_scene = {next_scene_enum}')
+            target_scene = self.get_target_scene(trait_class, current_scene)
+            target_scene_enum = f'SCENE_{target_scene.upper()}'
+            init_fields.append(f'.target_scene = {target_scene_enum}')
 
         # Get HLC defaults and struct members
         hlc_defaults = self.get_trait_member_values(trait_class)
@@ -497,10 +519,6 @@ class N64Exporter:
             light_block_lines.append(f'    lights[{i}].traits = NULL;')
         lights_block = '\n'.join(light_block_lines)
 
-        # Calculate next scene for this scene's traits
-        next_scene = self.get_next_scene(scene_name)
-        next_scene_enum = f'SCENE_{next_scene.upper()}'
-
         object_block_lines = []
         for i, object in enumerate(self.scene_data[scene_name]['objects']):
             object_block_lines.append(f'    objects[{i}].transform.loc[0] = {object["pos"][0]:.6f}f;')
@@ -534,7 +552,7 @@ class N64Exporter:
                     # Generate trait data if needed (uses Blender values with HLC defaults as fallback)
                     if self.trait_needs_data(trait_class):
                         data_var = f'td_{scene_name}_o{i}_t{t_idx}'
-                        init_str = self.build_trait_initializer(trait_class, next_scene_enum, instance_props)
+                        init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
                         self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
                         object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{data_var};')
                     else:
@@ -567,7 +585,7 @@ class N64Exporter:
                 # Generate trait data for scene traits if needed (uses Blender values with HLC defaults as fallback)
                 if self.trait_needs_data(trait_class):
                     data_var = f'td_{scene_name}_s_t{t_idx}'
-                    init_str = self.build_trait_initializer(trait_class, next_scene_enum, instance_props)
+                    init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
                     self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
                     scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{data_var};')
                 else:
